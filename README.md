@@ -1,0 +1,1 @@
+Kali is the Hindu goddess of destruction and rebirth, and is often associated with change and transformation. As a rendering framework, the name Kali could evoke associations with flexibility and adaptation.
