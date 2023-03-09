@@ -6,9 +6,10 @@ add_library(core SHARED)
 target_compile_features(core PUBLIC cxx_std_20)
 target_include_directories(core PUBLIC ${CMAKE_SOURCE_DIR}/include)
 target_sources(core PRIVATE
+    core/error.cpp
     core/object.cpp
-    core/window.cpp
     core/version.cpp
+    core/window.cpp
 )
 target_compile_definitions(core PRIVATE KALI_DLL)
 target_link_libraries(core PRIVATE git_version fmt glfw)

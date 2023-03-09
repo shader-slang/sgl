@@ -1,5 +1,4 @@
 #include <kali/core/window.h>
-#include <kali/core/assert.h>
 #include <kali/core/error.h>
 
 #include <GLFW/glfw3.h>
