@@ -1,4 +1,3 @@
-
 add_executable(core_tests)
 target_sources(core_tests PRIVATE
     core_tests.cpp

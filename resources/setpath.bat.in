@@ -1,0 +1,9 @@
+@echo off
+
+REM ***************************************************************
+REM * This script adds kali to the current path on Windows.
+REM ***************************************************************
+
+set KALI_DIR=%~dp0
+set PATH=%KALI_DIR%;%PATH%
+set PYTHONPATH=%KALI_DIR%python;%PYTHONPATH%

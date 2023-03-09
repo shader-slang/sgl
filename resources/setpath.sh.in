@@ -1,0 +1,26 @@
+# This script adds kali to the current path on Linux.
+# It must be executed via the 'source' command so that
+# it can modify the relevant environment variables.
+
+KALI_DIR=""
+
+if [ "$BASH_VERSION" ]; then
+    if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
+        KALI_DIR=$(dirname "$BASH_SOURCE")
+        KALI_DIR=$(builtin cd "$KALI_DIR"; builtin pwd)
+    fi
+elif [ "$ZSH_VERSION" ]; then
+    if [[ -n ${(M)zsh_eval_context:#file} ]]; then
+        KALI_DIR=$(dirname "$0:A")
+    fi
+fi
+
+if [ -z "$KALI_DIR" ]; then
+    echo "This script must be executed via the 'source' command, i.e.:"
+    echo "$ source ${0}"
+    exit 0
+fi
+
+export PYTHONPATH="$KALI_DIR/python:$PYTHONPATH"
+export PATH="$KALI_DIR:$PATH"
+export LD_LIBRARY_PATH="$KALI_DIR:$LD_LIBRARY_PATH"
