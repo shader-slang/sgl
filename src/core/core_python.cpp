@@ -1,4 +1,5 @@
 #include <kali/core/window.h>
+#include <kali/core/version.h>
 
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/string.h>
@@ -10,6 +11,8 @@ namespace kali {
 
 NB_MODULE(core, m)
 {
+    m.def("get_version", []() { return get_version().long_string; });
+
     nb::class_<Window> window(m, "Window");
     window.def(
         nb::init<uint32_t, uint32_t, const std::string&>(), "width"_a = 1024, "height"_a = 1024, "title"_a = "kali");

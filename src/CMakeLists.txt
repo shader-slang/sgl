@@ -8,9 +8,10 @@ target_include_directories(core PUBLIC ${CMAKE_SOURCE_DIR}/include)
 target_sources(core PRIVATE
     core/object.cpp
     core/window.cpp
+    core/version.cpp
 )
 target_compile_definitions(core PRIVATE KALI_DLL)
-target_link_libraries(core PRIVATE glfw)
+target_link_libraries(core PRIVATE git_version fmt glfw)
 
 set_target_properties(core PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${KALI_RUNTIME_OUTPUT_DIRECTORY}

@@ -1,9 +1,14 @@
 #include <kali/core/window.h>
+#include <kali/core/version.h>
+
+#include <iostream>
 
 using namespace kali;
 
 int main()
 {
+    std::cout << get_version().long_string << std::endl;
+
     ref<Window> window = new Window(1024, 1024, "Editor");
 
     window->main_loop();
