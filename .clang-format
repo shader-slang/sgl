@@ -1,6 +1,5 @@
 BasedOnStyle: WebKit
 ColumnLimit: 120
-DerivePointerAlignment: true
 MaxEmptyLinesToKeep: 2
 SortIncludes: false
 SortUsingDeclarations: false
@@ -11,7 +10,8 @@ FixNamespaceComments: true
 
 AllowAllConstructorInitializersOnNextLine: true
 BreakConstructorInitializers: BeforeComma
-Cpp11BracedListStyle: false
+Cpp11BracedListStyle: true
+SpaceBeforeCpp11BracedList: false
 AlwaysBreakTemplateDeclarations: true
 AllowShortFunctionsOnASingleLine: Inline
 AllowShortEnumsOnASingleLine: true
