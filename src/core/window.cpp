@@ -66,5 +66,4 @@ void Window::main_loop()
     }
 }
 
-
 } // namespace kali

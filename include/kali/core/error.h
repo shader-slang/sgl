@@ -1,5 +1,8 @@
 #pragma once
 
-#define KALI_THROW(x)                                                                                                  \
+#include <stdexcept>
+
+#define KALI_THROW(msg)                                                                                                \
     {                                                                                                                  \
+        throw std::runtime_error(msg);                                                                                 \
     }
