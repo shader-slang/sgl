@@ -2,7 +2,66 @@ cmake_minimum_required(VERSION 3.0)
 
 project(kali)
 
+# -----------------------------------------------------------------------------
+# Check platform
+# -----------------------------------------------------------------------------
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Window")
+    set(KALI_PLATFORM "Windows")
+    set(KALI_WINDOWS TRUE)
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    set(KALI_PLATFORM "Linux")
+    set(KALI_LINUX TRUE)
+else()
+    message(FATAL_ERROR "Unsupported platform!")
+endif()
+message(STATUS "Platform: ${KALI_PLATFORM}")
+
+# -----------------------------------------------------------------------------
+# Python
+# -----------------------------------------------------------------------------
+
 find_package(Python 3.8 COMPONENTS Interpreter Development.Module REQUIRED)
+
+# -----------------------------------------------------------------------------
+# Global setup
+# -----------------------------------------------------------------------------
+
+# Require builds to be outside of source tree.
+file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
+if(EXISTS "${LOC_PATH}")
+    message(FATAL_ERROR "You cannot build in a source directory (or any directory with a CMakeLists.txt file). Please use a build directory instead.")
+endif()
+
+# Enable folders (for Visual Studio).
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+# Setup available build configurations.
+if(NOT SETUP_CONFIGURATION_TYPES)
+    set(SETUP_CONFIGURATION_TYPES 1)
+
+    if(CMAKE_CONFIGURATION_TYPES)
+        # multi config generator
+        set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "" FORCE)
+    else()
+        # single config generator
+        set_property(CACHE CMAKE_BUILD_TYPE PROPERTY HELPSTRING "Choose the type of build")
+        set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug;Release")
+    endif()
+endif()
+
+set(KALI_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(KALI_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+if(CMAKE_CONFIGURATION_TYPES)
+    set(KALI_OUTPUT_DIRECTORY ${KALI_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>)
+else()
+    set(KALI_OUTPUT_DIRECTORY ${KALI_RUNTIME_OUTPUT_DIRECTORY})
+endif()
+
+# set(KALI_SHADER_OUTPUT_DIRECTORY ${KALI_OUTPUT_DIRECTORY}/shaders)
+# set(KALI_PLUGIN_OUTPUT_DIRECTORY ${KALI_OUTPUT_DIRECTORY}/plugins)
+
 
 add_subdirectory(external)
 add_subdirectory(src)
