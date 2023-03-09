@@ -11,6 +11,7 @@
             "description": "Base configuration inherited by all presets.",
             "hidden": true,
             "cacheVariables": {},
+            "cmakeExecutable": "${sourceDir}/tools/cmake/bin/cmake",
             "binaryDir": "${sourceDir}/build/${presetName}"
         },
         {
@@ -59,7 +60,7 @@
                 "strategy": "external"
             },
             "cacheVariables": {
-                "__CMAKE_MAKE_PROGRAM": "${sourceDir}/tools/.packman/ninja/ninja.exe",
+                "CMAKE_MAKE_PROGRAM": "${sourceDir}/tools/ninja/ninja.exe",
                 "CMAKE_CXX_COMPILER": "cl"
             },
             "vendor": {
@@ -90,7 +91,7 @@
             "inherits": "linux-base",
             "generator": "Ninja Multi-Config",
             "cacheVariables": {
-                "__CMAKE_MAKE_PROGRAM": "${sourceDir}/tools/.packman/ninja/ninja",
+                "CMAKE_MAKE_PROGRAM": "${sourceDir}/tools/ninja/ninja",
                 "CMAKE_C_COMPILER": "clang",
                 "CMAKE_CXX_COMPILER": "clang++"
             }
