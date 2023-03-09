@@ -7,7 +7,7 @@ using namespace kali;
 
 int main()
 {
-    std::cout << get_version().long_string << std::endl;
+    std::cout << get_version().long_tag << std::endl;
 
     ref<Window> window = new Window(1024, 1024, "Editor");
 

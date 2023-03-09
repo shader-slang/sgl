@@ -14,8 +14,8 @@ struct Version {
     const char* git_branch;
     bool git_dirty;
 
-    const char* short_string;
-    const char* long_string;
+    const char* short_tag;
+    const char* long_tag;
 };
 
 KALI_API Version& get_version();

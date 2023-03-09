@@ -11,7 +11,15 @@ namespace kali {
 
 NB_MODULE(core, m)
 {
-    m.def("get_version", []() { return get_version().long_string; });
+    nb::class_<Version> version(m, "Version");
+    version.def_ro("minor", &Version::minor);
+    version.def_ro("major", &Version::major);
+    version.def_ro("git_commit", &Version::git_commit);
+    version.def_ro("git_branch", &Version::git_branch);
+    version.def_ro("git_dirty", &Version::git_dirty);
+    version.def_ro("short_tag", &Version::short_tag);
+    version.def_ro("long_tag", &Version::long_tag);
+    m.def("get_version", []() { return get_version(); });
 
     nb::class_<Window> window(m, "Window");
     window.def(

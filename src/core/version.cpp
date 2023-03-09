@@ -11,8 +11,8 @@ namespace kali {
 
 Version& get_version()
 {
-    static std::string short_string{fmt::format("kali {}.{}", KALI_VERSION_MAJOR, KALI_VERSION_MINOR)};
-    static std::string long_string{fmt::format("kali {}.{} (commit: {}, branch: {}, dirty: {})", KALI_VERSION_MAJOR,
+    static std::string short_tag{fmt::format("kali {}.{}", KALI_VERSION_MAJOR, KALI_VERSION_MINOR)};
+    static std::string long_tag{fmt::format("kali {}.{} (commit: {}, branch: {}, dirty: {})", KALI_VERSION_MAJOR,
         KALI_VERSION_MINOR, GIT_VERSION_COMMIT, GIT_VERSION_BRANCH, GIT_VERSION_DIRTY ? "yes" : "no")};
 
     static Version version{
@@ -21,8 +21,8 @@ Version& get_version()
         .git_commit = GIT_VERSION_COMMIT,
         .git_branch = GIT_VERSION_BRANCH,
         .git_dirty = GIT_VERSION_DIRTY,
-        .short_string = short_string.c_str(),
-        .long_string = long_string.c_str(),
+        .short_tag = short_tag.c_str(),
+        .long_tag = long_tag.c_str(),
     };
 
     return version;
