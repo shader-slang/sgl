@@ -20,7 +20,7 @@ public:
     uint32_t get_height() const { return m_height; }
 
     void set_title(std::string title);
-    const std::string &get_title() const { return m_title; }
+    const std::string& get_title() const { return m_title; }
 
     void main_loop();
 

@@ -23,10 +23,9 @@ public:
 
 
 private:
-    LogLevel m_log_level;
+    LogLevel m_log_level{Info};
 };
 
 // inline LOG(LogLevel)
-
 
 } // namespace kali

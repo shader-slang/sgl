@@ -7,5 +7,6 @@ template<typename>
 class ref;
 
 class Logger;
+class Window;
 
 } // namespace kali

@@ -7,7 +7,7 @@ TEST_SUITE_BEGIN("vector");
 
 TEST_CASE("float2")
 {
-    float2 a{1,2}, b{2,3};
+    float2 a{1, 2}, b{2, 3};
     auto c = a + b;
 }
 

@@ -35,7 +35,7 @@ public:
     }
 
 private:
-    mutable std::atomic<uint32_t> m_ref_count { 0 };
+    mutable std::atomic<uint32_t> m_ref_count{0};
 };
 
 template<typename T>
@@ -165,7 +165,7 @@ public:
     operator bool() const { return m_ptr != nullptr; }
 
 private:
-    T* m_ptr { nullptr };
+    T* m_ptr{nullptr};
 };
 
 } // namespace kali

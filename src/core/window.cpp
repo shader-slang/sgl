@@ -9,7 +9,7 @@
 namespace kali {
 
 namespace {
-    std::atomic<uint32_t> glfw_ref_count { 0 };
+    std::atomic<uint32_t> glfw_ref_count{0};
 
     inline void init_glfw()
     {
