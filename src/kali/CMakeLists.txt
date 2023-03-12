@@ -12,12 +12,18 @@ target_sources(kali PRIVATE
     core/version.cpp
     core/window.cpp
     core/logger.cpp
+    rhi/device.cpp
+    rhi/swapchain.cpp
 )
 target_compile_definitions(kali PRIVATE KALI_DLL)
-target_link_libraries(kali PRIVATE git_version glfw slang slang-gfx PUBLIC fmt)
+target_link_libraries(kali PRIVATE git_version glfw PUBLIC fmt slang slang-gfx)
 
 if(KALI_WINDOWS)
     target_link_libraries(kali PRIVATE Dbghelp)
+endif()
+
+if(MSVC)
+    target_compile_options(kali PUBLIC /wd4251)
 endif()
 
 set_target_properties(kali PROPERTIES
@@ -53,6 +59,7 @@ endif()
 
 file(GENERATE OUTPUT ${KALI_OUTPUT_DIRECTORY}/python/kali/__init__.py INPUT ${CMAKE_SOURCE_DIR}/resources/__init__.py)
 
+# Copy binary files.
 get_property(binary_files GLOBAL PROPERTY KALI_BINARY_FILES)
 
 foreach(file ${binary_files})

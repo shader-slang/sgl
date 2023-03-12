@@ -105,7 +105,19 @@
     inline void flip_bit(e_& val, e_ flag) { val = is_set(val, flag) ? (val & (~flag)) : (val | flag); }
 // clang-format on
 
+#if KALI_WINDOWS
+// TODO replace with fwd declarations
+#include <Windows.h>
+#endif
+
+
 namespace kali {
+
+#if KALI_WINDOWS
+using WindowHandle = HWND;
+#elif KALI_LINUX
+struct WindowHandle { };
+#endif
 
 struct StackTraceItem {
     std::string module;
