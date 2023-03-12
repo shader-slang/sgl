@@ -11,14 +11,14 @@ target_sources(kali PRIVATE
     core/platform.cpp
     core/version.cpp
     core/window.cpp
+    core/logger.cpp
 )
 target_compile_definitions(kali PRIVATE KALI_DLL)
-target_link_libraries(kali PRIVATE git_version fmt glfw slang slang-gfx)
+target_link_libraries(kali PRIVATE git_version glfw slang slang-gfx PUBLIC fmt)
 
 if(KALI_WINDOWS)
     target_link_libraries(kali PRIVATE Dbghelp)
 endif()
-
 
 set_target_properties(kali PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${KALI_RUNTIME_OUTPUT_DIRECTORY}
@@ -28,7 +28,6 @@ set_target_properties(kali PROPERTIES
 # -----------------------------------------------------------------------------
 # kali python bindings
 # -----------------------------------------------------------------------------
-
 nanobind_add_module(kali_python NB_STATIC LTO core/core_python.cpp)
 target_link_libraries(kali_python PRIVATE kali)
 set_target_properties(kali_python PROPERTIES
@@ -47,6 +46,7 @@ if(KALI_WINDOWS)
     file(GENERATE OUTPUT ${KALI_OUTPUT_DIRECTORY}/setpath.bat INPUT ${CMAKE_SOURCE_DIR}/resources/setpath.bat.in)
     file(GENERATE OUTPUT ${KALI_OUTPUT_DIRECTORY}/setpath.ps1 INPUT ${CMAKE_SOURCE_DIR}/resources/setpath.ps1.in)
 endif()
+
 if(KALI_LINUX)
     file(GENERATE OUTPUT ${KALI_OUTPUT_DIRECTORY}/setpath.sh INPUT ${CMAKE_SOURCE_DIR}/resources/setpath.sh.in)
 endif()
@@ -54,6 +54,7 @@ endif()
 file(GENERATE OUTPUT ${KALI_OUTPUT_DIRECTORY}/python/kali/__init__.py INPUT ${CMAKE_SOURCE_DIR}/resources/__init__.py)
 
 get_property(binary_files GLOBAL PROPERTY KALI_BINARY_FILES)
+
 foreach(file ${binary_files})
     add_custom_command(TARGET kali POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${file} ${KALI_OUTPUT_DIRECTORY}/)
 endforeach()

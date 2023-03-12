@@ -8,6 +8,7 @@
 #elif KALI_LINUX
 #include <sstream>
 #include <execinfo.h>
+#include <cxxabi.h>
 #endif
 
 namespace kali {
