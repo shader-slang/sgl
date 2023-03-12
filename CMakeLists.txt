@@ -72,6 +72,23 @@ endif()
 include(git_version)
 git_version_setup()
 
+# -----------------------------------------------------------------------------
+# Misc
+# -----------------------------------------------------------------------------
+
+set_property(GLOBAL PROPERTY KALI_BINARY_FILES "")
+
+function(kali_copy_binary src)
+    message(STATUS "copying binary file: ${src}")
+    get_property(binary_files GLOBAL PROPERTY KALI_BINARY_FILES)
+    list(APPEND binary_files ${src})
+    set_property(GLOBAL PROPERTY KALI_BINARY_FILES ${binary_files})
+endfunction()
+
+function(kali_copy_library target)
+    get_property(src TARGET ${target} PROPERTY IMPORTED_LOCATION)
+    kali_copy_binary(${src})
+endfunction()
 
 
 add_subdirectory(external)

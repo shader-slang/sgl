@@ -20,3 +20,41 @@ set(GLFW_BUILD_TESTS OFF)
 set(GLFW_BUILD_DOCS OFF)
 set(GLFW_INSTALL OFF)
 add_subdirectory(glfw)
+
+# slang
+
+set(SLANG_DIR ${CMAKE_CURRENT_SOURCE_DIR}/slang)
+set(KALI_SLANG_CONFIG release)
+if(KALI_WINDOWS)
+    add_library(slang SHARED IMPORTED GLOBAL)
+    set_target_properties(slang PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES ${SLANG_DIR}
+        IMPORTED_IMPLIB ${SLANG_DIR}/bin/windows-x64/${KALI_SLANG_CONFIG}/slang.lib
+        IMPORTED_LOCATION ${SLANG_DIR}/bin/windows-x64/${KALI_SLANG_CONFIG}/slang.dll
+    )
+elseif(KALI_LINUX)
+    add_library(slang SHARED IMPORTED GLOBAL)
+    set_target_properties(slang PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES ${SLANG_DIR}
+        IMPORTED_LOCATION ${SLANG_DIR}/bin/linux-x64/${KALI_SLANG_CONFIG}/libslang.so
+    )
+endif()
+kali_copy_library(slang)
+
+# slang-gfx
+
+if(KALI_WINDOWS)
+    add_library(slang-gfx SHARED IMPORTED GLOBAL)
+    set_target_properties(slang-gfx PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES ${SLANG_DIR}
+        IMPORTED_IMPLIB ${SLANG_DIR}/bin/windows-x64/${KALI_SLANG_CONFIG}/gfx.lib
+        IMPORTED_LOCATION ${SLANG_DIR}/bin/windows-x64/${KALI_SLANG_CONFIG}/gfx.dll
+    )
+elseif(KALI_LINUX)
+    add_library(slang-gfx SHARED IMPORTED GLOBAL)
+    set_target_properties(slang-gfx PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES ${SLANG_DIR}
+        IMPORTED_LOCATION ${SLANG_DIR}/bin/linux-x64/${KALI_SLANG_CONFIG}/libgfx.so
+    )
+endif()
+kali_copy_library(slang-gfx)
