@@ -1,5 +1,5 @@
-#include <kali/core/window.h>
-#include <kali/core/error.h>
+#include "window.h"
+#include "error.h"
 
 #include <GLFW/glfw3.h>
 

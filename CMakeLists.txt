@@ -75,5 +75,6 @@ git_version_setup()
 
 
 add_subdirectory(external)
-add_subdirectory(src)
+add_subdirectory(src/kali)
+add_subdirectory(src/editor)
 add_subdirectory(tests)

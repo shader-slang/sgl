@@ -1,46 +1,35 @@
 # -----------------------------------------------------------------------------
-# core library
+# kali library
 # -----------------------------------------------------------------------------
 
-add_library(core SHARED)
-target_compile_features(core PUBLIC cxx_std_20)
-target_include_directories(core PUBLIC ${CMAKE_SOURCE_DIR}/include)
-target_sources(core PRIVATE
+add_library(kali SHARED)
+target_compile_features(kali PUBLIC cxx_std_20)
+target_include_directories(kali PUBLIC .)
+target_sources(kali PRIVATE
     core/error.cpp
     core/object.cpp
     core/version.cpp
     core/window.cpp
 )
-target_compile_definitions(core PRIVATE KALI_DLL)
-target_link_libraries(core PRIVATE git_version fmt glfw)
+target_compile_definitions(kali PRIVATE KALI_DLL)
+target_link_libraries(kali PRIVATE git_version fmt glfw slang slang-gfx)
 
-set_target_properties(core PROPERTIES
+set_target_properties(kali PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${KALI_RUNTIME_OUTPUT_DIRECTORY}
     LIBRARY_OUTPUT_DIRECTORY ${KALI_LIBRARY_OUTPUT_DIRECTORY}
 )
 
 # -----------------------------------------------------------------------------
-# core python bindings
+# kali python bindings
 # -----------------------------------------------------------------------------
 
-nanobind_add_module(core_python NB_STATIC LTO core/core_python.cpp)
-target_link_libraries(core_python PRIVATE core)
-set_target_properties(core_python PROPERTIES
-    OUTPUT_NAME core
-    ARCHIVE_OUTPUT_NAME core_python
-    RUNTIME_OUTPUT_DIRECTORY ${KALI_OUTPUT_DIRECTORY}/python/kali
-    LIBRARY_OUTPUT_DIRECTORY ${KALI_OUTPUT_DIRECTORY}/python/kali
-)
-
-# -----------------------------------------------------------------------------
-# editor
-# -----------------------------------------------------------------------------
-
-add_executable(editor)
-target_sources(editor PRIVATE editor/editor.cpp)
-target_link_libraries(editor PRIVATE core)
-set_target_properties(editor PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${KALI_RUNTIME_OUTPUT_DIRECTORY}
+nanobind_add_module(kali_python NB_STATIC LTO core/core_python.cpp)
+target_link_libraries(kali_python PRIVATE kali)
+set_target_properties(kali_python PROPERTIES
+    OUTPUT_NAME kali
+    ARCHIVE_OUTPUT_NAME kali_python
+    RUNTIME_OUTPUT_DIRECTORY ${KALI_OUTPUT_DIRECTORY}/python
+    LIBRARY_OUTPUT_DIRECTORY ${KALI_OUTPUT_DIRECTORY}/python
 )
 
 # -----------------------------------------------------------------------------
@@ -57,3 +46,8 @@ if(KALI_LINUX)
 endif()
 
 file(GENERATE OUTPUT ${KALI_OUTPUT_DIRECTORY}/python/kali/__init__.py INPUT ${CMAKE_SOURCE_DIR}/resources/__init__.py)
+
+get_property(binary_files GLOBAL PROPERTY KALI_BINARY_FILES)
+foreach(file ${binary_files})
+    add_custom_command(TARGET kali POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${file} ${KALI_OUTPUT_DIRECTORY}/)
+endforeach()

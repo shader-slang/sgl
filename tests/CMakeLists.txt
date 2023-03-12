@@ -4,7 +4,7 @@ target_sources(core_tests PRIVATE
     core/object_tests.cpp
     core/vector_tests.cpp
 )
-target_link_libraries(core_tests PRIVATE doctest core)
+target_link_libraries(core_tests PRIVATE doctest kali)
 
 set_target_properties(core_tests PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${KALI_RUNTIME_OUTPUT_DIRECTORY}

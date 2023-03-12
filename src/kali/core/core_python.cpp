@@ -1,5 +1,5 @@
-#include <kali/core/window.h>
-#include <kali/core/version.h>
+#include "core/window.h"
+#include "core/version.h"
 
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/string.h>
@@ -9,7 +9,7 @@ using namespace nb::literals;
 
 namespace kali {
 
-NB_MODULE(core, m)
+NB_MODULE(kali, m)
 {
     nb::class_<Version> version(m, "Version");
     version.def_ro("minor", &Version::minor);

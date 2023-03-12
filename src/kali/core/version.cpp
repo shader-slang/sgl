@@ -1,4 +1,4 @@
-#include <kali/core/version.h>
+#include "version.h"
 
 #include "git_version.h"
 

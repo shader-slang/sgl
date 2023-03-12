@@ -1,6 +1,6 @@
 #pragma once
 
-#include <kali/core/object.h>
+#include "object.h"
 
 #include <string>
 #include <cstdint>

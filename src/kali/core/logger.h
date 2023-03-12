@@ -1,6 +1,6 @@
 #pragma once
 
-#include <kali/core/object.h>
+#include "object.h"
 
 namespace kali {
 

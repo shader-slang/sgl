@@ -1,5 +1,5 @@
-#include <kali/core/window.h>
-#include <kali/core/version.h>
+#include "core/window.h"
+#include "core/version.h"
 
 #include <iostream>
 

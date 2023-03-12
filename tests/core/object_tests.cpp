@@ -1,5 +1,5 @@
 #include <doctest.h>
-#include <kali/core/object.h>
+#include "core/object.h"
 
 using namespace kali;
 
