@@ -1,5 +1,9 @@
 #pragma once
 
+#include <string>
+#include <vector>
+#include <span>
+
 /**
  * Compilers.
  */
@@ -100,3 +104,19 @@
     inline bool is_set(e_ val, e_ flag) { return (val & flag) != static_cast<e_>(0); } \
     inline void flip_bit(e_& val, e_ flag) { val = is_set(val, flag) ? (val & (~flag)) : (val | flag); }
 // clang-format on
+
+namespace kali {
+
+struct StackTraceItem {
+    std::string module;
+    uint64_t address;
+    std::string symbol;
+    size_t offset;
+};
+
+/// Generate a backtrace.
+[[nodiscard]] KALI_API std::vector<StackTraceItem> backtrace(size_t skip_frames = 1);
+/// Convert stack trace to a human readable string.
+[[nodiscard]] KALI_API std::string format_stacktrace(std::span<const StackTraceItem> trace);
+
+} // namespace kali

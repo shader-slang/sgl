@@ -8,11 +8,17 @@ target_include_directories(kali PUBLIC .)
 target_sources(kali PRIVATE
     core/error.cpp
     core/object.cpp
+    core/platform.cpp
     core/version.cpp
     core/window.cpp
 )
 target_compile_definitions(kali PRIVATE KALI_DLL)
 target_link_libraries(kali PRIVATE git_version fmt glfw slang slang-gfx)
+
+if(KALI_WINDOWS)
+    target_link_libraries(kali PRIVATE Dbghelp)
+endif()
+
 
 set_target_properties(kali PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${KALI_RUNTIME_OUTPUT_DIRECTORY}
