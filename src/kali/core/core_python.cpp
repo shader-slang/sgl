@@ -1,3 +1,4 @@
+#include "core/error.h"
 #include "core/window.h"
 #include "core/version.h"
 
@@ -7,10 +8,14 @@
 namespace nb = nanobind;
 using namespace nb::literals;
 
+void register_rhi(nb::module_& m);
+
 namespace kali {
 
 NB_MODULE(kali, m)
 {
+    nb::exception<Exception>(m, "Exception", PyExc_RuntimeError);
+
     nb::class_<Version> version(m, "Version");
     version.def_ro("minor", &Version::minor);
     version.def_ro("major", &Version::major);

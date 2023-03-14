@@ -116,7 +116,10 @@ namespace kali {
 #if KALI_WINDOWS
 using WindowHandle = HWND;
 #elif KALI_LINUX
-struct WindowHandle { };
+struct WindowHandle {
+    void* xdisplay;
+    uint32_t xwindow;
+};
 #endif
 
 struct StackTraceItem {

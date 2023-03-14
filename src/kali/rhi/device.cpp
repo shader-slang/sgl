@@ -6,16 +6,24 @@
 
 namespace kali {
 
-Device::Device()
+Device::Device(const DeviceDesc& desc)
 {
-    gfx::IDevice::Desc gfx_desc{};
-    gfx_desc.deviceType = gfx::DeviceType::DirectX12;
+    gfx::IDevice::Desc gfx_desc{
+        .deviceType = gfx::DeviceType::DirectX12,
+    };
     if (SLANG_FAILED(gfx::gfxCreateDevice(&gfx_desc, m_gfx_device.writeRef())))
-        KALI_THROW("Failed to create device!");
+        KALI_THROW(Exception("Failed to create device!"));
+
+    gfx::ICommandQueue::Desc queue_desc{
+        .type = gfx::ICommandQueue::QueueType::Graphics,
+    };
+    if (SLANG_FAILED(m_gfx_device->createCommandQueue(queue_desc, m_gfx_queue.writeRef())))
+        KALI_THROW(Exception("Failed to create graphics queue!"));
 }
 
 Device::~Device()
 {
+    m_gfx_queue.setNull();
     m_gfx_device.setNull();
 }
 

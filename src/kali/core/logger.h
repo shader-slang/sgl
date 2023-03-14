@@ -8,15 +8,15 @@
 namespace kali {
 
 enum class LogLevel {
-    Debug,
-    Info,
-    Warn,
-    Error,
+    debug,
+    info,
+    warn,
+    error,
 };
 
 class KALI_API Logger : public Object {
 public:
-    Logger(LogLevel log_level = LogLevel::Info);
+    Logger(LogLevel log_level = LogLevel::info);
 
     void set_log_level(LogLevel log_level);
     LogLevel get_log_level() const;
@@ -26,7 +26,7 @@ public:
     static Logger& get_default();
 
 private:
-    LogLevel m_log_level{LogLevel::Info};
+    LogLevel m_log_level{LogLevel::info};
 };
 
 namespace detail {
@@ -37,19 +37,19 @@ namespace detail {
     }
 } // namespace detail
 
-#define KALI_DEBUG(fmt, ...) ::kali::detail::log(LogLevel::Debug, FMT_STRING(fmt), __VA_ARGS__)
-#define KALI_INFO(fmt, ...) ::kali::detail::log(LogLevel::Info, FMT_STRING(fmt), __VA_ARGS__)
-#define KALI_WARN(fmt, ...) ::kali::detail::log(LogLevel::Warn, FMT_STRING(fmt), __VA_ARGS__)
-#define KALI_ERROR(fmt, ...) ::kali::detail::log(LogLevel::Error, FMT_STRING(fmt), __VA_ARGS__)
+#define KALI_DEBUG(fmt, ...) ::kali::detail::log(LogLevel::debug, FMT_STRING(fmt), __VA_ARGS__)
+#define KALI_INFO(fmt, ...) ::kali::detail::log(LogLevel::info, FMT_STRING(fmt), __VA_ARGS__)
+#define KALI_WARN(fmt, ...) ::kali::detail::log(LogLevel::warn, FMT_STRING(fmt), __VA_ARGS__)
+#define KALI_ERROR(fmt, ...) ::kali::detail::log(LogLevel::error, FMT_STRING(fmt), __VA_ARGS__)
 
 #define KALI_DEBUG_WITH_LOC(fmt, ...)                                                                                  \
-    ::kali::detail::log(LogLevel::Debug, FMT_STRING(fmt " [{}:{}]"), __VA_ARGS__, __FILE__, __LINE__)
+    ::kali::detail::log(LogLevel::debug, FMT_STRING(fmt " [{}:{}]"), __VA_ARGS__, __FILE__, __LINE__)
 #define KALI_INFO_WITH_LOC(fmt, ...)                                                                                   \
-    ::kali::detail::log(LogLevel::Info, FMT_STRING(fmt " [{}:{}]"), __VA_ARGS__, __FILE__, __LINE__)
+    ::kali::detail::log(LogLevel::info, FMT_STRING(fmt " [{}:{}]"), __VA_ARGS__, __FILE__, __LINE__)
 #define KALI_WARN_WITH_LOC(fmt, ...)                                                                                   \
-    ::kali::detail::log(LogLevel::Warn, FMT_STRING(fmt " [{}:{}]"), __VA_ARGS__, __FILE__, __LINE__)
+    ::kali::detail::log(LogLevel::warn, FMT_STRING(fmt " [{}:{}]"), __VA_ARGS__, __FILE__, __LINE__)
 #define KALI_ERROR_WITH_LOC(fmt, ...)                                                                                  \
-    ::kali::detail::log(LogLevel::Error, FMT_STRING(fmt " [{}:{}]"), __VA_ARGS__, __FILE__, __LINE__)
+    ::kali::detail::log(LogLevel::error, FMT_STRING(fmt " [{}:{}]"), __VA_ARGS__, __FILE__, __LINE__)
 
 // inline LOG(LogLevel)
 

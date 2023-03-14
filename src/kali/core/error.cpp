@@ -1,12 +1,10 @@
 #include "error.h"
 
-#include <fmt/format.h>
-
 namespace kali {
 
-std::string get_assert_message(const char* cond, const char* file, int line)
+Exception::Exception(const char* what)
+    : m_what(std::make_shared<std::string>(what))
 {
-    return fmt::format("ASSERT: {}\n{}:{}\n", cond, file, line);
 }
 
 } // namespace kali

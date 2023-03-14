@@ -1,7 +1,9 @@
 #pragma once
 
 #include "fwd.h"
+#include "formats.h"
 
+#include "core/platform.h"
 #include "core/object.h"
 
 #include <slang-gfx.h>
@@ -11,17 +13,21 @@ namespace kali {
 class Window;
 
 struct SwapchainDesc {
-    // Format format;
+    Format format;
     uint32_t width, height;
     uint32_t image_count;
-    // ICommandQueue* queue;
     bool enable_vsync;
 };
 
 class Swapchain : public Object {
 public:
+    Swapchain(const SwapchainDesc& desc, WindowHandle window_handle, ref<Device> device);
     Swapchain(const SwapchainDesc& desc, ref<Window> window, ref<Device> device);
     ~Swapchain();
+
+    const SwapchainDesc& get_desc() const { return m_desc; }
+
+    void resize(uint32_t width, uint32_t height);
 
 private:
     SwapchainDesc m_desc;

@@ -42,7 +42,8 @@ template<typename T>
 class ref {
 public:
     // TODO move elsewhere so we can use ref with forward declared types
-    // static_assert(std::is_base_of_v<Object, T>, "Cannot create reference to objects not inheriting from Object class.");
+    // static_assert(std::is_base_of_v<Object, T>, "Cannot create reference to objects not inheriting from Object
+    // class.");
 
     /// Default constructor.
     ref() = default;

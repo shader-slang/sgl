@@ -7,13 +7,13 @@ namespace kali {
 inline const char* log_level_str(LogLevel level)
 {
     switch (level) {
-    case LogLevel::Debug:
+    case LogLevel::debug:
         return "[DEBUG]";
-    case LogLevel::Info:
+    case LogLevel::info:
         return "[INFO] ";
-    case LogLevel::Warn:
+    case LogLevel::warn:
         return "[WARN] ";
-    case LogLevel::Error:
+    case LogLevel::error:
         return "[ERROR]";
     }
     return "";

@@ -23,6 +23,7 @@ if(KALI_WINDOWS)
 endif()
 
 if(MSVC)
+    target_compile_options(kali PUBLIC /DEBUG)
     target_compile_options(kali PUBLIC /wd4251)
 endif()
 
@@ -34,7 +35,10 @@ set_target_properties(kali PROPERTIES
 # -----------------------------------------------------------------------------
 # kali python bindings
 # -----------------------------------------------------------------------------
-nanobind_add_module(kali_python NB_STATIC LTO core/core_python.cpp)
+nanobind_add_module(kali_python NB_STATIC LTO
+    core/core_python.cpp
+    rhi/rhi_python.cpp
+)
 target_link_libraries(kali_python PRIVATE kali)
 set_target_properties(kali_python PROPERTIES
     OUTPUT_NAME kali
