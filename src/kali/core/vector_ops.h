@@ -1,6 +1,11 @@
 #pragma once
 
 #include "vector_types.h"
+#include "traits.h"
+
+#include <fmt/format.h>
+
+#include <string>
 
 namespace kali {
 
@@ -40,7 +45,7 @@ template<typename T, size_t N, std::enable_if_t<std::negation_v<is_boolean<T>>, 
 template<typename T, size_t N, std::enable_if_t<std::negation_v<is_boolean<T>>, bool> = false>
 [[nodiscard]] constexpr auto operator-(const vector<T, N> v) noexcept
 {
-if constexpr (N == 1)
+    if constexpr (N == 1)
         return vector<T, N>{-v.x};
     else if constexpr (N == 2)
         return vector<T, N>{-v.x, -v.y};
@@ -927,4 +932,28 @@ template<typename T, size_t N, std::enable_if_t<std::negation_v<std::is_floating
 
 /* <<<PYMACROEND>>> */
 
+/// Convert vector to string.
+template<typename T, size_t N>
+std::string to_string(const vector<T, N>& v)
+{
+    return ::fmt::format("{}", v);
+}
+
 } // namespace kali
+
+/// Vector string formatter.
+template<typename T, size_t N>
+struct ::fmt::formatter<::kali::vector<T, N>> : formatter<T> {
+    template<typename FormatContext>
+    auto format(const ::kali::vector<T, N>& v, FormatContext& ctx) const
+    {
+        auto out = ctx.out();
+        out = ::fmt::format_to(out, "{}{}", kali::ScalarTraits<T>::name, N);
+        for (int i = 0; i < N; ++i) {
+            out = ::fmt::format_to(out, "{}", (i == 0) ? "(" : ", ");
+            out = formatter<T>::format(v[i], ctx);
+        }
+        out = ::fmt::format_to(out, ")");
+        return out;
+    }
+};
