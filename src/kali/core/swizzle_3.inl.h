@@ -1,3 +1,4 @@
+// clang-format off
 /* <<<PYMACRO
 from itertools import product
 for c in product(["x", "y", "z"], repeat=3):
@@ -33,3 +34,4 @@ for c in product(["x", "y", "z"], repeat=3):
 [[nodiscard]] constexpr auto zzy() const noexcept { return vector<T, 3>(z, z, y); }
 [[nodiscard]] constexpr auto zzz() const noexcept { return vector<T, 3>(z, z, z); }
 /* <<<PYMACROEND>>> */
+// clang-format on

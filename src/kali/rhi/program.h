@@ -9,9 +9,7 @@
 
 namespace kali {
 
-struct ProgramDesc {
-
-};
+struct ProgramDesc { };
 
 class KALI_API Program : public Object {
 public:
