@@ -1,8 +1,7 @@
 #include "version.h"
+#include "format.h"
 
 #include "git_version.h"
-
-#include <fmt/format.h>
 
 namespace kali {
 

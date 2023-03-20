@@ -1,6 +1,5 @@
 #include "platform.h"
-
-#include <fmt/format.h>
+#include "format.h"
 
 #if KALI_WINDOWS
 #include <Windows.h>

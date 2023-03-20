@@ -7,8 +7,7 @@ namespace kali {
 using uint = uint32_t;
 
 template<typename T>
-struct ScalarTraits {
-};
+struct ScalarTraits { };
 
 template<>
 struct ScalarTraits<float> {

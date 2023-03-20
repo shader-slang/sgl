@@ -7,5 +7,4 @@
 namespace kali {
 
 
-
 } // namespace kali

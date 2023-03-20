@@ -9,8 +9,7 @@ namespace kali {
 // ----------------------------------------------------------------------------
 
 template<typename T, size_t N>
-struct vector_storage {
-};
+struct vector_storage { };
 
 template<typename T>
 struct vector_storage<T, 1> {

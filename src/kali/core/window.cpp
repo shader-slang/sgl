@@ -44,8 +44,6 @@ struct EventHandlers {
     {
         static_cast<Window*>(glfwGetWindowUserPointer(window))->handle_window_size(width, height);
     }
-
-
 };
 
 

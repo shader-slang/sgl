@@ -19,7 +19,7 @@ struct SwapchainDesc {
     bool enable_vsync;
 };
 
-class Swapchain : public Object {
+class KALI_API Swapchain : public Object {
 public:
     Swapchain(const SwapchainDesc& desc, WindowHandle window_handle, ref<Device> device);
     Swapchain(const SwapchainDesc& desc, ref<Window> window, ref<Device> device);

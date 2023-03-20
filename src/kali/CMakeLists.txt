@@ -13,18 +13,22 @@ target_sources(kali PRIVATE
     core/window.cpp
     core/logger.cpp
     rhi/device.cpp
+    rhi/program.cpp
+    rhi/resource.cpp
     rhi/swapchain.cpp
 )
 target_compile_definitions(kali PRIVATE KALI_DLL)
+
+if(MSVC)
+    target_compile_options(kali PUBLIC /DEBUG)
+    target_compile_options(kali PUBLIC /W4 /WX)
+    target_compile_options(kali PUBLIC /wd4251)
+endif()
+
 target_link_libraries(kali PRIVATE git_version glfw PUBLIC fmt slang slang-gfx)
 
 if(KALI_WINDOWS)
     target_link_libraries(kali PRIVATE Dbghelp)
-endif()
-
-if(MSVC)
-    target_compile_options(kali PUBLIC /DEBUG)
-    target_compile_options(kali PUBLIC /wd4251)
 endif()
 
 set_target_properties(kali PROPERTIES

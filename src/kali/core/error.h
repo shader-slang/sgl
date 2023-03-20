@@ -2,8 +2,7 @@
 
 #include "platform.h"
 #include "logger.h"
-
-#include <fmt/format.h>
+#include "format.h"
 
 #include <stdexcept>
 #include <string>

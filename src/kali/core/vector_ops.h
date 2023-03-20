@@ -2,8 +2,7 @@
 
 #include "vector_types.h"
 #include "traits.h"
-
-#include <fmt/format.h>
+#include "format.h"
 
 #include <string>
 

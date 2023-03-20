@@ -2,8 +2,7 @@
 
 #include "object.h"
 #include "platform.h"
-
-#include <fmt/format.h>
+#include "format.h"
 
 namespace kali {
 
