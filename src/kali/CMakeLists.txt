@@ -46,11 +46,27 @@ nanobind_add_module(kali_python NB_STATIC LTO
 )
 target_link_libraries(kali_python PRIVATE kali)
 set_target_properties(kali_python PROPERTIES
-    OUTPUT_NAME kali
+    OUTPUT_NAME kali_python
     ARCHIVE_OUTPUT_NAME kali_python
-    RUNTIME_OUTPUT_DIRECTORY ${KALI_OUTPUT_DIRECTORY}/python
-    LIBRARY_OUTPUT_DIRECTORY ${KALI_OUTPUT_DIRECTORY}/python
+    RUNTIME_OUTPUT_DIRECTORY ${KALI_OUTPUT_DIRECTORY}/python/kali
+    LIBRARY_OUTPUT_DIRECTORY ${KALI_OUTPUT_DIRECTORY}/python/kali
 )
+
+# Generate python stub files.
+if(KALI_WINDOWS)
+    add_custom_command(
+        TARGET kali_python POST_BUILD
+        COMMAND ${KALI_OUTPUT_DIRECTORY}/setpath.bat & ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build_scripts/generate_stubs.py ${KALI_OUTPUT_DIRECTORY}/python
+        )
+endif()
+if(KALI_LINUX)
+    add_custom_command(
+        TARGET kali_python POST_BUILD
+        WORKING_DIRECTORY ${KALI_OUTPUT_DIRECTORY}
+        COMMAND ${CMAKE_SOURCE_DIR}/build_scripts/wrap_setpath.sh ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build_scripts/generate_stubs.py ${KALI_OUTPUT_DIRECTORY}/python
+    )
+endif()
+
 
 # -----------------------------------------------------------------------------
 # misc

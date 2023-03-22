@@ -124,12 +124,12 @@ void bind_vector_type(nb::module_& m, const char* name)
     }
 }
 
-NB_MODULE(kali, m)
+NB_MODULE(kali_python, m)
 {
     bind_vector_type<float1>(m, "float1");
-    bind_vector_type<float1>(m, "float2");
-    bind_vector_type<float1>(m, "float3");
-    bind_vector_type<float1>(m, "float4");
+    bind_vector_type<float2>(m, "float2");
+    bind_vector_type<float3>(m, "float3");
+    bind_vector_type<float4>(m, "float4");
     bind_vector_type<uint1>(m, "uint1");
     bind_vector_type<uint2>(m, "uint2");
     bind_vector_type<uint3>(m, "uint3");
