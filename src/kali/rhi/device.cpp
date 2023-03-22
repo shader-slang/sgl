@@ -1,6 +1,7 @@
 #include "device.h"
 #include "swapchain.h"
 #include "resource.h"
+#include "program.h"
 
 #include "core/error.h"
 #include "core/window.h"
@@ -37,6 +38,11 @@ Device::Device(const DeviceDesc& desc)
     };
     if (SLANG_FAILED(m_gfx_device->createCommandQueue(queue_desc, m_gfx_queue.writeRef())))
         KALI_THROW(Exception("Failed to create graphics queue!"));
+
+    if (SLANG_FAILED(slang::createGlobalSession(m_slang_session.writeRef())))
+        KALI_THROW(Exception("Failed to create global slang session!"));
+
+    m_program_manager = new ProgramManager(this, m_slang_session);
 }
 
 Device::~Device()
@@ -53,6 +59,21 @@ ref<Swapchain> Device::create_swapchain(const SwapchainDesc& desc, ref<Window> w
 ref<Buffer> Device::create_buffer(const BufferDesc& desc, void* init_data)
 {
     return new Buffer(desc, init_data, this);
+}
+
+ref<Program> Device::create_program(const ProgramDesc& desc)
+{
+    return m_program_manager->create_program(desc);
+}
+
+ref<Program> Device::create_program(std::filesystem::path path, std::string entrypoint)
+{
+    return create_program(ProgramDesc::create().add_file(path).add_entrypoint(entrypoint));
+}
+
+ProgramManager& Device::get_program_manager()
+{
+    return *m_program_manager;
 }
 
 

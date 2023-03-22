@@ -84,6 +84,8 @@
 #define KALI_INLINE __attribute__((always_inline))
 #endif
 
+#define KALI_UNUSED(x) (void)x
+
 /**
  * Preprocessor stringification.
  */
