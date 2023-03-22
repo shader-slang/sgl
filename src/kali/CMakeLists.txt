@@ -41,6 +41,7 @@ set_target_properties(kali PROPERTIES
 # kali python bindings
 # -----------------------------------------------------------------------------
 nanobind_add_module(kali_python NB_STATIC LTO
+    kali_python.cpp
     core/core_python.cpp
     rhi/rhi_python.cpp
 )

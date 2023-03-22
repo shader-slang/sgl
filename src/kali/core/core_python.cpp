@@ -1,8 +1,8 @@
-#include "core/error.h"
-#include "core/window.h"
-#include "core/version.h"
-#include "core/vector_types.h"
-#include "core/vector_ops.h"
+#include "error.h"
+#include "window.h"
+#include "version.h"
+#include "vector_types.h"
+#include "vector_ops.h"
 
 #include <nanobind/nanobind.h>
 #include <nanobind/operators.h>
@@ -11,10 +11,7 @@
 namespace nb = nanobind;
 using namespace nb::literals;
 
-void register_rhi(nb::module_& m);
-
 namespace kali {
-
 
 template<typename T, bool with_operators = true>
 void bind_vector_type(nb::module_& m, const char* name)
@@ -109,7 +106,7 @@ void bind_vector_type(nb::module_& m, const char* name)
     }
 }
 
-NB_MODULE(kali_python, m)
+void register_core(nb::module_& m)
 {
     bind_vector_type<float1>(m, "float1");
     bind_vector_type<float2>(m, "float2");

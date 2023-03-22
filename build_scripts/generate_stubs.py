@@ -183,17 +183,17 @@ def process_class(m, c):
     base_name = base_name.replace(m.__name__ + ".", "")
 
     w(f'class {c.__name__}{"(" + base_name + ")" if has_base else ""}:')
-    if c.__doc__ is not None:
-        doc = c.__doc__.splitlines()
-        if len(doc) > 0:
-            if doc[0].strip() == "":
-                doc = doc[1:]
-            if c.__doc__:
-                w(f'    """')
-                for l in doc:
-                    w(f"    {l}")
-                w(f'    """')
-                w(f"")
+    # if c.__doc__ is not None:
+    #     doc = c.__doc__.splitlines()
+    #     if len(doc) > 0:
+    #         if doc[0].strip() == "":
+    #             doc = doc[1:]
+    #         if c.__doc__:
+    #             w(f'    """')
+    #             for l in doc:
+    #                 w(f"    {l}")
+    #             w(f'    """')
+    #             w(f"")
 
     process_function(m, c.__init__, indent=4)
     process_function(m, c.__call__, indent=4)
@@ -393,7 +393,7 @@ if __name__ == "__main__":
         os.makedirs(module_dir, exist_ok=True)
         open(os.path.join(module_dir, "__init__.pyi"), "w").write(buffer)
 
-        modules += submodules
+        # modules += submodules
         processed_modules.add(m)
 
     elapsed = time.time() - start
