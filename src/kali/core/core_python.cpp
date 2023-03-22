@@ -55,20 +55,6 @@ void bind_vector_type(nb::module_& m, const char* name)
         vec.def("__init__", init_xyzw, "x"_a, "y"_a, "z"_a, "w"_a);
     }
 
-#if 0
-    // Casting float16_t <-> float vectors.
-    // This allows explicit casts, e.g., float16_t3(c), where c is a float3 in python.
-    if constexpr (std::is_same<value_type, float16_t>::value) {
-        using floatN = glm::vec<length, float, glm::defaultp>;
-        auto initVector = [](floatN v) { return T(v); };
-        vec.def(nb::init(initVector), "v"_a);
-    } else if constexpr (std::is_same<value_type, float>::value) {
-        using float16_tN = tfloat16_vec<length>;
-        auto initVector = [](float16_tN v) { return T(v); };
-        vec.def(nb::init(initVector), "v"_a);
-    }
-#endif
-
     auto to_string = [](const T& v) { return kali::to_string(v); };
     vec.def("__repr__", to_string);
     vec.def("__str__", to_string);
@@ -76,7 +62,7 @@ void bind_vector_type(nb::module_& m, const char* name)
     // Operators
 
     if constexpr (with_operators) {
-        if constexpr (std::negation_v<is_boolean<value_type>>) {
+        if constexpr (!is_boolean_v<value_type>) {
             vec.def(nb::self + nb::self);
             vec.def(nb::self + value_type());
             vec.def(value_type() + nb::self);
@@ -109,17 +95,16 @@ void bind_vector_type(nb::module_& m, const char* name)
             vec.def(nb::self >> nb::self);
             vec.def(nb::self >> value_type());
             vec.def(value_type() >> nb::self);
-        }
-        if constexpr (!std::is_floating_point_v<T>) {
-            // vec.def(nb::self | nb::self);
-            // vec.def(nb::self | value_type());
-            // vec.def(value_type() | nb::self);
-            // vec.def(nb::self & nb::self);
-            // vec.def(nb::self & value_type());
-            // vec.def(value_type() & nb::self);
-            // vec.def(nb::self ^ nb::self);
-            // vec.def(nb::self ^ value_type());
-            // vec.def(value_type() ^ nb::self);
+
+            vec.def(nb::self | nb::self);
+            vec.def(nb::self | value_type());
+            vec.def(value_type() | nb::self);
+            vec.def(nb::self & nb::self);
+            vec.def(nb::self & value_type());
+            vec.def(value_type() & nb::self);
+            vec.def(nb::self ^ nb::self);
+            vec.def(nb::self ^ value_type());
+            vec.def(value_type() ^ nb::self);
         }
     }
 }
