@@ -1,6 +1,7 @@
 #include "rhi/device.h"
 #include "rhi/swapchain.h"
 #include "rhi/resource.h"
+#include "rhi/program.h"
 
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/optional.h>
@@ -29,6 +30,9 @@ void register_rhi(nb::module_& m)
             });
         },
         "type"_a = DeviceType::automatic);
+    device.def("create_program", nb::overload_cast<const ProgramDesc&>(&Device::create_program), "desc"_a);
+    device.def("create_program", nb::overload_cast<std::filesystem::path, std::string>(&Device::create_program),
+        "path"_a, "entrypoint"_a);
 
     nb::class_<Swapchain> swapchain(m, "Swapchain");
 
@@ -53,6 +57,8 @@ void register_rhi(nb::module_& m)
 
     nb::class_<Resource> resource(m, "Resource");
     resource.def("device_address", &Resource::get_device_address);
+
+    nb::class_<Program> program(m, "Program");
 }
 
 } // namespace kali

@@ -13,6 +13,7 @@ target_sources(kali PRIVATE
     core/window.cpp
     core/logger.cpp
     rhi/device.cpp
+    rhi/pipeline.cpp
     rhi/program.cpp
     rhi/resource.cpp
     rhi/swapchain.cpp
