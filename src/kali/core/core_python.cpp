@@ -139,7 +139,11 @@ void register_core(nb::module_& m)
 
     nb::class_<Window> window(m, "Window");
     window.def(
-        nb::init<uint32_t, uint32_t, const std::string&>(), "width"_a = 1024, "height"_a = 1024, "title"_a = "kali");
+        nb::init<uint32_t, uint32_t, const std::string&>(),
+        "width"_a = 1024,
+        "height"_a = 1024,
+        "title"_a = "kali"
+    );
     window.def_prop_ro("width", &Window::get_width);
     window.def_prop_ro("height", &Window::get_height);
     window.def("resize", &Window::resize, "width"_a, "height"_a);

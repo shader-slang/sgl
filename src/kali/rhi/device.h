@@ -1,6 +1,7 @@
 #pragma once
 
 #include "fwd.h"
+#include "resource.h"
 
 #include "core/platform.h"
 #include "core/object.h"
@@ -34,11 +35,30 @@ public:
 
     ref<Swapchain> create_swapchain(const SwapchainDesc& desc, ref<Window> window);
 
-    ref<Buffer> create_buffer(const BufferDesc& desc, void* init_data = nullptr);
+    ref<Buffer> create_buffer(const BufferDesc& desc, const void* init_data = nullptr);
 
-    // ref<Buffer> create_raw_buffer();
-    // ref<Buffer> create_structured_buffer();
-    // ref<Buffer> create_typed_buffer();
+    ref<Buffer> create_raw_buffer(
+        size_t size,
+        ResourceUsage usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access,
+        CpuAccess cpu_access = CpuAccess::none,
+        const void* init_data = nullptr
+    );
+
+    ref<Buffer> create_typed_buffer(
+        Format format,
+        size_t element_count,
+        ResourceUsage usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access,
+        CpuAccess cpu_access = CpuAccess::none,
+        const void* init_data = nullptr
+    );
+
+    ref<Buffer> create_structured_buffer(
+        size_t struct_size,
+        size_t element_count,
+        ResourceUsage usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access,
+        CpuAccess cpu_access = CpuAccess::none,
+        const void* init_data = nullptr
+    );
 
     ref<Program> create_program(const ProgramDesc& desc);
 

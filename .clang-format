@@ -15,6 +15,12 @@ SpaceBeforeCpp11BracedList: false
 AlwaysBreakTemplateDeclarations: true
 AllowShortFunctionsOnASingleLine: Inline
 AllowShortEnumsOnASingleLine: true
+AllowAllArgumentsOnNextLine: false
+BinPackArguments: false
+AllowAllParametersOfDeclarationOnNextLine: false
+BinPackParameters: false
+ExperimentalAutoDetectBinPacking: false
+AlignAfterOpenBracket: BlockIndent
 BreakBeforeBraces: Custom
 BraceWrapping:
     AfterCaseLabel: false
@@ -31,3 +37,8 @@ BraceWrapping:
     BeforeLambdaBody: true
     BeforeWhile: false
     SplitEmptyRecord: false
+
+AlignTrailingComments: true
+ReflowComments: true
+CommentPragmas: '^\\.+'
+PenaltyBreakComment: 0

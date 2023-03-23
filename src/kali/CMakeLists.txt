@@ -12,13 +12,26 @@ target_sources(kali PRIVATE
     core/version.cpp
     core/window.cpp
     core/logger.cpp
+    rhi/command.cpp
     rhi/device.cpp
+    rhi/formats.cpp
     rhi/pipeline.cpp
     rhi/program.cpp
     rhi/resource.cpp
     rhi/swapchain.cpp
 )
-target_compile_definitions(kali PRIVATE KALI_DLL)
+target_compile_definitions(kali
+    PRIVATE
+        KALI_DLL
+    PUBLIC
+        NOMINMAX
+)
+
+target_link_libraries(kali PRIVATE git_version glfw PUBLIC fmt slang slang-gfx)
+
+if(KALI_WINDOWS)
+    target_link_libraries(kali PRIVATE Dbghelp)
+endif()
 
 if(MSVC)
     target_compile_options(kali PUBLIC /DEBUG)
@@ -26,11 +39,6 @@ if(MSVC)
     target_compile_options(kali PUBLIC /wd4251)
 endif()
 
-target_link_libraries(kali PRIVATE git_version glfw PUBLIC fmt slang slang-gfx)
-
-if(KALI_WINDOWS)
-    target_link_libraries(kali PRIVATE Dbghelp)
-endif()
 
 set_target_properties(kali PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${KALI_RUNTIME_OUTPUT_DIRECTORY}

@@ -62,7 +62,9 @@ public:
         : m_ptr(static_cast<T2*>(r.get()))
     {
         static_assert(
-            std::is_convertible_v<T2*, T*>, "Cannot create reference to object from another unconvertible reference.");
+            std::is_convertible_v<T2*, T*>,
+            "Cannot create reference to object from another unconvertible reference."
+        );
         if (m_ptr)
             static_cast<Object*>(m_ptr)->inc_ref();
     }

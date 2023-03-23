@@ -56,7 +56,8 @@ struct vector : public vector_storage<T, N> {
     using storage = vector_storage<T, N>;
     static_assert(
         std::disjunction_v<std::is_same<T, bool>, std::is_same<T, float>, std::is_same<T, int>, std::is_same<T, uint>>,
-        "Invalid vector type");
+        "Invalid vector type"
+    );
     static_assert(N == 1 || N == 2 || N == 3 || N == 4, "Invalid vector dimension");
     using storage::vector_storage;
     [[nodiscard]] constexpr T& operator[](size_t index) noexcept { return (&(this->x))[index]; }

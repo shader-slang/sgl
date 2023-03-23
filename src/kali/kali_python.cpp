@@ -12,4 +12,3 @@ NB_MODULE(kali_python, m)
     kali::register_core(m);
     kali::register_rhi(m);
 }
-

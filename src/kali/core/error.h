@@ -52,7 +52,10 @@ protected:
 #define KALI_THROW(exc)                                                                                                \
     {                                                                                                                  \
         KALI_ERROR(                                                                                                    \
-            "Throwing exception: {}\n\nStacktrace:\n{}", exc.what(), kali::format_stacktrace(kali::backtrace()));      \
+            "Throwing exception: {}\n\nStacktrace:\n{}",                                                               \
+            exc.what(),                                                                                                \
+            kali::format_stacktrace(kali::backtrace())                                                                 \
+        );                                                                                                             \
         throw exc;                                                                                                     \
     }
 

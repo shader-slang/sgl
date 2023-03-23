@@ -28,7 +28,8 @@ Swapchain::Swapchain(const SwapchainDesc& desc, WindowHandle window_handle, ref<
 #endif
 
     if (SLANG_FAILED(
-            m_device->get_gfx_device()->createSwapchain(gfx_desc, gfx_window_handle, m_gfx_swapchain.writeRef())))
+            m_device->get_gfx_device()->createSwapchain(gfx_desc, gfx_window_handle, m_gfx_swapchain.writeRef())
+        ))
         KALI_THROW(Exception("Failed to create swapchain!"));
 }
 
