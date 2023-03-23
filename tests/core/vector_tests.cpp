@@ -1,4 +1,4 @@
-#include <doctest.h>
+#include "testing.h"
 #include "core/types.h"
 #include "core/vector_ops.h"
 

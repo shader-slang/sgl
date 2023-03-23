@@ -1,4 +1,4 @@
-#include <doctest.h>
+#include "testing.h"
 #include "core/object.h"
 
 using namespace kali;
