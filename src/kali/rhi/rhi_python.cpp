@@ -101,6 +101,11 @@ void register_rhi(nb::module_& m)
     nb::class_<Resource> resource(m, "Resource");
     resource.def("device_address", &Resource::get_device_address);
 
+    nb::class_<Buffer> buffer(m, "Buffer");
+    buffer.def_prop_ro("size", &Buffer::get_size);
+    buffer.def_prop_ro("struct_size", &Buffer::get_struct_size);
+    buffer.def_prop_ro("format", &Buffer::get_format);
+
     nb::class_<Program> program(m, "Program");
 }
 

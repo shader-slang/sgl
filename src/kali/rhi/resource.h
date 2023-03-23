@@ -125,15 +125,6 @@ struct ResourceViewRange {
 using MipLevel = uint32_t;
 using ArraySlice = uint32_t;
 
-struct ResourceDesc {
-    ResourceType type{ResourceType::unknown};
-    ResourceState default_state{};
-    // ResourceStateSet allowed_states{};
-    MemoryType memory_type{MemoryType::device_local};
-    // bool shared
-    // existing handle
-};
-
 class KALI_API Resource : public Object {
 public:
     virtual ~Resource();
@@ -194,7 +185,6 @@ struct BufferDesc {
     BufferDesc& set_format(Format format_) { format = format_; return *this; }
     // clang-format on
 
-
     // bool shared
     // existing handle
 };
@@ -205,7 +195,9 @@ public:
 
     const BufferDesc& get_desc() const { return m_desc; }
 
-    size_t get_size() const { return 0; }
+    size_t get_size() const { return m_desc.size; }
+    size_t get_struct_size() const { return m_desc.struct_size; }
+    Format get_format() const { return m_desc.format; }
 
     DeviceAddress get_gpu_address_offset() const { return 0; }
 
@@ -228,7 +220,7 @@ private:
     Slang::ComPtr<gfx::IBufferResource> m_gfx_buffer;
 };
 
-struct TextureDesc : ResourceDesc { };
+struct TextureDesc { };
 
 class KALI_API Texture : public Resource {
 public:

@@ -132,6 +132,8 @@ Buffer::Buffer(const BufferDesc& desc, const void* init_data, ref<Device> device
 
 void* Buffer::map(std::optional<MemoryRange> read_range)
 {
+    KALI_ASSERT(m_desc.cpu_access != CpuAccess::none);
+
     gfx::MemoryRange gfx_read_range;
     if (read_range)
         gfx_read_range = get_gfx_memory_range(*read_range);
@@ -142,6 +144,8 @@ void* Buffer::map(std::optional<MemoryRange> read_range)
 
 void Buffer::unmap(std::optional<MemoryRange> write_range)
 {
+    KALI_ASSERT(m_desc.cpu_access != CpuAccess::none);
+
     gfx::MemoryRange gfx_write_range;
     if (write_range)
         gfx_write_range = get_gfx_memory_range(*write_range);

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/platform.h"
+
 #include <slang-gfx.h>
 
 namespace kali {
@@ -106,6 +108,6 @@ enum class Format : uint32_t {
     bc7_unorm_srgb,
 };
 
-gfx::Format get_gfx_format(Format format);
+KALI_API gfx::Format get_gfx_format(Format format);
 
 }; // namespace kali
