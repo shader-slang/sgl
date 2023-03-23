@@ -26,6 +26,7 @@ enum class DeviceType {
 
 struct DeviceDesc {
     DeviceType type{DeviceType::automatic};
+    bool enable_debug_layers{false};
 };
 
 class KALI_API Device : public Object {
@@ -70,6 +71,7 @@ public:
     gfx::ICommandQueue* get_gfx_queue() const { return m_gfx_queue.get(); }
 
 private:
+    DeviceDesc m_desc;
     Slang::ComPtr<gfx::IDevice> m_gfx_device;
     Slang::ComPtr<gfx::ICommandQueue> m_gfx_queue;
     Slang::ComPtr<slang::IGlobalSession> m_slang_session;

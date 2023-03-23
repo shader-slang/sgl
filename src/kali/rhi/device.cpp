@@ -9,6 +9,37 @@
 
 namespace kali {
 
+class DebugLogger : public gfx::IDebugCallback {
+public:
+    virtual SLANG_NO_THROW void SLANG_MCALL
+    handleMessage(gfx::DebugMessageType type, gfx::DebugMessageSource source, const char* message)
+    {
+        const char* source_str = "";
+        switch (source) {
+        case gfx::DebugMessageSource::Layer:
+            source_str = "Layer";
+        case gfx::DebugMessageSource::Driver:
+            source_str = "Driver";
+        case gfx::DebugMessageSource::Slang:
+            source_str = "Slang";
+        }
+        switch (type) {
+        case gfx::DebugMessageType::Info:
+            KALI_INFO("{}: {}", source_str, message);
+            break;
+        case gfx::DebugMessageType::Warning:
+            KALI_WARN("{}: {}", source_str, message);
+            break;
+        case gfx::DebugMessageType::Error:
+            KALI_ERROR("{}: {}", source_str, message);
+            break;
+        }
+    }
+};
+
+static DebugLogger s_debug_logger;
+
+
 inline gfx::DeviceType get_gfx_device_type(DeviceType device_type)
 {
     switch (device_type) {
@@ -27,9 +58,15 @@ inline gfx::DeviceType get_gfx_device_type(DeviceType device_type)
 }
 
 Device::Device(const DeviceDesc& desc)
+    : m_desc(desc)
 {
+    if (m_desc.enable_debug_layers) {
+        gfx::gfxEnableDebugLayer();
+        gfx::gfxSetDebugCallback(&s_debug_logger);
+    }
+
     gfx::IDevice::Desc gfx_desc{
-        .deviceType = get_gfx_device_type(desc.type),
+        .deviceType = get_gfx_device_type(m_desc.type),
     };
     if (SLANG_FAILED(gfx::gfxCreateDevice(&gfx_desc, m_gfx_device.writeRef())))
         KALI_THROW(Exception("Failed to create device!"));
