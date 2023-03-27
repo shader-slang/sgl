@@ -16,6 +16,8 @@ struct vector_storage<T, 1> {
     T x;
     // clang-format off
     constexpr vector_storage(T x = {}) noexcept : x{x} {}
+    template<typename U>
+    constexpr vector_storage(U x) noexcept : x{T(x)} {}
     // clang-format on
 };
 
@@ -25,6 +27,10 @@ struct vector_storage<T, 2> {
     // clang-format off
     explicit constexpr vector_storage(T s = {}) noexcept : x{s}, y{s} {}
     constexpr vector_storage(T x, T y) noexcept : x{x}, y{y} {}
+    template<typename U>
+    constexpr vector_storage(U s) noexcept : x{T(s)}, y{T(s)} {}
+    template<typename U>
+    constexpr vector_storage(U x, U y) noexcept : x{T(x)}, y{T(y)} {}
     // clang-format on
 #include "swizzle_2.inl.h"
 };
@@ -35,6 +41,10 @@ struct vector_storage<T, 3> {
     // clang-format off
     explicit constexpr vector_storage(T s = {}) noexcept : x{s}, y{s}, z{s} {}
     constexpr vector_storage(T x, T y, T z) noexcept : x{x}, y{y}, z{z} {}
+    template<typename U>
+    constexpr vector_storage(U s) noexcept : x{T(s)}, y{T(s)}, z{T(s)} {}
+    template<typename U>
+    constexpr vector_storage(U x, U y, U z) noexcept : x{T(x)}, y{T(y)}, z{T(z)} {}
     // clang-format on
 #include "swizzle_3.inl.h"
 };
@@ -45,6 +55,10 @@ struct vector_storage<T, 4> {
     // clang-format off
     explicit constexpr vector_storage(T s = {}) noexcept : x{s}, y{s}, z{s}, w{s} {}
     constexpr vector_storage(T x, T y, T z, T w) noexcept : x{x}, y{y}, z{z}, w{w} {}
+    template<typename U>
+    constexpr vector_storage(U s) noexcept : x{T(s)}, y{T(s)}, z{T(s)}, w{T(s)} {}
+    template<typename U>
+    constexpr vector_storage(U x, U y, U z, U w) noexcept : x{T(x)}, y{T(y)}, z{T(z)}, w{T(w)} {}
     // clang-format on
 #include "swizzle_4.inl.h"
 };

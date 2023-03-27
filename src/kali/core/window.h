@@ -2,9 +2,11 @@
 
 #include "platform.h"
 #include "object.h"
+#include "input.h"
 
-#include <string>
 #include <functional>
+#include <span>
+#include <string>
 #include <cstdint>
 
 // GLFW forward declarations
@@ -34,18 +36,46 @@ public:
     // events
 
     using ResizeCallback = std::function<void(uint32_t /* width */, uint32_t /* height */)>;
+    using KeyboardEventCallback = std::function<void(const KeyboardEvent& /* event */)>;
+    using MouseEventCallback = std::function<void(const MouseEvent& /* event */)>;
+    using GamepadEventCallback = std::function<void(const GamepadEvent& /* event */)>;
+    using GamepadStateCallback = std::function<void(const GamepadState& /* state */)>;
+    using DropFilesCallback = std::function<void(const std::span<const char*> /* files */)>;
 
     void set_on_resize(ResizeCallback on_resize) { m_on_resize = on_resize; }
+    void set_on_keyboard_event(KeyboardEventCallback on_keyboard_event) { m_on_keyboard_event = on_keyboard_event; }
+    void set_on_mouse_event(MouseEventCallback on_mouse_event) { m_on_mouse_event = on_mouse_event; }
+    void set_on_gamepad_event(GamepadEventCallback on_gamepad_event) { m_on_gamepad_event = on_gamepad_event; }
+    void set_on_gamepad_state(GamepadStateCallback on_gamepad_state) { m_on_gamepad_state = on_gamepad_state; }
+    void set_on_drop_files(DropFilesCallback on_drop_files) { m_on_drop_files = on_drop_files; }
 
 private:
+    void poll_gamepad_input();
+
     void handle_window_size(uint32_t width, uint32_t height);
+    void handle_keyboard_event(const KeyboardEvent& event);
+    void handle_mouse_event(const MouseEvent& event);
+    void handle_gamepad_event(const GamepadEvent& event);
+    void handle_drop_files(const std::span<const char*> files);
 
     uint32_t m_width;
     uint32_t m_height;
     std::string m_title;
     GLFWwindow* m_window;
 
+    float2 m_mouse_pos{0.f, 0.f};
+    KeyModifierFlags m_mods;
+
+    static constexpr int INVALID_GAMEPAD_ID = -1;
+    int m_gamepad_id{INVALID_GAMEPAD_ID};
+    GamepadState m_gamepad_prev_state;
+
     ResizeCallback m_on_resize;
+    KeyboardEventCallback m_on_keyboard_event;
+    MouseEventCallback m_on_mouse_event;
+    GamepadEventCallback m_on_gamepad_event;
+    GamepadStateCallback m_on_gamepad_state;
+    DropFilesCallback m_on_drop_files;
 
     friend struct EventHandlers;
 };
