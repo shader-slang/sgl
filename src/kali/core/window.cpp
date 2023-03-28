@@ -6,6 +6,8 @@
 #if KALI_WINDOWS
 #define GLFW_EXPOSE_NATIVE_WIN32
 #elif KALI_LINUX
+#include <X11/Xlib.h>
+#include <X11/extensions/Xrandr.h>
 #define GLFW_EXPOSE_NATIVE_X11
 #endif
 #define GLFW_NATIVE_INCLUDE_NONE
@@ -366,7 +368,7 @@ WindowHandle Window::get_window_handle() const
 #if KALI_WINDOWS
     handle = glfwGetWin32Window(m_window);
 #elif KALI_LINUX
-    handle.xdisplay = glfwGetX11Display(m_window);
+    handle.xdisplay = glfwGetX11Display();
     handle.xwindow = glfwGetX11Window(m_window);
 #endif
     return handle;

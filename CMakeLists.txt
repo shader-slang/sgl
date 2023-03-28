@@ -39,6 +39,8 @@ endif()
 # Enable folders (for Visual Studio).
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 # Setup available build configurations.
 if(NOT SETUP_CONFIGURATION_TYPES)
     set(SETUP_CONFIGURATION_TYPES 1)

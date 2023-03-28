@@ -2,6 +2,8 @@
 
 #include "scalar_types.h"
 
+#include <cstdlib>
+
 namespace kali {
 
 // ----------------------------------------------------------------------------

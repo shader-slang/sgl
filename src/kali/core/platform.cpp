@@ -5,7 +5,7 @@
 #include <Windows.h>
 #include <DbgHelp.h>
 #elif KALI_LINUX
-#include <sstream>
+#include <regex>
 #include <execinfo.h>
 #include <cxxabi.h>
 #endif
@@ -61,21 +61,29 @@ std::vector<StackTraceItem> backtrace(size_t skip_frames)
         return demangled;
     };
 
-    void* trace[100];
-    int count = ::backtrace(trace, 100);
+    void* raw_trace[100];
+    int count = ::backtrace(raw_trace, 100);
     if (skip_frames >= count)
         return {};
 
-    char** info = ::backtrace_symbols(trace, count);
+    char** info = ::backtrace_symbols(raw_trace, count);
+
+    std::regex re("(\\S+)\\((\\S*)\\+(0x[0-9a-f]*)\\)\\s+\\[(0x[0-9a-f]+)\\].*");
 
     std::vector<StackTraceItem> trace;
     trace.reserve(count - skip_frames);
     for (size_t i = skip_frames; i < count; i++) {
-        std::istringstream iss{info[i]};
-        char plus = '+';
+        std::cmatch m;
         StackTraceItem item{};
-        iss >> item.module >> std::hex >> item.address >> item.symbol >> plus >> std::dec >> item.offset;
-        item.symbol = demangle(item.symbol.c_str());
+        if (std::regex_match(info[i], m, re)) {
+            item.module = m[1];
+            item.symbol = m[2];
+            item.symbol = demangle(item.symbol.c_str());
+            item.offset = std::stoul(m[3], nullptr, 16);
+            item.address = std::stoul(m[4], nullptr, 16);
+        } else {
+            item.symbol = info[i];
+        }
         trace.emplace_back(std::move(item));
     }
     free(info);

@@ -36,19 +36,19 @@ namespace detail {
     }
 } // namespace detail
 
-#define KALI_DEBUG(fmt, ...) ::kali::detail::log(LogLevel::debug, FMT_STRING(fmt), __VA_ARGS__)
-#define KALI_INFO(fmt, ...) ::kali::detail::log(LogLevel::info, FMT_STRING(fmt), __VA_ARGS__)
-#define KALI_WARN(fmt, ...) ::kali::detail::log(LogLevel::warn, FMT_STRING(fmt), __VA_ARGS__)
-#define KALI_ERROR(fmt, ...) ::kali::detail::log(LogLevel::error, FMT_STRING(fmt), __VA_ARGS__)
+#define KALI_DEBUG(fmt, ...) ::kali::detail::log(LogLevel::debug, FMT_STRING(fmt), ##__VA_ARGS__)
+#define KALI_INFO(fmt, ...) ::kali::detail::log(LogLevel::info, FMT_STRING(fmt), ##__VA_ARGS__)
+#define KALI_WARN(fmt, ...) ::kali::detail::log(LogLevel::warn, FMT_STRING(fmt), ##__VA_ARGS__)
+#define KALI_ERROR(fmt, ...) ::kali::detail::log(LogLevel::error, FMT_STRING(fmt), ##__VA_ARGS__)
 
 #define KALI_DEBUG_WITH_LOC(fmt, ...)                                                                                  \
-    ::kali::detail::log(LogLevel::debug, FMT_STRING(fmt " [{}:{}]"), __VA_ARGS__, __FILE__, __LINE__)
+    ::kali::detail::log(LogLevel::debug, FMT_STRING(fmt " [{}:{}]"), ##__VA_ARGS__, __FILE__, __LINE__)
 #define KALI_INFO_WITH_LOC(fmt, ...)                                                                                   \
-    ::kali::detail::log(LogLevel::info, FMT_STRING(fmt " [{}:{}]"), __VA_ARGS__, __FILE__, __LINE__)
+    ::kali::detail::log(LogLevel::info, FMT_STRING(fmt " [{}:{}]"), ##__VA_ARGS__, __FILE__, __LINE__)
 #define KALI_WARN_WITH_LOC(fmt, ...)                                                                                   \
-    ::kali::detail::log(LogLevel::warn, FMT_STRING(fmt " [{}:{}]"), __VA_ARGS__, __FILE__, __LINE__)
+    ::kali::detail::log(LogLevel::warn, FMT_STRING(fmt " [{}:{}]"), ##__VA_ARGS__, __FILE__, __LINE__)
 #define KALI_ERROR_WITH_LOC(fmt, ...)                                                                                  \
-    ::kali::detail::log(LogLevel::error, FMT_STRING(fmt " [{}:{}]"), __VA_ARGS__, __FILE__, __LINE__)
+    ::kali::detail::log(LogLevel::error, FMT_STRING(fmt " [{}:{}]"), ##__VA_ARGS__, __FILE__, __LINE__)
 
 // inline LOG(LogLevel)
 
