@@ -1,4 +1,4 @@
 build/
-external/slang/
-tools/*/
+external/slang
+tools/*
 !tools/packman/
