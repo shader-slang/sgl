@@ -1,4 +1,5 @@
 #include "window.h"
+#include "assert.h"
 #include "error.h"
 
 #include <GLFW/glfw3.h>
@@ -394,6 +395,17 @@ void Window::main_loop()
         poll_gamepad_input();
         glfwSwapBuffers(m_window);
     }
+}
+
+void Window::set_clipboard(const std::string& text)
+{
+    glfwSetClipboardString(m_window, text.c_str());
+}
+
+std::optional<std::string> Window::get_clipboard() const
+{
+    const char* text = glfwGetClipboardString(m_window);
+    return text ? std::optional<std::string>(text) : std::nullopt;
 }
 
 void Window::poll_gamepad_input()

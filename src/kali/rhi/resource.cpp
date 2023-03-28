@@ -2,6 +2,7 @@
 #include "device.h"
 #include "helpers.h"
 
+#include "core/assert.h"
 #include "core/error.h"
 
 namespace kali {

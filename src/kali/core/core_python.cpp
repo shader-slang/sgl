@@ -127,14 +127,14 @@ void register_core(nb::module_& m)
 
     nb::exception<Exception>(m, "Exception", PyExc_RuntimeError);
 
-    nb::class_<Version> version(m, "Version");
-    version.def_ro("minor", &Version::minor);
-    version.def_ro("major", &Version::major);
-    version.def_ro("git_commit", &Version::git_commit);
-    version.def_ro("git_branch", &Version::git_branch);
-    version.def_ro("git_dirty", &Version::git_dirty);
-    version.def_ro("short_tag", &Version::short_tag);
-    version.def_ro("long_tag", &Version::long_tag);
+    nb::class_<Version>(m, "Version")
+        .def_ro("minor", &Version::minor)
+        .def_ro("major", &Version::major)
+        .def_ro("git_commit", &Version::git_commit)
+        .def_ro("git_branch", &Version::git_branch)
+        .def_ro("git_dirty", &Version::git_dirty)
+        .def_ro("short_tag", &Version::short_tag)
+        .def_ro("long_tag", &Version::long_tag);
     m.def("get_version", []() { return get_version(); });
 
     nb::class_<Window> window(m, "Window");
@@ -149,6 +149,15 @@ void register_core(nb::module_& m)
     window.def("resize", &Window::resize, "width"_a, "height"_a);
     window.def_prop_rw("title", &Window::get_title, &Window::set_title);
     window.def("main_loop", &Window::main_loop);
+    window.def("set_clipboard", &Window::set_clipboard, "text"_a);
+    window.def("get_clipboard", &Window::get_clipboard);
+
+    window.def_prop_rw("on_resize", &Window::get_on_resize, &Window::set_on_resize);
+    window.def_prop_rw("on_keyboard_event", &Window::get_on_keyboard_event, &Window::set_on_keyboard_event);
+    window.def_prop_rw("on_mouse_event", &Window::get_on_mouse_event, &Window::set_on_mouse_event);
+    window.def_prop_rw("on_gamepad_event", &Window::get_on_gamepad_event, &Window::set_on_gamepad_event);
+    window.def_prop_rw("on_gamepad_state", &Window::get_on_gamepad_state, &Window::set_on_gamepad_state);
+    window.def_prop_rw("on_drop_files", &Window::get_on_drop_files, &Window::set_on_drop_files);
 }
 
 } // namespace kali

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "platform.h"
+#include "enum.h"
 #include "vector_types.h"
 
 namespace kali {

@@ -1,6 +1,7 @@
 #include "swapchain.h"
 #include "device.h"
 
+#include "core/assert.h"
 #include "core/error.h"
 #include "core/window.h"
 

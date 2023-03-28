@@ -4,10 +4,11 @@
 #include "object.h"
 #include "input.h"
 
+#include <cstdint>
 #include <functional>
+#include <optional>
 #include <span>
 #include <string>
-#include <cstdint>
 
 // GLFW forward declarations
 struct GLFWwindow;
@@ -33,6 +34,11 @@ public:
 
     void main_loop();
 
+    // clipboard
+
+    void set_clipboard(const std::string& text);
+    std::optional<std::string> get_clipboard() const;
+
     // events
 
     using ResizeCallback = std::function<void(uint32_t /* width */, uint32_t /* height */)>;
@@ -43,11 +49,17 @@ public:
     using DropFilesCallback = std::function<void(const std::span<const char*> /* files */)>;
 
     void set_on_resize(ResizeCallback on_resize) { m_on_resize = on_resize; }
+    ResizeCallback get_on_resize() const { return m_on_resize; }
     void set_on_keyboard_event(KeyboardEventCallback on_keyboard_event) { m_on_keyboard_event = on_keyboard_event; }
+    KeyboardEventCallback get_on_keyboard_event() const { return m_on_keyboard_event; }
     void set_on_mouse_event(MouseEventCallback on_mouse_event) { m_on_mouse_event = on_mouse_event; }
+    MouseEventCallback get_on_mouse_event() const { return m_on_mouse_event; }
     void set_on_gamepad_event(GamepadEventCallback on_gamepad_event) { m_on_gamepad_event = on_gamepad_event; }
+    GamepadEventCallback get_on_gamepad_event() const { return m_on_gamepad_event; }
     void set_on_gamepad_state(GamepadStateCallback on_gamepad_state) { m_on_gamepad_state = on_gamepad_state; }
+    GamepadStateCallback get_on_gamepad_state() const { return m_on_gamepad_state; }
     void set_on_drop_files(DropFilesCallback on_drop_files) { m_on_drop_files = on_drop_files; }
+    DropFilesCallback get_on_drop_files() const { return m_on_drop_files; }
 
 private:
     void poll_gamepad_input();

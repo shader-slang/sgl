@@ -1,6 +1,6 @@
 #include "formats.h"
 
-#include "core/error.h"
+#include "core/assert.h"
 
 namespace kali {
 

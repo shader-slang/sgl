@@ -3,9 +3,10 @@
 #include "formats.h"
 #include "helpers.h"
 
+#include "core/assert.h"
 #include "core/error.h"
-#include "core/vector_ops.h"
 #include "core/maths.h"
+#include "core/vector_ops.h"
 
 namespace kali {
 
