@@ -1,5 +1,7 @@
 #include "testing.h"
 
+#include "core/platform.h"
+
 #include "rhi/device.h"
 
 #include <map>
@@ -28,7 +30,11 @@ static std::map<DeviceType, ref<Device>> s_cached_devices;
 
 void run_gpu_test(void (*func)(GpuTestContext&))
 {
+#if KALI_WINDOWS
     std::vector<DeviceType> device_types{DeviceType::d3d12, DeviceType::vulkan, DeviceType::cpu};
+#elif KALI_LINUX
+    std::vector<DeviceType> device_types{DeviceType::vulkan, DeviceType::cpu};
+#endif
 
     bool use_cached_device = true;
 
