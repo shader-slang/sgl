@@ -3,7 +3,9 @@ target_sources(kali_tests PRIVATE
     kali_tests.cpp
     testing.cpp
     core/maths_tests.cpp
+    core/memory_mapped_file_tests.cpp
     core/object_tests.cpp
+    core/string_utils_tests.cpp
     core/vector_tests.cpp
     rhi/device_tests.cpp
 )

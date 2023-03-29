@@ -7,11 +7,14 @@ target_compile_features(kali PUBLIC cxx_std_20)
 target_include_directories(kali PUBLIC .)
 target_sources(kali PRIVATE
     core/error.cpp
+    core/logger.cpp
+    core/memory_mapped_file.cpp
     core/object.cpp
     core/platform.cpp
+    core/string_utils.cpp
     core/version.cpp
     core/window.cpp
-    core/logger.cpp
+    imageio/imageio.cpp
     rhi/command.cpp
     rhi/device.cpp
     rhi/formats.cpp
@@ -27,7 +30,7 @@ target_compile_definitions(kali
         NOMINMAX
 )
 
-target_link_libraries(kali PRIVATE git_version glfw PUBLIC fmt slang slang-gfx)
+target_link_libraries(kali PRIVATE git_version glfw PUBLIC stb fmt slang slang-gfx)
 
 if(KALI_WINDOWS)
     target_link_libraries(kali PRIVATE Dbghelp)

@@ -21,6 +21,11 @@ set(GLFW_BUILD_DOCS OFF)
 set(GLFW_INSTALL OFF)
 add_subdirectory(glfw)
 
+# stb
+
+add_library(stb INTERFACE)
+target_include_directories(stb INTERFACE stb)
+
 # slang
 
 set(SLANG_DIR ${CMAKE_CURRENT_SOURCE_DIR}/slang)
