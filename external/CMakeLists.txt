@@ -21,6 +21,12 @@ set(GLFW_BUILD_DOCS OFF)
 set(GLFW_INSTALL OFF)
 add_subdirectory(glfw)
 
+# tinyexr
+
+add_library(tinyexr STATIC)
+target_sources(tinyexr PRIVATE tinyexr/miniz.c)
+target_include_directories(tinyexr PUBLIC tinyexr)
+
 # stb
 
 add_library(stb INTERFACE)
