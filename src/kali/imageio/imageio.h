@@ -18,6 +18,8 @@ enum class ComponentType {
     unknown,
     u8,
     u16,
+    u32,
+    f16,
     f32,
 };
 
@@ -39,6 +41,10 @@ struct ImageSpec {
         case ComponentType::u8:
             return 1;
         case ComponentType::u16:
+            return 2;
+        case ComponentType::u32:
+            return 4;
+        case ComponentType::f16:
             return 2;
         case ComponentType::f32:
             return 4;

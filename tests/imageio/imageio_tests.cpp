@@ -9,6 +9,10 @@ struct rgb8 {
     uint8_t r, g, b;
 };
 
+struct rgba_f32 {
+    float r, g, b, a;
+};
+
 template<typename T>
 struct TestImage {
     uint32_t w;
@@ -47,6 +51,15 @@ inline double pixel_diff(rgb8 p0, rgb8 p1)
     double g = std::max(p0.g, p1.g) - std::min(p0.g, p1.g);
     double b = std::max(p0.b, p1.b) - std::min(p0.b, p1.b);
     return std::max(r, std::max(g, b));
+}
+
+inline double pixel_diff(rgba_f32 p0, rgba_f32 p1)
+{
+    double r = std::max(p0.r, p1.r) - std::min(p0.r, p1.r);
+    double g = std::max(p0.g, p1.g) - std::min(p0.g, p1.g);
+    double b = std::max(p0.b, p1.b) - std::min(p0.b, p1.b);
+    double a = std::max(p0.a, p1.a) - std::min(p0.a, p1.a);
+    return std::max(r, std::max(g, std::max(b, a)));
 }
 
 template<typename T>
@@ -88,6 +101,36 @@ TEST_CASE("jpeg")
         CHECK_EQ(spec.component_type, ComponentType::u8);
 
         auto img2 = create_image<rgb8>(spec.width, spec.height);
+        CHECK(input->read_image(img2.data(), img.size()));
+
+        double diff = image_diff(img, img2);
+        CHECK_LE(diff, 1.0);
+    }
+}
+
+TEST_CASE("exr")
+{
+    auto img = create_checkerboard(128, 64, rgba_f32{0.1f, 0.3f, 0.5f, 1.0f}, rgba_f32{0.9f, 0.7f, 0.5f, 0.5f});
+
+    {
+        auto output = ImageOutput::open(
+            "test.exr",
+            {.width = img.w, .height = img.h, .component_count = 4, .component_type = ComponentType::f32}
+        );
+        REQUIRE(output);
+        CHECK(output->write_image(img.data(), img.size()));
+    }
+    {
+        auto input = ImageInput::open("test.exr");
+        REQUIRE(input);
+
+        const ImageSpec& spec = input->get_spec();
+        CHECK_EQ(spec.width, 128);
+        CHECK_EQ(spec.height, 64);
+        CHECK_EQ(spec.component_count, 4);
+        CHECK_EQ(spec.component_type, ComponentType::f32);
+
+        auto img2 = create_image<rgba_f32>(spec.width, spec.height);
         CHECK(input->read_image(img2.data(), img.size()));
 
         double diff = image_diff(img, img2);

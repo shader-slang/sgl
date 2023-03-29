@@ -30,7 +30,7 @@ target_compile_definitions(kali
         NOMINMAX
 )
 
-target_link_libraries(kali PRIVATE git_version glfw PUBLIC stb fmt slang slang-gfx)
+target_link_libraries(kali PRIVATE git_version glfw PUBLIC stb tinyexr fmt slang slang-gfx)
 
 if(KALI_WINDOWS)
     target_link_libraries(kali PRIVATE Dbghelp)

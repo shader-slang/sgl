@@ -28,6 +28,16 @@
 #pragma warning(pop)
 #endif
 
+#if KALI_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4706) // assignment within conditional expression
+#endif
+#define TINYEXR_IMPLEMENTATION
+#include <tinyexr.h>
+#if KALI_MSVC
+#pragma warning(pop)
+#endif
+
 namespace kali {
 
 // ----------------------------------------------------------------------------
@@ -55,8 +65,7 @@ public:
     virtual void close() { m_file.reset(); }
 
     virtual bool read_spec(const void* buffer, size_t len, ImageSpec& out_spec) = 0;
-    virtual bool read_image(void* buffer, size_t len) = 0;
-
+    virtual bool read_image(void* out_buffer, size_t out_len) = 0;
 
 protected:
     std::filesystem::path m_path;
@@ -70,6 +79,12 @@ public:
 
     virtual bool open(const std::filesystem::path& path, const ImageSpec& spec)
     {
+        KALI_ASSERT(!path.empty());
+        KALI_ASSERT(spec.width > 0);
+        KALI_ASSERT(spec.height > 0);
+        KALI_ASSERT(spec.component_count > 0);
+        KALI_ASSERT(spec.component_type != ComponentType::unknown);
+
         m_path = path;
         m_spec = spec;
         m_ofs.open(path, std::ios::binary);
@@ -97,17 +112,17 @@ class StbImageReader : public ImageReader {
 public:
     ~StbImageReader() { }
 
-    bool read_spec(const void* buffer, size_t len, ImageSpec& out_spec)
+    bool read_spec(const void* buffer_, size_t len_, ImageSpec& out_spec) override
     {
-        m_buffer = reinterpret_cast<const stbi_uc*>(buffer);
-        m_len = narrow_cast<int>(len);
+        const stbi_uc* buffer = reinterpret_cast<const stbi_uc*>(buffer_);
+        int len = narrow_cast<int>(len_);
 
         int width, height, component_count;
-        if (!stbi_info_from_memory(m_buffer, m_len, &width, &height, &component_count))
+        if (!stbi_info_from_memory(buffer, len, &width, &height, &component_count))
             return false;
 
-        bool is_hdr = stbi_is_hdr_from_memory(m_buffer, m_len);
-        bool is_16bit = stbi_is_16_bit_from_memory(m_buffer, m_len);
+        bool is_hdr = stbi_is_hdr_from_memory(buffer, len);
+        bool is_16bit = stbi_is_16_bit_from_memory(buffer, len);
 
         m_spec = ImageSpec{
             .width = narrow_cast<uint32_t>(width),
@@ -120,33 +135,34 @@ public:
         return true;
     }
 
-    bool read_image(void* buffer, size_t len) override
+    bool read_image(void* out_buffer, size_t out_len) override
     {
         KALI_ASSERT(m_spec.width > 0);
         KALI_ASSERT(m_spec.height > 0);
         KALI_ASSERT(m_spec.component_count > 0);
         KALI_ASSERT(m_spec.component_type != ComponentType::unknown);
 
+        const stbi_uc* buffer = reinterpret_cast<const stbi_uc*>(m_file->data());
+        int len = narrow_cast<int>(m_file->size());
+
         int width, height, component_count;
         uint8_t* pixels{nullptr};
         size_t read_len{0};
         switch (m_spec.component_type) {
         case ComponentType::u8:
-            pixels = reinterpret_cast<uint8_t*>(
-                stbi_load_from_memory(m_buffer, m_len, &width, &height, &component_count, 0)
-            );
+            pixels
+                = reinterpret_cast<uint8_t*>(stbi_load_from_memory(buffer, len, &width, &height, &component_count, 0));
             read_len = width * height * component_count;
             break;
         case ComponentType::u16:
-            pixels = reinterpret_cast<uint8_t*>(
-                stbi_load_16_from_memory(m_buffer, m_len, &width, &height, &component_count, 0)
-            );
+            pixels
+                = reinterpret_cast<uint8_t*>(stbi_load_16_from_memory(buffer, len, &width, &height, &component_count, 0)
+                );
             read_len = width * height * component_count * 2;
             break;
         case ComponentType::f32:
-            pixels = reinterpret_cast<uint8_t*>(
-                stbi_loadf_from_memory(m_buffer, m_len, &width, &height, &component_count, 0)
-            );
+            pixels
+                = reinterpret_cast<uint8_t*>(stbi_loadf_from_memory(buffer, len, &width, &height, &component_count, 0));
             read_len = width * height * component_count * 4;
             break;
         }
@@ -155,19 +171,15 @@ public:
             return false;
 
         size_t expected_len = m_spec.width * m_spec.height * m_spec.component_count * m_spec.get_component_size();
-        KALI_ASSERT_EQ(len, expected_len);
+        KALI_ASSERT_EQ(out_len, expected_len);
         KALI_ASSERT_EQ(read_len, expected_len);
 
-        std::memcpy(buffer, pixels, len);
+        std::memcpy(out_buffer, pixels, out_len);
 
         stbi_image_free(pixels);
 
         return true;
     }
-
-private:
-    const stbi_uc* m_buffer{nullptr};
-    int m_len{0};
 };
 
 // ----------------------------------------------------------------------------
@@ -180,11 +192,6 @@ public:
 
     bool open(const std::filesystem::path& path, const ImageSpec& spec) override
     {
-        KALI_ASSERT(spec.width > 0);
-        KALI_ASSERT(spec.height > 0);
-        KALI_ASSERT(spec.component_count > 0);
-        KALI_ASSERT(spec.component_type != ComponentType::unknown);
-
         std::string ext = to_lower(path.extension().string());
         if (ext == ".png") {
             m_file_format = FileFormat::png;
@@ -261,6 +268,182 @@ protected:
     enum class FileFormat { unknown, png, jpg, bmp, tga, hdr };
     FileFormat m_file_format{FileFormat::unknown};
 };
+
+// ----------------------------------------------------------------------------
+// TinyExrImageReader
+// ----------------------------------------------------------------------------
+
+class TinyExrImageReader : public ImageReader {
+public:
+    ~TinyExrImageReader() { }
+
+    bool read_spec(const void* buffer, size_t len, ImageSpec& out_spec) override
+    {
+        const uint8_t* memory = reinterpret_cast<const uint8_t*>(buffer);
+
+        EXRVersion exr_version;
+        if (ParseEXRVersionFromMemory(&exr_version, memory, len) != TINYEXR_SUCCESS)
+            return false;
+
+        if (exr_version.multipart)
+            return false;
+
+        EXRHeader exr_header;
+        const char* err;
+        if (ParseEXRHeaderFromMemory(&exr_header, &exr_version, memory, len, &err) != TINYEXR_SUCCESS) {
+            FreeEXRErrorMessage(err);
+            return false;
+        }
+
+        EXRImage exr_image;
+        InitEXRImage(&exr_image);
+
+        if (LoadEXRImageFromMemory(&exr_image, &exr_header, memory, len, &err) != TINYEXR_SUCCESS) {
+            FreeEXRHeader(&exr_header);
+            FreeEXRErrorMessage(err);
+            return false;
+        }
+
+        // exr_image.
+
+        FreeEXRImage(&exr_image);
+        FreeEXRHeader(&exr_header);
+
+        KALI_UNUSED(out_spec);
+        return false;
+    }
+
+    bool read_image(void* out_buffer, size_t out_len) override
+    {
+        KALI_UNUSED(out_buffer);
+        KALI_UNUSED(out_len);
+        return false;
+    }
+
+private:
+};
+
+// ----------------------------------------------------------------------------
+// TinyExrImageWriter
+// ----------------------------------------------------------------------------
+
+class TinyExrImageWriter : public ImageWriter {
+public:
+    ~TinyExrImageWriter() { }
+
+    bool open(const std::filesystem::path& path, const ImageSpec& spec) override
+    {
+        if (spec.component_count > 4)
+            return false;
+        if (spec.component_type != ComponentType::u32 && spec.component_type != ComponentType::f32
+            && spec.component_type != ComponentType::f16)
+            return false;
+
+        return ImageWriter::open(path, spec);
+    }
+
+    bool write_image(const void* buffer, size_t len) override
+    {
+        KALI_ASSERT(m_spec.component_count <= 4);
+
+        int pixel_type;
+        switch (m_spec.component_type) {
+        case ComponentType::u32:
+            pixel_type = TINYEXR_PIXELTYPE_UINT;
+            break;
+        case ComponentType::f32:
+            pixel_type = TINYEXR_PIXELTYPE_FLOAT;
+            break;
+        case ComponentType::f16:
+            pixel_type = TINYEXR_PIXELTYPE_HALF;
+            break;
+        default:
+            KALI_ASSERT(false);
+            break;
+        }
+
+        KALI_UNUSED(buffer);
+        KALI_UNUSED(len);
+
+        // Split image into channels.
+        std::vector<std::unique_ptr<uint8_t[]>> channel_data(m_spec.component_count);
+        std::vector<uint8_t*> channel_ptrs(m_spec.component_count);
+        std::vector<int> pixel_types(m_spec.component_count);
+        std::vector<int> requested_pixel_types(m_spec.component_count);
+        for (uint32_t i = 0; i < m_spec.component_count; ++i) {
+            channel_data[i].reset(new uint8_t[m_spec.width * m_spec.height * m_spec.get_component_size()]);
+            channel_ptrs[m_spec.component_count - i - 1] = channel_data[i].get();
+            pixel_types[i] = pixel_type;
+            requested_pixel_types[i] = pixel_type;
+        }
+
+        // Convert interleaved input data into channel data.
+        switch (m_spec.component_type) {
+        case ComponentType::u32:
+        case ComponentType::f32:
+            for (uint32_t y = 0; y < m_spec.height; ++y) {
+                for (uint32_t x = 0; x < m_spec.width; ++x) {
+                    const uint32_t* pixel = reinterpret_cast<const uint32_t*>(buffer) + (y * m_spec.width + x) * m_spec.component_count;
+                    for (uint32_t i = 0; i < m_spec.component_count; ++i) {
+                        uint32_t* channel = reinterpret_cast<uint32_t*>(channel_data[i].get());
+                        channel[y * m_spec.width + x] = pixel[i];
+                    }
+                }
+            }
+            break;
+        case ComponentType::f16:
+            for (uint32_t y = 0; y < m_spec.height; ++y) {
+                for (uint32_t x = 0; x < m_spec.width; ++x) {
+                    const uint16_t* pixel = reinterpret_cast<const uint16_t*>(buffer) + (y * m_spec.width + x) * m_spec.component_count;
+                    for (uint32_t i = 0; i < m_spec.component_count; ++i) {
+                        uint16_t* channel = reinterpret_cast<uint16_t*>(channel_data[i].get());
+                        channel[y * m_spec.width + x] = pixel[i];
+                    }
+                }
+            }
+            break;
+        }
+
+        // Setup channel infos.
+        std::vector<EXRChannelInfo> channel_infos(m_spec.component_count);
+        const char channel_names[] = "RGBA";
+        for (uint32_t i = 0; i < m_spec.component_count; ++i) {
+            auto& info = channel_infos[i];
+            info.name[0] = channel_names[m_spec.component_count - i - 1];
+            info.name[1] = '\0';
+        }
+
+        EXRHeader exr_header;
+        InitEXRHeader(&exr_header);
+
+        exr_header.num_channels = m_spec.component_count;
+        exr_header.channels = channel_infos.data();
+        exr_header.pixel_types = pixel_types.data();
+        exr_header.requested_pixel_types = pixel_types.data();
+
+        EXRImage exr_image;
+        InitEXRImage(&exr_image);
+
+        exr_image.width = m_spec.width;
+        exr_image.height = m_spec.height;
+        exr_image.num_channels = m_spec.component_count;
+        exr_image.images = channel_ptrs.data();
+
+        uint8_t* exr_buffer;
+        const char* err;
+        size_t exr_size = SaveEXRImageToMemory(&exr_image, &exr_header, &exr_buffer, &err);
+        if (exr_size == 0) {
+            FreeEXRErrorMessage(err);
+            return false;
+        }
+
+        m_ofs.write(reinterpret_cast<const char*>(exr_buffer), exr_size);
+        free(exr_buffer);
+
+        return true;
+    }
+};
+
 
 #if 0
 
@@ -442,6 +625,8 @@ ref<ImageInput> ImageInput::open(const std::filesystem::path& path)
 
     if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp" || ext == ".tga" || ext == ".hdr") {
         reader = std::make_unique<StbImageReader>();
+    } else if (ext == ".exr") {
+        reader = std::make_unique<TinyExrImageReader>();
     }
 
     if (!reader)
@@ -483,6 +668,8 @@ ref<ImageOutput> ImageOutput::open(const std::filesystem::path& path, ImageSpec 
 
     if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp" || ext == ".tga" || ext == ".hdr") {
         writer = std::make_unique<StbImageWriter>();
+    } else if (ext == ".exr") {
+        writer = std::make_unique<TinyExrImageWriter>();
     }
 
     if (!writer)

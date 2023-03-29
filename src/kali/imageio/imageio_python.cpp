@@ -14,6 +14,8 @@ void register_imageio(nb::module_& m)
         .value("unknown", ComponentType::unknown)
         .value("u8", ComponentType::u8)
         .value("u16", ComponentType::u16)
+        .value("u32", ComponentType::u32)
+        .value("f16", ComponentType::f16)
         .value("f32", ComponentType::f32);
 
     nb::class_<ImageSpec>(m, "ImageSpec")
