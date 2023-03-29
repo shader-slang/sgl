@@ -2,6 +2,7 @@
 
 #include "core/assert.h"
 #include "core/string_utils.h"
+#include "core/type_utils.h"
 #include "core/memory_mapped_file.h"
 
 #include <cstdio> // must be included before jpeglib.h
@@ -12,9 +13,20 @@
 #include <cctype>
 #include <cstring>
 #include <string>
+#include <fstream>
 
+#if KALI_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4244) // conversion from 'int' to 'unsigned char', possible loss of data
+#pragma warning(disable : 4996) // This function or variable may be unsafe. Consider using sprintf_s instead.
+#endif
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
+#if KALI_MSVC
+#pragma warning(pop)
+#endif
 
 namespace kali {
 
@@ -26,17 +38,55 @@ class ImageReader {
 public:
     virtual ~ImageReader() { }
 
-    virtual bool open(const std::filesystem::path& path, ImageSpec& out_spec) = 0;
-    virtual bool open(const void* buffer, size_t len, ImageSpec& out_spec) = 0;
+    virtual bool open(const std::filesystem::path& path, ImageSpec& out_spec)
+    {
+        m_path = path;
+        m_file = std::make_unique<MemoryMappedFile>(path);
+        if (!m_file->is_open())
+            return false;
+
+        bool success = read_spec(m_file->data(), m_file->size(), m_spec);
+        if (success)
+            out_spec = m_spec;
+
+        return success;
+    }
+
+    virtual void close() { m_file.reset(); }
+
+    virtual bool read_spec(const void* buffer, size_t len, ImageSpec& out_spec) = 0;
     virtual bool read_image(void* buffer, size_t len) = 0;
+
+
+protected:
+    std::filesystem::path m_path;
+    ImageSpec m_spec;
+    std::unique_ptr<MemoryMappedFile> m_file;
 };
 
 class ImageWriter {
 public:
     virtual ~ImageWriter() { }
 
-    virtual bool open(const std::filesystem::path& path, const ImageSpec& spec) = 0;
+    virtual bool open(const std::filesystem::path& path, const ImageSpec& spec)
+    {
+        m_path = path;
+        m_spec = spec;
+        m_ofs.open(path, std::ios::binary);
+        if (!m_ofs.is_open())
+            return false;
+
+        return true;
+    }
+
+    virtual void close() { m_ofs.close(); }
+
     virtual bool write_image(const void* buffer, size_t len) = 0;
+
+protected:
+    std::filesystem::path m_path;
+    ImageSpec m_spec;
+    std::ofstream m_ofs;
 };
 
 // ----------------------------------------------------------------------------
@@ -45,37 +95,171 @@ public:
 
 class StbImageReader : public ImageReader {
 public:
-    StbImageReader() { }
-
     ~StbImageReader() { }
 
-    bool open(const std::filesystem::path& path, ImageSpec& out_spec) override
+    bool read_spec(const void* buffer, size_t len, ImageSpec& out_spec)
     {
-        m_path = path;
-        m_out_spec = out_spec;
-        return true;
-    }
+        m_buffer = reinterpret_cast<const stbi_uc*>(buffer);
+        m_len = narrow_cast<int>(len);
 
-    bool open(const void* buffer, size_t len, ImageSpec& out_spec) override
-    {
-        m_buffer = buffer;
-        m_len = len;
-        m_out_spec = out_spec;
+        int width, height, component_count;
+        if (!stbi_info_from_memory(m_buffer, m_len, &width, &height, &component_count))
+            return false;
+
+        bool is_hdr = stbi_is_hdr_from_memory(m_buffer, m_len);
+        bool is_16bit = stbi_is_16_bit_from_memory(m_buffer, m_len);
+
+        m_spec = ImageSpec{
+            .width = narrow_cast<uint32_t>(width),
+            .height = narrow_cast<uint32_t>(height),
+            .component_count = narrow_cast<uint32_t>(component_count),
+            .component_type = is_hdr ? ComponentType::f32 : (is_16bit ? ComponentType::u16 : ComponentType::u8),
+        };
+        out_spec = m_spec;
+
         return true;
     }
 
     bool read_image(void* buffer, size_t len) override
     {
-        KALI_UNUSED(buffer);
-        KALI_UNUSED(len);
-        return false;
+        KALI_ASSERT(m_spec.width > 0);
+        KALI_ASSERT(m_spec.height > 0);
+        KALI_ASSERT(m_spec.component_count > 0);
+        KALI_ASSERT(m_spec.component_type != ComponentType::unknown);
+
+        int width, height, component_count;
+        uint8_t* pixels{nullptr};
+        size_t read_len{0};
+        switch (m_spec.component_type) {
+        case ComponentType::u8:
+            pixels = reinterpret_cast<uint8_t*>(
+                stbi_load_from_memory(m_buffer, m_len, &width, &height, &component_count, 0)
+            );
+            read_len = width * height * component_count;
+            break;
+        case ComponentType::u16:
+            pixels = reinterpret_cast<uint8_t*>(
+                stbi_load_16_from_memory(m_buffer, m_len, &width, &height, &component_count, 0)
+            );
+            read_len = width * height * component_count * 2;
+            break;
+        case ComponentType::f32:
+            pixels = reinterpret_cast<uint8_t*>(
+                stbi_loadf_from_memory(m_buffer, m_len, &width, &height, &component_count, 0)
+            );
+            read_len = width * height * component_count * 4;
+            break;
+        }
+
+        if (!pixels)
+            return false;
+
+        size_t expected_len = m_spec.width * m_spec.height * m_spec.component_count * m_spec.get_component_size();
+        KALI_ASSERT_EQ(len, expected_len);
+        KALI_ASSERT_EQ(read_len, expected_len);
+
+        std::memcpy(buffer, pixels, len);
+
+        stbi_image_free(pixels);
+
+        return true;
     }
 
 private:
-    std::filesystem::path m_path;
-    const void* m_buffer{nullptr};
-    size_t m_len{0};
-    ImageSpec m_out_spec;
+    const stbi_uc* m_buffer{nullptr};
+    int m_len{0};
+};
+
+// ----------------------------------------------------------------------------
+// StbImageWriter
+// ----------------------------------------------------------------------------
+
+class StbImageWriter : public ImageWriter {
+public:
+    ~StbImageWriter() { }
+
+    bool open(const std::filesystem::path& path, const ImageSpec& spec) override
+    {
+        KALI_ASSERT(spec.width > 0);
+        KALI_ASSERT(spec.height > 0);
+        KALI_ASSERT(spec.component_count > 0);
+        KALI_ASSERT(spec.component_type != ComponentType::unknown);
+
+        std::string ext = to_lower(path.extension().string());
+        if (ext == ".png") {
+            m_file_format = FileFormat::png;
+            if (spec.component_type != ComponentType::u8)
+                return false;
+        } else if (ext == ".jpg" || ext == ".jpeg") {
+            m_file_format = FileFormat::jpg;
+            if (spec.component_type != ComponentType::u8)
+                return false;
+        } else if (ext == ".bmp") {
+            m_file_format = FileFormat::bmp;
+            if (spec.component_type != ComponentType::u8)
+                return false;
+        } else if (ext == ".tga") {
+            m_file_format = FileFormat::tga;
+            if (spec.component_type != ComponentType::u8)
+                return false;
+        } else if (ext == ".hdr") {
+            m_file_format = FileFormat::hdr;
+            if (spec.component_type != ComponentType::f32)
+                return false;
+        } else
+            return false;
+
+        return ImageWriter::open(path, spec);
+    }
+
+    bool write_image(const void* buffer, size_t len) override
+    {
+        KALI_UNUSED(len);
+
+        size_t expected_len = m_spec.width * m_spec.height * m_spec.component_count * m_spec.get_component_size();
+        KALI_ASSERT_EQ(len, expected_len);
+
+        int width = narrow_cast<int>(m_spec.width);
+        int height = narrow_cast<int>(m_spec.height);
+        int component_count = narrow_cast<int>(m_spec.component_count);
+
+        auto write_func = [](void* context, void* data, int size)
+        {
+            std::ofstream* ofs = reinterpret_cast<std::ofstream*>(context);
+            ofs->write(reinterpret_cast<char*>(data), size);
+        };
+
+        bool success{false};
+        switch (m_file_format) {
+        case FileFormat::png:
+            success = stbi_write_png_to_func(write_func, &m_ofs, width, height, component_count, buffer, 0);
+            break;
+        case FileFormat::jpg:
+            success = stbi_write_jpg_to_func(write_func, &m_ofs, width, height, component_count, buffer, 100);
+            break;
+        case FileFormat::bmp:
+            success = stbi_write_bmp_to_func(write_func, &m_ofs, width, height, component_count, buffer);
+            break;
+        case FileFormat::tga:
+            success = stbi_write_tga_to_func(write_func, &m_ofs, width, height, component_count, buffer);
+            break;
+        case FileFormat::hdr:
+            success = stbi_write_hdr_to_func(
+                write_func,
+                &m_ofs,
+                width,
+                height,
+                component_count,
+                reinterpret_cast<const float*>(buffer)
+            );
+            break;
+        }
+        return success;
+    }
+
+protected:
+    enum class FileFormat { unknown, png, jpg, bmp, tga, hdr };
+    FileFormat m_file_format{FileFormat::unknown};
 };
 
 #if 0
@@ -247,7 +431,7 @@ class PNGReader : public ImageReader { };
 // ImageInput
 // ----------------------------------------------------------------------------
 
-std::unique_ptr<ImageInput> ImageInput::open(const std::filesystem::path& path)
+ref<ImageInput> ImageInput::open(const std::filesystem::path& path)
 {
     if (!std::filesystem::exists(path))
         return nullptr;
@@ -256,11 +440,9 @@ std::unique_ptr<ImageInput> ImageInput::open(const std::filesystem::path& path)
 
     std::unique_ptr<ImageReader> reader;
 
-#if 0
-    if (ext == ".jpg" || ext == ".jpeg") {
-        reader = std::make_unique<JPEGReader>();
+    if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp" || ext == ".tga" || ext == ".hdr") {
+        reader = std::make_unique<StbImageReader>();
     }
-#endif
 
     if (!reader)
         return nullptr;
@@ -270,15 +452,10 @@ std::unique_ptr<ImageInput> ImageInput::open(const std::filesystem::path& path)
         return nullptr;
 
     ImageSpec spec;
-#if 0
     if (!reader->open(path, spec))
         return nullptr;
-#else
-    if (!reader->open(file->data(), file->mapped_size(), spec))
-        return nullptr;
-#endif
 
-    std::unique_ptr<ImageInput> image_input = std::make_unique<ImageInput>();
+    ref<ImageInput> image_input = new ImageInput();
     image_input->m_spec = std::move(spec);
     image_input->m_reader = std::move(reader);
     image_input->m_file = std::move(file);
@@ -298,17 +475,15 @@ bool ImageInput::read_image(void* buffer, size_t len)
 // ImageOutput
 // ----------------------------------------------------------------------------
 
-std::unique_ptr<ImageOutput> ImageOutput::open(const std::filesystem::path& path, ImageSpec spec)
+ref<ImageOutput> ImageOutput::open(const std::filesystem::path& path, ImageSpec spec)
 {
     std::string ext = to_lower(path.extension().string());
 
     std::unique_ptr<ImageWriter> writer;
 
-#if 0
-    if (ext == ".jpg" || ext == ".jpeg") {
-        writer = std::make_unique<JPEGWriter>();
+    if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp" || ext == ".tga" || ext == ".hdr") {
+        writer = std::make_unique<StbImageWriter>();
     }
-#endif
 
     if (!writer)
         return nullptr;
@@ -316,7 +491,7 @@ std::unique_ptr<ImageOutput> ImageOutput::open(const std::filesystem::path& path
     if (!writer->open(path, spec))
         return nullptr;
 
-    std::unique_ptr<ImageOutput> image_output = std::make_unique<ImageOutput>();
+    ref<ImageOutput> image_output = new ImageOutput();
     image_output->m_spec = std::move(spec);
     image_output->m_writer = std::move(writer);
 

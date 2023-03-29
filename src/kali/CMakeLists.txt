@@ -54,6 +54,7 @@ set_target_properties(kali PROPERTIES
 nanobind_add_module(kali_python NB_STATIC LTO
     kali_python.cpp
     core/core_python.cpp
+    imageio/imageio_python.cpp
     rhi/rhi_python.cpp
 )
 target_link_libraries(kali_python PRIVATE kali)

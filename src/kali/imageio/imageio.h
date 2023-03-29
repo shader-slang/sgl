@@ -1,5 +1,8 @@
 #pragma once
 
+#include "core/platform.h"
+#include "core/object.h"
+
 #include <cstdint>
 #include <filesystem>
 #include <memory>
@@ -10,25 +13,48 @@ class MemoryMappedFile;
 class ImageReader;
 class ImageWriter;
 
+/// The type of each component in an image.
 enum class ComponentType {
-    Unknown,
-    U8,
+    unknown,
+    u8,
+    u16,
+    f32,
 };
 
 struct ImageSpec {
+    /// The width of the image in pixels.
     uint32_t width{0};
+    /// The height of the image in pixels.
     uint32_t height{0};
-    ComponentType component_type{ComponentType::Unknown};
+    /// The number of components per pixel.
     uint32_t component_count{0};
+    /// The type of each component.
+    ComponentType component_type{ComponentType::unknown};
+
+    size_t get_component_size() const
+    {
+        switch (component_type) {
+        case ComponentType::unknown:
+            return 0;
+        case ComponentType::u8:
+            return 1;
+        case ComponentType::u16:
+            return 2;
+        case ComponentType::f32:
+            return 4;
+        }
+        return 0;
+    }
 };
 
-class ImageInput {
+/// Class for reading images.
+class KALI_API ImageInput : public Object {
 public:
-    static std::unique_ptr<ImageInput> open(const std::filesystem::path& path);
+    static ref<ImageInput> open(const std::filesystem::path& path);
 
     ~ImageInput();
 
-    const ImageSpec& spec() const { return m_spec; }
+    const ImageSpec& get_spec() const { return m_spec; }
 
     bool read_image(void* buffer, size_t len);
 
@@ -38,9 +64,10 @@ private:
     std::unique_ptr<MemoryMappedFile> m_file;
 };
 
-class ImageOutput {
+/// Class for writing images.
+class KALI_API ImageOutput : public Object {
 public:
-    static std::unique_ptr<ImageOutput> open(const std::filesystem::path& path, ImageSpec spec);
+    static ref<ImageOutput> open(const std::filesystem::path& path, ImageSpec spec);
 
     ~ImageOutput();
 

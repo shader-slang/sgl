@@ -7,6 +7,7 @@ target_sources(kali_tests PRIVATE
     core/object_tests.cpp
     core/string_utils_tests.cpp
     core/vector_tests.cpp
+    imageio/imageio_tests.cpp
     rhi/device_tests.cpp
 )
 target_include_directories(kali_tests BEFORE PRIVATE .)
