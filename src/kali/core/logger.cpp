@@ -42,7 +42,7 @@ void Logger::log(LogLevel level, std::string_view msg)
 Logger& Logger::get_default()
 {
     static Logger logger;
-    // TODO return per thread logger
+    // TODO(@skallweit): return per thread logger
     return logger;
 }
 

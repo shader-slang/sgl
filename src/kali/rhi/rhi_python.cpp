@@ -13,6 +13,10 @@ namespace kali {
 
 void register_rhi(nb::module_& m)
 {
+    // ------------------------------------------------------------------------
+    // formats.h
+    // ------------------------------------------------------------------------
+
     nb::enum_<Format>(m, "Format")
         .value("unknown", Format::unknown)
         .value("r32g32b32a32_typeless", Format::r32g32b32a32_typeless)
@@ -95,53 +99,9 @@ void register_rhi(nb::module_& m)
         .value("bc7_unorm", Format::bc7_unorm)
         .value("bc7_unorm_srgb", Format::bc7_unorm_srgb);
 
-    nb::enum_<DeviceType>(m, "DeviceType")
-        .value("automatic", DeviceType::automatic)
-        .value("d3d12", DeviceType::d3d12)
-        .value("vulkan", DeviceType::vulkan)
-        .value("cpu", DeviceType::cpu)
-        .value("cuda", DeviceType::cuda);
-
-    nb::class_<Device> device(m, "Device");
-    device.def(
-        "__init__",
-        [](Device* device, DeviceType type)
-        {
-            new (device) Device(DeviceDesc{
-                .type = type,
-            });
-        },
-        "type"_a = DeviceType::automatic
-    );
-    device.def(
-        "create_buffer",
-        [](Device* device, size_t size, size_t struct_size, Format format, std::string debug_name)
-        {
-            return device->create_buffer(BufferDesc{
-                .size = size,
-                .struct_size = struct_size,
-                .format = format,
-                .debug_name = std::move(debug_name),
-                .usage = ResourceUsage::vertex,
-                .cpu_access = CpuAccess::none,
-            });
-        },
-        "size"_a,
-        "struct_size"_a = 0,
-        "format"_a = Format::unknown,
-        "debug_name"_a = ""
-    );
-
-    device.def("create_program", nb::overload_cast<const ProgramDesc&>(&Device::create_program), "desc"_a);
-    device.def(
-        "create_program",
-        nb::overload_cast<std::filesystem::path, std::string>(&Device::create_program),
-        "path"_a,
-        "entrypoint"_a
-    );
-
-    nb::class_<Swapchain> swapchain(m, "Swapchain");
-
+    // ------------------------------------------------------------------------
+    // resource.h
+    // ------------------------------------------------------------------------
 
     nb::enum_<ResourceType>(m, "ResourceType")
         .value("unknown", ResourceType::unknown)
@@ -150,6 +110,13 @@ void register_rhi(nb::module_& m)
         .value("texture_2d", ResourceType::texture_2d)
         .value("texture_3d", ResourceType::texture_3d)
         .value("texture_cube", ResourceType::texture_cube);
+
+    nb::enum_<TextureType>(m, "TextureType")
+        .value("unknown", TextureType::unknown)
+        .value("texture_1d", TextureType::texture_1d)
+        .value("texture_2d", TextureType::texture_2d)
+        .value("texture_3d", TextureType::texture_3d)
+        .value("texture_cube", TextureType::texture_cube);
 
     nb::enum_<ResourceState>(m, "ResourceState")
         .value("undefined", ResourceState::undefined)
@@ -191,24 +158,151 @@ void register_rhi(nb::module_& m)
         .def("__and__", [](ResourceUsage value1, ResourceUsage value2) { return value1 & value2; })
         .def("__or__", [](ResourceUsage value1, ResourceUsage value2) { return value1 | value2; });
 
-    nb::enum_<MemoryType>(m, "MemoryType")
-        .value("device_local", MemoryType::device_local)
-        .value("upload", MemoryType::upload)
-        .value("read_back", MemoryType::read_back);
+    nb::enum_<CpuAccess>(m, "CpuAccess")
+        .value("none", CpuAccess::none)
+        .value("read", CpuAccess::read)
+        .value("write", CpuAccess::write);
 
-    nb::class_<MemoryRange> memory_range(m, "MemoryRange");
-    memory_range.def_rw("offset", &MemoryRange::offset);
-    memory_range.def_rw("size", &MemoryRange::size);
+    nb::class_<MemoryRange>(m, "MemoryRange").def_rw("offset", &MemoryRange::offset).def_rw("size", &MemoryRange::size);
 
     nb::class_<Resource> resource(m, "Resource");
     resource.def("device_address", &Resource::get_device_address);
 
+    nb::class_<BufferDesc>(m, "BufferDesc")
+        .def_rw("size", &BufferDesc::size)
+        .def_rw("struct_size", &BufferDesc::struct_size)
+        .def_rw("format", &BufferDesc::format)
+        .def_rw("initial_state", &BufferDesc::initial_state)
+        .def_rw("usage", &BufferDesc::usage)
+        .def_rw("cpu_access", &BufferDesc::cpu_access)
+        .def_rw("debug_name", &BufferDesc::debug_name);
+
     nb::class_<Buffer> buffer(m, "Buffer");
+    buffer.def_prop_ro("desc", &Buffer::get_desc);
     buffer.def_prop_ro("size", &Buffer::get_size);
     buffer.def_prop_ro("struct_size", &Buffer::get_struct_size);
     buffer.def_prop_ro("format", &Buffer::get_format);
 
+    nb::class_<TextureDesc>(m, "TextureDesc")
+        .def_rw("type", &TextureDesc::type)
+        .def_rw("width", &TextureDesc::width)
+        .def_rw("height", &TextureDesc::height)
+        .def_rw("depth", &TextureDesc::depth)
+        .def_rw("array_size", &TextureDesc::array_size)
+        .def_rw("mip_count", &TextureDesc::mip_count)
+        .def_rw("format", &TextureDesc::format)
+        .def_rw("initial_state", &TextureDesc::initial_state)
+        .def_rw("usage", &TextureDesc::usage)
+        .def_rw("cpu_access", &TextureDesc::cpu_access)
+        .def_rw("debug_name", &TextureDesc::debug_name);
+
+    // ------------------------------------------------------------------------
+    // swapchain.h
+    // ------------------------------------------------------------------------
+
+    nb::class_<Swapchain> swapchain(m, "Swapchain");
+
+    // ------------------------------------------------------------------------
+    // program.h
+    // ------------------------------------------------------------------------
+
     nb::class_<Program> program(m, "Program");
+
+    // ------------------------------------------------------------------------
+    // device.h
+    // ------------------------------------------------------------------------
+
+    nb::enum_<DeviceType>(m, "DeviceType")
+        .value("automatic", DeviceType::automatic)
+        .value("d3d12", DeviceType::d3d12)
+        .value("vulkan", DeviceType::vulkan)
+        .value("cpu", DeviceType::cpu)
+        .value("cuda", DeviceType::cuda);
+
+    nb::class_<Device> device(m, "Device");
+    device.def(
+        "__init__",
+        [](Device* device, DeviceType type)
+        {
+            new (device) Device(DeviceDesc{
+                .type = type,
+            });
+        },
+        "type"_a = DeviceType::automatic
+    );
+    device.def(
+        "create_buffer",
+        [](Device* device, const BufferDesc& desc) { return device->create_buffer(desc); },
+        "desc"_a
+    );
+    device.def(
+        "create_buffer",
+        [](Device* device,
+           size_t size,
+           size_t struct_size,
+           Format format,
+           ResourceUsage usage,
+           CpuAccess cpu_access,
+           std::string debug_name)
+        {
+            return device->create_buffer(BufferDesc{
+                .size = size,
+                .struct_size = struct_size,
+                .format = format,
+                .usage = usage,
+                .cpu_access = cpu_access,
+                .debug_name = std::move(debug_name),
+            });
+        },
+        "size"_a,
+        "struct_size"_a = 0,
+        "format"_a = Format::unknown,
+        "usage"_a = ResourceUsage::none,
+        "cpu_access"_a = CpuAccess::none,
+        "debug_name"_a = ""
+    );
+    device.def(
+        "create_texture",
+        [](Device* device, const TextureDesc& desc) { return device->create_texture(desc); },
+        "desc"_a
+    );
+    device.def(
+        "create_texture",
+        [](Device* device,
+           TextureType type,
+           uint32_t width,
+           uint32_t height,
+           uint32_t depth,
+           uint32_t array_size,
+           uint32_t mip_count,
+           Format format)
+        {
+            return device->create_texture(TextureDesc{
+                .type = type,
+                .width = width,
+                .height = height,
+                .depth = depth,
+                .array_size = array_size,
+                .mip_count = mip_count,
+                .format = format,
+            });
+        },
+        "type"_a = TextureType::unknown,
+        "width"_a = 0,
+        "height"_a = 0,
+        "depth"_a = 0,
+        "array_size"_a = 0,
+        "mip_count"_a = 0,
+        "format"_a = Format::unknown
+    );
+
+    device.def("create_program", nb::overload_cast<const ProgramDesc&>(&Device::create_program), "desc"_a);
+    device.def(
+        "create_program",
+        nb::overload_cast<std::filesystem::path, std::string>(&Device::create_program),
+        "path"_a,
+        "entrypoint"_a
+    );
 }
 
 } // namespace kali

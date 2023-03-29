@@ -141,6 +141,12 @@ ref<Buffer> Device::create_structured_buffer(
     return create_buffer(desc, init_data);
 }
 
+ref<Texture> Device::create_texture(const TextureDesc& desc, const void* init_data)
+{
+    return new Texture(desc, init_data, this);
+}
+
+
 ref<Program> Device::create_program(const ProgramDesc& desc)
 {
     return m_program_manager->create_program(desc);

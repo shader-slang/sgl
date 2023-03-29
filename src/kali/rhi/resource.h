@@ -74,12 +74,6 @@ enum class CpuAccess : uint32_t {
     read,
 };
 
-enum class MemoryType : uint32_t {
-    device_local,
-    upload,
-    read_back,
-};
-
 struct MemoryRange {
     uint64_t offset;
     uint64_t size;
@@ -162,11 +156,11 @@ struct BufferDesc {
     size_t struct_size{0};          ///< Struct size in bytes. If > 0, this is a structured buffer.
     Format format{Format::unknown}; ///< Buffer format. If != unknown, this is a typed buffer.
 
-    std::string debug_name; ///< Debug name.
-
     ResourceState initial_state{ResourceState::undefined};
     ResourceUsage usage{ResourceUsage::none};
     CpuAccess cpu_access{CpuAccess::none};
+
+    std::string debug_name; ///< Debug name.
 
 #if 0
     static BufferDesc create() { return {}; }
@@ -221,10 +215,41 @@ private:
     Slang::ComPtr<gfx::IBufferResource> m_gfx_buffer;
 };
 
-struct TextureDesc { };
+enum class TextureType : uint32_t {
+    unknown = uint32_t(ResourceType::unknown),
+    texture_1d = uint32_t(ResourceType::texture_1d),
+    texture_2d = uint32_t(ResourceType::texture_2d),
+    texture_3d = uint32_t(ResourceType::texture_3d),
+    texture_cube = uint32_t(ResourceType::texture_cube),
+};
+
+struct TextureDesc {
+    /// Texture type.
+    TextureType type{TextureType::unknown};
+
+    uint32_t width{0};              ///< Width in pixels.
+    uint32_t height{0};             ///< Height in pixels (0 for 1D textures).
+    uint32_t depth{0};              ///< Depth in pixels (0 for 1D/2D textures).
+    uint32_t array_size{0};         ///< Number of array slices (0 for non-array textures).
+    uint32_t mip_count{0};          ///< Number of mip levels (0 for auto-generated mips).
+    Format format{Format::unknown}; ///< Texture format.
+
+    uint32_t sample_count{0}; ///< Number of samples per pixel (0 for non-multisampled textures).
+    uint32_t quality = 0;     ///< Quality level for multisampled textures.
+
+    // TODO(@skallweit): support clear value
+
+    ResourceState initial_state{ResourceState::undefined};
+    ResourceUsage usage{ResourceUsage::none};
+    CpuAccess cpu_access{CpuAccess::none};
+
+    std::string debug_name;
+};
 
 class KALI_API Texture : public Resource {
 public:
+    Texture(const TextureDesc& desc, const void* init_data, ref<Device> device);
+
     const TextureDesc& get_desc() const { return m_desc; }
 
     uint32_t get_width(MipLevel mip_level = 0) const
@@ -250,6 +275,7 @@ public:
         return get_array_size() * get_mip_count() * (get_type() == ResourceType::texture_cube ? 6 : 1);
     }
 
+    virtual DeviceAddress get_device_address() const override { return 0; }
     virtual gfx::IResource* get_gfx_resource() const override { return m_gfx_texture; }
     gfx::ITextureResource* get_gfx_texture_resource() const { return m_gfx_texture; }
 

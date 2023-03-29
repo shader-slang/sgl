@@ -128,7 +128,7 @@ void CommandList::copy_buffer_region(
     uint64_t size
 )
 {
-    // TODO: check for overlapping copies within same buffer?
+    // TODO(@skallweit): check for overlapping copies within same buffer?
     KALI_ASSERT(dst);
     KALI_ASSERT(src);
     KALI_ASSERT_LE(dst_offset + size, dst->get_size());

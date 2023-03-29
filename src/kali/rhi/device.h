@@ -61,6 +61,8 @@ public:
         const void* init_data = nullptr
     );
 
+    ref<Texture> create_texture(const TextureDesc& desc, const void* init_data = nullptr);
+
     ref<Program> create_program(const ProgramDesc& desc);
 
     ref<Program> create_program(std::filesystem::path path, std::string entrypoint);

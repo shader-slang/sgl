@@ -7,7 +7,7 @@
 
 namespace kali {
 
-gfx::IResource::Type get_gfx_resource_type(ResourceType resource_type)
+inline gfx::IResource::Type get_gfx_resource_type(ResourceType resource_type)
 {
     static_assert(uint32_t(ResourceType::unknown) == uint32_t(gfx::IResource::Type::Unknown));
     static_assert(uint32_t(ResourceType::buffer) == uint32_t(gfx::IResource::Type::Buffer));
@@ -19,7 +19,7 @@ gfx::IResource::Type get_gfx_resource_type(ResourceType resource_type)
     return gfx::IResource::Type(resource_type);
 }
 
-gfx::ResourceState get_gfx_resource_state(ResourceState resource_state)
+inline gfx::ResourceState get_gfx_resource_state(ResourceState resource_state)
 {
     // clang-format off
     static_assert(uint32_t(ResourceState::undefined) == uint32_t(gfx::ResourceState::Undefined));
@@ -49,14 +49,56 @@ gfx::ResourceState get_gfx_resource_state(ResourceState resource_state)
     return gfx::ResourceState(resource_state);
 }
 
-inline gfx::MemoryType get_gfx_memory_type(MemoryType memory_type)
+inline gfx::ResourceStateSet get_gfx_allowed_states(ResourceUsage usage)
 {
-    static_assert(uint32_t(MemoryType::device_local) == uint32_t(gfx::MemoryType::DeviceLocal));
-    static_assert(uint32_t(MemoryType::upload) == uint32_t(gfx::MemoryType::Upload));
-    static_assert(uint32_t(MemoryType::read_back) == uint32_t(gfx::MemoryType::ReadBack));
-    KALI_ASSERT(uint32_t(memory_type) <= uint32_t(MemoryType::read_back));
-    return gfx::MemoryType(memory_type);
+    gfx::ResourceStateSet states(gfx::ResourceState::CopyDestination, gfx::ResourceState::CopySource);
+
+    if (is_set(usage, ResourceUsage::vertex)) {
+        states.add(gfx::ResourceState::VertexBuffer);
+        states.add(gfx::ResourceState::AccelerationStructureBuildInput);
+    }
+    if (is_set(usage, ResourceUsage::index)) {
+        states.add(gfx::ResourceState::IndexBuffer);
+        states.add(gfx::ResourceState::AccelerationStructureBuildInput);
+    }
+    if (is_set(usage, ResourceUsage::constant)) {
+        states.add(gfx::ResourceState::ConstantBuffer);
+    }
+    if (is_set(usage, ResourceUsage::stream_output)) {
+        states.add(gfx::ResourceState::StreamOutput);
+    }
+    if (is_set(usage, ResourceUsage::shader_resource)) {
+        states.add(gfx::ResourceState::ShaderResource);
+    }
+    if (is_set(usage, ResourceUsage::unordered_access)) {
+        states.add(gfx::ResourceState::UnorderedAccess);
+    }
+    if (is_set(usage, ResourceUsage::render_target)) {
+        states.add(gfx::ResourceState::RenderTarget);
+    }
+    if (is_set(usage, ResourceUsage::depth_stencil)) {
+        states.add(gfx::ResourceState::DepthWrite);
+    }
+    if (is_set(usage, ResourceUsage::indirect_arg)) {
+        states.add(gfx::ResourceState::IndirectArgument);
+    }
+    if (is_set(usage, ResourceUsage::acceleration_structure)) {
+        states.add(gfx::ResourceState::AccelerationStructure);
+        states.add(gfx::ResourceState::ShaderResource);
+        states.add(gfx::ResourceState::UnorderedAccess);
+    }
+
+    return states;
 }
+
+inline gfx::ResourceState get_gfx_initial_state(ResourceUsage usage)
+{
+    if (is_set(usage, ResourceUsage::acceleration_structure)) {
+        return gfx::ResourceState::AccelerationStructure;
+    }
+    return gfx::ResourceState::General;
+}
+
 
 inline gfx::MemoryType get_gfx_memory_type(CpuAccess cpu_access)
 {
@@ -69,12 +111,6 @@ inline gfx::MemoryType get_gfx_memory_type(CpuAccess cpu_access)
         return gfx::MemoryType::ReadBack;
     }
     KALI_THROW(Exception("Invalid CpuAccess value"));
-}
-
-inline gfx::ResourceStateSet get_gfx_allowed_states(ResourceUsage resource_usage)
-{
-    KALI_UNUSED(resource_usage);
-    return {};
 }
 
 inline gfx::MemoryRange get_gfx_memory_range(MemoryRange memory_range)
@@ -115,13 +151,18 @@ Buffer::Buffer(const BufferDesc& desc, const void* init_data, ref<Device> device
     : Resource(ResourceType::buffer, device)
     , m_desc(desc)
 {
+    KALI_ASSERT(m_desc.size > 0);
+    KALI_ASSERT(m_desc.struct_size == 0 || m_desc.format == Format::unknown);
+    KALI_ASSERT(m_desc.struct_size == 0 || m_desc.size % m_desc.struct_size == 0);
+
     gfx::IBufferResource::Desc gfx_desc{};
     gfx_desc.type = gfx::IResource::Type::Buffer;
     gfx_desc.defaultState = get_gfx_resource_state(m_desc.initial_state);
-    // gfx_desc.allowedStates = ResourceStateSet();
+    gfx_desc.allowedStates = get_gfx_allowed_states(m_desc.usage);
     gfx_desc.memoryType = get_gfx_memory_type(m_desc.cpu_access);
+    // TODO(@skallweit): add support for existing handles
     // gfx_desc.existingHandle =
-    // gfx_desc.isShared =
+    gfx_desc.isShared = is_set(m_desc.usage, ResourceUsage::shared);
     gfx_desc.sizeInBytes = gfx::Size(m_desc.size);
     gfx_desc.elementSize = gfx::Size(m_desc.struct_size);
     gfx_desc.format = get_gfx_format(m_desc.format);
@@ -155,5 +196,39 @@ void Buffer::unmap(std::optional<MemoryRange> write_range)
 // Texture
 // ----------------------------------------------------------------------------
 
+Texture::Texture(const TextureDesc& desc, const void* init_data, ref<Device> device)
+    : Resource(ResourceType(desc.type), device)
+    , m_desc(desc)
+{
+    KALI_ASSERT(m_desc.width > 0);
+    KALI_ASSERT(m_desc.height > 0);
+    KALI_ASSERT(m_desc.depth > 0);
+    KALI_ASSERT(m_desc.mip_count > 0);
+    KALI_ASSERT(m_desc.array_size > 0);
+    KALI_ASSERT(m_desc.format != Format::unknown);
+
+    gfx::ITextureResource::Desc gfx_desc{};
+    gfx_desc.type = get_gfx_resource_type(ResourceType(m_desc.type));
+    gfx_desc.defaultState = get_gfx_resource_state(m_desc.initial_state);
+    gfx_desc.allowedStates = get_gfx_allowed_states(m_desc.usage);
+    gfx_desc.memoryType = get_gfx_memory_type(m_desc.cpu_access);
+    // TODO(@skallweit): add support for existing handles
+    // gfx_desc.existingHandle =
+    gfx_desc.isShared = is_set(m_desc.usage, ResourceUsage::shared);
+    gfx_desc.size.width = gfx::Size(m_desc.width);
+    gfx_desc.size.height = gfx::Size(m_desc.height);
+    gfx_desc.size.depth = gfx::Size(m_desc.depth);
+    gfx_desc.numMipLevels = gfx::Size(m_desc.mip_count);
+    gfx_desc.arraySize = gfx::Size(m_desc.array_size);
+    gfx_desc.format = get_gfx_format(m_desc.format);
+    gfx_desc.sampleDesc.numSamples = gfx::GfxCount(m_desc.sample_count);
+    gfx_desc.sampleDesc.quality = m_desc.quality;
+
+    // TODO(@skallweit): add support for init data
+    KALI_UNUSED(init_data);
+    gfx::ITextureResource::SubresourceData* gfx_init_data{nullptr};
+
+    SLANG_CALL(m_device->get_gfx_device()->createTextureResource(gfx_desc, gfx_init_data, m_gfx_texture.writeRef()));
+}
 
 } // namespace kali
