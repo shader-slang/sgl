@@ -50,6 +50,31 @@ set_target_properties(kali PROPERTIES
 )
 
 # -----------------------------------------------------------------------------
+# kali unit tests
+# -----------------------------------------------------------------------------
+
+add_executable(kali_tests)
+target_sources(kali_tests PRIVATE
+    kali_tests.cpp
+    testing.cpp
+    core/tests/test_maths.cpp
+    core/tests/test_memory_mapped_file.cpp
+    core/tests/test_object.cpp
+    core/tests/test_string_utils.cpp
+    core/tests/test_vector.cpp
+    imageio/tests/test_imageio.cpp
+    rhi/tests/test_device.cpp
+)
+target_include_directories(kali_tests BEFORE PRIVATE .)
+target_link_libraries(kali_tests PRIVATE doctest kali)
+target_compile_definitions(kali_tests PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+
+set_target_properties(kali_tests PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${KALI_RUNTIME_OUTPUT_DIRECTORY}
+    LIBRARY_OUTPUT_DIRECTORY ${KALI_LIBRARY_OUTPUT_DIRECTORY}
+)
+
+# -----------------------------------------------------------------------------
 # kali python bindings
 # -----------------------------------------------------------------------------
 nanobind_add_module(kali_python NB_STATIC LTO
