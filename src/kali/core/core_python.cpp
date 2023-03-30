@@ -59,7 +59,13 @@ void bind_vector_type(nb::module_& m, const char* name)
     // Operators
 
     if constexpr (with_operators) {
+        vec.def(nb::self == nb::self);
+        vec.def(nb::self != nb::self);
+
         if constexpr (!is_boolean_v<value_type>) {
+            vec.def(+nb::self);
+            vec.def(-nb::self);
+
             vec.def(nb::self + nb::self);
             vec.def(nb::self + value_type());
             vec.def(value_type() + nb::self);
@@ -82,6 +88,7 @@ void bind_vector_type(nb::module_& m, const char* name)
             vec.def(nb::self /= nb::self);
             vec.def(nb::self /= value_type());
         }
+
         if constexpr (std::is_integral_v<value_type> && !is_boolean_v<value_type>) {
             vec.def(nb::self % nb::self);
             vec.def(nb::self % value_type());

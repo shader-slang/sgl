@@ -2,3 +2,5 @@ build/
 external/slang
 tools/*
 !tools/packman/
+
+*.pyc

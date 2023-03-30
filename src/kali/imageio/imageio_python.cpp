@@ -1,7 +1,10 @@
 #include "imageio/imageio.h"
 
+#include "core/object_python.h"
+
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/optional.h>
+#include <nanobind/stl/filesystem.h>
 
 namespace nb = nanobind;
 using namespace nb::literals;
@@ -24,11 +27,11 @@ void register_imageio(nb::module_& m)
         .def_rw("component_count", &ImageSpec::component_count)
         .def_rw("component_type", &ImageSpec::component_type);
 
-    nb::class_<ImageInput>(m, "ImageInput")
-        .def_static("open", &ImageInput::open)
+    nb::class_<ImageInput, Object>(m, "ImageInput")
+        .def_static("open", &ImageInput::open, "path"_a)
         .def_prop_ro("spec", &ImageInput::get_spec);
 
-    nb::class_<ImageOutput>(m, "ImageOutput").def_static("open", &ImageOutput::open);
+    nb::class_<ImageOutput, Object>(m, "ImageOutput").def_static("open", &ImageOutput::open, "path"_a, "spec"_a);
 }
 
 } // namespace kali

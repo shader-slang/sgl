@@ -40,6 +40,10 @@ template<typename T, size_t N, std::enable_if_t<std::negation_v<is_boolean<T>>, 
     return v;
 }
 
+#if KALI_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4146) // unary minus operator applied to unsigned type, result still unsigned
+#endif
 /// Unary minus operator
 template<typename T, size_t N, std::enable_if_t<std::negation_v<is_boolean<T>>, bool> = false>
 [[nodiscard]] constexpr auto operator-(const vector<T, N> v) noexcept
@@ -53,6 +57,9 @@ template<typename T, size_t N, std::enable_if_t<std::negation_v<is_boolean<T>>, 
     else
         return vector<T, N>{-v.x, -v.y, -v.z, -v.w};
 }
+#if KALI_MSVC
+#pragma warning(pop)
+#endif
 
 /// Unary not operator
 template<typename T, size_t N>

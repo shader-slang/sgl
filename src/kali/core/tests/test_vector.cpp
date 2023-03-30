@@ -49,6 +49,30 @@ TEST_CASE("unary not")
     CHECK(all(~uint4{0x0000ffff, 0xffff0000, 0x0f0f0f0f, 0xf0f0f0f0} == uint4{0xffff0000, 0x0000ffff, 0xf0f0f0f0, 0x0f0f0f0f}));
 }
 
+TEST_CASE("binary +,-")
+{
+    CHECK(all(int1{1} + int1{2} == int1{3}));
+    CHECK(all(int2{1, 2} + int2{3, 4} == int2{4, 6}));
+    CHECK(all(int3{1, 2, 3} + int3{4, 5, 6} == int3{5, 7, 9}));
+    CHECK(all(int4{1, 2, 3, 4} + int4{5, 6, 7, 8} == int4{6, 8, 10, 12}));
+    CHECK(all(int1{1} - int1{2} == int1{-1}));
+    CHECK(all(int2{1, 2} - int2{3, 4} == int2{-2, -2}));
+    CHECK(all(int3{1, 2, 3} - int3{4, 5, 6} == int3{-3, -3, -3}));
+    CHECK(all(int4{1, 2, 3, 4} - int4{5, 6, 7, 8} == int4{-4, -4, -4, -4}));
+}
+
+TEST_CASE("binary *,/")
+{
+    CHECK(all(int1{1} * int1{2} == int1{2}));
+    CHECK(all(int2{1, 2} * int2{3, 4} == int2{3, 8}));
+    CHECK(all(int3{1, 2, 3} * int3{4, 5, 6} == int3{4, 10, 18}));
+    CHECK(all(int4{1, 2, 3, 4} * int4{5, 6, 7, 8} == int4{5, 12, 21, 32}));
+    CHECK(all(int1{2} / int1{1} == int1{2}));
+    CHECK(all(int2{8, 4} / int2{2, 2} == int2{4, 2}));
+    CHECK(all(int3{18, 10, 6} / int3{2, 2, 3} == int3{9, 5, 2}));
+    CHECK(all(int4{32, 21, 12, 5} / int4{2, 3, 4, 5} == int4{16, 7, 3, 1}));
+}
+
 TEST_CASE("any")
 {
     CHECK_EQ(any(bool1{false}), false);

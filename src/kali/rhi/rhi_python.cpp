@@ -4,6 +4,8 @@
 #include "rhi/sampler.h"
 #include "rhi/program.h"
 
+#include "core/object_python.h"
+
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/bind_map.h>
