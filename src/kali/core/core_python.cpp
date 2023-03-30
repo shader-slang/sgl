@@ -7,6 +7,7 @@
 #include <nanobind/nanobind.h>
 #include <nanobind/operators.h>
 #include <nanobind/stl/string.h>
+#include <nanobind/stl/function.h>
 
 namespace nb = nanobind;
 using namespace nb::literals;
@@ -178,6 +179,12 @@ void register_core(nb::module_& m)
         .def_ro("short_tag", &Version::short_tag)
         .def_ro("long_tag", &Version::long_tag);
     m.def("get_version", []() { return get_version(); });
+
+    // ------------------------------------------------------------------------
+    // input.h
+    // ------------------------------------------------------------------------
+
+    nb::class_<MouseEvent>(m, "MouseEvent");
 
     // ------------------------------------------------------------------------
     // window.h
