@@ -213,7 +213,9 @@ struct EventHandlers {
 
     static void handle_window_size(GLFWwindow* glfw_window, int width, int height)
     {
-        static_cast<Window*>(glfwGetWindowUserPointer(glfw_window))->handle_window_size(width, height);
+        Window* window = static_cast<Window*>(glfwGetWindowUserPointer(glfw_window));
+
+        window->handle_window_size(width, height);
     }
 
     static void handle_key(GLFWwindow* glfw_window, int key, int scancode, int action, int mods)

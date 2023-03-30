@@ -7,6 +7,7 @@
 #include "core/error.h"
 #include "core/maths.h"
 #include "core/vector_ops.h"
+#include "core/type_utils.h"
 
 namespace kali {
 
@@ -242,33 +243,33 @@ void CommandList::upload_texture_subresource_data(
     const uint8_t* data_ptr = reinterpret_cast<const uint8_t*>(data);
     auto encoder = get_gfx_resource_command_encoder();
     gfx::ITextureResource::Offset3D gfx_offset = {
-        static_cast<gfx::GfxIndex>(offset.x),
-        static_cast<gfx::GfxIndex>(offset.y),
-        static_cast<gfx::GfxIndex>(offset.z),
+        narrow_cast<gfx::GfxIndex>(offset.x),
+        narrow_cast<gfx::GfxIndex>(offset.y),
+        narrow_cast<gfx::GfxIndex>(offset.z),
     };
     gfx::ITextureResource::Extents gfx_size = {
-        static_cast<gfx::GfxCount>(size.x),
-        static_cast<gfx::GfxCount>(size.y),
-        static_cast<gfx::GfxCount>(size.z),
+        narrow_cast<gfx::GfxCount>(size.x),
+        narrow_cast<gfx::GfxCount>(size.y),
+        narrow_cast<gfx::GfxCount>(size.z),
     };
     gfx::FormatInfo format_info = {};
     SLANG_CALL(gfx::gfxGetFormatInfo(get_gfx_format(texture->get_format()), &format_info));
     for (uint32_t i = subresource_index; i < subresource_index + subresource_count; i++) {
         gfx::SubresourceRange sr_range = {};
-        // sr_range.baseArrayLayer = static_cast<gfx::GfxIndex>(pTexture->getSubresourceArraySlice(i));
-        // sr_range.mipLevel = static_cast<gfx::GfxIndex>(pTexture->getSubresourceMipLevel(i));
+        // sr_range.baseArrayLayer = narrow_cast<gfx::GfxIndex>(pTexture->getSubresourceArraySlice(i));
+        // sr_range.mipLevel = narrow_cast<gfx::GfxIndex>(pTexture->getSubresourceMipLevel(i));
         sr_range.layerCount = 1;
         sr_range.mipLevelCount = 1;
         if (!copy_region) {
             gfx_size.width
-                = align_to(format_info.blockWidth, static_cast<gfx::GfxCount>(texture->get_width(sr_range.mipLevel)));
+                = align_to(format_info.blockWidth, narrow_cast<gfx::GfxCount>(texture->get_width(sr_range.mipLevel)));
             gfx_size.height
-                = align_to(format_info.blockHeight, static_cast<gfx::GfxCount>(texture->get_height(sr_range.mipLevel)));
-            gfx_size.depth = static_cast<gfx::GfxCount>(texture->get_depth(sr_range.mipLevel));
+                = align_to(format_info.blockHeight, narrow_cast<gfx::GfxCount>(texture->get_height(sr_range.mipLevel)));
+            gfx_size.depth = narrow_cast<gfx::GfxCount>(texture->get_depth(sr_range.mipLevel));
         }
         gfx::ITextureResource::SubresourceData sr_data = {};
         sr_data.data = data_ptr;
-        sr_data.strideY = static_cast<int64_t>(gfx_size.width) / format_info.blockWidth * format_info.blockSizeInBytes;
+        sr_data.strideY = narrow_cast<int64_t>(gfx_size.width) / format_info.blockWidth * format_info.blockSizeInBytes;
         sr_data.strideZ = sr_data.strideY * (gfx_size.height / format_info.blockHeight);
         data_ptr += sr_data.strideZ * gfx_size.depth;
         encoder->uploadTextureData(texture->get_gfx_texture_resource(), sr_range, gfx_offset, gfx_size, &sr_data, 1);
