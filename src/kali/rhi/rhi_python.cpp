@@ -6,6 +6,7 @@
 
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/optional.h>
+#include <nanobind/stl/bind_map.h>
 
 namespace nb = nanobind;
 using namespace nb::literals;
@@ -229,6 +230,7 @@ void register_rhi(nb::module_& m)
         .value("maximum", TextureReductionOp::maximum);
 
     nb::class_<Sampler> sampler(m, "Sampler");
+    sampler.def_prop_ro("desc", &Sampler::get_desc);
 
     // ------------------------------------------------------------------------
     // swapchain.h
@@ -239,6 +241,76 @@ void register_rhi(nb::module_& m)
     // ------------------------------------------------------------------------
     // program.h
     // ------------------------------------------------------------------------
+
+    nb::enum_<ShaderType>(m, "ShaderType")
+        .value("none", ShaderType::none)
+        .value("vertex", ShaderType::vertex)
+        .value("hull", ShaderType::hull)
+        .value("domain", ShaderType::domain)
+        .value("geometry", ShaderType::geometry)
+        .value("fragment", ShaderType::fragment)
+        .value("compute", ShaderType::compute)
+        .value("ray_generation", ShaderType::ray_generation)
+        .value("intersection", ShaderType::intersection)
+        .value("any_hit", ShaderType::any_hit)
+        .value("closest_hit", ShaderType::closest_hit)
+        .value("miss", ShaderType::miss)
+        .value("callable", ShaderType::callable)
+        .value("mesh", ShaderType::mesh)
+        .value("amplification", ShaderType::amplification);
+
+    nb::enum_<ShaderModel>(m, "ShaderModel")
+        .value("sm_6_0", ShaderModel::sm_6_0)
+        .value("sm_6_1", ShaderModel::sm_6_1)
+        .value("sm_6_2", ShaderModel::sm_6_2)
+        .value("sm_6_3", ShaderModel::sm_6_3)
+        .value("sm_6_4", ShaderModel::sm_6_4)
+        .value("sm_6_5", ShaderModel::sm_6_5)
+        .value("sm_6_6", ShaderModel::sm_6_6);
+
+    nb::class_<TypeConformance>(m, "TypeConformance")
+        .def_rw("type_name", &TypeConformance::type_name)
+        .def_rw("interface_name", &TypeConformance::interface_name);
+
+    nb::bind_map<std::map<TypeConformance, uint32_t>>(m, "TypeConformanceListBase");
+    nb::class_<TypeConformanceList, std::map<TypeConformance, uint32_t>>(m, "TypeConformanceList")
+        .def(
+            "add",
+            nb::overload_cast<std::string, std::string, uint32_t>(&TypeConformanceList::add),
+            "type_name"_a,
+            "interface_name"_a,
+            "id"_a = -1
+        )
+        .def(
+            "remove",
+            nb::overload_cast<std::string, std::string>(&TypeConformanceList::remove),
+            "type_name"_a,
+            "interface_name"_a
+        )
+        .def("add", nb::overload_cast<const TypeConformanceList&>(&TypeConformanceList::add), "other"_a)
+        .def("remove", nb::overload_cast<const TypeConformanceList&>(&TypeConformanceList::remove), "other"_a);
+
+    nb::bind_map<std::map<std::string, std::string>>(m, "DefineListBase");
+    nb::class_<DefineList, std::map<std::string, std::string>>(m, "DefineList")
+        .def("add", nb::overload_cast<const std::string&, std::string>(&DefineList::add), "name"_a, "value"_a = "")
+        .def("remove", nb::overload_cast<const std::string&>(&DefineList::remove), "name"_a)
+        .def("add", nb::overload_cast<const DefineList&>(&DefineList::add), "other"_a)
+        .def("remove", nb::overload_cast<const DefineList&>(&DefineList::remove), "other"_a);
+
+    nb::enum_<ShaderSourceType>(m, "ShaderSourceType")
+        .value("file", ShaderSourceType::file)
+        .value("string", ShaderSourceType::string);
+
+    nb::class_<ShaderSourceDesc>(m, "ShaderSourceDesc")
+        .def_rw("type", &ShaderSourceDesc::type)
+        .def_rw("file", &ShaderSourceDesc::file)
+        .def_rw("string", &ShaderSourceDesc::string);
+
+    // nb::class_<ShaderModuleDesc>(m, "ShaderModuleDesc")
+    //     .def_rw("type", &ShaderModuleDesc::type)
+    //     .def_rw("file", &ShaderModuleDesc::file)
+    //     .def_rw("string", &ShaderModuleDesc::string)
+    //     .def_rw("translation_unit", &ShaderModuleDesc::translation_unit);
 
     nb::class_<Program> program(m, "Program");
 
@@ -378,12 +450,12 @@ void register_rhi(nb::module_& m)
     );
 
     device.def("create_program", nb::overload_cast<const ProgramDesc&>(&Device::create_program), "desc"_a);
-    device.def(
-        "create_program",
-        nb::overload_cast<std::filesystem::path, std::string>(&Device::create_program),
-        "path"_a,
-        "entrypoint"_a
-    );
+    // device.def(
+    //     "create_program",
+    //     nb::overload_cast<std::filesystem::path, std::string>(&Device::create_program),
+    //     "path"_a,
+    //     "entrypoint"_a
+    // );
 }
 
 } // namespace kali

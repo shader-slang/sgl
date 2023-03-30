@@ -12,6 +12,7 @@ target_sources(kali_tests PRIVATE
 )
 target_include_directories(kali_tests BEFORE PRIVATE .)
 target_link_libraries(kali_tests PRIVATE doctest kali)
+target_compile_definitions(kali_tests PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
 set_target_properties(kali_tests PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${KALI_RUNTIME_OUTPUT_DIRECTORY}

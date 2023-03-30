@@ -383,7 +383,8 @@ public:
         case ComponentType::f32:
             for (uint32_t y = 0; y < m_spec.height; ++y) {
                 for (uint32_t x = 0; x < m_spec.width; ++x) {
-                    const uint32_t* pixel = reinterpret_cast<const uint32_t*>(buffer) + (y * m_spec.width + x) * m_spec.component_count;
+                    const uint32_t* pixel
+                        = reinterpret_cast<const uint32_t*>(buffer) + (y * m_spec.width + x) * m_spec.component_count;
                     for (uint32_t i = 0; i < m_spec.component_count; ++i) {
                         uint32_t* channel = reinterpret_cast<uint32_t*>(channel_data[i].get());
                         channel[y * m_spec.width + x] = pixel[i];
@@ -394,7 +395,8 @@ public:
         case ComponentType::f16:
             for (uint32_t y = 0; y < m_spec.height; ++y) {
                 for (uint32_t x = 0; x < m_spec.width; ++x) {
-                    const uint16_t* pixel = reinterpret_cast<const uint16_t*>(buffer) + (y * m_spec.width + x) * m_spec.component_count;
+                    const uint16_t* pixel
+                        = reinterpret_cast<const uint16_t*>(buffer) + (y * m_spec.width + x) * m_spec.component_count;
                     for (uint32_t i = 0; i < m_spec.component_count; ++i) {
                         uint16_t* channel = reinterpret_cast<uint16_t*>(channel_data[i].get());
                         channel[y * m_spec.width + x] = pixel[i];

@@ -67,7 +67,7 @@ public:
 
     ref<Texture> create_texture(const TextureDesc& desc, const void* init_data = nullptr);
 
-    ref<Sampler> create_sampler(const SamplerDesc &desc);
+    ref<Sampler> create_sampler(const SamplerDesc& desc);
 
     ref<Program> create_program(const ProgramDesc& desc);
 
