@@ -1,6 +1,7 @@
 #include "device.h"
 #include "swapchain.h"
 #include "resource.h"
+#include "sampler.h"
 #include "program.h"
 #include "helpers.h"
 
@@ -65,8 +66,17 @@ Device::Device(const DeviceDesc& desc)
         gfx::gfxSetDebugCallback(&s_debug_logger);
     }
 
+    m_type = m_desc.type;
+    if (m_type == DeviceType::automatic) {
+#if KALI_WINDOWS
+        m_type = DeviceType::d3d12;
+#elif KALI_LINUX
+        m_type = DeviceType::vulkan;
+#endif
+    }
+
     gfx::IDevice::Desc gfx_desc{
-        .deviceType = get_gfx_device_type(m_desc.type),
+        .deviceType = get_gfx_device_type(m_type),
     };
     if (SLANG_FAILED(gfx::gfxCreateDevice(&gfx_desc, m_gfx_device.writeRef())))
         KALI_THROW(Exception("Failed to create device!"));
@@ -146,15 +156,14 @@ ref<Texture> Device::create_texture(const TextureDesc& desc, const void* init_da
     return new Texture(desc, init_data, this);
 }
 
+ref<Sampler> Device::create_sampler(const SamplerDesc& desc)
+{
+    return new Sampler(desc, this);
+}
 
 ref<Program> Device::create_program(const ProgramDesc& desc)
 {
     return m_program_manager->create_program(desc);
-}
-
-ref<Program> Device::create_program(std::filesystem::path path, std::string entrypoint)
-{
-    return create_program(ProgramDesc::create().add_file(path).add_entrypoint(entrypoint));
 }
 
 ProgramManager& Device::get_program_manager()

@@ -18,6 +18,9 @@ class Buffer;
 struct TextureDesc;
 class Texture;
 
+struct SamplerDesc;
+class Sampler;
+
 struct ProgramDesc;
 class Program;
 class ProgramManager;

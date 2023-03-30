@@ -1,6 +1,7 @@
 #include "rhi/device.h"
 #include "rhi/swapchain.h"
 #include "rhi/resource.h"
+#include "rhi/sampler.h"
 #include "rhi/program.h"
 
 #include <nanobind/nanobind.h>
@@ -197,6 +198,39 @@ void register_rhi(nb::module_& m)
         .def_rw("debug_name", &TextureDesc::debug_name);
 
     // ------------------------------------------------------------------------
+    // sampler.h
+    // ------------------------------------------------------------------------
+
+    nb::enum_<ComparisonFunc>(m, "ComparisonFunc")
+        .value("never", ComparisonFunc::never)
+        .value("less", ComparisonFunc::less)
+        .value("equal", ComparisonFunc::equal)
+        .value("less_equal", ComparisonFunc::less_equal)
+        .value("greater", ComparisonFunc::greater)
+        .value("not_equal", ComparisonFunc::not_equal)
+        .value("greater_equal", ComparisonFunc::greater_equal)
+        .value("always", ComparisonFunc::always);
+
+    nb::enum_<TextureFilteringMode>(m, "TextureFilteringMode")
+        .value("point", TextureFilteringMode::point)
+        .value("linear", TextureFilteringMode::linear);
+
+    nb::enum_<TextureAddressingMode>(m, "TextureAddressingMode")
+        .value("wrap", TextureAddressingMode::wrap)
+        .value("clamp_to_edge", TextureAddressingMode::clamp_to_edge)
+        .value("clamp_to_border", TextureAddressingMode::clamp_to_border)
+        .value("mirror_repeat", TextureAddressingMode::mirror_repeat)
+        .value("mirror_once", TextureAddressingMode::mirror_once);
+
+    nb::enum_<TextureReductionOp>(m, "TextureReductionOp")
+        .value("average", TextureReductionOp::average)
+        .value("comparison", TextureReductionOp::comparison)
+        .value("minimum", TextureReductionOp::minimum)
+        .value("maximum", TextureReductionOp::maximum);
+
+    nb::class_<Sampler> sampler(m, "Sampler");
+
+    // ------------------------------------------------------------------------
     // swapchain.h
     // ------------------------------------------------------------------------
 
@@ -294,6 +328,53 @@ void register_rhi(nb::module_& m)
         "array_size"_a = 0,
         "mip_count"_a = 0,
         "format"_a = Format::unknown
+    );
+    device.def(
+        "create_sampler",
+        [](Device* device,
+           TextureFilteringMode min_filter,
+           TextureFilteringMode mag_filter,
+           TextureFilteringMode mip_filter,
+           TextureReductionOp reduction_op,
+           TextureAddressingMode address_u,
+           TextureAddressingMode address_v,
+           TextureAddressingMode address_w,
+           float mip_lod_bias,
+           uint32_t max_anisotropy,
+           ComparisonFunc comparison_func,
+           float4 border_color,
+           float min_lod,
+           float max_lod)
+        {
+            return device->create_sampler(SamplerDesc{
+                .min_filter = min_filter,
+                .mag_filter = mag_filter,
+                .mip_filter = mip_filter,
+                .reduction_op = reduction_op,
+                .address_u = address_u,
+                .address_v = address_v,
+                .address_w = address_w,
+                .mip_lod_bias = mip_lod_bias,
+                .max_anisotropy = max_anisotropy,
+                .comparison_func = comparison_func,
+                .border_color = border_color,
+                .min_lod = min_lod,
+                .max_lod = max_lod,
+            });
+        },
+        "min_filter"_a = TextureFilteringMode::linear,
+        "mag_filter"_a = TextureFilteringMode::linear,
+        "mip_filter"_a = TextureFilteringMode::linear,
+        "reduction_op"_a = TextureReductionOp::average,
+        "address_u"_a = TextureAddressingMode::wrap,
+        "address_v"_a = TextureAddressingMode::wrap,
+        "address_w"_a = TextureAddressingMode::wrap,
+        "mip_lod_bias"_a = 0.f,
+        "max_anisotropy"_a = 1,
+        "comparison_func"_a = ComparisonFunc::never,
+        "border_color"_a = float4{1.f, 1.f, 1.f, 1.f},
+        "min_lod"_a = -1000.f,
+        "max_lod"_a = 1000.f
     );
 
     device.def("create_program", nb::overload_cast<const ProgramDesc&>(&Device::create_program), "desc"_a);

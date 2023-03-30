@@ -21,6 +21,7 @@ target_sources(kali PRIVATE
     rhi/pipeline.cpp
     rhi/program.cpp
     rhi/resource.cpp
+    rhi/sampler.cpp
     rhi/swapchain.cpp
 )
 target_compile_definitions(kali

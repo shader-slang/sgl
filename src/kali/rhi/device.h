@@ -34,6 +34,10 @@ public:
     Device(const DeviceDesc& desc = DeviceDesc{});
     ~Device();
 
+    const DeviceDesc& get_desc() const { return m_desc; }
+
+    DeviceType get_type() const { return m_type; }
+
     ref<Swapchain> create_swapchain(const SwapchainDesc& desc, ref<Window> window);
 
     ref<Buffer> create_buffer(const BufferDesc& desc, const void* init_data = nullptr);
@@ -63,9 +67,11 @@ public:
 
     ref<Texture> create_texture(const TextureDesc& desc, const void* init_data = nullptr);
 
+    ref<Sampler> create_sampler(const SamplerDesc &desc);
+
     ref<Program> create_program(const ProgramDesc& desc);
 
-    ref<Program> create_program(std::filesystem::path path, std::string entrypoint);
+    // ref<Program> create_program(std::filesystem::path path, std::string entrypoint);
 
     ProgramManager& get_program_manager();
 
@@ -74,6 +80,7 @@ public:
 
 private:
     DeviceDesc m_desc;
+    DeviceType m_type;
     Slang::ComPtr<gfx::IDevice> m_gfx_device;
     Slang::ComPtr<gfx::ICommandQueue> m_gfx_queue;
     Slang::ComPtr<slang::IGlobalSession> m_slang_session;
