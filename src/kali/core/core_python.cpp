@@ -108,6 +108,33 @@ void bind_vector_type(nb::module_& m, const char* name)
 
 void register_core(nb::module_& m)
 {
+    // ------------------------------------------------------------------------
+    // object.h
+    // ------------------------------------------------------------------------
+
+    object_init_py(
+        [](PyObject* o) noexcept
+        {
+            nb::gil_scoped_acquire guard;
+            Py_INCREF(o);
+        },
+        [](PyObject* o) noexcept
+        {
+            nb::gil_scoped_acquire guard;
+            Py_DECREF(o);
+        }
+    );
+
+    nb::class_<Object>(
+        m,
+        "Object",
+        nb::intrusive_ptr<Object>([](Object* o, PyObject* po) noexcept { o->set_self_py(po); })
+    );
+
+    // ------------------------------------------------------------------------
+    // vector_types.h
+    // ------------------------------------------------------------------------
+
     bind_vector_type<float1>(m, "float1");
     bind_vector_type<float2>(m, "float2");
     bind_vector_type<float3>(m, "float3");
@@ -125,7 +152,15 @@ void register_core(nb::module_& m)
     bind_vector_type<bool3>(m, "bool3");
     bind_vector_type<bool4>(m, "bool4");
 
+    // ------------------------------------------------------------------------
+    // error.h
+    // ------------------------------------------------------------------------
+
     nb::exception<Exception>(m, "Exception", PyExc_RuntimeError);
+
+    // ------------------------------------------------------------------------
+    // version.h
+    // ------------------------------------------------------------------------
 
     nb::class_<Version>(m, "Version")
         .def_ro("minor", &Version::minor)
@@ -137,7 +172,11 @@ void register_core(nb::module_& m)
         .def_ro("long_tag", &Version::long_tag);
     m.def("get_version", []() { return get_version(); });
 
-    nb::class_<Window> window(m, "Window");
+    // ------------------------------------------------------------------------
+    // window.h
+    // ------------------------------------------------------------------------
+
+    nb::class_<Window, Object> window(m, "Window");
     window.def(
         nb::init<uint32_t, uint32_t, const std::string&>(),
         "width"_a = 1024,

@@ -167,7 +167,7 @@ void register_rhi(nb::module_& m)
 
     nb::class_<MemoryRange>(m, "MemoryRange").def_rw("offset", &MemoryRange::offset).def_rw("size", &MemoryRange::size);
 
-    nb::class_<Resource> resource(m, "Resource");
+    nb::class_<Resource, Object> resource(m, "Resource");
     resource.def("device_address", &Resource::get_device_address);
 
     nb::class_<BufferDesc>(m, "BufferDesc")
@@ -179,7 +179,7 @@ void register_rhi(nb::module_& m)
         .def_rw("cpu_access", &BufferDesc::cpu_access)
         .def_rw("debug_name", &BufferDesc::debug_name);
 
-    nb::class_<Buffer> buffer(m, "Buffer");
+    nb::class_<Buffer, Resource> buffer(m, "Buffer");
     buffer.def_prop_ro("desc", &Buffer::get_desc);
     buffer.def_prop_ro("size", &Buffer::get_size);
     buffer.def_prop_ro("struct_size", &Buffer::get_struct_size);
@@ -229,14 +229,14 @@ void register_rhi(nb::module_& m)
         .value("minimum", TextureReductionOp::minimum)
         .value("maximum", TextureReductionOp::maximum);
 
-    nb::class_<Sampler> sampler(m, "Sampler");
+    nb::class_<Sampler, Object> sampler(m, "Sampler");
     sampler.def_prop_ro("desc", &Sampler::get_desc);
 
     // ------------------------------------------------------------------------
     // swapchain.h
     // ------------------------------------------------------------------------
 
-    nb::class_<Swapchain> swapchain(m, "Swapchain");
+    nb::class_<Swapchain, Object> swapchain(m, "Swapchain");
 
     // ------------------------------------------------------------------------
     // program.h
@@ -312,7 +312,7 @@ void register_rhi(nb::module_& m)
     //     .def_rw("string", &ShaderModuleDesc::string)
     //     .def_rw("translation_unit", &ShaderModuleDesc::translation_unit);
 
-    nb::class_<Program> program(m, "Program");
+    nb::class_<Program, Object> program(m, "Program");
 
     // ------------------------------------------------------------------------
     // device.h
@@ -325,7 +325,7 @@ void register_rhi(nb::module_& m)
         .value("cpu", DeviceType::cpu)
         .value("cuda", DeviceType::cuda);
 
-    nb::class_<Device> device(m, "Device");
+    nb::class_<Device, Object> device(m, "Device");
     device.def(
         "__init__",
         [](Device* device, DeviceType type)
