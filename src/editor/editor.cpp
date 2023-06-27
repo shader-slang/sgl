@@ -15,8 +15,7 @@ namespace nested {
 struct Test {
     static void test()
     {
-        auto trace = backtrace();
-        std::cout << format_stacktrace(trace);
+        std::cout << format_stacktrace(backtrace());
     }
 };
 

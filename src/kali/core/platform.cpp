@@ -14,12 +14,17 @@ namespace kali {
 
 #if KALI_WINDOWS
 
-std::vector<StackTraceItem> backtrace(size_t skip_frames)
+StackTrace backtrace(size_t skip_frames)
 {
-    void* stack[100];
+    StackFrame stack[1024];
+    size_t frame_count = CaptureStackBackTrace(DWORD(skip_frames), 1024, reinterpret_cast<PVOID*>(stack), nullptr);
+    return {stack, stack + frame_count};
+}
+
+ResolvedStackTrace resolve_stacktrace(std::span<const StackFrame> trace)
+{
     HANDLE process = GetCurrentProcess();
     SymInitialize(process, nullptr, true);
-    size_t frame_count = CaptureStackBackTrace(DWORD(skip_frames), 100, stack, nullptr);
 
     struct Symbol : SYMBOL_INFO {
         char name_storage[1023];
@@ -30,22 +35,26 @@ std::vector<StackTraceItem> backtrace(size_t skip_frames)
     IMAGEHLP_MODULE64 module{};
     module.SizeOfStruct = sizeof(IMAGEHLP_MODULE64);
 
-    std::vector<StackTraceItem> trace;
-    trace.reserve(frame_count);
-    for (size_t i = 0; i < frame_count; i++) {
-        uint64_t address = reinterpret_cast<uint64_t>(stack[i]);
-        uint64_t offset = 0ull;
-        bool has_symbol = SymFromAddr(process, address, &offset, &symbol);
-        bool has_module = SymGetModuleInfo64(process, symbol.ModBase, &module);
-        StackTraceItem item{
-            .module = has_module ? module.ModuleName : "?",
-            .address = address,
-            .symbol = has_symbol ? symbol.Name : "?",
-            .offset = offset,
-        };
-        trace.emplace_back(std::move(item));
+    IMAGEHLP_LINE line{};
+    line.SizeOfStruct = sizeof(IMAGEHLP_LINE);
+
+    ResolvedStackTrace resolved_trace(trace.size());
+    for (size_t i = 0; i < trace.size(); i++) {
+        ResolvedStackFrame& resolved = resolved_trace[i];
+        resolved.address = trace[i];
+        resolved.offset = 0ull;
+        if (SymFromAddr(process, resolved.address, &resolved.offset, &symbol))
+            resolved.symbol = symbol.Name;
+        if (SymGetModuleInfo64(process, symbol.ModBase, &module))
+            resolved.module = module.ModuleName;
+        DWORD displacement;
+        if (SymGetLineFromAddr64(process, resolved.address, &displacement, &line)) {
+            resolved.source = line.FileName ? line.FileName : "";
+            resolved.line = line.LineNumber;
+        }
     }
-    return trace;
+
+    return resolved_trace;
 }
 
 #elif KALI_LINUX
@@ -93,12 +102,30 @@ std::vector<StackTraceItem> backtrace(size_t skip_frames)
 
 #endif
 
-std::string format_stacktrace(std::span<const StackTraceItem> trace)
+std::string format_stacktrace(std::span<const ResolvedStackFrame> trace)
 {
     std::string result;
-    for (const auto& item : trace)
-        result += fmt::format("{:08x}: {}({}) in {}\n", item.address, item.symbol, item.offset, item.module);
+    for (const auto& item : trace) {
+        if (item.source.empty()) {
+            result += fmt::format("{:08x}: {}+{:#x} in {}\n", item.address, item.symbol, item.offset, item.module);
+        } else {
+            result += fmt::format(
+                "{}({}): {}+{:#x} in {}\n",
+                item.source,
+                item.line,
+                item.symbol,
+                item.offset,
+                item.module
+            );
+        }
+    }
     return result;
 }
+
+std::string format_stacktrace(std::span<const StackFrame> trace)
+{
+    return format_stacktrace(resolve_stacktrace(trace));
+}
+
 
 } // namespace kali

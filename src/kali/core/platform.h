@@ -112,16 +112,31 @@ struct WindowHandle {
 };
 #endif
 
-struct StackTraceItem {
+using StackFrame = uintptr_t;
+using StackTrace = std::vector<StackFrame>;
+
+struct ResolvedStackFrame {
+    uintptr_t address;
     std::string module;
-    uint64_t address;
     std::string symbol;
     size_t offset;
+    std::string source;
+    uint32_t line;
 };
 
+using ResolvedStackTrace = std::vector<ResolvedStackFrame>;
+
 /// Generate a backtrace.
-[[nodiscard]] KALI_API std::vector<StackTraceItem> backtrace(size_t skip_frames = 1);
-/// Convert stack trace to a human readable string.
-[[nodiscard]] KALI_API std::string format_stacktrace(std::span<const StackTraceItem> trace);
+[[nodiscard]] KALI_API StackTrace backtrace(size_t skip_frames = 1);
+
+// Resolve a stack trace with symbol information.
+[[nodiscard]] KALI_API ResolvedStackTrace resolve_stacktrace(std::span<const StackFrame> trace);
+
+/// Convert resolved stack trace to a human readable string.
+[[nodiscard]] KALI_API std::string format_stacktrace(std::span<const ResolvedStackFrame> trace);
+
+/// Convert resolved stack trace to a human readable string.
+[[nodiscard]] KALI_API std::string format_stacktrace(std::span<const StackFrame> trace);
+
 
 } // namespace kali
