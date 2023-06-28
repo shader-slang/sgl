@@ -1,7 +1,6 @@
 #pragma once
 
 #include "error.h"
-#include "logger.h"
 #include "format.h"
 
 #include <span>
