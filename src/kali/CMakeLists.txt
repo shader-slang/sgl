@@ -57,6 +57,7 @@ add_executable(kali_tests)
 target_sources(kali_tests PRIVATE
     kali_tests.cpp
     testing.cpp
+    core/tests/test_enum.cpp
     core/tests/test_maths.cpp
     core/tests/test_memory_mapped_file.cpp
     core/tests/test_object.cpp
