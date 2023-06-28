@@ -80,3 +80,5 @@ public:
         );                                                                                                             \
         throw exc;                                                                                                     \
     }
+
+#define KALI_UNIMPLEMENTED() KALI_THROW(kali::RuntimeError("Unimplemented"))

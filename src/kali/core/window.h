@@ -5,6 +5,7 @@
 #include "input.h"
 
 #include <cstdint>
+#include <filesystem>
 #include <functional>
 #include <optional>
 #include <span>
@@ -15,10 +16,26 @@ struct GLFWwindow;
 
 namespace kali {
 
+enum class WindowMode {
+    normal,
+    minimized,
+    fullscreen,
+};
+
+struct WindowDesc {
+    uint32_t width;
+    uint32_t height;
+    std::string title;
+    WindowMode mode{WindowMode::normal};
+    bool resizable{true};
+};
+
 class KALI_API Window : public Object {
 public:
-    Window(uint32_t width, uint32_t height, std::string title = "");
+    Window(WindowDesc desc);
     ~Window();
+
+    static ref<Window> create(WindowDesc desc) { return make_ref<Window>(desc); }
 
     WindowHandle get_window_handle() const;
 
@@ -31,6 +48,8 @@ public:
 
     void set_title(std::string title);
     const std::string& get_title() const { return m_title; }
+
+    void set_icon(const std::filesystem::path& path);
 
     void main_loop();
 

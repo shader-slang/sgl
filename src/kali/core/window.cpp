@@ -230,16 +230,16 @@ struct EventHandlers {
         mods = fix_glfw_modifiers(mods, key, action);
         window->m_mods = get_key_modifier_flags(mods);
 
-        KeyboardEvent::Type type;
+        KeyboardEventType type;
         switch (action) {
         case GLFW_RELEASE:
-            type = KeyboardEvent::Type::key_release;
+            type = KeyboardEventType::key_release;
             break;
         case GLFW_PRESS:
-            type = KeyboardEvent::Type::key_press;
+            type = KeyboardEventType::key_press;
             break;
         case GLFW_REPEAT:
-            type = KeyboardEvent::Type::key_repeat;
+            type = KeyboardEventType::key_repeat;
             break;
         default:
             return;
@@ -259,7 +259,7 @@ struct EventHandlers {
         Window* window = static_cast<Window*>(glfwGetWindowUserPointer(glfw_window));
 
         KeyboardEvent event{
-            .type = KeyboardEvent::Type::input,
+            .type = KeyboardEventType::input,
             .mods = window->m_mods,
             .codepoint = codepoint,
         };
@@ -290,7 +290,7 @@ struct EventHandlers {
         }
 
         MouseEvent event{
-            .type = (action == GLFW_PRESS) ? MouseEvent::Type::button_down : MouseEvent::Type::button_up,
+            .type = (action == GLFW_PRESS) ? MouseEventType::button_down : MouseEventType::button_up,
             .button = mouse_button,
             .mods = window->m_mods,
         };
@@ -305,7 +305,7 @@ struct EventHandlers {
         window->m_mouse_pos = float2(xpos, ypos);
 
         MouseEvent event{
-            .type = MouseEvent::Type::move,
+            .type = MouseEventType::move,
             .pos = window->m_mouse_pos,
             .mods = window->m_mods,
         };
@@ -318,7 +318,7 @@ struct EventHandlers {
         Window* window = static_cast<Window*>(glfwGetWindowUserPointer(glfw_window));
 
         MouseEvent event{
-            .type = MouseEvent::Type::scroll,
+            .type = MouseEventType::scroll,
             .pos = window->m_mouse_pos,
             .scroll = float2(xoffset, yoffset),
             .mods = window->m_mods,
@@ -336,12 +336,29 @@ struct EventHandlers {
 };
 
 
-Window::Window(uint32_t width, uint32_t height, std::string title)
-    : m_width(width)
-    , m_height(height)
-    , m_title(title)
+Window::Window(WindowDesc desc)
+    : m_width(desc.width)
+    , m_height(desc.height)
+    , m_title(desc.title)
 {
     init_glfw();
+
+    if (desc.mode == WindowMode::fullscreen) {
+        glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+        auto mon = glfwGetPrimaryMonitor();
+        auto mod = glfwGetVideoMode(mon);
+        m_width = mod->width;
+        m_height = mod->height;
+    } else if (desc.mode == WindowMode::minimized) {
+        // Start with window being invisible
+        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+        glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_FALSE);
+        glfwWindowHint(GLFW_FOCUSED, GLFW_FALSE);
+    }
+
+    if (desc.resizable == false) {
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    }
 
     m_window = glfwCreateWindow(m_width, m_height, m_title.c_str(), NULL, NULL);
     if (!m_window)
@@ -388,6 +405,12 @@ void Window::set_title(std::string title)
 {
     m_title = std::move(title);
     glfwSetWindowTitle(m_window, m_title.c_str());
+}
+
+void Window::set_icon(const std::filesystem::path& path)
+{
+    KALI_UNUSED(path);
+    KALI_UNIMPLEMENTED();
 }
 
 void Window::main_loop()

@@ -13,10 +13,7 @@ using namespace kali;
 namespace nested {
 
 struct Test {
-    static void test()
-    {
-        std::cout << format_stacktrace(backtrace());
-    }
+    static void test() { std::cout << format_stacktrace(backtrace()); }
 };
 
 
@@ -37,7 +34,7 @@ int main()
     nested::Test::test();
 
 
-    ref<Window> window = new Window(1024, 1024, "Editor");
+    ref<Window> window = Window::create({.width = 1024, .height = 1024, .title = "Kali Editor"});
 
     window->set_on_resize([](uint32_t width, uint32_t height) { KALI_INFO("Window resized to {}x{}", width, height); });
 
@@ -45,16 +42,16 @@ int main()
         [](const MouseEvent& event)
         {
             switch (event.type) {
-            case MouseEvent::Type::button_down:
+            case MouseEventType::button_down:
                 KALI_INFO("mouse down");
                 break;
-            case MouseEvent::Type::button_up:
+            case MouseEventType::button_up:
                 KALI_INFO("mouse up");
                 break;
-            case MouseEvent::Type::move:
+            case MouseEventType::move:
                 KALI_INFO("mouse move");
                 break;
-            case MouseEvent::Type::scroll:
+            case MouseEventType::scroll:
                 KALI_INFO("mouse scroll");
                 break;
             }

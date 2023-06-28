@@ -10,6 +10,7 @@ enum class MouseButton : uint32_t {
     left,
     middle,
     right,
+    unknown,
 };
 
 enum class KeyModifierFlags : uint32_t {
@@ -138,45 +139,47 @@ enum class KeyCode : uint32_t {
     unknown,
 };
 
+enum class KeyboardEventType {
+    key_press,   ///< Key was pressed.
+    key_release, ///< Key was released.
+    key_repeat,  ///< Key is repeatedly down.
+    input        ///< Character input.
+};
+
 struct KeyboardEvent {
-    enum class Type {
-        key_press,   ///< key was pressed.
-        key_release, ///< key was released.
-        key_repeat,  ///< key is repeatedly down.
-        input        ///< character input
-    };
 
-    Type type;             ///< The event type.
-    KeyCode key;           ///< The last key that was pressed/released.
-    KeyModifierFlags mods; ///< Keyboard modifier flags.
-    uint32_t codepoint;    ///< UTF-32 codepoint from GLFW for events.
+    KeyboardEventType type;        ///< The event type.
+    KeyCode key{KeyCode::unknown}; ///< The last key that was pressed/released.
+    KeyModifierFlags mods{0};      ///< Keyboard modifier flags.
+    uint32_t codepoint{0};         ///< UTF-32 codepoint from GLFW for events.
 
-    bool is_key_press() const { return type == Type::key_press; }
-    bool is_key_release() const { return type == Type::key_release; }
-    bool is_key_repeat() const { return type == Type::key_repeat; }
-    bool is_input() const { return type == Type::input; }
+    bool is_key_press() const { return type == KeyboardEventType::key_press; }
+    bool is_key_release() const { return type == KeyboardEventType::key_release; }
+    bool is_key_repeat() const { return type == KeyboardEventType::key_repeat; }
+    bool is_input() const { return type == KeyboardEventType::input; }
 
     bool has_modifier(KeyModifier mod) const { return is_set(mods, (KeyModifierFlags)mod); }
 };
 
+enum class MouseEventType {
+    button_down, ///< Mouse button was pressed.
+    button_up,   ///< Mouse button was released.
+    move,        ///< Mouse cursor position changed.
+    scroll       ///< Mouse wheel was scrolled.
+};
+
 struct MouseEvent {
-    enum class Type {
-        button_down, ///< Mouse button was pressed
-        button_up,   ///< Mouse button was released
-        move,        ///< Mouse cursor position changed
-        scroll       ///< Mouse wheel was scrolled
-    };
 
-    Type type;
-    float2 pos;
-    float2 scroll;
-    MouseButton button;
-    KeyModifierFlags mods;
+    MouseEventType type;
+    float2 pos{0.f, 0.f};
+    float2 scroll{0.f, 0.f};
+    MouseButton button{MouseButton::unknown};
+    KeyModifierFlags mods{0};
 
-    bool is_button_down() const { return type == Type::button_down; }
-    bool is_button_up() const { return type == Type::button_up; }
-    bool is_move() const { return type == Type::move; }
-    bool is_scroll() const { return type == Type::scroll; }
+    bool is_button_down() const { return type == MouseEventType::button_down; }
+    bool is_button_up() const { return type == MouseEventType::button_up; }
+    bool is_move() const { return type == MouseEventType::move; }
+    bool is_scroll() const { return type == MouseEventType::scroll; }
 
     bool has_modifier(KeyModifier mod) const { return is_set(mods, (KeyModifierFlags)mod); }
 };
