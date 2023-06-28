@@ -1,0 +1,141 @@
+#include "testing.h"
+#include "core/platform.h"
+
+using namespace kali;
+
+TEST_SUITE_BEGIN("platform");
+
+TEST_CASE("get_display_scale_factor")
+{
+    float factor = get_display_scale_factor();
+    CHECK_GT(factor, 0.f);
+}
+
+TEST_CASE("is_same_path")
+{
+    CHECK(is_same_path("foo", "foo"));
+    CHECK(is_same_path("foo", "./foo"));
+    CHECK(is_same_path("foo/", "foo/."));
+    CHECK(is_same_path("foo/", "./foo/."));
+    CHECK(is_same_path("foo/", "foo/./"));
+    CHECK(is_same_path("foo/", "./foo/./"));
+    CHECK(is_same_path("foo/", "foo/./."));
+    CHECK(is_same_path("foo/", "./foo/./."));
+}
+
+TEST_CASE("has_extension")
+{
+    CHECK_EQ(has_extension("foo.exr", "exr"), true);
+    CHECK_EQ(has_extension("foo.exr", ".exr"), true);
+    CHECK_EQ(has_extension("foo.Exr", "exr"), true);
+    CHECK_EQ(has_extension("foo.Exr", ".exr"), true);
+    CHECK_EQ(has_extension("foo.Exr", "exR"), true);
+    CHECK_EQ(has_extension("foo.Exr", ".exR"), true);
+    CHECK_EQ(has_extension("foo.EXR", "exr"), true);
+    CHECK_EQ(has_extension("foo.EXR", ".exr"), true);
+    CHECK_EQ(has_extension("foo.xr", "exr"), false);
+    CHECK_EQ(has_extension("/foo/png", ""), true);
+    CHECK_EQ(has_extension("/foo/png", "exr"), false);
+    CHECK_EQ(has_extension("/foo/.profile", ""), true);
+}
+
+TEST_CASE("get_extension_from_path")
+{
+    CHECK_EQ(get_extension_from_path("foo.exr"), "exr");
+    CHECK_EQ(get_extension_from_path("foo.Exr"), "exr");
+    CHECK_EQ(get_extension_from_path("foo.EXR"), "exr");
+    CHECK_EQ(get_extension_from_path("foo"), "");
+    CHECK_EQ(get_extension_from_path("/foo/.profile"), "");
+}
+
+TEST_CASE("junction")
+{
+    std::filesystem::path cwd = std::filesystem::current_path();
+    std::filesystem::path target = cwd / "junction_target";
+    std::filesystem::path link = cwd / "junction_link";
+
+    // Create junction_target/test
+    std::filesystem::create_directories(target / "test");
+
+    // Create junction from junction_link to junction_target
+    CHECK(create_junction(link, target));
+
+    // Check that junction was successfully created by accessing junction_link/test
+    CHECK(std::filesystem::exists(link / "test"));
+
+    // Delete junction
+    CHECK(delete_junction(link));
+
+    // Check that junction was deleted
+    CHECK_FALSE(std::filesystem::exists(link));
+
+    // Delete junction_target/test
+    std::filesystem::remove_all(target);
+}
+
+TEST_CASE("paths")
+{
+    auto executable_path = get_executable_path();
+    CHECK_FALSE(executable_path.empty());
+    MESSAGE("executable_path:", executable_path);
+
+    auto executable_directory = get_executable_directory();
+    CHECK_FALSE(executable_directory.empty());
+    MESSAGE("executable_directory:", executable_directory);
+
+    auto executable_name = get_executable_name();
+    CHECK_FALSE(executable_name.empty());
+    MESSAGE("executable_name:", executable_name);
+
+    auto app_data_directory = get_app_data_directory();
+    CHECK_FALSE(app_data_directory.empty());
+    MESSAGE("app_data_directory:", app_data_directory);
+
+    auto home_directory = get_home_directory();
+    CHECK_FALSE(home_directory.empty());
+    MESSAGE("home_directory:", home_directory);
+}
+
+TEST_CASE("environment")
+{
+    auto path = get_environment_variable("PATH");
+    CHECK(path.has_value());
+    MESSAGE("PATH:", path.value());
+}
+
+TEST_CASE("memory")
+{
+    uint64_t total_virtual_memory = get_total_virtual_memory();
+    CHECK_GT(total_virtual_memory, 0);
+    MESSAGE("total_virtual_memory:", total_virtual_memory);
+
+    uint64_t used_virtual_memory = get_used_virtual_memory();
+    CHECK_GT(used_virtual_memory, 0);
+    MESSAGE("used_virtual_memory:", used_virtual_memory);
+
+    uint64_t process_used_virtual_memory = get_process_used_virtual_memory();
+    CHECK_GT(process_used_virtual_memory, 0);
+    MESSAGE("process_used_virtual_memory:", process_used_virtual_memory);
+
+    uint64_t current_rss = get_current_rss();
+    CHECK_GT(current_rss, 0);
+    MESSAGE("current_rss:", current_rss);
+
+    uint64_t peak_rss = get_peak_rss();
+    CHECK_GT(peak_rss, 0);
+    MESSAGE("peak_rss:", peak_rss);
+}
+
+TEST_CASE("backtrace")
+{
+    StackTrace trace = backtrace();
+    CHECK_GT(trace.size(), 0);
+
+    ResolvedStackTrace resolved_trace = resolve_stacktrace(trace);
+    CHECK_EQ(resolved_trace.size(), trace.size());
+
+    std::string formatted_trace = format_stacktrace(resolved_trace);
+    CHECK_GT(formatted_trace.size(), 0);
+}
+
+TEST_SUITE_END();

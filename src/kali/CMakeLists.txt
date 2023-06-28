@@ -10,6 +10,8 @@ target_sources(kali PRIVATE
     core/logger.cpp
     core/memory_mapped_file.cpp
     core/object.cpp
+    core/platform_linux.cpp
+    core/platform_windows.cpp
     core/platform.cpp
     core/string_utils.cpp
     core/version.cpp
@@ -61,6 +63,7 @@ target_sources(kali_tests PRIVATE
     core/tests/test_maths.cpp
     core/tests/test_memory_mapped_file.cpp
     core/tests/test_object.cpp
+    core/tests/test_platform.cpp
     core/tests/test_string_utils.cpp
     core/tests/test_vector.cpp
     imageio/tests/test_imageio.cpp

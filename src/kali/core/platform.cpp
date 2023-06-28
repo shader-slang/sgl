@@ -1,106 +1,89 @@
 #include "platform.h"
+#include "error.h"
 #include "format.h"
 
-#if KALI_WINDOWS
-#include <Windows.h>
-#include <DbgHelp.h>
-#elif KALI_LINUX
-#include <regex>
-#include <execinfo.h>
-#include <cxxabi.h>
-#endif
+#include <GLFW/glfw3.h>
+
+#include <cstdio>
 
 namespace kali {
 
-#if KALI_WINDOWS
-
-StackTrace backtrace(size_t skip_frames)
+float get_display_scale_factor()
 {
-    StackFrame stack[1024];
-    size_t frame_count = CaptureStackBackTrace(DWORD(skip_frames), 1024, reinterpret_cast<PVOID*>(stack), nullptr);
-    return {stack, stack + frame_count};
+    float xscale = 1.f;
+    float yscale = 1.f;
+    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    if (monitor)
+        glfwGetMonitorContentScale(monitor, &xscale, &yscale);
+    return 0.5f * (xscale + yscale);
 }
 
-ResolvedStackTrace resolve_stacktrace(std::span<const StackFrame> trace)
+// -------------------------------------------------------------------------------------------------
+// Filesystem
+// -------------------------------------------------------------------------------------------------
+
+bool is_same_path(const std::filesystem::path& lhs, const std::filesystem::path& rhs)
 {
-    HANDLE process = GetCurrentProcess();
-    SymInitialize(process, nullptr, true);
-
-    struct Symbol : SYMBOL_INFO {
-        char name_storage[1023];
-    } symbol{};
-    symbol.MaxNameLen = 1024;
-    symbol.SizeOfStruct = sizeof(SYMBOL_INFO);
-
-    IMAGEHLP_MODULE64 module{};
-    module.SizeOfStruct = sizeof(IMAGEHLP_MODULE64);
-
-    IMAGEHLP_LINE line{};
-    line.SizeOfStruct = sizeof(IMAGEHLP_LINE);
-
-    ResolvedStackTrace resolved_trace(trace.size());
-    for (size_t i = 0; i < trace.size(); i++) {
-        ResolvedStackFrame& resolved = resolved_trace[i];
-        resolved.address = trace[i];
-        resolved.offset = 0ull;
-        if (SymFromAddr(process, resolved.address, &resolved.offset, &symbol))
-            resolved.symbol = symbol.Name;
-        if (SymGetModuleInfo64(process, symbol.ModBase, &module))
-            resolved.module = module.ModuleName;
-        DWORD displacement;
-        if (SymGetLineFromAddr64(process, resolved.address, &displacement, &line)) {
-            resolved.source = line.FileName ? line.FileName : "";
-            resolved.line = line.LineNumber;
-        }
-    }
-
-    return resolved_trace;
+    return std::filesystem::weakly_canonical(lhs) == std::filesystem::weakly_canonical(rhs);
 }
 
-#elif KALI_LINUX
-
-std::vector<StackTraceItem> backtrace(size_t skip_frames)
+bool has_extension(const std::filesystem::path& path, std::string_view ext)
 {
-    auto demangle = [](const char* name)
+    // Remove leading '.' from ext.
+    if (ext.size() > 0 && ext[0] == '.')
+        ext.remove_prefix(1);
+
+    std::string pathExt = get_extension_from_path(path);
+
+    if (ext.size() != pathExt.size())
+        return false;
+
+    return std::equal(ext.rbegin(), ext.rend(), pathExt.rbegin(), [](char a, char b) { return std::tolower(a) == std::tolower(b); });
+}
+
+std::string get_extension_from_path(const std::filesystem::path& path)
+{
+    std::string ext;
+    if (path.has_extension())
     {
-        int status = 0;
-        char* buffer = abi::__cxa_demangle(name, nullptr, nullptr, &status);
-        std::string demangled{buffer ? buffer : name};
-        free(buffer);
-        return demangled;
-    };
-
-    void* raw_trace[100];
-    int count = ::backtrace(raw_trace, 100);
-    if (skip_frames >= count)
-        return {};
-
-    char** info = ::backtrace_symbols(raw_trace, count);
-
-    std::regex re("(\\S+)\\((\\S*)\\+(0x[0-9a-f]*)\\)\\s+\\[(0x[0-9a-f]+)\\].*");
-
-    std::vector<StackTraceItem> trace;
-    trace.reserve(count - skip_frames);
-    for (size_t i = skip_frames; i < count; i++) {
-        std::cmatch m;
-        StackTraceItem item{};
-        if (std::regex_match(info[i], m, re)) {
-            item.module = m[1];
-            item.symbol = m[2];
-            item.symbol = demangle(item.symbol.c_str());
-            item.offset = std::stoul(m[3], nullptr, 16);
-            item.address = std::stoul(m[4], nullptr, 16);
-        } else {
-            item.symbol = info[i];
-        }
-        trace.emplace_back(std::move(item));
+        ext = path.extension().string();
+        // Remove the leading '.' from ext.
+        if (ext.size() > 0 && ext[0] == '.')
+            ext.erase(0, 1);
+        // Convert to lower-case.
+        std::transform(ext.begin(), ext.end(), ext.begin(), [](char c) { return std::tolower(c); });
     }
-    free(info);
-
-    return trace;
+    return ext;
 }
 
+std::filesystem::path get_temp_file_path()
+{
+    static std::mutex mutex;
+    std::lock_guard<std::mutex> guard(mutex);
+#if KALI_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4996)
 #endif
+    char* name = std::tmpnam(nullptr);
+#if KALI_MSVC
+#pragma warning(pop)
+#endif
+    if (name == nullptr)
+        KALI_THROW(RuntimeError("Failed to create temporary file path."));
+    return name;
+}
+
+const std::filesystem::path& get_executable_directory()
+{
+    static std::filesystem::path directory{get_executable_path().parent_path()};
+    return directory;
+}
+
+const std::string& get_executable_name()
+{
+    static std::string name{get_executable_path().filename().string()};
+    return name;
+}
 
 std::string format_stacktrace(std::span<const ResolvedStackFrame> trace)
 {
@@ -126,6 +109,5 @@ std::string format_stacktrace(std::span<const StackFrame> trace)
 {
     return format_stacktrace(resolve_stacktrace(trace));
 }
-
 
 } // namespace kali
