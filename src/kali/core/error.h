@@ -40,6 +40,29 @@ protected:
     std::shared_ptr<std::string> m_what;
 };
 
+class KALI_API RuntimeError : public Exception {
+public:
+    RuntimeError() noexcept { }
+    RuntimeError(const char* what)
+        : Exception(what)
+    {
+    }
+    RuntimeError(const std::string& what)
+        : Exception(what)
+    {
+    }
+
+    template<typename... Args>
+    explicit RuntimeError(fmt::format_string<Args...> fmt, Args&&... args)
+        : RuntimeError(fmt::format(fmt, std::forward<Args>(args)...).c_str())
+    {
+    }
+
+    RuntimeError(const RuntimeError& other) noexcept { m_what = other.m_what; }
+
+    virtual ~RuntimeError() override { }
+};
+
 #if KALI_MSVC
 #pragma warning(pop)
 #endif
