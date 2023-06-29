@@ -17,12 +17,10 @@ template<typename T>
 using EnumInfo = decltype(find_enum_info_adl(std::declval<T>()));
 
 template<typename, typename = void>
-struct has_enum_info : std::false_type {
-};
+struct has_enum_info : std::false_type { };
 
 template<typename T>
-struct has_enum_info<T, std::void_t<decltype(EnumInfo<T>::items)>> : std::true_type {
-};
+struct has_enum_info<T, std::void_t<decltype(EnumInfo<T>::items)>> : std::true_type { };
 
 template<typename T>
 inline constexpr bool has_enum_info_v = has_enum_info<T>::value;

@@ -209,8 +209,7 @@ using FileDialogFilterList = std::vector<FileDialogFilter>;
 // Memory
 // -------------------------------------------------------------------------------------------------
 
-struct MemoryStats
-{
+struct MemoryStats {
     uint64_t rss;
     uint64_t peak_rss;
 };
@@ -220,7 +219,8 @@ struct MemoryStats
 /// Returns the current resident/working set size in bytes, how much memory does the process actually use.
 [[nodiscard]] KALI_API uint64_t get_current_rss();
 
-/// Returns the peak resident/working set size in btes, how much memory has the processes maximally occupy during its runtime.
+/// Returns the peak resident/working set size in btes, how much memory has the processes maximally occupy during its
+/// runtime.
 [[nodiscard]] KALI_API uint64_t get_peak_rss();
 
 // -------------------------------------------------------------------------------------------------
@@ -233,7 +233,7 @@ struct MemoryStats
 /// Release a shared library.
 KALI_API void release_shared_library(SharedLibraryHandle library);
 
-///Get a function pointer from a library.
+/// Get a function pointer from a library.
 KALI_API void* get_proc_address(SharedLibraryHandle library, const char* proc_name);
 
 // -------------------------------------------------------------------------------------------------
@@ -247,7 +247,7 @@ KALI_API void* get_proc_address(SharedLibraryHandle library, const char* proc_na
 KALI_API void debug_break();
 
 /// Print a message into the debug window.
-KALI_API void print_to_debug_window(const char *str);
+KALI_API void print_to_debug_window(const char* str);
 
 // -------------------------------------------------------------------------------------------------
 // Stacktrace

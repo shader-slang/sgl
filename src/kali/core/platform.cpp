@@ -38,14 +38,18 @@ bool has_extension(const std::filesystem::path& path, std::string_view ext)
     if (ext.size() != pathExt.size())
         return false;
 
-    return std::equal(ext.rbegin(), ext.rend(), pathExt.rbegin(), [](char a, char b) { return std::tolower(a) == std::tolower(b); });
+    return std::equal(
+        ext.rbegin(),
+        ext.rend(),
+        pathExt.rbegin(),
+        [](char a, char b) { return std::tolower(a) == std::tolower(b); }
+    );
 }
 
 std::string get_extension_from_path(const std::filesystem::path& path)
 {
     std::string ext;
-    if (path.has_extension())
-    {
+    if (path.has_extension()) {
         ext = path.extension().string();
         // Remove the leading '.' from ext.
         if (ext.size() > 0 && ext[0] == '.')

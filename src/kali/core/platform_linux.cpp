@@ -18,9 +18,9 @@
 
 namespace kali {
 
-void init_platform() {}
+void init_platform() { }
 
-void shutdown_platform() {}
+void shutdown_platform() { }
 
 void set_window_icon(WindowHandle handle, const std::filesystem::path& path)
 {
@@ -29,8 +29,7 @@ void set_window_icon(WindowHandle handle, const std::filesystem::path& path)
     KALI_UNIMPLEMENTED();
 }
 
-struct KeyboardInterruptData
-{
+struct KeyboardInterruptData {
     std::mutex mutex;
     std::function<void()> handler;
 
@@ -45,11 +44,9 @@ static void signal_handler(int sig)
 {
     KeyboardInterruptData& data = KeyboardInterruptData::get();
 
-    if (sig == SIGINT)
-    {
+    if (sig == SIGINT) {
         std::lock_guard<std::mutex> lock(data.mutex);
-        if (data.handler)
-        {
+        if (data.handler) {
             data.handler();
         }
     }
@@ -60,17 +57,14 @@ void set_keyboard_interrupt_handler(std::function<void()> handler)
     KeyboardInterruptData& data = KeyboardInterruptData::get();
     std::lock_guard<std::mutex> lock(data.mutex);
 
-    if (handler && !data.handler)
-    {
+    if (handler && !data.handler) {
         struct sigaction action;
         action.sa_handler = signal_handler;
         sigemptyset(&action.sa_mask);
         action.sa_flags = 0;
         if (sigaction(SIGINT, &action, nullptr) != 0)
             KALI_THROW(RuntimeError("Failed to register keyboard interrupt handler"));
-    }
-    else if (!handler && data.handler)
-    {
+    } else if (!handler && data.handler) {
         struct sigaction action;
         action.sa_handler = SIG_DFL;
         sigemptyset(&action.sa_mask);

@@ -64,8 +64,7 @@ void set_window_icon(WindowHandle handle, const std::filesystem::path& path)
     SendMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM)hicon);
 }
 
-struct KeyboardInterruptData
-{
+struct KeyboardInterruptData {
     std::mutex mutex;
     std::function<void()> handler;
 
@@ -80,11 +79,9 @@ static BOOL WINAPI console_ctrl_handler(_In_ DWORD dwCtrlType)
 {
     KeyboardInterruptData& data = KeyboardInterruptData::get();
 
-    if (dwCtrlType == CTRL_C_EVENT)
-    {
+    if (dwCtrlType == CTRL_C_EVENT) {
         std::lock_guard<std::mutex> lock(data.mutex);
-        if (data.handler)
-        {
+        if (data.handler) {
             data.handler();
             return TRUE;
         }
@@ -98,13 +95,10 @@ void set_keyboard_interrupt_handler(std::function<void()> handler)
     KeyboardInterruptData& data = KeyboardInterruptData::get();
     std::lock_guard<std::mutex> lock(data.mutex);
 
-    if (handler && !data.handler)
-    {
+    if (handler && !data.handler) {
         if (SetConsoleCtrlHandler(console_ctrl_handler, TRUE) == 0)
             KALI_THROW(RuntimeError("Failed to register keyboard interrupt handler"));
-    }
-    else if (!handler && data.handler)
-    {
+    } else if (!handler && data.handler) {
         if (SetConsoleCtrlHandler(console_ctrl_handler, FALSE) == 0)
             KALI_THROW(RuntimeError("Failed to unregister keyboard interrupt handler"));
     }
@@ -452,8 +446,7 @@ MemoryStats get_memory_stats()
 {
     MemoryStats stats = {};
     PROCESS_MEMORY_COUNTERS pmc;
-    if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(PROCESS_MEMORY_COUNTERS)))
-    {
+    if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(PROCESS_MEMORY_COUNTERS))) {
         stats.rss = pmc.WorkingSetSize;
         stats.peak_rss = pmc.PeakWorkingSetSize;
     }
