@@ -81,6 +81,8 @@ enum class Format : uint32_t {
 
     d32_float,
     d16_unorm,
+    d32_float_s8_uint,
+    r32_float_x32_typeless,
 
     b4g4r4a4_unorm,
     b5g6r5_unorm,

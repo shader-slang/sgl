@@ -64,6 +64,8 @@ gfx::Format get_gfx_format(Format format)
     static_assert(uint32_t(Format::r8_snorm) == uint32_t(gfx::Format::R8_SNORM));
     static_assert(uint32_t(Format::d32_float) == uint32_t(gfx::Format::D32_FLOAT));
     static_assert(uint32_t(Format::d16_unorm) == uint32_t(gfx::Format::D16_UNORM));
+    static_assert(uint32_t(Format::d32_float_s8_uint) == uint32_t(gfx::Format::D32_FLOAT_S8_UINT));
+    static_assert(uint32_t(Format::r32_float_x32_typeless) == uint32_t(gfx::Format::R32_FLOAT_X32_TYPELESS));
     static_assert(uint32_t(Format::b4g4r4a4_unorm) == uint32_t(gfx::Format::B4G4R4A4_UNORM));
     static_assert(uint32_t(Format::b5g6r5_unorm) == uint32_t(gfx::Format::B5G6R5_UNORM));
     static_assert(uint32_t(Format::b5g5r5a1_unorm) == uint32_t(gfx::Format::B5G5R5A1_UNORM));
