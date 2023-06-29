@@ -164,7 +164,8 @@ void register_core(nb::module_& m)
     // error.h
     // ------------------------------------------------------------------------
 
-    nb::exception<Exception>(m, "Exception", PyExc_RuntimeError);
+    nb::exception<RuntimeError>(m, "RuntimeError", PyExc_RuntimeError);
+    nb::exception<ArgumentError>(m, "ArgumentError", PyExc_ValueError);
 
     // ------------------------------------------------------------------------
     // version.h

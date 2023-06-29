@@ -63,6 +63,29 @@ public:
     virtual ~RuntimeError() override { }
 };
 
+class KALI_API ArgumentError : public Exception {
+public:
+    ArgumentError() noexcept { }
+    ArgumentError(const char* what)
+        : Exception(what)
+    {
+    }
+    ArgumentError(const std::string& what)
+        : Exception(what)
+    {
+    }
+
+    template<typename... Args>
+    explicit ArgumentError(fmt::format_string<Args...> fmt, Args&&... args)
+        : ArgumentError(fmt::format(fmt, std::forward<Args>(args)...).c_str())
+    {
+    }
+
+    ArgumentError(const ArgumentError& other) noexcept { m_what = other.m_what; }
+
+    virtual ~ArgumentError() override { }
+};
+
 #if KALI_MSVC
 #pragma warning(pop)
 #endif
