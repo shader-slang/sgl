@@ -35,6 +35,8 @@ inline ImageComponentType dtype_to_image_component_type(nb::dlpack::dtype dtype)
             return ImageComponentType::f32;
             break;
         }
+    default:
+        break;
     }
 
     return ImageComponentType::unknown;
@@ -43,6 +45,8 @@ inline ImageComponentType dtype_to_image_component_type(nb::dlpack::dtype dtype)
 inline nanobind::dlpack::dtype image_component_type_to_dtype(ImageComponentType type)
 {
     switch (type) {
+    case ImageComponentType::unknown:
+        return {};
     case ImageComponentType::u8:
         return nb::dlpack::dtype{uint8_t(nb::dlpack::dtype_code::UInt), 8, 1};
     case ImageComponentType::u16:

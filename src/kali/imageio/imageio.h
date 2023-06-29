@@ -2,7 +2,6 @@
 
 #include "core/platform.h"
 #include "core/object.h"
-#include "core/tensor.h"
 
 #include <cstdint>
 #include <filesystem>
