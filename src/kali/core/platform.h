@@ -209,19 +209,18 @@ using FileDialogFilterList = std::vector<FileDialogFilter>;
 // Memory
 // -------------------------------------------------------------------------------------------------
 
+/// Get the page size of the system.
+[[nodiscard]] KALI_API size_t get_page_size();
+
 struct MemoryStats {
+    /// Current resident/working set size in bytes.
     uint64_t rss;
+    /// Peak resident/working set size in bytes.
     uint64_t peak_rss;
 };
 
+/// Get the current memory stats.
 [[nodiscard]] KALI_API MemoryStats get_memory_stats();
-
-/// Returns the current resident/working set size in bytes, how much memory does the process actually use.
-[[nodiscard]] KALI_API uint64_t get_current_rss();
-
-/// Returns the peak resident/working set size in btes, how much memory has the processes maximally occupy during its
-/// runtime.
-[[nodiscard]] KALI_API uint64_t get_peak_rss();
 
 // -------------------------------------------------------------------------------------------------
 // Shared libraries

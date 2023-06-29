@@ -103,6 +103,13 @@ TEST_CASE("environment")
     MESSAGE("PATH:", path.value());
 }
 
+TEST_CASE("get_page_size")
+{
+    size_t page_size = get_page_size();
+    CHECK_GT(page_size, 0);
+    MESSAGE("page_size:", page_size);
+}
+
 TEST_CASE("get_memory_stats")
 {
     MemoryStats stats = get_memory_stats();

@@ -182,10 +182,25 @@ std::optional<std::string> get_environment_variable(const char* name)
 // Memory
 // -------------------------------------------------------------------------------------------------
 
+size_t get_page_size()
+{
+    return sysconf(_SC_PAGESIZE);
+}
+
 MemoryStats get_memory_stats()
 {
     MemoryStats stats = {};
-    // read rss from /proc/self/stat
+    std::ifstream stat_file("/proc/self/stat");
+    if (stat_file) {
+        std::string line;
+        std::getline(stat_file, line);
+        std::istringstream iss(line);
+        std::vector<std::string> tokens(std::istream_iterator<std::string>{iss}, std::istream_iterator<std::string>{});
+        if (tokens.size() >= 25) {
+            stats.rss = std::stoull(tokens[23]) * get_page_size();
+            stats.peak_rss = std::stoull(tokens[24]) * get_page_size();
+        }
+    }
     return stats;
 }
 

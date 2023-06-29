@@ -442,6 +442,13 @@ std::optional<std::string> get_environment_variable(const char* name)
 // Memory
 // -------------------------------------------------------------------------------------------------
 
+size_t get_page_size()
+{
+    SYSTEM_INFO info;
+    GetSystemInfo(&info);
+    return info.dwAllocationGranularity;
+}
+
 MemoryStats get_memory_stats()
 {
     MemoryStats stats = {};
@@ -451,22 +458,6 @@ MemoryStats get_memory_stats()
         stats.peak_rss = pmc.PeakWorkingSetSize;
     }
     return stats;
-}
-
-uint64_t get_current_rss()
-{
-    PROCESS_MEMORY_COUNTERS pmc;
-    if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(PROCESS_MEMORY_COUNTERS)))
-        return pmc.WorkingSetSize;
-    return 0;
-}
-
-uint64_t get_peak_rss()
-{
-    PROCESS_MEMORY_COUNTERS pmc;
-    if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(PROCESS_MEMORY_COUNTERS)))
-        return pmc.PeakWorkingSetSize;
-    return 0;
 }
 
 // -------------------------------------------------------------------------------------------------
