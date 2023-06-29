@@ -104,7 +104,8 @@ private:
  * can be used to increase/decrease the Python reference count of an instance
  * (i.e., `Py_INCREF` / `Py_DECREF`).
  */
-KALI_API void object_init_py(void (*object_inc_ref_py)(PyObject*) noexcept, void (*object_dec_ref_py)(PyObject*) noexcept);
+KALI_API void
+object_init_py(void (*object_inc_ref_py)(PyObject*) noexcept, void (*object_dec_ref_py)(PyObject*) noexcept);
 
 template<typename T>
 class ref {
@@ -239,5 +240,23 @@ public:
 private:
     T* m_ptr{nullptr};
 };
+
+template<class T, class... Args>
+ref<T> make_ref(Args&&... args)
+{
+    return ref<T>(new T(std::forward<Args>(args)...));
+}
+
+template<class T, class U>
+ref<T> static_ref_cast(const ref<U>& r) noexcept
+{
+    return ref<T>(static_cast<T*>(r.get()));
+}
+
+template<class T, class U>
+ref<T> dynamic_ref_cast(const ref<U>& r) noexcept
+{
+    return ref<T>(dynamic_cast<T*>(r.get()));
+}
 
 } // namespace kali

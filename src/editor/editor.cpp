@@ -5,6 +5,7 @@
 #include "core/error.h"
 #include "core/logger.h"
 #include "core/vector_ops.h"
+#include "core/platform.h"
 
 #include <iostream>
 
@@ -21,6 +22,8 @@ struct Test {
 
 int main()
 {
+    init_platform();
+
     KALI_INFO("{}", get_version().long_tag);
 
     KALI_DEBUG("just a test");
@@ -32,7 +35,6 @@ int main()
     KALI_INFO("{}", to_string(uint4(1, 2, 3, 4)));
 
     nested::Test::test();
-
 
     ref<Window> window = Window::create({.width = 1024, .height = 1024, .title = "Kali Editor"});
 
