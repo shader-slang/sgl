@@ -15,6 +15,7 @@
 
 #include <regex>
 #include <iostream>
+#include <fstream>
 
 namespace kali {
 
@@ -196,9 +197,10 @@ MemoryStats get_memory_stats()
         std::getline(stat_file, line);
         std::istringstream iss(line);
         std::vector<std::string> tokens(std::istream_iterator<std::string>{iss}, std::istream_iterator<std::string>{});
-        if (tokens.size() >= 25) {
+        if (tokens.size() >= 24) {
             stats.rss = std::stoull(tokens[23]) * get_page_size();
-            stats.peak_rss = std::stoull(tokens[24]) * get_page_size();
+            stats.peak_rss = std::stoull(tokens[22]);
+            // stats.peak_rss = std::stoull(tokens[24]) * get_page_size();
         }
     }
     return stats;
@@ -249,10 +251,15 @@ void print_to_debug_window(const char* str)
 
 StackTrace backtrace(size_t skip_frames)
 {
-    // TODO
-    return {};
+    uintptr_t raw_trace[1024];
+    int count = ::backtrace(reinterpret_cast<void**>(raw_trace), 1024);
+    if (skip_frames >= count)
+        return {};
+    return StackTrace{raw_trace + skip_frames, raw_trace + skip_frames + (count - skip_frames)};
+}
 
-#if 0
+ResolvedStackTrace resolve_stacktrace(std::span<const StackFrame> trace)
+{
     auto demangle = [](const char* name)
     {
         int status = 0;
@@ -262,43 +269,31 @@ StackTrace backtrace(size_t skip_frames)
         return demangled;
     };
 
-    void* raw_trace[100];
-    int count = ::backtrace(raw_trace, 100);
-    if (skip_frames >= count)
-        return {};
-
-    char** info = ::backtrace_symbols(raw_trace, count);
+    char** info = ::backtrace_symbols(reinterpret_cast<void* const*>(trace.data()), trace.size());
 
     std::regex re("(\\S+)\\((\\S*)\\+(0x[0-9a-f]*)\\)\\s+\\[(0x[0-9a-f]+)\\].*");
 
-    StackTrace trace;
-    trace.reserve(count - skip_frames);
-    for (size_t i = skip_frames; i < count; i++) {
+    ResolvedStackTrace resolved_trace(trace.size());
+    for (size_t i = 0; i < trace.size(); i++) {
+        ResolvedStackFrame& resolved = resolved_trace[i];
+        resolved.address = trace[i];
+        resolved.offset = 0ull;
+
         std::cmatch m;
-        StackTraceItem item{};
         if (std::regex_match(info[i], m, re)) {
-            item.module = m[1];
-            item.symbol = m[2];
-            item.symbol = demangle(item.symbol.c_str());
-            item.offset = std::stoul(m[3], nullptr, 16);
-            item.address = std::stoul(m[4], nullptr, 16);
+            resolved.module = m[1];
+            resolved.symbol = m[2];
+            resolved.symbol = demangle(resolved.symbol.c_str());
+            resolved.offset = std::stoul(m[3], nullptr, 16);
         } else {
-            item.symbol = info[i];
+            resolved.symbol = info[i];
         }
-        trace.emplace_back(std::move(item));
     }
+
     free(info);
 
-    return trace;
-#endif
+    return resolved_trace;
 }
-
-ResolvedStackTrace resolve_stacktrace(std::span<const StackFrame> trace)
-{
-    // TODO
-    return {};
-}
-
 
 } // namespace kali
 
