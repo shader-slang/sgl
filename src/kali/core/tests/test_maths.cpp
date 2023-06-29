@@ -1,6 +1,8 @@
 #include "testing.h"
 #include "core/maths.h"
 
+#include <cstdint>
+
 using namespace kali;
 
 TEST_SUITE_BEGIN("maths");

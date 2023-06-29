@@ -10,7 +10,9 @@
             "name": "base",
             "description": "Base configuration inherited by all presets.",
             "hidden": true,
-            "cacheVariables": {},
+            "cacheVariables": {
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            },
             "cmakeExecutable": "${sourceDir}/tools/cmake/bin/cmake",
             "binaryDir": "${sourceDir}/build/${presetName}"
         },
@@ -102,6 +104,25 @@
             "inherits": [
                 "linux-clang-base"
             ]
+        },
+        {
+            "name": "linux-gcc-base",
+            "description": "Base Linux/GCC configuration.",
+            "hidden": true,
+            "inherits": "linux-base",
+            "generator": "Ninja Multi-Config",
+            "cacheVariables": {
+                "CMAKE_MAKE_PROGRAM": "${sourceDir}/tools/ninja/ninja",
+                "CMAKE_C_COMPILER": "gcc",
+                "CMAKE_CXX_COMPILER": "g++"
+            }
+        },
+        {
+            "name": "linux-gcc",
+            "displayName": "Linux/GCC",
+            "inherits": [
+                "linux-gcc-base"
+            ]
         }
     ],
     "buildPresets": [
@@ -127,6 +148,18 @@
             "name": "linux-clang-debug",
             "displayName": "Debug",
             "configurePreset": "linux-clang",
+            "configuration": "Debug"
+        },
+        {
+            "name": "linux-gcc-release",
+            "displayName": "Release",
+            "configurePreset": "linux-gcc",
+            "configuration": "Release"
+        },
+        {
+            "name": "linux-gcc-debug",
+            "displayName": "Debug",
+            "configurePreset": "linux-gcc",
             "configuration": "Debug"
         }
     ]

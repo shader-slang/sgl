@@ -112,6 +112,89 @@ void set_keyboard_interrupt_handler(std::function<void()> handler)
 }
 
 // -------------------------------------------------------------------------------------------------
+// File dialogs
+// -------------------------------------------------------------------------------------------------
+
+struct FilterSpec {
+    FilterSpec(std::span<const FileDialogFilter> filters, bool for_open)
+    {
+        size_t size = for_open ? filters.size() + 1 : filters.size();
+        com_dlg.reserve(size);
+        descs.reserve(size);
+        ext.reserve(size);
+
+        if (for_open)
+            com_dlg.push_back({});
+
+        std::wstring all;
+        for (const auto& f : filters) {
+            descs.push_back(to_wstring(f.desc));
+            ext.push_back(L"*." + to_wstring(f.ext));
+            com_dlg.push_back({descs.back().c_str(), ext.back().c_str()});
+            all += ext.back() + L";";
+        }
+
+        if (for_open) {
+            descs.push_back(L"Supported Formats");
+            ext.push_back(all);
+            com_dlg[0] = {descs.back().c_str(), ext.back().c_str()};
+        }
+    }
+
+    size_t size() const { return com_dlg.size(); }
+    const COMDLG_FILTERSPEC* data() const { return com_dlg.data(); }
+
+private:
+    std::vector<COMDLG_FILTERSPEC> com_dlg;
+    std::vector<std::wstring> descs;
+    std::vector<std::wstring> ext;
+};
+
+template<typename DialogType>
+static std::optional<std::filesystem::path>
+file_dialog_common(std::span<const FileDialogFilter> filters, DWORD options, const CLSID clsid)
+{
+    KALI_ASSERT(s_initialized == true);
+
+    FilterSpec fs(filters, typeid(DialogType) == typeid(IFileOpenDialog));
+
+    DialogType* dialog;
+    WINDOWS_CALL(CoCreateInstance(clsid, NULL, CLSCTX_ALL, IID_PPV_ARGS(&dialog)));
+    dialog->SetOptions(options | FOS_FORCEFILESYSTEM);
+    dialog->SetFileTypes((uint32_t)fs.size(), fs.data());
+    dialog->SetDefaultExtension(fs.data()->pszSpec);
+
+    if (dialog->Show(NULL) == S_OK) {
+        IShellItem* pItem;
+        if (dialog->GetResult(&pItem) == S_OK) {
+            PWSTR path_str;
+            if (pItem->GetDisplayName(SIGDN_FILESYSPATH, &path_str) == S_OK) {
+                std::filesystem::path path = path_str;
+                CoTaskMemFree(path_str);
+                return path;
+            }
+        }
+    }
+
+    return {};
+}
+
+std::optional<std::filesystem::path> open_file_dialog(std::span<const FileDialogFilter> filters)
+{
+    return file_dialog_common<IFileOpenDialog>(filters, FOS_FILEMUSTEXIST, CLSID_FileOpenDialog);
+}
+
+std::optional<std::filesystem::path> save_file_dialog(std::span<const FileDialogFilter> filters)
+{
+    return file_dialog_common<IFileSaveDialog>(filters, FOS_OVERWRITEPROMPT, CLSID_FileSaveDialog);
+}
+
+std::optional<std::filesystem::path> choose_folder_dialog()
+{
+    return file_dialog_common<IFileOpenDialog>({}, FOS_PICKFOLDERS | FOS_PATHMUSTEXIST, CLSID_FileOpenDialog);
+}
+
+// -------------------------------------------------------------------------------------------------
 // Filesystem
 // -------------------------------------------------------------------------------------------------
 
@@ -277,87 +360,8 @@ bool delete_junction(const std::filesystem::path& link)
 }
 
 // -------------------------------------------------------------------------------------------------
-// File dialogs
+// System paths
 // -------------------------------------------------------------------------------------------------
-
-struct FilterSpec {
-    FilterSpec(std::span<const FileDialogFilter> filters, bool for_open)
-    {
-        size_t size = for_open ? filters.size() + 1 : filters.size();
-        com_dlg.reserve(size);
-        descs.reserve(size);
-        ext.reserve(size);
-
-        if (for_open)
-            com_dlg.push_back({});
-
-        std::wstring all;
-        for (const auto& f : filters) {
-            descs.push_back(to_wstring(f.desc));
-            ext.push_back(L"*." + to_wstring(f.ext));
-            com_dlg.push_back({descs.back().c_str(), ext.back().c_str()});
-            all += ext.back() + L";";
-        }
-
-        if (for_open) {
-            descs.push_back(L"Supported Formats");
-            ext.push_back(all);
-            com_dlg[0] = {descs.back().c_str(), ext.back().c_str()};
-        }
-    }
-
-    size_t size() const { return com_dlg.size(); }
-    const COMDLG_FILTERSPEC* data() const { return com_dlg.data(); }
-
-private:
-    std::vector<COMDLG_FILTERSPEC> com_dlg;
-    std::vector<std::wstring> descs;
-    std::vector<std::wstring> ext;
-};
-
-template<typename DialogType>
-static std::optional<std::filesystem::path>
-file_dialog_common(std::span<const FileDialogFilter> filters, DWORD options, const CLSID clsid)
-{
-    KALI_ASSERT(s_initialized == true);
-
-    FilterSpec fs(filters, typeid(DialogType) == typeid(IFileOpenDialog));
-
-    DialogType* dialog;
-    WINDOWS_CALL(CoCreateInstance(clsid, NULL, CLSCTX_ALL, IID_PPV_ARGS(&dialog)));
-    dialog->SetOptions(options | FOS_FORCEFILESYSTEM);
-    dialog->SetFileTypes((uint32_t)fs.size(), fs.data());
-    dialog->SetDefaultExtension(fs.data()->pszSpec);
-
-    if (dialog->Show(NULL) == S_OK) {
-        IShellItem* pItem;
-        if (dialog->GetResult(&pItem) == S_OK) {
-            PWSTR path_str;
-            if (pItem->GetDisplayName(SIGDN_FILESYSPATH, &path_str) == S_OK) {
-                std::filesystem::path path = path_str;
-                CoTaskMemFree(path_str);
-                return path;
-            }
-        }
-    }
-
-    return {};
-}
-
-std::optional<std::filesystem::path> open_file_dialog(std::span<const FileDialogFilter> filters)
-{
-    return file_dialog_common<IFileOpenDialog>(filters, FOS_FILEMUSTEXIST, CLSID_FileOpenDialog);
-}
-
-std::optional<std::filesystem::path> save_file_dialog(std::span<const FileDialogFilter> filters)
-{
-    return file_dialog_common<IFileSaveDialog>(filters, FOS_OVERWRITEPROMPT, CLSID_FileSaveDialog);
-}
-
-std::optional<std::filesystem::path> choose_folder_dialog()
-{
-    return file_dialog_common<IFileOpenDialog>({}, FOS_PICKFOLDERS | FOS_PATHMUSTEXIST, CLSID_FileOpenDialog);
-}
 
 const std::filesystem::path& get_executable_path()
 {
@@ -444,30 +448,16 @@ std::optional<std::string> get_environment_variable(const char* name)
 // Memory
 // -------------------------------------------------------------------------------------------------
 
-uint64_t get_total_virtual_memory()
+MemoryStats get_memory_stats()
 {
-    MEMORYSTATUSEX mem;
-    mem.dwLength = sizeof(MEMORYSTATUSEX);
-    if (GlobalMemoryStatusEx(&mem))
-        return mem.ullTotalPageFile;
-    return 0;
-}
-
-uint64_t get_used_virtual_memory()
-{
-    MEMORYSTATUSEX mem;
-    mem.dwLength = sizeof(MEMORYSTATUSEX);
-    if (GlobalMemoryStatusEx(&mem))
-        return mem.ullTotalPageFile - mem.ullAvailPageFile;
-    return 0;
-}
-
-uint64_t get_process_used_virtual_memory()
-{
-    PROCESS_MEMORY_COUNTERS_EX pmc;
-    if (GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc)))
-        return pmc.PrivateUsage;
-    return 0;
+    MemoryStats stats = {};
+    PROCESS_MEMORY_COUNTERS pmc;
+    if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(PROCESS_MEMORY_COUNTERS)))
+    {
+        stats.rss = pmc.WorkingSetSize;
+        stats.peak_rss = pmc.PeakWorkingSetSize;
+    }
+    return stats;
 }
 
 uint64_t get_current_rss()

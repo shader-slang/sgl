@@ -4,12 +4,23 @@
 
 #include "error.h"
 #include "format.h"
+#include "logger.h"
 
-#include <regex>
 #include <execinfo.h>
 #include <cxxabi.h>
+#include <dlfcn.h>
+#include <signal.h>
+#include <sys/types.h>
+#include <pwd.h>
+
+#include <regex>
+#include <iostream>
 
 namespace kali {
+
+void init_platform() {}
+
+void shutdown_platform() {}
 
 void set_window_icon(WindowHandle handle, const std::filesystem::path& path)
 {
@@ -70,12 +81,35 @@ void set_keyboard_interrupt_handler(std::function<void()> handler)
     data.handler = handler;
 }
 
+// -------------------------------------------------------------------------------------------------
+// File dialogs
+// -------------------------------------------------------------------------------------------------
+
+std::optional<std::filesystem::path> open_file_dialog(std::span<const FileDialogFilter> filters)
+{
+    KALI_UNIMPLEMENTED();
+}
+
+std::optional<std::filesystem::path> save_file_dialog(std::span<const FileDialogFilter> filters)
+{
+    KALI_UNIMPLEMENTED();
+}
+
+std::optional<std::filesystem::path> choose_folder_dialog()
+{
+    KALI_UNIMPLEMENTED();
+}
+
+// -------------------------------------------------------------------------------------------------
+// Filesystem
+// -------------------------------------------------------------------------------------------------
+
 bool create_junction(const std::filesystem::path& link, const std::filesystem::path& target)
 {
     std::error_code ec;
     std::filesystem::create_directory_symlink(target, link, ec);
     if (ec)
-        KALI_WARNING("Failed to create symlink {} to {}: {}", link, target, ec.value());
+        KALI_WARN("Failed to create symlink {} to {}: {}", link, target, ec.value());
     return !ec;
 }
 
@@ -84,11 +118,13 @@ bool delete_junction(const std::filesystem::path& link)
     std::error_code ec;
     std::filesystem::remove(link, ec);
     if (ec)
-        KALI_WARNING("Failed to remove symlink {}: {}", link, ec.value());
+        KALI_WARN("Failed to remove symlink {}: {}", link, ec.value());
     return !ec;
 }
 
-std::optional<std::filesystem::path> open_file_dialog(std::span<const FileDialogFilter> filters) { }
+// -------------------------------------------------------------------------------------------------
+// System paths
+// -------------------------------------------------------------------------------------------------
 
 const std::filesystem::path& get_executable_path()
 {
@@ -152,34 +188,11 @@ std::optional<std::string> get_environment_variable(const char* name)
 // Memory
 // -------------------------------------------------------------------------------------------------
 
-uint64_t get_total_virtual_memory()
+MemoryStats get_memory_stats()
 {
-    // TODO
-    return 0;
-}
-
-uint64_t get_used_virtual_memory()
-{
-    // TODO
-    return 0;
-}
-
-uint64_t get_process_used_virtual_memory()
-{
-    // TODO
-    return 0;
-}
-
-uint64_t get_current_rss()
-{
-    // TODO
-    return 0;
-}
-
-uint64_t get_peak_rss()
-{
-    // TODO
-    return 0;
+    MemoryStats stats = {};
+    // read rss from /proc/self/stat
+    return stats;
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -218,15 +231,19 @@ void debug_break()
 
 void print_to_debug_window(const char* str)
 {
-    std::cerr < str;
+    std::cerr << str;
 }
 
 // -------------------------------------------------------------------------------------------------
 // Stacktrace
 // -------------------------------------------------------------------------------------------------
 
-std::vector<StackTraceItem> backtrace(size_t skip_frames)
+StackTrace backtrace(size_t skip_frames)
 {
+    // TODO
+    return {};
+
+#if 0
     auto demangle = [](const char* name)
     {
         int status = 0;
@@ -245,7 +262,7 @@ std::vector<StackTraceItem> backtrace(size_t skip_frames)
 
     std::regex re("(\\S+)\\((\\S*)\\+(0x[0-9a-f]*)\\)\\s+\\[(0x[0-9a-f]+)\\].*");
 
-    std::vector<StackTraceItem> trace;
+    StackTrace trace;
     trace.reserve(count - skip_frames);
     for (size_t i = skip_frames; i < count; i++) {
         std::cmatch m;
@@ -264,7 +281,15 @@ std::vector<StackTraceItem> backtrace(size_t skip_frames)
     free(info);
 
     return trace;
+#endif
 }
+
+ResolvedStackTrace resolve_stacktrace(std::span<const StackFrame> trace)
+{
+    // TODO
+    return {};
+}
+
 
 } // namespace kali
 

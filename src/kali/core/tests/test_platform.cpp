@@ -103,27 +103,13 @@ TEST_CASE("environment")
     MESSAGE("PATH:", path.value());
 }
 
-TEST_CASE("memory")
+TEST_CASE("get_memory_stats")
 {
-    uint64_t total_virtual_memory = get_total_virtual_memory();
-    CHECK_GT(total_virtual_memory, 0);
-    MESSAGE("total_virtual_memory:", total_virtual_memory);
-
-    uint64_t used_virtual_memory = get_used_virtual_memory();
-    CHECK_GT(used_virtual_memory, 0);
-    MESSAGE("used_virtual_memory:", used_virtual_memory);
-
-    uint64_t process_used_virtual_memory = get_process_used_virtual_memory();
-    CHECK_GT(process_used_virtual_memory, 0);
-    MESSAGE("process_used_virtual_memory:", process_used_virtual_memory);
-
-    uint64_t current_rss = get_current_rss();
-    CHECK_GT(current_rss, 0);
-    MESSAGE("current_rss:", current_rss);
-
-    uint64_t peak_rss = get_peak_rss();
-    CHECK_GT(peak_rss, 0);
-    MESSAGE("peak_rss:", peak_rss);
+    MemoryStats stats = get_memory_stats();
+    CHECK_GT(stats.rss, 0);
+    MESSAGE("rss:", stats.rss);
+    CHECK_GT(stats.peak_rss, 0);
+    MESSAGE("peak_rss:", stats.peak_rss);
 }
 
 TEST_CASE("backtrace")

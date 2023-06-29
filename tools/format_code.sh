@@ -1,11 +1,11 @@
 #!/bin/sh
 
-export pwd=`pwd`
-export project_dir=$pwd/..
-export python_dir=$project_dir/tools/python
-export python=$python_dir/bin/python3
-export clang_format=$project_dir/tools/clang-format/clang-format.exe
+pwd=$(dirname "$0")
+project_dir=$pwd/..
+python_dir=$project_dir/tools/python
+python=$python_dir/python3
+clang_format=clang-format
 
-cd $project_dir
+pushd $project_dir
 env LD_LIBRARY_PATH="$python_dir/lib" $python $pwd/run_clang_format.py --clang-format-executable=$clang_format -i -r src
-cd $pwd
+popd

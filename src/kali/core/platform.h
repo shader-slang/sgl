@@ -135,6 +135,25 @@ KALI_API void set_window_icon(WindowHandle handle, const std::filesystem::path& 
 KALI_API void set_keyboard_interrupt_handler(std::function<void()> handler);
 
 // -------------------------------------------------------------------------------------------------
+// File dialogs
+// -------------------------------------------------------------------------------------------------
+
+struct FileDialogFilter {
+    std::string desc; // The description ("Portable Network Graphics")
+    std::string ext;  // The extension, without the `.` ("png")
+};
+using FileDialogFilterList = std::vector<FileDialogFilter>;
+
+/// Show a file open dialog.
+[[nodiscard]] KALI_API std::optional<std::filesystem::path> open_file_dialog(std::span<const FileDialogFilter> filters);
+
+/// Show a file save dialog.
+[[nodiscard]] KALI_API std::optional<std::filesystem::path> save_file_dialog(std::span<const FileDialogFilter> filters);
+
+/// Show a folder selection dialog.
+[[nodiscard]] KALI_API std::optional<std::filesystem::path> choose_folder_dialog();
+
+// -------------------------------------------------------------------------------------------------
 // Filesystem
 // -------------------------------------------------------------------------------------------------
 
@@ -159,25 +178,6 @@ KALI_API void set_keyboard_interrupt_handler(std::function<void()> handler);
 
 /// Delete a junction (sof link).
 [[nodiscard]] KALI_API bool delete_junction(const std::filesystem::path& link);
-
-// -------------------------------------------------------------------------------------------------
-// File dialogs
-// -------------------------------------------------------------------------------------------------
-
-struct FileDialogFilter {
-    std::string desc; // The description ("Portable Network Graphics")
-    std::string ext;  // The extension, without the `.` ("png")
-};
-using FileDialogFilterList = std::vector<FileDialogFilter>;
-
-/// Show a file open dialog.
-[[nodiscard]] KALI_API std::optional<std::filesystem::path> open_file_dialog(std::span<const FileDialogFilter> filters);
-
-/// Show a file save dialog.
-[[nodiscard]] KALI_API std::optional<std::filesystem::path> save_file_dialog(std::span<const FileDialogFilter> filters);
-
-/// Show a folder selection dialog.
-[[nodiscard]] KALI_API std::optional<std::filesystem::path> choose_folder_dialog();
 
 // -------------------------------------------------------------------------------------------------
 // System paths
@@ -209,14 +209,13 @@ using FileDialogFilterList = std::vector<FileDialogFilter>;
 // Memory
 // -------------------------------------------------------------------------------------------------
 
-/// Get the total virtual memory in bytes.
-[[nodiscard]] KALI_API uint64_t get_total_virtual_memory();
+struct MemoryStats
+{
+    uint64_t rss;
+    uint64_t peak_rss;
+};
 
-/// Get the used virtual memory in bytes.
-[[nodiscard]] KALI_API uint64_t get_used_virtual_memory();
-
-/// Get the virtual memory used by this process in bytes.
-[[nodiscard]] KALI_API uint64_t get_process_used_virtual_memory();
+[[nodiscard]] KALI_API MemoryStats get_memory_stats();
 
 /// Returns the current resident/working set size in bytes, how much memory does the process actually use.
 [[nodiscard]] KALI_API uint64_t get_current_rss();

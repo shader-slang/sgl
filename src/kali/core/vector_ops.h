@@ -947,19 +947,21 @@ std::string to_string(const vector<T, N>& v)
 
 } // namespace kali
 
+namespace fmt {
 /// Vector string formatter.
 template<typename T, size_t N>
-struct ::fmt::formatter<::kali::vector<T, N>> : formatter<T> {
+struct formatter<::kali::vector<T, N>> : formatter<T> {
     template<typename FormatContext>
     auto format(const ::kali::vector<T, N>& v, FormatContext& ctx) const
     {
         auto out = ctx.out();
-        out = ::fmt::format_to(out, "{}{}", kali::ScalarTraits<T>::name, N);
+        out = format_to(out, "{}{}", kali::ScalarTraits<T>::name, N);
         for (int i = 0; i < N; ++i) {
-            out = ::fmt::format_to(out, "{}", (i == 0) ? "(" : ", ");
+            out = format_to(out, "{}", (i == 0) ? "(" : ", ");
             out = formatter<T>::format(v[i], ctx);
         }
-        out = ::fmt::format_to(out, ")");
+        out = format_to(out, ")");
         return out;
     }
 };
+} // namespace fmt

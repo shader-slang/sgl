@@ -222,8 +222,11 @@ Slang::ComPtr<slang::ICompileRequest> ProgramManager::create_slang_compile_reque
         target_define = "__TARGET_CPU__";
         break;
     case DeviceType::cuda:
-        target_desc.format = SLANG_CUDA_OBJECT_CODE;
+        target_desc.format = SLANG_OBJECT_CODE;
         target_define = "__TARGET_CUDA__";
+        break;
+    default:
+        KALI_ASSERT(false);
         break;
     }
     KALI_ASSERT(target_define);
