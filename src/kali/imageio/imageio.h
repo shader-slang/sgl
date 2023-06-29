@@ -2,6 +2,7 @@
 
 #include "core/platform.h"
 #include "core/object.h"
+#include "core/tensor.h"
 
 #include <cstdint>
 #include <filesystem>
@@ -14,7 +15,7 @@ class ImageReader;
 class ImageWriter;
 
 /// The type of each component in an image.
-enum class ComponentType {
+enum class ImageComponentType {
     unknown,
     u8,
     u16,
@@ -31,26 +32,28 @@ struct ImageSpec {
     /// The number of components per pixel.
     uint32_t component_count{0};
     /// The type of each component.
-    ComponentType component_type{ComponentType::unknown};
+    ImageComponentType component_type{ImageComponentType::unknown};
 
-    size_t get_component_size() const
+    size_t get_component_byte_size() const
     {
         switch (component_type) {
-        case ComponentType::unknown:
+        case ImageComponentType::unknown:
             return 0;
-        case ComponentType::u8:
+        case ImageComponentType::u8:
             return 1;
-        case ComponentType::u16:
+        case ImageComponentType::u16:
             return 2;
-        case ComponentType::u32:
+        case ImageComponentType::u32:
             return 4;
-        case ComponentType::f16:
+        case ImageComponentType::f16:
             return 2;
-        case ComponentType::f32:
+        case ImageComponentType::f32:
             return 4;
         }
         return 0;
     }
+
+    size_t get_image_byte_size() const { return width * height * component_count * get_component_byte_size(); }
 };
 
 /// Class for reading images.
@@ -64,8 +67,11 @@ public:
 
     bool read_image(void* buffer, size_t len);
 
+    const std::string& get_error() const { return m_error; }
+
 private:
     ImageSpec m_spec;
+    std::string m_error;
     std::unique_ptr<ImageReader> m_reader;
     std::unique_ptr<MemoryMappedFile> m_file;
 };
@@ -79,8 +85,11 @@ public:
 
     bool write_image(const void* buffer, size_t len);
 
+    const std::string& get_error() const { return m_error; }
+
 private:
     ImageSpec m_spec;
+    std::string m_error;
     std::unique_ptr<ImageWriter> m_writer;
 };
 

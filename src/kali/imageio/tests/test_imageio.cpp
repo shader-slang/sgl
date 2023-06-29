@@ -84,7 +84,7 @@ TEST_CASE("jpeg")
     {
         auto output = ImageOutput::open(
             "test.jpg",
-            {.width = img.w, .height = img.h, .component_count = 3, .component_type = ComponentType::u8}
+            {.width = img.w, .height = img.h, .component_count = 3, .component_type = ImageComponentType::u8}
         );
         REQUIRE(output);
         CHECK(output->write_image(img.data(), img.size()));
@@ -98,7 +98,7 @@ TEST_CASE("jpeg")
         CHECK_EQ(spec.width, 128);
         CHECK_EQ(spec.height, 64);
         CHECK_EQ(spec.component_count, 3);
-        CHECK_EQ(spec.component_type, ComponentType::u8);
+        CHECK_EQ(spec.component_type, ImageComponentType::u8);
 
         auto img2 = create_image<rgb8>(spec.width, spec.height);
         CHECK(input->read_image(img2.data(), img.size()));
@@ -115,7 +115,7 @@ TEST_CASE("exr")
     {
         auto output = ImageOutput::open(
             "test.exr",
-            {.width = img.w, .height = img.h, .component_count = 4, .component_type = ComponentType::f32}
+            {.width = img.w, .height = img.h, .component_count = 4, .component_type = ImageComponentType::f32}
         );
         REQUIRE(output);
         CHECK(output->write_image(img.data(), img.size()));
@@ -128,7 +128,7 @@ TEST_CASE("exr")
         CHECK_EQ(spec.width, 128);
         CHECK_EQ(spec.height, 64);
         CHECK_EQ(spec.component_count, 4);
-        CHECK_EQ(spec.component_type, ComponentType::f32);
+        CHECK_EQ(spec.component_type, ImageComponentType::f32);
 
         auto img2 = create_image<rgba_f32>(spec.width, spec.height);
         CHECK(input->read_image(img2.data(), img.size()));

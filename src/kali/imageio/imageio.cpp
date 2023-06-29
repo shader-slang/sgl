@@ -83,7 +83,7 @@ public:
         KALI_ASSERT(spec.width > 0);
         KALI_ASSERT(spec.height > 0);
         KALI_ASSERT(spec.component_count > 0);
-        KALI_ASSERT(spec.component_type != ComponentType::unknown);
+        KALI_ASSERT(spec.component_type != ImageComponentType::unknown);
 
         m_path = path;
         m_spec = spec;
@@ -128,7 +128,8 @@ public:
             .width = narrow_cast<uint32_t>(width),
             .height = narrow_cast<uint32_t>(height),
             .component_count = narrow_cast<uint32_t>(component_count),
-            .component_type = is_hdr ? ComponentType::f32 : (is_16bit ? ComponentType::u16 : ComponentType::u8),
+            .component_type
+            = is_hdr ? ImageComponentType::f32 : (is_16bit ? ImageComponentType::u16 : ImageComponentType::u8),
         };
         out_spec = m_spec;
 
@@ -140,7 +141,7 @@ public:
         KALI_ASSERT(m_spec.width > 0);
         KALI_ASSERT(m_spec.height > 0);
         KALI_ASSERT(m_spec.component_count > 0);
-        KALI_ASSERT(m_spec.component_type != ComponentType::unknown);
+        KALI_ASSERT(m_spec.component_type != ImageComponentType::unknown);
 
         const stbi_uc* buffer = reinterpret_cast<const stbi_uc*>(m_file->data());
         int len = narrow_cast<int>(m_file->size());
@@ -149,18 +150,18 @@ public:
         uint8_t* pixels{nullptr};
         size_t read_len{0};
         switch (m_spec.component_type) {
-        case ComponentType::u8:
+        case ImageComponentType::u8:
             pixels
                 = reinterpret_cast<uint8_t*>(stbi_load_from_memory(buffer, len, &width, &height, &component_count, 0));
             read_len = width * height * component_count;
             break;
-        case ComponentType::u16:
+        case ImageComponentType::u16:
             pixels
                 = reinterpret_cast<uint8_t*>(stbi_load_16_from_memory(buffer, len, &width, &height, &component_count, 0)
                 );
             read_len = width * height * component_count * 2;
             break;
-        case ComponentType::f32:
+        case ImageComponentType::f32:
             pixels
                 = reinterpret_cast<uint8_t*>(stbi_loadf_from_memory(buffer, len, &width, &height, &component_count, 0));
             read_len = width * height * component_count * 4;
@@ -170,7 +171,7 @@ public:
         if (!pixels)
             return false;
 
-        size_t expected_len = m_spec.width * m_spec.height * m_spec.component_count * m_spec.get_component_size();
+        size_t expected_len = m_spec.width * m_spec.height * m_spec.component_count * m_spec.get_component_byte_size();
         KALI_ASSERT_EQ(out_len, expected_len);
         KALI_ASSERT_EQ(read_len, expected_len);
 
@@ -195,23 +196,23 @@ public:
         std::string ext = to_lower(path.extension().string());
         if (ext == ".png") {
             m_file_format = FileFormat::png;
-            if (spec.component_type != ComponentType::u8)
+            if (spec.component_type != ImageComponentType::u8)
                 return false;
         } else if (ext == ".jpg" || ext == ".jpeg") {
             m_file_format = FileFormat::jpg;
-            if (spec.component_type != ComponentType::u8)
+            if (spec.component_type != ImageComponentType::u8)
                 return false;
         } else if (ext == ".bmp") {
             m_file_format = FileFormat::bmp;
-            if (spec.component_type != ComponentType::u8)
+            if (spec.component_type != ImageComponentType::u8)
                 return false;
         } else if (ext == ".tga") {
             m_file_format = FileFormat::tga;
-            if (spec.component_type != ComponentType::u8)
+            if (spec.component_type != ImageComponentType::u8)
                 return false;
         } else if (ext == ".hdr") {
             m_file_format = FileFormat::hdr;
-            if (spec.component_type != ComponentType::f32)
+            if (spec.component_type != ImageComponentType::f32)
                 return false;
         } else
             return false;
@@ -223,7 +224,7 @@ public:
     {
         KALI_UNUSED(len);
 
-        size_t expected_len = m_spec.width * m_spec.height * m_spec.component_count * m_spec.get_component_size();
+        size_t expected_len = m_spec.width * m_spec.height * m_spec.component_count * m_spec.get_component_byte_size();
         KALI_ASSERT_EQ(len, expected_len);
 
         int width = narrow_cast<int>(m_spec.width);
@@ -335,8 +336,8 @@ public:
     {
         if (spec.component_count > 4)
             return false;
-        if (spec.component_type != ComponentType::u32 && spec.component_type != ComponentType::f32
-            && spec.component_type != ComponentType::f16)
+        if (spec.component_type != ImageComponentType::u32 && spec.component_type != ImageComponentType::f32
+            && spec.component_type != ImageComponentType::f16)
             return false;
 
         return ImageWriter::open(path, spec);
@@ -348,13 +349,13 @@ public:
 
         int pixel_type;
         switch (m_spec.component_type) {
-        case ComponentType::u32:
+        case ImageComponentType::u32:
             pixel_type = TINYEXR_PIXELTYPE_UINT;
             break;
-        case ComponentType::f32:
+        case ImageComponentType::f32:
             pixel_type = TINYEXR_PIXELTYPE_FLOAT;
             break;
-        case ComponentType::f16:
+        case ImageComponentType::f16:
             pixel_type = TINYEXR_PIXELTYPE_HALF;
             break;
         default:
@@ -371,7 +372,7 @@ public:
         std::vector<int> pixel_types(m_spec.component_count);
         std::vector<int> requested_pixel_types(m_spec.component_count);
         for (uint32_t i = 0; i < m_spec.component_count; ++i) {
-            channel_data[i].reset(new uint8_t[m_spec.width * m_spec.height * m_spec.get_component_size()]);
+            channel_data[i].reset(new uint8_t[m_spec.width * m_spec.height * m_spec.get_component_byte_size()]);
             channel_ptrs[m_spec.component_count - i - 1] = channel_data[i].get();
             pixel_types[i] = pixel_type;
             requested_pixel_types[i] = pixel_type;
@@ -379,8 +380,8 @@ public:
 
         // Convert interleaved input data into channel data.
         switch (m_spec.component_type) {
-        case ComponentType::u32:
-        case ComponentType::f32:
+        case ImageComponentType::u32:
+        case ImageComponentType::f32:
             for (uint32_t y = 0; y < m_spec.height; ++y) {
                 for (uint32_t x = 0; x < m_spec.width; ++x) {
                     const uint32_t* pixel
@@ -392,7 +393,7 @@ public:
                 }
             }
             break;
-        case ComponentType::f16:
+        case ImageComponentType::f16:
             for (uint32_t y = 0; y < m_spec.height; ++y) {
                 for (uint32_t x = 0; x < m_spec.width; ++x) {
                     const uint16_t* pixel
@@ -494,7 +495,7 @@ public:
 
             out_spec.width = m_info.image_width;
             out_spec.height = m_info.image_height;
-            out_spec.component_type = ComponentType::U8;
+            out_spec.component_type = ImageComponentType::U8;
             out_spec.component_count = m_info.num_components;
             // TODO read exif
 
