@@ -104,10 +104,35 @@ ref<DebugConsoleLoggerOutput> DebugConsoleLoggerOutput::global()
     return output;
 }
 
-Logger::Logger(LogLevel log_level, std::set<ref<LoggerOutput>> outputs)
+Logger::Logger(LogLevel log_level, bool use_default_outputs)
     : m_level(log_level)
-    , m_outputs(std::move(outputs))
 {
+    if (use_default_outputs) {
+        add_output(ConsoleLoggerOutput::global());
+        if (is_debugger_present())
+            add_output(DebugConsoleLoggerOutput::global());
+    }
+}
+
+ref<LoggerOutput> Logger::add_console_output(bool colored)
+{
+    ref<LoggerOutput> output = make_ref<ConsoleLoggerOutput>(colored);
+    add_output(output);
+    return output;
+}
+
+ref<LoggerOutput> Logger::add_file_output(const std::filesystem::path& path)
+{
+    ref<LoggerOutput> output = make_ref<FileLoggerOutput>(path);
+    add_output(output);
+    return output;
+}
+
+ref<LoggerOutput> Logger::add_debug_console_output()
+{
+    ref<LoggerOutput> output = make_ref<DebugConsoleLoggerOutput>();
+    add_output(output);
+    return output;
 }
 
 void Logger::add_output(ref<LoggerOutput> output)
@@ -120,6 +145,12 @@ void Logger::remove_output(ref<LoggerOutput> output)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_outputs.erase(output);
+}
+
+void Logger::remove_all_outputs()
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_outputs.clear();
 }
 
 void Logger::set_level(LogLevel level)
@@ -137,6 +168,9 @@ LogLevel Logger::get_level() const
 void Logger::log(LogLevel level, const std::string_view msg, LogFrequency frequency)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
+
+    if (level < m_level)
+        return;
 
     if (frequency == LogFrequency::once && is_duplicate(msg))
         return;

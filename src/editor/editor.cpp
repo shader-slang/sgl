@@ -24,6 +24,8 @@ int main()
 {
     init_platform();
 
+    Logger::global().add_file_output("editor.log");
+
     log_info("{}", get_version().long_tag);
 
     log_debug("just a test");

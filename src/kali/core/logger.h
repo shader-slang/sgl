@@ -67,56 +67,68 @@ public:
     static ref<DebugConsoleLoggerOutput> global();
 };
 
-// We define two types of logging helpers, one taking raw strings,
-// the other taking formatted strings. We don't want string formatting and
-// errors being thrown due to missing arguments when passing raw strings.
-
 /// Defines a family of logging functions for a given log level.
-#define KALI_LOG_FUNC(name, level, log)                                                                                \
+/// The functions are:
+/// - name(msg)
+/// - name(fmt, ...)
+/// - name_once(msg)
+/// - name_once(fmt, ...)
+/// The once variants only log the message once per program run.
+#define KALI_LOG_FUNC_FAMILY(name, level, log_func)                                                                    \
     inline void name(const std::string_view msg)                                                                       \
     {                                                                                                                  \
-        log(level, msg, LogFrequency::always);                                                                         \
+        log_func(level, msg, LogFrequency::always);                                                                    \
     }                                                                                                                  \
     template<typename... Args>                                                                                         \
     inline void name(fmt::format_string<Args...> fmt, Args&&... args)                                                  \
     {                                                                                                                  \
-        log(level, fmt::format(fmt, std::forward<Args>(args)...), LogFrequency::always);                               \
+        log_func(level, fmt::format(fmt, std::forward<Args>(args)...), LogFrequency::always);                          \
     }                                                                                                                  \
     inline void name##_once(const std::string_view msg)                                                                \
     {                                                                                                                  \
-        log(level, msg, LogFrequency::once);                                                                           \
+        log_func(level, msg, LogFrequency::once);                                                                      \
     }                                                                                                                  \
     template<typename... Args>                                                                                         \
     inline void name##_once(fmt::format_string<Args...> fmt, Args&&... args)                                           \
     {                                                                                                                  \
-        log(level, fmt::format(fmt, std::forward<Args>(args)...), LogFrequency::once);                                 \
+        log_func(level, fmt::format(fmt, std::forward<Args>(args)...), LogFrequency::once);                            \
     }
 
 
 class KALI_API Logger : public Object {
 public:
-    Logger(
-        LogLevel level = LogLevel::info,
-        std::set<ref<LoggerOutput>> outputs = {ConsoleLoggerOutput::global(), DebugConsoleLoggerOutput::global()}
-    );
+    Logger(LogLevel level = LogLevel::info, bool use_default_outputs = true);
+
+    static ref<Logger> create(LogLevel level = LogLevel::info, bool use_default_outputs = true)
+    {
+        return make_ref<Logger>(level, use_default_outputs);
+    }
+
+    ref<LoggerOutput> add_console_output(bool colored = true);
+    ref<LoggerOutput> add_file_output(const std::filesystem::path& path);
+    ref<LoggerOutput> add_debug_console_output();
 
     void add_output(ref<LoggerOutput> output);
     void remove_output(ref<LoggerOutput> output);
+    void remove_all_outputs();
 
     void set_level(LogLevel level);
     LogLevel get_level() const;
 
     void log(LogLevel level, const std::string_view msg, LogFrequency frequency = LogFrequency::always);
 
-    KALI_LOG_FUNC(debug, LogLevel::debug, log)
-    KALI_LOG_FUNC(info, LogLevel::info, log)
-    KALI_LOG_FUNC(warn, LogLevel::warn, log)
-    KALI_LOG_FUNC(error, LogLevel::error, log)
-    KALI_LOG_FUNC(fatal, LogLevel::fatal, log)
+    // Define logging functions.
+    KALI_LOG_FUNC_FAMILY(debug, LogLevel::debug, log)
+    KALI_LOG_FUNC_FAMILY(info, LogLevel::info, log)
+    KALI_LOG_FUNC_FAMILY(warn, LogLevel::warn, log)
+    KALI_LOG_FUNC_FAMILY(error, LogLevel::error, log)
+    KALI_LOG_FUNC_FAMILY(fatal, LogLevel::fatal, log)
 
+    /// Returns the global logger.
     static Logger& global();
 
 private:
+    /// Checks if the given message has already been logged.
     bool is_duplicate(const std::string_view msg);
 
     LogLevel m_level{LogLevel::info};
@@ -127,19 +139,13 @@ private:
     mutable std::mutex m_mutex;
 };
 
-namespace detail {
-    inline void log(LogLevel level, const std::string_view msg, LogFrequency frequency)
-    {
-        Logger::global().log(level, msg, frequency);
-    }
-} // namespace detail
+// Define global logging functions.
+KALI_LOG_FUNC_FAMILY(log_debug, LogLevel::debug, Logger::global().log)
+KALI_LOG_FUNC_FAMILY(log_info, LogLevel::info, Logger::global().log)
+KALI_LOG_FUNC_FAMILY(log_warn, LogLevel::warn, Logger::global().log)
+KALI_LOG_FUNC_FAMILY(log_error, LogLevel::error, Logger::global().log)
+KALI_LOG_FUNC_FAMILY(log_fatal, LogLevel::fatal, Logger::global().log)
 
-KALI_LOG_FUNC(log_debug, LogLevel::debug, detail::log)
-KALI_LOG_FUNC(log_info, LogLevel::info, detail::log)
-KALI_LOG_FUNC(log_warn, LogLevel::warn, detail::log)
-KALI_LOG_FUNC(log_error, LogLevel::error, detail::log)
-KALI_LOG_FUNC(log_fatal, LogLevel::fatal, detail::log)
-
-#undef KALI_LOG_FUNC
+#undef KALI_LOG_FUNC_FAMILY
 
 } // namespace kali
