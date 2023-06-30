@@ -17,10 +17,12 @@ template<typename T>
 using EnumInfo = decltype(find_enum_info_adl(std::declval<T>()));
 
 template<typename, typename = void>
-struct has_enum_info : std::false_type { };
+struct has_enum_info : std::false_type {
+};
 
 template<typename T>
-struct has_enum_info<T, std::void_t<decltype(EnumInfo<T>::items)>> : std::true_type { };
+struct has_enum_info<T, std::void_t<decltype(EnumInfo<T>::items)>> : std::true_type {
+};
 
 template<typename T>
 inline constexpr bool has_enum_info_v = has_enum_info<T>::value;
@@ -35,7 +37,7 @@ inline const std::string& enum_to_string(T value)
     const auto& items = EnumInfo<T>::items();
     auto it = std::find_if(items.begin(), items.end(), [value](const auto& item) { return item.first == value; });
     if (it == items.end())
-        throw RuntimeError("Invalid enum value {}", int(value));
+        KALI_THROW(RuntimeError("Invalid enum value {}", int(value)));
     return it->second;
 }
 
@@ -49,7 +51,7 @@ inline T string_to_enum(std::string_view name)
     const auto& items = EnumInfo<T>::items();
     auto it = std::find_if(items.begin(), items.end(), [name](const auto& item) { return item.second == name; });
     if (it == items.end())
-        throw RuntimeError("Invalid enum name '{}'", name);
+        KALI_THROW(RuntimeError("Invalid enum name '{}'", name));
     return it->first;
 }
 
@@ -80,7 +82,7 @@ inline std::vector<std::string> flags_to_string_list(T flags)
         }
     }
     if (flags != T(0))
-        throw RuntimeError("Invalid enum flags value {}", int(flags));
+        KALI_THROW(RuntimeError("Invalid enum flags value {}", int(flags)));
     return list;
 }
 
@@ -153,16 +155,3 @@ struct fmt::formatter<T, std::enable_if_t<kali::has_enum_info_v<T>, char>> : for
         return formatter<std::string>::format(kali::enum_to_string(e), ctx);
     }
 };
-
-
-// clang-format off
-/// Implement logical operators on a class enum for making it usable as a flags enum.
-#define KALI_ENUM_CLASS_OPERATORS(e_) \
-    inline e_ operator& (e_ a, e_ b) { return static_cast<e_>(static_cast<int>(a)& static_cast<int>(b)); } \
-    inline e_ operator| (e_ a, e_ b) { return static_cast<e_>(static_cast<int>(a)| static_cast<int>(b)); } \
-    inline e_& operator|= (e_& a, e_ b) { a = a | b; return a; }; \
-    inline e_& operator&= (e_& a, e_ b) { a = a & b; return a; }; \
-    inline e_  operator~ (e_ a) { return static_cast<e_>(~static_cast<int>(a)); } \
-    inline bool is_set(e_ val, e_ flag) { return (val & flag) != static_cast<e_>(0); } \
-    inline void flip_bit(e_& val, e_ flag) { val = is_set(val, flag) ? (val & (~flag)) : (val | flag); }
-// clang-format on

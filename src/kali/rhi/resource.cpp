@@ -110,7 +110,7 @@ inline gfx::MemoryType get_gfx_memory_type(CpuAccess cpu_access)
     case CpuAccess::read:
         return gfx::MemoryType::ReadBack;
     }
-    KALI_THROW(Exception("Invalid CpuAccess value"));
+    KALI_THROW(RuntimeError("Invalid CpuAccess value"));
 }
 
 inline gfx::MemoryRange get_gfx_memory_range(MemoryRange memory_range)

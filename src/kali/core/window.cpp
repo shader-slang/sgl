@@ -25,7 +25,7 @@ namespace {
     {
         if (glfw_ref_count.fetch_add(1) == 0) {
             if (glfwInit() != GLFW_TRUE)
-                KALI_THROW(Exception("Failed to initialize GLFW"));
+                KALI_THROW(RuntimeError("Failed to initialize GLFW"));
 
             // Register mappings for NV controllers.
             // clang-format off
@@ -208,7 +208,7 @@ namespace {
 struct EventHandlers {
     static void handle_error(int error_code, const char* description)
     {
-        KALI_ERROR("GLFW error {}: {}", error_code, description);
+        log_error("GLFW error {}: {}", error_code, description);
     }
 
     static void handle_window_size(GLFWwindow* glfw_window, int width, int height)
@@ -362,7 +362,7 @@ Window::Window(WindowDesc desc)
 
     m_window = glfwCreateWindow(m_width, m_height, m_title.c_str(), NULL, NULL);
     if (!m_window)
-        KALI_THROW(Exception("Failed to create GLFW window"));
+        KALI_THROW(RuntimeError("Failed to create GLFW window"));
 
     glfwSetWindowUserPointer(m_window, this);
     glfwSetErrorCallback(&EventHandlers::handle_error);
@@ -440,7 +440,7 @@ void Window::poll_gamepad_input()
         for (int id = GLFW_JOYSTICK_1; id <= GLFW_JOYSTICK_LAST; ++id) {
             if (glfwJoystickPresent(id) && glfwJoystickIsGamepad(id)) {
                 std::string name(glfwGetJoystickName(id));
-                KALI_INFO("Gamepad '{}' connected.", name);
+                log_info("Gamepad '{}' connected.", name);
                 m_gamepad_id = id;
                 m_gamepad_prev_state = {};
 
@@ -454,7 +454,7 @@ void Window::poll_gamepad_input()
     // Check if gamepad is disconnected.
     if (m_gamepad_id != INVALID_GAMEPAD_ID) {
         if (!(glfwJoystickPresent(m_gamepad_id) && glfwJoystickIsGamepad(m_gamepad_id))) {
-            KALI_INFO("Gamepad disconnected.");
+            log_info("Gamepad disconnected.");
             m_gamepad_id = INVALID_GAMEPAD_ID;
 
             GamepadEvent event{.type = GamepadEvent::Type::disconnect};

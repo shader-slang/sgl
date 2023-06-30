@@ -4,6 +4,7 @@
 
 #include <atomic>
 #include <type_traits>
+#include <utility>
 #include <cstdint>
 
 extern "C" {
@@ -214,13 +215,13 @@ public:
     T* operator->() { return m_ptr; }
 
     /// Access the object referenced by this reference.
-    const T* operator->() const { return m_ptr; }
+    T* operator->() const { return m_ptr; }
 
     /// Return a C++ reference to the referenced object.
     T& operator*() { return *m_ptr; }
 
     /// Return a const C++ reference to the referenced object.
-    const T& operator*() const { return *m_ptr; }
+    T& operator*() const { return *m_ptr; }
 
     /// Return a pointer to the referenced object.
     operator T*() { return m_ptr; }
@@ -232,7 +233,7 @@ public:
     T* get() { return m_ptr; }
 
     /// Return a pointer to the referenced object.
-    const T* get() const { return m_ptr; }
+    T* get() const { return m_ptr; }
 
     /// Check if the object is defined.
     operator bool() const { return m_ptr != nullptr; }
@@ -260,3 +261,23 @@ ref<T> dynamic_ref_cast(const ref<U>& r) noexcept
 }
 
 } // namespace kali
+
+namespace std {
+template<typename T>
+void swap(::kali::ref<T>& x, ::kali::ref<T>& y) noexcept
+{
+    return x.swap(y);
+}
+
+template<typename T>
+struct less<::kali::ref<T>> {
+    bool operator()(const ::kali::ref<T>& a, const ::kali::ref<T>& b) const { return a.get() < b.get(); }
+};
+
+template<typename T>
+struct hash<::kali::ref<T>> {
+    constexpr int operator()(const ::kali::ref<T>& r) const { return std::hash<T*>()(r.get()); }
+};
+
+
+} // namespace std

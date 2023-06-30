@@ -24,37 +24,38 @@ int main()
 {
     init_platform();
 
-    KALI_INFO("{}", get_version().long_tag);
+    log_info("{}", get_version().long_tag);
 
-    KALI_DEBUG("just a test");
-    KALI_DEBUG("{} {} {}", "hello", 42, "world!");
+    log_debug("just a test");
+    log_debug("{} {} {}", "hello", 42, "world!");
 
-    KALI_DEBUG_WITH_LOC("just a test");
-    KALI_DEBUG_WITH_LOC("{} {} {}", "hello", 42, "world!");
+    log_error_once("just a test");
+    log_error_once("just a test");
+    log_error_once("just a test");
 
-    KALI_INFO("{}", to_string(uint4(1, 2, 3, 4)));
+    log_info("{}", to_string(uint4(1, 2, 3, 4)));
 
     nested::Test::test();
 
     ref<Window> window = Window::create({.width = 1024, .height = 1024, .title = "Kali Editor"});
 
-    window->set_on_resize([](uint32_t width, uint32_t height) { KALI_INFO("Window resized to {}x{}", width, height); });
+    window->set_on_resize([](uint32_t width, uint32_t height) { log_info("Window resized to {}x{}", width, height); });
 
     window->set_on_mouse_event(
         [](const MouseEvent& event)
         {
             switch (event.type) {
             case MouseEventType::button_down:
-                KALI_INFO("mouse down");
+                log_info("mouse down");
                 break;
             case MouseEventType::button_up:
-                KALI_INFO("mouse up");
+                log_info("mouse up");
                 break;
             case MouseEventType::move:
-                KALI_INFO("mouse move");
+                log_info("mouse move");
                 break;
             case MouseEventType::scroll:
-                KALI_INFO("mouse scroll");
+                log_info("mouse scroll");
                 break;
             }
         }
@@ -64,7 +65,7 @@ int main()
         [](const std::span<const char*> files)
         {
             for (const char* file : files) {
-                KALI_INFO("dropped file: {}", file);
+                log_info("dropped file: {}", file);
             }
         }
     );

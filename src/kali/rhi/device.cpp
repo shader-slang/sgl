@@ -26,13 +26,13 @@ public:
         }
         switch (type) {
         case gfx::DebugMessageType::Info:
-            KALI_INFO("{}: {}", source_str, message);
+            log_info("{}: {}", source_str, message);
             break;
         case gfx::DebugMessageType::Warning:
-            KALI_WARN("{}: {}", source_str, message);
+            log_warn("{}: {}", source_str, message);
             break;
         case gfx::DebugMessageType::Error:
-            KALI_ERROR("{}: {}", source_str, message);
+            log_error("{}: {}", source_str, message);
             break;
         }
     }
@@ -55,7 +55,7 @@ inline gfx::DeviceType get_gfx_device_type(DeviceType device_type)
     case DeviceType::cuda:
         return gfx::DeviceType::CUDA;
     }
-    KALI_THROW(Exception("Invalid DeviceType"));
+    KALI_THROW(RuntimeError("Invalid DeviceType"));
 }
 
 Device::Device(const DeviceDesc& desc)
@@ -79,7 +79,7 @@ Device::Device(const DeviceDesc& desc)
         .deviceType = get_gfx_device_type(m_type),
     };
     if (SLANG_FAILED(gfx::gfxCreateDevice(&gfx_desc, m_gfx_device.writeRef())))
-        KALI_THROW(Exception("Failed to create device!"));
+        KALI_THROW(RuntimeError("Failed to create device!"));
 
     gfx::ICommandQueue::Desc queue_desc{
         .type = gfx::ICommandQueue::QueueType::Graphics,

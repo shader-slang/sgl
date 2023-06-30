@@ -1,5 +1,6 @@
 #include "swapchain.h"
 #include "device.h"
+#include "helpers.h"
 
 #include "core/assert.h"
 #include "core/error.h"
@@ -28,10 +29,8 @@ Swapchain::Swapchain(const SwapchainDesc& desc, WindowHandle window_handle, ref<
     gfx::WindowHandle gfx_window_handle = gfx::WindowHandle::FromXWindow(window_handle.xdisplay, window_handle.xwindow);
 #endif
 
-    if (SLANG_FAILED(
-            m_device->get_gfx_device()->createSwapchain(gfx_desc, gfx_window_handle, m_gfx_swapchain.writeRef())
-        ))
-        KALI_THROW(Exception("Failed to create swapchain!"));
+
+    SLANG_CALL(m_device->get_gfx_device()->createSwapchain(gfx_desc, gfx_window_handle, m_gfx_swapchain.writeRef()));
 }
 
 Swapchain::Swapchain(const SwapchainDesc& desc, ref<Window> window, ref<Device> device)

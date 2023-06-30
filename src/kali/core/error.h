@@ -9,6 +9,9 @@
 
 namespace kali {
 
+/// Report a fatal error and terminate the process.
+[[noreturn]] KALI_API void report_fatal_error(const std::string& msg);
+
 #if KALI_MSVC
 #pragma warning(push)
 #pragma warning(disable : 4275) // allow dllexport on classes dervied from STL
@@ -96,7 +99,7 @@ public:
 /// Logs the exception and a stack trace before throwing.
 #define KALI_THROW(exc)                                                                                                \
     {                                                                                                                  \
-        KALI_ERROR(                                                                                                    \
+        log_error(                                                                                                     \
             "Throwing exception: {}\n\nStacktrace:\n{}",                                                               \
             exc.what(),                                                                                                \
             kali::format_stacktrace(kali::backtrace())                                                                 \

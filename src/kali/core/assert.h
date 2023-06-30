@@ -10,21 +10,21 @@
 
 #define KALI_ASSERT(cond)                                                                                              \
     if (!(cond)) {                                                                                                     \
-        std::string str = fmt::format("Assertion failed: {}\n{}:{}", #cond, __FILE__, __LINE__);                       \
-        KALI_THROW(Exception(str));                                                                                    \
+        std::string msg_ = fmt::format("Assertion failed: {}\n{}:{}", #cond, __FILE__, __LINE__);                      \
+        ::kali::report_fatal_error(msg_);                                                                              \
     }
 
 #define KALI_ASSERT_MSG(cond, msg)                                                                                     \
     if (!(cond)) {                                                                                                     \
-        std::string str = fmt::format("Assertion failed: {} ({})\n{}:{}", #cond, msg, __FILE__, __LINE__);             \
-        KALI_THROW(Exception(str));                                                                                    \
+        std::string msg_ = fmt::format("Assertion failed: {} ({})\n{}:{}", #cond, msg, __FILE__, __LINE__);            \
+        ::kali::report_fatal_error(msg_);                                                                              \
     }
 
 #define KALI_ASSERT_OP(a, b, op)                                                                                       \
     if (!(a op b)) {                                                                                                   \
-        std::string str                                                                                                \
+        std::string msg_                                                                                               \
             = fmt::format("Assertion failed: {} {} {} ({} {} {})\n{}:{}", #a, #op, #b, a, #op, b, __FILE__, __LINE__); \
-        KALI_THROW(Exception(str));                                                                                    \
+        ::kali::report_fatal_error(msg_);                                                                              \
     }
 
 #else // KALI_ENABLE_ASSERTS

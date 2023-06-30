@@ -6,7 +6,7 @@
 
 #define SLANG_CALL(call)                                                                                               \
     {                                                                                                                  \
-        SlangResult result = call;                                                                                     \
-        if (SLANG_FAILED(result))                                                                                      \
-            KALI_THROW(Exception("Slang call {} failed with error: {}", #call, result));                               \
+        SlangResult result_ = call;                                                                                    \
+        if (SLANG_FAILED(result_))                                                                                     \
+            KALI_THROW(RuntimeError("Slang call {} failed with error: {}", #call, result_));                           \
     }

@@ -1,4 +1,5 @@
 #include "error.h"
+#include "logger.h"
 #include "window.h"
 #include "version.h"
 #include "vector_types.h"
@@ -180,6 +181,72 @@ void register_core(nb::module_& m)
         .def_ro("short_tag", &Version::short_tag)
         .def_ro("long_tag", &Version::long_tag);
     m.def("get_version", []() { return get_version(); });
+
+    // ------------------------------------------------------------------------
+    // logger.h
+    // ------------------------------------------------------------------------
+
+    nb::enum_<LogLevel>(m, "LogLevel")
+        .value("debug", LogLevel::debug)
+        .value("info", LogLevel::info)
+        .value("warn", LogLevel::warn)
+        .value("error", LogLevel::error)
+        .value("fatal", LogLevel::fatal)
+        .export_values();
+
+    nb::enum_<LogFrequency>(m, "LogFrequency")
+        .value("always", LogFrequency::always)
+        .value("once", LogFrequency::once)
+        .export_values();
+
+    nb::class_<LoggerOutput>(m, "LoggerOutput");
+
+    // clang-format off
+#define DEF_LOG_METHOD(name) def(#name, [](Logger& self, const std::string_view msg) { self.name(msg); }, "msg"_a)
+    // clang-format on
+
+    nb::class_<Logger>(m, "Logger")
+        .def_prop_rw("level", &Logger::get_level, &Logger::set_level)
+        .def("add_output", &Logger::add_output)
+        .def("remove_output", &Logger::remove_output)
+        .def("log", &Logger::log, "level"_a, "msg"_a, "frequency"_a = LogFrequency::always)
+        .DEF_LOG_METHOD(debug)
+        .DEF_LOG_METHOD(info)
+        .DEF_LOG_METHOD(warn)
+        .DEF_LOG_METHOD(error)
+        .DEF_LOG_METHOD(fatal)
+        .DEF_LOG_METHOD(debug_once)
+        .DEF_LOG_METHOD(info_once)
+        .DEF_LOG_METHOD(warn_once)
+        .DEF_LOG_METHOD(error_once)
+        .DEF_LOG_METHOD(fatal_once);
+
+#undef DEF_LOG_METHOD
+
+    // clang-format off
+#define DEF_LOG_FUNC(name) def(#name, [](const std::string_view msg) { name(msg); }, "msg"_a)
+    // clang-format on
+
+    m.def(
+         "log",
+         [](const LogLevel level, const std::string_view msg, const LogFrequency frequency)
+         { Logger::global().log(level, msg, frequency); },
+         "level"_a,
+         "msg"_a,
+         "frequency"_a = LogFrequency::always
+    )
+        .DEF_LOG_FUNC(log_debug)
+        .DEF_LOG_FUNC(log_debug_once)
+        .DEF_LOG_FUNC(log_info)
+        .DEF_LOG_FUNC(log_info_once)
+        .DEF_LOG_FUNC(log_warn)
+        .DEF_LOG_FUNC(log_warn_once)
+        .DEF_LOG_FUNC(log_error)
+        .DEF_LOG_FUNC(log_error_once)
+        .DEF_LOG_FUNC(log_fatal)
+        .DEF_LOG_FUNC(log_fatal_once);
+
+#undef DEF_LOG_FUNC
 
     // ------------------------------------------------------------------------
     // input.h

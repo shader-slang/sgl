@@ -194,8 +194,8 @@ Slang::ComPtr<slang::ICompileRequest> ProgramManager::create_slang_compile_reque
     bool flag_fast = is_set(compiler_flags, ShaderCompilerFlags::floating_point_mode_fast);
     bool flag_precise = is_set(compiler_flags, ShaderCompilerFlags::floating_point_mode_precise);
     if (flag_fast && flag_precise) {
-        KALI_WARN("Shader compiler flags 'floating_point_mode_fast' and 'floating_point_mode_precise' can't be used "
-                  "simultaneously. ignoring 'floating_point_mode_fast'.");
+        log_warn("Shader compiler flags 'floating_point_mode_fast' and 'floating_point_mode_precise' can't be used "
+                 "simultaneously. ignoring 'floating_point_mode_fast'.");
         flag_fast = false;
     }
     target_desc.floatingPointMode = SLANG_FLOATING_POINT_MODE_DEFAULT;

@@ -41,11 +41,9 @@ struct ImageSpec {
         case ImageComponentType::u8:
             return 1;
         case ImageComponentType::u16:
-            return 2;
-        case ImageComponentType::u32:
-            return 4;
         case ImageComponentType::f16:
             return 2;
+        case ImageComponentType::u32:
         case ImageComponentType::f32:
             return 4;
         }

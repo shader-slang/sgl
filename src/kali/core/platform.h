@@ -88,15 +88,6 @@
 #define KALI_INLINE __attribute__((always_inline))
 #endif
 
-#define KALI_UNUSED(x) (void)x
-
-/**
- * Preprocessor stringification.
- */
-#define KALI_STRINGIZE(a) #a
-#define KALI_CONCAT_STRINGS_(a, b) a##b
-#define KALI_CONCAT_STRINGS(a, b) KALI_CONCAT_STRINGS_(a, b)
-
 #if KALI_WINDOWS
 #define DECLARE_HANDLE(name)                                                                                           \
     struct name##__;                                                                                                   \

@@ -4,7 +4,7 @@
 #include "formats.h"
 
 #include "core/platform.h"
-#include "core/enum.h"
+#include "core/macros.h"
 #include "core/object.h"
 
 #include <slang-gfx.h>
