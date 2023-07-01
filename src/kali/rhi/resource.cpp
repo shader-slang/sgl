@@ -19,7 +19,7 @@ inline gfx::IResource::Type get_gfx_resource_type(ResourceType resource_type)
     return gfx::IResource::Type(resource_type);
 }
 
-inline gfx::ResourceState get_gfx_resource_state(ResourceState resource_state)
+gfx::ResourceState get_gfx_resource_state(ResourceState resource_state)
 {
     // clang-format off
     static_assert(uint32_t(ResourceState::undefined) == uint32_t(gfx::ResourceState::Undefined));

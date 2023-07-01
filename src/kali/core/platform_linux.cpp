@@ -104,7 +104,7 @@ bool create_junction(const std::filesystem::path& link, const std::filesystem::p
     std::error_code ec;
     std::filesystem::create_directory_symlink(target, link, ec);
     if (ec)
-        KALI_WARN("Failed to create symlink {} to {}: {}", link, target, ec.value());
+        log_warn("Failed to create symlink {} to {}: {}", link, target, ec.value());
     return !ec;
 }
 
@@ -113,7 +113,7 @@ bool delete_junction(const std::filesystem::path& link)
     std::error_code ec;
     std::filesystem::remove(link, ec);
     if (ec)
-        KALI_WARN("Failed to remove symlink {}: {}", link, ec.value());
+        log_warn("Failed to remove symlink {}: {}", link, ec.value());
     return !ec;
 }
 

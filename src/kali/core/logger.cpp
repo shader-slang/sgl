@@ -63,7 +63,7 @@ bool ConsoleLoggerOutput::enable_ansi_control_sequences()
     if (auto value = get_environment_variable("NO_COLOR"); value && !value->empty())
         return false;
 
-#ifdef KALI_WINDOWS
+#if KALI_WINDOWS
     // Set output mode to handle virtual terminal sequences.
     HANDLE h_output = GetStdHandle(STD_OUTPUT_HANDLE);
     if (h_output == INVALID_HANDLE_VALUE)
@@ -102,7 +102,7 @@ void FileLoggerOutput::write(LogLevel level, const std::string_view msg)
 
 void DebugConsoleLoggerOutput::write(LogLevel level, const std::string_view msg)
 {
-#ifdef KALI_WINDOWS
+#if KALI_WINDOWS
     std::string str = fmt::format("{} {}\n", s_level_str[int(level)], msg);
     OutputDebugStringA(str.c_str());
 #endif

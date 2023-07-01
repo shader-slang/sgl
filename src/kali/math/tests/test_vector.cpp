@@ -1,6 +1,7 @@
 #include "testing.h"
 #include "math/vector.h"
 
+#include <algorithm>
 #include <random>
 
 using namespace kali;

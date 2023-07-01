@@ -166,6 +166,9 @@ public:
                 = reinterpret_cast<uint8_t*>(stbi_loadf_from_memory(buffer, len, &width, &height, &component_count, 0));
             read_len = width * height * component_count * 4;
             break;
+        default:
+            KALI_ASSERT(false);
+            break;
         }
 
         if (!pixels)
@@ -260,6 +263,8 @@ public:
                 component_count,
                 reinterpret_cast<const float*>(buffer)
             );
+            break;
+        default:
             break;
         }
         return success;
@@ -404,6 +409,9 @@ public:
                     }
                 }
             }
+            break;
+        default:
+            KALI_ASSERT(false);
             break;
         }
 
