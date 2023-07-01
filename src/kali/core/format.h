@@ -1,6 +1,6 @@
 #pragma once
 
-#include "platform.h"
+#include "macros.h"
 
 #if KALI_MSVC
 #pragma warning(push)

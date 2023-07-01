@@ -17,7 +17,6 @@ struct Test {
     static void test() { std::cout << format_stacktrace(backtrace()); }
 };
 
-
 } // namespace nested
 
 int main()

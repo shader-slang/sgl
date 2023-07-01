@@ -1,6 +1,6 @@
 #pragma once
 
-#include "platform.h"
+#include "macros.h"
 #include "logger.h"
 #include "format.h"
 
@@ -9,8 +9,14 @@
 
 namespace kali {
 
+class Exception;
+
 /// Report a fatal error and terminate the process.
 [[noreturn]] KALI_API void report_fatal_error(const std::string& msg);
+
+/// Report an exception that is about to be thrown.
+/// Used in the KALI_THROW macro.
+KALI_API void report_exception(const Exception& exception);
 
 #if KALI_MSVC
 #pragma warning(push)
@@ -99,11 +105,7 @@ public:
 /// Logs the exception and a stack trace before throwing.
 #define KALI_THROW(exc)                                                                                                \
     {                                                                                                                  \
-        log_error(                                                                                                     \
-            "Throwing exception: {}\n\nStacktrace:\n{}",                                                               \
-            exc.what(),                                                                                                \
-            kali::format_stacktrace(kali::backtrace())                                                                 \
-        );                                                                                                             \
+        report_exception(exc);                                                                                         \
         throw exc;                                                                                                     \
     }
 

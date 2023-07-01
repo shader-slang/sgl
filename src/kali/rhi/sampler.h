@@ -2,7 +2,7 @@
 
 #include "fwd.h"
 
-#include "core/platform.h"
+#include "core/macros.h"
 #include "core/object.h"
 #include "core/vector_types.h"
 

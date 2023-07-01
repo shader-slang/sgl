@@ -1,6 +1,6 @@
 #pragma once
 
-#include "platform.h"
+#include "macros.h"
 
 #include <cstdint>
 

@@ -3,6 +3,7 @@
 #include "fwd.h"
 #include "formats.h"
 
+#include "core/macros.h"
 #include "core/platform.h"
 #include "core/object.h"
 

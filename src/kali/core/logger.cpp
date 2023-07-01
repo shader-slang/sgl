@@ -1,4 +1,5 @@
 #include "logger.h"
+#include "macros.h"
 #include "platform.h"
 
 #include <fmt/color.h>

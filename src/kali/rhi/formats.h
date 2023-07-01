@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/platform.h"
+#include "core/macros.h"
 
 #include <slang-gfx.h>
 
