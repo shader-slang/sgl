@@ -8,7 +8,6 @@
 #include <string_view>
 #include <set>
 #include <filesystem>
-#include <fstream>
 
 namespace kali {
 
@@ -52,11 +51,12 @@ private:
 class KALI_API FileLoggerOutput : public LoggerOutput {
 public:
     FileLoggerOutput(const std::filesystem::path& path);
+    ~FileLoggerOutput();
 
     virtual void write(LogLevel level, const std::string_view msg) override;
 
 private:
-    std::ofstream m_stream;
+    void* m_file;
 };
 
 /// Logger output that writes to the debug console (Windows only).

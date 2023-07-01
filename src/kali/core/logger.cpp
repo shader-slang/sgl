@@ -79,15 +79,24 @@ bool ConsoleLoggerOutput::enable_ansi_control_sequences()
 }
 
 FileLoggerOutput::FileLoggerOutput(const std::filesystem::path& path)
-    : m_stream(path)
 {
+#if KALI_WINDOWS
+    ::_wfopen_s(reinterpret_cast<FILE**>(&m_file), path.wstring().c_str(), L"w");
+#else
+    m_file = ::fopen(path.string().c_str(), "w");
+#endif
+}
+
+FileLoggerOutput::~FileLoggerOutput()
+{
+    if (m_file)
+        ::fclose(static_cast<FILE*>(m_file));
 }
 
 void FileLoggerOutput::write(LogLevel level, const std::string_view msg)
 {
-    std::string str = fmt::format("{} {}\n", s_level_str[int(level)], msg);
-    m_stream.write(str.data(), str.size());
-    m_stream.flush();
+    fmt::print(static_cast<FILE*>(m_file), "{} {}\n", s_level_str[int(level)], msg);
+    ::fflush(static_cast<FILE*>(m_file));
 }
 
 void DebugConsoleLoggerOutput::write(LogLevel level, const std::string_view msg)
