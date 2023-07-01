@@ -110,3 +110,6 @@ public:
     }
 
 #define KALI_UNIMPLEMENTED() KALI_THROW(kali::RuntimeError("Unimplemented"))
+
+// TODO
+#define KALI_UNREACHABLE()

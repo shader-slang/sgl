@@ -17,6 +17,7 @@ target_sources(kali PRIVATE
     core/version.cpp
     core/window.cpp
     imageio/imageio.cpp
+    math/float16.cpp
     rhi/command.cpp
     rhi/device.cpp
     rhi/formats.cpp
@@ -31,6 +32,7 @@ target_compile_definitions(kali
         KALI_DLL
     PUBLIC
         NOMINMAX
+        _USE_MATH_DEFINES
 )
 
 target_link_libraries(kali PRIVATE git_version glfw PUBLIC stb tinyexr fmt slang slang-gfx)
@@ -43,6 +45,7 @@ if(MSVC)
     target_compile_options(kali PUBLIC /DEBUG)
     target_compile_options(kali PUBLIC /W4 /WX)
     target_compile_options(kali PUBLIC /wd4251)
+    target_compile_options(kali PUBLIC /wd4201) # nonstandard extension used: nameless struct/union
 endif()
 
 
@@ -67,6 +70,10 @@ target_sources(kali_tests PRIVATE
     core/tests/test_string_utils.cpp
     core/tests/test_vector.cpp
     imageio/tests/test_imageio.cpp
+    math/tests/test_float16.cpp
+    math/tests/test_matrix.cpp
+    math/tests/test_quaternion.cpp
+    math/tests/test_vector.cpp
     rhi/tests/test_device.cpp
 )
 target_include_directories(kali_tests BEFORE PRIVATE .)
