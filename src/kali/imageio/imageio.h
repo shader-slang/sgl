@@ -55,6 +55,7 @@ struct ImageSpec {
 
 /// Class for reading images.
 class KALI_API ImageInput : public Object {
+    KALI_OBJECT(ImageInput)
 public:
     static ref<ImageInput> open(const std::filesystem::path& path);
 
@@ -75,6 +76,7 @@ private:
 
 /// Class for writing images.
 class KALI_API ImageOutput : public Object {
+    KALI_OBJECT(ImageOutput)
 public:
     static ref<ImageOutput> open(const std::filesystem::path& path, ImageSpec spec);
 

@@ -30,6 +30,7 @@ struct DeviceDesc {
 };
 
 class KALI_API Device : public Object {
+    KALI_OBJECT(Device)
 public:
     Device(const DeviceDesc& desc = DeviceDesc{});
     ~Device();

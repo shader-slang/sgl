@@ -121,6 +121,7 @@ using MipLevel = uint32_t;
 using ArraySlice = uint32_t;
 
 class KALI_API Resource : public Object {
+    KALI_OBJECT(Resource)
 public:
     virtual ~Resource();
 
@@ -185,6 +186,7 @@ struct BufferDesc {
 };
 
 class KALI_API Buffer : public Resource {
+    KALI_OBJECT(Buffer)
 public:
     Buffer(const BufferDesc& desc, const void* init_data, ref<Device> device);
 
@@ -247,6 +249,7 @@ struct TextureDesc {
 };
 
 class KALI_API Texture : public Resource {
+    KALI_OBJECT(Texture)
 public:
     Texture(const TextureDesc& desc, const void* init_data, ref<Device> device);
 

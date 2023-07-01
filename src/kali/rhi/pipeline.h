@@ -10,6 +10,7 @@
 namespace kali {
 
 class KALI_API Pipeline : public Object {
+    KALI_OBJECT(Pipeline)
 public:
     Pipeline(ref<Device> device);
 

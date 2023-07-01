@@ -26,6 +26,7 @@ enum class LogFrequency {
 
 /// Abstract base class for logger outputs.
 class KALI_API LoggerOutput : public Object {
+    KALI_OBJECT(LoggerOutput)
 public:
     virtual void write(LogLevel level, const std::string_view msg) = 0;
 };
@@ -96,6 +97,7 @@ public:
 
 
 class KALI_API Logger : public Object {
+    KALI_OBJECT(Logger)
 public:
     Logger(LogLevel level = LogLevel::info, bool use_default_outputs = true);
 

@@ -59,7 +59,7 @@ void run_gpu_test(void (*func)(GpuTestContext&))
                 s_cached_devices[device_type] = device;
             }
 
-            GpuTestContext ctx{.device = device};
+            GpuTestContext ctx{.device = device.get()};
             func(ctx);
         }
     }

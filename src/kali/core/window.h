@@ -31,6 +31,7 @@ struct WindowDesc {
 };
 
 class KALI_API Window : public Object {
+    KALI_OBJECT(Window)
 public:
     Window(WindowDesc desc);
     ~Window();

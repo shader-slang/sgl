@@ -1,13 +1,33 @@
 #include "object.h"
 
+#if KALI_ENABLE_OBJECT_TRACKING
+#include "assert.h"
+#include "logger.h"
+#include <set>
+#include <mutex>
+#endif
+
 namespace kali {
 
 static void (*object_inc_ref_py)(PyObject*) noexcept = nullptr;
 static void (*object_dec_ref_py)(PyObject*) noexcept = nullptr;
 
+#if KALI_ENABLE_OBJECT_TRACKING
+static std::mutex s_tracked_objects_mutex;
+static std::set<const Object*> s_tracked_objects;
+#endif
+
 void Object::inc_ref() const noexcept
 {
     uintptr_t value = m_state.load(std::memory_order_relaxed);
+
+    // TODO check this
+#if KALI_ENABLE_OBJECT_TRACKING
+    if (m_state == 1) {
+        std::lock_guard<std::mutex> lock(s_tracked_objects_mutex);
+        s_tracked_objects.insert(this);
+    }
+#endif
 
     while (true) {
         if (value & 1) {
@@ -21,7 +41,7 @@ void Object::inc_ref() const noexcept
     }
 }
 
-void Object::dec_ref() const noexcept
+void Object::dec_ref(bool dealloc) const noexcept
 {
     uintptr_t value = m_state.load(std::memory_order_relaxed);
 
@@ -31,7 +51,14 @@ void Object::dec_ref() const noexcept
                 fprintf(stderr, "Object::dec_ref(%p): reference count underflow!", this);
                 abort();
             } else if (value == 3) {
-                delete this;
+#if KALI_ENABLE_OBJECT_TRACKING
+                {
+                    std::lock_guard<std::mutex> lock(s_tracked_objects_mutex);
+                    s_tracked_objects.erase(this);
+                }
+#endif
+                if (dealloc)
+                    delete this;
             } else {
                 if (!m_state
                          .compare_exchange_weak(value, value - 2, std::memory_order_relaxed, std::memory_order_relaxed))
@@ -76,6 +103,67 @@ PyObject* Object::self_py() const noexcept
     else
         return (PyObject*)value;
 }
+
+#if KALI_ENABLE_OBJECT_TRACKING
+
+void Object::report_alive_objects()
+{
+    std::lock_guard<std::mutex> lock(s_tracked_objects_mutex);
+    log_info("Alive objects:");
+    for (const Object* object : s_tracked_objects)
+        object->report_refs();
+}
+
+void Object::report_refs() const
+{
+    log_info("Object (class={} address={}) has {} reference(s)", get_class_name(), fmt::ptr(this), ref_count());
+#if KALI_ENABLE_REF_TRACKING
+    std::lock_guard<std::mutex> lock(m_ref_trackers_mutex);
+    for (const auto& it : m_ref_trackers) {
+        log_info("ref={} count={}\n{}\n", it.first, it.second.count, format_stacktrace(it.second.stack_trace));
+    }
+#endif
+}
+
+#endif // KALI_ENABLE_OBJECT_TRACKING
+
+#if KALI_ENABLE_REF_TRACKING
+
+void Object::inc_ref(uint64_t ref_id) const
+{
+    if (m_enable_ref_tracking) {
+        std::lock_guard<std::mutex> lock(m_ref_trackers_mutex);
+        auto it = m_ref_trackers.find(ref_id);
+        if (it != m_ref_trackers.end()) {
+            it->second.count++;
+        } else {
+            m_ref_trackers.emplace(ref_id, backtrace());
+        }
+    }
+
+    inc_ref();
+}
+
+void Object::dec_ref(uint64_t ref_id, bool dealloc) const noexcept
+{
+    if (m_enable_ref_tracking) {
+        std::lock_guard<std::mutex> lock(m_ref_trackers_mutex);
+        auto it = m_ref_trackers.find(ref_id);
+        KALI_ASSERT(it != m_ref_trackers.end());
+        if (--it->second.count == 0) {
+            m_ref_trackers.erase(it);
+        }
+    }
+
+    dec_ref(dealloc);
+}
+
+void Object::set_enable_ref_tracking(bool enable)
+{
+    m_enable_ref_tracking = enable;
+}
+
+#endif // KALI_ENABLE_REF_TRACKING
 
 void object_init_py(void (*object_inc_ref_py_)(PyObject*) noexcept, void (*object_dec_ref_py_)(PyObject*) noexcept)
 {

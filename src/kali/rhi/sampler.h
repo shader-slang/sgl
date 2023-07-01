@@ -58,6 +58,7 @@ struct SamplerDesc {
 };
 
 class Sampler : public Object {
+    KALI_OBJECT(Sampler)
 public:
     Sampler(const SamplerDesc& desc, ref<Device> device);
 

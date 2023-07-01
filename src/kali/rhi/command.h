@@ -12,6 +12,7 @@
 namespace kali {
 
 class CommandList : public Object {
+    KALI_OBJECT(CommandList)
 public:
     Device* get_device() const { return m_device; }
 

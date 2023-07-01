@@ -29,7 +29,9 @@ inline SlangStage get_gfx_slang_stage(ShaderType shader_type)
     return SlangStage(shader_type);
 }
 
-struct ProgramVersion : public Object { };
+struct ProgramVersion : public Object {
+    KALI_OBJECT(ProgramVersion)
+};
 
 Program::Program(const ProgramDesc& desc, ProgramManager* program_manager)
     : m_desc(desc)
@@ -38,7 +40,7 @@ Program::Program(const ProgramDesc& desc, ProgramManager* program_manager)
     KALI_ASSERT(m_program_manager);
 
     std::string log;
-    m_active_version = m_program_manager->create_program_version(*this, log);
+    m_active_version = m_program_manager->create_program_version(*this, log).get();
 }
 
 ProgramManager::ProgramManager(Device* device, slang::IGlobalSession* slang_session)

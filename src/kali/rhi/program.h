@@ -292,6 +292,7 @@ struct ProgramVersion;
 struct ProgramKernels;
 
 class KALI_API Program : public Object {
+    KALI_OBJECT(Program)
 public:
     Program(const ProgramDesc& desc, ProgramManager* program_manager);
 
@@ -305,6 +306,7 @@ private:
 };
 
 class KALI_API ProgramManager : public Object {
+    KALI_OBJECT(ProgramManager)
 public:
     ProgramManager(Device* device, slang::IGlobalSession* slang_session);
 
