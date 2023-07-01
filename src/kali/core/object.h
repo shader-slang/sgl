@@ -379,7 +379,7 @@ public:
             T* prevPtr = m_ptr;
             m_ptr = ptr;
             if (prevPtr)
-                rec_ref(reinterpret_cast<const Object*>(prevPtr));
+                dec_ref(reinterpret_cast<const Object*>(prevPtr));
         }
     }
 
