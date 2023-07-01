@@ -2,7 +2,7 @@
 
 #include "macros.h"
 #include "enum.h"
-#include "vector_types.h"
+#include "math/vector_types.h"
 
 namespace kali {
 

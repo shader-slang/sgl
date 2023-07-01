@@ -6,8 +6,8 @@
 #include "core/assert.h"
 #include "core/error.h"
 #include "core/maths.h"
-#include "core/vector_ops.h"
 #include "core/type_utils.h"
+#include "math/vector_math.h"
 
 namespace kali {
 

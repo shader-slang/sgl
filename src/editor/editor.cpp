@@ -4,8 +4,8 @@
 #include "core/version.h"
 #include "core/error.h"
 #include "core/logger.h"
-#include "core/vector_ops.h"
 #include "core/platform.h"
+#include "math/vector.h"
 
 #include <iostream>
 

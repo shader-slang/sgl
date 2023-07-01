@@ -68,7 +68,6 @@ target_sources(kali_tests PRIVATE
     core/tests/test_object.cpp
     core/tests/test_platform.cpp
     core/tests/test_string_utils.cpp
-    core/tests/test_vector.cpp
     imageio/tests/test_imageio.cpp
     math/tests/test_float16.cpp
     math/tests/test_matrix.cpp
@@ -92,6 +91,7 @@ nanobind_add_module(kali_python NB_STATIC LTO
     kali_python.cpp
     core/core_python.cpp
     imageio/imageio_python.cpp
+    math/math_python.cpp
     rhi/rhi_python.cpp
 )
 target_link_libraries(kali_python PRIVATE kali)

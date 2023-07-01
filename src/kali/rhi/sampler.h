@@ -4,7 +4,7 @@
 
 #include "core/macros.h"
 #include "core/object.h"
-#include "core/vector_types.h"
+#include "math/vector_types.h"
 
 #include <slang-gfx.h>
 

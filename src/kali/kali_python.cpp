@@ -4,6 +4,7 @@ namespace nb = nanobind;
 
 namespace kali {
 void register_core(nb::module_& m);
+void register_math(nb::module_& m);
 void register_rhi(nb::module_& m);
 void register_imageio(nb::module_& m);
 } // namespace kali
@@ -11,6 +12,7 @@ void register_imageio(nb::module_& m);
 NB_MODULE(kali_python, m)
 {
     kali::register_core(m);
+    kali::register_math(m);
     kali::register_rhi(m);
     kali::register_imageio(m);
 }
