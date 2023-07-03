@@ -9,6 +9,7 @@ def equal(a: float4, b: float4):
 def equal(a: uint4, b: uint4):
     return a.x == b.x and a.y == b.y and a.z == b.z and a.w == b.w
 
+
 def eq(a: bool4, b: bool4):
     return a.x == b.x and a.y == b.y and a.z == b.z and a.w == b.w
 
@@ -33,7 +34,7 @@ def test_float4_fields():
 
 
 def test_float4_str():
-    assert str(float4(1, 2, 3, 4)) == "float4(1, 2, 3, 4)"
+    assert str(float4(1, 2, 3, 4)) == "{1, 2, 3, 4}"
 
 
 def test_float4_unary_ops():
