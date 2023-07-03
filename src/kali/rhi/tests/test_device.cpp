@@ -7,6 +7,12 @@ using namespace kali;
 
 TEST_SUITE_BEGIN("device");
 
+TEST_CASE("enumerate_adapters")
+{
+    std::vector<AdapterInfo> adapters = Device::enumerate_adapters();
+    CHECK(!adapters.empty());
+}
+
 TEST_CASE_GPU("init")
 {
     CHECK(ctx.device);

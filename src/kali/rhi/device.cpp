@@ -171,4 +171,38 @@ ProgramManager& Device::get_program_manager()
     return *m_program_manager;
 }
 
+std::vector<AdapterInfo> Device::enumerate_adapters(DeviceType type)
+{
+    if (type == DeviceType::automatic) {
+#if KALI_WINDOWS
+        type = DeviceType::d3d12;
+#elif KALI_LINUX
+        type = DeviceType::vulkan;
+#endif
+    }
+
+    auto convert_luid = [](const gfx::AdapterLUID& gfx_luid) -> AdapterLUID
+    {
+        AdapterLUID luid;
+        for (size_t i = 0; i < 16; ++i)
+            luid[i] = gfx_luid.luid[i];
+        return luid;
+    };
+
+    gfx::AdapterList gfx_adapters = gfx::gfxGetAdapters(get_gfx_device_type(type));
+
+    std::vector<AdapterInfo> adapters(gfx_adapters.getCount());
+    for (size_t i = 0; i < adapters.size(); ++i) {
+        const auto& gfx_adapter = gfx_adapters.getAdapters()[i];
+        adapters[i] = AdapterInfo{
+            .name = gfx_adapter.name,
+            .vendor_id = gfx_adapter.vendorID,
+            .device_id = gfx_adapter.deviceID,
+            .luid = convert_luid(gfx_adapter.luid),
+        };
+    }
+
+    return adapters;
+}
+
 } // namespace kali

@@ -8,6 +8,7 @@
 
 #include <slang-gfx.h>
 
+#include <array>
 #include <filesystem>
 #include <string>
 #include <vector>
@@ -15,6 +16,22 @@
 namespace kali {
 
 class Window;
+
+using AdapterLUID = std::array<uint8_t, 16>;
+
+struct AdapterInfo {
+    /// Descriptive name of the adapter.
+    std::string name;
+
+    /// Unique identifier for the vendor (only available for D3D12 and Vulkan).
+    uint32_t vendor_id;
+
+    /// Unique identifier for the physical device among devices from the vendor (only available for D3D12 and Vulkan).
+    uint32_t device_id;
+
+    /// Logically unique identifier of the adapter.
+    AdapterLUID luid;
+};
 
 enum class DeviceType {
     automatic,
@@ -27,6 +44,12 @@ enum class DeviceType {
 struct DeviceDesc {
     DeviceType type{DeviceType::automatic};
     bool enable_debug_layers{false};
+
+    /// If not null, the device will be created on the specified adapter.
+    AdapterLUID* adapter_luid{nullptr};
+
+    /// Path to the shader cache directory. Leave empty to disable shader cache.
+    std::filesystem::path shader_cache_path;
 };
 
 class KALI_API Device : public Object {
@@ -34,6 +57,8 @@ class KALI_API Device : public Object {
 public:
     Device(const DeviceDesc& desc = DeviceDesc{});
     ~Device();
+
+    static ref<Device> create(const DeviceDesc& desc = DeviceDesc{}) { return make_ref<Device>(desc); }
 
     const DeviceDesc& get_desc() const { return m_desc; }
 
@@ -78,6 +103,9 @@ public:
 
     gfx::IDevice* get_gfx_device() const { return m_gfx_device.get(); }
     gfx::ICommandQueue* get_gfx_queue() const { return m_gfx_queue.get(); }
+
+    /// Enumerates all available adapters of a given device type.
+    static std::vector<AdapterInfo> enumerate_adapters(DeviceType type = DeviceType::automatic);
 
 private:
     DeviceDesc m_desc;
