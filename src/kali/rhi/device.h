@@ -83,6 +83,19 @@ public:
         const void* init_data = nullptr
     );
 
+    template<typename T>
+    ref<Buffer> create_typed_buffer(
+        size_t element_count,
+        ResourceUsage usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access,
+        CpuAccess cpu_access = CpuAccess::none,
+        const void* init_data = nullptr
+    )
+    {
+        constexpr Format format = host_type_to_format<T>();
+        static_assert(format != Format::unknown, "Unsupported type");
+        return create_typed_buffer(format, element_count, usage, cpu_access, init_data);
+    }
+
     ref<Buffer> create_structured_buffer(
         size_t struct_size,
         size_t element_count,
