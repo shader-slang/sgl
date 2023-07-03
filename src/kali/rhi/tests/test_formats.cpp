@@ -29,15 +29,24 @@ TEST_CASE("validate_format_infos")
     auto format_type_to_slang_type = [](FormatType type) -> SlangScalarType
     {
         switch (type) {
-        case FormatType::unknown: return SLANG_SCALAR_TYPE_NONE;
-        case FormatType::typeless: return SLANG_SCALAR_TYPE_VOID;
-        case FormatType::float_: return SLANG_SCALAR_TYPE_FLOAT32;
-        case FormatType::unorm: return SLANG_SCALAR_TYPE_FLOAT32;
-        case FormatType::unorm_srgb: return SLANG_SCALAR_TYPE_FLOAT32;
-        case FormatType::snorm: return SLANG_SCALAR_TYPE_FLOAT32;
-        case FormatType::uint: return SLANG_SCALAR_TYPE_UINT32;
-        case FormatType::sint: return SLANG_SCALAR_TYPE_INT32;
-        default: return SLANG_SCALAR_TYPE_NONE;
+        case FormatType::unknown:
+            return SLANG_SCALAR_TYPE_NONE;
+        case FormatType::typeless:
+            return SLANG_SCALAR_TYPE_VOID;
+        case FormatType::float_:
+            return SLANG_SCALAR_TYPE_FLOAT32;
+        case FormatType::unorm:
+            return SLANG_SCALAR_TYPE_FLOAT32;
+        case FormatType::unorm_srgb:
+            return SLANG_SCALAR_TYPE_FLOAT32;
+        case FormatType::snorm:
+            return SLANG_SCALAR_TYPE_FLOAT32;
+        case FormatType::uint:
+            return SLANG_SCALAR_TYPE_UINT32;
+        case FormatType::sint:
+            return SLANG_SCALAR_TYPE_INT32;
+        default:
+            return SLANG_SCALAR_TYPE_NONE;
         }
     };
 

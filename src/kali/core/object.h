@@ -433,46 +433,25 @@ public:
     }
 
     /// Compare this reference to a null pointer.
-    bool operator==(std::nullptr_t) const
-    {
-        return m_ptr == nullptr;
-    }
+    bool operator==(std::nullptr_t) const { return m_ptr == nullptr; }
 
     /// Compare this reference to a null pointer.
-    bool operator!=(std::nullptr_t) const
-    {
-        return m_ptr != nullptr;
-    }
+    bool operator!=(std::nullptr_t) const { return m_ptr != nullptr; }
 
     /// Compare this reference to a null pointer.
-    bool operator<(std::nullptr_t) const
-    {
-        return m_ptr < nullptr;
-    }
+    bool operator<(std::nullptr_t) const { return m_ptr < nullptr; }
 
     /// Access the object referenced by this reference.
-    T* operator->() const
-    {
-        return m_ptr;
-    }
+    T* operator->() const { return m_ptr; }
 
     /// Return a C++ reference to the referenced object.
-    T& operator*() const
-    {
-        return *m_ptr;
-    }
+    T& operator*() const { return *m_ptr; }
 
     /// Return a pointer to the referenced object.
-    T* get() const
-    {
-        return m_ptr;
-    }
+    T* get() const { return m_ptr; }
 
     /// Check if the object is defined
-    operator bool() const
-    {
-        return m_ptr != nullptr;
-    }
+    operator bool() const { return m_ptr != nullptr; }
 
     /// Swap this reference with another reference.
     void swap(ref& r) noexcept

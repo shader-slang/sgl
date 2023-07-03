@@ -5,8 +5,7 @@
 #if __has_include(<dxgiformat.h>)
 #include <dxgiformat.h>
 #else
-enum DXGI_FORMAT
-{
+enum DXGI_FORMAT {
     DXGI_FORMAT_UNKNOWN = 0,
     DXGI_FORMAT_R32G32B32A32_TYPELESS = 1,
     DXGI_FORMAT_R32G32B32A32_FLOAT = 2,
@@ -135,8 +134,7 @@ enum DXGI_FORMAT
 #if __has_include(<vulkan/vulkan.h>)
 #include <vulkan/vulkan.h>
 #else
-typedef enum VkFormat
-{
+typedef enum VkFormat {
     VK_FORMAT_UNDEFINED = 0,
     VK_FORMAT_R4G4_UNORM_PACK8 = 1,
     VK_FORMAT_R4G4B4A4_UNORM_PACK16 = 2,
@@ -325,8 +323,7 @@ typedef enum VkFormat
 } VkFormat;
 #endif
 
-namespace kali
-{
+namespace kali {
 
 /// Convert from Falcor to DXGI format.
 DXGI_FORMAT KALI_API get_dxgi_format(Format format);
@@ -340,4 +337,4 @@ VkFormat KALI_API get_vulkan_format(Format format);
 /// Convert from Vulkan to Falcor format.
 Format KALI_API get_format(VkFormat vk_format);
 
-} // namespace Falcor
+} // namespace kali

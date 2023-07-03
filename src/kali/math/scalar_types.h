@@ -48,8 +48,7 @@ using std::is_unsigned_v;
 // clang-format on
 
 template<typename T>
-struct ScalarTraits {
-};
+struct ScalarTraits { };
 
 template<>
 struct ScalarTraits<bool> {

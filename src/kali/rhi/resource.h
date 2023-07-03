@@ -106,7 +106,6 @@ struct ResourceViewRange {
     {
     }
 
-
     bool operator==(const ResourceViewRange& other) const
     {
         return (first_array_slice == other.first_array_slice) && (array_size == other.array_size)
