@@ -68,12 +68,22 @@ endif()
 # set(KALI_PLUGIN_OUTPUT_DIRECTORY ${KALI_OUTPUT_DIRECTORY}/plugins)
 
 # -----------------------------------------------------------------------------
-# Misc
+# Version
 # -----------------------------------------------------------------------------
 
 # Embed git information.
 include(git_version)
 git_version_setup()
+
+# -----------------------------------------------------------------------------
+# Macros
+# -----------------------------------------------------------------------------
+
+macro(kali_add_example target)
+    add_executable(${target})
+    target_link_libraries(${target} PRIVATE kali)
+    set_target_properties(${target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${KALI_RUNTIME_OUTPUT_DIRECTORY})
+endmacro()
 
 # -----------------------------------------------------------------------------
 # Misc
@@ -97,3 +107,4 @@ endfunction()
 add_subdirectory(external)
 add_subdirectory(src/kali)
 add_subdirectory(src/editor)
+add_subdirectory(src/examples)
