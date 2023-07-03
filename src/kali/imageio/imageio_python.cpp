@@ -69,8 +69,7 @@ void register_imageio(nb::module_& m)
         .value("u16", ImageComponentType::u16)
         .value("u32", ImageComponentType::u32)
         .value("f16", ImageComponentType::f16)
-        .value("f32", ImageComponentType::f32)
-        .export_values();
+        .value("f32", ImageComponentType::f32);
 
     nb::class_<ImageSpec>(m, "ImageSpec")
         .def_rw("width", &ImageSpec::width)

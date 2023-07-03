@@ -68,13 +68,9 @@ void register_core(nb::module_& m)
         .value("info", LogLevel::info)
         .value("warn", LogLevel::warn)
         .value("error", LogLevel::error)
-        .value("fatal", LogLevel::fatal)
-        .export_values();
+        .value("fatal", LogLevel::fatal);
 
-    nb::enum_<LogFrequency>(m, "LogFrequency")
-        .value("always", LogFrequency::always)
-        .value("once", LogFrequency::once)
-        .export_values();
+    nb::enum_<LogFrequency>(m, "LogFrequency").value("always", LogFrequency::always).value("once", LogFrequency::once);
 
     nb::class_<LoggerOutput>(m, "LoggerOutput");
 
@@ -137,21 +133,18 @@ void register_core(nb::module_& m)
         .value("left", MouseButton::left)
         .value("middle", MouseButton::middle)
         .value("right", MouseButton::right)
-        .value("unknown", MouseButton::unknown)
-        .export_values();
+        .value("unknown", MouseButton::unknown);
 
     nb::enum_<KeyModifierFlags>(m, "KeyModifierFlags")
         .value("none", KeyModifierFlags::none)
         .value("shift", KeyModifierFlags::shift)
         .value("ctrl", KeyModifierFlags::ctrl)
-        .value("alt", KeyModifierFlags::alt)
-        .export_values();
+        .value("alt", KeyModifierFlags::alt);
 
     nb::enum_<KeyModifier>(m, "KeyModifier")
         .value("shift", KeyModifier::shift)
         .value("ctrl", KeyModifier::ctrl)
-        .value("alt", KeyModifier::alt)
-        .export_values();
+        .value("alt", KeyModifier::alt);
 
     nb::enum_<KeyCode>(m, "KeyCode")
         .value("space", KeyCode::space)
@@ -259,15 +252,13 @@ void register_core(nb::module_& m)
         .value("right_alt", KeyCode::right_alt)
         .value("right_super", KeyCode::right_super)
         .value("menu", KeyCode::menu)
-        .value("unknown", KeyCode::unknown)
-        .export_values();
+        .value("unknown", KeyCode::unknown);
 
     nb::enum_<KeyboardEventType>(m, "KeyboardEventType")
         .value("key_press", KeyboardEventType::key_press)
         .value("key_release", KeyboardEventType::key_release)
         .value("key_repeat", KeyboardEventType::key_repeat)
-        .value("input", KeyboardEventType::input)
-        .export_values();
+        .value("input", KeyboardEventType::input);
 
     nb::class_<KeyboardEvent>(m, "KeyboardEvent")
         .def_ro("type", &KeyboardEvent::type)
@@ -284,8 +275,7 @@ void register_core(nb::module_& m)
         .value("button_down", MouseEventType::button_down)
         .value("button_up", MouseEventType::button_up)
         .value("move", MouseEventType::move)
-        .value("scroll", MouseEventType::scroll)
-        .export_values();
+        .value("scroll", MouseEventType::scroll);
 
     nb::class_<MouseEvent>(m, "MouseEvent")
         .def_ro("type", &MouseEvent::type)
@@ -314,8 +304,7 @@ void register_core(nb::module_& m)
         .value("up", GamepadButton::up)
         .value("right", GamepadButton::right)
         .value("down", GamepadButton::down)
-        .value("left", GamepadButton::left)
-        .export_values();
+        .value("left", GamepadButton::left);
 
     nb::class_<GamepadEvent>(m, "GamepadEvent")
         .def_ro("type", &GamepadEvent::type)
@@ -338,8 +327,7 @@ void register_core(nb::module_& m)
     nb::enum_<WindowMode>(m, "WindowMode")
         .value("normal", WindowMode::normal)
         .value("minimized", WindowMode::minimized)
-        .value("fullscreen", WindowMode::fullscreen)
-        .export_values();
+        .value("fullscreen", WindowMode::fullscreen);
 
     nb::class_<Window, Object> window(m, "Window");
     window.def(
