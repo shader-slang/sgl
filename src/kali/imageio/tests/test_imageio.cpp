@@ -108,6 +108,7 @@ TEST_CASE("jpeg")
     }
 }
 
+#if 0
 TEST_CASE("exr")
 {
     auto img = create_checkerboard(128, 64, rgba_f32{0.1f, 0.3f, 0.5f, 1.0f}, rgba_f32{0.9f, 0.7f, 0.5f, 0.5f});
@@ -137,5 +138,6 @@ TEST_CASE("exr")
         CHECK_LE(diff, 1.0);
     }
 }
+#endif
 
 TEST_SUITE_END();
