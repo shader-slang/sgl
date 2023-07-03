@@ -14,7 +14,7 @@ public:
         m_device = new Device();
 
         SwapchainDesc swapchain_desc{
-            .format = Format::r8g8b8a8_unorm_srgb,
+            .format = Format::rgba8_unorm_srgb,
             .width = window->get_width(),
             .height = window->get_height(),
             .image_count = 3,

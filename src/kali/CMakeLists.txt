@@ -74,6 +74,7 @@ target_sources(kali_tests PRIVATE
     math/tests/test_quaternion.cpp
     math/tests/test_vector.cpp
     rhi/tests/test_device.cpp
+    rhi/tests/test_formats.cpp
 )
 target_include_directories(kali_tests BEFORE PRIVATE .)
 target_link_libraries(kali_tests PRIVATE doctest kali)
