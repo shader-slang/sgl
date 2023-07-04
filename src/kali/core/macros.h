@@ -1,8 +1,9 @@
 #pragma once
 
-/**
- * Compilers.
- */
+// -------------------------------------------------------------------------------------------------
+// Compiler macros
+// -------------------------------------------------------------------------------------------------
+
 #define KALI_COMPILER_MSVC 1
 #define KALI_COMPILER_CLANG 2
 #define KALI_COMPILER_GCC 3
@@ -27,9 +28,10 @@
 #define KALI_CLANG (KALI_COMPILER == KALI_COMPILER_CLANG)
 #define KALI_GCC (KALI_COMPILER == KALI_COMPILER_GCC)
 
-/**
- * Platforms.
- */
+// -------------------------------------------------------------------------------------------------
+// Platform macros
+// -------------------------------------------------------------------------------------------------
+
 #define KALI_PLATFORM_WINDOWS 1
 #define KALI_PLATFORM_LINUX 2
 #define KALI_PLATFORM_MACOS 3
@@ -71,9 +73,10 @@
 #define KALI_API KALI_API_IMPORT
 #endif // KALI_DLL
 
-/**
- * Force inline.
- */
+// -------------------------------------------------------------------------------------------------
+// Convenience macros
+// -------------------------------------------------------------------------------------------------
+
 #if KALI_MSVC
 #define KALI_INLINE __forceinline
 #elif KALI_CLANG | KALI_GCC
@@ -82,13 +85,21 @@
 
 #define KALI_UNUSED(x) (void)x
 
-/**
- * Preprocessor stringification.
- */
 #define KALI_STRINGIZE(a) #a
 #define KALI_CONCAT_STRINGS_(a, b) a##b
 #define KALI_CONCAT_STRINGS(a, b) KALI_CONCAT_STRINGS_(a, b)
 
+// -------------------------------------------------------------------------------------------------
+// Compiler warnings
+// -------------------------------------------------------------------------------------------------
+
+// Example usage:
+// KALI_DIAGNOSTIC_PUSH
+// KALI_DISABLE_MSVC_WARNING(4455)
+// KALI_DISABLE_CLANG_WARNING("-Wuser-defined-literals")
+// KALI_DISABLE_GCC_WARNING("-Wliteral-suffix")
+// inline float16_t operator""h(long double value) { return float16_t(static_cast<float>(value)); }
+// KALI_DIAGNOSTIC_POP
 
 #if KALI_MSVC
 #define KALI_DIAGNOSTIC_PUSH __pragma(warning(push))
@@ -113,6 +124,9 @@
 #define KALI_DISABLE_GCC_WARNING(warning) KALI_DISABLE_WARNING(warning)
 #endif
 
+// -------------------------------------------------------------------------------------------------
+// Enum flags
+// -------------------------------------------------------------------------------------------------
 
 // clang-format off
 /// Implement logical operators on a class enum for making it usable as a flags enum.
