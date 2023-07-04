@@ -90,8 +90,8 @@ private:
 
 KALI_DIAGNOSTIC_PUSH
 KALI_DISABLE_MSVC_WARNING(4455) // disable warning about literal suffixes not starting with an underscore
-KALI_DISABLE_CLANG_WARNING(-Wuser-defined-literals)
-KALI_DISABLE_GCC_WARNING(-Wliteral-suffix)
+KALI_DISABLE_CLANG_WARNING("-Wuser-defined-literals")
+KALI_DISABLE_GCC_WARNING("-Wliteral-suffix")
 
 /// h suffix for "half float" literals.
 inline float16_t operator""h(long double value)

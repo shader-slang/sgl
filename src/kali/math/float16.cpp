@@ -11,7 +11,8 @@ namespace kali::math {
 static float overflow()
 {
     KALI_DIAGNOSTIC_PUSH
-    KALI_DISABLE_GCC_WARNING(-Wvolatile)
+    KALI_DISABLE_CLANG_WARNING("-Wdeprecated-volatile")
+    KALI_DISABLE_GCC_WARNING("-Wvolatile")
     volatile float f = 1e10;
     for (int i = 0; i < 10; ++i)
         f *= f; // this will overflow before the for loop terminates
