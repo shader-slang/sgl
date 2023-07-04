@@ -7,24 +7,7 @@
 
 #include <map>
 
-namespace kali {
-
-inline std::string to_string(DeviceType device_type)
-{
-    switch (device_type) {
-    case DeviceType::automatic:
-        return "automatic";
-    case DeviceType::d3d12:
-        return "d3d12";
-    case DeviceType::vulkan:
-        return "vulkan";
-    case DeviceType::cpu:
-        return "cpu";
-    case DeviceType::cuda:
-        return "cuda";
-    }
-    return "invalid";
-}
+namespace kali::testing {
 
 // TODO remove global
 static std::map<DeviceType, ref<Device>> s_cached_devices;
@@ -40,7 +23,7 @@ void run_gpu_test(void (*func)(GpuTestContext&))
     bool use_cached_device = true;
 
     for (DeviceType device_type : device_types) {
-        SUBCASE(to_string(device_type).c_str())
+        SUBCASE(enum_to_string(device_type).c_str())
         {
             ref<Device> device;
             if (use_cached_device) {
@@ -54,7 +37,7 @@ void run_gpu_test(void (*func)(GpuTestContext&))
                     .type = device_type,
                     .enable_debug_layers = true,
                 };
-                device = new Device(desc);
+                device = Device::create(desc);
                 device->get_program_manager().add_search_path(SOURCE_DIR);
                 s_cached_devices[device_type] = device;
             }
@@ -65,4 +48,9 @@ void run_gpu_test(void (*func)(GpuTestContext&))
     }
 }
 
-} // namespace kali
+void release_cached_devices()
+{
+    s_cached_devices.clear();
+}
+
+} // namespace kali::testing

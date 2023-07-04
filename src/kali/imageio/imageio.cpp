@@ -643,7 +643,7 @@ ref<ImageInput> ImageInput::open(const std::filesystem::path& path)
     if (!reader->open(path, spec))
         return nullptr;
 
-    ref<ImageInput> image_input = new ImageInput();
+    ref<ImageInput> image_input = make_ref<ImageInput>();
     image_input->m_spec = std::move(spec);
     image_input->m_reader = std::move(reader);
     image_input->m_file = std::move(file);
@@ -681,7 +681,7 @@ ref<ImageOutput> ImageOutput::open(const std::filesystem::path& path, ImageSpec 
     if (!writer->open(path, spec))
         return nullptr;
 
-    ref<ImageOutput> image_output = new ImageOutput();
+    ref<ImageOutput> image_output = make_ref<ImageOutput>();
     image_output->m_spec = std::move(spec);
     image_output->m_writer = std::move(writer);
 

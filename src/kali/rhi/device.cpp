@@ -88,7 +88,7 @@ Device::Device(const DeviceDesc& desc)
     SLANG_CALL(m_gfx_device->createCommandQueue(queue_desc, m_gfx_queue.writeRef()));
     SLANG_CALL(slang::createGlobalSession(m_slang_session.writeRef()));
 
-    m_program_manager = new ProgramManager(this, m_slang_session);
+    m_program_manager = make_ref<ProgramManager>(this, m_slang_session);
 }
 
 Device::~Device()
@@ -99,12 +99,12 @@ Device::~Device()
 
 ref<Swapchain> Device::create_swapchain(const SwapchainDesc& desc, ref<Window> window)
 {
-    return new Swapchain(desc, window, this);
+    return make_ref<Swapchain>(desc, window, ref<Device>(this));
 }
 
 ref<Buffer> Device::create_buffer(const BufferDesc& desc, const void* init_data)
 {
-    return new Buffer(desc, init_data, this);
+    return make_ref<Buffer>(desc, init_data, ref<Device>(this));
 }
 
 ref<Buffer> Device::create_raw_buffer(size_t size, ResourceUsage usage, CpuAccess cpu_access, const void* init_data)
@@ -153,12 +153,12 @@ ref<Buffer> Device::create_structured_buffer(
 
 ref<Texture> Device::create_texture(const TextureDesc& desc, const void* init_data)
 {
-    return new Texture(desc, init_data, this);
+    return make_ref<Texture>(desc, init_data, ref<Device>(this));
 }
 
 ref<Sampler> Device::create_sampler(const SamplerDesc& desc)
 {
-    return new Sampler(desc, this);
+    return make_ref<Sampler>(desc, ref<Device>(this));
 }
 
 ref<Program> Device::create_program(const ProgramDesc& desc)

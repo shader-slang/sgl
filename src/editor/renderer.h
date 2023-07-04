@@ -11,7 +11,7 @@ class Renderer {
 public:
     Renderer(ref<Window> window)
     {
-        m_device = new Device();
+        m_device = Device::create();
 
         SwapchainDesc swapchain_desc{
             .format = Format::rgba8_unorm_srgb,

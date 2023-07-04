@@ -14,23 +14,26 @@ typedef _object PyObject;
 };
 
 /// Enable/disable object lifetime tracking.
-/// When enabled, each object that derives from Object will have its
+/// When enabled, each object derived from Object will have its
 /// lifetime tracked. This is useful for debugging memory leaks.
 #define KALI_ENABLE_OBJECT_TRACKING 0
 
 /// Enable/disable reference tracking.
-/// When enabled, all references to object that have reference tracking
+/// When enabled, all references to an object that has reference tracking
 /// enabled using set_enable_ref_tracking() are tracked. Each time the reference
 /// count is increased, the current stack trace is stored. This helps identify
 /// owners of objects that are not properly releasing their references.
+/// Optionally all references can be tracked by setting KALI_TRACK_ALL_REFS.
 #define KALI_ENABLE_REF_TRACKING 0
 
 #if KALI_ENABLE_REF_TRACKING
 #if !KALI_ENABLE_OBJECT_TRACKING
 #error "KALI_ENABLE_REF_TRACKING requires KALI_ENABLE_OBJECT_TRACKING"
 #endif
+#include "platform.h"
 #include <map>
 #include <mutex>
+static constexpr bool KALI_TRACK_ALL_REFS{false};
 #endif
 
 
@@ -140,17 +143,17 @@ private:
 
 #if KALI_ENABLE_REF_TRACKING
     struct RefTracker {
-        uint32_t count;
+        uint32_t count{1};
         StackTrace stack_trace;
-        RefTracker(StackTrace stack_trace_)
-            : count(1)
-            , stack_trace(std::move(stack_trace))
-        {
-        }
+        // RefTracker(StackTrace stack_trace_)
+        //     : count(1)
+        //     , stack_trace(std::move(stack_trace))
+        // {
+        // }
     };
     mutable std::map<uint64_t, RefTracker> m_ref_trackers;
     mutable std::mutex m_ref_trackers_mutex;
-    bool m_enable_ref_tracking = false;
+    bool m_enable_ref_tracking = KALI_TRACK_ALL_REFS;
 #endif
 };
 
@@ -252,11 +255,11 @@ public:
     }
 
     /// Construct a reference from a pointer.
-    ref(T* ptr)
+    explicit ref(T* ptr)
         : m_ptr(ptr)
     {
         if (m_ptr)
-            reinterpret_cast<Object*>(m_ptr)->inc_ref();
+            inc_ref(reinterpret_cast<Object*>(m_ptr));
     }
 
     /// Move constructor.
@@ -461,159 +464,6 @@ public:
         std::swap(m_ref_id, r.m_ref_id);
 #endif
     }
-
-#if 0
-    /// Construct a reference from a convertible reference.
-    template<typename T2>
-    ref(const ref<T2>& r)
-        : m_ptr(reinterpret_cast<T2*>(r.get()))
-    {
-        static_assert(
-            std::is_convertible_v<T2*, T*>,
-            "Cannot create reference to object from another unconvertible reference."
-        );
-        if (m_ptr)
-            reinterpret_cast<Object*>(m_ptr)->inc_ref();
-    }
-
-    /// Copy constructor.
-    ref(const ref& r)
-        : m_ptr(r.m_ptr)
-    {
-        if (m_ptr)
-            reinterpret_cast<Object*>(m_ptr)->inc_ref();
-    }
-
-    /// Move constructor.
-    ref(ref&& r) noexcept
-        : m_ptr(r.m_ptr)
-    {
-        r.m_ptr = nullptr;
-    }
-
-    /// Destructor.
-    ~ref()
-    {
-        if (m_ptr)
-            reinterpret_cast<Object*>(m_ptr)->dec_ref();
-    }
-
-    /// Copy assignment operator.
-    ref& operator=(const ref& r) noexcept
-    {
-        if (m_ptr != r.m_ptr) {
-            if (r.m_ptr)
-                reinterpret_cast<Object*>(r.m_ptr)->inc_ref();
-            if (m_ptr)
-                reinterpret_cast<Object*>(m_ptr)->dec_ref();
-            m_ptr = r.m_ptr;
-        }
-        return *this;
-    }
-
-    /// Move assignment operator.
-    ref& operator=(ref&& r) noexcept
-    {
-        if (&r != this) {
-            if (m_ptr)
-                static_cast<Object*>(m_ptr)->dec_ref();
-            m_ptr = r.m_ptr;
-            r.m_ptr = nullptr;
-        }
-        return *this;
-    }
-
-    /// Assign pointer.
-    ref& operator=(T* ptr) noexcept
-    {
-        if (m_ptr != ptr) {
-            if (ptr)
-                static_cast<Object*>(ptr)->inc_ref();
-            if (m_ptr)
-                static_cast<Object*>(m_ptr)->dec_ref();
-            m_ptr = ptr;
-        }
-        return *this;
-    }
-
-    /// Compare this reference to another reference.
-    bool operator==(const ref& r) const
-    {
-        return m_ptr == r.m_ptr;
-    }
-
-    /// Compare this reference to another reference.
-    bool operator!=(const ref& r) const
-    {
-        return m_ptr != r.m_ptr;
-    }
-
-    /// Compare this reference to a pointer.
-    bool operator==(const T* ptr) const
-    {
-        return m_ptr == ptr;
-    }
-
-    /// Compare this reference to a pointer.
-    bool operator!=(const T* ptr) const
-    {
-        return m_ptr != ptr;
-    }
-
-    /// Access the object referenced by this reference.
-    T* operator->()
-    {
-        return m_ptr;
-    }
-
-    /// Access the object referenced by this reference.
-    T* operator->() const
-    {
-        return m_ptr;
-    }
-
-    /// Return a C++ reference to the referenced object.
-    T& operator*()
-    {
-        return *m_ptr;
-    }
-
-    /// Return a const C++ reference to the referenced object.
-    T& operator*() const
-    {
-        return *m_ptr;
-    }
-
-    /// Return a pointer to the referenced object.
-    operator T*()
-    {
-        return m_ptr;
-    }
-
-    /// Return a pointer to the referenced object.
-    operator const T*() const
-    {
-        return m_ptr;
-    }
-
-    /// Return a const pointer to the referenced object.
-    T* get()
-    {
-        return m_ptr;
-    }
-
-    /// Return a pointer to the referenced object.
-    T* get() const
-    {
-        return m_ptr;
-    }
-
-    /// Check if the object is defined.
-    operator bool() const
-    {
-        return m_ptr != nullptr;
-    }
-#endif
 
 private:
     inline void inc_ref(const Object* object)

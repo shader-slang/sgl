@@ -4,6 +4,7 @@
 #include "resource.h"
 
 #include "core/macros.h"
+#include "core/enum.h"
 #include "core/object.h"
 
 #include <slang-gfx.h>
@@ -40,6 +41,18 @@ enum class DeviceType {
     cpu,
     cuda,
 };
+
+KALI_ENUM_INFO(
+    DeviceType,
+    {
+        {DeviceType::automatic, "automatic"},
+        {DeviceType::d3d12, "d3d12"},
+        {DeviceType::vulkan, "vulkan"},
+        {DeviceType::cpu, "cpu"},
+        {DeviceType::cuda, "cuda"},
+    }
+);
+KALI_ENUM_REGISTER(DeviceType);
 
 struct DeviceDesc {
     DeviceType type{DeviceType::automatic};

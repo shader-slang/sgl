@@ -7,19 +7,23 @@
 
 int main(int argc, char** argv)
 {
-    KALI_UNUSED(argc);
-    KALI_UNUSED(argv);
-
     kali::Logger::global().remove_all_outputs();
     kali::Logger::global().add_debug_console_output();
     kali::Logger::global().add_file_output("kali_tests.log");
 
-    doctest::Context context;
+    int result = 1;
+    {
+        doctest::Context context(argc, argv);
 
-    // context.setOption("success", true);
+        // Select specific test suite to run
     // context.setOption("-ts", "formats");
+        // Report successful tests
+        // context.setOption("success", true);
 
-    int result = context.run();
+        result = context.run();
+
+        kali::testing::release_cached_devices();
+    }
 
 #if KALI_ENABLE_OBJECT_TRACKING
     kali::Logger::global().add_console_output();

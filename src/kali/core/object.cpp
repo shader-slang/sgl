@@ -137,7 +137,7 @@ void Object::inc_ref(uint64_t ref_id) const
         if (it != m_ref_trackers.end()) {
             it->second.count++;
         } else {
-            m_ref_trackers.emplace(ref_id, backtrace());
+            m_ref_trackers.emplace(ref_id, RefTracker{1, backtrace(3)});
         }
     }
 

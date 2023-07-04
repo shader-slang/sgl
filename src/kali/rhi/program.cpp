@@ -56,7 +56,7 @@ ProgramManager::ProgramManager(Device* device, slang::IGlobalSession* slang_sess
 
 ref<Program> ProgramManager::create_program(const ProgramDesc& desc)
 {
-    return new Program(desc, this);
+    return make_ref<Program>(desc, this);
 }
 
 ref<ProgramVersion> ProgramManager::create_program_version(const Program& program, std::string& out_log) const
