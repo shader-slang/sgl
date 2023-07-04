@@ -89,6 +89,30 @@
 #define KALI_CONCAT_STRINGS_(a, b) a##b
 #define KALI_CONCAT_STRINGS(a, b) KALI_CONCAT_STRINGS_(a, b)
 
+
+#if KALI_MSVC
+#define KALI_DIAGNOSTIC_PUSH __pragma(warning(push))
+#define KALI_DIAGNOSTIC_POP __pragma(warning(pop))
+#define KALI_DISABLE_WARNING(w) __pragma(warning(disable : w))
+#define KALI_DISABLE_WARNING_USER_DEFINED_LITERAL KALI_DISABLE_WARNING(4455)
+#define KALI_DISABLE_WARNING_VOLATILE
+#elif KALI_CLANG
+#define KALI_DO_PRAGMA(x) _Pragma(#x)
+#define KALI_DIAGNOSTIC_PUSH KALI_DO_PRAGMA(clang diagnostic push)
+#define KALI_DIAGNOSTIC_POP KALI_DO_PRAGMA(clang diagnostic pop)
+#define KALI_DISABLE_WARNING(w) KALI_DO_PRAGMA(clang diagnostic ignored #w)
+#define KALI_DISABLE_WARNING_USER_DEFINED_LITERAL KALI_DISABLE_WARNING(-Wuser-defined-literals)
+#define KALI_DISABLE_WARNING_VOLATILE KALI_DISABLE_WARNING(-Wdeprecated-volatile)
+#elif KALI_GCC
+#define KALI_DO_PRAGMA(x) _Pragma(#x)
+#define KALI_DIAGNOSTIC_PUSH KALI_DO_PRAGMA(GCC diagnostic push)
+#define KALI_DIAGNOSTIC_POP KALI_DO_PRAGMA(GCC diagnostic pop)
+#define KALI_DISABLE_WARNING(w) KALI_DO_PRAGMA(GCC diagnostic ignored #w)
+#define KALI_DISABLE_WARNING_USER_DEFINED_LITERAL KALI_DISABLE_WARNING(-Wliteral-suffix)
+#define KALI_DISABLE_WARNING_VOLATILE KALI_DISABLE_WARNING(-Wvolatile)
+#endif
+
+
 // clang-format off
 /// Implement logical operators on a class enum for making it usable as a flags enum.
 #define KALI_ENUM_CLASS_OPERATORS(e_) \

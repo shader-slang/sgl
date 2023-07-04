@@ -88,16 +88,8 @@ private:
     uint16_t m_bits;
 };
 
-#if KALI_MSVC
-#pragma warning(push)
-#pragma warning(disable : 4455) // disable warning about literal suffixes not starting with an underscore
-#elif KALI_CLANG
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wuser-defined-literals"
-#elif KALI_GCC
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wliteral-suffix"
-#endif
+KALI_DIAGNOSTIC_PUSH
+KALI_DISABLE_WARNING_USER_DEFINED_LITERAL
 
 /// h suffix for "half float" literals.
 inline float16_t operator""h(long double value)
@@ -105,13 +97,7 @@ inline float16_t operator""h(long double value)
     return float16_t(static_cast<float>(value));
 }
 
-#if KALI_MSVC
-#pragma warning(pop)
-#elif KALI_CLANG
-#pragma clang diagnostic pop
-#elif KALI_GCC
-#pragma GCC diagnostic pop
-#endif
+KALI_DIAGNOSTIC_POP
 
 } // namespace kali::math
 
