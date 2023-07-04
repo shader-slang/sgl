@@ -93,7 +93,7 @@
 #if KALI_MSVC
 #define KALI_DIAGNOSTIC_PUSH __pragma(warning(push))
 #define KALI_DIAGNOSTIC_POP __pragma(warning(pop))
-#define KALI_DISABLE_WARNING(warning) __pragma(warning(disable : warning))
+#define KALI_DISABLE_WARNING(warning_) __pragma(warning(disable : warning_))
 #define KALI_DISABLE_MSVC_WARNING(warning) KALI_DISABLE_WARNING(warning)
 #define KALI_DISABLE_CLANG_WARNING(warning)
 #define KALI_DISABLE_GCC_WARNING(warning)

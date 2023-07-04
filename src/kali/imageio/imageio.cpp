@@ -17,8 +17,7 @@
 #include <fstream>
 
 KALI_DIAGNOSTIC_PUSH
-KALI_DISABLE_MSVC_WARNING(4244) // 'argument' : conversion from 'type1' to 'type2', possible loss of data
-KALI_DISABLE_MSVC_WARNING(4996) // This function or variable may be unsafe. Consider using sprintf_s instead.
+KALI_DISABLE_MSVC_WARNING(4244 4996)
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -26,7 +25,7 @@ KALI_DISABLE_MSVC_WARNING(4996) // This function or variable may be unsafe. Cons
 KALI_DIAGNOSTIC_POP
 
 KALI_DIAGNOSTIC_PUSH
-KALI_DISABLE_MSVC_WARNING(4706) // assignment within conditional expression
+KALI_DISABLE_MSVC_WARNING(4706)
 #define TINYEXR_IMPLEMENTATION
 #include <tinyexr.h>
 KALI_DIAGNOSTIC_POP

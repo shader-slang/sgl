@@ -19,7 +19,8 @@ class Exception;
 KALI_API void report_exception(const Exception& exception);
 
 KALI_DIAGNOSTIC_PUSH
-KALI_DISABLE_MSVC_WARNING(4275) // allow dllexport on classes dervied from STL
+// allow dllexport on classes dervied from STL
+KALI_DISABLE_MSVC_WARNING(4275)
 
 class KALI_API Exception : public std::exception {
 public:

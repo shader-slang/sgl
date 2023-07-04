@@ -41,7 +41,8 @@ template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
 }
 
 KALI_DIAGNOSTIC_PUSH
-KALI_DISABLE_MSVC_WARNING(4146) // unary minus operator applied to unsigned type, result still unsigned
+// unary minus operator applied to unsigned type, result still unsigned
+KALI_DISABLE_MSVC_WARNING(4146)
 
 /// Unary minus operator
 template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>

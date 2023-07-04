@@ -89,7 +89,8 @@ private:
 };
 
 KALI_DIAGNOSTIC_PUSH
-KALI_DISABLE_MSVC_WARNING(4455) // disable warning about literal suffixes not starting with an underscore
+// disable warning about literal suffixes not starting with an underscore
+KALI_DISABLE_MSVC_WARNING(4455)
 KALI_DISABLE_CLANG_WARNING("-Wuser-defined-literals")
 KALI_DISABLE_GCC_WARNING("-Wliteral-suffix")
 

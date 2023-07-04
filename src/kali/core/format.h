@@ -3,8 +3,7 @@
 #include "macros.h"
 
 KALI_DIAGNOSTIC_PUSH
-KALI_DISABLE_MSVC_WARNING(4061) // enumerator 'identifier' in switch of enum 'enumeration' is not explicitly handled by a case label
-KALI_DISABLE_MSVC_WARNING(4459) // declaration of 'identifier' hides global declaration
+KALI_DISABLE_MSVC_WARNING(4061 4459)
 #include <fmt/format.h>
 KALI_DIAGNOSTIC_POP
 

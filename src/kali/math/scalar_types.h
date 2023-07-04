@@ -89,7 +89,8 @@ using uint = math::uint;
 using float16_t = math::float16_t;
 
 KALI_DIAGNOSTIC_PUSH
-KALI_DISABLE_MSVC_WARNING(4455) // disable warning about literal suffixes not starting with an underscore
+// disable warning about literal suffixes not starting with an underscore
+KALI_DISABLE_MSVC_WARNING(4455)
 
 using math::operator""h;
 
