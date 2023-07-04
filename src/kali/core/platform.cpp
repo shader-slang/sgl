@@ -64,14 +64,10 @@ std::filesystem::path get_temp_file_path()
 {
     static std::mutex mutex;
     std::lock_guard<std::mutex> guard(mutex);
-#if KALI_MSVC
-#pragma warning(push)
-#pragma warning(disable : 4996)
-#endif
+    KALI_DIAGNOSTIC_PUSH
+    KALI_DISABLE_MSVC_WARNING(4996)
     char* name = std::tmpnam(nullptr);
-#if KALI_MSVC
-#pragma warning(pop)
-#endif
+    KALI_DIAGNOSTIC_POP
     if (name == nullptr)
         KALI_THROW(RuntimeError("Failed to create temporary file path."));
     return name;

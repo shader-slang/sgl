@@ -1,5 +1,6 @@
 #include "imageio.h"
 
+#include "core/macros.h"
 #include "core/assert.h"
 #include "core/string_utils.h"
 #include "core/type_utils.h"
@@ -15,28 +16,20 @@
 #include <string>
 #include <fstream>
 
-#if KALI_MSVC
-#pragma warning(push)
-#pragma warning(disable : 4244) // conversion from 'int' to 'unsigned char', possible loss of data
-#pragma warning(disable : 4996) // This function or variable may be unsafe. Consider using sprintf_s instead.
-#endif
+KALI_DIAGNOSTIC_PUSH
+KALI_DISABLE_MSVC_WARNING(4244) // 'argument' : conversion from 'type1' to 'type2', possible loss of data
+KALI_DISABLE_MSVC_WARNING(4996) // This function or variable may be unsafe. Consider using sprintf_s instead.
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
-#if KALI_MSVC
-#pragma warning(pop)
-#endif
+KALI_DIAGNOSTIC_POP
 
-#if KALI_MSVC
-#pragma warning(push)
-#pragma warning(disable : 4706) // assignment within conditional expression
-#endif
+KALI_DIAGNOSTIC_PUSH
+KALI_DISABLE_MSVC_WARNING(4706) // assignment within conditional expression
 #define TINYEXR_IMPLEMENTATION
 #include <tinyexr.h>
-#if KALI_MSVC
-#pragma warning(pop)
-#endif
+KALI_DIAGNOSTIC_POP
 
 namespace kali {
 

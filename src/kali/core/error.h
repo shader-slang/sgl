@@ -18,10 +18,8 @@ class Exception;
 /// Used in the KALI_THROW macro.
 KALI_API void report_exception(const Exception& exception);
 
-#if KALI_MSVC
-#pragma warning(push)
-#pragma warning(disable : 4275) // allow dllexport on classes dervied from STL
-#endif
+KALI_DIAGNOSTIC_PUSH
+KALI_DISABLE_MSVC_WARNING(4275) // allow dllexport on classes dervied from STL
 
 class KALI_API Exception : public std::exception {
 public:
@@ -95,9 +93,7 @@ public:
     virtual ~ArgumentError() override { }
 };
 
-#if KALI_MSVC
-#pragma warning(pop)
-#endif
+KALI_DIAGNOSTIC_POP
 
 } // namespace kali
 

@@ -40,10 +40,9 @@ template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
     return v;
 }
 
-#if KALI_MSVC
-#pragma warning(push)
-#pragma warning(disable : 4146) // unary minus operator applied to unsigned type, result still unsigned
-#endif
+KALI_DIAGNOSTIC_PUSH
+KALI_DISABLE_MSVC_WARNING(4146) // unary minus operator applied to unsigned type, result still unsigned
+
 /// Unary minus operator
 template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
 [[nodiscard]] constexpr auto operator-(const vector<T, N> v) noexcept
@@ -57,9 +56,8 @@ template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
     else
         return vector<T, N>{-v.x, -v.y, -v.z, -v.w};
 }
-#if KALI_MSVC
-#pragma warning(pop)
-#endif
+
+KALI_DIAGNOSTIC_POP
 
 /// Unary not operator
 template<typename T, int N>

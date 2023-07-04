@@ -1,6 +1,7 @@
 #pragma once
 
 #include "float16.h"
+#include "core/macros.h"
 #include "core/format.h"
 
 #include <string>
@@ -87,16 +88,12 @@ namespace kali {
 using uint = math::uint;
 using float16_t = math::float16_t;
 
-#if KALI_MSVC
-#pragma warning(push)
-#pragma warning(disable : 4455) // disable warning about literal suffixes not starting with an underscore
-#endif
+KALI_DIAGNOSTIC_PUSH
+KALI_DISABLE_MSVC_WARNING(4455) // disable warning about literal suffixes not starting with an underscore
 
 using math::operator""h;
 
-#if KALI_MSVC
-#pragma warning(pop)
-#endif
+KALI_DIAGNOSTIC_POP
 
 } // namespace kali
 
