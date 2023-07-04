@@ -10,10 +10,17 @@ namespace kali::math {
 
 static float overflow()
 {
+#if KALI_GCC
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wvolatile"
+#endif
     volatile float f = 1e10;
     for (int i = 0; i < 10; ++i)
         f *= f; // this will overflow before the for loop terminates
     return f;
+#if KALI_GCC
+#pragma GCC diagnostic pop
+#endif
 }
 
 union uif32 {
