@@ -6,6 +6,7 @@ add_library(kali SHARED)
 target_compile_features(kali PUBLIC cxx_std_20)
 target_include_directories(kali PUBLIC .)
 target_sources(kali PRIVATE
+    kali.natvis
     core/error.cpp
     core/logger.cpp
     core/memory_mapped_file.cpp
