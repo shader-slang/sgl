@@ -651,7 +651,7 @@ ref<ImageInput> ImageInput::open(const std::filesystem::path& path)
     return image_input;
 }
 
-ImageInput::~ImageInput() { }
+ImageInput::~ImageInput() = default;
 
 bool ImageInput::read_image(void* buffer, size_t len)
 {
@@ -688,7 +688,7 @@ ref<ImageOutput> ImageOutput::open(const std::filesystem::path& path, ImageSpec 
     return image_output;
 }
 
-ImageOutput::~ImageOutput() { }
+ImageOutput::~ImageOutput() = default;
 
 bool ImageOutput::write_image(const void* buffer, size_t len)
 {

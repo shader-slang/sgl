@@ -7,28 +7,78 @@ target_compile_features(kali PUBLIC cxx_std_20)
 target_include_directories(kali PUBLIC .)
 target_sources(kali PRIVATE
     kali.natvis
+
+    core/assert.h
     core/cpu_timer.cpp
+    core/cpu_timer.h
+    core/enum.h
     core/error.cpp
+    core/error.h
+    core/format.h
+    core/fwd.h
+    core/input.h
     core/logger.cpp
+    core/logger.h
+    core/macros.h
+    core/maths.h
     core/memory_mapped_file.cpp
+    core/memory_mapped_file.h
     core/object.cpp
+    core/object.h
     core/platform_linux.cpp
     core/platform_windows.cpp
     core/platform.cpp
+    core/platform.h
     core/plugin.cpp
+    core/plugin.h
+    core/resolver.h
     core/string_utils.cpp
+    core/string_utils.h
+    core/traits.h
+    core/type_utils.h
     core/version.cpp
+    core/version.h
     core/window.cpp
+    core/window.h
+
     imageio/imageio.cpp
+    imageio/imageio.h
+
+    math/constants.h
     math/float16.cpp
+    math/float16.h
+    math/matrix_math.h
+    math/matrix_types.h
+    math/matrix.h
+    math/quaternion_math.h
+    math/quaternion_types.h
+    math/quaternion.h
+    math/ray.h
+    math/scalar_math.h
+    math/scalar_types.h
+    math/vector_math.h
+    math/vector_types.h
+    math/vector.h
+
     rhi/command.cpp
+    rhi/command.h
     rhi/device.cpp
+    rhi/device.h
     rhi/formats.cpp
+    rhi/formats.h
+    rhi/fwd.h
+    rhi/helpers.h
+    rhi/native_formats.h
     rhi/pipeline.cpp
+    rhi/pipeline.h
     rhi/program.cpp
+    rhi/program.h
     rhi/resource.cpp
+    rhi/resource.h
     rhi/sampler.cpp
+    rhi/sampler.h
     rhi/swapchain.cpp
+    rhi/swapchain.h
 )
 target_compile_definitions(kali
     PRIVATE
@@ -56,6 +106,8 @@ set_target_properties(kali PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${KALI_RUNTIME_OUTPUT_DIRECTORY}
     LIBRARY_OUTPUT_DIRECTORY ${KALI_LIBRARY_OUTPUT_DIRECTORY}
 )
+
+kali_header_validation(kali)
 
 # -----------------------------------------------------------------------------
 # kali unit tests
@@ -96,6 +148,7 @@ set_target_properties(kali_tests PROPERTIES
 nanobind_add_module(kali_python NB_STATIC LTO
     kali_python.cpp
     core/core_python.cpp
+    core/object_python.h
     imageio/imageio_python.cpp
     math/math_python.cpp
     rhi/rhi_python.cpp
