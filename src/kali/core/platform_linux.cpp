@@ -231,7 +231,16 @@ void* get_proc_address(SharedLibraryHandle library, const char* proc_name)
 
 bool is_debugger_present()
 {
-    // TODO
+    std::ifstream status_file("/proc/self/status");
+    std::string s;
+    while (status_file >> s) {
+        if (s == "TracerPid:") {
+            int pid;
+            status_file >> pid;
+            return pid != 0;
+        }
+        std::getline(status_file, s);
+    }
     return false;
 }
 
