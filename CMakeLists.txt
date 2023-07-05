@@ -9,7 +9,10 @@ project(kali)
 # Configuration
 # -----------------------------------------------------------------------------
 
-# Enable/disable Address Sanitizer.
+# Enable/disable precompiled headers.
+set(KALI_ENABLE_PCH OFF CACHE BOOL "Enable precompiled headers")
+
+# Enable/disable address sanitizer.
 set(KALI_ENABLE_ASAN OFF CACHE BOOL "Enable address sanitizer")
 
 # Enable/disable header validation.

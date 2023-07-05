@@ -3,8 +3,7 @@
 # -----------------------------------------------------------------------------
 
 add_library(kali SHARED)
-target_compile_features(kali PUBLIC cxx_std_20)
-target_include_directories(kali PUBLIC .)
+
 target_sources(kali PRIVATE
     kali.natvis
 
@@ -80,26 +79,51 @@ target_sources(kali PRIVATE
     rhi/swapchain.cpp
     rhi/swapchain.h
 )
-target_compile_definitions(kali
-    PRIVATE
-        KALI_DLL
+
+target_include_directories(kali PUBLIC .)
+
+target_compile_features(kali PUBLIC cxx_std_20)
+
+target_compile_options(kali
     PUBLIC
-        NOMINMAX
-        _USE_MATH_DEFINES
+        # MSVC flags.
+        $<$<COMPILE_LANG_AND_ID:CXX,MSVC>:
+            /MP                             # enable multi-processor compilation
+            /Zi                             # generate debug symbols
+            /WX                             # warnings as errors
+            /W4                             # increase warning level
+            /wd4251                         # 'type' : class 'type1' needs to have dll-interface to be used by clients of class 'type2'
+            /wd4201                         # nonstandard extension used: nameless struct/union
+        >
+        # Clang/GCC flags.
+        $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:
+            -fms-extensions                 # enable MS extensions (among other things allow anonymous structs)
+            -fvisibility=hidden             # hide symbols by default
+            -Wall                           # set warning level
+            -Wno-unused-function
+            -Wno-unused-variable
+            -Wno-unused-but-set-variable
+            -Wno-switch
+            -Wno-missing-braces
+            -Wno-invalid-offsetof
+        >
+        # Clang flags.
+        $<$<CXX_COMPILER_ID:Clang>:
+            -Wno-unused-private-field
+            -Wno-braced-scalar-init
+            -Wno-self-assign-overloaded
+        >
+        # GCC flags.
+        $<$<CXX_COMPILER_ID:GNU>:
+            -fpermissive
+            -Wno-sign-compare
+            -Wno-literal-suffix
+            -Wno-class-memaccess
+            -Wno-strict-aliasing
+            -Wno-maybe-uninitialized
+            -Wno-stringop-truncation
+        >
 )
-
-target_link_libraries(kali PRIVATE git_version glfw PUBLIC stb tinyexr fmt slang slang-gfx)
-
-if(KALI_WINDOWS)
-    target_link_libraries(kali PRIVATE Dbghelp)
-endif()
-
-if(MSVC)
-    target_compile_options(kali PUBLIC /DEBUG)
-    target_compile_options(kali PUBLIC /W4 /WX)
-    target_compile_options(kali PUBLIC /wd4251)
-    target_compile_options(kali PUBLIC /wd4201) # nonstandard extension used: nameless struct/union
-endif()
 
 if(KALI_ENABLE_ASAN)
     target_compile_options(kali
@@ -126,6 +150,68 @@ if(KALI_ENABLE_ASAN)
     )
 endif()
 
+if(KALI_ENABLE_PCH)
+    target_precompile_headers(kali
+        PRIVATE
+            kali_pch.h
+    )
+endif()
+
+target_link_options(kali
+    PUBLIC
+        # MSVC flags.
+        $<$<CXX_COMPILER_ID:MSVC>:/DEBUG>           # generate debug information
+)
+
+target_compile_definitions(kali
+    PUBLIC
+        # $<$<CONFIG:Release>:NDEBUG>
+        # $<$<CONFIG:Debug>:_DEBUG>
+        # Windows.
+        $<$<PLATFORM_ID:Windows>:NOMINMAX>  # do not define min/max macros
+        $<$<PLATFORM_ID:Windows>:UNICODE>   # force character map to unicode
+        # MSVC C++ library.
+        $<$<CXX_COMPILER_ID:MSVC>:_USE_MATH_DEFINES>
+        # $<$<CXX_COMPILER_ID:MSVC>:_SCL_SECURE_NO_WARNINGS>
+        # $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>
+        # $<$<CXX_COMPILER_ID:MSVC>:_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING>
+        # Clang.
+        $<$<CXX_COMPILER_ID:Clang>:_MSC_EXTENSIONS> # enable MS extensions
+        # Feature flags.
+        KALI_HAS_D3D12=$<BOOL:${KALI_HAS_D3D12}>
+        KALI_HAS_VULKAN=$<BOOL:${KALI_HAS_VULKAN}>
+        # KALI_HAS_AFTERMATH=$<BOOL:${KALI_HAS_AFTERMATH}>
+        # KALI_HAS_NVAPI=$<BOOL:${KALI_HAS_NVAPI}>
+        # KALI_HAS_CUDA=$<BOOL:${KALI_HAS_CUDA}>
+        # KALI_HAS_D3D12_AGILITY_SDK=$<BOOL:${KALI_HAS_D3D12_AGILITY_SDK}>
+    PRIVATE
+        KALI_DLL
+        # $<$<PLATFORM_ID:Windows>:IMGUI_API=__declspec\(dllexport\)>
+        # $<$<PLATFORM_ID:Linux>:IMGUI_API=__attribute__\(\(visibility\("default"\)\)\)>
+)
+
+target_link_libraries(kali
+    PUBLIC
+        fmt
+        slang slang-gfx
+        # $<$<BOOL:${KALI_HAS_CUDA}>:CUDA::cuda_driver>
+        # $<$<BOOL:${KALI_HAS_CUDA}>:CUDA::cudart_static>
+    PRIVATE
+        git_version
+        glfw stb tinyexr
+        # $<$<BOOL:${KALI_HAS_D3D12}>:d3d12>
+        # $<$<BOOL:${KALI_HAS_D3D12_AGILITY_SDK}>:agility-sdk>
+        # $<$<BOOL:${KALI_HAS_AFTERMATH}>:aftermath>
+        # $<$<BOOL:${KALI_HAS_NVAPI}>:nvapi>
+        # Windows system libraries.
+        $<$<PLATFORM_ID:Windows>:Dbghelp>
+        # $<$<PLATFORM_ID:Windows>:shcore.lib>
+        # $<$<PLATFORM_ID:Windows>:shlwapi.lib>
+        # $<$<PLATFORM_ID:Windows>:comctl32.lib>
+        # $<$<PLATFORM_ID:Windows>:setupapi.lib>  # Used in MonitorInfo
+        # Linux system libraries.
+        # $<$<PLATFORM_ID:Linux>:gtk3>
+)
 
 set_target_properties(kali PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${KALI_RUNTIME_OUTPUT_DIRECTORY}
