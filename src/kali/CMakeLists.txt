@@ -177,6 +177,8 @@ target_compile_definitions(kali
         # $<$<CXX_COMPILER_ID:MSVC>:_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING>
         # Clang.
         $<$<CXX_COMPILER_ID:Clang>:_MSC_EXTENSIONS> # enable MS extensions
+        # Settings flags.
+        KALI_ENABLE_ASSERTS=$<BOOL:${KALI_ENABLE_ASSERTS}>
         # Feature flags.
         KALI_HAS_D3D12=$<BOOL:${KALI_HAS_D3D12}>
         KALI_HAS_VULKAN=$<BOOL:${KALI_HAS_VULKAN}>
