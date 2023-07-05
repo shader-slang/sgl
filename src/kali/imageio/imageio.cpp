@@ -617,7 +617,7 @@ class PNGReader : public ImageReader { };
 // ImageInput
 // ----------------------------------------------------------------------------
 
-ref<ImageInput> ImageInput::open(const std::filesystem::path& path)
+ref<ImageInput> ImageInput::open(const std::filesystem::path& path, Options options)
 {
     if (!std::filesystem::exists(path))
         return nullptr;
@@ -645,6 +645,7 @@ ref<ImageInput> ImageInput::open(const std::filesystem::path& path)
 
     ref<ImageInput> image_input = make_ref<ImageInput>();
     image_input->m_spec = std::move(spec);
+    image_input->m_options = std::move(options);
     image_input->m_reader = std::move(reader);
     image_input->m_file = std::move(file);
 
@@ -663,7 +664,7 @@ bool ImageInput::read_image(void* buffer, size_t len)
 // ImageOutput
 // ----------------------------------------------------------------------------
 
-ref<ImageOutput> ImageOutput::open(const std::filesystem::path& path, ImageSpec spec)
+ref<ImageOutput> ImageOutput::open(const std::filesystem::path& path, ImageSpec spec, Options options)
 {
     std::string ext = to_lower(path.extension().string());
 
@@ -683,6 +684,7 @@ ref<ImageOutput> ImageOutput::open(const std::filesystem::path& path, ImageSpec 
 
     ref<ImageOutput> image_output = make_ref<ImageOutput>();
     image_output->m_spec = std::move(spec);
+    image_output->m_options = std::move(options);
     image_output->m_writer = std::move(writer);
 
     return image_output;

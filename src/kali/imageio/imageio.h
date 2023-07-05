@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <map>
 #include <memory>
 
 namespace kali {
@@ -63,7 +64,9 @@ struct ImageSpec {
 class KALI_API ImageInput : public Object {
     KALI_OBJECT(ImageInput)
 public:
-    static ref<ImageInput> open(const std::filesystem::path& path);
+    using Options = std::map<std::string, std::string>;
+
+    static ref<ImageInput> open(const std::filesystem::path& path, Options options = {});
 
     ~ImageInput();
 
@@ -75,6 +78,7 @@ public:
 
 private:
     ImageSpec m_spec;
+    Options m_options;
     std::string m_error;
     std::unique_ptr<ImageReader> m_reader;
     std::unique_ptr<MemoryMappedFile> m_file;
@@ -84,7 +88,9 @@ private:
 class KALI_API ImageOutput : public Object {
     KALI_OBJECT(ImageOutput)
 public:
-    static ref<ImageOutput> open(const std::filesystem::path& path, ImageSpec spec);
+    using Options = std::map<std::string, std::string>;
+
+    static ref<ImageOutput> open(const std::filesystem::path& path, ImageSpec spec, Options options = {});
 
     ~ImageOutput();
 
@@ -94,6 +100,7 @@ public:
 
 private:
     ImageSpec m_spec;
+    Options m_options;
     std::string m_error;
     std::unique_ptr<ImageWriter> m_writer;
 };
