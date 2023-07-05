@@ -103,9 +103,9 @@ target_compile_options(kali
             -Wno-unused-function
             -Wno-unused-variable
             -Wno-unused-but-set-variable
-            -Wno-switch
-            -Wno-missing-braces
-            -Wno-invalid-offsetof
+            # -Wno-switch
+            # -Wno-missing-braces
+            # -Wno-invalid-offsetof
         >
         # Clang flags.
         $<$<CXX_COMPILER_ID:Clang>:

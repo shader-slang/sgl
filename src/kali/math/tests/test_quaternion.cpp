@@ -150,18 +150,18 @@ TEST_CASE("operators")
     {
         quatf q1(1.f, 2.f, 3.f, 4.f);
         quatf q2(1.f, 2.f, 3.f, 4.f);
-        CHECK_EQ_VECTOR(q1 == q2, bool4(true, true, true, true));
+        CHECK_EQ_VECTOR((q1 == q2), bool4(true, true, true, true));
         quatf q3(1.f, 2.f, 3.f, 5.f);
-        CHECK_EQ_VECTOR(q1 == q3, bool4(true, true, true, false));
+        CHECK_EQ_VECTOR((q1 == q3), bool4(true, true, true, false));
     }
 
     // Binary != operator
     {
         quatf q1(1.f, 2.f, 3.f, 4.f);
         quatf q2(1.f, 2.f, 3.f, 4.f);
-        CHECK_EQ_VECTOR(q1 != q2, bool4(false, false, false, false));
+        CHECK_EQ_VECTOR((q1 != q2), bool4(false, false, false, false));
         quatf q3(1.f, 2.f, 3.f, 5.f);
-        CHECK_EQ_VECTOR(q1 != q3, bool4(false, false, false, true));
+        CHECK_EQ_VECTOR((q1 != q3), bool4(false, false, false, true));
     }
 }
 
