@@ -9,7 +9,10 @@ project(kali)
 # Configuration
 # -----------------------------------------------------------------------------
 
-# Header validation.
+# Enable/disable Address Sanitizer.
+set(KALI_ENABLE_ASAN OFF CACHE BOOL "Enable address sanitizer")
+
+# Enable/disable header validation.
 # If enabled, additional targets are generated to validate that headers are self sufficient.
 set(KALI_ENABLE_HEADER_VALIDATION OFF CACHE BOOL "Enable header validation")
 

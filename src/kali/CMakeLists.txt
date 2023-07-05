@@ -101,6 +101,31 @@ if(MSVC)
     target_compile_options(kali PUBLIC /wd4201) # nonstandard extension used: nameless struct/union
 endif()
 
+if(KALI_ENABLE_ASAN)
+    target_compile_options(kali
+        PUBLIC
+            $<$<COMPILE_LANG_AND_ID:CXX,MSVC>:
+                /fsanitize=address
+            >
+            $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:
+                -fsanitize=address
+            >
+    )
+    target_link_options(kali
+        PUBLIC
+            $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:
+                -fsanitize=address
+            >
+    )
+    target_compile_definitions(kali
+        PUBLIC
+            $<$<COMPILE_LANG_AND_ID:CXX,MSVC>:
+                _DISABLE_VECTOR_ANNOTATION
+                _DISABLE_STRING_ANNOTATION
+            >
+    )
+endif()
+
 
 set_target_properties(kali PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${KALI_RUNTIME_OUTPUT_DIRECTORY}
