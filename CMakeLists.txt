@@ -154,7 +154,7 @@ function(kali_header_validation target)
 endfunction()
 
 # -----------------------------------------------------------------------------
-# Misc
+# Binary files
 # -----------------------------------------------------------------------------
 
 set_property(GLOBAL PROPERTY KALI_BINARY_FILES "")
@@ -171,6 +171,9 @@ function(kali_copy_library target)
     kali_copy_binary(${src})
 endfunction()
 
+# -----------------------------------------------------------------------------
+# Sources
+# -----------------------------------------------------------------------------
 
 add_subdirectory(external)
 add_subdirectory(src/kali)
