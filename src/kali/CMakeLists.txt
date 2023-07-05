@@ -7,6 +7,7 @@ target_compile_features(kali PUBLIC cxx_std_20)
 target_include_directories(kali PUBLIC .)
 target_sources(kali PRIVATE
     kali.natvis
+    core/cpu_timer.cpp
     core/error.cpp
     core/logger.cpp
     core/memory_mapped_file.cpp
@@ -14,6 +15,7 @@ target_sources(kali PRIVATE
     core/platform_linux.cpp
     core/platform_windows.cpp
     core/platform.cpp
+    core/plugin.cpp
     core/string_utils.cpp
     core/version.cpp
     core/window.cpp
@@ -63,11 +65,13 @@ add_executable(kali_tests)
 target_sources(kali_tests PRIVATE
     kali_tests.cpp
     testing.cpp
+    core/tests/test_cpu_timer.cpp
     core/tests/test_enum.cpp
     core/tests/test_maths.cpp
     core/tests/test_memory_mapped_file.cpp
     core/tests/test_object.cpp
     core/tests/test_platform.cpp
+    core/tests/test_plugin.cpp
     core/tests/test_string_utils.cpp
     imageio/tests/test_imageio.cpp
     math/tests/test_float16.cpp
