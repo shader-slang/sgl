@@ -9,6 +9,9 @@ project(kali)
 # Configuration
 # -----------------------------------------------------------------------------
 
+# Enable/disable asserts.
+set(KALI_ENABLE_ASSERTS ON CACHE BOOL "Enable asserts")
+
 # Enable/disable precompiled headers.
 set(KALI_ENABLE_PCH OFF CACHE BOOL "Enable precompiled headers")
 

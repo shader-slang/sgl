@@ -3,9 +3,6 @@
 #include "format.h"
 #include "error.h"
 
-// TODO(@skallweit): move to config
-#define KALI_ENABLE_ASSERTS 1
-
 #if KALI_ENABLE_ASSERTS
 
 #define KALI_ASSERT(cond)                                                                                              \
