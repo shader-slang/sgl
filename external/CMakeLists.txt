@@ -61,6 +61,9 @@ if(KALI_WINDOWS)
         IMPORTED_IMPLIB ${SLANG_DIR}/bin/windows-x64/${KALI_SLANG_CONFIG}/gfx.lib
         IMPORTED_LOCATION ${SLANG_DIR}/bin/windows-x64/${KALI_SLANG_CONFIG}/gfx.dll
     )
+    kali_copy_binary(${SLANG_DIR}/bin/windows-x64/${KALI_SLANG_CONFIG}/slang-glslang.dll)
+    kali_copy_binary(${SLANG_DIR}/bin/windows-x64/${KALI_SLANG_CONFIG}/slang-llvm.dll)
+    kali_copy_binary(${SLANG_DIR}/bin/windows-x64/${KALI_SLANG_CONFIG}/slang-rt.dll)
 elseif(KALI_LINUX)
     add_library(slang-gfx SHARED IMPORTED GLOBAL)
     set_target_properties(slang-gfx PROPERTIES
@@ -69,3 +72,11 @@ elseif(KALI_LINUX)
     )
 endif()
 kali_copy_library(slang-gfx)
+
+# dxcompiler
+
+set(DXCOMPILER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/dxcompiler)
+if(KALI_WINDOWS)
+    kali_copy_binary(${DXCOMPILER_DIR}/bin/x64/dxcompiler.dll)
+    kali_copy_binary(${DXCOMPILER_DIR}/bin/x64/dxil.dll)
+endif()
