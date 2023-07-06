@@ -1,39 +1,64 @@
 #pragma once
 
 #include "fwd.h"
+#include "types.h"
 
 #include "core/macros.h"
+#include "core/enum.h"
 #include "core/object.h"
 
 #include <slang-gfx.h>
 
 namespace kali {
 
-class KALI_API Pipeline : public Object {
-    KALI_OBJECT(Pipeline)
+class KALI_API PipelineState : public Object {
+    KALI_OBJECT(PipelineState)
 public:
-    Pipeline(ref<Device> device);
+    PipelineState(ref<Device> device);
 
-    gfx::IPipelineState* get_gfx_pipeline() const { return m_gfx_pipeline; }
+    gfx::IPipelineState* get_gfx_pipeline_state() const { return m_gfx_pipeline_state; }
 
 protected:
     ref<Device> m_device;
-    Slang::ComPtr<gfx::IPipelineState> m_gfx_pipeline;
+    Slang::ComPtr<gfx::IPipelineState> m_gfx_pipeline_state;
 };
 
-struct ComputePipelineDesc {
-    Program* program;
+struct ComputePipelineStateDesc {
+    ref<Program> program;
 };
 
-class KALI_API ComputePipeline : public Pipeline {
+class KALI_API ComputePipelineState : public PipelineState {
 public:
-    ComputePipeline(const ComputePipelineDesc& desc, ref<Device> device);
+    ComputePipelineState(const ComputePipelineStateDesc& desc, ref<Device> device);
 
-    const ComputePipelineDesc& get_desc() const { return m_desc; }
+    const ComputePipelineStateDesc& get_desc() const { return m_desc; }
 
 private:
-    ComputePipelineDesc m_desc;
+    ComputePipelineStateDesc m_desc;
     ref<Program> m_program;
 };
+
+struct GraphicsPipelineStateDesc {
+    ref<Program> program;
+
+    // ref<InputLayout> input_layout;
+    // ref<FramebufferLayout> framebuffer_layout;
+    PrimitiveType primitive_type {PrimitiveType::triangle};
+    DepthStencilDesc depth_stencil;
+    RasterizerDesc rasterizer;
+    BlendDesc blend;
+};
+
+class KALI_API GraphicsPipelineState : public PipelineState {
+public:
+    GraphicsPipelineState(const GraphicsPipelineStateDesc& desc, ref<Device> device);
+
+    const GraphicsPipelineStateDesc& get_desc() const { return m_desc; }
+
+private:
+    GraphicsPipelineStateDesc m_desc;
+    ref<Program> m_program;
+};
+
 
 } // namespace kali

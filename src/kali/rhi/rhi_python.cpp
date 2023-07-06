@@ -1,3 +1,4 @@
+#include "rhi/types.h"
 #include "rhi/device.h"
 #include "rhi/swapchain.h"
 #include "rhi/resource.h"
@@ -17,6 +18,37 @@ namespace kali {
 
 void register_rhi(nb::module_& m)
 {
+    // ------------------------------------------------------------------------
+    // types.h
+    // ------------------------------------------------------------------------
+
+    nb::enum_<ComparisonFunc>(m, "ComparisonFunc")
+        .value("never", ComparisonFunc::never)
+        .value("less", ComparisonFunc::less)
+        .value("equal", ComparisonFunc::equal)
+        .value("less_equal", ComparisonFunc::less_equal)
+        .value("greater", ComparisonFunc::greater)
+        .value("not_equal", ComparisonFunc::not_equal)
+        .value("greater_equal", ComparisonFunc::greater_equal)
+        .value("always", ComparisonFunc::always);
+
+    nb::enum_<TextureFilteringMode>(m, "TextureFilteringMode")
+        .value("point", TextureFilteringMode::point)
+        .value("linear", TextureFilteringMode::linear);
+
+    nb::enum_<TextureAddressingMode>(m, "TextureAddressingMode")
+        .value("wrap", TextureAddressingMode::wrap)
+        .value("clamp_to_edge", TextureAddressingMode::clamp_to_edge)
+        .value("clamp_to_border", TextureAddressingMode::clamp_to_border)
+        .value("mirror_repeat", TextureAddressingMode::mirror_repeat)
+        .value("mirror_once", TextureAddressingMode::mirror_once);
+
+    nb::enum_<TextureReductionOp>(m, "TextureReductionOp")
+        .value("average", TextureReductionOp::average)
+        .value("comparison", TextureReductionOp::comparison)
+        .value("minimum", TextureReductionOp::minimum)
+        .value("maximum", TextureReductionOp::maximum);
+
     // ------------------------------------------------------------------------
     // formats.h
     // ------------------------------------------------------------------------
@@ -127,33 +159,6 @@ void register_rhi(nb::module_& m)
     // ------------------------------------------------------------------------
     // sampler.h
     // ------------------------------------------------------------------------
-
-    nb::enum_<ComparisonFunc>(m, "ComparisonFunc")
-        .value("never", ComparisonFunc::never)
-        .value("less", ComparisonFunc::less)
-        .value("equal", ComparisonFunc::equal)
-        .value("less_equal", ComparisonFunc::less_equal)
-        .value("greater", ComparisonFunc::greater)
-        .value("not_equal", ComparisonFunc::not_equal)
-        .value("greater_equal", ComparisonFunc::greater_equal)
-        .value("always", ComparisonFunc::always);
-
-    nb::enum_<TextureFilteringMode>(m, "TextureFilteringMode")
-        .value("point", TextureFilteringMode::point)
-        .value("linear", TextureFilteringMode::linear);
-
-    nb::enum_<TextureAddressingMode>(m, "TextureAddressingMode")
-        .value("wrap", TextureAddressingMode::wrap)
-        .value("clamp_to_edge", TextureAddressingMode::clamp_to_edge)
-        .value("clamp_to_border", TextureAddressingMode::clamp_to_border)
-        .value("mirror_repeat", TextureAddressingMode::mirror_repeat)
-        .value("mirror_once", TextureAddressingMode::mirror_once);
-
-    nb::enum_<TextureReductionOp>(m, "TextureReductionOp")
-        .value("average", TextureReductionOp::average)
-        .value("comparison", TextureReductionOp::comparison)
-        .value("minimum", TextureReductionOp::minimum)
-        .value("maximum", TextureReductionOp::maximum);
 
     nb::class_<Sampler, Object> sampler(m, "Sampler");
     sampler.def_prop_ro("desc", &Sampler::get_desc);

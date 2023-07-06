@@ -1,6 +1,7 @@
 #pragma once
 
 #include "fwd.h"
+#include "types.h"
 
 #include "core/macros.h"
 #include "core/object.h"
@@ -9,37 +10,6 @@
 #include <slang-gfx.h>
 
 namespace kali {
-
-enum class ComparisonFunc {
-    never,
-    less,
-    equal,
-    less_equal,
-    greater,
-    not_equal,
-    greater_equal,
-    always,
-};
-
-enum class TextureFilteringMode {
-    point,
-    linear,
-};
-
-enum class TextureAddressingMode {
-    wrap,
-    clamp_to_edge,
-    clamp_to_border,
-    mirror_repeat,
-    mirror_once,
-};
-
-enum class TextureReductionOp {
-    average,
-    comparison,
-    minimum,
-    maximum,
-};
 
 struct SamplerDesc {
     TextureFilteringMode min_filter{TextureFilteringMode::linear};

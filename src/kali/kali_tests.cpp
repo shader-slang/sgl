@@ -16,7 +16,7 @@ int main(int argc, char** argv)
         doctest::Context context(argc, argv);
 
         // Select specific test suite to run
-    // context.setOption("-ts", "formats");
+        // context.setOption("-ts", "formats");
         // Report successful tests
         // context.setOption("success", true);
 

@@ -2,6 +2,7 @@
 
 #include "fwd.h"
 
+#include "core/assert.h"
 #include "core/macros.h"
 #include "core/object.h"
 #include "core/enum.h"
@@ -47,7 +48,9 @@ enum class ShaderModel {
 inline std::string to_string(ShaderModel shader_model)
 {
     static const char* strings[] = {"sm_6_0", "sm_6_1", "sm_6_2", "sm_6_3", "sm_6_4", "sm_6_5", "sm_6_6"};
-    return strings[static_cast<size_t>(shader_model)];
+    KALI_ASSERT_GE(int(shader_model), int(ShaderModel::sm_6_0));
+    KALI_ASSERT_LE(int(shader_model), int(ShaderModel::sm_6_6));
+    return strings[int(shader_model)];
 }
 
 enum class ShaderCompilerFlags {
