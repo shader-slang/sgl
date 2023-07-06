@@ -1,4 +1,5 @@
 #include "object_python.h"
+#include "helpers.h"
 
 #include "kali/rhi/types.h"
 #include "kali/rhi/device.h"
@@ -22,111 +23,33 @@ void register_kali_rhi(nb::module_& m)
     // types.h
     // ------------------------------------------------------------------------
 
-    nb::enum_<ComparisonFunc>(m, "ComparisonFunc")
-        .value("never", ComparisonFunc::never)
-        .value("less", ComparisonFunc::less)
-        .value("equal", ComparisonFunc::equal)
-        .value("less_equal", ComparisonFunc::less_equal)
-        .value("greater", ComparisonFunc::greater)
-        .value("not_equal", ComparisonFunc::not_equal)
-        .value("greater_equal", ComparisonFunc::greater_equal)
-        .value("always", ComparisonFunc::always);
-
-    nb::enum_<TextureFilteringMode>(m, "TextureFilteringMode")
-        .value("point", TextureFilteringMode::point)
-        .value("linear", TextureFilteringMode::linear);
-
-    nb::enum_<TextureAddressingMode>(m, "TextureAddressingMode")
-        .value("wrap", TextureAddressingMode::wrap)
-        .value("clamp_to_edge", TextureAddressingMode::clamp_to_edge)
-        .value("clamp_to_border", TextureAddressingMode::clamp_to_border)
-        .value("mirror_repeat", TextureAddressingMode::mirror_repeat)
-        .value("mirror_once", TextureAddressingMode::mirror_once);
-
-    nb::enum_<TextureReductionOp>(m, "TextureReductionOp")
-        .value("average", TextureReductionOp::average)
-        .value("comparison", TextureReductionOp::comparison)
-        .value("minimum", TextureReductionOp::minimum)
-        .value("maximum", TextureReductionOp::maximum);
+    nb::kali_enum<ComparisonFunc>(m, "ComparisonFunc");
+    nb::kali_enum<TextureFilteringMode>(m, "TextureFilteringMode");
+    nb::kali_enum<TextureAddressingMode>(m, "TextureAddressingMode");
+    nb::kali_enum<TextureReductionOp>(m, "TextureReductionOp");
 
     // ------------------------------------------------------------------------
     // formats.h
     // ------------------------------------------------------------------------
 
-    nb::enum_<Format> format(m, "Format");
-    for (uint32_t i = 0; i < uint32_t(Format::count); ++i) {
-        const FormatInfo& info = get_format_info(Format(i));
-        format.value(info.name.c_str(), info.format);
-    }
+    nb::kali_enum<Format>(m, "Format");
 
     // ------------------------------------------------------------------------
     // resource.h
     // ------------------------------------------------------------------------
 
-    nb::enum_<ResourceType>(m, "ResourceType")
-        .value("unknown", ResourceType::unknown)
-        .value("buffer", ResourceType::buffer)
-        .value("texture_1d", ResourceType::texture_1d)
-        .value("texture_2d", ResourceType::texture_2d)
-        .value("texture_3d", ResourceType::texture_3d)
-        .value("texture_cube", ResourceType::texture_cube);
+    nb::kali_enum<ResourceType>(m, "ResourceType");
+    nb::kali_enum<ResourceState>(m, "ResourceState");
 
-    nb::enum_<TextureType>(m, "TextureType")
-        .value("unknown", TextureType::unknown)
-        .value("texture_1d", TextureType::texture_1d)
-        .value("texture_2d", TextureType::texture_2d)
-        .value("texture_3d", TextureType::texture_3d)
-        .value("texture_cube", TextureType::texture_cube);
-
-    nb::enum_<ResourceState>(m, "ResourceState")
-        .value("undefined", ResourceState::undefined)
-        .value("general", ResourceState::general)
-        .value("pre_initialized", ResourceState::pre_initialized)
-        .value("vertex_buffer", ResourceState::vertex_buffer)
-        .value("index_buffer", ResourceState::index_buffer)
-        .value("constant_buffer", ResourceState::constant_buffer)
-        .value("stream_output", ResourceState::stream_output)
-        .value("shader_resource", ResourceState::shader_resource)
-        .value("unordered_access", ResourceState::unordered_access)
-        .value("render_target", ResourceState::render_target)
-        .value("depth_read", ResourceState::depth_read)
-        .value("depth_write", ResourceState::depth_write)
-        .value("present", ResourceState::present)
-        .value("indirect_argument", ResourceState::indirect_argument)
-        .value("copy_source", ResourceState::copy_source)
-        .value("copy_destination", ResourceState::copy_destination)
-        .value("resolve_source", ResourceState::resolve_source)
-        .value("resolve_destination", ResourceState::resolve_destination)
-        .value("acceleration_structure", ResourceState::acceleration_structure)
-        .value("acceleration_structure_build_output", ResourceState::acceleration_structure_build_output)
-        .value("pixel_shader_resource", ResourceState::pixel_shader_resource)
-        .value("non_pixel_shader_resource", ResourceState::non_pixel_shader_resource);
-
-    nb::enum_<ResourceUsage>(m, "ResourceUsage")
-        .value("none", ResourceUsage::none)
-        .value("vertex", ResourceUsage::vertex)
-        .value("index", ResourceUsage::index)
-        .value("constant", ResourceUsage::constant)
-        .value("stream_output", ResourceUsage::stream_output)
-        .value("shader_resource", ResourceUsage::shader_resource)
-        .value("unordered_access", ResourceUsage::unordered_access)
-        .value("render_target", ResourceUsage::render_target)
-        .value("depth_stencil", ResourceUsage::depth_stencil)
-        .value("indirect_arg", ResourceUsage::indirect_arg)
-        .value("shared", ResourceUsage::shared)
-        .value("acceleration_structure", ResourceUsage::acceleration_structure)
+    nb::kali_enum<ResourceUsage>(m, "ResourceUsage")
         .def("__and__", [](ResourceUsage value1, ResourceUsage value2) { return value1 & value2; })
         .def("__or__", [](ResourceUsage value1, ResourceUsage value2) { return value1 | value2; });
 
-    nb::enum_<CpuAccess>(m, "CpuAccess")
-        .value("none", CpuAccess::none)
-        .value("read", CpuAccess::read)
-        .value("write", CpuAccess::write);
+    nb::kali_enum<MemoryType>(m, "MemoryType");
 
     nb::class_<MemoryRange>(m, "MemoryRange").def_rw("offset", &MemoryRange::offset).def_rw("size", &MemoryRange::size);
 
-    nb::class_<Resource, Object> resource(m, "Resource");
-    resource.def("device_address", &Resource::get_device_address);
+    nb::class_<Resource, Object>(m, "Resource").def("device_address", &Resource::get_device_address);
 
     nb::class_<BufferDesc>(m, "BufferDesc")
         .def_rw("size", &BufferDesc::size)
@@ -134,14 +57,16 @@ void register_kali_rhi(nb::module_& m)
         .def_rw("format", &BufferDesc::format)
         .def_rw("initial_state", &BufferDesc::initial_state)
         .def_rw("usage", &BufferDesc::usage)
-        .def_rw("cpu_access", &BufferDesc::cpu_access)
+        .def_rw("memory_type", &BufferDesc::memory_type)
         .def_rw("debug_name", &BufferDesc::debug_name);
 
-    nb::class_<Buffer, Resource> buffer(m, "Buffer");
-    buffer.def_prop_ro("desc", &Buffer::get_desc);
-    buffer.def_prop_ro("size", &Buffer::get_size);
-    buffer.def_prop_ro("struct_size", &Buffer::get_struct_size);
-    buffer.def_prop_ro("format", &Buffer::get_format);
+    nb::class_<Buffer, Resource>(m, "Buffer")
+        .def_prop_ro("desc", &Buffer::get_desc)
+        .def_prop_ro("size", &Buffer::get_size)
+        .def_prop_ro("struct_size", &Buffer::get_struct_size)
+        .def_prop_ro("format", &Buffer::get_format);
+
+    nb::kali_enum<TextureType>(m, "TextureType");
 
     nb::class_<TextureDesc>(m, "TextureDesc")
         .def_rw("type", &TextureDesc::type)
@@ -153,7 +78,7 @@ void register_kali_rhi(nb::module_& m)
         .def_rw("format", &TextureDesc::format)
         .def_rw("initial_state", &TextureDesc::initial_state)
         .def_rw("usage", &TextureDesc::usage)
-        .def_rw("cpu_access", &TextureDesc::cpu_access)
+        .def_rw("memory_type", &TextureDesc::memory_type)
         .def_rw("debug_name", &TextureDesc::debug_name);
 
     // ------------------------------------------------------------------------
@@ -249,12 +174,7 @@ void register_kali_rhi(nb::module_& m)
     // device.h
     // ------------------------------------------------------------------------
 
-    nb::enum_<DeviceType>(m, "DeviceType")
-        .value("automatic", DeviceType::automatic)
-        .value("d3d12", DeviceType::d3d12)
-        .value("vulkan", DeviceType::vulkan)
-        .value("cpu", DeviceType::cpu)
-        .value("cuda", DeviceType::cuda);
+    nb::kali_enum<DeviceType>(m, "DeviceType");
 
     nb::class_<Device, Object> device(m, "Device");
     device.def(
@@ -279,7 +199,7 @@ void register_kali_rhi(nb::module_& m)
            size_t struct_size,
            Format format,
            ResourceUsage usage,
-           CpuAccess cpu_access,
+           MemoryType memory_type,
            std::string debug_name)
         {
             return device->create_buffer(BufferDesc{
@@ -287,7 +207,7 @@ void register_kali_rhi(nb::module_& m)
                 .struct_size = struct_size,
                 .format = format,
                 .usage = usage,
-                .cpu_access = cpu_access,
+                .memory_type = memory_type,
                 .debug_name = std::move(debug_name),
             });
         },
@@ -295,7 +215,7 @@ void register_kali_rhi(nb::module_& m)
         "struct_size"_a = 0,
         "format"_a = Format::unknown,
         "usage"_a = ResourceUsage::none,
-        "cpu_access"_a = CpuAccess::none,
+        "memory_type"_a = MemoryType::device_local,
         "debug_name"_a = ""
     );
     device.def(

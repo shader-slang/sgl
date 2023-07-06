@@ -101,17 +101,13 @@ inline gfx::ResourceState get_gfx_initial_state(ResourceUsage usage)
 }
 
 
-inline gfx::MemoryType get_gfx_memory_type(CpuAccess cpu_access)
+inline gfx::MemoryType get_gfx_memory_type(MemoryType memory_type)
 {
-    switch (cpu_access) {
-    case CpuAccess::none:
-        return gfx::MemoryType::DeviceLocal;
-    case CpuAccess::write:
-        return gfx::MemoryType::Upload;
-    case CpuAccess::read:
-        return gfx::MemoryType::ReadBack;
-    }
-    KALI_THROW(RuntimeError("Invalid CpuAccess value"));
+    static_assert(uint32_t(MemoryType::device_local) == uint32_t(gfx::MemoryType::DeviceLocal));
+    static_assert(uint32_t(MemoryType::upload) == uint32_t(gfx::MemoryType::Upload));
+    static_assert(uint32_t(MemoryType::read_back) == uint32_t(gfx::MemoryType::ReadBack));
+    KALI_ASSERT(uint32_t(memory_type) <= uint32_t(MemoryType::read_back));
+    return gfx::MemoryType(memory_type);
 }
 
 inline gfx::MemoryRange get_gfx_memory_range(MemoryRange memory_range)
@@ -160,7 +156,7 @@ Buffer::Buffer(const BufferDesc& desc, const void* init_data, ref<Device> device
     gfx_desc.type = gfx::IResource::Type::Buffer;
     gfx_desc.defaultState = get_gfx_resource_state(m_desc.initial_state);
     gfx_desc.allowedStates = get_gfx_allowed_states(m_desc.usage);
-    gfx_desc.memoryType = get_gfx_memory_type(m_desc.cpu_access);
+    gfx_desc.memoryType = get_gfx_memory_type(m_desc.memory_type);
     // TODO(@skallweit): add support for existing handles
     // gfx_desc.existingHandle =
     gfx_desc.isShared = is_set(m_desc.usage, ResourceUsage::shared);
@@ -173,7 +169,7 @@ Buffer::Buffer(const BufferDesc& desc, const void* init_data, ref<Device> device
 
 void* Buffer::map(std::optional<MemoryRange> read_range)
 {
-    KALI_ASSERT(m_desc.cpu_access != CpuAccess::none);
+    KALI_ASSERT(m_desc.memory_type != MemoryType::device_local);
 
     gfx::MemoryRange gfx_read_range;
     if (read_range)
@@ -185,7 +181,7 @@ void* Buffer::map(std::optional<MemoryRange> read_range)
 
 void Buffer::unmap(std::optional<MemoryRange> write_range)
 {
-    KALI_ASSERT(m_desc.cpu_access != CpuAccess::none);
+    KALI_ASSERT(m_desc.memory_type != MemoryType::device_local);
 
     gfx::MemoryRange gfx_write_range;
     if (write_range)
@@ -212,7 +208,7 @@ Texture::Texture(const TextureDesc& desc, const void* init_data, ref<Device> dev
     gfx_desc.type = get_gfx_resource_type(ResourceType(m_desc.type));
     gfx_desc.defaultState = get_gfx_resource_state(m_desc.initial_state);
     gfx_desc.allowedStates = get_gfx_allowed_states(m_desc.usage);
-    gfx_desc.memoryType = get_gfx_memory_type(m_desc.cpu_access);
+    gfx_desc.memoryType = get_gfx_memory_type(m_desc.memory_type);
     // TODO(@skallweit): add support for existing handles
     // gfx_desc.existingHandle =
     gfx_desc.isShared = is_set(m_desc.usage, ResourceUsage::shared);

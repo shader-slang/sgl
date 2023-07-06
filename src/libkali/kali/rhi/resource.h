@@ -4,6 +4,7 @@
 #include "kali/rhi/formats.h"
 
 #include "kali/macros.h"
+#include "kali/enum.h"
 #include "kali/object.h"
 
 #include <slang-gfx.h>
@@ -23,6 +24,19 @@ enum class ResourceType : uint32_t {
     texture_3d,
     texture_cube,
 };
+
+KALI_ENUM_INFO(
+    ResourceType,
+    {
+        {ResourceType::unknown, "unknown"},
+        {ResourceType::buffer, "buffer"},
+        {ResourceType::texture_1d, "texture_1d"},
+        {ResourceType::texture_2d, "texture_2d"},
+        {ResourceType::texture_3d, "texture_3d"},
+        {ResourceType::texture_cube, "texture_cube"},
+    }
+);
+KALI_ENUM_REGISTER(ResourceType);
 
 enum class ResourceState : uint32_t {
     undefined,
@@ -49,6 +63,35 @@ enum class ResourceState : uint32_t {
     non_pixel_shader_resource,
 };
 
+KALI_ENUM_INFO(
+    ResourceState,
+    {
+        {ResourceState::undefined, "undefined"},
+        {ResourceState::general, "general"},
+        {ResourceState::pre_initialized, "pre_initialized"},
+        {ResourceState::vertex_buffer, "vertex_buffer"},
+        {ResourceState::index_buffer, "index_buffer"},
+        {ResourceState::constant_buffer, "constant_buffer"},
+        {ResourceState::stream_output, "stream_output"},
+        {ResourceState::shader_resource, "shader_resource"},
+        {ResourceState::unordered_access, "unordered_access"},
+        {ResourceState::render_target, "render_target"},
+        {ResourceState::depth_read, "depth_read"},
+        {ResourceState::depth_write, "depth_write"},
+        {ResourceState::present, "present"},
+        {ResourceState::indirect_argument, "indirect_argument"},
+        {ResourceState::copy_source, "copy_source"},
+        {ResourceState::copy_destination, "copy_destination"},
+        {ResourceState::resolve_source, "resolve_source"},
+        {ResourceState::resolve_destination, "resolve_destination"},
+        {ResourceState::acceleration_structure, "acceleration_structure"},
+        {ResourceState::acceleration_structure_build_output, "acceleration_structure_build_output"},
+        {ResourceState::pixel_shader_resource, "pixel_shader_resource"},
+        {ResourceState::non_pixel_shader_resource, "non_pixel_shader_resource"},
+    }
+);
+KALI_ENUM_REGISTER(ResourceState);
+
 enum class ResourceUsage : uint32_t {
     none = 0x0,              ///< The resource will not be bound the pipeline. Use this to create a staging resource
     vertex = 0x1,            ///< The resource will be bound as a vertex-buffer
@@ -65,13 +108,42 @@ enum class ResourceUsage : uint32_t {
     acceleration_structure = 0x80000000, ///< The resource will be bound as an acceleration structure
 };
 
+KALI_ENUM_INFO(
+    ResourceUsage,
+    {
+        {ResourceUsage::none, "none"},
+        {ResourceUsage::vertex, "vertex"},
+        {ResourceUsage::index, "index"},
+        {ResourceUsage::constant, "constant"},
+        {ResourceUsage::stream_output, "stream_output"},
+        {ResourceUsage::shader_resource, "shader_resource"},
+        {ResourceUsage::unordered_access, "unordered_access"},
+        {ResourceUsage::render_target, "render_target"},
+        {ResourceUsage::depth_stencil, "depth_stencil"},
+        {ResourceUsage::indirect_arg, "indirect_arg"},
+        {ResourceUsage::shared, "shared"},
+        {ResourceUsage::acceleration_structure, "acceleration_structure"},
+    }
+);
+KALI_ENUM_REGISTER(ResourceUsage);
+
 KALI_ENUM_CLASS_OPERATORS(ResourceUsage)
 
-enum class CpuAccess : uint32_t {
-    none,
-    write,
-    read,
+enum class MemoryType : uint32_t {
+    device_local,
+    upload,
+    read_back,
 };
+
+KALI_ENUM_INFO(
+    MemoryType,
+    {
+        {MemoryType::device_local, "device_local"},
+        {MemoryType::upload, "upload"},
+        {MemoryType::read_back, "read_back"},
+    }
+);
+KALI_ENUM_REGISTER(MemoryType);
 
 struct MemoryRange {
     uint64_t offset;
@@ -157,7 +229,7 @@ struct BufferDesc {
 
     ResourceState initial_state{ResourceState::undefined};
     ResourceUsage usage{ResourceUsage::none};
-    CpuAccess cpu_access{CpuAccess::none};
+    MemoryType memory_type{MemoryType::device_local};
 
     std::string debug_name; ///< Debug name.
 
@@ -223,6 +295,18 @@ enum class TextureType : uint32_t {
     texture_cube = uint32_t(ResourceType::texture_cube),
 };
 
+KALI_ENUM_INFO(
+    TextureType,
+    {
+        {TextureType::unknown, "unknown"},
+        {TextureType::texture_1d, "texture_1d"},
+        {TextureType::texture_2d, "texture_2d"},
+        {TextureType::texture_3d, "texture_3d"},
+        {TextureType::texture_cube, "texture_cube"},
+    }
+);
+KALI_ENUM_REGISTER(TextureType);
+
 struct TextureDesc {
     /// Texture type.
     TextureType type{TextureType::unknown};
@@ -241,7 +325,7 @@ struct TextureDesc {
 
     ResourceState initial_state{ResourceState::undefined};
     ResourceUsage usage{ResourceUsage::none};
-    CpuAccess cpu_access{CpuAccess::none};
+    MemoryType memory_type{MemoryType::device_local};
 
     std::string debug_name;
 };

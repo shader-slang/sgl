@@ -62,9 +62,9 @@ inline gfx::DeviceType get_gfx_device_type(DeviceType device_type)
 Device::Device(const DeviceDesc& desc)
     : m_desc(desc)
 {
+    gfx::gfxSetDebugCallback(&s_debug_logger);
     if (m_desc.enable_debug_layers) {
         gfx::gfxEnableDebugLayer();
-        gfx::gfxSetDebugCallback(&s_debug_logger);
     }
 
     m_type = m_desc.type;
@@ -108,12 +108,12 @@ ref<Buffer> Device::create_buffer(const BufferDesc& desc, const void* init_data)
     return make_ref<Buffer>(desc, init_data, ref<Device>(this));
 }
 
-ref<Buffer> Device::create_raw_buffer(size_t size, ResourceUsage usage, CpuAccess cpu_access, const void* init_data)
+ref<Buffer> Device::create_raw_buffer(size_t size, ResourceUsage usage, MemoryType memory_type, const void* init_data)
 {
     BufferDesc desc{
         .size = size,
         .usage = usage,
-        .cpu_access = cpu_access,
+        .memory_type = memory_type,
     };
     return create_buffer(desc, init_data);
 }
@@ -122,7 +122,7 @@ ref<Buffer> Device::create_typed_buffer(
     Format format,
     size_t element_count,
     ResourceUsage usage,
-    CpuAccess cpu_access,
+    MemoryType memory_type,
     const void* init_data
 )
 {
@@ -130,7 +130,7 @@ ref<Buffer> Device::create_typed_buffer(
         .size = element_count * 1,
         .format = format,
         .usage = usage,
-        .cpu_access = cpu_access,
+        .memory_type = memory_type,
     };
     return create_buffer(desc, init_data);
 }
@@ -139,7 +139,7 @@ ref<Buffer> Device::create_structured_buffer(
     size_t struct_size,
     size_t element_count,
     ResourceUsage usage,
-    CpuAccess cpu_access,
+    MemoryType memory_type,
     const void* init_data
 )
 {
@@ -147,7 +147,7 @@ ref<Buffer> Device::create_structured_buffer(
         .size = element_count * struct_size,
         .struct_size = struct_size,
         .usage = usage,
-        .cpu_access = cpu_access,
+        .memory_type = memory_type,
     };
     return create_buffer(desc, init_data);
 }
