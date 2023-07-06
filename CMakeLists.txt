@@ -5,6 +5,9 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 
 project(kali)
 
+set(CTEST_OUTPUT_ON_FAILURE TRUE)
+enable_testing()
+
 # -----------------------------------------------------------------------------
 # Configuration
 # -----------------------------------------------------------------------------
@@ -170,7 +173,7 @@ endfunction()
 set_property(GLOBAL PROPERTY KALI_BINARY_FILES "")
 
 function(kali_copy_binary src)
-    message(STATUS "copying binary file: ${src}")
+    message(STATUS "Copying binary file: ${src}")
     get_property(binary_files GLOBAL PROPERTY KALI_BINARY_FILES)
     list(APPEND binary_files ${src})
     set_property(GLOBAL PROPERTY KALI_BINARY_FILES ${binary_files})

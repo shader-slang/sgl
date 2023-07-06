@@ -162,5 +162,17 @@
             "configurePreset": "linux-gcc",
             "configuration": "Debug"
         }
+    ],
+    "testPresets": [
+        {
+            "name": "Windows/MSVC",
+            "description": "",
+            "displayName": "",
+            "configurePreset": "windows-msvc",
+            "configuration": "Debug",
+            "environment": {
+                "CTEST_OUTPUT_ON_FAILURE": "1"
+            }
+        }
     ]
 }

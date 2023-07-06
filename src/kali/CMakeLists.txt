@@ -255,6 +255,9 @@ set_target_properties(kali_tests PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${KALI_LIBRARY_OUTPUT_DIRECTORY}
 )
 
+add_test(NAME kali_tests COMMAND $<TARGET_FILE:kali_tests>)
+add_test(NAME python_tests COMMAND ${Python_EXECUTABLE} -m pytest ${CMAKE_SOURCE_DIR}/src)
+
 # -----------------------------------------------------------------------------
 # kali python bindings
 # -----------------------------------------------------------------------------
