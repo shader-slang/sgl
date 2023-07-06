@@ -1,5 +1,6 @@
 build/
 external/slang
+external/dxcompiler
 tools/*
 !tools/packman/
 .vscode/
