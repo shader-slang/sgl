@@ -5,7 +5,6 @@ Kali is the Hindu goddess of destruction and rebirth, and is often associated wi
 
 | Directory        | Description                                   |
 |------------------|-----------------------------------------------|
-| `build_scripts`  | -                                             |
 | `cmake`          | CMake modules.                                |
 | `data`           | Binary data (git lfs submodule).              |
 | `external`       | Third-party libraries.                        |
