@@ -52,7 +52,7 @@ int main()
 #endif
 
 #if 0
-    # python
+#python
     N = 1024
     a = device.create_buffer(1024)
     b = device.create_buffer(1024)
@@ -73,7 +73,7 @@ int main()
 
     compute_context.dispatch(pipeline, entry_point_vars={"a": a, "b": b, "c": c, "size": N} root_vars={}, (N, 1, 1))
 
-    # shorter version
+#shorter version
     compute_kernel = device.create_compute_kernel("compute.cs.slang", "main")
     compute_kernel(ctx, (N, 1, 1), a=a, b=b, c=c, size=N)
 
