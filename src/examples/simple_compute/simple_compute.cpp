@@ -1,7 +1,6 @@
-
-#include "rhi/device.h"
-#include "rhi/program.h"
-#include "core/logger.h"
+#include "kali/logger.h"
+#include "kali/rhi/device.h"
+#include "kali/rhi/program.h"
 
 using namespace kali;
 

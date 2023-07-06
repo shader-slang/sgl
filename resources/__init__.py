@@ -7,4 +7,4 @@ if os.name == "nt":
 
 del os
 
-from .kali_python import *
+from .kali_ext import *

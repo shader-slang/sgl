@@ -1,9 +1,9 @@
 #pragma once
 
-#include "core/object.h"
-#include "core/window.h"
-#include "rhi/device.h"
-#include "rhi/swapchain.h"
+#include "kali/object.h"
+#include "kali/window.h"
+#include "kali/rhi/device.h"
+#include "kali/rhi/swapchain.h"
 
 namespace kali {
 

@@ -48,11 +48,11 @@ and the docstrings of the objects.
 
 import os
 import sys
-import json
 import logging
 import inspect
 import re
 import time
+import typing
 
 # ------------------------------------------------------------------------------
 
@@ -391,6 +391,9 @@ if __name__ == "__main__":
 
         module_dir = os.path.join(package_dir, m.__name__.replace(".", os.path.sep))
         os.makedirs(module_dir, exist_ok=True)
+        # See https://github.com/python/cpython/issues/98253
+        w("for f in typing._cleanups:")
+        w("    f()")
         open(os.path.join(module_dir, "__init__.pyi"), "w").write(buffer)
 
         # modules += submodules
@@ -398,3 +401,6 @@ if __name__ == "__main__":
 
     elapsed = time.time() - start
     logging.debug("Done ({:.2f} ms)".format(elapsed * 1000))
+
+for f in typing._cleanups:
+    f()

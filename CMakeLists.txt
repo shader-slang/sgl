@@ -194,6 +194,25 @@ message(STATUS "Feature flags:")
 message(STATUS "KALI_HAS_D3D12: ${KALI_HAS_D3D12}")
 message(STATUS "KALI_HAS_VULKAN: ${KALI_HAS_VULKAN}")
 
-add_subdirectory(src/kali)
+add_subdirectory(src/libkali)
+add_subdirectory(src/kali_tests)
+add_subdirectory(src/kali_ext)
 add_subdirectory(src/editor)
 add_subdirectory(src/examples)
+
+
+# -----------------------------------------------------------------------------
+# misc
+# -----------------------------------------------------------------------------
+
+# Generate setpath scripts.
+if(KALI_WINDOWS)
+    file(GENERATE OUTPUT ${KALI_OUTPUT_DIRECTORY}/setpath.bat INPUT ${CMAKE_SOURCE_DIR}/resources/setpath.bat.in)
+    file(GENERATE OUTPUT ${KALI_OUTPUT_DIRECTORY}/setpath.ps1 INPUT ${CMAKE_SOURCE_DIR}/resources/setpath.ps1.in)
+endif()
+
+if(KALI_LINUX)
+    file(GENERATE OUTPUT ${KALI_OUTPUT_DIRECTORY}/setpath.sh INPUT ${CMAKE_SOURCE_DIR}/resources/setpath.sh.in)
+endif()
+
+file(GENERATE OUTPUT ${KALI_OUTPUT_DIRECTORY}/python/kali/__init__.py INPUT ${CMAKE_SOURCE_DIR}/resources/__init__.py)
