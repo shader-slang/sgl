@@ -43,7 +43,7 @@ struct GraphicsPipelineStateDesc {
 
     // ref<InputLayout> input_layout;
     // ref<FramebufferLayout> framebuffer_layout;
-    PrimitiveType primitive_type {PrimitiveType::triangle};
+    PrimitiveType primitive_type{PrimitiveType::triangle};
     DepthStencilDesc depth_stencil;
     RasterizerDesc rasterizer;
     BlendDesc blend;

@@ -37,17 +37,30 @@ ConsoleLoggerOutput::ConsoleLoggerOutput(bool colored)
     m_use_color = colored && enable_ansi_control_sequences();
 }
 
-void ConsoleLoggerOutput::write(LogLevel level, const std::string_view msg)
+void ConsoleLoggerOutput::write(LogLevel level, const std::string_view module, const std::string_view msg)
 {
     std::string_view level_str = s_level_str[static_cast<int>(level)];
     fmt::terminal_color color = s_level_color[static_cast<int>(level)];
 
     ::FILE* stream = level >= LogLevel::error ? stderr : stdout;
 
-    if (m_use_color)
-        fmt::print(stream, "{} {}\n", fmt::styled(level_str, fmt::fg(color)), msg);
-    else
-        fmt::print(stream, "{} {}\n", level_str, msg);
+    if (m_use_color) {
+        if (module.empty())
+            fmt::print(stream, "{} {}\n", fmt::styled(level_str, fmt::fg(color)), msg);
+        else
+            fmt::print(
+                stream,
+                "{} {} {}\n",
+                fmt::styled(level_str, fmt::fg(color)),
+                fmt::styled(module, fmt::fg(fmt::terminal_color::bright_black)),
+                msg
+            );
+    } else {
+        if (module.empty())
+            fmt::print(stream, "{} {}\n", level_str, msg);
+        else
+            fmt::print(stream, "{} {} {}\n", level_str, module, msg);
+    }
 
     ::fflush(stream);
 }
@@ -94,17 +107,22 @@ FileLoggerOutput::~FileLoggerOutput()
         ::fclose(static_cast<FILE*>(m_file));
 }
 
-void FileLoggerOutput::write(LogLevel level, const std::string_view msg)
+void FileLoggerOutput::write(LogLevel level, const std::string_view module, const std::string_view msg)
 {
-    fmt::print(static_cast<FILE*>(m_file), "{} {}\n", s_level_str[int(level)], msg);
+    if (module.empty())
+        fmt::print(static_cast<FILE*>(m_file), "{} {}\n", s_level_str[int(level)], msg);
+    else
+        fmt::print(static_cast<FILE*>(m_file), "{} {} {}\n", s_level_str[int(level)], module, msg);
     ::fflush(static_cast<FILE*>(m_file));
 }
 
-void DebugConsoleLoggerOutput::write(LogLevel level, const std::string_view msg)
+void DebugConsoleLoggerOutput::write(LogLevel level, const std::string_view module, const std::string_view msg)
 {
 #if KALI_WINDOWS
-    std::string str = fmt::format("{} {}\n", s_level_str[int(level)], msg);
-    OutputDebugStringA(str.c_str());
+    if (module.empty())
+        OutputDebugStringA(fmt::format("{} {}\n", s_level_str[int(level)], msg).c_str());
+    else
+        OutputDebugStringA(fmt::format("{} {} {}\n", s_level_str[int(level)], module, msg).c_str());
 #endif
 }
 
@@ -114,9 +132,13 @@ ref<DebugConsoleLoggerOutput> DebugConsoleLoggerOutput::global()
     return output;
 }
 
-Logger::Logger(LogLevel log_level, bool use_default_outputs)
+Logger::Logger(LogLevel log_level, const std::string_view module, bool use_default_outputs)
     : m_level(log_level)
+    , m_module(module)
 {
+    if (!m_module.empty())
+        m_module = fmt::format("[{}]", m_module);
+
     if (use_default_outputs) {
         add_output(ConsoleLoggerOutput::global());
         if (is_debugger_present())
@@ -143,6 +165,13 @@ ref<LoggerOutput> Logger::add_debug_console_output()
     ref<LoggerOutput> output = make_ref<DebugConsoleLoggerOutput>();
     add_output(output);
     return output;
+}
+
+void Logger::use_same_outputs(const Logger& other)
+{
+    remove_all_outputs();
+    for (auto& output : other.m_outputs)
+        add_output(output);
 }
 
 void Logger::add_output(ref<LoggerOutput> output)
@@ -186,7 +215,7 @@ void Logger::log(LogLevel level, const std::string_view msg, LogFrequency freque
         return;
 
     for (const auto& output : m_outputs)
-        output->write(level, msg);
+        output->write(level, m_module, msg);
 }
 
 Logger& Logger::global()

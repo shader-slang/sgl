@@ -28,7 +28,7 @@ enum class LogFrequency {
 class KALI_API LoggerOutput : public Object {
     KALI_OBJECT(LoggerOutput)
 public:
-    virtual void write(LogLevel level, const std::string_view msg) = 0;
+    virtual void write(LogLevel level, const std::string_view module, const std::string_view msg) = 0;
 };
 
 /// Logger output that writes to the console.
@@ -38,7 +38,7 @@ class KALI_API ConsoleLoggerOutput : public LoggerOutput {
 public:
     ConsoleLoggerOutput(bool colored = true);
 
-    virtual void write(LogLevel level, const std::string_view msg) override;
+    virtual void write(LogLevel level, const std::string_view module, const std::string_view msg) override;
 
     static ref<ConsoleLoggerOutput> global();
 
@@ -54,7 +54,7 @@ public:
     FileLoggerOutput(const std::filesystem::path& path);
     ~FileLoggerOutput();
 
-    virtual void write(LogLevel level, const std::string_view msg) override;
+    virtual void write(LogLevel level, const std::string_view module, const std::string_view msg) override;
 
 private:
     void* m_file;
@@ -63,7 +63,7 @@ private:
 /// Logger output that writes to the debug console (Windows only).
 class KALI_API DebugConsoleLoggerOutput : public LoggerOutput {
 public:
-    virtual void write(LogLevel level, const std::string_view msg) override;
+    virtual void write(LogLevel level, const std::string_view module, const std::string_view msg) override;
 
     static ref<DebugConsoleLoggerOutput> global();
 };
@@ -99,16 +99,19 @@ public:
 class KALI_API Logger : public Object {
     KALI_OBJECT(Logger)
 public:
-    Logger(LogLevel level = LogLevel::info, bool use_default_outputs = true);
+    Logger(LogLevel level = LogLevel::info, const std::string_view module = {}, bool use_default_outputs = true);
 
-    static ref<Logger> create(LogLevel level = LogLevel::info, bool use_default_outputs = true)
+    static ref<Logger>
+    create(LogLevel level = LogLevel::info, const std::string_view module = {}, bool use_default_outputs = true)
     {
-        return make_ref<Logger>(level, use_default_outputs);
+        return make_ref<Logger>(level, module, use_default_outputs);
     }
 
     ref<LoggerOutput> add_console_output(bool colored = true);
     ref<LoggerOutput> add_file_output(const std::filesystem::path& path);
     ref<LoggerOutput> add_debug_console_output();
+
+    void use_same_outputs(const Logger& other);
 
     void add_output(ref<LoggerOutput> output);
     void remove_output(ref<LoggerOutput> output);
@@ -134,6 +137,7 @@ private:
     bool is_duplicate(const std::string_view msg);
 
     LogLevel m_level{LogLevel::info};
+    std::string m_module;
 
     std::set<ref<LoggerOutput>> m_outputs;
     std::set<std::string, std::less<>> m_messages;

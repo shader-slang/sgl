@@ -13,34 +13,46 @@ namespace kali {
 
 class DebugLogger : public gfx::IDebugCallback {
 public:
+    DebugLogger()
+    {
+        m_logger = Logger::create(LogLevel::debug, "DEVICE", false);
+        m_logger->use_same_outputs(Logger::global());
+    }
+
     virtual SLANG_NO_THROW void SLANG_MCALL
     handleMessage(gfx::DebugMessageType type, gfx::DebugMessageSource source, const char* message)
     {
         const char* source_str = "";
         switch (source) {
         case gfx::DebugMessageSource::Layer:
-            source_str = "Layer";
+            source_str = "layer";
         case gfx::DebugMessageSource::Driver:
-            source_str = "Driver";
+            source_str = "driver";
         case gfx::DebugMessageSource::Slang:
-            source_str = "Slang";
+            source_str = "slang";
         }
         switch (type) {
         case gfx::DebugMessageType::Info:
-            log_info("{}: {}", source_str, message);
+            m_logger->info("{}: {}", source_str, message);
             break;
         case gfx::DebugMessageType::Warning:
-            log_warn("{}: {}", source_str, message);
+            m_logger->warn("{}: {}", source_str, message);
             break;
         case gfx::DebugMessageType::Error:
-            log_error("{}: {}", source_str, message);
+            m_logger->error("{}: {}", source_str, message);
             break;
         }
     }
+
+private:
+    ref<Logger> m_logger;
 };
 
-static DebugLogger s_debug_logger;
-
+static DebugLogger& get_debug_logger()
+{
+    static DebugLogger debug_logger;
+    return debug_logger;
+}
 
 inline gfx::DeviceType get_gfx_device_type(DeviceType device_type)
 {
@@ -62,7 +74,7 @@ inline gfx::DeviceType get_gfx_device_type(DeviceType device_type)
 Device::Device(const DeviceDesc& desc)
     : m_desc(desc)
 {
-    gfx::gfxSetDebugCallback(&s_debug_logger);
+    gfx::gfxSetDebugCallback(&get_debug_logger());
     if (m_desc.enable_debug_layers) {
         gfx::gfxEnableDebugLayer();
     }

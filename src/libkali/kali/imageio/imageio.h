@@ -15,9 +15,9 @@ class ImageReader;
 class ImageWriter;
 
 #ifdef KALI_HEADER_VALIDATION
-class MemoryMappedFile {};
-class ImageReader {};
-class ImageWriter {};
+class MemoryMappedFile { };
+class ImageReader { };
+class ImageWriter { };
 #endif
 
 /// The type of each component in an image.
