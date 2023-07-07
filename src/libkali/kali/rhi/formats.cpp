@@ -99,19 +99,19 @@ static const FormatInfo s_format_infos[] = {
     // bh = block_height
     // format                       name                        bpb     cc      type                        depth   stencil compressed  bw  bh      channel_bit_count   dxgi_format                             vk_format
     {Format::unknown,               "unknown",                  0,      0,      FormatType::unknown,        false,  false,  false,      0,  0,      {0, 0, 0, 0    },   DXGI_FORMAT_UNKNOWN,                    VK_FORMAT_UNDEFINED},
-    {Format::rgba32_typeless,       "rgba32_typeless",          16,     4,      FormatType::typeless,       false,  false,  false,      1,  1,      {0, 0, 0, 0    },   DXGI_FORMAT_R32G32B32A32_TYPELESS,      VK_FORMAT_UNDEFINED},
-    {Format::rgb32_typeless,        "rgb32_typeless",           12,     3,      FormatType::typeless,       false,  false,  false,      1,  1,      {0, 0, 0, 0    },   DXGI_FORMAT_R32G32B32_TYPELESS,         VK_FORMAT_UNDEFINED},
-    {Format::rg32_typeless,         "rg32_typeless",            8,      2,      FormatType::typeless,       false,  false,  false,      1,  1,      {0, 0, 0, 0    },   DXGI_FORMAT_R32G32_TYPELESS,            VK_FORMAT_UNDEFINED},
-    {Format::r32_typeless,          "r32_typeless",             4,      1,      FormatType::typeless,       false,  false,  false,      1,  1,      {0, 0, 0, 0    },   DXGI_FORMAT_R32_TYPELESS,               VK_FORMAT_UNDEFINED},
+    {Format::rgba32_typeless,       "rgba32_typeless",          16,     4,      FormatType::typeless,       false,  false,  false,      1,  1,      {32, 32, 32, 32},   DXGI_FORMAT_R32G32B32A32_TYPELESS,      VK_FORMAT_UNDEFINED},
+    {Format::rgb32_typeless,        "rgb32_typeless",           12,     3,      FormatType::typeless,       false,  false,  false,      1,  1,      {32, 32, 32, 0 },   DXGI_FORMAT_R32G32B32_TYPELESS,         VK_FORMAT_UNDEFINED},
+    {Format::rg32_typeless,         "rg32_typeless",            8,      2,      FormatType::typeless,       false,  false,  false,      1,  1,      {32, 32, 0, 0  },   DXGI_FORMAT_R32G32_TYPELESS,            VK_FORMAT_UNDEFINED},
+    {Format::r32_typeless,          "r32_typeless",             4,      1,      FormatType::typeless,       false,  false,  false,      1,  1,      {32, 0, 0, 0   },   DXGI_FORMAT_R32_TYPELESS,               VK_FORMAT_UNDEFINED},
 
-    {Format::rgba16_typeless,       "rgba16_typeless",          8,      4,      FormatType::typeless,       false,  false,  false,      1,  1,      {0, 0, 0, 0    },   DXGI_FORMAT_R16G16B16A16_TYPELESS,      VK_FORMAT_UNDEFINED},
-    {Format::rg16_typeless,         "rg16_typeless",            4,      2,      FormatType::typeless,       false,  false,  false,      1,  1,      {0, 0, 0, 0    },   DXGI_FORMAT_R16G16_TYPELESS,            VK_FORMAT_UNDEFINED},
-    {Format::r16_typeless,          "r16_typeless",             2,      1,      FormatType::typeless,       false,  false,  false,      1,  1,      {0, 0, 0, 0    },   DXGI_FORMAT_R16_TYPELESS,               VK_FORMAT_UNDEFINED},
+    {Format::rgba16_typeless,       "rgba16_typeless",          8,      4,      FormatType::typeless,       false,  false,  false,      1,  1,      {16, 16, 16, 16},   DXGI_FORMAT_R16G16B16A16_TYPELESS,      VK_FORMAT_UNDEFINED},
+    {Format::rg16_typeless,         "rg16_typeless",            4,      2,      FormatType::typeless,       false,  false,  false,      1,  1,      {16, 16, 0, 0  },   DXGI_FORMAT_R16G16_TYPELESS,            VK_FORMAT_UNDEFINED},
+    {Format::r16_typeless,          "r16_typeless",             2,      1,      FormatType::typeless,       false,  false,  false,      1,  1,      {16, 0, 0, 0   },   DXGI_FORMAT_R16_TYPELESS,               VK_FORMAT_UNDEFINED},
 
-    {Format::rgba8_typeless,        "rgba8_typeless",           4,      4,      FormatType::typeless,       false,  false,  false,      1,  1,      {0, 0, 0, 0    },   DXGI_FORMAT_R8G8B8A8_TYPELESS,          VK_FORMAT_UNDEFINED},
-    {Format::rg8_typeless,          "rg8_typeless",             2,      2,      FormatType::typeless,       false,  false,  false,      1,  1,      {0, 0, 0, 0    },   DXGI_FORMAT_R8G8_TYPELESS,              VK_FORMAT_UNDEFINED},
-    {Format::r8_typeless,           "r8_typeless",              1,      1,      FormatType::typeless,       false,  false,  false,      1,  1,      {0, 0, 0, 0    },   DXGI_FORMAT_R8_TYPELESS,                VK_FORMAT_UNDEFINED},
-    {Format::bgra8_typeless,        "bgra8_typeless",           4,      4,      FormatType::typeless,       false,  false,  false,      1,  1,      {0, 0, 0, 0    },   DXGI_FORMAT_B8G8R8A8_TYPELESS,          VK_FORMAT_UNDEFINED},
+    {Format::rgba8_typeless,        "rgba8_typeless",           4,      4,      FormatType::typeless,       false,  false,  false,      1,  1,      {8, 8, 8, 8    },   DXGI_FORMAT_R8G8B8A8_TYPELESS,          VK_FORMAT_UNDEFINED},
+    {Format::rg8_typeless,          "rg8_typeless",             2,      2,      FormatType::typeless,       false,  false,  false,      1,  1,      {8, 8, 0, 0    },   DXGI_FORMAT_R8G8_TYPELESS,              VK_FORMAT_UNDEFINED},
+    {Format::r8_typeless,           "r8_typeless",              1,      1,      FormatType::typeless,       false,  false,  false,      1,  1,      {8, 0, 0, 0    },   DXGI_FORMAT_R8_TYPELESS,                VK_FORMAT_UNDEFINED},
+    {Format::bgra8_typeless,        "bgra8_typeless",           4,      4,      FormatType::typeless,       false,  false,  false,      1,  1,      {8, 8, 8, 8    },   DXGI_FORMAT_B8G8R8A8_TYPELESS,          VK_FORMAT_UNDEFINED},
 
     {Format::rgba32_float,          "rgba32_float",             16,     4,      FormatType::float_,         false,  false,  false,      1,  1,      {32, 32, 32, 32},   DXGI_FORMAT_R32G32B32A32_FLOAT,         VK_FORMAT_R32G32B32A32_SFLOAT},
     {Format::rgb32_float,           "rgb32_float",              12,     3,      FormatType::float_,         false,  false,  false,      1,  1,      {32, 32, 32, 0 },   DXGI_FORMAT_R32G32B32_FLOAT,            VK_FORMAT_R32G32B32_SFLOAT},
@@ -171,15 +171,15 @@ static const FormatInfo s_format_infos[] = {
 
     {Format::d32_float,             "d32_float",                4,      1,      FormatType::float_,         true,   false,  false,      1,  1,      {32, 0, 0, 0   },   DXGI_FORMAT_D32_FLOAT,                  VK_FORMAT_D32_SFLOAT},
     {Format::d16_unorm,             "d16_unorm",                2,      1,      FormatType::unorm,          true,   false,  false,      1,  1,      {16, 0, 0, 0   },   DXGI_FORMAT_D16_UNORM,                  VK_FORMAT_D16_UNORM},
-    {Format::d32_float_s8_uint,     "d32_float_s8_uint",        8,      2,      FormatType::float_,         true,   true,   false,      1,  1,      {32, 0, 0, 0   },   DXGI_FORMAT_D32_FLOAT_S8X24_UINT,       VK_FORMAT_D32_SFLOAT_S8_UINT},
-    {Format::r32_float_x32_typeless,"r32_float_x32_typeless",   8,      2,      FormatType::typeless,       false,  false,  false,      1,  1,      {0, 0, 0, 0    },   DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS,   VK_FORMAT_UNDEFINED},
+    {Format::d32_float_s8_uint,     "d32_float_s8_uint",        8,      2,      FormatType::float_,         true,   true,   false,      1,  1,      {32, 8, 0, 0   },   DXGI_FORMAT_D32_FLOAT_S8X24_UINT,       VK_FORMAT_D32_SFLOAT_S8_UINT},
+    {Format::r32_float_x32_typeless,"r32_float_x32_typeless",   8,      2,      FormatType::typeless,       false,  false,  false,      1,  1,      {32, 32, 0, 0  },   DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS,   VK_FORMAT_UNDEFINED},
 
     {Format::bgra4_unorm,           "bgra4_unorm",              2,      4,      FormatType::unorm,          false,  false,  false,      1,  1,      {4, 4, 4, 4    },   DXGI_FORMAT_B4G4R4A4_UNORM,             VK_FORMAT_B4G4R4A4_UNORM_PACK16},
     {Format::b5g6r5_unorm,          "b5g6r5_unorm",             2,      3,      FormatType::unorm,          false,  false,  false,      1,  1,      {5, 6, 5, 0    },   DXGI_FORMAT_B5G6R5_UNORM,               VK_FORMAT_B5G6R5_UNORM_PACK16},
     {Format::b5g5r5a1_unorm,        "b5g5r5a1_unorm",           2,      4,      FormatType::unorm,          false,  false,  false,      1,  1,      {5, 5, 5, 1    },   DXGI_FORMAT_B5G5R5A1_UNORM,             VK_FORMAT_B5G5R5A1_UNORM_PACK16},
 
     {Format::r9g9b9e5_sharedexp,    "r9g9b9e5_sharedexp",       4,      3,      FormatType::float_,         false,  false,  false,      1,  1,      {9, 9, 9, 5    },   DXGI_FORMAT_R9G9B9E5_SHAREDEXP,         VK_FORMAT_E5B9G9R9_UFLOAT_PACK32},
-    {Format::r10g10b10a2_typeless,  "r10g10b10a2_typeless",     4,      4,      FormatType::typeless,       false,  false,  false,      1,  1,      {0, 0, 0, 0    },   DXGI_FORMAT_R10G10B10A2_TYPELESS,       VK_FORMAT_UNDEFINED},
+    {Format::r10g10b10a2_typeless,  "r10g10b10a2_typeless",     4,      4,      FormatType::typeless,       false,  false,  false,      1,  1,      {10, 10, 10, 2 },   DXGI_FORMAT_R10G10B10A2_TYPELESS,       VK_FORMAT_UNDEFINED},
     {Format::r10g10b10a2_unorm,     "r10g10b10a2_unorm",        4,      4,      FormatType::unorm,          false,  false,  false,      1,  1,      {10, 10, 10, 2 },   DXGI_FORMAT_R10G10B10A2_UNORM,          VK_FORMAT_A2B10G10R10_UNORM_PACK32},
     {Format::r10g10b10a2_uint,      "r10g10b10a2_uint",         4,      4,      FormatType::uint,           false,  false,  false,      1,  1,      {10, 10, 10, 2 },   DXGI_FORMAT_R10G10B10A2_UINT,           VK_FORMAT_A2B10G10R10_UINT_PACK32},
     {Format::r11g11b10_float,       "r11g11b10_float",          4,      3,      FormatType::float_,         false,  false,  false,      1,  1,      {11, 11, 10, 0 },   DXGI_FORMAT_R11G11B10_FLOAT,            VK_FORMAT_B10G11R11_UFLOAT_PACK32},

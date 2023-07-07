@@ -142,6 +142,19 @@ KALI_ENUM_INFO(
 );
 KALI_ENUM_REGISTER(FormatType);
 
+enum class TextureChannelFlags : uint32_t {
+    none = 0x0,
+    r = 0x1,
+    g = 0x2,
+    b = 0x4,
+    a = 0x8,
+    rg = 0x3,
+    rgb = 0x7,
+    rgba = 0xf,
+};
+
+KALI_ENUM_CLASS_OPERATORS(TextureChannelFlags);
+
 /// Resource format information.
 struct FormatInfo {
     Format format;
@@ -157,6 +170,37 @@ struct FormatInfo {
     int channel_bit_count[4];
     uint32_t dxgi_format;
     uint32_t vk_format;
+
+    bool is_depth_stencil() const { return is_depth || is_stencil; }
+
+    bool is_typeless_format() const { return type == FormatType::typeless; }
+    bool is_float_format() const { return type == FormatType::float_; }
+    bool is_integer_format() const { return type == FormatType::uint || type == FormatType::sint; }
+    bool is_normalized_format() const
+    {
+        return type == FormatType::unorm || type == FormatType::unorm_srgb || type == FormatType::snorm;
+    }
+    bool is_srgb_format() const { return type == FormatType::unorm_srgb; }
+
+    TextureChannelFlags get_mask() const
+    {
+        TextureChannelFlags flags = TextureChannelFlags::none;
+        flags |= channel_count >= 1 ? TextureChannelFlags::r : TextureChannelFlags::none;
+        flags |= channel_count >= 2 ? TextureChannelFlags::g : TextureChannelFlags::none;
+        flags |= channel_count >= 3 ? TextureChannelFlags::b : TextureChannelFlags::none;
+        flags |= channel_count >= 4 ? TextureChannelFlags::a : TextureChannelFlags::none;
+        return flags;
+    }
+
+    uint32_t get_channel_bits(TextureChannelFlags flags) const
+    {
+        uint32_t bits = 0;
+        bits += (is_set(flags, TextureChannelFlags::r)) ? channel_bit_count[0] : 0;
+        bits += (is_set(flags, TextureChannelFlags::g)) ? channel_bit_count[1] : 0;
+        bits += (is_set(flags, TextureChannelFlags::b)) ? channel_bit_count[2] : 0;
+        bits += (is_set(flags, TextureChannelFlags::a)) ? channel_bit_count[3] : 0;
+        return bits;
+    }
 };
 
 KALI_API const FormatInfo& get_format_info(Format format);
