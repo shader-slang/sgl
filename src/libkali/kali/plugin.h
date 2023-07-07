@@ -211,7 +211,7 @@ private:
         std::lock_guard<std::mutex> lock(m_class_descs_mutex);
 
         if (find_class_desc<BaseT>(type) != nullptr)
-            throw RuntimeError(
+            KALI_THROW(
                 "A plugin class with type name '{}' (base class type '{}') has already been registered.",
                 type,
                 BaseT::get_plugin_base_type()

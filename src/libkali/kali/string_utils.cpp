@@ -177,7 +177,7 @@ std::vector<uint8_t> decode_base64(std::string_view str)
     if (in_len == 0)
         return {};
     if (in_len % 4 != 0)
-        throw ArgumentError("Input data size is not a multiple of 4");
+        KALI_THROW("Input data size is not a multiple of 4");
 
     size_t out_len = in_len / 4 * 3;
     if (str[in_len - 1] == '=')

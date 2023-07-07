@@ -11,7 +11,7 @@
 #include "kali/math/scalar_math.h"
 #include "kali/math/vector_math.h"
 #include "kali/math/constants.h"
-#include "kali/assert.h"
+#include "kali/error.h"
 
 namespace kali::math {
 
@@ -413,7 +413,6 @@ template<typename T>
         return quat<T>((m[0][2] + m[2][0]) * mult, (m[2][1] + m[1][2]) * mult, biggest_val, (m[1][0] - m[0][1]) * mult);
     default:
         KALI_UNREACHABLE();
-        return quat<T>::identity();
     }
 }
 

@@ -64,14 +64,14 @@ void set_keyboard_interrupt_handler(std::function<void()> handler)
         sigemptyset(&action.sa_mask);
         action.sa_flags = 0;
         if (sigaction(SIGINT, &action, nullptr) != 0)
-            KALI_THROW(RuntimeError("Failed to register keyboard interrupt handler"));
+            KALI_THROW("Failed to register keyboard interrupt handler");
     } else if (!handler && data.handler) {
         struct sigaction action;
         action.sa_handler = SIG_DFL;
         sigemptyset(&action.sa_mask);
         action.sa_flags = 0;
         if (sigaction(SIGINT, &action, nullptr) != 0)
-            KALI_THROW(RuntimeError("Failed to unregister keyboard interrupt handler"));
+            KALI_THROW("Failed to unregister keyboard interrupt handler");
     }
     data.handler = handler;
 }
@@ -128,7 +128,7 @@ const std::filesystem::path& get_executable_path()
         {
             char path_str[PATH_MAX] = {0};
             if (::readlink("/proc/self/exe", path_str, PATH_MAX) == -1)
-                KALI_THROW(RuntimeError("Failed to get the executable path."));
+                KALI_THROW("Failed to get the executable path.");
             return std::filesystem::path(path_str);
         }()
     );
@@ -142,7 +142,7 @@ const std::filesystem::path& get_runtime_directory()
         {
             Dl_info info;
             if (::dladdr((void*)&get_runtime_directory, &info) == 0)
-                KALI_THROW(RuntimeError("Failed to get the falcor directory. dladdr() failed."));
+                KALI_THROW("Failed to get the falcor directory. dladdr() failed.");
             return std::filesystem::path(info.dli_fname).parent_path();
         }()
     );

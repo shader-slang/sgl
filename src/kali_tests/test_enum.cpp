@@ -83,7 +83,7 @@ TEST_CASE("string_to_enum")
     try {
         string_to_enum<TestEnum>("D");
         CHECK(false);
-    } catch (const RuntimeError&) {
+    } catch (const std::exception&) {
         CHECK(true);
     }
 }
@@ -102,7 +102,7 @@ TEST_CASE("enum_to_string")
     try {
         enum_to_string(TestEnum(-1));
         CHECK(false);
-    } catch (const RuntimeError&) {
+    } catch (const std::exception&) {
         CHECK(true);
     }
 }
@@ -128,7 +128,7 @@ TEST_CASE("flags_to_string_list")
     try {
         flags_to_string_list(TestFlags(-1));
         CHECK(false);
-    } catch (const RuntimeError&) {
+    } catch (const std::runtime_error&) {
         CHECK(true);
     }
 }
@@ -145,7 +145,7 @@ TEST_CASE("string_list_to_flags")
     try {
         string_list_to_flags<TestFlags>({"D"});
         CHECK(false);
-    } catch (const RuntimeError&) {
+    } catch (const std::runtime_error&) {
         CHECK(true);
     }
 }

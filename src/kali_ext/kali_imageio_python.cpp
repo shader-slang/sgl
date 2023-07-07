@@ -92,18 +92,18 @@ void register_kali_imageio(nb::module_& m)
         {
             ref<ImageInput> input = ImageInput::open(path);
             if (!input)
-                throw RuntimeError("Failed to open image");
+                KALI_THROW("Failed to open image");
 
             const ImageSpec& spec = input->get_spec();
 
             size_t image_size = spec.get_image_byte_size();
             void* image_data = std::malloc(image_size);
             if (!image_data)
-                throw RuntimeError("Failed to allocate memory for image");
+                KALI_THROW("Failed to allocate memory for image");
 
             if (!input->read_image(image_data, image_size)) {
                 std::free(image_data);
-                throw RuntimeError("Failed to read image: {}", input->get_error());
+                KALI_THROW("Failed to read image: {}", input->get_error());
             }
 
             size_t ndim = spec.component_count > 1 ? 3 : 2;
@@ -119,11 +119,8 @@ void register_kali_imageio(nb::module_& m)
         "write_image",
         [](const std::filesystem::path& path, const nb::ndarray<nb::numpy>& image) -> void
         {
-            if (image.ndim() < 2 || image.ndim() > 3)
-                throw ArgumentError("Image dimensions must be 2 or 3");
-
-            if (image.shape(0) == 0 || image.shape(1) == 0)
-                throw ArgumentError("Image dimensions must be non-zero");
+            KALI_ASSERT_MSG(image.ndim() >= 2 && image.ndim() <= 3, "Image dimensions must be 2 or 3");
+            KALI_ASSERT_MSG(image.shape(0) != 0 && image.shape(1) != 0, "Image dimensions must be non-zero");
 
             ImageSpec spec;
             spec.width = narrow_cast<uint32_t>(image.shape(1));
@@ -131,17 +128,16 @@ void register_kali_imageio(nb::module_& m)
             spec.component_count = image.ndim() > 2 ? narrow_cast<uint32_t>(image.shape(2)) : 1;
             spec.component_type = dtype_to_image_component_type(image.dtype());
 
-            if (spec.component_type == ImageComponentType::unknown)
-                throw ArgumentError("Image dtype is not supported");
+            KALI_ASSERT_MSG(spec.component_type != ImageComponentType::unknown, "Image dtype is not supported");
 
             ref<ImageOutput> output = ImageOutput::open(path, spec);
             if (!output)
-                throw RuntimeError("Failed to open image");
+                KALI_THROW("Failed to open image");
 
             // TODO convert image layout if not column-major
 
             if (!output->write_image(image.data(), image.nbytes()))
-                throw RuntimeError("Failed to write image: {}", output->get_error());
+                KALI_THROW("Failed to write image: {}", output->get_error());
         },
         "path"_a,
         "image"_a

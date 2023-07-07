@@ -2,7 +2,7 @@
 
 #include "kali/rhi/fwd.h"
 
-#include "kali/assert.h"
+#include "kali/error.h"
 #include "kali/macros.h"
 #include "kali/object.h"
 #include "kali/enum.h"

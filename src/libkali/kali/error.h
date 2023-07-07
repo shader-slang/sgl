@@ -6,107 +6,154 @@
 
 #include <stdexcept>
 #include <string>
+#include <string_view>
+
+/**
+ * @file error.h
+ * @brief Error handling utilities.
+ *
+ * Exceptions:
+ * - KALI_THROW(msg)
+ * - KALI_UNIMPLEMENTED()
+ * - KALI_UNREACHABLE()
+ *
+ * Assertions:
+ * - KALI_ASSERT(cond)
+ * - KALI_ASSERT_MSG(cond, msg)
+ * - KALI_ASSERT_OP(a, b, op)
+ *
+ * Slow assertions:
+ * - KALI_SLOW_ASSERT(cond)
+ * - KALI_SLOW_ASSERT_MSG(cond, msg)
+ * - KALI_SLOW_ASSERT_OP(a, b, op)
+ *
+ */
+
+// -------------------------------------------------------------------------------------------------
+// Exceptions
+// -------------------------------------------------------------------------------------------------
 
 namespace kali {
 
-class Exception;
+/// Throw an exception.
+[[noreturn]] KALI_API void throw_exception(std::string_view file, int line, std::string_view msg);
 
-/// Report a fatal error and terminate the process.
-[[noreturn]] KALI_API void report_fatal_error(const std::string& msg);
-
-/// Report an exception that is about to be thrown.
-/// Used in the KALI_THROW macro.
-KALI_API void report_exception(const Exception& exception);
-
-KALI_DIAGNOSTIC_PUSH
-// allow dllexport on classes dervied from STL
-KALI_DISABLE_MSVC_WARNING(4275)
-
-class KALI_API Exception : public std::exception {
-public:
-    Exception() noexcept { }
-    Exception(const char* what);
-    Exception(const std::string& what)
-        : Exception(what.c_str())
+namespace detail {
+    [[noreturn]] inline void throw_exception(std::string_view file, int line, std::string_view msg)
     {
+        ::kali::throw_exception(file, line, msg);
     }
 
     template<typename... Args>
-    explicit Exception(fmt::format_string<Args...> fmt, Args&&... args)
-        : Exception(fmt::format(fmt, std::forward<Args>(args)...).c_str())
+    [[noreturn]] inline void
+    throw_exception(std::string_view file, int line, fmt::format_string<Args...> fmt, Args&&... args)
     {
+        ::kali::throw_exception(file, line, fmt::format(fmt, std::forward<Args>(args)...));
     }
 
-    Exception(const Exception& other) noexcept { m_what = other.m_what; }
-
-    virtual ~Exception() override { }
-
-    virtual const char* what() const noexcept override { return m_what ? m_what->c_str() : ""; }
-
-protected:
-    // Message is stored as a reference counted string in order to allow copy constructor to be noexcept.
-    std::shared_ptr<std::string> m_what;
-};
-
-class KALI_API RuntimeError : public Exception {
-public:
-    RuntimeError() noexcept { }
-    RuntimeError(const char* what)
-        : Exception(what)
-    {
-    }
-    RuntimeError(const std::string& what)
-        : Exception(what)
-    {
-    }
-
-    template<typename... Args>
-    explicit RuntimeError(fmt::format_string<Args...> fmt, Args&&... args)
-        : RuntimeError(fmt::format(fmt, std::forward<Args>(args)...).c_str())
-    {
-    }
-
-    RuntimeError(const RuntimeError& other) noexcept { m_what = other.m_what; }
-
-    virtual ~RuntimeError() override { }
-};
-
-class KALI_API ArgumentError : public Exception {
-public:
-    ArgumentError() noexcept { }
-    ArgumentError(const char* what)
-        : Exception(what)
-    {
-    }
-    ArgumentError(const std::string& what)
-        : Exception(what)
-    {
-    }
-
-    template<typename... Args>
-    explicit ArgumentError(fmt::format_string<Args...> fmt, Args&&... args)
-        : ArgumentError(fmt::format(fmt, std::forward<Args>(args)...).c_str())
-    {
-    }
-
-    ArgumentError(const ArgumentError& other) noexcept { m_what = other.m_what; }
-
-    virtual ~ArgumentError() override { }
-};
-
-KALI_DIAGNOSTIC_POP
-
+} // namespace detail
 } // namespace kali
 
 /// Helper for throwing exceptions.
 /// Logs the exception and a stack trace before throwing.
-#define KALI_THROW(exc)                                                                                                \
-    {                                                                                                                  \
-        report_exception(exc);                                                                                         \
-        throw exc;                                                                                                     \
+#define KALI_THROW(...) ::kali::detail::throw_exception(__FILE__, __LINE__, __VA_ARGS__);
+
+/// Helper for marking unimplemented functions.
+#define KALI_UNIMPLEMENTED() KALI_THROW("Unimplemented")
+
+/// Helper for marking unreachable code.
+#define KALI_UNREACHABLE() KALI_THROW("Unreachable")
+
+// -------------------------------------------------------------------------------------------------
+// Assertions
+// -------------------------------------------------------------------------------------------------
+
+namespace kali {
+
+/// Report a failed assertion.
+[[noreturn]] KALI_API void
+report_assertion(std::string_view file, int line, std::string_view cond, std::string_view msg = {});
+
+} // namespace kali
+
+#if KALI_ENABLE_ASSERTS
+
+#define KALI_ASSERT(cond)                                                                                              \
+    if (!(cond)) {                                                                                                     \
+        ::kali::report_assertion(__FILE__, __LINE__, #cond);                                                           \
     }
 
-#define KALI_UNIMPLEMENTED() KALI_THROW(kali::RuntimeError("Unimplemented"))
+#define KALI_ASSERT_MSG(cond, msg)                                                                                     \
+    if (!(cond)) {                                                                                                     \
+        ::kali::report_assertion(__FILE__, __LINE__, #cond, msg);                                                      \
+    }
 
-// TODO
-#define KALI_UNREACHABLE()
+#define KALI_ASSERT_OP(a, b, op)                                                                                       \
+    if (!((a)op(b))) {                                                                                                 \
+        ::kali::report_assertion(__FILE__, __LINE__, ::fmt::format("{} {} {} ({} {} {})", #a, #op, #b, a, #op, b));    \
+    }
+
+#else // KALI_ENABLE_ASSERTS
+
+#define KALI_ASSERT(a)                                                                                                 \
+    {                                                                                                                  \
+    }
+#define KALI_ASSERT_MSG(a, msg)                                                                                        \
+    {                                                                                                                  \
+    }
+#define KALI_ASSERT_OP(a, b, op)                                                                                       \
+    {                                                                                                                  \
+    }
+
+#endif // KALI_ENABLE_ASSERTS
+
+#define KALI_ASSERT_EQ(a, b) KALI_ASSERT_OP(a, b, ==)
+#define KALI_ASSERT_NE(a, b) KALI_ASSERT_OP(a, b, !=)
+#define KALI_ASSERT_GE(a, b) KALI_ASSERT_OP(a, b, >=)
+#define KALI_ASSERT_GT(a, b) KALI_ASSERT_OP(a, b, >)
+#define KALI_ASSERT_LE(a, b) KALI_ASSERT_OP(a, b, <=)
+#define KALI_ASSERT_LT(a, b) KALI_ASSERT_OP(a, b, <)
+
+// -------------------------------------------------------------------------------------------------
+// Slow assertions
+// -------------------------------------------------------------------------------------------------
+
+#if KALI_ENABLE_SLOW_ASSERTS
+
+#define KALI_SLOW_ASSERT(cond)                                                                                         \
+    if (!(cond)) {                                                                                                     \
+        ::kali::report_assertion(__FILE__, __LINE__, #cond);                                                           \
+    }
+
+#define KALI_SLOW_ASSERT_MSG(cond, msg)                                                                                \
+    if (!(cond)) {                                                                                                     \
+        ::kali::report_assertion(__FILE__, __LINE__, #cond, msg);                                                      \
+    }
+
+#define KALI_SLOW_ASSERT_OP(a, b, op)                                                                                  \
+    if (!((a)op(b))) {                                                                                                 \
+        ::kali::report_assertion(__FILE__, __LINE__, ::fmt::format("{} {} {} ({} {} {})", #a, #op, #b, a, #op, b));    \
+    }
+
+#else // KALI_ENABLE_SLOW_ASSERTS
+
+#define KALI_SLOW_ASSERT(cond)                                                                                         \
+    {                                                                                                                  \
+    }
+
+#define KALI_SLOW_ASSERT_MSG(cond, msg)                                                                                \
+    {                                                                                                                  \
+    }
+
+#define KALI_SLOW_ASSERT_OP(a, b, op)                                                                                  \
+    {                                                                                                                  \
+    }
+
+#endif // KALI_ENABLE_SLOW_ASSERTS
+
+#define KALI_SLOW_ASSERT_EQ(a, b) KALI_SLOW_ASSERT_OP(a, b, ==)
+#define KALI_SLOW_ASSERT_NE(a, b) KALI_SLOW_ASSERT_OP(a, b, !=)
+#define KALI_SLOW_ASSERT_GE(a, b) KALI_SLOW_ASSERT_OP(a, b, >=)
+#define KALI_SLOW_ASSERT_GT(a, b) KALI_SLOW_ASSERT_OP(a, b, >)
+#define KALI_SLOW_ASSERT_LE(a, b) KALI_SLOW_ASSERT_OP(a, b, <=)
+#define KALI_SLOW_ASSERT_LT(a, b) KALI_SLOW_ASSERT_OP(a, b, <)

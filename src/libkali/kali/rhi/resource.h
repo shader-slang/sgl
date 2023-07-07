@@ -14,6 +14,7 @@
 namespace kali {
 
 using DeviceAddress = uint64_t;
+using DeviceOffset = uint64_t;
 using DeviceSize = uint64_t;
 
 enum class ResourceType : uint32_t {
@@ -145,11 +146,6 @@ KALI_ENUM_INFO(
 );
 KALI_ENUM_REGISTER(MemoryType);
 
-struct MemoryRange {
-    uint64_t offset;
-    uint64_t size;
-};
-
 struct ResourceViewRange {
     static constexpr uint32_t MAX_POSSIBLE = 0xffffffff;
 
@@ -187,6 +183,35 @@ struct ResourceViewRange {
 };
 
 
+class KALI_API ResourceView : public Object {
+    KALI_OBJECT(ResourceView)
+public:
+    enum class Type {
+        unknown,
+        render_target,
+        depth_stencil,
+        shader_resource,
+        unordered_access,
+        acceleration_structure,
+    };
+
+    struct Desc {
+        Type type{Type::unknown};
+        Format format{Format::unknown};
+        ResourceViewRange range;
+    };
+
+    ResourceView(Desc desc)
+        : m_desc(std::move(desc))
+    {
+    }
+
+    Type get_type() const { return m_desc.type; }
+
+private:
+    Desc m_desc;
+};
+
 using MipLevel = uint32_t;
 using ArraySlice = uint32_t;
 
@@ -207,6 +232,11 @@ public:
     void set_debug_name(const char* name);
     const char* get_debug_name() const;
 
+    // ref<ResourceView> get_rtv() const;
+    // ref<ResourceView> get_dsv() const;
+    // ref<ResourceView> get_srv() const;
+    // ref<ResourceView> get_uav() const;
+
     virtual DeviceAddress get_device_address() const = 0;
     virtual gfx::IResource* get_gfx_resource() const = 0;
 
@@ -219,8 +249,10 @@ protected:
     ResourceType m_type;
     ref<Device> m_device;
 
+
     friend class CommandList;
 };
+
 
 struct BufferDesc {
     size_t size{0};                 ///< Buffer size in bytes.
@@ -266,17 +298,25 @@ public:
     size_t get_struct_size() const { return m_desc.struct_size; }
     Format get_format() const { return m_desc.format; }
 
-    DeviceAddress get_gpu_address_offset() const { return 0; }
-
-    void* map(std::optional<MemoryRange> read_range);
+    /// Map the whole buffer.
+    /// Only available for buffers created with MemoryType::upload or MemoryType::read_back.
+    void* map() const;
 
     template<typename T>
-    T* map(std::optional<MemoryRange> read_range)
+    T* map() const
     {
-        return reinterpret_cast<T*>(map(read_range));
+        return reinterpret_cast<T*>(map());
     }
 
-    void unmap(std::optional<MemoryRange> write_range);
+    /// Map a range of the buffer.
+    /// Only available for buffers created with MemoryType::upload or MemoryType::read_back.
+    void* map(DeviceOffset offset, DeviceSize size_in_bytes) const;
+
+    /// Unmap the buffer.
+    void unmap() const;
+
+    /// Returns true if buffer is currently mapped.
+    bool is_mapped() const { return m_mapped_ptr != nullptr; }
 
     virtual DeviceAddress get_device_address() const override { return m_gfx_buffer->getDeviceAddress(); }
     virtual gfx::IResource* get_gfx_resource() const override { return m_gfx_buffer; }
@@ -285,6 +325,8 @@ public:
 private:
     BufferDesc m_desc;
     Slang::ComPtr<gfx::IBufferResource> m_gfx_buffer;
+
+    mutable void* m_mapped_ptr{nullptr};
 };
 
 enum class TextureType : uint32_t {
@@ -310,16 +352,22 @@ KALI_ENUM_REGISTER(TextureType);
 struct TextureDesc {
     /// Texture type.
     TextureType type{TextureType::unknown};
-
-    uint32_t width{0};              ///< Width in pixels.
-    uint32_t height{0};             ///< Height in pixels (0 for 1D textures).
-    uint32_t depth{0};              ///< Depth in pixels (0 for 1D/2D textures).
-    uint32_t array_size{0};         ///< Number of array slices (0 for non-array textures).
-    uint32_t mip_count{0};          ///< Number of mip levels (0 for auto-generated mips).
-    Format format{Format::unknown}; ///< Texture format.
-
-    uint32_t sample_count{0}; ///< Number of samples per pixel (0 for non-multisampled textures).
-    uint32_t quality = 0;     ///< Quality level for multisampled textures.
+    /// Texture format.
+    Format format{Format::unknown};
+    /// Width in pixels.
+    uint32_t width{0};
+    /// Height in pixels (1 for 1D textures).
+    uint32_t height{1};
+    /// Depth in pixels (1for 1D/2D textures).
+    uint32_t depth{1};
+    /// Number of array slices (0 for non-array textures).
+    uint32_t array_size{0};
+    /// Number of mip levels (0 for auto-generated mips).
+    uint32_t mip_count{0};
+    /// Number of samples per pixel (0 for non-multisampled textures).
+    uint32_t sample_count{0};
+    /// Quality level for multisampled textures.
+    uint32_t quality{0};
 
     // TODO(@skallweit): support clear value
 

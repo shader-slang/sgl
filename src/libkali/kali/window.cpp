@@ -1,5 +1,4 @@
 #include "window.h"
-#include "kali/assert.h"
 #include "kali/error.h"
 
 #include <GLFW/glfw3.h>
@@ -25,7 +24,7 @@ namespace {
     {
         if (glfw_ref_count.fetch_add(1) == 0) {
             if (glfwInit() != GLFW_TRUE)
-                KALI_THROW(RuntimeError("Failed to initialize GLFW"));
+                KALI_THROW("Failed to initialize GLFW");
 
             // Register mappings for NV controllers.
             // clang-format off
@@ -362,7 +361,7 @@ Window::Window(WindowDesc desc)
 
     m_window = glfwCreateWindow(m_width, m_height, m_title.c_str(), NULL, NULL);
     if (!m_window)
-        KALI_THROW(RuntimeError("Failed to create GLFW window"));
+        KALI_THROW("Failed to create GLFW window");
 
     glfwSetWindowUserPointer(m_window, this);
     glfwSetErrorCallback(&EventHandlers::handle_error);

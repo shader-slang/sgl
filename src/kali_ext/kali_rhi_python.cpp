@@ -47,8 +47,6 @@ void register_kali_rhi(nb::module_& m)
 
     nb::kali_enum<MemoryType>(m, "MemoryType");
 
-    nb::class_<MemoryRange>(m, "MemoryRange").def_rw("offset", &MemoryRange::offset).def_rw("size", &MemoryRange::size);
-
     nb::class_<Resource, Object>(m, "Resource").def("device_address", &Resource::get_device_address);
 
     nb::class_<BufferDesc>(m, "BufferDesc")
@@ -227,30 +225,30 @@ void register_kali_rhi(nb::module_& m)
         "create_texture",
         [](Device* device,
            TextureType type,
+           Format format,
            uint32_t width,
            uint32_t height,
            uint32_t depth,
            uint32_t array_size,
-           uint32_t mip_count,
-           Format format)
+           uint32_t mip_count)
         {
             return device->create_texture(TextureDesc{
                 .type = type,
+                .format = format,
                 .width = width,
                 .height = height,
                 .depth = depth,
                 .array_size = array_size,
                 .mip_count = mip_count,
-                .format = format,
             });
         },
         "type"_a = TextureType::unknown,
-        "width"_a = 0,
-        "height"_a = 0,
-        "depth"_a = 0,
+        "format"_a = Format::unknown,
+        "width"_a = 1,
+        "height"_a = 1,
+        "depth"_a = 1,
         "array_size"_a = 0,
-        "mip_count"_a = 0,
-        "format"_a = Format::unknown
+        "mip_count"_a = 0
     );
     device.def(
         "create_sampler",

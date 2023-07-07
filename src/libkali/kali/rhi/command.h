@@ -67,8 +67,13 @@ public:
      * @param src_offset Source offset in bytes
      * @param size Size in bytes
      */
-    void
-    copy_buffer_region(const Buffer* dst, uint64_t dst_offset, const Buffer* src, uint64_t src_offset, uint64_t size);
+    void copy_buffer_region(
+        const Buffer* dst,
+        DeviceOffset dst_offset,
+        const Buffer* src,
+        DeviceOffset src_offset,
+        DeviceSize size
+    );
 
     void copy_texture_region(
         const Texture* dst,

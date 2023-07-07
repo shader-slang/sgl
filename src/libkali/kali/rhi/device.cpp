@@ -68,7 +68,7 @@ inline gfx::DeviceType get_gfx_device_type(DeviceType device_type)
     case DeviceType::cuda:
         return gfx::DeviceType::CUDA;
     }
-    KALI_THROW(RuntimeError("Invalid DeviceType"));
+    KALI_UNREACHABLE();
 }
 
 Device::Device(const DeviceDesc& desc)
@@ -92,7 +92,7 @@ Device::Device(const DeviceDesc& desc)
         .deviceType = get_gfx_device_type(m_type),
     };
     if (SLANG_FAILED(gfx::gfxCreateDevice(&gfx_desc, m_gfx_device.writeRef())))
-        KALI_THROW(RuntimeError("Failed to create device!"));
+        KALI_THROW("Failed to create device!");
 
     gfx::ICommandQueue::Desc queue_desc{
         .type = gfx::ICommandQueue::QueueType::Graphics,

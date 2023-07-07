@@ -4,25 +4,39 @@
 
 namespace kali {
 
-void report_fatal_error(const std::string& msg)
+void throw_exception(std::string_view file, int line, std::string_view msg)
 {
-    log_fatal(msg);
+    std::string error_msg = fmt::format("Exception: {}\nFile: {}:{}", msg, file, line);
 
-    std::exit(1);
+    bool debugger_present = is_debugger_present();
+
+    if (!debugger_present)
+        error_msg += "\nStack trace:\n" + format_stacktrace(backtrace());
+
+    log_fatal(error_msg);
+
+    if (debugger_present)
+        debug_break();
+
+    throw std::runtime_error(error_msg.c_str());
 }
 
-void report_exception(const Exception& exception)
+void report_assertion(std::string_view file, int line, std::string_view cond, std::string_view msg)
 {
-    log_error(
-        "Throwing exception: {}\n\nStacktrace:\n{}",
-        exception.what(),
-        kali::format_stacktrace(kali::backtrace(1))
-    );
-}
+    std::string error_msg = msg.empty() ? fmt::format("Assertion failed: {}\nFile: {}:{}", cond, file, line)
+                                        : fmt::format("Assertion failed: {} {}\nFile: {}:{}", cond, msg, file, line);
 
-Exception::Exception(const char* what)
-    : m_what(std::make_shared<std::string>(what))
-{
+    bool debugger_present = is_debugger_present();
+
+    if (!debugger_present)
+        error_msg += "\nStack trace:\n" + format_stacktrace(backtrace());
+
+    log_fatal(error_msg);
+
+    if (debugger_present)
+        debug_break();
+
+    throw std::runtime_error(error_msg.c_str());
 }
 
 } // namespace kali

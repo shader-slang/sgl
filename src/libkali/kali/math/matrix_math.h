@@ -9,7 +9,7 @@
 #include "kali/math/matrix_types.h"
 #include "kali/math/vector.h"
 #include "kali/math/quaternion.h"
-#include "kali/assert.h"
+#include "kali/error.h"
 #include "kali/format.h"
 
 namespace kali::math {

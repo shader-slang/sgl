@@ -11,7 +11,7 @@ R narrow_cast(T value)
 {
     // TODO(@skallweit): add better error reporting with source_lcation?
     if (!std::in_range<R>(value))
-        KALI_THROW(RuntimeError("narrow_cast failed"));
+        KALI_THROW("narrow_cast failed");
     return static_cast<R>(value);
 }
 

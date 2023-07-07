@@ -1,6 +1,7 @@
 #pragma once
 
 #include "kali/math/scalar_types.h"
+#include "kali/error.h"
 
 namespace kali::math {
 
@@ -47,8 +48,17 @@ struct vector<T, 1> {
     constexpr vector(const vector<U, 1>& other) noexcept
         : x{T(other.x)} {};
 
-    [[nodiscard]] constexpr T& operator[](int index) noexcept { return (&(this->x))[index]; }
-    [[nodiscard]] constexpr const T& operator[](int index) const noexcept { return (&(this->x))[index]; }
+    [[nodiscard]] constexpr T& operator[](int index) noexcept
+    {
+        KALI_SLOW_ASSERT_LT(index, dimension);
+        return (&(this->x))[index];
+    }
+
+    [[nodiscard]] constexpr const T& operator[](int index) const noexcept
+    {
+        KALI_SLOW_ASSERT_LT(index, dimension);
+        return (&(this->x))[index];
+    }
 
     [[nodiscard]] static constexpr int length() noexcept { return dimension; }
 };
@@ -91,8 +101,17 @@ struct vector<T, 2> {
         : x{T(other.x)}
         , y{T(other.y)} {};
 
-    [[nodiscard]] constexpr T& operator[](int index) noexcept { return (&(this->x))[index]; }
-    [[nodiscard]] constexpr const T& operator[](int index) const noexcept { return (&(this->x))[index]; }
+    [[nodiscard]] constexpr T& operator[](int index) noexcept
+    {
+        KALI_SLOW_ASSERT_LT(index, dimension);
+        return (&(this->x))[index];
+    }
+
+    [[nodiscard]] constexpr const T& operator[](int index) const noexcept
+    {
+        KALI_SLOW_ASSERT_LT(index, dimension);
+        return (&(this->x))[index];
+    }
 
     [[nodiscard]] static constexpr int length() noexcept { return dimension; }
 
@@ -142,8 +161,17 @@ struct vector<T, 3> {
         , y{T(other.y)}
         , z{T(other.z)} {};
 
-    [[nodiscard]] constexpr T& operator[](int index) noexcept { return (&(this->x))[index]; }
-    [[nodiscard]] constexpr const T& operator[](int index) const noexcept { return (&(this->x))[index]; }
+    [[nodiscard]] constexpr T& operator[](int index) noexcept
+    {
+        KALI_SLOW_ASSERT_LT(index, dimension);
+        return (&(this->x))[index];
+    }
+
+    [[nodiscard]] constexpr const T& operator[](int index) const noexcept
+    {
+        KALI_SLOW_ASSERT_LT(index, dimension);
+        return (&(this->x))[index];
+    }
 
     [[nodiscard]] static constexpr int length() noexcept { return dimension; }
 
@@ -202,8 +230,17 @@ struct vector<T, 4> {
         , z{T(other.z)}
         , w{T(other.w)} {};
 
-    [[nodiscard]] constexpr T& operator[](int index) noexcept { return (&(this->x))[index]; }
-    [[nodiscard]] constexpr const T& operator[](int index) const noexcept { return (&(this->x))[index]; }
+    [[nodiscard]] constexpr T& operator[](int index) noexcept
+    {
+        KALI_SLOW_ASSERT_LT(index, dimension);
+        return (&(this->x))[index];
+    }
+
+    [[nodiscard]] constexpr const T& operator[](int index) const noexcept
+    {
+        KALI_SLOW_ASSERT_LT(index, dimension);
+        return (&(this->x))[index];
+    }
 
     [[nodiscard]] static constexpr int length() noexcept { return dimension; }
 

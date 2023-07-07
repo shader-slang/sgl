@@ -35,7 +35,7 @@ inline const std::string& enum_to_string(T value)
     const auto& items = EnumInfo<T>::items();
     auto it = std::find_if(items.begin(), items.end(), [value](const auto& item) { return item.first == value; });
     if (it == items.end())
-        KALI_THROW(RuntimeError("Invalid enum value {}", int(value)));
+        KALI_THROW("Invalid enum value {}", int(value));
     return it->second;
 }
 
@@ -49,7 +49,7 @@ inline T string_to_enum(std::string_view name)
     const auto& items = EnumInfo<T>::items();
     auto it = std::find_if(items.begin(), items.end(), [name](const auto& item) { return item.second == name; });
     if (it == items.end())
-        KALI_THROW(RuntimeError("Invalid enum name '{}'", name));
+        KALI_THROW("Invalid enum name '{}'", name);
     return it->first;
 }
 
@@ -80,7 +80,7 @@ inline std::vector<std::string> flags_to_string_list(T flags)
         }
     }
     if (flags != T(0))
-        KALI_THROW(RuntimeError("Invalid enum flags value {}", int(flags)));
+        KALI_THROW("Invalid enum flags value {}", int(flags));
     return list;
 }
 

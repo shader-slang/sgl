@@ -2,7 +2,7 @@
 
 #include "kali/rhi/device.h"
 
-#include "kali/assert.h"
+#include "kali/error.h"
 #include "kali/type_utils.h"
 #include "kali/resolver.h"
 

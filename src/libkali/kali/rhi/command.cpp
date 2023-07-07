@@ -4,7 +4,6 @@
 #include "kali/rhi/formats.h"
 #include "kali/rhi/helpers.h"
 
-#include "kali/assert.h"
 #include "kali/error.h"
 #include "kali/maths.h"
 #include "kali/type_utils.h"
@@ -124,10 +123,10 @@ void CommandList::copy_resource(const Resource* dst, const Resource* src)
 
 void CommandList::copy_buffer_region(
     const Buffer* dst,
-    uint64_t dst_offset,
+    DeviceOffset dst_offset,
     const Buffer* src,
-    uint64_t src_offset,
-    uint64_t size
+    DeviceOffset src_offset,
+    DeviceSize size
 )
 {
     // TODO(@skallweit): check for overlapping copies within same buffer?
@@ -140,13 +139,7 @@ void CommandList::copy_buffer_region(
     buffer_barrier(src, ResourceState::copy_source);
 
     auto encoder = get_gfx_resource_command_encoder();
-    encoder->copyBuffer(
-        dst->get_gfx_buffer_resource(),
-        dst->get_gpu_address_offset() + dst_offset,
-        src->get_gfx_buffer_resource(),
-        src->get_gpu_address_offset() + src_offset,
-        size
-    );
+    encoder->copyBuffer(dst->get_gfx_buffer_resource(), dst_offset, src->get_gfx_buffer_resource(), src_offset, size);
     mark_pending();
 }
 

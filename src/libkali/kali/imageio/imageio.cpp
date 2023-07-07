@@ -1,7 +1,7 @@
 #include "imageio.h"
 
 #include "kali/macros.h"
-#include "kali/assert.h"
+#include "kali/error.h"
 #include "kali/string_utils.h"
 #include "kali/type_utils.h"
 #include "kali/memory_mapped_file.h"

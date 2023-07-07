@@ -3,7 +3,6 @@
 #include "kali/rhi/device.h"
 #include "kali/rhi/helpers.h"
 
-#include "kali/assert.h"
 #include "kali/error.h"
 
 namespace kali {
@@ -110,14 +109,6 @@ inline gfx::MemoryType get_gfx_memory_type(MemoryType memory_type)
     return gfx::MemoryType(memory_type);
 }
 
-inline gfx::MemoryRange get_gfx_memory_range(MemoryRange memory_range)
-{
-    return gfx::MemoryRange{
-        .offset = memory_range.offset,
-        .size = memory_range.size,
-    };
-}
-
 // ----------------------------------------------------------------------------
 // Resource
 // ----------------------------------------------------------------------------
@@ -167,26 +158,32 @@ Buffer::Buffer(const BufferDesc& desc, const void* init_data, ref<Device> device
     SLANG_CALL(m_device->get_gfx_device()->createBufferResource(gfx_desc, init_data, m_gfx_buffer.writeRef()));
 }
 
-void* Buffer::map(std::optional<MemoryRange> read_range)
+void* Buffer::map() const
 {
     KALI_ASSERT(m_desc.memory_type != MemoryType::device_local);
-
-    gfx::MemoryRange gfx_read_range;
-    if (read_range)
-        gfx_read_range = get_gfx_memory_range(*read_range);
-    void* ptr;
-    SLANG_CALL(m_gfx_buffer->map(read_range ? &gfx_read_range : nullptr, &ptr));
-    return ptr;
+    KALI_ASSERT(m_mapped_ptr == nullptr);
+    SLANG_CALL(m_gfx_buffer->map(nullptr, &m_mapped_ptr));
+    return m_mapped_ptr;
 }
 
-void Buffer::unmap(std::optional<MemoryRange> write_range)
+void* Buffer::map(DeviceAddress offset, DeviceSize size_in_bytes) const
 {
     KALI_ASSERT(m_desc.memory_type != MemoryType::device_local);
+    KALI_ASSERT(m_mapped_ptr == nullptr);
+    gfx::MemoryRange gfx_read_range{
+        .offset = offset,
+        .size = size_in_bytes,
+    };
+    SLANG_CALL(m_gfx_buffer->map(&gfx_read_range, &m_mapped_ptr));
+    return m_mapped_ptr;
+}
 
-    gfx::MemoryRange gfx_write_range;
-    if (write_range)
-        gfx_write_range = get_gfx_memory_range(*write_range);
-    SLANG_CALL(m_gfx_buffer->unmap(write_range ? &gfx_write_range : nullptr));
+void Buffer::unmap() const
+{
+    KALI_ASSERT(m_desc.memory_type != MemoryType::device_local);
+    KALI_ASSERT(m_mapped_ptr != nullptr);
+    SLANG_CALL(m_gfx_buffer->unmap(nullptr));
+    m_mapped_ptr = nullptr;
 }
 
 // ----------------------------------------------------------------------------

@@ -8,5 +8,5 @@
     {                                                                                                                  \
         SlangResult result_ = call;                                                                                    \
         if (SLANG_FAILED(result_))                                                                                     \
-            KALI_THROW(RuntimeError("Slang call {} failed with error: {}", #call, result_));                           \
+            KALI_THROW("Slang call {} failed with error: {}", #call, result_);                                         \
     }

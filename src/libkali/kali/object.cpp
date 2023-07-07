@@ -1,7 +1,7 @@
 #include "object.h"
 
 #if KALI_ENABLE_OBJECT_TRACKING
-#include "kali/assert.h"
+#include "kali/error.h"
 #include "kali/logger.h"
 #include <set>
 #include <mutex>

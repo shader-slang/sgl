@@ -69,7 +69,7 @@ std::filesystem::path get_temp_file_path()
     char* name = std::tmpnam(nullptr);
     KALI_DIAGNOSTIC_POP
     if (name == nullptr)
-        KALI_THROW(RuntimeError("Failed to create temporary file path."));
+        KALI_THROW("Failed to create temporary file path.");
     return name;
 }
 

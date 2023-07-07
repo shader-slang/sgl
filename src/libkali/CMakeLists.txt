@@ -7,7 +7,6 @@ add_library(kali SHARED)
 target_sources(kali PRIVATE
     kali/kali.natvis
 
-    kali/assert.h
     kali/cpu_timer.cpp
     kali/cpu_timer.h
     kali/enum.h

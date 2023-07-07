@@ -2,7 +2,6 @@
 
 #if KALI_WINDOWS
 
-#include "kali/assert.h"
 #include "kali/error.h"
 #include "kali/format.h"
 #include "kali/string_utils.h"
@@ -26,7 +25,7 @@
     {                                                                                                                  \
         auto result_ = a;                                                                                              \
         if (FAILED(result_))                                                                                           \
-            KALI_THROW(RuntimeError("Windows API call failed: {} (result={})", #a, int(result_)));                     \
+            KALI_THROW("Windows API call failed: {} (result={})", #a, int(result_));                                   \
     }
 
 namespace kali {
@@ -59,7 +58,7 @@ void set_window_icon(WindowHandle handle, const std::filesystem::path& path)
 {
     HANDLE hicon = LoadImageW(GetModuleHandleW(NULL), path.c_str(), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_LOADFROMFILE);
     if (!hicon)
-        throw RuntimeError("Failed to load icon from '{}'.", path);
+        KALI_THROW("Failed to load icon from '{}'.", path);
     HWND hwnd = handle ? static_cast<HWND>(handle) : GetActiveWindow();
     SendMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM)hicon);
 }
@@ -97,10 +96,10 @@ void set_keyboard_interrupt_handler(std::function<void()> handler)
 
     if (handler && !data.handler) {
         if (SetConsoleCtrlHandler(console_ctrl_handler, TRUE) == 0)
-            KALI_THROW(RuntimeError("Failed to register keyboard interrupt handler"));
+            KALI_THROW("Failed to register keyboard interrupt handler");
     } else if (!handler && data.handler) {
         if (SetConsoleCtrlHandler(console_ctrl_handler, FALSE) == 0)
-            KALI_THROW(RuntimeError("Failed to unregister keyboard interrupt handler"));
+            KALI_THROW("Failed to unregister keyboard interrupt handler");
     }
     data.handler = handler;
 }
@@ -364,7 +363,7 @@ const std::filesystem::path& get_executable_path()
         {
             CHAR path_str[1024];
             if (GetModuleFileNameA(nullptr, path_str, ARRAYSIZE(path_str)) == 0)
-                KALI_THROW(RuntimeError("Failed to get the executable path."));
+                KALI_THROW("Failed to get the executable path.");
             return std::filesystem::path(path_str);
         }()
     );
@@ -383,16 +382,13 @@ const std::filesystem::path& get_runtime_directory()
                     &hm
                 )
                 == 0)
-                KALI_THROW(RuntimeError(
-                    "Failed to get the falcor directory. GetModuleHandle failed, error = {}.",
-                    GetLastError()
-                ));
+                KALI_THROW("Failed to get the falcor directory. GetModuleHandle failed, error = {}.", GetLastError());
             CHAR path_str[1024];
             if (GetModuleFileNameA(hm, path_str, sizeof(path_str)) == 0)
-                KALI_THROW(RuntimeError(
+                KALI_THROW(
                     "Failed to get the falcor directory. GetModuleFileNameA failed, error = {}.",
                     GetLastError()
-                ));
+                );
             return std::filesystem::path(path_str).parent_path();
         }()
     );
@@ -406,7 +402,7 @@ const std::filesystem::path& get_app_data_directory()
         {
             PWSTR path_str;
             if (!SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, NULL, &path_str)))
-                KALI_THROW(RuntimeError("Failed to get the application data directory."));
+                KALI_THROW("Failed to get the application data directory.");
             return std::filesystem::path(path_str);
         }()
     );
