@@ -93,6 +93,7 @@ target_compile_options(kali
             /W4                             # increase warning level
             /wd4251                         # 'type' : class 'type1' needs to have dll-interface to be used by clients of class 'type2'
             /wd4201                         # nonstandard extension used: nameless struct/union
+            /wd4189                         # local variable is initialized but not referenced
         >
         # Clang/GCC flags.
         $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:
@@ -176,8 +177,10 @@ target_compile_definitions(kali
         # $<$<CXX_COMPILER_ID:MSVC>:_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING>
         # Clang.
         $<$<CXX_COMPILER_ID:Clang>:_MSC_EXTENSIONS> # enable MS extensions
-        # Settings flags.
-        KALI_ENABLE_ASSERTS=$<BOOL:${KALI_ENABLE_ASSERTS}>
+        # Always enable asserts unless KALI_DISABLE_ASSERTS is set.
+        KALI_ENABLE_ASSERTS=$<NOT:$<BOOL:${KALI_DISABLE_ASSERTS}>>
+        # Enable slow asserts in Debug build unless KALI_DISABLE_SLOW_ASSERTS is set.
+        KALI_ENABLE_SLOW_ASSERTS=$<AND:$<CONFIG:Debug>,$<NOT:$<BOOL:${KALI_DISABLE_SLOW_ASSERTS}>>>
         # Feature flags.
         KALI_HAS_D3D12=$<BOOL:${KALI_HAS_D3D12}>
         KALI_HAS_VULKAN=$<BOOL:${KALI_HAS_VULKAN}>

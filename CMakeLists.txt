@@ -12,8 +12,15 @@ enable_testing()
 # Configuration
 # -----------------------------------------------------------------------------
 
-# Enable/disable asserts.
-set(KALI_ENABLE_ASSERTS ON CACHE BOOL "Enable asserts")
+# Disable asserts.
+# By default, asserts are enabled in both debug and release builds.
+# This option can be used to override the default behavior.
+set(KALI_DISABLE_ASSERTS OFF CACHE BOOL "Disable asserts")
+
+# Disable slow asserts.
+# By default, slow asserts are enabled in debug builds and disabled in release builds.
+# This option can be used to override the default behavior.
+set(KALI_DISABLE_SLOW_ASSERTS OFF CACHE BOOL "Disable slow asserts")
 
 # Enable/disable precompiled headers.
 set(KALI_ENABLE_PCH OFF CACHE BOOL "Enable precompiled headers")
