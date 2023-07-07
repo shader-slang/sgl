@@ -97,6 +97,44 @@ inline T string_list_to_flags(const std::vector<std::string>& list)
     return flags;
 }
 
+namespace detail {
+
+    /// Format an enum value.
+    /// First, we check for a single value and return "name::value" if it succeeds.
+    /// Otherwise, we check for flags and return "name::(value1 | value2 | ...)".
+    /// Any bits that are not found in the enum information are formatted as hex.
+    template<typename T, std::enable_if_t<has_enum_info_v<T>, bool> = true>
+    inline std::string format_enum(T value)
+    {
+        const std::string& name = EnumInfo<T>::name();
+        const auto& items = EnumInfo<T>::items();
+        // Check for single value.
+        for (const auto& item : items)
+            if (item.first == value)
+                return {fmt::format("{}::{}", name, item.second)};
+        // Check for flags.
+        std::string str = name + "::(";
+        uint64_t bits = uint64_t(value);
+        bool first = true;
+        for (const auto& item : items) {
+            if (bits & uint64_t(item.first)) {
+                if (!first)
+                    str += " | ";
+                str += item.second;
+                bits &= ~uint64_t(item.first);
+                first = false;
+            }
+        }
+        if (bits != 0) {
+            if (!first)
+                str += " | ";
+            str += fmt::format("0x{:x}", bits);
+        }
+        str += ")";
+        return str;
+    }
+
+} // namespace detail
 } // namespace kali
 
 /**
@@ -111,6 +149,11 @@ inline T string_list_to_flags(const std::vector<std::string>& list)
  */
 #define KALI_ENUM_INFO(T, ...)                                                                                         \
     struct T##_info {                                                                                                  \
+        static const std::string& name()                                                                               \
+        {                                                                                                              \
+            static const std::string name = #T;                                                                        \
+            return name;                                                                                               \
+        }                                                                                                              \
         static std::span<std::pair<T, std::string>> items()                                                            \
         {                                                                                                              \
             static std::pair<T, std::string> items[] = __VA_ARGS__;                                                    \
@@ -150,6 +193,6 @@ struct fmt::formatter<T, std::enable_if_t<kali::has_enum_info_v<T>, char>> : for
     template<typename FormatContext>
     auto format(const T& e, FormatContext& ctx)
     {
-        return formatter<std::string>::format(kali::enum_to_string(e), ctx);
+        return formatter<std::string>::format(kali::detail::format_enum(e), ctx);
     }
 };
