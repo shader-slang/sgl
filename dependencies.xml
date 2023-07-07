@@ -23,4 +23,7 @@
     <dependency name="dxcompiler" linkPath="external/dxcompiler">
         <package name="dxcompiler" version="1.7.2207" platforms="windows-x86_64" />
     </dependency>
+    <dependency name="agility-sdk" linkPath="external/agility-sdk">
+        <package name="agility-sdk" version="1.4.10" platforms="windows-x86_64"/>
+    </dependency>
 </project>

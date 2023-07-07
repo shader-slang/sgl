@@ -225,8 +225,10 @@ kali_header_validation(kali)
 
 # TODO: Move this to the main CMakeLists.txt, requires to not be based on kali target.
 # Copy binary files.
-get_property(binary_files GLOBAL PROPERTY KALI_BINARY_FILES)
+get_property(binary_files_src GLOBAL PROPERTY KALI_BINARY_FILES_SRC)
+get_property(binary_files_dst GLOBAL PROPERTY KALI_BINARY_FILES_DST)
 
-foreach(file ${binary_files})
-    add_custom_command(TARGET kali POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${file} ${KALI_OUTPUT_DIRECTORY}/)
+foreach(file IN ZIP_LISTS binary_files_src binary_files_dst)
+    # if dst is directory create it
+    add_custom_command(TARGET kali POST_BUILD COMMAND ${CMAKE_COMMAND} -E make_directory ${file_1} COMMAND ${CMAKE_COMMAND} -E copy_if_different ${file_0} ${file_1}/)
 endforeach()

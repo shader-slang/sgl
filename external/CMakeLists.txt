@@ -61,9 +61,9 @@ if(KALI_WINDOWS)
         IMPORTED_IMPLIB ${SLANG_DIR}/bin/windows-x64/${KALI_SLANG_CONFIG}/gfx.lib
         IMPORTED_LOCATION ${SLANG_DIR}/bin/windows-x64/${KALI_SLANG_CONFIG}/gfx.dll
     )
-    kali_copy_binary(${SLANG_DIR}/bin/windows-x64/${KALI_SLANG_CONFIG}/slang-glslang.dll)
-    kali_copy_binary(${SLANG_DIR}/bin/windows-x64/${KALI_SLANG_CONFIG}/slang-llvm.dll)
-    kali_copy_binary(${SLANG_DIR}/bin/windows-x64/${KALI_SLANG_CONFIG}/slang-rt.dll)
+    kali_copy_binary(${SLANG_DIR}/bin/windows-x64/${KALI_SLANG_CONFIG}/slang-glslang.dll .)
+    kali_copy_binary(${SLANG_DIR}/bin/windows-x64/${KALI_SLANG_CONFIG}/slang-llvm.dll .)
+    kali_copy_binary(${SLANG_DIR}/bin/windows-x64/${KALI_SLANG_CONFIG}/slang-rt.dll .)
 elseif(KALI_LINUX)
     add_library(slang-gfx SHARED IMPORTED GLOBAL)
     set_target_properties(slang-gfx PROPERTIES
@@ -77,6 +77,19 @@ kali_copy_library(slang-gfx)
 
 set(DXCOMPILER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/dxcompiler)
 if(KALI_WINDOWS)
-    kali_copy_binary(${DXCOMPILER_DIR}/bin/x64/dxcompiler.dll)
-    kali_copy_binary(${DXCOMPILER_DIR}/bin/x64/dxil.dll)
+    kali_copy_binary(${DXCOMPILER_DIR}/bin/x64/dxcompiler.dll .)
+    kali_copy_binary(${DXCOMPILER_DIR}/bin/x64/dxil.dll .)
+endif()
+
+# agility-sdk
+
+set(AGILITY_SDK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/agility-sdk)
+if(EXISTS ${AGILITY_SDK_DIR}/build/native/include/d3d12.h)
+    add_library(agility-sdk INTERFACE)
+    target_include_directories(agility-sdk INTERFACE ${AGILITY_SDK_DIR}/build/native/include)
+    kali_copy_binary(${AGILITY_SDK_DIR}/build/native/bin/x64/D3D12Core.dll D3D12)
+    kali_copy_binary(${AGILITY_SDK_DIR}/build/native/bin/x64/d3d12SDKLayers.dll D3D12)
+    set(KALI_HAS_AGILITY_SDK ON PARENT_SCOPE)
+else()
+    set(KALI_HAS_AGILITY_SDK OFF PARENT_SCOPE)
 endif()

@@ -170,18 +170,23 @@ endfunction()
 # Binary files
 # -----------------------------------------------------------------------------
 
-set_property(GLOBAL PROPERTY KALI_BINARY_FILES "")
+set_property(GLOBAL PROPERTY KALI_BINARY_FILES_SRC "")
+set_property(GLOBAL PROPERTY KALI_BINARY_FILES_DST "")
 
-function(kali_copy_binary src)
-    message(STATUS "Copying binary file: ${src}")
-    get_property(binary_files GLOBAL PROPERTY KALI_BINARY_FILES)
-    list(APPEND binary_files ${src})
-    set_property(GLOBAL PROPERTY KALI_BINARY_FILES ${binary_files})
+function(kali_copy_binary src dst_dir)
+    message(STATUS "Copying binary file ${src} to ${dst_dir}")
+    set(dst ${KALI_OUTPUT_DIRECTORY}/${dst_dir})
+    get_property(binary_files_src GLOBAL PROPERTY KALI_BINARY_FILES_SRC)
+    get_property(binary_files_dst GLOBAL PROPERTY KALI_BINARY_FILES_DST)
+    list(APPEND binary_files_src ${src})
+    list(APPEND binary_files_dst ${dst})
+    set_property(GLOBAL PROPERTY KALI_BINARY_FILES_SRC ${binary_files_src})
+    set_property(GLOBAL PROPERTY KALI_BINARY_FILES_DST ${binary_files_dst})
 endfunction()
 
 function(kali_copy_library target)
     get_property(src TARGET ${target} PROPERTY IMPORTED_LOCATION)
-    kali_copy_binary(${src})
+    kali_copy_binary(${src} .)
 endfunction()
 
 # -----------------------------------------------------------------------------
@@ -193,6 +198,7 @@ add_subdirectory(external)
 message(STATUS "Feature flags:")
 message(STATUS "KALI_HAS_D3D12: ${KALI_HAS_D3D12}")
 message(STATUS "KALI_HAS_VULKAN: ${KALI_HAS_VULKAN}")
+message(STATUS "KALI_HAS_AGILITY_SDK: ${KALI_HAS_AGILITY_SDK}")
 
 add_subdirectory(src/libkali)
 add_subdirectory(src/kali_tests)

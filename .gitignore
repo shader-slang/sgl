@@ -1,6 +1,7 @@
 build/
 external/slang
 external/dxcompiler
+external/agility-sdk
 tools/*
 !tools/packman/
 .vscode/
