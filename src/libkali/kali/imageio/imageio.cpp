@@ -356,8 +356,7 @@ public:
             pixel_type = TINYEXR_PIXELTYPE_HALF;
             break;
         default:
-            KALI_ASSERT(false);
-            break;
+            KALI_THROW("Unsupported component type");
         }
 
         KALI_UNUSED(buffer);
@@ -403,8 +402,7 @@ public:
             }
             break;
         default:
-            KALI_ASSERT(false);
-            break;
+            KALI_THROW("Unsupported component type");
         }
 
         // Setup channel infos.
