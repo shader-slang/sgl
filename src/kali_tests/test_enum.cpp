@@ -80,12 +80,7 @@ TEST_CASE("string_to_enum")
     CHECK(string_to_enum<TestStruct::TestEnum>("Y") == TestStruct::TestEnum::Y);
 
     // Converting unregistered strings throws.
-    try {
-        string_to_enum<TestEnum>("D");
-        CHECK(false);
-    } catch (const std::exception&) {
-        CHECK(true);
-    }
+    CHECK_THROWS(string_to_enum<TestEnum>("D"));
 }
 
 TEST_CASE("enum_to_string")
@@ -99,12 +94,7 @@ TEST_CASE("enum_to_string")
     CHECK(enum_to_string(TestStruct::TestEnum::Y) == "Y");
 
     // Converting unregistered values throws.
-    try {
-        enum_to_string(TestEnum(-1));
-        CHECK(false);
-    } catch (const std::exception&) {
-        CHECK(true);
-    }
+    CHECK_THROWS(enum_to_string(TestEnum(-1)));
 }
 
 TEST_CASE("enum_has_value")
@@ -125,12 +115,7 @@ TEST_CASE("flags_to_string_list")
     );
 
     // Converting unregistered values throws.
-    try {
-        flags_to_string_list(TestFlags(-1));
-        CHECK(false);
-    } catch (const std::runtime_error&) {
-        CHECK(true);
-    }
+    CHECK_THROWS(flags_to_string_list(TestFlags(-1)));
 }
 
 TEST_CASE("string_list_to_flags")
@@ -142,12 +127,7 @@ TEST_CASE("string_list_to_flags")
     CHECK(string_list_to_flags<TestFlags>({"A", "B", "C"}) == (TestFlags::A | TestFlags::B | TestFlags::C));
 
     // Converting unregistered strings throws.
-    try {
-        string_list_to_flags<TestFlags>({"D"});
-        CHECK(false);
-    } catch (const std::runtime_error&) {
-        CHECK(true);
-    }
+    CHECK_THROWS(string_list_to_flags<TestFlags>({"D"}));
 }
 
 } // namespace kali
