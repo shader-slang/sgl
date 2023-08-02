@@ -1,3 +1,5 @@
+#pragma once
+
 #include "kali/stream.h"
 
 namespace kali {
@@ -48,7 +50,7 @@ public:
     /// Return the underlying raw buffer.
     const uint8_t* data() const { return m_data; }
 
-private:
+protected:
     void resize(size_t new_size);
 
     /// Current capacity of the underlying buffer.

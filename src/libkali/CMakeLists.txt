@@ -21,6 +21,8 @@ target_sources(kali PRIVATE
     kali/logger.h
     kali/macros.h
     kali/maths.h
+    kali/memory_mapped_file_stream.cpp
+    kali/memory_mapped_file_stream.h
     kali/memory_mapped_file.cpp
     kali/memory_mapped_file.h
     kali/memory_stream.cpp

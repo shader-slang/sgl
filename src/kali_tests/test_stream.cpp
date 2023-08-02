@@ -1,6 +1,7 @@
 #include "testing.h"
 #include "kali/memory_stream.h"
 #include "kali/file_stream.h"
+#include "kali/memory_mapped_file_stream.h"
 
 #include <cstring>
 #include <fstream>
@@ -235,6 +236,54 @@ TEST_CASE("FileStream")
         CHECK(std::memcmp(buffer, "5678abcdefgh", 12) == 0);
 
         CHECK_EQ(stream.tell(), 16);
+
+        stream.close();
+        CHECK_FALSE(stream.is_open());
+    }
+}
+
+TEST_CASE("MemoryMappedFileStream")
+{
+    char buffer[16];
+
+    SUBCASE("read")
+    {
+        std::ofstream file("memory_mapped_file_stream_read.bin", std::ios::binary);
+        file.write("12345678abcdefgh", 16);
+        file.close();
+
+        MemoryMappedFileStream stream("memory_mapped_file_stream_read.bin");
+        CHECK_EQ(stream.path(), "memory_mapped_file_stream_read.bin");
+        CHECK(stream.is_open());
+        CHECK(stream.is_readable());
+        CHECK_FALSE(stream.is_writable());
+        CHECK_EQ(stream.tell(), 0);
+        CHECK_EQ(stream.size(), 16);
+
+        CHECK_THROWS(stream.write("12345678", 8));
+        CHECK_THROWS(stream.truncate(1));
+
+        char buffer[16];
+        stream.read(buffer, 8);
+        CHECK(std::memcmp(buffer, "12345678", 8) == 0);
+        CHECK_EQ(stream.tell(), 8);
+
+        stream.seek(0);
+        CHECK_EQ(stream.tell(), 0);
+
+        stream.read(buffer, 8);
+        CHECK(std::memcmp(buffer, "12345678", 8) == 0);
+        CHECK_EQ(stream.tell(), 8);
+
+        stream.seek(4);
+        CHECK_EQ(stream.tell(), 4);
+
+        stream.read(buffer, 12);
+        CHECK(std::memcmp(buffer, "5678abcdefgh", 12) == 0);
+
+        CHECK_EQ(stream.tell(), 16);
+
+        CHECK_THROWS(stream.read(buffer, 1));
 
         stream.close();
         CHECK_FALSE(stream.is_open());
