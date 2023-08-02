@@ -196,6 +196,10 @@ TEST_CASE("PluginManager")
 
         CHECK_EQ(plugin_b2->get_plugin_type(), "PluginB2");
         CHECK_EQ(plugin_b2->get_plugin_info().sequence, std::vector<int>({2, 4, 8, 16}));
+
+        delete plugin_b1;
+        delete plugin_b2;
+        delete plugin_b3;
     }
 }
 

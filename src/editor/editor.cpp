@@ -11,14 +11,6 @@
 
 using namespace kali;
 
-namespace nested {
-
-struct Test {
-    static void test() { std::cout << format_stacktrace(backtrace()); }
-};
-
-} // namespace nested
-
 int main()
 {
     init_platform();
@@ -34,9 +26,7 @@ int main()
     log_error_once("just a test");
     log_error_once("just a test");
 
-    log_info("{}", to_string(uint4(1, 2, 3, 4)));
-
-    nested::Test::test();
+    log_info("{}", uint4(1, 2, 3, 4));
 
     ref<Window> window = Window::create({.width = 1024, .height = 1024, .title = "Kali Editor"});
 
