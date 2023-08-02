@@ -174,6 +174,30 @@ void register_kali_rhi(nb::module_& m)
 
     nb::kali_enum<DeviceType>(m, "DeviceType");
 
+    nb::class_<DeviceLimits>(m, "DeviceLimits")
+        .def_ro("max_texture_dimension_1d", &DeviceLimits::max_texture_dimension_1d)
+        .def_ro("max_texture_dimension_2d", &DeviceLimits::max_texture_dimension_2d)
+        .def_ro("max_texture_dimension_3d", &DeviceLimits::max_texture_dimension_3d)
+        .def_ro("max_texture_dimension_cube", &DeviceLimits::max_texture_dimension_cube)
+        .def_ro("max_texture_array_layers", &DeviceLimits::max_texture_array_layers)
+        .def_ro("max_vertex_input_elements", &DeviceLimits::max_vertex_input_elements)
+        .def_ro("max_vertex_input_element_offset", &DeviceLimits::max_vertex_input_element_offset)
+        .def_ro("max_vertex_streams", &DeviceLimits::max_vertex_streams)
+        .def_ro("max_vertex_stream_stride", &DeviceLimits::max_vertex_stream_stride)
+        .def_ro("max_compute_threads_per_group", &DeviceLimits::max_compute_threads_per_group)
+        .def_ro("max_compute_thread_group_size", &DeviceLimits::max_compute_thread_group_size)
+        .def_ro("max_compute_dispatch_thread_groups", &DeviceLimits::max_compute_dispatch_thread_groups)
+        .def_ro("max_viewports", &DeviceLimits::max_viewports)
+        .def_ro("max_viewport_dimensions", &DeviceLimits::max_viewport_dimensions)
+        .def_ro("max_framebuffer_dimensions", &DeviceLimits::max_framebuffer_dimensions)
+        .def_ro("max_shader_visible_samplers", &DeviceLimits::max_shader_visible_samplers);
+
+    nb::class_<DeviceInfo>(m, "DeviceInfo")
+        .def_ro("type", &DeviceInfo::type)
+        .def_ro("api_name", &DeviceInfo::api_name)
+        .def_ro("adapter_name", &DeviceInfo::adapter_name)
+        .def_ro("limits", &DeviceInfo::limits);
+
     nb::class_<Device, Object> device(m, "Device");
     device.def(
         "__init__",
@@ -185,6 +209,7 @@ void register_kali_rhi(nb::module_& m)
         },
         "type"_a = DeviceType::automatic
     );
+    device.def_prop_ro("info", &Device::get_info);
     device.def(
         "create_buffer",
         [](Device* device, const BufferDesc& desc) { return device->create_buffer(desc); },

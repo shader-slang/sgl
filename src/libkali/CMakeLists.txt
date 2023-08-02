@@ -21,6 +21,8 @@ target_sources(kali PRIVATE
     kali/maths.h
     kali/memory_mapped_file.cpp
     kali/memory_mapped_file.h
+    kali/memory_stream.cpp
+    kali/memory_stream.h
     kali/object.cpp
     kali/object.h
     kali/platform_linux.cpp
@@ -30,6 +32,7 @@ target_sources(kali PRIVATE
     kali/plugin.cpp
     kali/plugin.h
     kali/resolver.h
+    kali/stream.h
     kali/string_utils.cpp
     kali/string_utils.h
     kali/traits.h

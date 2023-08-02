@@ -94,6 +94,42 @@ Device::Device(const DeviceDesc& desc)
     if (SLANG_FAILED(gfx::gfxCreateDevice(&gfx_desc, m_gfx_device.writeRef())))
         KALI_THROW("Failed to create device!");
 
+    // Get device info.
+    const gfx::DeviceInfo& gfx_device_info = m_gfx_device->getDeviceInfo();
+    m_info.type = m_type;
+    m_info.api_name = gfx_device_info.apiName;
+    m_info.adapter_name = gfx_device_info.adapterName;
+    m_info.limits.max_texture_dimension_1d = gfx_device_info.limits.maxTextureDimension1D;
+    m_info.limits.max_texture_dimension_2d = gfx_device_info.limits.maxTextureDimension2D;
+    m_info.limits.max_texture_dimension_3d = gfx_device_info.limits.maxTextureDimension3D;
+    m_info.limits.max_texture_dimension_cube = gfx_device_info.limits.maxTextureDimensionCube;
+    m_info.limits.max_texture_array_layers = gfx_device_info.limits.maxTextureArrayLayers;
+    m_info.limits.max_vertex_input_elements = gfx_device_info.limits.maxVertexInputElements;
+    m_info.limits.max_vertex_input_element_offset = gfx_device_info.limits.maxVertexInputElementOffset;
+    m_info.limits.max_vertex_streams = gfx_device_info.limits.maxVertexStreams;
+    m_info.limits.max_vertex_stream_stride = gfx_device_info.limits.maxVertexStreamStride;
+    m_info.limits.max_compute_threads_per_group = gfx_device_info.limits.maxComputeThreadsPerGroup;
+    m_info.limits.max_compute_thread_group_size = uint3(
+        gfx_device_info.limits.maxComputeThreadGroupSize[0],
+        gfx_device_info.limits.maxComputeThreadGroupSize[1],
+        gfx_device_info.limits.maxComputeThreadGroupSize[2]
+    );
+    m_info.limits.max_compute_dispatch_thread_groups = uint3(
+        gfx_device_info.limits.maxComputeDispatchThreadGroups[0],
+        gfx_device_info.limits.maxComputeDispatchThreadGroups[1],
+        gfx_device_info.limits.maxComputeDispatchThreadGroups[2]
+    );
+    m_info.limits.max_viewports = gfx_device_info.limits.maxViewports;
+    m_info.limits.max_viewport_dimensions
+        = uint2(gfx_device_info.limits.maxViewportDimensions[0], gfx_device_info.limits.maxViewportDimensions[1]);
+    m_info.limits.max_framebuffer_dimensions = uint3(
+        gfx_device_info.limits.maxFramebufferDimensions[0],
+        gfx_device_info.limits.maxFramebufferDimensions[1],
+        gfx_device_info.limits.maxFramebufferDimensions[2]
+    );
+    m_info.limits.max_shader_visible_samplers = gfx_device_info.limits.maxShaderVisibleSamplers;
+
+
     gfx::ICommandQueue::Desc queue_desc{
         .type = gfx::ICommandQueue::QueueType::Graphics,
     };

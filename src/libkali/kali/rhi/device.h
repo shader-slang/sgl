@@ -6,6 +6,7 @@
 #include "kali/macros.h"
 #include "kali/enum.h"
 #include "kali/object.h"
+#include "kali/math/vector_types.h"
 
 #include <slang-gfx.h>
 
@@ -65,6 +66,56 @@ struct DeviceDesc {
     std::filesystem::path shader_cache_path;
 };
 
+struct DeviceLimits {
+    /// Maximum dimension for 1D textures.
+    uint32_t max_texture_dimension_1d;
+    /// Maximum dimensions for 2D textures.
+    uint32_t max_texture_dimension_2d;
+    /// Maximum dimensions for 3D textures.
+    uint32_t max_texture_dimension_3d;
+    /// Maximum dimensions for cube textures.
+    uint32_t max_texture_dimension_cube;
+    /// Maximum number of texture layers.
+    uint32_t max_texture_array_layers;
+
+    /// Maximum number of vertex input elements in a graphics pipeline.
+    uint32_t max_vertex_input_elements;
+    /// Maximum offset of a vertex input element in the vertex stream.
+    uint32_t max_vertex_input_element_offset;
+    /// Maximum number of vertex streams in a graphics pipeline.
+    uint32_t max_vertex_streams;
+    /// Maximum stride of a vertex stream.
+    uint32_t max_vertex_stream_stride;
+
+    /// Maximum number of threads per thread group.
+    uint32_t max_compute_threads_per_group;
+    /// Maximum dimensions of a thread group.
+    uint3 max_compute_thread_group_size;
+    /// Maximum number of thread groups per dimension in a single dispatch.
+    uint3 max_compute_dispatch_thread_groups;
+
+    /// Maximum number of viewports per pipeline.
+    uint32_t max_viewports;
+    /// Maximum viewport dimensions.
+    uint2 max_viewport_dimensions;
+    /// Maximum framebuffer dimensions.
+    uint3 max_framebuffer_dimensions;
+
+    /// Maximum samplers visible in a shader stage.
+    uint32_t max_shader_visible_samplers;
+};
+
+struct DeviceInfo {
+    /// The type of the device.
+    DeviceType type;
+    /// The name of the graphics API being used by this device.
+    std::string api_name;
+    /// The name of the graphics adapter.
+    std::string adapter_name;
+    /// Limits of the device.
+    DeviceLimits limits;
+};
+
 class KALI_API Device : public Object {
     KALI_OBJECT(Device)
 public:
@@ -74,6 +125,8 @@ public:
     static ref<Device> create(const DeviceDesc& desc = DeviceDesc{}) { return make_ref<Device>(desc); }
 
     const DeviceDesc& get_desc() const { return m_desc; }
+
+    const DeviceInfo& get_info() const { return m_info; }
 
     DeviceType get_type() const { return m_type; }
 
@@ -135,6 +188,7 @@ public:
 
 private:
     DeviceDesc m_desc;
+    DeviceInfo m_info;
     DeviceType m_type;
     Slang::ComPtr<gfx::IDevice> m_gfx_device;
     Slang::ComPtr<gfx::ICommandQueue> m_gfx_queue;

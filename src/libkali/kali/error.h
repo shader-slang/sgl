@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <source_location>
 
 /**
  * @file error.h
@@ -36,19 +37,19 @@
 namespace kali {
 
 /// Throw an exception.
-[[noreturn]] KALI_API void throw_exception(std::string_view file, int line, std::string_view msg);
+[[noreturn]] KALI_API void throw_exception(const std::source_location& loc, std::string_view msg);
 
 namespace detail {
-    [[noreturn]] inline void throw_exception(std::string_view file, int line, std::string_view msg)
+    [[noreturn]] inline void throw_exception(const std::source_location& loc, std::string_view msg)
     {
-        ::kali::throw_exception(file, line, msg);
+        ::kali::throw_exception(loc, msg);
     }
 
     template<typename... Args>
     [[noreturn]] inline void
-    throw_exception(std::string_view file, int line, fmt::format_string<Args...> fmt, Args&&... args)
+    throw_exception(const std::source_location& loc, fmt::format_string<Args...> fmt, Args&&... args)
     {
-        ::kali::throw_exception(file, line, fmt::format(fmt, std::forward<Args>(args)...));
+        ::kali::throw_exception(loc, fmt::format(fmt, std::forward<Args>(args)...));
     }
 
 } // namespace detail
@@ -56,7 +57,7 @@ namespace detail {
 
 /// Helper for throwing exceptions.
 /// Logs the exception and a stack trace before throwing.
-#define KALI_THROW(...) ::kali::detail::throw_exception(__FILE__, __LINE__, __VA_ARGS__);
+#define KALI_THROW(...) ::kali::detail::throw_exception(std::source_location::current(), __VA_ARGS__);
 
 /// Helper for marking unimplemented functions.
 #define KALI_UNIMPLEMENTED() KALI_THROW("Unimplemented")
@@ -72,7 +73,7 @@ namespace kali {
 
 /// Report a failed assertion.
 [[noreturn]] KALI_API void
-report_assertion(std::string_view file, int line, std::string_view cond, std::string_view msg = {});
+report_assertion(const std::source_location& loc, std::string_view cond, std::string_view msg = {});
 
 } // namespace kali
 
@@ -80,17 +81,20 @@ report_assertion(std::string_view file, int line, std::string_view cond, std::st
 
 #define KALI_ASSERT(cond)                                                                                              \
     if (!(cond)) {                                                                                                     \
-        ::kali::report_assertion(__FILE__, __LINE__, #cond);                                                           \
+        ::kali::report_assertion(std::source_location::current(), #cond);                                              \
     }
 
 #define KALI_ASSERT_MSG(cond, msg)                                                                                     \
     if (!(cond)) {                                                                                                     \
-        ::kali::report_assertion(__FILE__, __LINE__, #cond, msg);                                                      \
+        ::kali::report_assertion(std::source_location::current(), #cond, msg);                                         \
     }
 
 #define KALI_ASSERT_OP(a, b, op)                                                                                       \
     if (!((a)op(b))) {                                                                                                 \
-        ::kali::report_assertion(__FILE__, __LINE__, ::fmt::format("{} {} {} ({} {} {})", #a, #op, #b, a, #op, b));    \
+        ::kali::report_assertion(                                                                                      \
+            std::source_location::current(),                                                                           \
+            fmt::format("{} {} {} ({} {} {})", #a, #op, #b, a, #op, b)                                                 \
+        );                                                                                                             \
     }
 
 #else // KALI_ENABLE_ASSERTS
@@ -122,17 +126,20 @@ report_assertion(std::string_view file, int line, std::string_view cond, std::st
 
 #define KALI_SLOW_ASSERT(cond)                                                                                         \
     if (!(cond)) {                                                                                                     \
-        ::kali::report_assertion(__FILE__, __LINE__, #cond);                                                           \
+        ::kali::report_assertion(std::source_location::current(), #cond);                                              \
     }
 
 #define KALI_SLOW_ASSERT_MSG(cond, msg)                                                                                \
     if (!(cond)) {                                                                                                     \
-        ::kali::report_assertion(__FILE__, __LINE__, #cond, msg);                                                      \
+        ::kali::report_assertion(std::source_location::current(), #cond, msg);                                         \
     }
 
 #define KALI_SLOW_ASSERT_OP(a, b, op)                                                                                  \
     if (!((a)op(b))) {                                                                                                 \
-        ::kali::report_assertion(__FILE__, __LINE__, ::fmt::format("{} {} {} ({} {} {})", #a, #op, #b, a, #op, b));    \
+        ::kali::report_assertion(                                                                                      \
+            std::source_location::current(),                                                                           \
+            fmt::format("{} {} {} ({} {} {})", #a, #op, #b, a, #op, b)                                                 \
+        );                                                                                                             \
     }
 
 #else // KALI_ENABLE_SLOW_ASSERTS

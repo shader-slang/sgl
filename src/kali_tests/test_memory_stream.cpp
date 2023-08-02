@@ -1,0 +1,146 @@
+#include "testing.h"
+#include "kali/memory_stream.h"
+
+#include <cstring>
+#include <fstream>
+#include <random>
+#include <vector>
+
+using namespace kali;
+
+TEST_SUITE_BEGIN("memory_stream");
+
+TEST_CASE("MemoryStream")
+{
+    SUBCASE("unowned_read_only")
+    {
+        const uint8_t buffer[8]{0, 1, 2, 3, 4, 5, 6, 7};
+        MemoryStream stream(buffer, 8);
+        CHECK(stream.is_open());
+        CHECK(stream.is_readable());
+        CHECK_FALSE(stream.is_writable());
+        CHECK_EQ(stream.tell(), 0);
+        CHECK_EQ(stream.size(), 8);
+        CHECK_EQ(stream.capacity(), 8);
+        CHECK_FALSE(stream.owns_data());
+        CHECK_EQ(stream.data(), buffer);
+
+        uint8_t tmp[8];
+        stream.read(tmp, 8);
+        CHECK(std::memcmp(tmp, buffer, 8) == 0);
+        CHECK_EQ(stream.tell(), 8);
+
+        stream.seek(0);
+        CHECK_EQ(stream.tell(), 0);
+
+        CHECK_THROWS(stream.write(tmp, 8));
+
+        stream.seek(4);
+        CHECK_EQ(stream.tell(), 4);
+
+        stream.read(tmp, 4);
+        CHECK(std::memcmp(tmp, buffer + 4, 4) == 0);
+
+        CHECK_THROWS(stream.truncate(4));
+        CHECK_THROWS(stream.truncate(16));
+
+        stream.close();
+        CHECK_FALSE(stream.is_open());
+    }
+
+    SUBCASE("unowned_read_write")
+    {
+        uint8_t buffer[8];
+        std::memcpy(buffer, "12345678", 8);
+        MemoryStream stream(buffer, 8);
+        CHECK(stream.is_open());
+        CHECK(stream.is_readable());
+        CHECK(stream.is_writable());
+        CHECK_EQ(stream.tell(), 0);
+        CHECK_EQ(stream.size(), 8);
+        CHECK_EQ(stream.capacity(), 8);
+        CHECK_FALSE(stream.owns_data());
+        CHECK_EQ(stream.data(), (void*)buffer);
+
+        uint8_t tmp[8];
+        stream.read(tmp, 8);
+        CHECK(std::memcmp(tmp, buffer, 8) == 0);
+        CHECK_EQ(stream.tell(), 8);
+
+        stream.seek(0);
+        CHECK_EQ(stream.tell(), 0);
+
+        std::memcpy(tmp, "abcdefgh", 8);
+        stream.write(tmp, 8);
+        CHECK(std::memcmp(tmp, buffer, 8) == 0);
+        CHECK_EQ(stream.tell(), 8);
+
+        stream.seek(4);
+        CHECK_EQ(stream.tell(), 4);
+
+        stream.read(tmp, 4);
+        CHECK(std::memcmp(tmp, buffer + 4, 4) == 0);
+
+        CHECK_THROWS(stream.truncate(4));
+        CHECK_THROWS(stream.truncate(16));
+
+        stream.close();
+        CHECK_FALSE(stream.is_open());
+    }
+
+    SUBCASE("owned")
+    {
+        MemoryStream stream(8);
+        CHECK(stream.is_open());
+        CHECK(stream.is_readable());
+        CHECK(stream.is_writable());
+        CHECK_EQ(stream.tell(), 0);
+        CHECK_EQ(stream.size(), 0);
+        CHECK_EQ(stream.capacity(), 8);
+        CHECK(stream.owns_data());
+        CHECK_NE(stream.data(), nullptr);
+
+        uint8_t tmp[8];
+        CHECK_THROWS(stream.read(tmp, 1));
+
+        stream.seek(8);
+        CHECK_EQ(stream.tell(), 8);
+
+        std::memcpy(tmp, "abcdefgh", 8);
+        stream.write(tmp, 8);
+        CHECK_EQ(stream.tell(), 16);
+        CHECK_EQ(stream.size(), 16);
+        CHECK_GE(stream.capacity(), 16);
+
+        stream.seek(0);
+        CHECK_EQ(stream.tell(), 0);
+        stream.read(tmp, 8);
+        for (size_t i = 0; i < 8; ++i)
+            CHECK_EQ(tmp[i], 0);
+        CHECK_EQ(stream.tell(), 8);
+
+        stream.seek(0);
+        CHECK_EQ(stream.tell(), 0);
+
+        std::memcpy(tmp, "01234567", 8);
+        stream.write(tmp, 8);
+        CHECK_EQ(stream.tell(), 8);
+        CHECK_EQ(stream.size(), 16);
+        CHECK_GE(stream.capacity(), 16);
+
+        stream.seek(4);
+        CHECK_EQ(stream.tell(), 4);
+        stream.read(tmp, 4);
+        for (size_t i = 0; i < 4; ++i)
+            CHECK_EQ(tmp[i], '4' + i);
+
+        stream.truncate(4);
+        CHECK_EQ(stream.tell(), 4);
+        CHECK_EQ(stream.size(), 4);
+
+        stream.close();
+        CHECK_FALSE(stream.is_open());
+    }
+}
+
+TEST_SUITE_END();
