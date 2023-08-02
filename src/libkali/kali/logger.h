@@ -12,6 +12,7 @@
 namespace kali {
 
 enum class LogLevel {
+    none,
     debug,
     info,
     warn,
@@ -155,3 +156,6 @@ KALI_LOG_FUNC_FAMILY(log_fatal, LogLevel::fatal, Logger::global().log)
 #undef KALI_LOG_FUNC_FAMILY
 
 } // namespace kali
+
+/// Prints the given variable name and value.
+#define KALI_PRINT(var) ::kali::Logger::global().log(::kali::LogLevel::none, ::fmt::format("{} = {}", #var, var))
