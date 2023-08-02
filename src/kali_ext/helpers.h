@@ -1,6 +1,6 @@
 #pragma once
 
-#include "kali/enum.h"
+#include "kali/core/enum.h"
 
 #include <nanobind/nanobind.h>
 

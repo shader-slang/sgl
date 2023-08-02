@@ -2,7 +2,7 @@
 
 #include "kali/math/scalar_types.h"
 #include "kali/math/vector_types.h"
-#include "kali/error.h"
+#include "kali/core/error.h"
 
 #include <limits>
 

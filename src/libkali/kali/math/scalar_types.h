@@ -1,8 +1,8 @@
 #pragma once
 
 #include "kali/math/float16.h"
-#include "kali/macros.h"
-#include "kali/format.h"
+#include "kali/core/macros.h"
+#include "kali/core/format.h"
 
 #include <string>
 #include <cstdint>

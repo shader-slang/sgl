@@ -1,7 +1,7 @@
 #pragma once
 
-#include "kali/macros.h"
-#include "kali/enum.h"
+#include "kali/core/macros.h"
+#include "kali/core/enum.h"
 
 #include <slang-gfx.h>
 

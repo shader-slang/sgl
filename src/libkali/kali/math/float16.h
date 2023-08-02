@@ -1,6 +1,6 @@
 #pragma once
 
-#include "kali/macros.h"
+#include "kali/core/macros.h"
 
 #include <cstdint>
 #include <limits>

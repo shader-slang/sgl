@@ -2,8 +2,8 @@
 
 #include "kali/imageio/imageio.h"
 
-#include "kali/error.h"
-#include "kali/type_utils.h"
+#include "kali/core/error.h"
+#include "kali/core/type_utils.h"
 
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>

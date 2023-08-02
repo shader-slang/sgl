@@ -1,10 +1,10 @@
 #include "renderer.h"
 
-#include "kali/window.h"
-#include "kali/version.h"
-#include "kali/error.h"
-#include "kali/logger.h"
-#include "kali/platform.h"
+#include "kali/core/window.h"
+#include "kali/core/version.h"
+#include "kali/core/error.h"
+#include "kali/core/logger.h"
+#include "kali/core/platform.h"
 #include "kali/math/vector.h"
 
 #include <iostream>

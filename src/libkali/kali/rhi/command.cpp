@@ -4,9 +4,9 @@
 #include "kali/rhi/formats.h"
 #include "kali/rhi/helpers.h"
 
-#include "kali/error.h"
-#include "kali/maths.h"
-#include "kali/type_utils.h"
+#include "kali/core/error.h"
+#include "kali/core/maths.h"
+#include "kali/core/type_utils.h"
 #include "kali/math/vector_math.h"
 
 namespace kali {

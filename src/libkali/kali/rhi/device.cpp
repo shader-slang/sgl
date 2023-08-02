@@ -6,8 +6,8 @@
 #include "kali/rhi/program.h"
 #include "kali/rhi/helpers.h"
 
-#include "kali/error.h"
-#include "kali/window.h"
+#include "kali/core/error.h"
+#include "kali/core/window.h"
 
 namespace kali {
 

@@ -3,7 +3,7 @@
 #include "kali/math/vector.h"
 #include "kali/math/matrix.h"
 #include "kali/math/quaternion.h"
-#include "kali/traits.h"
+#include "kali/core/traits.h"
 
 #include <nanobind/nanobind.h>
 #include <nanobind/operators.h>

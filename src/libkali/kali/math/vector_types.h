@@ -1,7 +1,7 @@
 #pragma once
 
 #include "kali/math/scalar_types.h"
-#include "kali/error.h"
+#include "kali/core/error.h"
 
 namespace kali::math {
 

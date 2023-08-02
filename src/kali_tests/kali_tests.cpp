@@ -1,7 +1,7 @@
 #include "testing.h"
-#include "kali/object.h"
-#include "kali/logger.h"
-#include "kali/error.h"
+#include "kali/core/object.h"
+#include "kali/core/logger.h"
+#include "kali/core/error.h"
 
 #define DOCTEST_CONFIG_IMPLEMENT
 #include <doctest.h>

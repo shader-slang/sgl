@@ -1,6 +1,6 @@
 #pragma once
 
-#include "kali/error.h"
+#include "kali/core/error.h"
 
 #include <slang-gfx.h>
 

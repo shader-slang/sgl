@@ -1,6 +1,6 @@
 #include "testing.h"
 
-#include "kali/macros.h"
+#include "kali/core/macros.h"
 
 #include "kali/rhi/device.h"
 #include "kali/rhi/program.h"

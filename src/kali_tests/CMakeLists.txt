@@ -6,15 +6,15 @@ add_executable(kali_tests)
 target_sources(kali_tests PRIVATE
     kali_tests.cpp
     testing.cpp
-    test_cpu_timer.cpp
-    test_enum.cpp
-    test_maths.cpp
-    test_memory_mapped_file.cpp
-    test_object.cpp
-    test_platform.cpp
-    test_plugin.cpp
-    test_stream.cpp
-    test_string_utils.cpp
+    core/test_cpu_timer.cpp
+    core/test_enum.cpp
+    core/test_maths.cpp
+    core/test_memory_mapped_file.cpp
+    core/test_object.cpp
+    core/test_platform.cpp
+    core/test_plugin.cpp
+    core/test_stream.cpp
+    core/test_string_utils.cpp
     imageio/test_imageio.cpp
     math/test_float16.cpp
     math/test_matrix.cpp

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "kali/object.h"
-#include "kali/window.h"
+#include "kali/core/object.h"
+#include "kali/core/window.h"
 #include "kali/rhi/device.h"
 #include "kali/rhi/swapchain.h"
 

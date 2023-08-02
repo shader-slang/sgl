@@ -11,7 +11,7 @@
 #include "kali/math/scalar_math.h"
 #include "kali/math/vector_math.h"
 #include "kali/math/constants.h"
-#include "kali/error.h"
+#include "kali/core/error.h"
 
 namespace kali::math {
 

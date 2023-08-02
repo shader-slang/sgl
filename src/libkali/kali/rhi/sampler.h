@@ -3,8 +3,8 @@
 #include "kali/rhi/fwd.h"
 #include "kali/rhi/types.h"
 
-#include "kali/macros.h"
-#include "kali/object.h"
+#include "kali/core/macros.h"
+#include "kali/core/object.h"
 #include "kali/math/vector_types.h"
 
 #include <slang-gfx.h>

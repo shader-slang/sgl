@@ -1,10 +1,10 @@
 #include "imageio.h"
 
-#include "kali/macros.h"
-#include "kali/error.h"
-#include "kali/string_utils.h"
-#include "kali/type_utils.h"
-#include "kali/memory_mapped_file.h"
+#include "kali/core/macros.h"
+#include "kali/core/error.h"
+#include "kali/core/string_utils.h"
+#include "kali/core/type_utils.h"
+#include "kali/core/memory_mapped_file.h"
 
 #include <cstdio> // must be included before jpeglib.h
 // #include <jpeglib.h>

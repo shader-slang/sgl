@@ -3,7 +3,7 @@
 #include "kali/rhi/native_formats.h"
 #include "kali/rhi/helpers.h"
 
-#include "kali/error.h"
+#include "kali/core/error.h"
 
 namespace kali {
 

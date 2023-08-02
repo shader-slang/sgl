@@ -3,9 +3,9 @@
 #include "kali/rhi/fwd.h"
 #include "kali/rhi/formats.h"
 
-#include "kali/macros.h"
-#include "kali/platform.h"
-#include "kali/object.h"
+#include "kali/core/macros.h"
+#include "kali/core/platform.h"
+#include "kali/core/object.h"
 
 #include <slang-gfx.h>
 

@@ -2,10 +2,10 @@
 
 #include "kali/rhi/fwd.h"
 
-#include "kali/error.h"
-#include "kali/macros.h"
-#include "kali/object.h"
-#include "kali/enum.h"
+#include "kali/core/error.h"
+#include "kali/core/macros.h"
+#include "kali/core/object.h"
+#include "kali/core/enum.h"
 
 #include <slang-gfx.h>
 
