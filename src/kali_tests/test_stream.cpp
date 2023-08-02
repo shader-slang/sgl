@@ -146,6 +146,13 @@ TEST_CASE("MemoryStream")
 
 TEST_CASE("FileStream")
 {
+    char buffer[16];
+
+    SUBCASE("open non-exist file")
+    {
+        CHECK_THROWS(FileStream("__file_that_does_not_exist__", FileStream::Mode::Read));
+    }
+
     SUBCASE("write")
     {
         FileStream stream("file_stream_write.bin", FileStream::Mode::Write);
@@ -156,6 +163,8 @@ TEST_CASE("FileStream")
         CHECK(stream.is_writable());
         CHECK_EQ(stream.tell(), 0);
         CHECK_EQ(stream.size(), 0);
+
+        CHECK_THROWS(stream.read(buffer, 1));
 
         stream.write("12345678", 8);
         CHECK_EQ(stream.tell(), 8);
@@ -184,7 +193,6 @@ TEST_CASE("FileStream")
 
         std::ifstream file("file_stream_write.bin", std::ios::binary);
         CHECK(file.is_open());
-        char buffer[12];
         file.read(buffer, 12);
         CHECK(std::memcmp(buffer, "12341234abcd", 12) == 0);
         file.close();
@@ -204,6 +212,9 @@ TEST_CASE("FileStream")
         CHECK_FALSE(stream.is_writable());
         CHECK_EQ(stream.tell(), 0);
         CHECK_EQ(stream.size(), 16);
+
+        CHECK_THROWS(stream.write("12345678", 8));
+        CHECK_THROWS(stream.truncate(1));
 
         char buffer[16];
         stream.read(buffer, 8);

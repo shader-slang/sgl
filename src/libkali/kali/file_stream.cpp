@@ -28,6 +28,9 @@ FileStream::FileStream(const std::filesystem::path& path, Mode mode)
     , m_mode(mode)
 {
     m_stream = std::make_unique<std::fstream>(m_path, get_openmode(m_mode));
+
+    if (!m_stream->good())
+        KALI_THROW("{}: I/O error while attempting to open file: {}", m_path, strerror(errno));
 }
 
 FileStream::~FileStream()
