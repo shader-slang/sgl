@@ -12,6 +12,8 @@ target_sources(kali PRIVATE
     kali/enum.h
     kali/error.cpp
     kali/error.h
+    kali/file_stream.cpp
+    kali/file_stream.h
     kali/format.h
     kali/fwd.h
     kali/input.h

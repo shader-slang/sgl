@@ -1,5 +1,6 @@
 #include "testing.h"
 #include "kali/memory_stream.h"
+#include "kali/file_stream.h"
 
 #include <cstring>
 #include <fstream>
@@ -8,7 +9,7 @@
 
 using namespace kali;
 
-TEST_SUITE_BEGIN("memory_stream");
+TEST_SUITE_BEGIN("stream");
 
 TEST_CASE("MemoryStream")
 {
@@ -137,6 +138,92 @@ TEST_CASE("MemoryStream")
         stream.truncate(4);
         CHECK_EQ(stream.tell(), 4);
         CHECK_EQ(stream.size(), 4);
+
+        stream.close();
+        CHECK_FALSE(stream.is_open());
+    }
+}
+
+TEST_CASE("FileStream")
+{
+    SUBCASE("write")
+    {
+        FileStream stream("file_stream_write.bin", FileStream::Mode::Write);
+        CHECK_EQ(stream.path(), "file_stream_write.bin");
+        CHECK_EQ(stream.mode(), FileStream::Mode::Write);
+        CHECK(stream.is_open());
+        CHECK_FALSE(stream.is_readable());
+        CHECK(stream.is_writable());
+        CHECK_EQ(stream.tell(), 0);
+        CHECK_EQ(stream.size(), 0);
+
+        stream.write("12345678", 8);
+        CHECK_EQ(stream.tell(), 8);
+        stream.flush();
+        CHECK_EQ(stream.size(), 8);
+
+        stream.seek(4);
+        CHECK_EQ(stream.tell(), 4);
+        stream.write("1234", 4);
+        CHECK_EQ(stream.tell(), 8);
+        stream.flush();
+        CHECK_EQ(stream.size(), 8);
+
+        stream.write("abcdefgh", 8);
+        CHECK_EQ(stream.tell(), 16);
+        stream.flush();
+        CHECK_EQ(stream.size(), 16);
+
+        stream.truncate(12);
+        CHECK_EQ(stream.tell(), 12);
+        stream.flush();
+        CHECK_EQ(stream.size(), 12);
+
+        stream.close();
+        CHECK_FALSE(stream.is_open());
+
+        std::ifstream file("file_stream_write.bin", std::ios::binary);
+        CHECK(file.is_open());
+        char buffer[12];
+        file.read(buffer, 12);
+        CHECK(std::memcmp(buffer, "12341234abcd", 12) == 0);
+        file.close();
+    }
+
+    SUBCASE("read")
+    {
+        std::ofstream file("file_stream_read.bin", std::ios::binary);
+        file.write("12345678abcdefgh", 16);
+        file.close();
+
+        FileStream stream("file_stream_read.bin", FileStream::Mode::Read);
+        CHECK_EQ(stream.path(), "file_stream_read.bin");
+        CHECK_EQ(stream.mode(), FileStream::Mode::Read);
+        CHECK(stream.is_open());
+        CHECK(stream.is_readable());
+        CHECK_FALSE(stream.is_writable());
+        CHECK_EQ(stream.tell(), 0);
+        CHECK_EQ(stream.size(), 16);
+
+        char buffer[16];
+        stream.read(buffer, 8);
+        CHECK(std::memcmp(buffer, "12345678", 8) == 0);
+        CHECK_EQ(stream.tell(), 8);
+
+        stream.seek(0);
+        CHECK_EQ(stream.tell(), 0);
+
+        stream.read(buffer, 8);
+        CHECK(std::memcmp(buffer, "12345678", 8) == 0);
+        CHECK_EQ(stream.tell(), 8);
+
+        stream.seek(4);
+        CHECK_EQ(stream.tell(), 4);
+
+        CHECK_THROWS_AS(stream.read(buffer, 16), EOFException);
+        CHECK(std::memcmp(buffer, "5678abcdefgh", 12) == 0);
+
+        CHECK_EQ(stream.tell(), 16);
 
         stream.close();
         CHECK_FALSE(stream.is_open());
