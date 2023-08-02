@@ -1,6 +1,7 @@
 #include "testing.h"
 #include "kali/object.h"
 #include "kali/logger.h"
+#include "kali/error.h"
 
 #define DOCTEST_CONFIG_IMPLEMENT
 #include <doctest.h>
@@ -10,6 +11,9 @@ int main(int argc, char** argv)
     kali::Logger::global().remove_all_outputs();
     kali::Logger::global().add_debug_console_output();
     kali::Logger::global().add_file_output("kali_tests.log");
+
+    /// Do not break debugger on exceptions when running tests.
+    kali::set_exception_diagnostics(kali::ExceptionDiagnosticFlags::none);
 
     int result = 1;
     {

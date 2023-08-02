@@ -36,6 +36,19 @@
 
 namespace kali {
 
+enum class ExceptionDiagnosticFlags {
+    none = 0,
+    break_debugger = 1,
+    log = 2,
+};
+KALI_ENUM_CLASS_OPERATORS(ExceptionDiagnosticFlags);
+
+/// Set exception diagnostic options.
+/// - ExceptionDiagnosticFlags::break_debugger:  break into debugger when throwing an exception
+/// - ExceptionDiagnosticFlags::log: log exception message
+void KALI_API set_exception_diagnostics(ExceptionDiagnosticFlags flags);
+
+
 /// Throw an exception.
 [[noreturn]] KALI_API void throw_exception(const std::source_location& loc, std::string_view msg);
 

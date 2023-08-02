@@ -4,6 +4,14 @@
 
 namespace kali {
 
+static ExceptionDiagnosticFlags s_exception_diagnostic_flags{
+    ExceptionDiagnosticFlags::break_debugger | ExceptionDiagnosticFlags::log};
+
+void set_exception_diagnostics(ExceptionDiagnosticFlags flags)
+{
+    s_exception_diagnostic_flags = flags;
+}
+
 void throw_exception(const std::source_location& loc, std::string_view msg)
 {
     std::string error_msg
@@ -14,9 +22,10 @@ void throw_exception(const std::source_location& loc, std::string_view msg)
     if (!debugger_present)
         error_msg += "\nStack trace:\n" + format_stacktrace(backtrace());
 
-    log_fatal(error_msg);
+    if (is_set(s_exception_diagnostic_flags, ExceptionDiagnosticFlags::log))
+        log_fatal(error_msg);
 
-    if (debugger_present)
+    if (is_set(s_exception_diagnostic_flags, ExceptionDiagnosticFlags::break_debugger) && debugger_present)
         debug_break();
 
     throw std::runtime_error(error_msg.c_str());
