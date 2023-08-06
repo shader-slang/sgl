@@ -77,8 +77,13 @@ double image_diff(const TestImage<T>& img0, const TestImage<T>& img1)
 
 TEST_SUITE_BEGIN("imageio");
 
-TEST_CASE("jpeg")
+TEST_CASE("jpg")
 {
+    CHECK_THROWS(ImageOutput::open(
+        "test.jpg",
+        {.width = 0, .height = 1, .component_count = 3, .component_type = ImageComponentType::u8}
+    ));
+
     auto img = create_checkerboard(128, 64, rgb8{25, 75, 125}, rgb8{125, 175, 225});
 
     {
@@ -87,7 +92,7 @@ TEST_CASE("jpeg")
             {.width = img.w, .height = img.h, .component_count = 3, .component_type = ImageComponentType::u8}
         );
         REQUIRE(output);
-        CHECK(output->write_image(img.data(), img.size()));
+        output->write_image(img.data(), img.size());
     }
 
     {
@@ -101,7 +106,7 @@ TEST_CASE("jpeg")
         CHECK_EQ(spec.component_type, ImageComponentType::u8);
 
         auto img2 = create_image<rgb8>(spec.width, spec.height);
-        CHECK(input->read_image(img2.data(), img.size()));
+        input->read_image(img2.data(), img.size());
 
         double diff = image_diff(img, img2);
         CHECK_LE(diff, 1.0);

@@ -4,7 +4,8 @@
 #include "kali/core/error.h"
 #include "kali/core/string_utils.h"
 #include "kali/core/type_utils.h"
-#include "kali/core/memory_mapped_file.h"
+#include "kali/core/platform.h"
+#include "kali/core/file_stream.h"
 
 #include <cstdio> // must be included before jpeglib.h
 // #include <jpeglib.h>
@@ -32,68 +33,62 @@ KALI_DIAGNOSTIC_POP
 
 namespace kali {
 
+static ImageFileFormat extension_to_format(std::string_view ext)
+{
+    if (ext == "png")
+        return ImageFileFormat::png;
+    else if (ext == "jpg" || ext == "jpeg")
+        return ImageFileFormat::jpg;
+    else if (ext == "bmp")
+        return ImageFileFormat::bmp;
+    else if (ext == "tga")
+        return ImageFileFormat::tga;
+    else if (ext == "hdr")
+        return ImageFileFormat::hdr;
+    else if (ext == "exr")
+        return ImageFileFormat::exr;
+    else
+        KALI_THROW("Unknown image file extension '{}'", ext);
+}
+
 // ----------------------------------------------------------------------------
 // ImageReader
 // ----------------------------------------------------------------------------
 
 class ImageReader {
 public:
-    virtual ~ImageReader() { }
-
-    virtual bool open(const std::filesystem::path& path, ImageSpec& out_spec)
+    ImageReader(ref<Stream> stream, ImageFileFormat file_format)
+        : m_stream(stream)
+        , m_file_format(file_format)
     {
-        m_path = path;
-        m_file = std::make_unique<MemoryMappedFile>(path);
-        if (!m_file->is_open())
-            return false;
-
-        bool success = read_spec(m_file->data(), m_file->size(), m_spec);
-        if (success)
-            out_spec = m_spec;
-
-        return success;
     }
 
-    virtual void close() { m_file.reset(); }
+    virtual ~ImageReader() { }
 
-    virtual bool read_spec(const void* buffer, size_t len, ImageSpec& out_spec) = 0;
-    virtual bool read_image(void* out_buffer, size_t out_len) = 0;
+    virtual ImageSpec read_spec() = 0;
+    virtual void read_image(const ImageSpec& spec, void* out_buffer, size_t out_len) = 0;
 
 protected:
-    std::filesystem::path m_path;
-    ImageSpec m_spec;
-    std::unique_ptr<MemoryMappedFile> m_file;
+    ref<Stream> m_stream;
+    ImageFileFormat m_file_format;
 };
 
 class ImageWriter {
 public:
-    virtual ~ImageWriter() { }
-
-    virtual bool open(const std::filesystem::path& path, const ImageSpec& spec)
+    ImageWriter(ref<Stream> stream, ImageFileFormat file_format)
+        : m_stream(stream)
+        , m_file_format(file_format)
     {
-        KALI_ASSERT(!path.empty());
-        KALI_ASSERT(spec.width > 0);
-        KALI_ASSERT(spec.height > 0);
-        KALI_ASSERT(spec.component_count > 0);
-        KALI_ASSERT(spec.component_type != ImageComponentType::unknown);
-
-        m_path = path;
-        m_spec = spec;
-        m_ofs.open(path, std::ios::binary);
-        if (!m_ofs.is_open())
-            return false;
-
-        return true;
     }
 
-    virtual void close() { m_ofs.close(); }
+    virtual ~ImageWriter() { }
 
-    virtual bool write_image(const void* buffer, size_t len) = 0;
+    virtual void write_spec(const ImageSpec& spec) = 0;
+    virtual void write_image(const ImageSpec& spec, const void* buffer, size_t len) = 0;
 
 protected:
-    std::filesystem::path m_path;
-    ImageSpec m_spec;
-    std::ofstream m_ofs;
+    ref<Stream> m_stream;
+    ImageFileFormat m_file_format;
 };
 
 // ----------------------------------------------------------------------------
@@ -102,60 +97,80 @@ protected:
 
 class StbImageReader : public ImageReader {
 public:
+    StbImageReader(ref<Stream> stream, ImageFileFormat file_format)
+        : ImageReader(stream, file_format)
+    {
+        m_callbacks.read = [](void* user, char* data, int size) -> int
+        {
+            StbImageReader* self = reinterpret_cast<StbImageReader*>(user);
+            try {
+                self->m_stream->read(data, size);
+            } catch (const EOFException&) {
+                self->m_eof = true;
+            }
+            return size;
+        };
+        m_callbacks.skip = [](void* user, int n)
+        {
+            StbImageReader* self = reinterpret_cast<StbImageReader*>(user);
+            self->m_stream->seek(self->m_stream->tell() + n);
+        };
+        m_callbacks.eof = [](void* user) -> int
+        {
+            StbImageReader* self = reinterpret_cast<StbImageReader*>(user);
+            return self->m_eof;
+        };
+    }
+
     ~StbImageReader() { }
 
-    bool read_spec(const void* buffer_, size_t len_, ImageSpec& out_spec) override
+    ImageSpec read_spec() override
     {
-        const stbi_uc* buffer = reinterpret_cast<const stbi_uc*>(buffer_);
-        int len = narrow_cast<int>(len_);
-
         int width, height, component_count;
-        if (!stbi_info_from_memory(buffer, len, &width, &height, &component_count))
-            return false;
+        if (!stbi_info_from_callbacks(&m_callbacks, this, &width, &height, &component_count))
+            KALI_THROW("Failed to read image spec");
 
-        bool is_hdr = stbi_is_hdr_from_memory(buffer, len);
-        bool is_16bit = stbi_is_16_bit_from_memory(buffer, len);
+        bool is_hdr = stbi_is_hdr_from_callbacks(&m_callbacks, this);
+        bool is_16bit = stbi_is_16_bit_from_callbacks(&m_callbacks, this);
 
-        m_spec = ImageSpec{
+        return {
             .width = narrow_cast<uint32_t>(width),
             .height = narrow_cast<uint32_t>(height),
             .component_count = narrow_cast<uint32_t>(component_count),
             .component_type
             = is_hdr ? ImageComponentType::f32 : (is_16bit ? ImageComponentType::u16 : ImageComponentType::u8),
         };
-        out_spec = m_spec;
-
-        return true;
     }
 
-    bool read_image(void* out_buffer, size_t out_len) override
+    void read_image(const ImageSpec& spec, void* out_buffer, size_t out_len) override
     {
-        KALI_ASSERT(m_spec.width > 0);
-        KALI_ASSERT(m_spec.height > 0);
-        KALI_ASSERT(m_spec.component_count > 0);
-        KALI_ASSERT(m_spec.component_type != ImageComponentType::unknown);
+        KALI_ASSERT(spec.width > 0);
+        KALI_ASSERT(spec.height > 0);
+        KALI_ASSERT(spec.component_count > 0);
+        KALI_ASSERT(spec.component_type != ImageComponentType::unknown);
 
-        const stbi_uc* buffer = reinterpret_cast<const stbi_uc*>(m_file->data());
-        int len = narrow_cast<int>(m_file->size());
+        m_stream->seek(0);
 
         int width, height, component_count;
         uint8_t* pixels{nullptr};
         size_t read_len{0};
-        switch (m_spec.component_type) {
+        switch (spec.component_type) {
         case ImageComponentType::u8:
-            pixels
-                = reinterpret_cast<uint8_t*>(stbi_load_from_memory(buffer, len, &width, &height, &component_count, 0));
+            pixels = reinterpret_cast<uint8_t*>(
+                stbi_load_from_callbacks(&m_callbacks, this, &width, &height, &component_count, 0)
+            );
             read_len = width * height * component_count;
             break;
         case ImageComponentType::u16:
-            pixels
-                = reinterpret_cast<uint8_t*>(stbi_load_16_from_memory(buffer, len, &width, &height, &component_count, 0)
-                );
+            pixels = reinterpret_cast<uint8_t*>(
+                stbi_load_16_from_callbacks(&m_callbacks, this, &width, &height, &component_count, 0)
+            );
             read_len = width * height * component_count * 2;
             break;
         case ImageComponentType::f32:
-            pixels
-                = reinterpret_cast<uint8_t*>(stbi_loadf_from_memory(buffer, len, &width, &height, &component_count, 0));
+            pixels = reinterpret_cast<uint8_t*>(
+                stbi_loadf_from_callbacks(&m_callbacks, this, &width, &height, &component_count, 0)
+            );
             read_len = width * height * component_count * 4;
             break;
         default:
@@ -164,18 +179,20 @@ public:
         }
 
         if (!pixels)
-            return false;
+            KALI_THROW("Failed to read image data");
 
-        size_t expected_len = m_spec.width * m_spec.height * m_spec.component_count * m_spec.get_component_byte_size();
+        size_t expected_len = spec.get_image_byte_size();
         KALI_ASSERT_EQ(out_len, expected_len);
         KALI_ASSERT_EQ(read_len, expected_len);
 
         std::memcpy(out_buffer, pixels, out_len);
 
         stbi_image_free(pixels);
-
-        return true;
     }
+
+private:
+    stbi_io_callbacks m_callbacks;
+    bool m_eof{false};
 };
 
 // ----------------------------------------------------------------------------
@@ -184,72 +201,76 @@ public:
 
 class StbImageWriter : public ImageWriter {
 public:
-    ~StbImageWriter() { }
-
-    bool open(const std::filesystem::path& path, const ImageSpec& spec) override
+    StbImageWriter(ref<Stream> stream, ImageFileFormat file_format)
+        : ImageWriter(stream, file_format)
     {
-        std::string ext = to_lower(path.extension().string());
-        if (ext == ".png") {
-            m_file_format = FileFormat::png;
-            if (spec.component_type != ImageComponentType::u8)
-                return false;
-        } else if (ext == ".jpg" || ext == ".jpeg") {
-            m_file_format = FileFormat::jpg;
-            if (spec.component_type != ImageComponentType::u8)
-                return false;
-        } else if (ext == ".bmp") {
-            m_file_format = FileFormat::bmp;
-            if (spec.component_type != ImageComponentType::u8)
-                return false;
-        } else if (ext == ".tga") {
-            m_file_format = FileFormat::tga;
-            if (spec.component_type != ImageComponentType::u8)
-                return false;
-        } else if (ext == ".hdr") {
-            m_file_format = FileFormat::hdr;
-            if (spec.component_type != ImageComponentType::f32)
-                return false;
-        } else
-            return false;
-
-        return ImageWriter::open(path, spec);
     }
 
-    bool write_image(const void* buffer, size_t len) override
+    ~StbImageWriter() { }
+
+    void write_spec(const ImageSpec& spec) override
+    {
+        switch (m_file_format) {
+        case ImageFileFormat::png:
+            if (spec.component_type != ImageComponentType::u8)
+                KALI_THROW("Unsupported component type for PNG");
+            break;
+        case ImageFileFormat::jpg:
+            if (spec.component_type != ImageComponentType::u8)
+                KALI_THROW("Unsupported component type for JPG");
+            break;
+        case ImageFileFormat::bmp:
+            if (spec.component_type != ImageComponentType::u8)
+                KALI_THROW("Unsupported component type for BMP");
+            break;
+        case ImageFileFormat::tga:
+            if (spec.component_type != ImageComponentType::u8 && spec.component_type != ImageComponentType::u16)
+                KALI_THROW("Unsupported component type for TGA");
+            break;
+        case ImageFileFormat::hdr:
+            if (spec.component_type != ImageComponentType::f32)
+                KALI_THROW("Unsupported component type for HDR");
+            break;
+        default:
+            KALI_THROW("Unknown file extension");
+        }
+    }
+
+    void write_image(const ImageSpec& spec, const void* buffer, size_t len) override
     {
         KALI_UNUSED(len);
 
-        size_t expected_len = m_spec.width * m_spec.height * m_spec.component_count * m_spec.get_component_byte_size();
+        size_t expected_len = spec.get_image_byte_size();
         KALI_ASSERT_EQ(len, expected_len);
 
-        int width = narrow_cast<int>(m_spec.width);
-        int height = narrow_cast<int>(m_spec.height);
-        int component_count = narrow_cast<int>(m_spec.component_count);
+        int width = narrow_cast<int>(spec.width);
+        int height = narrow_cast<int>(spec.height);
+        int component_count = narrow_cast<int>(spec.component_count);
 
         auto write_func = [](void* context, void* data, int size)
         {
-            std::ofstream* ofs = reinterpret_cast<std::ofstream*>(context);
-            ofs->write(reinterpret_cast<char*>(data), size);
+            Stream* stream = reinterpret_cast<Stream*>(context);
+            stream->write(reinterpret_cast<char*>(data), size);
         };
 
         bool success{false};
         switch (m_file_format) {
-        case FileFormat::png:
-            success = stbi_write_png_to_func(write_func, &m_ofs, width, height, component_count, buffer, 0);
+        case ImageFileFormat::png:
+            success = stbi_write_png_to_func(write_func, m_stream.get(), width, height, component_count, buffer, 0);
             break;
-        case FileFormat::jpg:
-            success = stbi_write_jpg_to_func(write_func, &m_ofs, width, height, component_count, buffer, 100);
+        case ImageFileFormat::jpg:
+            success = stbi_write_jpg_to_func(write_func, m_stream.get(), width, height, component_count, buffer, 100);
             break;
-        case FileFormat::bmp:
-            success = stbi_write_bmp_to_func(write_func, &m_ofs, width, height, component_count, buffer);
+        case ImageFileFormat::bmp:
+            success = stbi_write_bmp_to_func(write_func, m_stream.get(), width, height, component_count, buffer);
             break;
-        case FileFormat::tga:
-            success = stbi_write_tga_to_func(write_func, &m_ofs, width, height, component_count, buffer);
+        case ImageFileFormat::tga:
+            success = stbi_write_tga_to_func(write_func, m_stream.get(), width, height, component_count, buffer);
             break;
-        case FileFormat::hdr:
+        case ImageFileFormat::hdr:
             success = stbi_write_hdr_to_func(
                 write_func,
-                &m_ofs,
+                &m_stream,
                 width,
                 height,
                 component_count,
@@ -257,15 +278,12 @@ public:
             );
             break;
         default:
-            break;
+            KALI_UNREACHABLE();
         }
-        return success;
     }
-
-protected:
-    enum class FileFormat { unknown, png, jpg, bmp, tga, hdr };
-    FileFormat m_file_format{FileFormat::unknown};
 };
+
+#if 0
 
 // ----------------------------------------------------------------------------
 // TinyExrImageReader
@@ -275,31 +293,33 @@ class TinyExrImageReader : public ImageReader {
 public:
     ~TinyExrImageReader() { }
 
-    bool read_spec(const void* buffer, size_t len, ImageSpec& out_spec) override
+    ImageSpec read_spec(const void* buffer, size_t len) override
     {
         const uint8_t* memory = reinterpret_cast<const uint8_t*>(buffer);
 
         EXRVersion exr_version;
         if (ParseEXRVersionFromMemory(&exr_version, memory, len) != TINYEXR_SUCCESS)
-            return false;
+            KALI_THROW("Failed to parse EXR version");
 
         if (exr_version.multipart)
-            return false;
+            KALI_THROW("Multipart EXR is not supported");
 
         EXRHeader exr_header;
         const char* err;
         if (ParseEXRHeaderFromMemory(&exr_header, &exr_version, memory, len, &err) != TINYEXR_SUCCESS) {
+            std::string err_copy = err;
             FreeEXRErrorMessage(err);
-            return false;
+            KALI_THROW("Failed to parse EXR header: {}", err_copy);
         }
 
         EXRImage exr_image;
         InitEXRImage(&exr_image);
 
         if (LoadEXRImageFromMemory(&exr_image, &exr_header, memory, len, &err) != TINYEXR_SUCCESS) {
+            std::string err_copy = err;
             FreeEXRHeader(&exr_header);
             FreeEXRErrorMessage(err);
-            return false;
+            KALI_THROW("Failed to read EXR image: {}", err_copy);
         }
 
         // exr_image.
@@ -307,15 +327,16 @@ public:
         FreeEXRImage(&exr_image);
         FreeEXRHeader(&exr_header);
 
-        KALI_UNUSED(out_spec);
-        return false;
+        // TODO: implement
+        return {};
     }
 
-    bool read_image(void* out_buffer, size_t out_len) override
+    void read_image(const ImageSpec& spec, void* out_buffer, size_t out_len) override
     {
+        KALI_UNUSED(spec);
         KALI_UNUSED(out_buffer);
         KALI_UNUSED(out_len);
-        return false;
+        KALI_UNIMPLEMENTED();
     }
 
 private:
@@ -329,23 +350,23 @@ class TinyExrImageWriter : public ImageWriter {
 public:
     ~TinyExrImageWriter() { }
 
-    bool open(const std::filesystem::path& path, const ImageSpec& spec) override
+    void open(const std::filesystem::path& path, const ImageSpec& spec) override
     {
         if (spec.component_count > 4)
-            return false;
+            KALI_THROW("Unsupported component count for EXR");
         if (spec.component_type != ImageComponentType::u32 && spec.component_type != ImageComponentType::f32
             && spec.component_type != ImageComponentType::f16)
-            return false;
+            KALI_THROW("Unsupported component type for EXR");
 
         return ImageWriter::open(path, spec);
     }
 
-    bool write_image(const void* buffer, size_t len) override
+    void write_image(const ImageSpec& spec, const void* buffer, size_t len) override
     {
-        KALI_ASSERT(m_spec.component_count <= 4);
+        KALI_ASSERT(spec.component_count <= 4);
 
         int pixel_type;
-        switch (m_spec.component_type) {
+        switch (spec.component_type) {
         case ImageComponentType::u32:
             pixel_type = TINYEXR_PIXELTYPE_UINT;
             break;
@@ -363,40 +384,40 @@ public:
         KALI_UNUSED(len);
 
         // Split image into channels.
-        std::vector<std::unique_ptr<uint8_t[]>> channel_data(m_spec.component_count);
-        std::vector<uint8_t*> channel_ptrs(m_spec.component_count);
-        std::vector<int> pixel_types(m_spec.component_count);
-        std::vector<int> requested_pixel_types(m_spec.component_count);
-        for (uint32_t i = 0; i < m_spec.component_count; ++i) {
-            channel_data[i].reset(new uint8_t[m_spec.width * m_spec.height * m_spec.get_component_byte_size()]);
-            channel_ptrs[m_spec.component_count - i - 1] = channel_data[i].get();
+        std::vector<std::unique_ptr<uint8_t[]>> channel_data(spec.component_count);
+        std::vector<uint8_t*> channel_ptrs(spec.component_count);
+        std::vector<int> pixel_types(spec.component_count);
+        std::vector<int> requested_pixel_types(spec.component_count);
+        for (uint32_t i = 0; i < spec.component_count; ++i) {
+            channel_data[i].reset(new uint8_t[spec.width * spec.height * spec.get_component_byte_size()]);
+            channel_ptrs[spec.component_count - i - 1] = channel_data[i].get();
             pixel_types[i] = pixel_type;
             requested_pixel_types[i] = pixel_type;
         }
 
         // Convert interleaved input data into channel data.
-        switch (m_spec.component_type) {
+        switch (spec.component_type) {
         case ImageComponentType::u32:
         case ImageComponentType::f32:
-            for (uint32_t y = 0; y < m_spec.height; ++y) {
-                for (uint32_t x = 0; x < m_spec.width; ++x) {
+            for (uint32_t y = 0; y < spec.height; ++y) {
+                for (uint32_t x = 0; x < spec.width; ++x) {
                     const uint32_t* pixel
-                        = reinterpret_cast<const uint32_t*>(buffer) + (y * m_spec.width + x) * m_spec.component_count;
-                    for (uint32_t i = 0; i < m_spec.component_count; ++i) {
+                        = reinterpret_cast<const uint32_t*>(buffer) + (y * spec.width + x) * spec.component_count;
+                    for (uint32_t i = 0; i < spec.component_count; ++i) {
                         uint32_t* channel = reinterpret_cast<uint32_t*>(channel_data[i].get());
-                        channel[y * m_spec.width + x] = pixel[i];
+                        channel[y * spec.width + x] = pixel[i];
                     }
                 }
             }
             break;
         case ImageComponentType::f16:
-            for (uint32_t y = 0; y < m_spec.height; ++y) {
-                for (uint32_t x = 0; x < m_spec.width; ++x) {
+            for (uint32_t y = 0; y < spec.height; ++y) {
+                for (uint32_t x = 0; x < spec.width; ++x) {
                     const uint16_t* pixel
-                        = reinterpret_cast<const uint16_t*>(buffer) + (y * m_spec.width + x) * m_spec.component_count;
-                    for (uint32_t i = 0; i < m_spec.component_count; ++i) {
+                        = reinterpret_cast<const uint16_t*>(buffer) + (y * spec.width + x) * spec.component_count;
+                    for (uint32_t i = 0; i < spec.component_count; ++i) {
                         uint16_t* channel = reinterpret_cast<uint16_t*>(channel_data[i].get());
-                        channel[y * m_spec.width + x] = pixel[i];
+                        channel[y * spec.width + x] = pixel[i];
                     }
                 }
             }
@@ -406,18 +427,18 @@ public:
         }
 
         // Setup channel infos.
-        std::vector<EXRChannelInfo> channel_infos(m_spec.component_count);
+        std::vector<EXRChannelInfo> channel_infos(spec.component_count);
         const char channel_names[] = "RGBA";
-        for (uint32_t i = 0; i < m_spec.component_count; ++i) {
+        for (uint32_t i = 0; i < spec.component_count; ++i) {
             auto& info = channel_infos[i];
-            info.name[0] = channel_names[m_spec.component_count - i - 1];
+            info.name[0] = channel_names[spec.component_count - i - 1];
             info.name[1] = '\0';
         }
 
         EXRHeader exr_header;
         InitEXRHeader(&exr_header);
 
-        exr_header.num_channels = m_spec.component_count;
+        exr_header.num_channels = spec.component_count;
         exr_header.channels = channel_infos.data();
         exr_header.pixel_types = pixel_types.data();
         exr_header.requested_pixel_types = pixel_types.data();
@@ -425,9 +446,9 @@ public:
         EXRImage exr_image;
         InitEXRImage(&exr_image);
 
-        exr_image.width = m_spec.width;
-        exr_image.height = m_spec.height;
-        exr_image.num_channels = m_spec.component_count;
+        exr_image.width = spec.width;
+        exr_image.height = spec.height;
+        exr_image.num_channels = spec.component_count;
         exr_image.images = channel_ptrs.data();
 
         uint8_t* exr_buffer;
@@ -435,16 +456,15 @@ public:
         size_t exr_size = SaveEXRImageToMemory(&exr_image, &exr_header, &exr_buffer, &err);
         if (exr_size == 0) {
             FreeEXRErrorMessage(err);
-            return false;
+            KALI_THROW("Failed to save EXR image");
         }
 
         m_ofs.write(reinterpret_cast<const char*>(exr_buffer), exr_size);
         free(exr_buffer);
-
-        return true;
     }
 };
 
+#endif
 
 #if 0
 
@@ -503,7 +523,7 @@ public:
         }
     }
 
-    bool read_image(void* buffer, size_t len) override
+    void read_image(const ImageSpec& spec, void* buffer, size_t len) override
     {
         uint8_t* dst = reinterpret_cast<uint8_t*>(buffer);
         try {
@@ -617,45 +637,48 @@ class PNGReader : public ImageReader { };
 
 ref<ImageInput> ImageInput::open(const std::filesystem::path& path, Options options)
 {
-    if (!std::filesystem::exists(path))
-        return nullptr;
+    ImageFileFormat file_format = extension_to_format(get_extension_from_path(path));
 
-    std::string ext = to_lower(path.extension().string());
+    ref<Stream> stream = make_ref<FileStream>(path, FileStream::Mode::Read);
 
+    return open(stream, file_format, options);
+}
+
+ref<ImageInput> ImageInput::open(ref<Stream> stream, ImageFileFormat file_format, Options options)
+{
     std::unique_ptr<ImageReader> reader;
 
-    if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp" || ext == ".tga" || ext == ".hdr") {
-        reader = std::make_unique<StbImageReader>();
-    } else if (ext == ".exr") {
-        reader = std::make_unique<TinyExrImageReader>();
+    switch (file_format) {
+    case ImageFileFormat::png:
+    case ImageFileFormat::jpg:
+    case ImageFileFormat::bmp:
+    case ImageFileFormat::tga:
+    case ImageFileFormat::hdr:
+        reader = std::make_unique<StbImageReader>(stream, file_format);
+        break;
+    case ImageFileFormat::exr:
+        // reader = std::make_unique<TinyExrImageReader>(stream, file_format);
+        break;
     }
 
     if (!reader)
-        return nullptr;
+        KALI_THROW("Unsupported image file format");
 
-    std::unique_ptr<MemoryMappedFile> file = std::make_unique<MemoryMappedFile>(path);
-    if (!file->is_open())
-        return nullptr;
-
-    ImageSpec spec;
-    if (!reader->open(path, spec))
-        return nullptr;
+    ImageSpec spec = reader->read_spec();
 
     ref<ImageInput> image_input = make_ref<ImageInput>();
     image_input->m_spec = std::move(spec);
     image_input->m_options = std::move(options);
     image_input->m_reader = std::move(reader);
-    image_input->m_file = std::move(file);
-
     return image_input;
 }
 
 ImageInput::~ImageInput() = default;
 
-bool ImageInput::read_image(void* buffer, size_t len)
+void ImageInput::read_image(void* buffer, size_t len)
 {
     KALI_ASSERT(m_reader);
-    return m_reader->read_image(buffer, len);
+    m_reader->read_image(m_spec, buffer, len);
 }
 
 // ----------------------------------------------------------------------------
@@ -664,36 +687,53 @@ bool ImageInput::read_image(void* buffer, size_t len)
 
 ref<ImageOutput> ImageOutput::open(const std::filesystem::path& path, ImageSpec spec, Options options)
 {
-    std::string ext = to_lower(path.extension().string());
+    ImageFileFormat file_format = extension_to_format(get_extension_from_path(path));
 
+    ref<Stream> stream = make_ref<FileStream>(path, FileStream::Mode::Write);
+
+    return open(stream, file_format, spec, options);
+}
+
+ref<ImageOutput> ImageOutput::open(ref<Stream> stream, ImageFileFormat file_format, ImageSpec spec, Options options)
+{
     std::unique_ptr<ImageWriter> writer;
 
-    if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp" || ext == ".tga" || ext == ".hdr") {
-        writer = std::make_unique<StbImageWriter>();
-    } else if (ext == ".exr") {
-        writer = std::make_unique<TinyExrImageWriter>();
+    KALI_ASSERT(spec.width > 0);
+    KALI_ASSERT(spec.height > 0);
+    KALI_ASSERT(spec.component_count > 0);
+    KALI_ASSERT(spec.component_type != ImageComponentType::unknown);
+
+    switch (file_format) {
+    case ImageFileFormat::png:
+    case ImageFileFormat::jpg:
+    case ImageFileFormat::bmp:
+    case ImageFileFormat::tga:
+    case ImageFileFormat::hdr:
+        writer = std::make_unique<StbImageWriter>(stream, file_format);
+        break;
+    case ImageFileFormat::exr:
+        // writer = std::make_unique<TinyExrImageWriter>(stream, file_format);
+        break;
     }
 
     if (!writer)
-        return nullptr;
+        KALI_THROW("Unknown image file format");
 
-    if (!writer->open(path, spec))
-        return nullptr;
+    writer->write_spec(spec);
 
     ref<ImageOutput> image_output = make_ref<ImageOutput>();
     image_output->m_spec = std::move(spec);
     image_output->m_options = std::move(options);
     image_output->m_writer = std::move(writer);
-
     return image_output;
 }
 
 ImageOutput::~ImageOutput() = default;
 
-bool ImageOutput::write_image(const void* buffer, size_t len)
+void ImageOutput::write_image(const void* buffer, size_t len)
 {
     KALI_ASSERT(m_writer);
-    return m_writer->write_image(buffer, len);
+    m_writer->write_image(m_spec, buffer, len);
 }
 
 } // namespace kali

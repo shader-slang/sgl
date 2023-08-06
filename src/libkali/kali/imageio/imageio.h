@@ -10,15 +10,24 @@
 
 namespace kali {
 
-class MemoryMappedFile;
 class ImageReader;
 class ImageWriter;
+class Stream;
 
 #ifdef KALI_HEADER_VALIDATION
-class MemoryMappedFile { };
 class ImageReader { };
 class ImageWriter { };
+class Stream { };
 #endif
+
+enum class ImageFileFormat {
+    png,
+    jpg,
+    bmp,
+    tga,
+    hdr,
+    exr,
+};
 
 /// The type of each component in an image.
 enum class ImageComponentType {
@@ -67,21 +76,18 @@ public:
     using Options = std::map<std::string, std::string>;
 
     static ref<ImageInput> open(const std::filesystem::path& path, Options options = {});
+    static ref<ImageInput> open(ref<Stream> stream, ImageFileFormat file_format, Options options = {});
 
     ~ImageInput();
 
     const ImageSpec& get_spec() const { return m_spec; }
 
-    bool read_image(void* buffer, size_t len);
-
-    const std::string& get_error() const { return m_error; }
+    void read_image(void* buffer, size_t len);
 
 private:
     ImageSpec m_spec;
     Options m_options;
-    std::string m_error;
     std::unique_ptr<ImageReader> m_reader;
-    std::unique_ptr<MemoryMappedFile> m_file;
 };
 
 /// Class for writing images.
@@ -91,17 +97,15 @@ public:
     using Options = std::map<std::string, std::string>;
 
     static ref<ImageOutput> open(const std::filesystem::path& path, ImageSpec spec, Options options = {});
+    static ref<ImageOutput> open(ref<Stream> stream, ImageFileFormat file_format, ImageSpec spec, Options options = {});
 
     ~ImageOutput();
 
-    bool write_image(const void* buffer, size_t len);
-
-    const std::string& get_error() const { return m_error; }
+    void write_image(const void* buffer, size_t len);
 
 private:
     ImageSpec m_spec;
     Options m_options;
-    std::string m_error;
     std::unique_ptr<ImageWriter> m_writer;
 };
 
