@@ -85,6 +85,16 @@ const std::string& get_executable_name()
     return name;
 }
 
+const std::filesystem::path& get_project_directory()
+{
+    static std::filesystem::path path{KALI_PROJECT_DIR};
+    return path;
+}
+
+// -------------------------------------------------------------------------------------------------
+// Stacktrace
+// -------------------------------------------------------------------------------------------------
+
 std::string format_stacktrace(std::span<const ResolvedStackFrame> trace)
 {
     std::string result;

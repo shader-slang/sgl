@@ -135,20 +135,6 @@ const std::filesystem::path& get_executable_path()
     return path;
 }
 
-const std::filesystem::path& get_runtime_directory()
-{
-    static std::filesystem::path path(
-        []()
-        {
-            Dl_info info;
-            if (::dladdr((void*)&get_runtime_directory, &info) == 0)
-                KALI_THROW("Failed to get the falcor directory. dladdr() failed.");
-            return std::filesystem::path(info.dli_fname).parent_path();
-        }()
-    );
-    return path;
-}
-
 const std::filesystem::path& get_app_data_directory()
 {
     static std::filesystem::path path([]() { return get_home_directory() / ".kali"; }());
@@ -164,6 +150,20 @@ const std::filesystem::path& get_home_directory()
             if ((path_str = ::getenv("HOME")) == NULL)
                 path_str = ::getpwuid(getuid())->pw_dir;
             return std::filesystem::path(path_str);
+        }()
+    );
+    return path;
+}
+
+const std::filesystem::path& get_runtime_directory()
+{
+    static std::filesystem::path path(
+        []()
+        {
+            Dl_info info;
+            if (dladdr((void*)&get_runtime_directory, &info) == 0)
+                KALI_THROW("Failed to get the runtime directory. dladdr() failed.");
+            return std::filesystem::path(info.dli_fname).parent_path();
         }()
     );
     return path;

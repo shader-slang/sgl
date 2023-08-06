@@ -111,6 +111,12 @@ using FileDialogFilterList = std::vector<FileDialogFilter>;
 /// Get the home directory.
 [[nodiscard]] KALI_API const std::filesystem::path& get_home_directory();
 
+/// Get the project source directory. Note that this is only valid during development.
+[[nodiscard]] KALI_API const std::filesystem::path& get_project_directory();
+
+/// Get the runtime directory. This is the path where the kali runtime library (kali.dll or libkali.so) resides.
+[[nodiscard]] KALI_API const std::filesystem::path& get_runtime_directory();
+
 // -------------------------------------------------------------------------------------------------
 // Environment
 // -------------------------------------------------------------------------------------------------

@@ -370,31 +370,6 @@ const std::filesystem::path& get_executable_path()
     return path;
 }
 
-const std::filesystem::path& get_runtime_directory()
-{
-    static std::filesystem::path path(
-        []()
-        {
-            HMODULE hm = NULL;
-            if (GetModuleHandleExA(
-                    GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                    (LPCSTR)&get_runtime_directory,
-                    &hm
-                )
-                == 0)
-                KALI_THROW("Failed to get the falcor directory. GetModuleHandle failed, error = {}.", GetLastError());
-            CHAR path_str[1024];
-            if (GetModuleFileNameA(hm, path_str, sizeof(path_str)) == 0)
-                KALI_THROW(
-                    "Failed to get the falcor directory. GetModuleFileNameA failed, error = {}.",
-                    GetLastError()
-                );
-            return std::filesystem::path(path_str).parent_path();
-        }()
-    );
-    return path;
-}
-
 const std::filesystem::path& get_app_data_directory()
 {
     static std::filesystem::path path(
@@ -417,6 +392,28 @@ const std::filesystem::path& get_home_directory()
             if (auto value = get_environment_variable("USERPROFILE"))
                 return std::filesystem::path(*value);
             return std::filesystem::path();
+        }()
+    );
+    return path;
+}
+
+const std::filesystem::path& get_runtime_directory()
+{
+    static std::filesystem::path path(
+        []()
+        {
+            HMODULE hm = NULL;
+            if (GetModuleHandleExA(
+                    GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                    (LPCSTR)&get_runtime_directory,
+                    &hm
+                )
+                == 0)
+                KALI_THROW("Failed to get the runtime directory. GetModuleHandle failed: {}", GetLastError());
+            CHAR path_str[1024];
+            if (GetModuleFileNameA(hm, path_str, sizeof(path_str)) == 0)
+                KALI_THROW("Failed to get the runtime directory. GetModuleFileNameA failed: {}", GetLastError());
+            return std::filesystem::path(path_str).parent_path();
         }()
     );
     return path;

@@ -200,6 +200,7 @@ target_compile_definitions(kali
         KALI_DLL
         # $<$<PLATFORM_ID:Windows>:IMGUI_API=__declspec\(dllexport\)>
         # $<$<PLATFORM_ID:Linux>:IMGUI_API=__attribute__\(\(visibility\("default"\)\)\)>
+        KALI_PROJECT_DIR="${CMAKE_SOURCE_DIR}"
 )
 
 target_link_libraries(kali
