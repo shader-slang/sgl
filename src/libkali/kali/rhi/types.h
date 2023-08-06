@@ -5,6 +5,8 @@
 
 #include <slang-gfx.h>
 
+namespace kali {
+
 enum class ComparisonFunc {
     never,
     less,
@@ -326,3 +328,5 @@ struct BlendDesc {
 
     bool alpha_to_coverage_enable{false};
 };
+
+} // namespace kali
