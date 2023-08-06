@@ -1,4 +1,5 @@
 #include "kali/core/logger.h"
+#include "kali/core/platform.h"
 #include "kali/rhi/device.h"
 #include "kali/rhi/program.h"
 #include "kali/math/vector.h"
@@ -78,7 +79,7 @@ struct ExampleProgram {
 
     Slang::Result execute()
     {
-        ref<Device> device = Device::create({.type = DeviceType::d3d12, .enable_debug_layers = true});
+        ref<Device> device = Device::create({.type = DeviceType::automatic, .enable_debug_layers = true});
         gfx_device = device->get_gfx_device();
 
         // gfx::IDevice::Desc deviceDesc = {};
@@ -87,11 +88,10 @@ struct ExampleProgram {
         // if (SLANG_FAILED(res))
         //     return res;
 
-
         gSlangSession = createSlangSession(gfx_device);
         gSlangModule = compileShaderModuleFromFile(
             gSlangSession,
-            "c:/projects/kali/src/examples/simple_compute/compute.cs.slang"
+            (get_project_directory() / "src/examples/simple_compute/compute.cs.slang").c_str()
         );
 
         gProgram = loadComputeProgram(gSlangModule, "main");
@@ -177,25 +177,6 @@ struct Test {
 
 int main()
 {
-    uint4 a = {1, 2, 3, 4};
-    float3 b = {1, 2, 3};
-    KALI_PRINT(a);
-    KALI_PRINT(b);
-
-    ResourceUsage usage
-        = ResourceUsage::unordered_access | ResourceUsage::acceleration_structure | ResourceUsage(0x345000);
-    KALI_PRINT(usage);
-
-    log_debug("debug message");
-    log_info("info message");
-    log_warn("warning message");
-    log_error("error message");
-    log_fatal("fatal message");
-
-    Test test;
-    test.is_valid(10);
-    KALI_ASSERT(a.x == 2);
-
     ExampleProgram program;
     program.execute();
     return 0;
