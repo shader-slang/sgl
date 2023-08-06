@@ -255,15 +255,18 @@ protected:
 
 
 struct BufferDesc {
-    size_t size{0};                 ///< Buffer size in bytes.
-    size_t struct_size{0};          ///< Struct size in bytes. If > 0, this is a structured buffer.
-    Format format{Format::unknown}; ///< Buffer format. If != unknown, this is a typed buffer.
+    /// Buffer size in bytes.
+    size_t size{0};
+    /// Struct size in bytes. If > 0, this is a structured buffer.
+    size_t struct_size{0};
+    /// Buffer format. If != unknown, this is a typed buffer.
+    Format format{Format::unknown};
 
     ResourceState initial_state{ResourceState::undefined};
     ResourceUsage usage{ResourceUsage::none};
     MemoryType memory_type{MemoryType::device_local};
 
-    std::string debug_name; ///< Debug name.
+    std::string debug_name;
 
 #if 0
     static BufferDesc create() { return {}; }
