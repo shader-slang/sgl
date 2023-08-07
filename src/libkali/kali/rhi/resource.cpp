@@ -241,9 +241,9 @@ NativeHandle ResourceView::get_native_handle() const
 // Buffer
 // ----------------------------------------------------------------------------
 
-Buffer::Buffer(const BufferDesc& desc, const void* init_data, ref<Device> device)
-    : Resource(ResourceType::buffer, device)
-    , m_desc(desc)
+Buffer::Buffer(BufferDesc desc, const void* init_data, ref<Device> device)
+    : Resource(ResourceType::buffer, std::move(device))
+    , m_desc(std::move(desc))
 {
     KALI_ASSERT(m_desc.size > 0);
     KALI_ASSERT(m_desc.struct_size == 0 || m_desc.format == Format::unknown);
@@ -336,9 +336,9 @@ ref<ResourceView> Buffer::get_uav() const
 // Texture
 // ----------------------------------------------------------------------------
 
-Texture::Texture(const TextureDesc& desc, const void* init_data, ref<Device> device)
-    : Resource(ResourceType(desc.type), device)
-    , m_desc(desc)
+Texture::Texture(TextureDesc desc, const void* init_data, ref<Device> device)
+    : Resource(ResourceType(desc.type), std::move(device))
+    , m_desc(std::move(desc))
 {
     KALI_ASSERT(m_desc.width > 0);
     KALI_ASSERT(m_desc.height > 0);

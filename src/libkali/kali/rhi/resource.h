@@ -373,7 +373,7 @@ struct BufferDesc {
 class KALI_API Buffer : public Resource {
     KALI_OBJECT(Buffer)
 public:
-    Buffer(const BufferDesc& desc, const void* init_data, ref<Device> device);
+    Buffer(BufferDesc desc, const void* init_data, ref<Device> device);
 
     const BufferDesc& get_desc() const { return m_desc; }
 
@@ -479,7 +479,7 @@ struct TextureDesc {
 class KALI_API Texture : public Resource {
     KALI_OBJECT(Texture)
 public:
-    Texture(const TextureDesc& desc, const void* init_data, ref<Device> device);
+    Texture(TextureDesc desc, const void* init_data, ref<Device> device);
 
     const TextureDesc& get_desc() const { return m_desc; }
 

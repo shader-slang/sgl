@@ -28,10 +28,10 @@ NativeHandle PipelineState::get_native_handle() const
     return {};
 }
 
-ComputePipelineState::ComputePipelineState(const ComputePipelineStateDesc& desc, ref<Device> device)
+ComputePipelineState::ComputePipelineState(ComputePipelineStateDesc desc, ref<Device> device)
     : PipelineState(std::move(device))
-    , m_desc(desc)
-    , m_program(desc.program)
+    , m_desc(std::move(desc))
+    , m_program(m_desc.program)
 {
     // gfx::ComputePipelineStateDesc gfx_desc{.program = m_program->get_gfx_program()};
     // gfx::ComputePipelineStateDesc gfx_desc{.program = m_program->get_gfx_program()};
@@ -41,10 +41,10 @@ ComputePipelineState::ComputePipelineState(const ComputePipelineStateDesc& desc,
     // m_device->get_gfx_device()->createComputePipelineState(gfx_desc, m_gfx_pipeline.writeRef());
 }
 
-GraphicsPipelineState::GraphicsPipelineState(const GraphicsPipelineStateDesc& desc, ref<Device> device)
+GraphicsPipelineState::GraphicsPipelineState(GraphicsPipelineStateDesc desc, ref<Device> device)
     : PipelineState(std::move(device))
-    , m_desc(desc)
-    , m_program(desc.program)
+    , m_desc(std::move(desc))
+    , m_program(m_desc.program)
 {
 }
 

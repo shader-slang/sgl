@@ -131,9 +131,9 @@ public:
 
     DeviceType get_type() const { return m_type; }
 
-    ref<Swapchain> create_swapchain(const SwapchainDesc& desc, ref<Window> window);
+    ref<Swapchain> create_swapchain(SwapchainDesc desc, ref<Window> window);
 
-    ref<Buffer> create_buffer(const BufferDesc& desc, const void* init_data = nullptr);
+    ref<Buffer> create_buffer(BufferDesc desc, const void* init_data = nullptr);
 
     ref<Buffer> create_raw_buffer(
         size_t size,
@@ -182,15 +182,20 @@ public:
         return create_structured_buffer(sizeof(T), element_count, usage, memory_type, init_data);
     }
 
-    ref<Texture> create_texture(const TextureDesc& desc, const void* init_data = nullptr);
+    ref<Texture> create_texture(TextureDesc desc, const void* init_data = nullptr);
+
+    ref<Sampler> create_sampler(SamplerDesc desc);
+
 
     ref<Sampler> create_sampler(const SamplerDesc& desc);
 
-    ref<Program> create_program(const ProgramDesc& desc);
+    ref<Program> create_program(ProgramDesc desc);
 
     // ref<Program> create_program(std::filesystem::path path, std::string entrypoint);
 
-    ref<ComputePipelineState> create_compute_pipeline_state(const ComputePipelineStateDesc& desc);
+    ref<ComputePipelineState> create_compute_pipeline_state(ComputePipelineStateDesc desc);
+
+    ref<GraphicsPipelineState> create_graphics_pipeline_state(GraphicsPipelineStateDesc desc);
 
     ref<GraphicsPipelineState> create_graphics_pipeline_state(const GraphicsPipelineStateDesc& desc);
 

@@ -148,14 +148,14 @@ Device::~Device()
     m_gfx_device.setNull();
 }
 
-ref<Swapchain> Device::create_swapchain(const SwapchainDesc& desc, ref<Window> window)
+ref<Swapchain> Device::create_swapchain(SwapchainDesc desc, ref<Window> window)
 {
-    return make_ref<Swapchain>(desc, window, ref<Device>(this));
+    return make_ref<Swapchain>(std::move(desc), window, ref<Device>(this));
 }
 
-ref<Buffer> Device::create_buffer(const BufferDesc& desc, const void* init_data)
+ref<Buffer> Device::create_buffer(BufferDesc desc, const void* init_data)
 {
-    return make_ref<Buffer>(desc, init_data, ref<Device>(this));
+    return make_ref<Buffer>(std::move(desc), init_data, ref<Device>(this));
 }
 
 ref<Buffer> Device::create_raw_buffer(size_t size, ResourceUsage usage, MemoryType memory_type, const void* init_data)
@@ -202,7 +202,21 @@ ref<Buffer> Device::create_structured_buffer(
     return create_buffer(desc, init_data);
 }
 
-ref<Texture> Device::create_texture(const TextureDesc& desc, const void* init_data)
+ref<Texture> Device::create_texture(TextureDesc desc, const void* init_data)
+{
+    return make_ref<Texture>(std::move(desc), init_data, ref<Device>(this));
+}
+
+ref<Sampler> Device::create_sampler(SamplerDesc desc)
+{
+    return make_ref<Sampler>(std::move(desc), ref<Device>(this));
+}
+
+ref<Program> Device::create_program(ProgramDesc desc)
+{
+    return m_program_manager->create_program(std::move(desc));
+}
+
 {
     return make_ref<Texture>(desc, init_data, ref<Device>(this));
 }
@@ -212,14 +226,14 @@ ref<Sampler> Device::create_sampler(const SamplerDesc& desc)
     return make_ref<Sampler>(desc, ref<Device>(this));
 }
 
-ref<Program> Device::create_program(const ProgramDesc& desc)
+ref<ComputePipelineState> Device::create_compute_pipeline_state(ComputePipelineStateDesc desc)
 {
-    return m_program_manager->create_program(desc);
+    return make_ref<ComputePipelineState>(std::move(desc), ref<Device>(this));
 }
 
-ref<ComputePipelineState> Device::create_compute_pipeline_state(const ComputePipelineStateDesc& desc)
+ref<GraphicsPipelineState> Device::create_graphics_pipeline_state(GraphicsPipelineStateDesc desc)
 {
-    return make_ref<ComputePipelineState>(desc, ref<Device>(this));
+    return make_ref<GraphicsPipelineState>(std::move(desc), ref<Device>(this));
 }
 
 ref<GraphicsPipelineState> Device::create_graphics_pipeline_state(const GraphicsPipelineStateDesc& desc)

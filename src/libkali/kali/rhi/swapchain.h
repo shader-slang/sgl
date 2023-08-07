@@ -23,8 +23,8 @@ struct SwapchainDesc {
 class KALI_API Swapchain : public Object {
     KALI_OBJECT(Swapchain)
 public:
-    Swapchain(const SwapchainDesc& desc, WindowHandle window_handle, ref<Device> device);
-    Swapchain(const SwapchainDesc& desc, ref<Window> window, ref<Device> device);
+    Swapchain(SwapchainDesc desc, WindowHandle window_handle, ref<Device> device);
+    Swapchain(SwapchainDesc desc, ref<Window> window, ref<Device> device);
     ~Swapchain();
 
     const SwapchainDesc& get_desc() const { return m_desc; }

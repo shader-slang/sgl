@@ -8,19 +8,19 @@
 
 namespace kali {
 
-Swapchain::Swapchain(const SwapchainDesc& desc, WindowHandle window_handle, ref<Device> device)
-    : m_desc(desc)
+Swapchain::Swapchain(SwapchainDesc desc, WindowHandle window_handle, ref<Device> device)
+    : m_desc(std::move(desc))
     , m_device(std::move(device))
 {
     KALI_ASSERT(m_device);
 
     gfx::ISwapchain::Desc gfx_desc{
-        .format = get_gfx_format(desc.format),
-        .width = gfx::GfxCount(desc.width),
-        .height = gfx::GfxCount(desc.height),
-        .imageCount = gfx::GfxCount(desc.image_count),
+        .format = get_gfx_format(m_desc.format),
+        .width = gfx::GfxCount(m_desc.width),
+        .height = gfx::GfxCount(m_desc.height),
+        .imageCount = gfx::GfxCount(m_desc.image_count),
         .queue = m_device->get_gfx_queue(),
-        .enableVSync = desc.enable_vsync,
+        .enableVSync = m_desc.enable_vsync,
     };
 
 #if KALI_WINDOWS
@@ -29,12 +29,11 @@ Swapchain::Swapchain(const SwapchainDesc& desc, WindowHandle window_handle, ref<
     gfx::WindowHandle gfx_window_handle = gfx::WindowHandle::FromXWindow(window_handle.xdisplay, window_handle.xwindow);
 #endif
 
-
     SLANG_CALL(m_device->get_gfx_device()->createSwapchain(gfx_desc, gfx_window_handle, m_gfx_swapchain.writeRef()));
 }
 
-Swapchain::Swapchain(const SwapchainDesc& desc, ref<Window> window, ref<Device> device)
-    : Swapchain(desc, window->get_window_handle(), device)
+Swapchain::Swapchain(SwapchainDesc desc, ref<Window> window, ref<Device> device)
+    : Swapchain(std::move(desc), window->get_window_handle(), std::move(device))
 {
     m_window = window;
 }

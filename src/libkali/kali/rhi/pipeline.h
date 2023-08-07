@@ -35,7 +35,7 @@ struct ComputePipelineStateDesc {
 
 class KALI_API ComputePipelineState : public PipelineState {
 public:
-    ComputePipelineState(const ComputePipelineStateDesc& desc, ref<Device> device);
+    ComputePipelineState(ComputePipelineStateDesc desc, ref<Device> device);
 
     const ComputePipelineStateDesc& get_desc() const { return m_desc; }
 
@@ -57,7 +57,7 @@ struct GraphicsPipelineStateDesc {
 
 class KALI_API GraphicsPipelineState : public PipelineState {
 public:
-    GraphicsPipelineState(const GraphicsPipelineStateDesc& desc, ref<Device> device);
+    GraphicsPipelineState(GraphicsPipelineStateDesc desc, ref<Device> device);
 
     const GraphicsPipelineStateDesc& get_desc() const { return m_desc; }
 

@@ -53,9 +53,9 @@ inline gfx::TextureReductionOp get_gfx_texture_reduction_op(TextureReductionOp t
     return gfx::TextureReductionOp(texture_reduction_op);
 }
 
-Sampler::Sampler(const SamplerDesc& desc, ref<Device> device)
-    : m_desc(desc)
-    , m_device(device)
+Sampler::Sampler(SamplerDesc desc, ref<Device> device)
+    : m_desc(std::move(desc))
+    , m_device(std::move(device))
 {
     gfx::ISamplerState::Desc gfx_desc{
         .minFilter = get_gfx_texture_filtering_mode(m_desc.min_filter),
