@@ -207,6 +207,7 @@ target_link_libraries(kali
     PUBLIC
         fmt
         slang slang-gfx
+        Vulkan-Headers
         # $<$<BOOL:${KALI_HAS_CUDA}>:CUDA::cuda_driver>
         # $<$<BOOL:${KALI_HAS_CUDA}>:CUDA::cudart_static>
     PRIVATE

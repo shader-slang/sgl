@@ -93,3 +93,6 @@ if(EXISTS ${AGILITY_SDK_DIR}/build/native/include/d3d12.h)
 else()
     set(KALI_HAS_AGILITY_SDK OFF PARENT_SCOPE)
 endif()
+
+# vulkan-headers
+add_subdirectory(vulkan-headers)
