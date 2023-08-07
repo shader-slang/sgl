@@ -171,6 +171,17 @@ public:
         const void* init_data = nullptr
     );
 
+    template<typename T>
+    ref<Buffer> create_structured_buffer(
+        size_t element_count,
+        ResourceUsage usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access,
+        MemoryType memory_type = MemoryType::device_local,
+        const T* init_data = nullptr
+    )
+    {
+        return create_structured_buffer(sizeof(T), element_count, usage, memory_type, init_data);
+    }
+
     ref<Texture> create_texture(const TextureDesc& desc, const void* init_data = nullptr);
 
     ref<Sampler> create_sampler(const SamplerDesc& desc);
