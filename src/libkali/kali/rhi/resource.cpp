@@ -110,6 +110,19 @@ inline gfx::MemoryType get_gfx_memory_type(MemoryType memory_type)
     return gfx::MemoryType(memory_type);
 }
 
+inline gfx::IResourceView::Type get_gfx_resource_view_type(ResourceViewType type)
+{
+    static_assert(uint32_t(ResourceViewType::shader_resource) == uint32_t(gfx::IResourceView::Type::ShaderResource));
+    static_assert(uint32_t(ResourceViewType::unordered_access) == uint32_t(gfx::IResourceView::Type::UnorderedAccess));
+    static_assert(uint32_t(ResourceViewType::render_target) == uint32_t(gfx::IResourceView::Type::RenderTarget));
+    static_assert(uint32_t(ResourceViewType::depth_stencil) == uint32_t(gfx::IResourceView::Type::DepthStencil));
+    static_assert(
+        uint32_t(ResourceViewType::acceleration_structure) == uint32_t(gfx::IResourceView::Type::AccelerationStructure)
+    );
+    KALI_ASSERT(uint32_t(type) <= uint32_t(ResourceViewType::acceleration_structure));
+    return gfx::IResourceView::Type(type);
+}
+
 // ----------------------------------------------------------------------------
 // Resource
 // ----------------------------------------------------------------------------
@@ -155,17 +168,58 @@ NativeHandle Resource::get_native_handle() const
 // ResourceView
 // ----------------------------------------------------------------------------
 
+ResourceView::ResourceView(const ResourceViewDesc& desc, const Buffer* buffer)
+    : m_desc(desc)
+    , m_resource(buffer)
+{
+    KALI_ASSERT(buffer);
+
+    KALI_ASSERT(m_desc.type == ResourceViewType::shader_resource || m_desc.type == ResourceViewType::unordered_access);
+
+    gfx::IResourceView::Desc gfx_desc{
+        .type = get_gfx_resource_view_type(m_desc.type),
+        .format = get_gfx_format(m_desc.format),
+        .bufferRange = {.firstElement = m_desc.buffer_range.first_element, .elementCount = m_desc.buffer_range.element_count},
+        .bufferElementSize = m_desc.buffer_element_size,
+    };
+    // TODO handle uav counter
+    SLANG_CALL(
+        buffer->m_device->get_gfx_device()
+            ->createBufferView(buffer->get_gfx_buffer_resource(), nullptr, gfx_desc, m_gfx_resource_view.writeRef())
+    );
+}
+
+ResourceView::ResourceView(const ResourceViewDesc& desc, const Texture* texture)
+    : m_desc(desc)
+    , m_resource(texture)
+{
+    KALI_ASSERT(texture);
+
+    KALI_ASSERT(
+        m_desc.type == ResourceViewType::shader_resource || m_desc.type == ResourceViewType::unordered_access
+        || m_desc.type == ResourceViewType::render_target || m_desc.type == ResourceViewType::depth_stencil
+    );
+
+    gfx::IResourceView::Desc gfx_desc{
+        .type = get_gfx_resource_view_type(m_desc.type),
+        .format = get_gfx_format(m_desc.format),
+    };
+    SLANG_CALL(texture->m_device->get_gfx_device()
+                   ->createTextureView(texture->get_gfx_texture_resource(), gfx_desc, m_gfx_resource_view.writeRef()));
+}
+
 NativeHandle ResourceView::get_native_handle() const
 {
+    if (!m_resource)
+        return {};
     gfx::InteropHandle handle = {};
     SLANG_CALL(m_gfx_resource_view->getNativeHandle(&handle));
-    ref<Device> device; // TODO get from resource
 #if KALI_HAS_D3D12
-    if (device->get_type() == DeviceType::d3d12)
+    if (m_resource->m_device->get_type() == DeviceType::d3d12)
         return NativeHandle(D3D12_CPU_DESCRIPTOR_HANDLE{handle.handleValue});
 #endif
 #if KALI_HAS_VULKAN
-    if (device->get_type() == DeviceType::vulkan) {
+    if (m_resource->m_device->get_type() == DeviceType::vulkan) {
         if (m_resource) {
             if (m_resource->get_type() == ResourceType::buffer) {
                 if (m_desc.format == Format::unknown)
@@ -236,6 +290,44 @@ void Buffer::unmap() const
     m_mapped_ptr = nullptr;
 }
 
+ref<ResourceView> Buffer::get_view(const ResourceViewDesc& desc) const
+{
+    auto it = m_views.find(desc);
+    if (it != m_views.end())
+        return it->second;
+    auto view = make_ref<ResourceView>(desc, this);
+    m_views.emplace(desc, view);
+    return view;
+}
+
+ref<ResourceView> Buffer::get_srv(uint64_t first_element, uint64_t element_count) const
+{
+    ResourceViewDesc desc{
+        .type = ResourceViewType::shader_resource,
+        .format = m_desc.format,
+    };
+    return get_view(desc);
+}
+
+ref<ResourceView> Buffer::get_uav(uint64_t first_element, uint64_t element_count) const
+{
+    ResourceViewDesc desc{
+        .type = ResourceViewType::unordered_access,
+        .format = m_desc.format,
+    };
+    return get_view(desc);
+}
+
+ref<ResourceView> Buffer::get_srv() const
+{
+    return get_srv(0);
+}
+
+ref<ResourceView> Buffer::get_uav() const
+{
+    return get_uav(0);
+}
+
 // ----------------------------------------------------------------------------
 // Texture
 // ----------------------------------------------------------------------------
@@ -274,5 +366,9 @@ Texture::Texture(const TextureDesc& desc, const void* init_data, ref<Device> dev
 
     SLANG_CALL(m_device->get_gfx_device()->createTextureResource(gfx_desc, gfx_init_data, m_gfx_texture.writeRef()));
 }
+
+ref<ResourceView> Texture::get_srv() const { }
+
+ref<ResourceView> Texture::get_uav() const { }
 
 } // namespace kali

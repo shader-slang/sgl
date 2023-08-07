@@ -35,7 +35,7 @@ public:
 
     const SamplerDesc& get_desc() const { return m_desc; }
 
-    gfx::ISamplerState* get_gfx_sampler() const { return m_gfx_sampler; }
+    gfx::ISamplerState* get_gfx_sampler_state() const { return m_gfx_sampler_state; }
 
     /// Returns the native API handle:
     /// - D3D12: D3D12_CPU_DESCRIPTOR_HANDLE
@@ -45,7 +45,7 @@ public:
 private:
     SamplerDesc m_desc;
     ref<Device> m_device;
-    Slang::ComPtr<gfx::ISamplerState> m_gfx_sampler;
+    Slang::ComPtr<gfx::ISamplerState> m_gfx_sampler_state;
 };
 
 } // namespace kali

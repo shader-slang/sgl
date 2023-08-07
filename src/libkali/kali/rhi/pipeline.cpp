@@ -36,6 +36,8 @@ ComputePipelineState::ComputePipelineState(const ComputePipelineStateDesc& desc,
     // gfx::ComputePipelineStateDesc gfx_desc{.program = m_program->get_gfx_program()};
     // gfx::ComputePipelineStateDesc gfx_desc{.program = m_program->get_gfx_program()};
 
+    gfx::ComputePipelineStateDesc gfx_desc;
+
     // m_device->get_gfx_device()->createComputePipelineState(gfx_desc, m_gfx_pipeline.writeRef());
 }
 

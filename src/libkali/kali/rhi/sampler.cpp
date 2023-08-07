@@ -72,13 +72,13 @@ Sampler::Sampler(const SamplerDesc& desc, ref<Device> device)
         .minLOD = m_desc.min_lod,
         .maxLOD = m_desc.max_lod,
     };
-    SLANG_CALL(m_device->get_gfx_device()->createSamplerState(gfx_desc, m_gfx_sampler.writeRef()));
+    SLANG_CALL(m_device->get_gfx_device()->createSamplerState(gfx_desc, m_gfx_sampler_state.writeRef()));
 }
 
 NativeHandle Sampler::get_native_handle() const
 {
     gfx::InteropHandle handle = {};
-    SLANG_CALL(m_gfx_sampler->getNativeHandle(&handle));
+    SLANG_CALL(m_gfx_sampler_state->getNativeHandle(&handle));
 #if KALI_HAS_D3D12
     if (m_device->get_type() == DeviceType::d3d12)
         return NativeHandle(D3D12_CPU_DESCRIPTOR_HANDLE{handle.handleValue});

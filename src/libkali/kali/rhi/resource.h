@@ -10,7 +10,8 @@
 
 #include <slang-gfx.h>
 
-#include <optional>
+#include <unordered_map>
+#include <limits>
 
 namespace kali {
 
@@ -183,31 +184,83 @@ struct ResourceViewRange {
     }
 };
 
+enum class ResourceViewType {
+    unknown,
+    render_target,
+    depth_stencil,
+    shader_resource,
+    unordered_access,
+    acceleration_structure,
+};
+
+KALI_ENUM_INFO(
+    ResourceViewType,
+    {
+        {ResourceViewType::unknown, "unknown"},
+        {ResourceViewType::render_target, "render_target"},
+        {ResourceViewType::depth_stencil, "depth_stencil"},
+        {ResourceViewType::shader_resource, "shader_resource"},
+        {ResourceViewType::unordered_access, "unordered_access"},
+        {ResourceViewType::acceleration_structure, "acceleration_structure"},
+    }
+);
+KALI_ENUM_REGISTER(ResourceViewType);
+
+struct BufferRange {
+    static constexpr uint64_t WHOLE = std::numeric_limits<uint64_t>::max();
+    uint64_t first_element{0};
+    uint64_t element_count{WHOLE};
+};
+
+struct SubresourceRange {
+    // TextureAspect aspectMask;
+    uint32_t mip_level;
+    uint32_t mip_level_count;
+    uint32_t base_array_layer; // For Texture3D, this is WSlice.
+    uint32_t layer_count;     // For cube maps, this is a multiple of 6.
+};
+
+struct ResourceViewDesc {
+    static constexpr uint32_t MAX_POSSIBLE = std::numeric_limits<uint32_t>::max();
+
+    ResourceViewType type{ResourceViewType::unknown};
+    Format format{Format::unknown};
+
+    // For buffer views.
+    BufferRange buffer_range;
+    uint64_t buffer_element_size;
+
+    bool operator==(const ResourceViewDesc& other) const
+    {
+        return (type == other.type) && (format == other.format)
+            && (buffer_range.first_element == other.buffer_range.first_element)
+            && (buffer_range.element_count == other.buffer_range.element_count)
+            && (buffer_element_size == other.buffer_element_size);
+    }
+};
+
+} // namespace kali
+
+namespace std {
+template<>
+struct hash<::kali::ResourceViewDesc> {
+    size_t operator()(const ::kali::ResourceViewDesc& desc) const noexcept
+    {
+        return 0;
+        // return hash<uint32_t>()(uint32_t(resource_type));
+    }
+};
+} // namespace std
+
+namespace kali {
 
 class KALI_API ResourceView : public Object {
     KALI_OBJECT(ResourceView)
 public:
-    enum class Type {
-        unknown,
-        render_target,
-        depth_stencil,
-        shader_resource,
-        unordered_access,
-        acceleration_structure,
-    };
+    ResourceView(const ResourceViewDesc& desc, const Buffer* buffer);
+    ResourceView(const ResourceViewDesc& desc, const Texture* texture);
 
-    struct Desc {
-        Type type{Type::unknown};
-        Format format{Format::unknown};
-        ResourceViewRange range;
-    };
-
-    ResourceView(Desc desc)
-        : m_desc(std::move(desc))
-    {
-    }
-
-    Type get_type() const { return m_desc.type; }
+    ResourceViewType get_type() const { return m_desc.type; }
 
     gfx::IResourceView* get_gfx_resource_view() const { return m_gfx_resource_view; }
 
@@ -217,9 +270,9 @@ public:
     NativeHandle get_native_handle() const;
 
 private:
-    Desc m_desc;
+    ResourceViewDesc m_desc;
 
-    Resource* m_resource{nullptr};
+    const Resource* m_resource{nullptr};
 
     Slang::ComPtr<gfx::IResourceView> m_gfx_resource_view;
 };
@@ -244,10 +297,14 @@ public:
     void set_debug_name(const char* name);
     const char* get_debug_name() const;
 
-    // ref<ResourceView> get_rtv() const;
-    // ref<ResourceView> get_dsv() const;
-    // ref<ResourceView> get_srv() const;
-    // ref<ResourceView> get_uav() const;
+    // virtual ref<ResourceView> get_rtv() const;
+    // virtual ref<ResourceView> get_dsv() const;
+
+    /// Get a shader resource view for the entire resource.
+    virtual ref<ResourceView> get_srv() const = 0;
+
+    /// Get a unordered access view for the entire resource.
+    virtual ref<ResourceView> get_uav() const = 0;
 
     virtual DeviceAddress get_device_address() const = 0;
     virtual gfx::IResource* get_gfx_resource() const = 0;
@@ -266,7 +323,9 @@ protected:
     ResourceType m_type;
     ref<Device> m_device;
 
+    mutable std::unordered_map<ResourceViewDesc, ref<ResourceView>> m_views;
 
+    friend class ResourceView;
     friend class CommandList;
 };
 
@@ -337,6 +396,21 @@ public:
 
     /// Returns true if buffer is currently mapped.
     bool is_mapped() const { return m_mapped_ptr != nullptr; }
+
+    /// Get a resource view. Views are cached and reused.
+    ref<ResourceView> get_view(const ResourceViewDesc& desc) const;
+
+    /// Get a shader resource view for a range of the buffer.
+    ref<ResourceView> get_srv(uint64_t first_element, uint64_t element_count = BufferRange::WHOLE) const;
+
+    /// Get a unordered access view for a range of the buffer.
+    ref<ResourceView> get_uav(uint64_t first_element, uint64_t element_count = BufferRange::WHOLE) const;
+
+    /// Get a shader resource view for the entire buffer.
+    virtual ref<ResourceView> get_srv() const override;
+
+    /// Get a unordered access view for the entire buffer.
+    virtual ref<ResourceView> get_uav() const override;
 
     virtual DeviceAddress get_device_address() const override { return m_gfx_buffer->getDeviceAddress(); }
     virtual gfx::IResource* get_gfx_resource() const override { return m_gfx_buffer; }
@@ -427,6 +501,12 @@ public:
     {
         return get_array_size() * get_mip_count() * (get_type() == ResourceType::texture_cube ? 6 : 1);
     }
+
+    /// Get a shader resource view for the entire texture.
+    virtual ref<ResourceView> get_srv() const override;
+
+    /// Get a unordered access view for the entire texture.
+    virtual ref<ResourceView> get_uav() const override;
 
     virtual DeviceAddress get_device_address() const override { return 0; }
     virtual gfx::IResource* get_gfx_resource() const override { return m_gfx_texture; }

@@ -40,10 +40,7 @@ compileShaderModuleFromFile(slang::ISession* slangSession, const std::filesystem
 }
 
 struct ExampleProgram {
-    int gWindowWidth = 640;
-    int gWindowHeight = 480;
-
-    Slang::ComPtr<gfx::IDevice> gfx_device;
+    ref<Device> device;
 
     Slang::ComPtr<slang::ISession> gSlangSession;
     Slang::ComPtr<slang::IModule> gSlangModule;
@@ -73,23 +70,16 @@ struct ExampleProgram {
         gfx::IShaderProgram::Desc programDesc = {};
         programDesc.slangGlobalScope = linkedProgram;
 
-        auto shaderProgram = gfx_device->createProgram(programDesc);
+        auto shaderProgram = device->get_gfx_device()->createProgram(programDesc);
 
         return shaderProgram;
     }
 
     Slang::Result execute()
     {
-        ref<Device> device = Device::create({.type = DeviceType::automatic, .enable_debug_layers = true});
-        gfx_device = device->get_gfx_device();
+        device = Device::create({.type = DeviceType::automatic, .enable_debug_layers = true});
 
-        // gfx::IDevice::Desc deviceDesc = {};
-        // deviceDesc.deviceType = gfx::DeviceType::DirectX12;
-        // Slang::Result res = gfxCreateDevice(&deviceDesc, gfx_device.writeRef());
-        // if (SLANG_FAILED(res))
-        //     return res;
-
-        gSlangSession = createSlangSession(gfx_device);
+        gSlangSession = createSlangSession(device->get_gfx_device());
         gSlangModule = compileShaderModuleFromFile(
             gSlangSession,
             get_project_directory() / "src/examples/simple_compute/compute.cs.slang"
@@ -101,7 +91,7 @@ struct ExampleProgram {
 
         gfx::ComputePipelineStateDesc desc;
         desc.program = gProgram;
-        auto pipelineState = gfx_device->createComputePipelineState(desc);
+        auto pipelineState = device->get_gfx_device()->createComputePipelineState(desc);
         if (!pipelineState)
             return SLANG_FAIL;
 
@@ -109,54 +99,32 @@ struct ExampleProgram {
 
         size_t buffer_size = 4 * 1024;
 
-        ref<Buffer> buffer2
+        ref<Buffer> buffer
             = device->create_raw_buffer(buffer_size, ResourceUsage::unordered_access, MemoryType::device_local);
-        auto gfx_buffer = buffer2->get_gfx_buffer_resource();
-
-        // gfx::IBufferResource::Desc gfx_buffer_desc = {};
-        // gfx_buffer_desc.type = gfx::IResource::Type::Buffer;
-        // gfx_buffer_desc.sizeInBytes = buffer_size;
-        // gfx_buffer_desc.elementSize = sizeof(float);
-        // gfx_buffer_desc.defaultState = gfx::ResourceState::UnorderedAccess;
-        // gfx_buffer_desc.allowedStates = gfx::ResourceStateSet(
-        //     gfx::ResourceState::CopySource,
-        //     gfx::ResourceState::CopyDestination,
-        //     gfx::ResourceState::UnorderedAccess
-        // );
-        // gfx_buffer_desc.memoryType = gfx::MemoryType::DeviceLocal;
-        // auto gfx_buffer = gfx_device->createBufferResource(gfx_buffer_desc);
-
-        gfx::IResourceView::Desc bufferViewDesc = {};
-        bufferViewDesc.type = gfx::IResourceView::Type::UnorderedAccess;
-        bufferViewDesc.format = gfx::Format::Unknown;
-        auto bufferView = gfx_device->createBufferView(gfx_buffer, nullptr, bufferViewDesc);
+        auto uav = buffer->get_uav();
 
         gfx::ITransientResourceHeap::Desc transientResourceHeapDesc = {};
         transientResourceHeapDesc.constantBufferSize = 256;
-        auto transientHeap = gfx_device->createTransientResourceHeap(transientResourceHeapDesc);
+        auto transientHeap = device->get_gfx_device()->createTransientResourceHeap(transientResourceHeapDesc);
 
-        // gfx::ICommandQueue::Desc queueDesc = {gfx::ICommandQueue::QueueType::Graphics};
-        // auto queue = gfx_device->createCommandQueue(queueDesc);
         auto queue = device->get_gfx_queue();
 
         auto commandBuffer = transientHeap->createCommandBuffer();
         auto encoder = commandBuffer->encodeComputeCommands();
         auto rootShaderObject = encoder->bindPipeline(gPipelineState);
         auto cursor = gfx::ShaderCursor(rootShaderObject);
-        cursor["g_buffer"].setResource(bufferView);
+        cursor["g_buffer"].setResource(buffer->get_uav()->get_gfx_resource_view());
         encoder->dispatchCompute(1024 / 32, 1, 1);
-        encoder->bufferBarrier(gfx_buffer, gfx::ResourceState::UnorderedAccess, gfx::ResourceState::CopySource);
+        encoder->bufferBarrier(buffer->get_gfx_buffer_resource(), gfx::ResourceState::UnorderedAccess, gfx::ResourceState::CopySource);
         encoder->endEncoding();
         commandBuffer->close();
         queue->executeCommandBuffer(commandBuffer);
 
         queue->waitOnHost();
 
-        Slang::ComPtr<ISlangBlob> blob;
-        gfx_device->readBufferResource(gfx_buffer, 0, buffer_size, blob.writeRef());
+        std::vector<uint32_t> data = device->read_buffer<uint32_t>(buffer.get(), 0, 16);
 
-        const uint32_t* data = (const uint32_t*)blob->getBufferPointer();
-        for (int i = 0; i < 16; ++i) {
+        for (size_t i = 0; i < data.size(); ++i) {
             log_info("data[{}] = {}", i, data[i]);
         }
 
