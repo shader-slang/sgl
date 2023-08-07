@@ -25,9 +25,15 @@ struct ProgramDesc;
 class Program;
 class ProgramManager;
 
+struct FenceDesc;
+class Fence;
+
 struct ComputePipelineStateDesc;
 class ComputePipelineState;
 struct GraphicsPipelineStateDesc;
 class GraphicsPipelineState;
+
+struct CommandQueueDesc;
+class CommandQueue;
 
 } // namespace kali

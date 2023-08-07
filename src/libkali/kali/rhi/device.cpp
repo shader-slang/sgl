@@ -3,8 +3,10 @@
 #include "kali/rhi/swapchain.h"
 #include "kali/rhi/resource.h"
 #include "kali/rhi/sampler.h"
+#include "kali/rhi/fence.h"
 #include "kali/rhi/program.h"
 #include "kali/rhi/pipeline.h"
+#include "kali/rhi/command_queue.h"
 #include "kali/rhi/helpers.h"
 #include "kali/rhi/native_handle_traits.h"
 
@@ -217,13 +219,17 @@ ref<Program> Device::create_program(ProgramDesc desc)
     return m_program_manager->create_program(std::move(desc));
 }
 
+ref<Fence> Device::create_fence(FenceDesc desc)
 {
-    return make_ref<Texture>(desc, init_data, ref<Device>(this));
+    return make_ref<Fence>(std::move(desc), ref<Device>(this));
 }
 
-ref<Sampler> Device::create_sampler(const SamplerDesc& desc)
+ref<Fence> Device::create_fence(uint64_t initial_value, bool shared)
 {
-    return make_ref<Sampler>(desc, ref<Device>(this));
+    return create_fence({
+        .initial_value = initial_value,
+        .shared = shared,
+    });
 }
 
 ref<ComputePipelineState> Device::create_compute_pipeline_state(ComputePipelineStateDesc desc)
@@ -236,9 +242,9 @@ ref<GraphicsPipelineState> Device::create_graphics_pipeline_state(GraphicsPipeli
     return make_ref<GraphicsPipelineState>(std::move(desc), ref<Device>(this));
 }
 
-ref<GraphicsPipelineState> Device::create_graphics_pipeline_state(const GraphicsPipelineStateDesc& desc)
+ref<CommandQueue> Device::create_command_queue(CommandQueueDesc desc)
 {
-    return make_ref<GraphicsPipelineState>(desc, ref<Device>(this));
+    return make_ref<CommandQueue>(std::move(desc), ref<Device>(this));
 }
 
 ProgramManager& Device::get_program_manager()

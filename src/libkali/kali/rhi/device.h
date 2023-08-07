@@ -186,8 +186,9 @@ public:
 
     ref<Sampler> create_sampler(SamplerDesc desc);
 
+    ref<Fence> create_fence(FenceDesc desc);
 
-    ref<Sampler> create_sampler(const SamplerDesc& desc);
+    ref<Fence> create_fence(uint64_t initial_value = 0, bool shared = false);
 
     ref<Program> create_program(ProgramDesc desc);
 
@@ -197,7 +198,7 @@ public:
 
     ref<GraphicsPipelineState> create_graphics_pipeline_state(GraphicsPipelineStateDesc desc);
 
-    ref<GraphicsPipelineState> create_graphics_pipeline_state(const GraphicsPipelineStateDesc& desc);
+    ref<CommandQueue> create_command_queue(CommandQueueDesc desc);
 
     ProgramManager& get_program_manager();
 

@@ -65,10 +65,14 @@ target_sources(kali PRIVATE
     kali/math/vector_types.h
     kali/math/vector.h
 
+    kali/rhi/command_queue.cpp
+    kali/rhi/command_queue.h
     kali/rhi/command.cpp
     kali/rhi/command.h
     kali/rhi/device.cpp
     kali/rhi/device.h
+    kali/rhi/fence.cpp
+    kali/rhi/fence.h
     kali/rhi/formats.cpp
     kali/rhi/formats.h
     kali/rhi/fwd.h
@@ -82,6 +86,7 @@ target_sources(kali PRIVATE
     kali/rhi/resource.h
     kali/rhi/sampler.cpp
     kali/rhi/sampler.h
+    kali/rhi/shared_handle.h
     kali/rhi/swapchain.cpp
     kali/rhi/swapchain.h
 )
