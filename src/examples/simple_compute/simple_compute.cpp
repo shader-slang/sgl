@@ -15,13 +15,14 @@ Slang::ComPtr<slang::ISession> createSlangSession(gfx::IDevice* device)
     return slangSession;
 }
 
-Slang::ComPtr<slang::IModule> compileShaderModuleFromFile(slang::ISession* slangSession, char const* filePath)
+Slang::ComPtr<slang::IModule>
+compileShaderModuleFromFile(slang::ISession* slangSession, const std::filesystem::path& path)
 {
     SlangCompileRequest* slangRequest = nullptr;
     slangSession->createCompileRequest(&slangRequest);
 
-    int translationUnitIndex = spAddTranslationUnit(slangRequest, SLANG_SOURCE_LANGUAGE_SLANG, filePath);
-    spAddTranslationUnitSourceFile(slangRequest, translationUnitIndex, filePath);
+    int translationUnitIndex = spAddTranslationUnit(slangRequest, SLANG_SOURCE_LANGUAGE_SLANG, path.string().c_str());
+    spAddTranslationUnitSourceFile(slangRequest, translationUnitIndex, path.string().c_str());
 
     const SlangResult compileRes = spCompile(slangRequest);
     if (auto diagnostics = spGetDiagnosticOutput(slangRequest)) {
@@ -91,7 +92,7 @@ struct ExampleProgram {
         gSlangSession = createSlangSession(gfx_device);
         gSlangModule = compileShaderModuleFromFile(
             gSlangSession,
-            (get_project_directory() / "src/examples/simple_compute/compute.cs.slang").c_str()
+            get_project_directory() / "src/examples/simple_compute/compute.cs.slang"
         );
 
         gProgram = loadComputeProgram(gSlangModule, "main");

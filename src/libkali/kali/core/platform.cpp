@@ -87,7 +87,7 @@ const std::string& get_executable_name()
 
 const std::filesystem::path& get_project_directory()
 {
-    static std::filesystem::path path{KALI_PROJECT_DIR};
+    static std::filesystem::path path = std::filesystem::path{KALI_PROJECT_DIR}.lexically_normal();
     return path;
 }
 

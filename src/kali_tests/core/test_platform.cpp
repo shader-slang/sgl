@@ -78,23 +78,31 @@ TEST_CASE("paths")
 {
     auto executable_path = get_executable_path();
     CHECK_FALSE(executable_path.empty());
-    MESSAGE("executable_path:", executable_path);
+    MESSAGE("executable_path: ", executable_path);
 
     auto executable_directory = get_executable_directory();
     CHECK_FALSE(executable_directory.empty());
-    MESSAGE("executable_directory:", executable_directory);
+    MESSAGE("executable_directory: ", executable_directory);
 
     auto executable_name = get_executable_name();
     CHECK_FALSE(executable_name.empty());
-    MESSAGE("executable_name:", executable_name);
+    MESSAGE("executable_name: ", executable_name);
 
     auto app_data_directory = get_app_data_directory();
     CHECK_FALSE(app_data_directory.empty());
-    MESSAGE("app_data_directory:", app_data_directory);
+    MESSAGE("app_data_directory: ", app_data_directory);
 
     auto home_directory = get_home_directory();
     CHECK_FALSE(home_directory.empty());
-    MESSAGE("home_directory:", home_directory);
+    MESSAGE("home_directory: ", home_directory);
+
+    auto project_directory = get_project_directory();
+    CHECK_FALSE(project_directory.empty());
+    MESSAGE("project_directory: ", project_directory);
+
+    auto runtime_directory = get_runtime_directory();
+    CHECK_FALSE(runtime_directory.empty());
+    MESSAGE("runtime_directory: ", runtime_directory);
 }
 
 TEST_CASE("environment")
