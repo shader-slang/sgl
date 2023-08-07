@@ -5,7 +5,6 @@
 
 #include "kali/core/error.h"
 
-
 namespace kali {
 
 inline gfx::ComparisonFunc get_gfx_comparison_func(ComparisonFunc comparison_func)

@@ -23,8 +23,12 @@ inline std::ios::openmode get_openmode(FileStream::Mode mode)
 inline std::string strerror_safe(int errnum)
 {
     char buf[1024];
+#if KALI_WINDOWS
     strerror_s(buf, sizeof(buf), errnum);
     return buf;
+#else
+    return strerror_r(errnum, buf, sizeof(buf));
+#endif
 }
 
 FileStream::FileStream(const std::filesystem::path& path, Mode mode)

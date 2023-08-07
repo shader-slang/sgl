@@ -31,15 +31,15 @@ public:
 
     virtual void write(const void* p, size_t size) override;
 
-    virtual void seek(size_t pos) { m_pos = pos; }
+    virtual void seek(size_t pos) override { m_pos = pos; }
 
     virtual void truncate(size_t size) override;
 
-    virtual size_t tell() const { return m_pos; }
+    virtual size_t tell() const override { return m_pos; }
 
-    virtual size_t size() const { return m_size; }
+    virtual size_t size() const override { return m_size; }
 
-    virtual void flush() { }
+    virtual void flush() override { }
 
     /// Return the current capacity of the underlying buffer.
     size_t capacity() const { return m_capacity; }

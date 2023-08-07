@@ -9,6 +9,13 @@
 #include <string_view>
 #include <source_location>
 
+#if !KALI_WINDOWS && !__has_builtin(__builtin_source_location)
+#include <experimental/source_location>
+namespace std {
+using source_location = std::experimental::source_location;
+}
+#endif
+
 /**
  * @file error.h
  * @brief Error handling utilities.
