@@ -46,12 +46,6 @@ struct ExampleProgram {
     Slang::ComPtr<slang::IModule> gSlangModule;
     Slang::ComPtr<gfx::IShaderProgram> gProgram;
 
-    Slang::ComPtr<gfx::IPipelineState> gPipelineState;
-
-    // Slang::Dictionary<int, std::string> gHashedStrings;
-
-    // GPUPrinting gGPUPrinting;
-
     Slang::ComPtr<gfx::IShaderProgram> loadComputeProgram(slang::IModule* slangModule, char const* entryPointName)
     {
         Slang::ComPtr<slang::IEntryPoint> entryPoint;
@@ -79,6 +73,11 @@ struct ExampleProgram {
     {
         device = Device::create({.type = DeviceType::automatic, .enable_debug_layers = true});
 
+        // device->create_program(ProgramDesc::create_compute(
+        //     get_project_directory() / "src/examples/simple_compute/compute.cs.slang",
+        //     "main"
+        // ));
+
         gSlangSession = createSlangSession(device->get_gfx_device());
         gSlangModule = compileShaderModuleFromFile(
             gSlangSession,
@@ -95,13 +94,7 @@ struct ExampleProgram {
         if (!pipelineState)
             return SLANG_FAIL;
 
-        gPipelineState = pipelineState;
-
-        size_t buffer_size = 4 * 1024;
-
-        ref<Buffer> buffer
-            = device->create_raw_buffer(buffer_size, ResourceUsage::unordered_access, MemoryType::device_local);
-        auto uav = buffer->get_uav();
+        ref<Buffer> buffer = device->create_structured_buffer<uint32_t>(1024, ResourceUsage::unordered_access, MemoryType::device_local);
 
         gfx::ITransientResourceHeap::Desc transientResourceHeapDesc = {};
         transientResourceHeapDesc.constantBufferSize = 256;
@@ -111,11 +104,15 @@ struct ExampleProgram {
 
         auto commandBuffer = transientHeap->createCommandBuffer();
         auto encoder = commandBuffer->encodeComputeCommands();
-        auto rootShaderObject = encoder->bindPipeline(gPipelineState);
+        auto rootShaderObject = encoder->bindPipeline(pipelineState);
         auto cursor = gfx::ShaderCursor(rootShaderObject);
-        cursor["g_buffer"].setResource(buffer->get_uav()->get_gfx_resource_view());
+        cursor["g_buffer"].setResource(buffer->get_uav(0, 1024)->get_gfx_resource_view());
         encoder->dispatchCompute(1024 / 32, 1, 1);
-        encoder->bufferBarrier(buffer->get_gfx_buffer_resource(), gfx::ResourceState::UnorderedAccess, gfx::ResourceState::CopySource);
+        encoder->bufferBarrier(
+            buffer->get_gfx_buffer_resource(),
+            gfx::ResourceState::UnorderedAccess,
+            gfx::ResourceState::CopySource
+        );
         encoder->endEncoding();
         commandBuffer->close();
         queue->executeCommandBuffer(commandBuffer);
@@ -127,8 +124,6 @@ struct ExampleProgram {
         for (size_t i = 0; i < data.size(); ++i) {
             log_info("data[{}] = {}", i, data[i]);
         }
-
-        // gGPUPrinting.processGPUPrintCommands(blob->getBufferPointer(), printBufferSize);
 
         return SLANG_OK;
     }

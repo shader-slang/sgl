@@ -59,6 +59,7 @@ KALI_ENUM_INFO(
 KALI_ENUM_REGISTER(ShaderStage);
 
 enum class ShaderModel {
+    automatic = 0,
     sm_6_0 = 60,
     sm_6_1 = 61,
     sm_6_2 = 62,
@@ -71,6 +72,7 @@ enum class ShaderModel {
 KALI_ENUM_INFO(
     ShaderModel,
     {
+        {ShaderModel::automatic, "automatic"},
         {ShaderModel::sm_6_0, "sm_6_0"},
         {ShaderModel::sm_6_1, "sm_6_1"},
         {ShaderModel::sm_6_2, "sm_6_2"},
@@ -262,7 +264,7 @@ struct ProgramDesc {
     std::vector<ProgramKernelDesc> kernels;
 
     DefineList defines;
-    ShaderModel shader_model;
+    ShaderModel shader_model{ShaderModel::automatic};
     ShaderCompilerFlags compiler_flags;
     std::string prelude;
     std::vector<std::string> downstream_compiler_args;
