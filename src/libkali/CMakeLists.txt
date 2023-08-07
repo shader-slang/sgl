@@ -101,6 +101,7 @@ target_compile_options(kali
             /wd4251                         # 'type' : class 'type1' needs to have dll-interface to be used by clients of class 'type2'
             /wd4201                         # nonstandard extension used: nameless struct/union
             /wd4189                         # local variable is initialized but not referenced
+            /wd4275                         # non dll-interface class 'type' used as base for dll-interface class 'type2'
         >
         # Clang/GCC flags.
         $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:

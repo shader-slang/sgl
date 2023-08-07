@@ -217,7 +217,6 @@ TEST_CASE("FileStream")
         CHECK_THROWS(stream.write("12345678", 8));
         CHECK_THROWS(stream.truncate(1));
 
-        char buffer[16];
         stream.read(buffer, 8);
         CHECK(std::memcmp(buffer, "12345678", 8) == 0);
         CHECK_EQ(stream.tell(), 8);
@@ -263,7 +262,6 @@ TEST_CASE("MemoryMappedFileStream")
         CHECK_THROWS(stream.write("12345678", 8));
         CHECK_THROWS(stream.truncate(1));
 
-        char buffer[16];
         stream.read(buffer, 8);
         CHECK(std::memcmp(buffer, "12345678", 8) == 0);
         CHECK_EQ(stream.tell(), 8);

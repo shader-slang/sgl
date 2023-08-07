@@ -11,16 +11,20 @@ inline std::ios::openmode get_openmode(FileStream::Mode mode)
     switch (mode) {
     case FileStream::Mode::Read:
         return std::ios::in | std::ios::binary;
-        ;
     case FileStream::Mode::Write:
         return std::ios::out | std::ios::binary;
-        ;
     case FileStream::Mode::ReadWrite:
         return std::ios::in | std::ios::out | std::ios::binary;
-        ;
     default:
         KALI_UNREACHABLE();
     }
+}
+
+inline std::string strerror_safe(int errnum)
+{
+    char buf[1024];
+    strerror_s(buf, sizeof(buf), errnum);
+    return buf;
 }
 
 FileStream::FileStream(const std::filesystem::path& path, Mode mode)
@@ -30,7 +34,7 @@ FileStream::FileStream(const std::filesystem::path& path, Mode mode)
     m_stream = std::make_unique<std::fstream>(m_path, get_openmode(m_mode));
 
     if (!m_stream->good())
-        KALI_THROW("{}: I/O error while attempting to open file: {}", m_path, strerror(errno));
+        KALI_THROW("{}: I/O error while attempting to open file: {}", m_path, strerror_safe(errno));
 }
 
 FileStream::~FileStream()
@@ -59,7 +63,7 @@ void FileStream::read(void* p, size_t size)
         if (eof)
             throw EOFException(fmt::format("{}: read {} out of {} bytes", m_path, gcount, size), gcount);
         else
-            KALI_THROW("{}: I/O error while attempting to read {} bytes: {}", m_path, size, strerror(errno));
+            KALI_THROW("{}: I/O error while attempting to read {} bytes: {}", m_path, size, strerror_safe(errno));
     }
 }
 
@@ -69,7 +73,7 @@ void FileStream::write(const void* p, size_t size)
 
     if (!m_stream->good()) {
         m_stream->clear();
-        KALI_THROW("{}: I/O error while attempting to write {} bytes: {}", m_path, size, strerror(errno));
+        KALI_THROW("{}: I/O error while attempting to write {} bytes: {}", m_path, size, strerror_safe(errno));
     }
 }
 
@@ -97,9 +101,9 @@ void FileStream::truncate(size_t size)
     std::filesystem::resize_file(m_path, size);
 
 #if KALI_WINDOWS
-    m_stream->open(m_path, get_openmode(m_mode));
+    m_stream->open(m_path, get_openmode(Mode::ReadWrite));
     if (!m_stream->good())
-        KALI_THROW("{}: I/O error while attempting to open file: {}", m_path, strerror(errno));
+        KALI_THROW("{}: I/O error while attempting to open file: {}", m_path, strerror_safe(errno));
 #endif
 
     seek(std::min(prev_pos, size));
@@ -123,7 +127,7 @@ void FileStream::flush()
     m_stream->flush();
     if (!m_stream->good()) {
         m_stream->clear();
-        KALI_THROW("{}: I/O error while attempting flush file stream: {}", m_path, strerror(errno));
+        KALI_THROW("{}: I/O error while attempting flush file stream: {}", m_path, strerror_safe(errno));
     }
 }
 

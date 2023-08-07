@@ -16,7 +16,7 @@ MemoryMappedFileStream::MemoryMappedFileStream(
     if (!m_file->is_open())
         KALI_THROW("{}: I/O error while attempting to open file", m_path);
 
-    m_data = (uint8_t *)m_file->data();
+    m_data = (uint8_t*)m_file->data();
     m_size = m_file->size();
 }
 
