@@ -17,7 +17,7 @@
 
 namespace kali {
 
-enum class ShaderType {
+enum class ShaderStage {
     none,
     vertex,
     hull,
@@ -35,22 +35,62 @@ enum class ShaderType {
     amplification,
 };
 
-enum class ShaderModel {
-    sm_6_0,
-    sm_6_1,
-    sm_6_2,
-    sm_6_3,
-    sm_6_4,
-    sm_6_5,
-    sm_6_6,
-};
+KALI_ENUM_INFO(
+    ShaderStage,
+    {
+        {ShaderStage::none, "none"},
+        {ShaderStage::vertex, "vertex"},
+        {ShaderStage::hull, "hull"},
+        {ShaderStage::domain, "domain"},
+        {ShaderStage::geometry, "geometry"},
+        {ShaderStage::fragment, "fragment"},
+        {ShaderStage::compute, "compute"},
+        {ShaderStage::ray_generation, "ray_generation"},
+        {ShaderStage::intersection, "intersection"},
+        {ShaderStage::any_hit, "any_hit"},
+        {ShaderStage::closest_hit, "closest_hit"},
+        {ShaderStage::miss, "miss"},
+        {ShaderStage::callable, "callable"},
+        {ShaderStage::mesh, "mesh"},
+        {ShaderStage::amplification, "amplification"},
+    }
+);
 
-inline std::string to_string(ShaderModel shader_model)
+KALI_ENUM_REGISTER(ShaderStage);
+
+enum class ShaderModel {
+    sm_6_0 = 60,
+    sm_6_1 = 61,
+    sm_6_2 = 62,
+    sm_6_3 = 63,
+    sm_6_4 = 64,
+    sm_6_5 = 65,
+    sm_6_6 = 66,
+    sm_6_7 = 67,
+};
+KALI_ENUM_INFO(
+    ShaderModel,
+    {
+        {ShaderModel::sm_6_0, "sm_6_0"},
+        {ShaderModel::sm_6_1, "sm_6_1"},
+        {ShaderModel::sm_6_2, "sm_6_2"},
+        {ShaderModel::sm_6_3, "sm_6_3"},
+        {ShaderModel::sm_6_4, "sm_6_4"},
+        {ShaderModel::sm_6_5, "sm_6_5"},
+        {ShaderModel::sm_6_6, "sm_6_6"},
+        {ShaderModel::sm_6_7, "sm_6_7"},
+    }
+);
+KALI_ENUM_REGISTER(ShaderModel);
+
+inline uint32_t get_shader_model_major_version(ShaderModel sm)
 {
-    static const char* strings[] = {"sm_6_0", "sm_6_1", "sm_6_2", "sm_6_3", "sm_6_4", "sm_6_5", "sm_6_6"};
-    KALI_ASSERT_GE(int(shader_model), int(ShaderModel::sm_6_0));
-    KALI_ASSERT_LE(int(shader_model), int(ShaderModel::sm_6_6));
-    return strings[int(shader_model)];
+    return static_cast<uint32_t>(sm) / 10;
+}
+
+inline uint32_t get_shader_model_minor_version(ShaderModel sm)
+{
+    return static_cast<uint32_t>(sm) % 10;
 }
 
 enum class ShaderCompilerFlags {
@@ -207,7 +247,7 @@ struct ShaderModuleDesc {
 };
 
 struct EntryPointDesc {
-    ShaderType type;
+    ShaderStage type;
     std::string name;
     std::string export_name;
 };
@@ -247,7 +287,7 @@ struct ProgramDesc {
                     .module_index = 0,
                     .entry_points = {
                         EntryPointDesc{
-                            .type = ShaderType::compute,
+                            .type = ShaderStage::compute,
                             .name = entry_point
                         },
                     },
@@ -301,11 +341,15 @@ public:
 
     const ProgramDesc& get_desc() const { return m_desc; }
 
+    gfx::IShaderProgram* get_gfx_shader_program() const { return m_gfx_shader_program; }
+
 private:
     ProgramDesc m_desc;
     ProgramManager* m_program_manager;
 
     ProgramVersion* m_active_version{nullptr};
+
+    Slang::ComPtr<gfx::IShaderProgram> m_gfx_shader_program;
 };
 
 class KALI_API ProgramManager : public Object {

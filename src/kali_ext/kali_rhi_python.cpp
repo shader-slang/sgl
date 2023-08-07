@@ -96,31 +96,8 @@ void register_kali_rhi(nb::module_& m)
     // program.h
     // ------------------------------------------------------------------------
 
-    nb::enum_<ShaderType>(m, "ShaderType")
-        .value("none", ShaderType::none)
-        .value("vertex", ShaderType::vertex)
-        .value("hull", ShaderType::hull)
-        .value("domain", ShaderType::domain)
-        .value("geometry", ShaderType::geometry)
-        .value("fragment", ShaderType::fragment)
-        .value("compute", ShaderType::compute)
-        .value("ray_generation", ShaderType::ray_generation)
-        .value("intersection", ShaderType::intersection)
-        .value("any_hit", ShaderType::any_hit)
-        .value("closest_hit", ShaderType::closest_hit)
-        .value("miss", ShaderType::miss)
-        .value("callable", ShaderType::callable)
-        .value("mesh", ShaderType::mesh)
-        .value("amplification", ShaderType::amplification);
-
-    nb::enum_<ShaderModel>(m, "ShaderModel")
-        .value("sm_6_0", ShaderModel::sm_6_0)
-        .value("sm_6_1", ShaderModel::sm_6_1)
-        .value("sm_6_2", ShaderModel::sm_6_2)
-        .value("sm_6_3", ShaderModel::sm_6_3)
-        .value("sm_6_4", ShaderModel::sm_6_4)
-        .value("sm_6_5", ShaderModel::sm_6_5)
-        .value("sm_6_6", ShaderModel::sm_6_6);
+    nb::kali_enum<ShaderStage>(m, "ShaderStage");
+    nb::kali_enum<ShaderModel>(m, "ShaderModel");
 
     nb::class_<TypeConformance>(m, "TypeConformance")
         .def_rw("type_name", &TypeConformance::type_name)

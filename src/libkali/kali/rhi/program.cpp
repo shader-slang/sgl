@@ -8,26 +8,26 @@
 
 namespace kali {
 
-inline SlangStage get_gfx_slang_stage(ShaderType shader_type)
+inline SlangStage get_gfx_slang_stage(ShaderStage shader_stage)
 {
-    static_assert(uint32_t(ShaderType::none) == SLANG_STAGE_NONE);
-    static_assert(uint32_t(ShaderType::none) == SLANG_STAGE_NONE);
-    static_assert(uint32_t(ShaderType::vertex) == SLANG_STAGE_VERTEX);
-    static_assert(uint32_t(ShaderType::hull) == SLANG_STAGE_HULL);
-    static_assert(uint32_t(ShaderType::domain) == SLANG_STAGE_DOMAIN);
-    static_assert(uint32_t(ShaderType::geometry) == SLANG_STAGE_GEOMETRY);
-    static_assert(uint32_t(ShaderType::fragment) == SLANG_STAGE_FRAGMENT);
-    static_assert(uint32_t(ShaderType::compute) == SLANG_STAGE_COMPUTE);
-    static_assert(uint32_t(ShaderType::ray_generation) == SLANG_STAGE_RAY_GENERATION);
-    static_assert(uint32_t(ShaderType::intersection) == SLANG_STAGE_INTERSECTION);
-    static_assert(uint32_t(ShaderType::any_hit) == SLANG_STAGE_ANY_HIT);
-    static_assert(uint32_t(ShaderType::closest_hit) == SLANG_STAGE_CLOSEST_HIT);
-    static_assert(uint32_t(ShaderType::miss) == SLANG_STAGE_MISS);
-    static_assert(uint32_t(ShaderType::callable) == SLANG_STAGE_CALLABLE);
-    static_assert(uint32_t(ShaderType::mesh) == SLANG_STAGE_MESH);
-    static_assert(uint32_t(ShaderType::amplification) == SLANG_STAGE_AMPLIFICATION);
-    KALI_ASSERT(uint32_t(shader_type) <= uint32_t(ShaderType::amplification));
-    return SlangStage(shader_type);
+    static_assert(uint32_t(ShaderStage::none) == SLANG_STAGE_NONE);
+    static_assert(uint32_t(ShaderStage::none) == SLANG_STAGE_NONE);
+    static_assert(uint32_t(ShaderStage::vertex) == SLANG_STAGE_VERTEX);
+    static_assert(uint32_t(ShaderStage::hull) == SLANG_STAGE_HULL);
+    static_assert(uint32_t(ShaderStage::domain) == SLANG_STAGE_DOMAIN);
+    static_assert(uint32_t(ShaderStage::geometry) == SLANG_STAGE_GEOMETRY);
+    static_assert(uint32_t(ShaderStage::fragment) == SLANG_STAGE_FRAGMENT);
+    static_assert(uint32_t(ShaderStage::compute) == SLANG_STAGE_COMPUTE);
+    static_assert(uint32_t(ShaderStage::ray_generation) == SLANG_STAGE_RAY_GENERATION);
+    static_assert(uint32_t(ShaderStage::intersection) == SLANG_STAGE_INTERSECTION);
+    static_assert(uint32_t(ShaderStage::any_hit) == SLANG_STAGE_ANY_HIT);
+    static_assert(uint32_t(ShaderStage::closest_hit) == SLANG_STAGE_CLOSEST_HIT);
+    static_assert(uint32_t(ShaderStage::miss) == SLANG_STAGE_MISS);
+    static_assert(uint32_t(ShaderStage::callable) == SLANG_STAGE_CALLABLE);
+    static_assert(uint32_t(ShaderStage::mesh) == SLANG_STAGE_MESH);
+    static_assert(uint32_t(ShaderStage::amplification) == SLANG_STAGE_AMPLIFICATION);
+    KALI_ASSERT(uint32_t(shader_stage) <= uint32_t(ShaderStage::amplification));
+    return SlangStage(shader_stage);
 }
 
 struct ProgramVersion : public Object {
@@ -185,7 +185,7 @@ Slang::ComPtr<slang::ICompileRequest> ProgramManager::create_slang_compile_reque
 
     slang::TargetDesc target_desc;
     target_desc.format = SLANG_TARGET_UNKNOWN;
-    target_desc.profile = m_slang_session->findProfile(to_string(program_desc.shader_model).c_str());
+    target_desc.profile = m_slang_session->findProfile(enum_to_string(program_desc.shader_model).c_str());
     KALI_ASSERT(target_desc.profile != SLANG_PROFILE_UNKNOWN);
 
     // Get compiler flags and adjust with forced flags.
@@ -248,7 +248,11 @@ Slang::ComPtr<slang::ICompileRequest> ProgramManager::create_slang_compile_reque
 
     // Add a `#define`s based on the target and shader model.
     add_define(target_define, "1");
-    std::string sm = "__SM_" + to_string(program_desc.shader_model).substr(3) + "__";
+    std::string sm = fmt::format(
+        "__SM_{}_{}__",
+        get_shader_model_major_version(program_desc.shader_model),
+        get_shader_model_minor_version(program_desc.shader_model)
+    );
     add_define(sm.c_str(), "1");
 
     session_desc.preprocessorMacros = defines.data();
