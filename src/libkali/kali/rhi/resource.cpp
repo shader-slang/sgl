@@ -2,6 +2,7 @@
 
 #include "kali/rhi/device.h"
 #include "kali/rhi/helpers.h"
+#include "kali/rhi/native_handle_traits.h"
 
 #include "kali/core/error.h"
 
@@ -129,6 +130,55 @@ void Resource::set_debug_name(const char* name)
 const char* Resource::get_debug_name() const
 {
     return get_gfx_resource()->getDebugName();
+}
+
+NativeHandle Resource::get_native_handle() const
+{
+    gfx::InteropHandle handle = {};
+    SLANG_CALL(get_gfx_resource()->getNativeResourceHandle(&handle));
+#if KALI_HAS_D3D12
+    if (m_device->get_type() == DeviceType::d3d12)
+        return NativeHandle(reinterpret_cast<ID3D12Resource*>(handle.handleValue));
+#endif
+#if KALI_HAS_VULKAN
+    if (m_device->get_type() == DeviceType::vulkan) {
+        if (m_type == ResourceType::buffer)
+            return NativeHandle(reinterpret_cast<VkBuffer>(handle.handleValue));
+        else
+            return NativeHandle(reinterpret_cast<VkImage>(handle.handleValue));
+    }
+#endif
+    return {};
+}
+
+// ----------------------------------------------------------------------------
+// ResourceView
+// ----------------------------------------------------------------------------
+
+NativeHandle ResourceView::get_native_handle() const
+{
+    gfx::InteropHandle handle = {};
+    SLANG_CALL(m_gfx_resource_view->getNativeHandle(&handle));
+    ref<Device> device; // TODO get from resource
+#if KALI_HAS_D3D12
+    if (device->get_type() == DeviceType::d3d12)
+        return NativeHandle(D3D12_CPU_DESCRIPTOR_HANDLE{handle.handleValue});
+#endif
+#if KALI_HAS_VULKAN
+    if (device->get_type() == DeviceType::vulkan) {
+        if (m_resource) {
+            if (m_resource->get_type() == ResourceType::buffer) {
+                if (m_desc.format == Format::unknown)
+                    return NativeHandle(reinterpret_cast<VkBuffer>(handle.handleValue));
+                else
+                    return NativeHandle(reinterpret_cast<VkBufferView>(handle.handleValue));
+            } else {
+                return NativeHandle(reinterpret_cast<VkImageView>(handle.handleValue));
+            }
+        }
+    }
+#endif
+    return {};
 }
 
 // ----------------------------------------------------------------------------

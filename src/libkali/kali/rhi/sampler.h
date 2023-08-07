@@ -2,6 +2,7 @@
 
 #include "kali/rhi/fwd.h"
 #include "kali/rhi/types.h"
+#include "kali/rhi/native_handle.h"
 
 #include "kali/core/macros.h"
 #include "kali/core/object.h"
@@ -35,6 +36,11 @@ public:
     const SamplerDesc& get_desc() const { return m_desc; }
 
     gfx::ISamplerState* get_gfx_sampler() const { return m_gfx_sampler; }
+
+    /// Returns the native API handle:
+    /// - D3D12: D3D12_CPU_DESCRIPTOR_HANDLE
+    /// - Vulkan: VkSampler
+    NativeHandle get_native_handle() const;
 
 private:
     SamplerDesc m_desc;

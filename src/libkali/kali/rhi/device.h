@@ -1,6 +1,7 @@
 #pragma once
 
 #include "kali/rhi/fwd.h"
+#include "kali/rhi/native_handle.h"
 #include "kali/rhi/resource.h"
 
 #include "kali/core/macros.h"
@@ -178,10 +179,30 @@ public:
 
     // ref<Program> create_program(std::filesystem::path path, std::string entrypoint);
 
+    ref<ComputePipelineState> create_compute_pipeline_state(const ComputePipelineStateDesc& desc);
+
+    ref<GraphicsPipelineState> create_graphics_pipeline_state(const GraphicsPipelineStateDesc& desc);
+
     ProgramManager& get_program_manager();
+
+    void read_buffer(const Buffer* buffer, size_t offset, size_t size, void* out_data);
+
+    template<typename T>
+    std::vector<T> read_buffer(const Buffer* buffer, size_t index, size_t count)
+    {
+        std::vector<T> data(count);
+        read_buffer(buffer, index * sizeof(T), count * sizeof(T), data.data());
+        return data;
+    }
+
 
     gfx::IDevice* get_gfx_device() const { return m_gfx_device.get(); }
     gfx::ICommandQueue* get_gfx_queue() const { return m_gfx_queue.get(); }
+
+    /// Returns the native API handle:
+    /// - D3D12: ID3D12Device* (0)
+    /// - Vulkan: VkInstance (0), VkPhysicalDevice (1), VkDevice (2)
+    NativeHandle get_native_handle(uint32_t index = 0) const;
 
     /// Enumerates all available adapters of a given device type.
     static std::vector<AdapterInfo> enumerate_adapters(DeviceType type = DeviceType::automatic);

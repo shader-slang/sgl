@@ -2,6 +2,7 @@
 
 #include "kali/rhi/device.h"
 #include "kali/rhi/helpers.h"
+#include "kali/rhi/native_handle_traits.h"
 
 #include "kali/core/error.h"
 
@@ -72,6 +73,21 @@ Sampler::Sampler(const SamplerDesc& desc, ref<Device> device)
         .maxLOD = m_desc.max_lod,
     };
     SLANG_CALL(m_device->get_gfx_device()->createSamplerState(gfx_desc, m_gfx_sampler.writeRef()));
+}
+
+NativeHandle Sampler::get_native_handle() const
+{
+    gfx::InteropHandle handle = {};
+    SLANG_CALL(m_gfx_sampler->getNativeHandle(&handle));
+#if KALI_HAS_D3D12
+    if (m_device->get_type() == DeviceType::d3d12)
+        return NativeHandle(D3D12_CPU_DESCRIPTOR_HANDLE{handle.handleValue});
+#endif
+#if KALI_HAS_VULKAN
+    if (m_device->get_type() == DeviceType::vulkan)
+        return NativeHandle(reinterpret_cast<VkSampler>(handle.handleValue));
+#endif
+    return {};
 }
 
 } // namespace kali

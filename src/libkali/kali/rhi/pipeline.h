@@ -2,6 +2,7 @@
 
 #include "kali/rhi/fwd.h"
 #include "kali/rhi/types.h"
+#include "kali/rhi/native_handle.h"
 
 #include "kali/core/macros.h"
 #include "kali/core/enum.h"
@@ -17,6 +18,11 @@ public:
     PipelineState(ref<Device> device);
 
     gfx::IPipelineState* get_gfx_pipeline_state() const { return m_gfx_pipeline_state; }
+
+    /// Returns the native API handle:
+    /// - D3D12: ID3D12PipelineState*
+    /// - Vulkan: VkPipeline
+    NativeHandle get_native_handle() const;
 
 protected:
     ref<Device> m_device;

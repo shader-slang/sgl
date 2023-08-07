@@ -2,6 +2,7 @@
 
 #include "kali/rhi/fwd.h"
 #include "kali/rhi/formats.h"
+#include "kali/rhi/native_handle.h"
 
 #include "kali/core/macros.h"
 #include "kali/core/enum.h"
@@ -208,8 +209,19 @@ public:
 
     Type get_type() const { return m_desc.type; }
 
+    gfx::IResourceView* get_gfx_resource_view() const { return m_gfx_resource_view; }
+
+    /// Returns the native API handle:
+    /// - D3D12: D3D12_CPU_DESCRIPTOR_HANDLE
+    /// - Vulkan: VkImageView for texture views, VkBufferView for typed buffer views, VkBuffer for untyped buffer views
+    NativeHandle get_native_handle() const;
+
 private:
     Desc m_desc;
+
+    Resource* m_resource{nullptr};
+
+    Slang::ComPtr<gfx::IResourceView> m_gfx_resource_view;
 };
 
 using MipLevel = uint32_t;
@@ -239,6 +251,11 @@ public:
 
     virtual DeviceAddress get_device_address() const = 0;
     virtual gfx::IResource* get_gfx_resource() const = 0;
+
+    /// Returns the native API handle:
+    /// - D3D12: ID3D12Resource*
+    /// - Vulkan: VkBuffer or VkImage
+    NativeHandle get_native_handle() const;
 
 protected:
     Resource() = delete;
