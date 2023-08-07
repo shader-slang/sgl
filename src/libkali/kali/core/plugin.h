@@ -25,7 +25,7 @@ namespace kali {
  * - A _plugin base class_ defines a `PluginInfo` struct, describing meta information about each
  *   _plugin class_ as well as a `PluginCreate` typedef used for instantiating plugin classes.
  *
- * A _plugin base class_ can be any class that is exported from the main Falcor library.
+ * A _plugin base class_ can be any class that is exported from the main kali library.
  * It needs to define a `PluginInfo` struct as well as a `PluginCreate` typedef.
  * The KALI_PLUGIN_BASE_CLASS macro extends the class with the required members for the plugin system.
  * For example:
