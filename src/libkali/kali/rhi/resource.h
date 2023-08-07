@@ -230,6 +230,9 @@ struct ResourceViewDesc {
     BufferRange buffer_range;
     uint64_t buffer_element_size;
 
+    // For texture views.
+    SubresourceRange subresource_range;
+
     bool operator==(const ResourceViewDesc& other) const
     {
         return (type == other.type) && (format == other.format)
@@ -246,6 +249,7 @@ template<>
 struct hash<::kali::ResourceViewDesc> {
     size_t operator()(const ::kali::ResourceViewDesc& desc) const noexcept
     {
+        KALI_UNUSED(desc);
         return 0;
         // return hash<uint32_t>()(uint32_t(resource_type));
     }
@@ -501,6 +505,9 @@ public:
     {
         return get_array_size() * get_mip_count() * (get_type() == ResourceType::texture_cube ? 6 : 1);
     }
+
+    /// Get a resource view. Views are cached and reused.
+    ref<ResourceView> get_view(const ResourceViewDesc& desc) const;
 
     /// Get a shader resource view for the entire texture.
     virtual ref<ResourceView> get_srv() const override;

@@ -100,7 +100,6 @@ inline gfx::ResourceState get_gfx_initial_state(ResourceUsage usage)
     return gfx::ResourceState::General;
 }
 
-
 inline gfx::MemoryType get_gfx_memory_type(MemoryType memory_type)
 {
     static_assert(uint32_t(MemoryType::device_local) == uint32_t(gfx::MemoryType::DeviceLocal));
@@ -179,7 +178,10 @@ ResourceView::ResourceView(const ResourceViewDesc& desc, const Buffer* buffer)
     gfx::IResourceView::Desc gfx_desc{
         .type = get_gfx_resource_view_type(m_desc.type),
         .format = get_gfx_format(m_desc.format),
-        .bufferRange = {.firstElement = m_desc.buffer_range.first_element, .elementCount = m_desc.buffer_range.element_count},
+        .bufferRange{
+            .firstElement = m_desc.buffer_range.first_element,
+            .elementCount = m_desc.buffer_range.element_count,
+        },
         .bufferElementSize = m_desc.buffer_element_size,
     };
     // TODO handle uav counter
@@ -305,6 +307,7 @@ ref<ResourceView> Buffer::get_srv(uint64_t first_element, uint64_t element_count
     ResourceViewDesc desc{
         .type = ResourceViewType::shader_resource,
         .format = m_desc.format,
+        .buffer_range{.first_element = first_element, .element_count = element_count},
     };
     return get_view(desc);
 }
@@ -314,6 +317,7 @@ ref<ResourceView> Buffer::get_uav(uint64_t first_element, uint64_t element_count
     ResourceViewDesc desc{
         .type = ResourceViewType::unordered_access,
         .format = m_desc.format,
+        .buffer_range{.first_element = first_element, .element_count = element_count},
     };
     return get_view(desc);
 }
@@ -367,8 +371,24 @@ Texture::Texture(const TextureDesc& desc, const void* init_data, ref<Device> dev
     SLANG_CALL(m_device->get_gfx_device()->createTextureResource(gfx_desc, gfx_init_data, m_gfx_texture.writeRef()));
 }
 
-ref<ResourceView> Texture::get_srv() const { }
+ref<ResourceView> Texture::get_view(const ResourceViewDesc& desc) const
+{
+    auto it = m_views.find(desc);
+    if (it != m_views.end())
+        return it->second;
+    auto view = make_ref<ResourceView>(desc, this);
+    m_views.emplace(desc, view);
+    return view;
+}
 
-ref<ResourceView> Texture::get_uav() const { }
+ref<ResourceView> Texture::get_srv() const
+{
+    return {};
+}
+
+ref<ResourceView> Texture::get_uav() const
+{
+    return {};
+}
 
 } // namespace kali
