@@ -300,7 +300,7 @@ void register_kali_rhi(nb::module_& m)
         "max_lod"_a = 1000.f
     );
 
-    device.def("create_program", nb::overload_cast<const ProgramDesc&>(&Device::create_program), "desc"_a);
+    // device.def("create_program", nb::overload_cast<const ProgramDesc&>(&Device::create_program), "desc"_a);
     // device.def(
     //     "create_program",
     //     nb::overload_cast<std::filesystem::path, std::string>(&Device::create_program),

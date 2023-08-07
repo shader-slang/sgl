@@ -229,6 +229,9 @@ namespace detail {
     KALI_HOST_TYPE_TO_FORMAT(uint, Format::r32_uint);
     KALI_HOST_TYPE_TO_FORMAT(uint2, Format::rg32_uint);
     KALI_HOST_TYPE_TO_FORMAT(uint4, Format::rgba32_uint);
+    KALI_HOST_TYPE_TO_FORMAT(float16_t, Format::r16_float);
+    KALI_HOST_TYPE_TO_FORMAT(float16_t2, Format::rg16_float);
+    KALI_HOST_TYPE_TO_FORMAT(float16_t4, Format::rgba16_float);
     KALI_HOST_TYPE_TO_FORMAT(float, Format::r32_float);
     KALI_HOST_TYPE_TO_FORMAT(float2, Format::rg32_float);
     KALI_HOST_TYPE_TO_FORMAT(float3, Format::rgb32_float);

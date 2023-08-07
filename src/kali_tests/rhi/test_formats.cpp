@@ -19,6 +19,9 @@ TEST_CASE("host_type_to_format")
     CHECK_EQ(host_type_to_format<uint>(), Format::r32_uint);
     CHECK_EQ(host_type_to_format<uint2>(), Format::rg32_uint);
     CHECK_EQ(host_type_to_format<uint4>(), Format::rgba32_uint);
+    CHECK_EQ(host_type_to_format<float16_t>(), Format::r16_float);
+    CHECK_EQ(host_type_to_format<float16_t2>(), Format::rg16_float);
+    CHECK_EQ(host_type_to_format<float16_t4>(), Format::rgba16_float);
     CHECK_EQ(host_type_to_format<float>(), Format::r32_float);
     CHECK_EQ(host_type_to_format<float2>(), Format::rg32_float);
     CHECK_EQ(host_type_to_format<float3>(), Format::rgb32_float);

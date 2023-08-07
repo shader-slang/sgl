@@ -2,7 +2,6 @@
 
 #include <doctest.h>
 
-
 namespace kali {
 
 class Device;
