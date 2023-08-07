@@ -115,7 +115,7 @@ void register_kali_imageio(nb::module_& m)
             size_t ndim = spec.component_count > 1 ? 3 : 2;
             size_t shape[3] = {spec.height, spec.width, spec.component_count};
             void* owned_data = image_data.release();
-            nb::capsule owner(owned_data, [](void* ptr) noexcept { delete[] ptr; });
+            nb::capsule owner(owned_data, [](void* ptr) noexcept { delete[] static_cast<uint8_t*>(ptr); });
             nb::dlpack::dtype dtype = image_component_type_to_dtype(spec.component_type);
             return nb::ndarray<nb::numpy>(owned_data, ndim, shape, owner, nullptr, dtype);
         },
