@@ -4,6 +4,7 @@
 
 #include "kali/rhi/device.h"
 #include "kali/rhi/command_queue.h"
+#include "kali/rhi/native_handle_traits.h"
 #include "kali/rhi/helpers.h"
 
 namespace kali {
