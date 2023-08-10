@@ -69,8 +69,6 @@ target_sources(kali PRIVATE
     kali/rhi/command_queue.h
     kali/rhi/command_stream.cpp
     kali/rhi/command_stream.h
-    kali/rhi/command.cpp
-    kali/rhi/command.h
     kali/rhi/device.cpp
     kali/rhi/device.h
     kali/rhi/fence.cpp
