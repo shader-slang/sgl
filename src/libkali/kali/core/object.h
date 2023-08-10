@@ -259,7 +259,7 @@ public:
         : m_ptr(ptr)
     {
         if (m_ptr)
-            inc_ref(reinterpret_cast<Object*>(m_ptr));
+            inc_ref(reinterpret_cast<const Object*>(m_ptr));
     }
 
     /// Move constructor.
