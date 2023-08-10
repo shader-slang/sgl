@@ -9,6 +9,8 @@
 #include "kali/core/macros.h"
 #include "kali/core/object.h"
 
+#include <functional>
+
 namespace gfx {
 struct ShaderCursor;
 }
@@ -260,7 +262,7 @@ private:
     uint32_t m_current_frame_index{0};
 
     Slang::ComPtr<gfx::ICommandBuffer> m_command_buffer;
-    gfx::ICommandEncoder* m_encoder;
+    gfx::ICommandEncoder* m_encoder{nullptr};
     EncoderType m_encoder_type{EncoderType::none};
 };
 

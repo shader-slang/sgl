@@ -330,7 +330,7 @@ protected:
     mutable std::unordered_map<ResourceViewDesc, ref<ResourceView>> m_views;
 
     friend class ResourceView;
-    friend class CommandList;
+    friend class CommandStream;
 };
 
 
