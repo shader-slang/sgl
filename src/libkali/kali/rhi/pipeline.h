@@ -33,7 +33,8 @@ protected:
 
 struct ComputePipelineStateDesc {
     // TODO we should introduce a weak_ref and use that here
-    ref<const ProgramVersion> program_version;
+    // This would allow the cache to check if the program version is still available
+    const ProgramVersion* program_version;
     auto operator<=>(const ComputePipelineStateDesc&) const = default;
 };
 

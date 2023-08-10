@@ -199,11 +199,17 @@ public:
 
     ref<ComputePipelineState> create_compute_pipeline_state(ComputePipelineStateDesc desc);
 
+    ref<ComputePipelineCache> create_compute_pipeline_cache();
+
     ref<GraphicsPipelineState> create_graphics_pipeline_state(GraphicsPipelineStateDesc desc);
 
     ref<CommandQueue> create_command_queue(CommandQueueDesc desc);
 
-    ProgramManager& get_program_manager();
+    ref<CommandStream> create_command_stream(CommandStreamDesc desc);
+
+    ProgramManager* get_program_manager() const { return m_program_manager.get(); }
+
+    CommandStream* get_command_stream() const { return m_command_stream.get(); }
 
     void read_buffer(const Buffer* buffer, size_t offset, size_t size, void* out_data);
 
@@ -217,7 +223,6 @@ public:
 
 
     gfx::IDevice* get_gfx_device() const { return m_gfx_device.get(); }
-    gfx::ICommandQueue* get_gfx_queue() const { return m_gfx_queue.get(); }
 
     /// Returns the native API handle:
     /// - D3D12: ID3D12Device* (0)
@@ -232,10 +237,10 @@ private:
     DeviceInfo m_info;
     ShaderModel m_supported_shader_model;
     Slang::ComPtr<gfx::IDevice> m_gfx_device;
-    Slang::ComPtr<gfx::ICommandQueue> m_gfx_queue;
     Slang::ComPtr<slang::IGlobalSession> m_slang_session;
 
     ref<ProgramManager> m_program_manager;
+    ref<CommandStream> m_command_stream;
 };
 
 } // namespace kali

@@ -7,6 +7,7 @@
 #include "kali/rhi/program.h"
 #include "kali/rhi/pipeline.h"
 #include "kali/rhi/command_queue.h"
+#include "kali/rhi/command_stream.h"
 #include "kali/rhi/helpers.h"
 #include "kali/rhi/native_handle_traits.h"
 
@@ -30,10 +31,13 @@ public:
         switch (source) {
         case gfx::DebugMessageSource::Layer:
             source_str = "layer";
+            break;
         case gfx::DebugMessageSource::Driver:
             source_str = "driver";
+            break;
         case gfx::DebugMessageSource::Slang:
             source_str = "slang";
+            break;
         }
         switch (type) {
         case gfx::DebugMessageType::Info:
@@ -155,18 +159,13 @@ Device::Device(const DeviceDesc& desc)
         }
     }
 
-    gfx::ICommandQueue::Desc queue_desc{
-        .type = gfx::ICommandQueue::QueueType::Graphics,
-    };
-
-    SLANG_CALL(m_gfx_device->createCommandQueue(queue_desc, m_gfx_queue.writeRef()));
-
     m_program_manager = make_ref<ProgramManager>(this, m_slang_session);
+
+    m_command_stream = create_command_stream({.queue_type = CommandQueueType::graphics});
 }
 
 Device::~Device()
 {
-    m_gfx_queue.setNull();
     m_gfx_device.setNull();
 }
 
@@ -257,6 +256,11 @@ ref<ComputePipelineState> Device::create_compute_pipeline_state(ComputePipelineS
     return make_ref<ComputePipelineState>(std::move(desc), ref<Device>(this));
 }
 
+ref<ComputePipelineCache> Device::create_compute_pipeline_cache()
+{
+    return make_ref<ComputePipelineCache>(ref<Device>(this));
+}
+
 ref<GraphicsPipelineState> Device::create_graphics_pipeline_state(GraphicsPipelineStateDesc desc)
 {
     return make_ref<GraphicsPipelineState>(std::move(desc), ref<Device>(this));
@@ -267,9 +271,9 @@ ref<CommandQueue> Device::create_command_queue(CommandQueueDesc desc)
     return make_ref<CommandQueue>(std::move(desc), ref<Device>(this));
 }
 
-ProgramManager& Device::get_program_manager()
+ref<CommandStream> Device::create_command_stream(CommandStreamDesc desc)
 {
-    return *m_program_manager;
+    return make_ref<CommandStream>(std::move(desc), ref<Device>(this));
 }
 
 void Device::read_buffer(const Buffer* buffer, size_t offset, size_t size, void* out_data)

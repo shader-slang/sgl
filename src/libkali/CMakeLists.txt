@@ -67,6 +67,8 @@ target_sources(kali PRIVATE
 
     kali/rhi/command_queue.cpp
     kali/rhi/command_queue.h
+    kali/rhi/command_stream.cpp
+    kali/rhi/command_stream.h
     kali/rhi/command.cpp
     kali/rhi/command.h
     kali/rhi/device.cpp
@@ -88,6 +90,8 @@ target_sources(kali PRIVATE
     kali/rhi/resource.h
     kali/rhi/sampler.cpp
     kali/rhi/sampler.h
+    kali/rhi/shader_cursor.cpp
+    kali/rhi/shader_cursor.h
     kali/rhi/shared_handle.h
     kali/rhi/swapchain.cpp
     kali/rhi/swapchain.h

@@ -19,7 +19,7 @@ Swapchain::Swapchain(SwapchainDesc desc, WindowHandle window_handle, ref<Device>
         .width = gfx::GfxCount(m_desc.width),
         .height = gfx::GfxCount(m_desc.height),
         .imageCount = gfx::GfxCount(m_desc.image_count),
-        .queue = m_device->get_gfx_queue(),
+        // .queue = m_device->get_gfx_queue(),
         .enableVSync = m_desc.enable_vsync,
     };
 

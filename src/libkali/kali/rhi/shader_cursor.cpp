@@ -1,4 +1,4 @@
-#include "shader-cursor.h"
+#include "shader_cursor.h"
 
 namespace gfx {
 

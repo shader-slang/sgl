@@ -31,10 +31,17 @@ class Fence;
 
 struct ComputePipelineStateDesc;
 class ComputePipelineState;
+class ComputePipelineCache;
 struct GraphicsPipelineStateDesc;
 class GraphicsPipelineState;
+class GraphicsPipelineCache;
 
 struct CommandQueueDesc;
 class CommandQueue;
+
+struct CommandStreamDesc;
+class CommandStream;
+
+class ShaderObject;
 
 } // namespace kali

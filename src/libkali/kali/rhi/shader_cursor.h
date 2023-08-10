@@ -1,5 +1,7 @@
 #pragma once
 
+#include "kali/core/macros.h"
+
 #include "slang-gfx.h"
 
 namespace gfx {
@@ -21,7 +23,7 @@ namespace gfx {
 /// attempts to protect against these cases and return an error `Result` or an invalid
 /// cursor, rather than allowing operations to proceed with incorrect types.
 ///
-struct ShaderCursor {
+struct KALI_API ShaderCursor {
     IShaderObject* m_baseObject = nullptr;
     slang::TypeLayoutReflection* m_typeLayout = nullptr;
     ShaderObjectContainerType m_containerType = ShaderObjectContainerType::None;

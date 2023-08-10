@@ -2,10 +2,12 @@
 #include "kali/core/platform.h"
 #include "kali/rhi/device.h"
 #include "kali/rhi/program.h"
+#include "kali/rhi/reflection.h"
 #include "kali/rhi/pipeline.h"
+#include "kali/rhi/command_stream.h"
+#include "kali/rhi/shader_cursor.h"
 #include "kali/math/vector.h"
 
-#include "shader-cursor.h"
 
 using namespace kali;
 
@@ -14,38 +16,55 @@ int main()
 {
     ref<Device> device = Device::create({.type = DeviceType::automatic, .enable_debug_layers = true});
 
-    device->get_program_manager().add_search_path(get_project_directory() / "src/examples/simple_compute");
+    device->get_program_manager()->add_search_path(get_project_directory() / "src/examples/simple_compute");
 
     ref<Program> program = device->create_program(ProgramDesc::create_compute("compute.cs.slang", "main"));
 
-    ref<ComputePipelineState> pipeline
-        = device->create_compute_pipeline_state({.program_version = ref<const ProgramVersion>(program->get_active_version())});
+#if 0
+    ProgramDesc desc;
+    desc.add_shader_module().add_string(R"(
+RWStructuredBuffer<uint> g_buffer;
+
+[shader("compute")]
+[numthreads(32, 1, 1)]
+void main(uint3 tid: SV_DispatchThreadID)
+{
+    if (tid.x < 1024)
+        g_buffer[tid.x] = tid.x;
+}
+    )");
+    desc.add_entry_point_group().add_entry_point(ShaderStage::compute, "main");
+    program = device->create_program(desc);
+#endif
 
     ref<Buffer> buffer
         = device->create_structured_buffer<uint32_t>(1024, ResourceUsage::unordered_access, MemoryType::device_local);
 
-    gfx::ITransientResourceHeap::Desc transientResourceHeapDesc = {};
-    transientResourceHeapDesc.constantBufferSize = 256;
-    auto transientHeap = device->get_gfx_device()->createTransientResourceHeap(transientResourceHeapDesc);
+    auto stream = device->get_command_stream();
 
-    auto queue = device->get_gfx_queue();
+    stream->buffer_barrier(buffer.get(), ResourceState::unordered_access);
 
-    auto commandBuffer = transientHeap->createCommandBuffer();
-    auto encoder = commandBuffer->encodeComputeCommands();
-    auto rootShaderObject = encoder->bindPipeline(pipeline->get_gfx_pipeline_state());
-    auto cursor = gfx::ShaderCursor(rootShaderObject);
-    cursor["g_buffer"].setResource(buffer->get_uav(0, 1024)->get_gfx_resource_view());
-    encoder->dispatchCompute(1024 / 32, 1, 1);
-    encoder->bufferBarrier(
-        buffer->get_gfx_buffer_resource(),
-        gfx::ResourceState::UnorderedAccess,
-        gfx::ResourceState::CopySource
+    stream->dispatch_compute(
+        program.get(),
+        uint3{1024, 1, 1},
+        [&](auto cursor) { cursor["g_buffer"].setResource(buffer->get_uav(0, 1024)->get_gfx_resource_view()); }
     );
-    encoder->endEncoding();
-    commandBuffer->close();
-    queue->executeCommandBuffer(commandBuffer);
 
-    queue->waitOnHost();
+    stream->buffer_barrier(buffer.get(), ResourceState::copy_source);
+    stream->submit();
+    stream->wait_host();
+
+    std::vector<uint32_t> data = device->read_buffer<uint32_t>(buffer.get(), 0, 16);
+    for (size_t i = 0; i < data.size(); ++i) {
+        log_info("data[{}] = {}", i, data[i]);
+    }
+
+
+#if 0
+    uint3 thread_group_size = program->get_active_version()->get_entry_point_layout(0).get_compute_thread_group_size();
+    KALI_PRINT(thread_group_size);
+    program->get_active_version()->get_program_layout().dump();
+#endif
 
 #if 0
     auto program = device->create_program(ProgramDesc::create_compute("compute.cs.slang", "main"));
@@ -57,14 +76,11 @@ int main()
         cursor["g_buffer"] = buffer;
     });
 
+    stream->dispatch_compute(program, uint3(1024, 1, 1), {{"g_buffer", buffer }});
+
     auto result = stream->read_buffer<uint32_t>(buffer, 0, 16);
 #endif
 
-    std::vector<uint32_t> data = device->read_buffer<uint32_t>(buffer.get(), 0, 16);
-
-    for (size_t i = 0; i < data.size(); ++i) {
-        log_info("data[{}] = {}", i, data[i]);
-    }
 
     return 0;
 
