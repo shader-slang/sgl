@@ -7,6 +7,7 @@
 #include "kali/rhi/resource.h"
 #include "kali/rhi/sampler.h"
 #include "kali/rhi/program.h"
+#include "kali/rhi/command_stream.h"
 
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/optional.h>
@@ -98,6 +99,7 @@ void register_kali_rhi(nb::module_& m)
 
     nb::kali_enum<ShaderStage>(m, "ShaderStage");
     nb::kali_enum<ShaderModel>(m, "ShaderModel");
+    nb::kali_enum<ShaderCompilerFlags>(m, "ShaderCompilerFlags");
 
     nb::class_<TypeConformance>(m, "TypeConformance")
         .def_rw("type_name", &TypeConformance::type_name)
@@ -137,11 +139,29 @@ void register_kali_rhi(nb::module_& m)
         .def_rw("file", &ShaderSourceDesc::file)
         .def_rw("string", &ShaderSourceDesc::string);
 
-    // nb::class_<ShaderModuleDesc>(m, "ShaderModuleDesc")
-    //     .def_rw("type", &ShaderModuleDesc::type)
-    //     .def_rw("file", &ShaderModuleDesc::file)
-    //     .def_rw("string", &ShaderModuleDesc::string)
-    //     .def_rw("translation_unit", &ShaderModuleDesc::translation_unit);
+    nb::class_<ShaderModuleDesc>(m, "ShaderModuleDesc")
+        .def_rw("sources", &ShaderModuleDesc::sources)
+        .def("add_file", &ShaderModuleDesc::add_file, "path"_a)
+        .def("add_string", &ShaderModuleDesc::add_string, "string"_a);
+
+    nb::class_<EntryPointDesc>(m, "EntryPointDesc")
+        .def_rw("type", &EntryPointDesc::type)
+        .def_rw("name", &EntryPointDesc::name)
+        .def_rw("export_name", &EntryPointDesc::export_name);
+
+    nb::class_<EntryPointGroupDesc>(m, "EntryPointGroupDesc")
+        .def_rw("name", &EntryPointGroupDesc::name)
+        .def_rw("shader_module_index", &EntryPointGroupDesc::shader_module_index)
+        .def_rw("entry_points", &EntryPointGroupDesc::entry_points)
+        .def("add_entry_point", &EntryPointGroupDesc::add_entry_point, "type"_a, "name"_a, "export_name"_a = "");
+
+    nb::class_<ProgramDesc>(m, "ProgramDesc")
+        .def_rw("shader_modules", &ProgramDesc::shader_modules)
+        .def_rw("entry_point_groups", &ProgramDesc::entry_point_groups)
+        .def_rw("shader_model", &ProgramDesc::shader_model)
+        .def_rw("compiler_flags", &ProgramDesc::compiler_flags)
+        .def_rw("prelude", &ProgramDesc::prelude)
+        .def_rw("downstream_compiler_args", &ProgramDesc::downstream_compiler_args);
 
     nb::class_<Program, Object> program(m, "Program");
 
@@ -307,6 +327,14 @@ void register_kali_rhi(nb::module_& m)
     //     "path"_a,
     //     "entrypoint"_a
     // );
+
+
+    // ------------------------------------------------------------------------
+    // command_stream.h
+    // ------------------------------------------------------------------------
+
+    nb::class_<CommandStream, Object>(m, "command_stream")
+    .def("submit", &CommandStream::submit);
 }
 
 } // namespace kali

@@ -107,6 +107,20 @@ enum class ShaderCompilerFlags {
 };
 KALI_ENUM_CLASS_OPERATORS(ShaderCompilerFlags)
 
+KALI_ENUM_INFO(
+    ShaderCompilerFlags,
+    {
+        {ShaderCompilerFlags::none, "none"},
+        {ShaderCompilerFlags::treat_warnings_as_errors, "treat_warnings_as_errors"},
+        {ShaderCompilerFlags::dump_intermediates, "dump_intermediates"},
+        {ShaderCompilerFlags::floating_point_mode_fast, "floating_point_mode_fast"},
+        {ShaderCompilerFlags::floating_point_mode_precise, "floating_point_mode_precise"},
+        {ShaderCompilerFlags::generate_debug_info, "generate_debug_info"},
+        {ShaderCompilerFlags::matrix_layout_column_major, "matrix_layout_column_major"},
+    }
+);
+KALI_ENUM_REGISTER(ShaderCompilerFlags);
+
 struct TypeConformance {
     std::string type_name;
     std::string interface_name;
@@ -268,11 +282,6 @@ struct EntryPointGroupDesc {
         entry_points.push_back({type, std::move(name_), std::move(export_name)});
         return entry_points.back();
     }
-};
-
-struct ProgramKernelDesc {
-    uint32_t module_index;
-    std::vector<EntryPointDesc> entry_points;
 };
 
 struct ProgramDesc {
