@@ -26,8 +26,10 @@ public:
     /// - Vulkan: VkPipeline
     NativeHandle get_native_handle() const;
 
+    void break_strong_reference_to_device();
+
 protected:
-    ref<Device> m_device;
+    breakable_ref<Device> m_device;
     Slang::ComPtr<gfx::IPipelineState> m_gfx_pipeline_state;
 };
 

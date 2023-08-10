@@ -43,7 +43,7 @@ int main()
             ResourceUsage::unordered_access,
             MemoryType::device_local
         );
-#if 0
+
         auto stream = device->get_command_stream();
 
         stream->buffer_barrier(buffer.get(), ResourceState::unordered_access);
@@ -62,8 +62,6 @@ int main()
         for (size_t i = 0; i < data.size(); ++i) {
             log_info("data[{}] = {}", i, data[i]);
         }
-#endif
-
 
 #if 0
         uint3 thread_group_size = program->get_active_version()->get_entry_point_layout(0).get_compute_thread_group_size();

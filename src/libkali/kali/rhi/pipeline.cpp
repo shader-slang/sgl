@@ -32,6 +32,11 @@ NativeHandle PipelineState::get_native_handle() const
     return {};
 }
 
+void PipelineState::break_strong_reference_to_device()
+{
+    m_device.break_strong_reference();
+}
+
 // ----------------------------------------------------------------------------
 // ComputePipelineState
 // ----------------------------------------------------------------------------
@@ -65,6 +70,7 @@ ref<ComputePipelineState> ComputePipelineCache::get_pipeline_state(ComputePipeli
         return it->second;
 
     ref<ComputePipelineState> pipeline = make_ref<ComputePipelineState>(std::move(desc), m_device);
+    pipeline->break_strong_reference_to_device();
     m_pipelines.emplace(pipeline->get_desc(), pipeline);
     return pipeline;
 }
