@@ -22,6 +22,7 @@ target_sources(kali_tests PRIVATE
     math/test_vector.cpp
     rhi/test_device.cpp
     rhi/test_formats.cpp
+    rhi/test_program.cpp
 )
 target_include_directories(kali_tests BEFORE PRIVATE .)
 target_link_libraries(kali_tests PRIVATE doctest kali)

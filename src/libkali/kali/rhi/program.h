@@ -184,7 +184,7 @@ public:
     }
 };
 
-class DefineList : public std::map<std::string, std::string> {
+class DefineList : public std::map<std::string, std::string, std::less<>> {
 public:
     /**
      * Adds a macro definition. If the macro already exists, it will be replaced.
@@ -192,9 +192,9 @@ public:
      * @param[in] value Optional. The value of the macro.
      * @return The updated list of macro definitions.
      */
-    DefineList& add(const std::string& name, std::string value = "")
+    DefineList& add(std::string_view name, std::string_view value = "")
     {
-        (*this)[name] = std::move(value);
+        emplace(std::string{name}, value);
         return *this;
     }
 
@@ -203,9 +203,11 @@ public:
      * @param[in] name The name of macro.
      * @return The updated list of macro definitions.
      */
-    DefineList& remove(const std::string& name)
+    DefineList& remove(std::string_view name)
     {
-        (*this).erase(name);
+        auto it = find(name);
+        if (it != end())
+            erase(it);
         return *this;
     }
 
@@ -229,9 +231,11 @@ public:
         return *this;
     }
 
+    bool has(std::string_view name) const { return find(name) != end(); }
+
     DefineList() = default;
     DefineList(std::initializer_list<std::pair<const std::string, std::string>> il)
-        : std::map<std::string, std::string>(il)
+        : std::map<std::string, std::string, std::less<>>(il)
     {
     }
 };
