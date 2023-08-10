@@ -371,6 +371,9 @@ private:
     friend class ProgramManager;
 };
 
+class ProgramLayout;
+class EntryPointLayout;
+
 class KALI_API ProgramVersion : public Object {
     KALI_OBJECT(ProgramVersion)
 public:
@@ -381,6 +384,9 @@ public:
         std::vector<Slang::ComPtr<slang::IComponentType>> entry_point_components,
         std::vector<Slang::ComPtr<slang::IComponentType>> linked_entry_point_components
     );
+
+    ProgramLayout get_program_layout() const;
+    EntryPointLayout get_entry_point_layout(uint32_t entry_point) const;
 
     gfx::IShaderProgram* get_gfx_shader_program() const;
 

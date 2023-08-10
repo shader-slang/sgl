@@ -1,6 +1,7 @@
 #include "program.h"
 
 #include "kali/rhi/device.h"
+#include "kali/rhi/reflection.h"
 #include "kali/rhi/helpers.h"
 
 #include "kali/core/error.h"
@@ -157,6 +158,17 @@ ProgramVersion::ProgramVersion(
     , m_linked_entry_point_components(std::move(linked_entry_point_components))
 {
     KALI_ASSERT(m_program);
+}
+
+ProgramLayout ProgramVersion::get_program_layout() const
+{
+    return ProgramLayout(this, m_program_component->getLayout());
+}
+
+EntryPointLayout ProgramVersion::get_entry_point_layout(uint32_t entry_point) const
+{
+    KALI_ASSERT(entry_point < m_entry_point_components.size());
+    return EntryPointLayout(this, entry_point, m_entry_point_components[entry_point]->getLayout()->getEntryPointByIndex(0));
 }
 
 gfx::IShaderProgram* ProgramVersion::get_gfx_shader_program() const

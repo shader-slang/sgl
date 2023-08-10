@@ -82,6 +82,8 @@ target_sources(kali PRIVATE
     kali/rhi/pipeline.h
     kali/rhi/program.cpp
     kali/rhi/program.h
+    kali/rhi/reflection.cpp
+    kali/rhi/reflection.h
     kali/rhi/resource.cpp
     kali/rhi/resource.h
     kali/rhi/sampler.cpp
