@@ -8,6 +8,10 @@
 
 namespace kali {
 
+// ----------------------------------------------------------------------------
+// PipelineState
+// ----------------------------------------------------------------------------
+
 PipelineState::PipelineState(ref<Device> device)
     : m_device(std::move(device))
 {
@@ -28,18 +32,46 @@ NativeHandle PipelineState::get_native_handle() const
     return {};
 }
 
+// ----------------------------------------------------------------------------
+// ComputePipelineState
+// ----------------------------------------------------------------------------
+
 ComputePipelineState::ComputePipelineState(ComputePipelineStateDesc desc, ref<Device> device)
     : PipelineState(std::move(device))
     , m_desc(std::move(desc))
-    , m_program(m_desc.program)
 {
-    // gfx::ComputePipelineStateDesc gfx_desc{.program = m_program->get_gfx_program()};
-    // gfx::ComputePipelineStateDesc gfx_desc{.program = m_program->get_gfx_program()};
-
-    gfx::ComputePipelineStateDesc gfx_desc;
-
-    // m_device->get_gfx_device()->createComputePipelineState(gfx_desc, m_gfx_pipeline.writeRef());
+    gfx::ComputePipelineStateDesc gfx_desc{.program = m_desc.program_version->get_gfx_shader_program()};
+    SLANG_CALL(m_device->get_gfx_device()->createComputePipelineState(gfx_desc, m_gfx_pipeline_state.writeRef()));
 }
+
+// ----------------------------------------------------------------------------
+// ComputePipelineCache
+// ----------------------------------------------------------------------------
+
+ComputePipelineCache::ComputePipelineCache(ref<Device> device)
+    : m_device(std::move(device))
+{
+}
+
+void ComputePipelineCache::clear()
+{
+    m_pipelines.clear();
+}
+
+ref<ComputePipelineState> ComputePipelineCache::get_pipeline_state(ComputePipelineStateDesc desc)
+{
+    auto it = m_pipelines.find(desc);
+    if (it != m_pipelines.end())
+        return it->second;
+
+    ref<ComputePipelineState> pipeline = make_ref<ComputePipelineState>(std::move(desc), m_device);
+    m_pipelines.emplace(pipeline->get_desc(), pipeline);
+    return pipeline;
+}
+
+// ----------------------------------------------------------------------------
+// GraphicsPipelineState
+// ----------------------------------------------------------------------------
 
 GraphicsPipelineState::GraphicsPipelineState(GraphicsPipelineStateDesc desc, ref<Device> device)
     : PipelineState(std::move(device))

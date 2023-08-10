@@ -10,6 +10,8 @@
 
 #include <slang-gfx.h>
 
+#include <map>
+
 namespace kali {
 
 class KALI_API PipelineState : public Object {
@@ -30,7 +32,9 @@ protected:
 };
 
 struct ComputePipelineStateDesc {
-    ref<Program> program;
+    // TODO we should introduce a weak_ref and use that here
+    ref<const ProgramVersion> program_version;
+    auto operator<=>(const ComputePipelineStateDesc&) const = default;
 };
 
 class KALI_API ComputePipelineState : public PipelineState {
@@ -41,8 +45,22 @@ public:
 
 private:
     ComputePipelineStateDesc m_desc;
-    ref<Program> m_program;
 };
+
+class KALI_API ComputePipelineCache : public Object {
+    KALI_OBJECT(ComputePipelineCache)
+public:
+    ComputePipelineCache(ref<Device> device);
+
+    void clear();
+
+    ref<ComputePipelineState> get_pipeline_state(ComputePipelineStateDesc desc);
+
+private:
+    ref<Device> m_device;
+    std::map<ComputePipelineStateDesc, ref<ComputePipelineState>> m_pipelines;
+};
+
 
 struct GraphicsPipelineStateDesc {
     ref<Program> program;
