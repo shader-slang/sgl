@@ -78,29 +78,33 @@ inline gfx::DeviceType get_gfx_device_type(DeviceType device_type)
 Device::Device(const DeviceDesc& desc)
     : m_desc(desc)
 {
+    SLANG_CALL(slang::createGlobalSession(m_slang_session.writeRef()));
+
     gfx::gfxSetDebugCallback(&get_debug_logger());
     if (m_desc.enable_debug_layers) {
         gfx::gfxEnableDebugLayer();
     }
 
-    m_type = m_desc.type;
-    if (m_type == DeviceType::automatic) {
+    if (m_desc.type == DeviceType::automatic) {
 #if KALI_WINDOWS
-        m_type = DeviceType::d3d12;
+        m_desc.type = DeviceType::d3d12;
 #elif KALI_LINUX
-        m_type = DeviceType::vulkan;
+        m_desc.type = DeviceType::vulkan;
 #endif
     }
 
     gfx::IDevice::Desc gfx_desc{
-        .deviceType = get_gfx_device_type(m_type),
+        .deviceType = get_gfx_device_type(m_desc.type),
+        .slang{
+            .slangGlobalSession = m_slang_session,
+        },
     };
     if (SLANG_FAILED(gfx::gfxCreateDevice(&gfx_desc, m_gfx_device.writeRef())))
         KALI_THROW("Failed to create device!");
 
     // Get device info.
     const gfx::DeviceInfo& gfx_device_info = m_gfx_device->getDeviceInfo();
-    m_info.type = m_type;
+    m_info.type = m_desc.type;
     m_info.api_name = gfx_device_info.apiName;
     m_info.adapter_name = gfx_device_info.adapterName;
     m_info.limits.max_texture_dimension_1d = gfx_device_info.limits.maxTextureDimension1D;
@@ -133,13 +137,29 @@ Device::Device(const DeviceDesc& desc)
     );
     m_info.limits.max_shader_visible_samplers = gfx_device_info.limits.maxShaderVisibleSamplers;
 
+    // Get supported shader model.
+    const std::vector<std::pair<ShaderModel, const char*>> available_shader_models = {
+        {ShaderModel::sm_6_7, "sm_6_7"},
+        {ShaderModel::sm_6_6, "sm_6_6"},
+        {ShaderModel::sm_6_5, "sm_6_5"},
+        {ShaderModel::sm_6_4, "sm_6_4"},
+        {ShaderModel::sm_6_3, "sm_6_3"},
+        {ShaderModel::sm_6_2, "sm_6_2"},
+        {ShaderModel::sm_6_1, "sm_6_1"},
+        {ShaderModel::sm_6_0, "sm_6_0"},
+    };
+    for (const auto& [sm, sm_str] : available_shader_models) {
+        if (m_gfx_device->hasFeature(sm_str)) {
+            m_supported_shader_model = sm;
+            break;
+        }
+    }
 
     gfx::ICommandQueue::Desc queue_desc{
         .type = gfx::ICommandQueue::QueueType::Graphics,
     };
 
     SLANG_CALL(m_gfx_device->createCommandQueue(queue_desc, m_gfx_queue.writeRef()));
-    SLANG_CALL(slang::createGlobalSession(m_slang_session.writeRef()));
 
     m_program_manager = make_ref<ProgramManager>(this, m_slang_session);
 }

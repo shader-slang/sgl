@@ -19,6 +19,7 @@
 namespace kali {
 
 class Window;
+enum class ShaderModel;
 
 using AdapterLUID = std::array<uint8_t, 16>;
 
@@ -127,9 +128,11 @@ public:
 
     const DeviceDesc& get_desc() const { return m_desc; }
 
+    DeviceType get_type() const { return m_desc.type; }
+
     const DeviceInfo& get_info() const { return m_info; }
 
-    DeviceType get_type() const { return m_type; }
+    ShaderModel get_supported_shader_model() const { return m_supported_shader_model; }
 
     ref<Swapchain> create_swapchain(SwapchainDesc desc, ref<Window> window);
 
@@ -227,7 +230,7 @@ public:
 private:
     DeviceDesc m_desc;
     DeviceInfo m_info;
-    DeviceType m_type;
+    ShaderModel m_supported_shader_model;
     Slang::ComPtr<gfx::IDevice> m_gfx_device;
     Slang::ComPtr<gfx::ICommandQueue> m_gfx_queue;
     Slang::ComPtr<slang::IGlobalSession> m_slang_session;
