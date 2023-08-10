@@ -4,10 +4,12 @@
 
 namespace kali {
 
-class ShaderObject
-{
+class ShaderObject {
 public:
-    ShaderObject(gfx::IShaderObject* shader_object) : m_shader_object(shader_object) {}
+    ShaderObject(gfx::IShaderObject* shader_object)
+        : m_shader_object(shader_object)
+    {
+    }
 
     gfx::IShaderObject* get_gfx_shader_object() const { return m_shader_object; }
 
@@ -15,4 +17,4 @@ private:
     gfx::IShaderObject* m_shader_object;
 };
 
-}
+} // namespace kali

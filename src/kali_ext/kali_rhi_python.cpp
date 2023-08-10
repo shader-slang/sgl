@@ -333,8 +333,7 @@ void register_kali_rhi(nb::module_& m)
     // command_stream.h
     // ------------------------------------------------------------------------
 
-    nb::class_<CommandStream, Object>(m, "command_stream")
-    .def("submit", &CommandStream::submit);
+    nb::class_<CommandStream, Object>(m, "command_stream").def("submit", &CommandStream::submit);
 }
 
 } // namespace kali

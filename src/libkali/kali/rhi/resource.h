@@ -217,7 +217,7 @@ struct SubresourceRange {
     uint32_t mip_level;
     uint32_t mip_level_count;
     uint32_t base_array_layer; // For Texture3D, this is WSlice.
-    uint32_t layer_count;     // For cube maps, this is a multiple of 6.
+    uint32_t layer_count;      // For cube maps, this is a multiple of 6.
 };
 
 struct ResourceViewDesc {

@@ -168,7 +168,11 @@ ProgramLayout ProgramVersion::get_program_layout() const
 EntryPointLayout ProgramVersion::get_entry_point_layout(uint32_t entry_point) const
 {
     KALI_ASSERT(entry_point < m_entry_point_components.size());
-    return EntryPointLayout(this, entry_point, m_entry_point_components[entry_point]->getLayout()->getEntryPointByIndex(0));
+    return EntryPointLayout(
+        this,
+        entry_point,
+        m_entry_point_components[entry_point]->getLayout()->getEntryPointByIndex(0)
+    );
 }
 
 gfx::IShaderProgram* ProgramVersion::get_gfx_shader_program() const
@@ -194,7 +198,10 @@ gfx::IShaderProgram* ProgramVersion::get_gfx_shader_program() const
                 m_gfx_shader_program.writeRef(),
                 diagnostics.writeRef()
             ))) {
-            KALI_THROW("Failed to create program version: {}", reinterpret_cast<const char*>(diagnostics->getBufferPointer()));
+            KALI_THROW(
+                "Failed to create program version: {}",
+                reinterpret_cast<const char*>(diagnostics->getBufferPointer())
+            );
         }
     }
 
