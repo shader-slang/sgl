@@ -2,6 +2,7 @@
 #include "kali/core/platform.h"
 #include "kali/rhi/device.h"
 #include "kali/rhi/program.h"
+#include "kali/rhi/pipeline.h"
 #include "kali/math/vector.h"
 
 #include "shader-cursor.h"
@@ -17,11 +18,8 @@ int main()
 
     ref<Program> program = device->create_program(ProgramDesc::create_compute("compute.cs.slang", "main"));
 
-    gfx::ComputePipelineStateDesc desc;
-    desc.program = program->get_active_version()->get_gfx_shader_program();
-    auto pipelineState = device->get_gfx_device()->createComputePipelineState(desc);
-    if (!pipelineState)
-        return SLANG_FAIL;
+    ref<ComputePipelineState> pipeline
+        = device->create_compute_pipeline_state({.program_version = ref<const ProgramVersion>(program->get_active_version())});
 
     ref<Buffer> buffer
         = device->create_structured_buffer<uint32_t>(1024, ResourceUsage::unordered_access, MemoryType::device_local);
@@ -34,7 +32,7 @@ int main()
 
     auto commandBuffer = transientHeap->createCommandBuffer();
     auto encoder = commandBuffer->encodeComputeCommands();
-    auto rootShaderObject = encoder->bindPipeline(pipelineState);
+    auto rootShaderObject = encoder->bindPipeline(pipeline->get_gfx_pipeline_state());
     auto cursor = gfx::ShaderCursor(rootShaderObject);
     cursor["g_buffer"].setResource(buffer->get_uav(0, 1024)->get_gfx_resource_view());
     encoder->dispatchCompute(1024 / 32, 1, 1);
@@ -48,6 +46,19 @@ int main()
     queue->executeCommandBuffer(commandBuffer);
 
     queue->waitOnHost();
+
+#if 0
+    auto program = device->create_program(ProgramDesc::create_compute("compute.cs.slang", "main"));
+    auto buffer = device->create_buffer<BufferDesc::create_structured<uint32_t>(1024, ResourceUsage::unordered_access, MemoryType::device_local));
+    // auto buffer = device->create_buffer<BufferDesc::create_structured(program->get_layout().get_variable("g_buffer"), 1024, ResourceUsage::unordered_access, MemoryType::device_local));
+    auto stream = device->get_default_stream();
+
+    stream->dispatch_compute(program, uint3(1024, 1, 1), [&](auto cursor){
+        cursor["g_buffer"] = buffer;
+    });
+
+    auto result = stream->read_buffer<uint32_t>(buffer, 0, 16);
+#endif
 
     std::vector<uint32_t> data = device->read_buffer<uint32_t>(buffer.get(), 0, 16);
 
