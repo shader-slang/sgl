@@ -131,8 +131,8 @@ public:
 #endif
 
 #if KALI_ENABLE_REF_TRACKING
-    void inc_ref(uint64_t ref_id) const;
-    void dec_ref(uint64_t ref_id, bool dealloc = true) const noexcept;
+    void inc_ref_tracked(uint64_t ref_id) const;
+    void dec_ref_tracked(uint64_t ref_id, bool dealloc = true) const noexcept;
 
     /// Enable/disable reference tracking of this object.
     void set_enable_ref_tracking(bool enable);
@@ -469,7 +469,7 @@ private:
     inline void inc_ref(const Object* object)
     {
 #if KALI_ENABLE_REF_TRACKING
-        object->inc_ref(m_ref_id);
+        object->inc_ref_tracked(m_ref_id);
 #else
         object->inc_ref();
 #endif
@@ -478,9 +478,9 @@ private:
     inline void dec_ref(const Object* object)
     {
 #if KALI_ENABLE_REF_TRACKING
-        object->dec_ref(m_ref_id);
+        object->dec_ref_tracked(m_ref_id);
 #else
-        object->dec_ref();
+        object->dec_ref(true);
 #endif
     }
 

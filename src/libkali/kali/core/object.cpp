@@ -13,7 +13,7 @@ static void (*object_inc_ref_py)(PyObject*) noexcept = nullptr;
 static void (*object_dec_ref_py)(PyObject*) noexcept = nullptr;
 
 #if KALI_ENABLE_OBJECT_TRACKING
-static std::mutex s_tracked_objects_mutex;
+static std::recursive_mutex s_tracked_objects_mutex;
 static std::set<const Object*> s_tracked_objects;
 #endif
 
@@ -24,7 +24,7 @@ void Object::inc_ref() const noexcept
     // TODO check this
 #if KALI_ENABLE_OBJECT_TRACKING
     if (m_state == 1) {
-        std::lock_guard<std::mutex> lock(s_tracked_objects_mutex);
+        std::lock_guard<std::recursive_mutex> lock(s_tracked_objects_mutex);
         s_tracked_objects.insert(this);
     }
 #endif
@@ -51,14 +51,15 @@ void Object::dec_ref(bool dealloc) const noexcept
                 fprintf(stderr, "Object::dec_ref(%p): reference count underflow!", this);
                 abort();
             } else if (value == 3) {
+                if (dealloc) {
 #if KALI_ENABLE_OBJECT_TRACKING
-                {
-                    std::lock_guard<std::mutex> lock(s_tracked_objects_mutex);
+                    std::lock_guard<std::recursive_mutex> lock(s_tracked_objects_mutex);
                     s_tracked_objects.erase(this);
-                }
 #endif
-                if (dealloc)
                     delete this;
+                } else {
+                    m_state.store(1, std::memory_order_relaxed);
+                }
             } else {
                 if (!m_state
                          .compare_exchange_weak(value, value - 2, std::memory_order_relaxed, std::memory_order_relaxed))
@@ -108,7 +109,7 @@ PyObject* Object::self_py() const noexcept
 
 void Object::report_alive_objects()
 {
-    std::lock_guard<std::mutex> lock(s_tracked_objects_mutex);
+    std::lock_guard<std::recursive_mutex> lock(s_tracked_objects_mutex);
     log_info("Alive objects:");
     for (const Object* object : s_tracked_objects)
         object->report_refs();
@@ -129,7 +130,7 @@ void Object::report_refs() const
 
 #if KALI_ENABLE_REF_TRACKING
 
-void Object::inc_ref(uint64_t ref_id) const
+void Object::inc_ref_tracked(uint64_t ref_id) const
 {
     if (m_enable_ref_tracking) {
         std::lock_guard<std::mutex> lock(m_ref_trackers_mutex);
@@ -144,7 +145,7 @@ void Object::inc_ref(uint64_t ref_id) const
     inc_ref();
 }
 
-void Object::dec_ref(uint64_t ref_id, bool dealloc) const noexcept
+void Object::dec_ref_tracked(uint64_t ref_id, bool dealloc) const noexcept
 {
     if (m_enable_ref_tracking) {
         std::lock_guard<std::mutex> lock(m_ref_trackers_mutex);
