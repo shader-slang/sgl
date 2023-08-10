@@ -115,23 +115,22 @@ target_compile_options(kali
             -fms-extensions                 # enable MS extensions (among other things allow anonymous structs)
             -fvisibility=hidden             # hide symbols by default
             -Wall                           # set warning level
+            -Wextra                         # enable extra warnings
             -Wno-unused-function
             -Wno-unused-variable
             -Wno-unused-but-set-variable
-            # -Wno-switch
-            # -Wno-missing-braces
-            # -Wno-invalid-offsetof
+            -Wno-sign-compare
         >
         # Clang flags.
         $<$<CXX_COMPILER_ID:Clang>:
             -Wno-unused-private-field
             -Wno-braced-scalar-init
             -Wno-self-assign-overloaded
+            -Wno-deprecated-copy
         >
         # GCC flags.
         $<$<CXX_COMPILER_ID:GNU>:
-            -fpermissive
-            -Wno-sign-compare
+            -Wno-missing-field-initializers
             -Wno-literal-suffix
             -Wno-class-memaccess
             -Wno-strict-aliasing

@@ -235,8 +235,21 @@ struct ShaderSourceDesc {
 struct ShaderModuleDesc {
     std::vector<ShaderSourceDesc> sources;
 
-    void add_file(std::filesystem::path path) { sources.push_back({ShaderSourceType::file, std::move(path)}); }
-    void add_string(std::string string) { sources.push_back({ShaderSourceType::string, std::move(string)}); }
+    void add_file(std::filesystem::path path)
+    {
+        sources.push_back({
+            .type = ShaderSourceType::file,
+            .file = std::move(path),
+        });
+    }
+
+    void add_string(std::string string)
+    {
+        sources.push_back({
+            .type = ShaderSourceType::string,
+            .string = std::move(string),
+        });
+    }
 };
 
 struct EntryPointDesc {
@@ -287,13 +300,16 @@ struct ProgramDesc {
         return shader_modules.back();
     }
 
-    EntryPointGroupDesc& add_entry_point_group(std::string name = "", uint32_t module_index = uint32_t(-1))
+    EntryPointGroupDesc& add_entry_point_group(std::string name = "", uint32_t shader_module_index = uint32_t(-1))
     {
         if (name.empty())
             name = "entry_point_group_" + std::to_string(entry_point_groups.size());
-        if (module_index == uint32_t(-1))
-            module_index = narrow_cast<uint32_t>(shader_modules.size()) - 1;
-        entry_point_groups.push_back({std::move(name), module_index});
+        if (shader_module_index == uint32_t(-1))
+            shader_module_index = narrow_cast<uint32_t>(shader_modules.size()) - 1;
+        entry_point_groups.push_back({
+            .name = std::move(name),
+            .shader_module_index = shader_module_index,
+        });
         return entry_point_groups.back();
     }
 

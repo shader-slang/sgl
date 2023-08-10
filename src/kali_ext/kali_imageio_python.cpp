@@ -29,6 +29,7 @@ inline ImageComponentType dtype_to_image_component_type(nb::dlpack::dtype dtype)
             return ImageComponentType::u32;
             break;
         }
+        break;
     case nb::dlpack::dtype_code::Float:
         switch (dtype.bits) {
         case 16:
@@ -37,6 +38,7 @@ inline ImageComponentType dtype_to_image_component_type(nb::dlpack::dtype dtype)
             return ImageComponentType::f32;
             break;
         }
+        break;
     default:
         break;
     }

@@ -82,11 +82,13 @@ void set_keyboard_interrupt_handler(std::function<void()> handler)
 
 std::optional<std::filesystem::path> open_file_dialog(std::span<const FileDialogFilter> filters)
 {
+    KALI_UNUSED(filters);
     KALI_UNIMPLEMENTED();
 }
 
 std::optional<std::filesystem::path> save_file_dialog(std::span<const FileDialogFilter> filters)
 {
+    KALI_UNUSED(filters);
     KALI_UNIMPLEMENTED();
 }
 

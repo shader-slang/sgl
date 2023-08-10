@@ -46,7 +46,7 @@ struct vector<T, 1> {
 
     template<typename U>
     constexpr vector(const vector<U, 1>& other) noexcept
-        : x{T(other.x)} {};
+        : x{T(other.x)} {}
 
     [[nodiscard]] constexpr T& operator[](int index) noexcept
     {
@@ -99,7 +99,7 @@ struct vector<T, 2> {
     template<typename U>
     constexpr vector(const vector<U, 2>& other) noexcept
         : x{T(other.x)}
-        , y{T(other.y)} {};
+        , y{T(other.y)} {}
 
     [[nodiscard]] constexpr T& operator[](int index) noexcept
     {
@@ -159,7 +159,7 @@ struct vector<T, 3> {
     constexpr vector(const vector<U, 3>& other) noexcept
         : x{T(other.x)}
         , y{T(other.y)}
-        , z{T(other.z)} {};
+        , z{T(other.z)} {}
 
     [[nodiscard]] constexpr T& operator[](int index) noexcept
     {
@@ -228,7 +228,7 @@ struct vector<T, 4> {
         : x{T(other.x)}
         , y{T(other.y)}
         , z{T(other.z)}
-        , w{T(other.w)} {};
+        , w{T(other.w)} {}
 
     [[nodiscard]] constexpr T& operator[](int index) noexcept
     {

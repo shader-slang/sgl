@@ -125,6 +125,10 @@ void DebugConsoleLoggerOutput::write(LogLevel level, const std::string_view modu
         OutputDebugStringA(fmt::format("{}{}\n", s_level_str[int(level)], msg).c_str());
     else
         OutputDebugStringA(fmt::format("{}{} {}\n", s_level_str[int(level)], module, msg).c_str());
+#else
+    KALI_UNUSED(level);
+    KALI_UNUSED(module);
+    KALI_UNUSED(msg);
 #endif
 }
 
