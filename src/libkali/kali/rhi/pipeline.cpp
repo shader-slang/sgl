@@ -69,6 +69,11 @@ ref<ComputePipelineState> ComputePipelineCache::get_pipeline_state(ComputePipeli
     return pipeline;
 }
 
+void ComputePipelineCache::break_strong_reference_to_device()
+{
+    m_device.break_strong_reference();
+}
+
 // ----------------------------------------------------------------------------
 // GraphicsPipelineState
 // ----------------------------------------------------------------------------

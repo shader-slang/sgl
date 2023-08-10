@@ -82,6 +82,8 @@ inline gfx::DeviceType get_gfx_device_type(DeviceType device_type)
 Device::Device(const DeviceDesc& desc)
     : m_desc(desc)
 {
+    inc_ref();
+
     SLANG_CALL(slang::createGlobalSession(m_slang_session.writeRef()));
 
     gfx::gfxSetDebugCallback(&get_debug_logger());
@@ -162,10 +164,16 @@ Device::Device(const DeviceDesc& desc)
     m_program_manager = make_ref<ProgramManager>(this, m_slang_session);
 
     m_command_stream = create_command_stream({.queue_type = CommandQueueType::graphics});
+    m_command_stream->break_strong_reference_to_device();
+
+    dec_ref(false);
 }
 
 Device::~Device()
 {
+    m_command_stream.reset();
+    m_program_manager.reset();
+
     m_gfx_device.setNull();
 }
 

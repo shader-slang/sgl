@@ -57,8 +57,10 @@ public:
 
     ref<ComputePipelineState> get_pipeline_state(ComputePipelineStateDesc desc);
 
+    void break_strong_reference_to_device();
+
 private:
-    ref<Device> m_device;
+    breakable_ref<Device> m_device;
     std::map<ComputePipelineStateDesc, ref<ComputePipelineState>> m_pipelines;
 };
 

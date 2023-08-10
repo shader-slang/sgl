@@ -14,73 +14,82 @@ using namespace kali;
 
 int main()
 {
-    ref<Device> device = Device::create({.type = DeviceType::automatic, .enable_debug_layers = true});
+    {
+        ref<Device> device = Device::create({.type = DeviceType::automatic, .enable_debug_layers = true});
 
-    device->get_program_manager()->add_search_path(get_project_directory() / "src/examples/simple_compute");
+        device->get_program_manager()->add_search_path(get_project_directory() / "src/examples/simple_compute");
 
-    ref<Program> program = device->create_program(ProgramDesc::create_compute("compute.cs.slang", "main"));
+        ref<Program> program = device->create_program(ProgramDesc::create_compute("compute.cs.slang", "main"));
 
 #if 0
-    ProgramDesc desc;
-    desc.add_shader_module().add_string(R"(
-RWStructuredBuffer<uint> g_buffer;
+        ProgramDesc desc;
+        desc.add_shader_module().add_string(R"(
+            RWStructuredBuffer<uint> g_buffer;
 
-[shader("compute")]
-[numthreads(32, 1, 1)]
-void main(uint3 tid: SV_DispatchThreadID)
-{
-    if (tid.x < 1024)
-        g_buffer[tid.x] = tid.x;
-}
-    )");
-    desc.add_entry_point_group().add_entry_point(ShaderStage::compute, "main");
-    program = device->create_program(desc);
+            [shader("compute")]
+            [numthreads(32, 1, 1)]
+            void main(uint3 tid: SV_DispatchThreadID)
+            {
+                if (tid.x < 1024)
+                    g_buffer[tid.x] = tid.x;
+            }
+        )");
+        desc.add_entry_point_group().add_entry_point(ShaderStage::compute, "main");
+        program = device->create_program(desc);
 #endif
 
-    ref<Buffer> buffer
-        = device->create_structured_buffer<uint32_t>(1024, ResourceUsage::unordered_access, MemoryType::device_local);
+        ref<Buffer> buffer = device->create_structured_buffer<uint32_t>(
+            1024,
+            ResourceUsage::unordered_access,
+            MemoryType::device_local
+        );
+#if 0
+        auto stream = device->get_command_stream();
 
-    auto stream = device->get_command_stream();
+        stream->buffer_barrier(buffer.get(), ResourceState::unordered_access);
 
-    stream->buffer_barrier(buffer.get(), ResourceState::unordered_access);
+        stream->dispatch_compute(
+            program.get(),
+            uint3{1024, 1, 1},
+            [&](auto cursor) { cursor["g_buffer"].setResource(buffer->get_uav(0, 1024)->get_gfx_resource_view()); }
+        );
 
-    stream->dispatch_compute(
-        program.get(),
-        uint3{1024, 1, 1},
-        [&](auto cursor) { cursor["g_buffer"].setResource(buffer->get_uav(0, 1024)->get_gfx_resource_view()); }
-    );
+        stream->buffer_barrier(buffer.get(), ResourceState::copy_source);
+        stream->submit();
+        stream->wait_host();
 
-    stream->buffer_barrier(buffer.get(), ResourceState::copy_source);
-    stream->submit();
-    stream->wait_host();
+        std::vector<uint32_t> data = device->read_buffer<uint32_t>(buffer.get(), 0, 16);
+        for (size_t i = 0; i < data.size(); ++i) {
+            log_info("data[{}] = {}", i, data[i]);
+        }
+#endif
 
-    std::vector<uint32_t> data = device->read_buffer<uint32_t>(buffer.get(), 0, 16);
-    for (size_t i = 0; i < data.size(); ++i) {
-        log_info("data[{}] = {}", i, data[i]);
+
+#if 0
+        uint3 thread_group_size = program->get_active_version()->get_entry_point_layout(0).get_compute_thread_group_size();
+        KALI_PRINT(thread_group_size);
+        program->get_active_version()->get_program_layout().dump();
+#endif
+
+#if 0
+        auto program = device->create_program(ProgramDesc::create_compute("compute.cs.slang", "main"));
+        auto buffer = device->create_buffer<BufferDesc::create_structured<uint32_t>(1024, ResourceUsage::unordered_access, MemoryType::device_local));
+        // auto buffer = device->create_buffer<BufferDesc::create_structured(program->get_layout().get_variable("g_buffer"), 1024, ResourceUsage::unordered_access, MemoryType::device_local));
+        auto stream = device->get_default_stream();
+
+        stream->dispatch_compute(program, uint3(1024, 1, 1), [&](auto cursor){
+            cursor["g_buffer"] = buffer;
+        });
+
+        stream->dispatch_compute(program, uint3(1024, 1, 1), {{"g_buffer", buffer }});
+
+        auto result = stream->read_buffer<uint32_t>(buffer, 0, 16);
+#endif
     }
 
-
-#if 0
-    uint3 thread_group_size = program->get_active_version()->get_entry_point_layout(0).get_compute_thread_group_size();
-    KALI_PRINT(thread_group_size);
-    program->get_active_version()->get_program_layout().dump();
+#if KALI_ENABLE_OBJECT_TRACKING
+    Object::report_alive_objects();
 #endif
-
-#if 0
-    auto program = device->create_program(ProgramDesc::create_compute("compute.cs.slang", "main"));
-    auto buffer = device->create_buffer<BufferDesc::create_structured<uint32_t>(1024, ResourceUsage::unordered_access, MemoryType::device_local));
-    // auto buffer = device->create_buffer<BufferDesc::create_structured(program->get_layout().get_variable("g_buffer"), 1024, ResourceUsage::unordered_access, MemoryType::device_local));
-    auto stream = device->get_default_stream();
-
-    stream->dispatch_compute(program, uint3(1024, 1, 1), [&](auto cursor){
-        cursor["g_buffer"] = buffer;
-    });
-
-    stream->dispatch_compute(program, uint3(1024, 1, 1), {{"g_buffer", buffer }});
-
-    auto result = stream->read_buffer<uint32_t>(buffer, 0, 16);
-#endif
-
 
     return 0;
 
@@ -156,7 +165,6 @@ void main(uint3 tid: SV_DispatchThreadID)
     compute_kernel(ctx, (N, 1, 1), a=a, b=b, c=c, size=N)
 
 #endif
-
     return 0;
 #endif
 }
