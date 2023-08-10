@@ -23,6 +23,7 @@ class Sampler;
 
 struct ProgramDesc;
 class Program;
+class ProgramVersion;
 class ProgramManager;
 
 struct FenceDesc;

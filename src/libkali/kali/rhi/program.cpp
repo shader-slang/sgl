@@ -1,16 +1,20 @@
 #include "program.h"
 
 #include "kali/rhi/device.h"
+#include "kali/rhi/helpers.h"
 
 #include "kali/core/error.h"
 #include "kali/core/type_utils.h"
 #include "kali/core/resolver.h"
+#include "kali/core/platform.h"
+
+// TODO
+#define KALI_NVAPI_AVAILABLE 0
 
 namespace kali {
 
 inline SlangStage get_gfx_slang_stage(ShaderStage shader_stage)
 {
-    static_assert(uint32_t(ShaderStage::none) == SLANG_STAGE_NONE);
     static_assert(uint32_t(ShaderStage::none) == SLANG_STAGE_NONE);
     static_assert(uint32_t(ShaderStage::vertex) == SLANG_STAGE_VERTEX);
     static_assert(uint32_t(ShaderStage::hull) == SLANG_STAGE_HULL);
@@ -30,18 +34,159 @@ inline SlangStage get_gfx_slang_stage(ShaderStage shader_stage)
     return SlangStage(shader_stage);
 }
 
-struct ProgramVersion : public Object {
-    KALI_OBJECT(ProgramVersion)
-};
-
-Program::Program(const ProgramDesc& desc, ProgramManager* program_manager)
-    : m_desc(desc)
+Program::Program(ProgramDesc desc, ProgramManager* program_manager)
+    : m_desc(std::move(desc))
     , m_program_manager(program_manager)
 {
     KALI_ASSERT(m_program_manager);
 
-    std::string log;
-    m_active_version = m_program_manager->create_program_version(*this, log).get();
+    ShaderModel supported_shader_model = m_program_manager->get_device()->get_supported_shader_model();
+
+    // If no shader model is selected, use the most recent supported one.
+    if (m_desc.shader_model == ShaderModel::unknown)
+        m_desc.shader_model = supported_shader_model;
+
+    // Validate descriptor.
+    if (m_desc.shader_modules.empty())
+        KALI_THROW("Program must have at least one module");
+    for (const auto& module : m_desc.shader_modules) {
+        if (module.sources.empty())
+            KALI_THROW("Program must not have shader modules without sources");
+    }
+    if (m_desc.entry_point_groups.empty())
+        KALI_THROW("Program must have at least one entry point group");
+    for (const auto& entry_point_group : m_desc.entry_point_groups) {
+        if (entry_point_group.entry_points.empty())
+            KALI_THROW("Program must not have empty entry point groups");
+        if (entry_point_group.shader_module_index >= m_desc.shader_modules.size())
+            KALI_THROW(
+                "Program entry point group '{}' references invalid shader module index {}",
+                entry_point_group.name,
+                entry_point_group.shader_module_index
+            );
+    }
+    if (m_desc.shader_model > supported_shader_model)
+        KALI_THROW("Shader model {} is not supported by the device", m_desc.shader_model);
+
+    m_program_manager->add_loaded_program(this);
+}
+
+Program::~Program()
+{
+    m_program_manager->remove_loaded_program(this);
+}
+
+void Program::set_defines(const DefineList& defines)
+{
+    m_defines = defines;
+    mark_dirty();
+}
+
+void Program::add_define(std::string_view name, std::string_view value)
+{
+    m_defines.add(name, value);
+    mark_dirty();
+}
+
+void Program::add_defines(const DefineList& defines)
+{
+    m_defines.add(defines);
+    mark_dirty();
+}
+
+void Program::remove_define(std::string_view name)
+{
+    m_defines.remove(name);
+    mark_dirty();
+}
+
+const ProgramVersion* Program::get_active_version()
+{
+    if (!m_active_version) {
+        // Lookup in cache.
+        ProgramVersionKey key{m_defines, m_type_conformances};
+        auto it = m_versions.find(key);
+        if (it != m_versions.end()) {
+            m_active_version = it->second.get();
+            return m_active_version;
+        }
+        // Create a new version.
+        std::string log;
+        ref<ProgramVersion> version = m_program_manager->create_program_version(*this, log);
+        if (!version)
+            KALI_THROW("Failed to compile program:\n{}", log);
+        m_versions.emplace(key, version);
+        m_active_version = version.get();
+    }
+
+    return m_active_version;
+}
+
+bool Program::reload(bool force)
+{
+    // Check if any of the source files have changed.
+    bool changed = false;
+    for (auto it : m_source_file_timestamps) {
+        if (std::filesystem::exists(it.first) && std::filesystem::last_write_time(it.first) != it.second) {
+            changed = true;
+            break;
+        }
+    }
+
+    if (changed || force) {
+        m_active_version = nullptr;
+        m_versions.clear();
+        m_source_file_timestamps.clear();
+        return true;
+    }
+
+    return false;
+}
+
+ProgramVersion::ProgramVersion(
+    const Program* program,
+    Slang::ComPtr<slang::ICompileRequest> compile_request,
+    Slang::ComPtr<slang::IComponentType> program_component,
+    std::vector<Slang::ComPtr<slang::IComponentType>> entry_point_components,
+    std::vector<Slang::ComPtr<slang::IComponentType>> linked_entry_point_components
+)
+    : m_program(program)
+    , m_compile_request(std::move(compile_request))
+    , m_program_component(std::move(program_component))
+    , m_entry_point_components(std::move(entry_point_components))
+    , m_linked_entry_point_components(std::move(linked_entry_point_components))
+{
+    KALI_ASSERT(m_program);
+}
+
+gfx::IShaderProgram* ProgramVersion::get_gfx_shader_program() const
+{
+    if (!m_gfx_shader_program) {
+
+        slang::IComponentType* global_scope = m_program_component;
+        std::vector<slang::IComponentType*> entry_points(
+            m_entry_point_components.begin(),
+            m_entry_point_components.end()
+        );
+
+        gfx::IShaderProgram::Desc shader_program_desc{
+            .linkingStyle = gfx::IShaderProgram::LinkingStyle::SeparateEntryPointCompilation,
+            .slangGlobalScope = global_scope,
+            .entryPointCount = narrow_cast<gfx::GfxCount>(entry_points.size()),
+            .slangEntryPoints = entry_points.data(),
+        };
+
+        Slang::ComPtr<ISlangBlob> diagnostics;
+        if (SLANG_FAILED(m_program->get_program_manager()->get_device()->get_gfx_device()->createProgram(
+                shader_program_desc,
+                m_gfx_shader_program.writeRef(),
+                diagnostics.writeRef()
+            ))) {
+            KALI_THROW("Failed to create program version: {}", reinterpret_cast<const char*>(diagnostics->getBufferPointer()));
+        }
+    }
+
+    return m_gfx_shader_program;
 }
 
 ProgramManager::ProgramManager(Device* device, slang::IGlobalSession* slang_session)
@@ -51,122 +196,27 @@ ProgramManager::ProgramManager(Device* device, slang::IGlobalSession* slang_sess
     KALI_ASSERT(device);
     KALI_ASSERT(slang_session);
 
+    m_global_defines
+        = { {"KALI_NVAPI_AVAILABLE", (KALI_NVAPI_AVAILABLE && m_device->get_type() == DeviceType::d3d12) ? "1" : "0"},
+#if KALI_NVAPI_AVAILABLE
+            {"NV_SHADER_EXTN_SLOT", "u999"},
+            {"__SHADER_TARGET_MAJOR",
+             std::to_string(get_shader_model_major_version(m_device->get_supported_shader_model()))},
+            {"__SHADER_TARGET_MINOR",
+             std::to_string(get_shader_model_minor_version(m_device->get_supported_shader_model()))},
+#endif
+          };
+
     m_disabled_warnings.push_back(15602); // #pragma once in modules
     m_disabled_warnings.push_back(30081); // implicit conversion
 }
 
-ref<Program> ProgramManager::create_program(const ProgramDesc& desc)
+ref<Program> ProgramManager::create_program(ProgramDesc desc)
 {
-    return make_ref<Program>(desc, this);
+    return make_ref<Program>(std::move(desc), this);
 }
 
 ref<ProgramVersion> ProgramManager::create_program_version(const Program& program, std::string& out_log) const
-{
-    Slang::ComPtr<slang::ICompileRequest> compile_request = create_slang_compile_request(program);
-    KALI_UNUSED(compile_request);
-
-    // Compile program.
-    SlangResult result = compile_request->compile();
-    out_log += compile_request->getDiagnosticOutput();
-    if (SLANG_FAILED(result))
-        return nullptr;
-
-    Slang::ComPtr<slang::IComponentType> program_component;
-    compile_request->getProgram(program_component.writeRef());
-    // slang::ISession* session = program_component->getSession();
-
-    // Prepare entry points.
-    std::vector<Slang::ComPtr<slang::IComponentType>> entry_point_components;
-    SlangUInt entry_point_index = 0;
-    for (const ProgramKernelDesc& kernel_desc : program.get_desc().kernels) {
-        for (const EntryPointDesc& entry_point_desc : kernel_desc.entry_points) {
-            Slang::ComPtr<slang::IComponentType> entry_point;
-            compile_request->getEntryPoint(entry_point_index++, entry_point.writeRef());
-            KALI_ASSERT(entry_point);
-
-            // Rename entry point in the generated code if the exported name differs from the source name.
-            // This makes it possible to generate different specializations of the same source entry point,
-            // for example by setting different type conformances.
-            if (!entry_point_desc.export_name.empty() && entry_point_desc.export_name != entry_point_desc.name) {
-                Slang::ComPtr<slang::IComponentType> renamed_entry_point;
-                entry_point->renameEntryPoint(entry_point_desc.export_name.c_str(), renamed_entry_point.writeRef());
-                entry_point_components.push_back(renamed_entry_point);
-            } else {
-                entry_point_components.push_back(entry_point);
-            }
-        }
-    }
-
-
-#if 0
-    // Extract list of files referenced, for dependency-tracking purposes.
-    int depFileCount = spGetDependencyFileCount(pSlangRequest);
-    for (int ii = 0; ii < depFileCount; ++ii)
-    {
-        std::string depFilePath = spGetDependencyFilePath(pSlangRequest, ii);
-        if (std::filesystem::exists(depFilePath))
-            program.mFileTimeMap[depFilePath] = getFileModifiedTime(depFilePath);
-    }
-
-    // Note: the `ProgramReflection` needs to be able to refer back to the
-    // `ProgramVersion`, but the `ProgramVersion` can't be initialized
-    // until we have its reflection. We cut that dependency knot by
-    // creating an "empty" program first, and then initializing it
-    // after the reflection is created.
-    //
-    // TODO: There is no meaningful semantic difference between `ProgramVersion`
-    // and `ProgramReflection`: they are one-to-one. Ideally in a future version
-    // of Falcor they could be the same object.
-    //
-    // TODO @skallweit remove const cast
-    ProgramVersion::SharedPtr pVersion = ProgramVersion::createEmpty(const_cast<Program*>(&program), program_component);
-
-    // Note: Because of interactions between how `SV_Target` outputs
-    // and `u` register bindings work in Slang today (as a compatibility
-    // feature for Shader Model 5.0 and below), we need to make sure
-    // that the entry points are included in the component type we use
-    // for reflection.
-    //
-    // TODO: Once Slang drops that behavior for SM 5.1+, we should be able
-    // to just use `program_component` for the reflection step instead
-    // of `pSlangProgram`.
-    //
-    ComPtr<slang::IComponentType> pSlangProgram;
-    spCompileRequest_getProgram(pSlangRequest, pSlangProgram.writeRef());
-
-    ProgramReflection::SharedPtr pReflector;
-    if (!doSlangReflection(*pVersion, program_component, entry_point_components, pReflector, log))
-    {
-        return nullptr;
-    }
-
-    auto descStr = program.getProgramDescString();
-    pVersion->init(program.getDefineList(), pReflector, descStr, entry_point_components);
-
-    timer.update();
-    double time = timer.delta();
-    mCompilationStats.programVersionCount++;
-    mCompilationStats.programVersionTotalTime += time;
-    mCompilationStats.programVersionMaxTime = std::max(mCompilationStats.programVersionMaxTime, time);
-    logDebug("Created program version in {:.3f} s: {}", timer.delta(), descStr);
-#endif
-
-    return nullptr;
-}
-
-
-void ProgramManager::add_search_path(std::filesystem::path path)
-{
-    m_search_paths.push_back(std::move(path));
-}
-
-void ProgramManager::remove_search_path(std::filesystem::path path)
-{
-    m_search_paths.erase(std::remove(m_search_paths.begin(), m_search_paths.end(), path), m_search_paths.end());
-}
-
-
-Slang::ComPtr<slang::ICompileRequest> ProgramManager::create_slang_compile_request(const Program& program) const
 {
     const ProgramDesc& program_desc = program.get_desc();
 
@@ -183,10 +233,17 @@ Slang::ComPtr<slang::ICompileRequest> ProgramManager::create_slang_compile_reque
     session_desc.searchPaths = search_paths.data();
     session_desc.searchPathCount = narrow_cast<SlangInt>(search_paths.size());
 
+    // Select target profile.
     slang::TargetDesc target_desc;
     target_desc.format = SLANG_TARGET_UNKNOWN;
-    target_desc.profile = m_slang_session->findProfile(enum_to_string(program_desc.shader_model).c_str());
-    KALI_ASSERT(target_desc.profile != SLANG_PROFILE_UNKNOWN);
+    std::string profile_str = fmt::format(
+        "sm_{}_{}",
+        get_shader_model_major_version(program_desc.shader_model),
+        get_shader_model_minor_version(program_desc.shader_model)
+    );
+    target_desc.profile = m_slang_session->findProfile(profile_str.c_str());
+    if (target_desc.profile == SLANG_PROFILE_UNKNOWN)
+        KALI_THROW("Unsupported target profile: {}", profile_str);
 
     // Get compiler flags and adjust with forced flags.
     ShaderCompilerFlags compiler_flags = program_desc.compiler_flags;
@@ -198,7 +255,7 @@ Slang::ComPtr<slang::ICompileRequest> ProgramManager::create_slang_compile_reque
     bool flag_precise = is_set(compiler_flags, ShaderCompilerFlags::floating_point_mode_precise);
     if (flag_fast && flag_precise) {
         log_warn("Shader compiler flags 'floating_point_mode_fast' and 'floating_point_mode_precise' can't be used "
-                 "simultaneously. ignoring 'floating_point_mode_fast'.");
+                 "simultaneously. Ignoring 'floating_point_mode_fast'.");
         flag_fast = false;
     }
     target_desc.floatingPointMode = SLANG_FLOATING_POINT_MODE_DEFAULT;
@@ -229,34 +286,33 @@ Slang::ComPtr<slang::ICompileRequest> ProgramManager::create_slang_compile_reque
         target_define = "__TARGET_CUDA__";
         break;
     default:
-        KALI_ASSERT(false);
-        break;
+        KALI_UNREACHABLE();
     }
     KALI_ASSERT(target_define);
 
-    // Pass any `#define` flags along to Slang, since we aren't doing our
-    // own preprocessing any more.
-    //
-    std::vector<slang::PreprocessorMacroDesc> defines;
-    const auto add_define = [&defines](const char* name, const char* value) { defines.push_back({name, value}); };
+    // Add preprocessor macros.
+    std::vector<slang::PreprocessorMacroDesc> macros;
+    const auto add_macro = [&macros](const char* name, const char* value) { macros.push_back({name, value}); };
 
     // Add global followed by program specific defines.
     for (const auto& d : m_global_defines)
-        add_define(d.first.c_str(), d.second.c_str());
-    for (const auto& d : program_desc.defines)
-        add_define(d.first.c_str(), d.second.c_str());
+        add_macro(d.first.c_str(), d.second.c_str());
+    for (const auto& d : program.get_defines())
+        add_macro(d.first.c_str(), d.second.c_str());
 
-    // Add a `#define`s based on the target and shader model.
-    add_define(target_define, "1");
-    std::string sm = fmt::format(
+    // Add target define.
+    add_macro(target_define, "1");
+
+    // Add shader model define.
+    std::string shader_model_define = fmt::format(
         "__SM_{}_{}__",
         get_shader_model_major_version(program_desc.shader_model),
         get_shader_model_minor_version(program_desc.shader_model)
     );
-    add_define(sm.c_str(), "1");
+    add_macro(shader_model_define.c_str(), "1");
 
-    session_desc.preprocessorMacros = defines.data();
-    session_desc.preprocessorMacroCount = narrow_cast<SlangInt>(defines.size());
+    session_desc.preprocessorMacros = macros.data();
+    session_desc.preprocessorMacroCount = narrow_cast<SlangInt>(macros.size());
 
     session_desc.targets = &target_desc;
     session_desc.targetCount = 1;
@@ -272,27 +328,25 @@ Slang::ComPtr<slang::ICompileRequest> ProgramManager::create_slang_compile_reque
     // Create a new slang session.
     // We do this because slang doesn't support reloading changed source files.
     Slang::ComPtr<slang::ISession> session;
-    m_slang_session->createSession(session_desc, session.writeRef());
+    SLANG_CALL(m_slang_session->createSession(session_desc, session.writeRef()));
     KALI_ASSERT(session);
 
 #if 0
     program.mFileTimeMap.clear(); // TODO @skallweit
 #endif
 
-#if 0
-    if (!program.mDesc.mLanguagePrelude.empty()) {
+    // Set language prelude. Only supported for HLSL.
+    if (!program_desc.prelude.empty()) {
         if (target_desc.format == SLANG_DXIL) {
-            m_slang_session->setLanguagePrelude(SLANG_SOURCE_LANGUAGE_HLSL, program.mDesc.mLanguagePrelude.c_str());
+            m_slang_session->setLanguagePrelude(SLANG_SOURCE_LANGUAGE_HLSL, program_desc.prelude.c_str());
         } else {
-            reportError("Language prelude set for unsupported target " + std::string(targetMacroName));
-            return nullptr;
+            KALI_THROW("Language prelude set for unsupported target " + std::string(target_define));
         }
     }
-#endif
 
     // Create compile request.
     Slang::ComPtr<slang::ICompileRequest> compile_request;
-    session->createCompileRequest(compile_request.writeRef());
+    SLANG_CALL(session->createCompileRequest(compile_request.writeRef()));
     KALI_ASSERT(compile_request);
 
     // Disable warnings.
@@ -332,14 +386,16 @@ Slang::ComPtr<slang::ICompileRequest> ProgramManager::create_slang_compile_reque
         args.push_back(nvapi_include.c_str());
 #endif
         if (!args.empty())
-            compile_request->processCommandLineArguments(args.data(), narrow_cast<int>(args.size()));
+            SLANG_CALL(compile_request->processCommandLineArguments(args.data(), narrow_cast<int>(args.size())));
     }
 
-    for (size_t i = 0; i < program_desc.modules.size(); ++i) {
-        const ShaderModuleDesc& module_desc = program_desc.modules[i];
+    // Add shader modules.
+    // Each shader module is a separate translation unit.
+    for (size_t i = 0; i < program_desc.shader_modules.size(); ++i) {
+        const ShaderModuleDesc& shader_module_desc = program_desc.shader_modules[i];
         int translation_unit_index = compile_request->addTranslationUnit(SLANG_SOURCE_LANGUAGE_SLANG, nullptr);
         KALI_ASSERT(translation_unit_index == i);
-        for (const ShaderSourceDesc& source_desc : module_desc.sources) {
+        for (const ShaderSourceDesc& source_desc : shader_module_desc.sources) {
             switch (source_desc.type) {
             case ShaderSourceType::file:
                 compile_request->addTranslationUnitSourceFile(
@@ -359,74 +415,117 @@ Slang::ComPtr<slang::ICompileRequest> ProgramManager::create_slang_compile_reque
     }
 
     // Add entry points.
-    for (const ProgramKernelDesc& kernel_desc : program_desc.kernels) {
-        for (const EntryPointDesc& entry_point_desc : kernel_desc.entry_points) {
+    for (const EntryPointGroupDesc& entry_point_group : program_desc.entry_point_groups) {
+        for (const EntryPointDesc& entry_point_desc : entry_point_group.entry_points) {
             compile_request->addEntryPoint(
-                narrow_cast<int>(kernel_desc.module_index),
+                narrow_cast<int>(entry_point_group.shader_module_index),
                 entry_point_desc.name.c_str(),
                 get_gfx_slang_stage(entry_point_desc.type)
             );
         }
     }
 
+    // Compile program.
+    SlangResult result = compile_request->compile();
+    out_log += compile_request->getDiagnosticOutput();
+    if (SLANG_FAILED(result))
+        return nullptr;
+
+    for (int i = 0; i < compile_request->getDependencyFileCount(); ++i) {
+        std::filesystem::path path = compile_request->getDependencyFilePath(i);
+        if (std::filesystem::exists(path))
+            program.m_source_file_timestamps[path] = std::filesystem::last_write_time(path);
+    }
+
+    Slang::ComPtr<slang::IComponentType> program_component;
+    SLANG_CALL(compile_request->getProgram(program_component.writeRef()));
+
+    // Prepare entry points.
+    std::vector<Slang::ComPtr<slang::IComponentType>> entry_point_components;
+    SlangUInt entry_point_index = 0;
+    for (const EntryPointGroupDesc& entry_point_group : program_desc.entry_point_groups) {
+        for (const EntryPointDesc& entry_point_desc : entry_point_group.entry_points) {
+            Slang::ComPtr<slang::IComponentType> entry_point;
+            SLANG_CALL(compile_request->getEntryPoint(entry_point_index++, entry_point.writeRef()));
+            KALI_ASSERT(entry_point);
+
+            // Rename entry point in the generated code if the exported name differs from the source name.
+            // This makes it possible to generate different specializations of the same source entry point,
+            // for example by setting different type conformances.
+            if (!entry_point_desc.export_name.empty() && entry_point_desc.export_name != entry_point_desc.name) {
+                Slang::ComPtr<slang::IComponentType> renamed_entry_point;
+                SLANG_CALL(
+                    entry_point->renameEntryPoint(entry_point_desc.export_name.c_str(), renamed_entry_point.writeRef())
+                );
+                entry_point_components.push_back(renamed_entry_point);
+            } else {
+                entry_point_components.push_back(entry_point);
+            }
+        }
+    }
+
+    // Prepare linked entry points.
+    std::vector<Slang::ComPtr<slang::IComponentType>> linked_entry_point_components;
+    for (const auto& entry_point_component : entry_point_components) {
+        slang::IComponentType* components[2] = {program_component, entry_point_component};
+        Slang::ComPtr<slang::IComponentType> linked_entry_point;
+        // TODO handle diagnostics
+        SLANG_CALL(session->createCompositeComponentType(
+            components,
+            std::size(components),
+            linked_entry_point.writeRef(),
+            nullptr
+        ));
+        linked_entry_point_components.push_back(linked_entry_point);
+    }
 
 #if 0
-    // Now lets add all our input shader code, one-by-one
-    int translationUnitsAdded = 0;
-    int translationUnitIndex = -1;
-
-    for (const auto& src : program.mDesc.mSources) {
-        // Register new translation unit with Slang if needed.
-        if (translationUnitIndex < 0 || src.source.createTranslationUnit) {
-            // If module name is empty, pass in nullptr to let Slang generate a name internally.
-            const char* name = !src.source.moduleName.empty() ? src.source.moduleName.c_str() : nullptr;
-            translationUnitIndex = spAddTranslationUnit(compile_request, SLANG_SOURCE_LANGUAGE_SLANG, name);
-            FALCOR_ASSERT(translationUnitIndex == translationUnitsAdded);
-            translationUnitsAdded++;
-        }
-        FALCOR_ASSERT(translationUnitIndex >= 0);
-
-        // Add source code to the translation unit
-        if (src.getType() == Program::ShaderModule::Type::File) {
-            // If this is not an HLSL or a SLANG file, display a warning
-            const auto& path = src.source.filePath;
-            if (!(hasExtension(path, "hlsl") || hasExtension(path, "slang"))) {
-                logWarning("Compiling a shader file which is not a SLANG file or an HLSL file. This is not an error, "
-                           "but make sure that the file "
-                           "contains valid shaders");
-            }
-            std::filesystem::path fullPath;
-            if (!findFileInShaderDirectories(path, fullPath)) {
-                reportError("Can't find file " + path.string());
-                spDestroyCompileRequest(compile_request);
-                return nullptr;
-            }
-            spAddTranslationUnitSourceFile(compile_request, translationUnitIndex, fullPath.string().c_str());
-        } else {
-            FALCOR_ASSERT(src.getType() == Program::ShaderModule::Type::String);
-            spAddTranslationUnitSourceString(
-                compile_request,
-                translationUnitIndex,
-                src.source.modulePath.c_str(),
-                src.source.str.c_str()
-            );
-        }
-    }
-
-    // Now we make a separate pass and add the entry points.
-    // Each entry point references the index of the source
-    // it uses, and luckily, the Slang API can use these
-    // indices directly.
-    for (auto& entryPoint : program.mDesc.mEntryPoints) {
-        spAddEntryPoint(
-            compile_request,
-            entryPoint.sourceIndex,
-            entryPoint.name.c_str(),
-            getSlangStage(entryPoint.stage)
-        );
+    ProgramReflection::SharedPtr pReflector;
+    if (!doSlangReflection(*pVersion, program_component, entry_point_components, pReflector, log))
+    {
+        return nullptr;
     }
 #endif
-    return compile_request;
+
+#if 0
+    auto descStr = program.getProgramDescString();
+    pVersion->init(program.getDefineList(), pReflector, descStr, entry_point_components);
+
+    timer.update();
+    double time = timer.delta();
+    mCompilationStats.programVersionCount++;
+    mCompilationStats.programVersionTotalTime += time;
+    mCompilationStats.programVersionMaxTime = std::max(mCompilationStats.programVersionMaxTime, time);
+    logDebug("Created program version in {:.3f} s: {}", timer.delta(), descStr);
+#endif
+
+    return make_ref<ProgramVersion>(
+        &program,
+        compile_request,
+        program_component,
+        entry_point_components,
+        linked_entry_point_components
+    );
+}
+
+size_t ProgramManager::reload_programs(bool force)
+{
+    size_t count = 0;
+    for (Program* program : m_loaded_programs)
+        if (program->reload(force))
+            count++;
+
+    return count;
+}
+
+void ProgramManager::add_search_path(std::filesystem::path path)
+{
+    m_search_paths.push_back(std::move(path));
+}
+
+void ProgramManager::remove_search_path(std::filesystem::path path)
+{
+    m_search_paths.erase(std::remove(m_search_paths.begin(), m_search_paths.end(), path), m_search_paths.end());
 }
 
 std::filesystem::path ProgramManager::resolve_path(const std::filesystem::path& path) const
@@ -439,6 +538,21 @@ std::filesystem::path ProgramManager::resolve_path(const std::filesystem::path& 
         }
     }
     return path;
+}
+
+void ProgramManager::add_loaded_program(Program* program)
+{
+    KALI_ASSERT(program);
+    m_loaded_programs.push_back(program);
+}
+
+void ProgramManager::remove_loaded_program(Program* program)
+{
+    KALI_ASSERT(program);
+    m_loaded_programs.erase(
+        std::remove(m_loaded_programs.begin(), m_loaded_programs.end(), program),
+        m_loaded_programs.end()
+    );
 }
 
 

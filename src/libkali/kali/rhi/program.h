@@ -6,13 +6,14 @@
 #include "kali/core/macros.h"
 #include "kali/core/object.h"
 #include "kali/core/enum.h"
+#include "kali/core/type_utils.h"
 
 #include <slang-gfx.h>
 
 #include <string>
+#include <string_view>
 #include <vector>
 #include <filesystem>
-#include <functional>
 #include <map>
 
 namespace kali {
@@ -109,24 +110,7 @@ KALI_ENUM_CLASS_OPERATORS(ShaderCompilerFlags)
 struct TypeConformance {
     std::string type_name;
     std::string interface_name;
-
-    bool operator<(TypeConformance const& other) const
-    {
-        return type_name < other.type_name || (type_name == other.type_name && interface_name < other.interface_name);
-    }
-
-    bool operator==(TypeConformance const& other) const
-    {
-        return type_name == other.type_name && interface_name == other.interface_name;
-    }
-    struct HashFunction {
-        size_t operator()(const TypeConformance& conformance) const
-        {
-            size_t hash = std::hash<std::string>()(conformance.type_name);
-            hash = hash ^ std::hash<std::string>()(conformance.interface_name);
-            return hash;
-        }
-    };
+    auto operator<=>(const TypeConformance&) const = default;
 };
 
 class TypeConformanceList : public std::map<TypeConformance, uint32_t> {
@@ -250,6 +234,9 @@ struct ShaderSourceDesc {
 
 struct ShaderModuleDesc {
     std::vector<ShaderSourceDesc> sources;
+
+    void add_file(std::filesystem::path path) { sources.push_back({ShaderSourceType::file, std::move(path)}); }
+    void add_string(std::string string) { sources.push_back({ShaderSourceType::string, std::move(string)}); }
 };
 
 struct EntryPointDesc {
@@ -258,17 +245,29 @@ struct EntryPointDesc {
     std::string export_name;
 };
 
+struct EntryPointGroupDesc {
+    std::string name;
+    uint32_t shader_module_index;
+    std::vector<EntryPointDesc> entry_points;
+
+    EntryPointDesc& add_entry_point(ShaderStage type, std::string name, std::string export_name = "")
+    {
+        entry_points.push_back({type, std::move(name), std::move(export_name)});
+        return entry_points.back();
+    }
+};
+
 struct ProgramKernelDesc {
     uint32_t module_index;
     std::vector<EntryPointDesc> entry_points;
 };
 
 struct ProgramDesc {
-    std::vector<ShaderModuleDesc> modules;
-    std::vector<ProgramKernelDesc> kernels;
+    std::vector<ShaderModuleDesc> shader_modules;
+    std::vector<EntryPointGroupDesc> entry_point_groups;
 
     ShaderModel shader_model{ShaderModel::unknown};
-    ShaderCompilerFlags compiler_flags;
+    ShaderCompilerFlags compiler_flags{ShaderCompilerFlags::none};
     std::string prelude;
     std::vector<std::string> downstream_compiler_args;
 
@@ -276,85 +275,122 @@ struct ProgramDesc {
 
     static ProgramDesc create_compute(std::filesystem::path path, std::string entry_point)
     {
-        ProgramDesc desc{
-            .modules = {
-                ShaderModuleDesc{
-                    .sources = {
-                        ShaderSourceDesc{
-                            .type = ShaderSourceType::file,
-                            .file = path,
-                        },
-                    },
-                },
-            },
-            .kernels = {
-                ProgramKernelDesc{
-                    .module_index = 0,
-                    .entry_points = {
-                        EntryPointDesc{
-                            .type = ShaderStage::compute,
-                            .name = entry_point
-                        },
-                    },
-                },
-            },
-        };
+        ProgramDesc desc;
+        desc.add_shader_module().add_file(std::move(path));
+        desc.add_entry_point_group().add_entry_point(ShaderStage::compute, std::move(entry_point));
         return desc;
     }
 
-    // clang-format off
-    ProgramDesc& set_defines(DefineList defines_) { defines = std::move(defines_); return *this; }
-    ProgramDesc& set_shader_model(ShaderModel shader_model_) { shader_model = shader_model_; return *this; }
-    ProgramDesc& set_compiler_flags(ShaderCompilerFlags compiler_flags_) { compiler_flags = compiler_flags_; return *this; }
-    ProgramDesc& set_prelude(std::string prelude_) { prelude = std::move(prelude_); return *this; }
-    ProgramDesc& set_downstream_compiler_args(std::vector<std::string> downstream_compiler_args_) { downstream_compiler_args = std::move(downstream_compiler_args_); return *this; }
-    // clang-format on
+    ShaderModuleDesc& add_shader_module()
+    {
+        shader_modules.push_back({});
+        return shader_modules.back();
+    }
 
-    // ProgramDesc& add_file(std::filesystem::path path)
-    // {
-    //     shader_modules.emplace_back(ShaderModuleDesc{
-    //         .type = ShaderModuleType::file,
-    //         .file = std::move(path),
-    //     });
-    //     return *this;
-    // }
+    EntryPointGroupDesc& add_entry_point_group(std::string name = "", uint32_t module_index = uint32_t(-1))
+    {
+        if (name.empty())
+            name = "entry_point_group_" + std::to_string(entry_point_groups.size());
+        if (module_index == uint32_t(-1))
+            module_index = narrow_cast<uint32_t>(shader_modules.size()) - 1;
+        entry_point_groups.push_back({std::move(name), module_index});
+        return entry_point_groups.back();
+    }
 
-    // ProgramDesc& add_string(std::string string)
-    // {
-    //     shader_modules.emplace_back(ShaderModuleDesc{
-    //         .type = ShaderModuleType::string,
-    //         .string = std::move(string),
-    //     });
-    //     return *this;
-    // }
+    ProgramDesc& set_shader_model(ShaderModel shader_model_)
+    {
+        shader_model = shader_model_;
+        return *this;
+    }
 
-    // ProgramDesc& add_entrypoint(std::string name)
-    // {
-    //     entrypoints.emplace_back(std::move(name));
-    //     return *this;
-    // }
+    ProgramDesc& set_compiler_flags(ShaderCompilerFlags compiler_flags_)
+    {
+        compiler_flags = compiler_flags_;
+        return *this;
+    }
+
+    ProgramDesc& set_prelude(std::string prelude_)
+    {
+        prelude = std::move(prelude_);
+        return *this;
+    }
+
+    ProgramDesc& set_downstream_compiler_args(std::vector<std::string> downstream_compiler_args_)
+    {
+        downstream_compiler_args = std::move(downstream_compiler_args_);
+        return *this;
+    }
 };
 
-struct ProgramVersion;
-
-struct ProgramKernels;
+class ProgramVersion;
 
 class KALI_API Program : public Object {
     KALI_OBJECT(Program)
 public:
-    Program(const ProgramDesc& desc, ProgramManager* program_manager);
+    Program(ProgramDesc desc, ProgramManager* program_manager);
+    virtual ~Program();
 
     const ProgramDesc& get_desc() const { return m_desc; }
 
-    gfx::IShaderProgram* get_gfx_shader_program() const { return m_gfx_shader_program; }
+    ProgramManager* get_program_manager() const { return m_program_manager; }
+
+    const DefineList& get_defines() const { return m_defines; }
+
+    void set_defines(const DefineList& defines);
+
+    void add_define(std::string_view name, std::string_view value = "");
+    void add_defines(const DefineList& defines);
+    void remove_define(std::string_view name);
+
+    const ProgramVersion* get_active_version();
+
+    bool reload(bool force);
 
 private:
+    void mark_dirty() { m_active_version = nullptr; }
+
+    struct ProgramVersionKey {
+        DefineList defines;
+        TypeConformanceList type_conformances;
+        auto operator<=>(const ProgramVersionKey&) const = default;
+    };
+
     ProgramDesc m_desc;
     ProgramManager* m_program_manager;
 
-    ProgramVersion* m_active_version{nullptr};
+    DefineList m_defines;
+    TypeConformanceList m_type_conformances;
 
-    Slang::ComPtr<gfx::IShaderProgram> m_gfx_shader_program;
+    std::map<ProgramVersionKey, ref<const ProgramVersion>> m_versions;
+    const ProgramVersion* m_active_version{nullptr};
+
+    /// Map to keep track of all source files contributing to this program and their timestamps.
+    /// This is used to detect if a source file has changed and the program needs to be recompiled.
+    mutable std::map<std::filesystem::path, std::filesystem::file_time_type> m_source_file_timestamps;
+
+    friend class ProgramManager;
+};
+
+class KALI_API ProgramVersion : public Object {
+    KALI_OBJECT(ProgramVersion)
+public:
+    ProgramVersion(
+        const Program* program,
+        Slang::ComPtr<slang::ICompileRequest> compile_request,
+        Slang::ComPtr<slang::IComponentType> program_component,
+        std::vector<Slang::ComPtr<slang::IComponentType>> entry_point_components,
+        std::vector<Slang::ComPtr<slang::IComponentType>> linked_entry_point_components
+    );
+
+    gfx::IShaderProgram* get_gfx_shader_program() const;
+
+private:
+    const Program* m_program;
+    Slang::ComPtr<slang::ICompileRequest> m_compile_request;
+    Slang::ComPtr<slang::IComponentType> m_program_component;
+    std::vector<Slang::ComPtr<slang::IComponentType>> m_entry_point_components;
+    std::vector<Slang::ComPtr<slang::IComponentType>> m_linked_entry_point_components;
+    mutable Slang::ComPtr<gfx::IShaderProgram> m_gfx_shader_program;
 };
 
 class KALI_API ProgramManager : public Object {
@@ -362,17 +398,31 @@ class KALI_API ProgramManager : public Object {
 public:
     ProgramManager(Device* device, slang::IGlobalSession* slang_session);
 
-    ref<Program> create_program(const ProgramDesc& desc);
+    Device* get_device() const { return m_device; }
 
+    ref<Program> create_program(ProgramDesc desc);
+
+    /// Create a new program version (i.e. a compiled program).
+    /// @param program Program to compile.
+    /// @param out_log String to write compiler output to.
+    /// @return A new program version, or null if compilation failed.
     ref<ProgramVersion> create_program_version(const Program& program, std::string& out_log) const;
+
+    /// Reload all programs.
+    /// @param force If true, all programs will be reloaded, even if they haven't changed.
+    /// @return The number of programs that were reloaded.
+    size_t reload_programs(bool force = false);
+
+    const std::vector<Program*>& get_loaded_programs() const { return m_loaded_programs; }
+
+    void add_loaded_program(Program* program);
+    void remove_loaded_program(Program* program);
 
     const std::vector<std::filesystem::path>& get_search_paths() const { return m_search_paths; }
     void add_search_path(std::filesystem::path path);
     void remove_search_path(std::filesystem::path path);
 
 private:
-    Slang::ComPtr<slang::ICompileRequest> create_slang_compile_request(const Program& program) const;
-
     std::filesystem::path resolve_path(const std::filesystem::path& path) const;
 
     Device* m_device;
@@ -383,6 +433,8 @@ private:
     ShaderCompilerFlags m_forced_enabled_compiler_flags{ShaderCompilerFlags::none};
     ShaderCompilerFlags m_forced_disabled_compiler_flags{ShaderCompilerFlags::none};
     std::vector<int> m_disabled_warnings;
+
+    std::vector<Program*> m_loaded_programs;
 };
 
 

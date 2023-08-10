@@ -121,10 +121,10 @@ void register_kali_rhi(nb::module_& m)
         .def("add", nb::overload_cast<const TypeConformanceList&>(&TypeConformanceList::add), "other"_a)
         .def("remove", nb::overload_cast<const TypeConformanceList&>(&TypeConformanceList::remove), "other"_a);
 
-    nb::bind_map<std::map<std::string, std::string>>(m, "DefineListBase");
-    nb::class_<DefineList, std::map<std::string, std::string>>(m, "DefineList")
-        .def("add", nb::overload_cast<const std::string&, std::string>(&DefineList::add), "name"_a, "value"_a = "")
-        .def("remove", nb::overload_cast<const std::string&>(&DefineList::remove), "name"_a)
+    nb::bind_map<std::map<std::string, std::string, std::less<>>>(m, "DefineListBase");
+    nb::class_<DefineList, std::map<std::string, std::string, std::less<>>>(m, "DefineList")
+        .def("add", nb::overload_cast<std::string_view, std::string_view>(&DefineList::add), "name"_a, "value"_a = "")
+        .def("remove", nb::overload_cast<std::string_view>(&DefineList::remove), "name"_a)
         .def("add", nb::overload_cast<const DefineList&>(&DefineList::add), "other"_a)
         .def("remove", nb::overload_cast<const DefineList&>(&DefineList::remove), "other"_a);
 
