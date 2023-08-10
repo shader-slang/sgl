@@ -250,9 +250,9 @@ struct EntryPointGroupDesc {
     uint32_t shader_module_index;
     std::vector<EntryPointDesc> entry_points;
 
-    EntryPointDesc& add_entry_point(ShaderStage type, std::string name, std::string export_name = "")
+    EntryPointDesc& add_entry_point(ShaderStage type, std::string name_, std::string export_name = "")
     {
-        entry_points.push_back({type, std::move(name), std::move(export_name)});
+        entry_points.push_back({type, std::move(name_), std::move(export_name)});
         return entry_points.back();
     }
 };
