@@ -64,8 +64,6 @@ int main()
         }
 
 #if 1
-        // uint3 thread_group_size = program->get_active_version()->get_entry_point_layout(0).get_compute_thread_group_size();
-        // KALI_PRINT(thread_group_size);
         program->get_active_version()->get_program_layout().dump();
 #endif
 

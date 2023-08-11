@@ -4,8 +4,7 @@ struct Test {
     StructuredBuffer<int> c;
 };
 
-struct BasicTypes
-{
+struct BasicTypes {
     uint16_t u16;
     uint16_t2 u16_2;
     uint16_t3 u16_3;

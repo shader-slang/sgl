@@ -396,7 +396,14 @@ static ref<ResourceTypeReflection> reflect_resource_type(slang::TypeLayoutReflec
     ResourceTypeReflection::ShaderAccess shader_access = get_shader_access(type_layout->getType());
     ref<TypeReflection> element_type = reflect_type(type_layout->getElementTypeLayout());
 
-    return make_ref<ResourceTypeReflection>(type, dimensions, structured_type, return_type, shader_access, element_type);
+    return make_ref<ResourceTypeReflection>(
+        type,
+        dimensions,
+        structured_type,
+        return_type,
+        shader_access,
+        element_type
+    );
 }
 
 static ref<InterfaceTypeReflection> reflect_interface_type(slang::TypeLayoutReflection* type_layout)
