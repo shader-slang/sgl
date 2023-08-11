@@ -3,8 +3,8 @@
     <!-- Object reference -->
     <Type Name="kali::ref&lt;*&gt;">
         <SmartPointer Usage="Minimal">mPtr</SmartPointer>
-        <DisplayString Condition="mPtr == 0">nullptr</DisplayString>
-        <DisplayString>{(void*)mPtr} refCount={mPtr-&gt;mRefCount} {*mPtr}</DisplayString>
+        <DisplayString Condition="m_ptr == 0">nullptr</DisplayString>
+        <DisplayString>{(void*)m_ptr} refCount={m_ptr-&gt;ref_count()} {*m_ptr}</DisplayString>
     </Type>
     <!-- Math types -->
     <Type Name="kali::math::vector&lt;*,1&gt;">
