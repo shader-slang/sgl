@@ -264,10 +264,10 @@ ref<ProgramVersion> ProgramManager::create_program_version(const Program& progra
     if (target_desc.profile == SLANG_PROFILE_UNKNOWN)
         KALI_THROW("Unsupported target profile: {}", profile_str);
 
-    // Get compiler flags and adjust with forced flags.
+    // Get compiler flags and override with global enabled/disabled flags.
     ShaderCompilerFlags compiler_flags = program_desc.compiler_flags;
-    compiler_flags &= ~m_forced_disabled_compiler_flags;
-    compiler_flags |= m_forced_enabled_compiler_flags;
+    compiler_flags &= ~m_global_disabled_compiler_flags;
+    compiler_flags |= m_global_enabled_compiler_flags;
 
     // Set floating point mode. If no shader compiler flags for this were set, we use Slang's default mode.
     bool flag_fast = is_set(compiler_flags, ShaderCompilerFlags::floating_point_mode_fast);
@@ -547,16 +547,24 @@ void ProgramManager::remove_search_path(std::filesystem::path path)
     m_search_paths.erase(std::remove(m_search_paths.begin(), m_search_paths.end(), path), m_search_paths.end());
 }
 
-std::filesystem::path ProgramManager::resolve_path(const std::filesystem::path& path) const
+void ProgramManager::add_global_define(std::string_view name, std::string_view value)
 {
-    if (!path.is_absolute()) {
-        for (const std::filesystem::path& search_path : m_search_paths) {
-            std::filesystem::path full_path = search_path / path;
-            if (std::filesystem::exists(full_path))
-                return full_path;
-        }
-    }
-    return path;
+    m_global_defines.add(name, value);
+}
+
+void ProgramManager::remove_global_define(std::string_view name)
+{
+    m_global_defines.remove(name);
+}
+
+void ProgramManager::set_global_enabled_compiler_flags(ShaderCompilerFlags flags)
+{
+    m_global_enabled_compiler_flags = flags;
+}
+
+void ProgramManager::set_global_disabled_compiler_flags(ShaderCompilerFlags flags)
+{
+    m_global_disabled_compiler_flags = flags;
 }
 
 void ProgramManager::add_loaded_program(Program* program)
@@ -574,5 +582,16 @@ void ProgramManager::remove_loaded_program(Program* program)
     );
 }
 
+std::filesystem::path ProgramManager::resolve_path(const std::filesystem::path& path) const
+{
+    if (!path.is_absolute()) {
+        for (const std::filesystem::path& search_path : m_search_paths) {
+            std::filesystem::path full_path = search_path / path;
+            if (std::filesystem::exists(full_path))
+                return full_path;
+        }
+    }
+    return path;
+}
 
 } // namespace kali

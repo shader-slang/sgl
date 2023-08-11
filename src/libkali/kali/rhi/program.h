@@ -444,14 +444,18 @@ public:
     /// @return The number of programs that were reloaded.
     size_t reload_programs(bool force = false);
 
-    const std::vector<Program*>& get_loaded_programs() const { return m_loaded_programs; }
-
-    void add_loaded_program(Program* program);
-    void remove_loaded_program(Program* program);
-
     const std::vector<std::filesystem::path>& get_search_paths() const { return m_search_paths; }
     void add_search_path(std::filesystem::path path);
     void remove_search_path(std::filesystem::path path);
+
+    void add_global_define(std::string_view name, std::string_view value = "");
+    void remove_global_define(std::string_view name);
+
+    void set_global_enabled_compiler_flags(ShaderCompilerFlags flags);
+    void set_global_disabled_compiler_flags(ShaderCompilerFlags flags);
+
+    void add_loaded_program(Program* program);
+    void remove_loaded_program(Program* program);
 
 private:
     std::filesystem::path resolve_path(const std::filesystem::path& path) const;
@@ -461,8 +465,8 @@ private:
 
     std::vector<std::filesystem::path> m_search_paths;
     DefineList m_global_defines;
-    ShaderCompilerFlags m_forced_enabled_compiler_flags{ShaderCompilerFlags::none};
-    ShaderCompilerFlags m_forced_disabled_compiler_flags{ShaderCompilerFlags::none};
+    ShaderCompilerFlags m_global_enabled_compiler_flags{ShaderCompilerFlags::none};
+    ShaderCompilerFlags m_global_disabled_compiler_flags{ShaderCompilerFlags::none};
     std::vector<int> m_disabled_warnings;
 
     std::vector<Program*> m_loaded_programs;
