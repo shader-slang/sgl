@@ -9,31 +9,12 @@
 #include "kali/core/resolver.h"
 #include "kali/core/platform.h"
 
+#include "types.inl"
+
 // TODO
 #define KALI_NVAPI_AVAILABLE 0
 
 namespace kali {
-
-inline SlangStage get_gfx_slang_stage(ShaderStage shader_stage)
-{
-    static_assert(uint32_t(ShaderStage::none) == SLANG_STAGE_NONE);
-    static_assert(uint32_t(ShaderStage::vertex) == SLANG_STAGE_VERTEX);
-    static_assert(uint32_t(ShaderStage::hull) == SLANG_STAGE_HULL);
-    static_assert(uint32_t(ShaderStage::domain) == SLANG_STAGE_DOMAIN);
-    static_assert(uint32_t(ShaderStage::geometry) == SLANG_STAGE_GEOMETRY);
-    static_assert(uint32_t(ShaderStage::fragment) == SLANG_STAGE_FRAGMENT);
-    static_assert(uint32_t(ShaderStage::compute) == SLANG_STAGE_COMPUTE);
-    static_assert(uint32_t(ShaderStage::ray_generation) == SLANG_STAGE_RAY_GENERATION);
-    static_assert(uint32_t(ShaderStage::intersection) == SLANG_STAGE_INTERSECTION);
-    static_assert(uint32_t(ShaderStage::any_hit) == SLANG_STAGE_ANY_HIT);
-    static_assert(uint32_t(ShaderStage::closest_hit) == SLANG_STAGE_CLOSEST_HIT);
-    static_assert(uint32_t(ShaderStage::miss) == SLANG_STAGE_MISS);
-    static_assert(uint32_t(ShaderStage::callable) == SLANG_STAGE_CALLABLE);
-    static_assert(uint32_t(ShaderStage::mesh) == SLANG_STAGE_MESH);
-    static_assert(uint32_t(ShaderStage::amplification) == SLANG_STAGE_AMPLIFICATION);
-    KALI_ASSERT(uint32_t(shader_stage) <= uint32_t(ShaderStage::amplification));
-    return SlangStage(shader_stage);
-}
 
 Program::Program(ProgramDesc desc, ProgramManager* program_manager)
     : m_desc(std::move(desc))

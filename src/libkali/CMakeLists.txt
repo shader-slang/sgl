@@ -93,6 +93,8 @@ target_sources(kali PRIVATE
     kali/rhi/shared_handle.h
     kali/rhi/swapchain.cpp
     kali/rhi/swapchain.h
+    kali/rhi/types.h
+    kali/rhi/types.inl
 )
 
 target_include_directories(kali PUBLIC .)
@@ -122,6 +124,9 @@ target_compile_options(kali
             -Wno-unused-variable
             -Wno-unused-but-set-variable
             -Wno-sign-compare
+
+            # this is a workaround for warnings in the nanobind binding code
+            -Wno-odr
         >
         # Clang flags.
         $<$<CXX_COMPILER_ID:Clang>:
@@ -208,6 +213,8 @@ target_compile_definitions(kali
         KALI_DLL
         # $<$<PLATFORM_ID:Windows>:IMGUI_API=__declspec\(dllexport\)>
         # $<$<PLATFORM_ID:Linux>:IMGUI_API=__attribute__\(\(visibility\("default"\)\)\)>
+        # Linux.
+        $<$<PLATFORM_ID:Linux>:__USE_LARGEFILE64>
         KALI_PROJECT_DIR="${CMAKE_SOURCE_DIR}"
 )
 

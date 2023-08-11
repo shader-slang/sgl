@@ -7,6 +7,46 @@
 
 namespace kali {
 
+enum class ShaderStage {
+    none,
+    vertex,
+    hull,
+    domain,
+    geometry,
+    fragment,
+    compute,
+    ray_generation,
+    intersection,
+    any_hit,
+    closest_hit,
+    miss,
+    callable,
+    mesh,
+    amplification,
+};
+
+KALI_ENUM_INFO(
+    ShaderStage,
+    {
+        {ShaderStage::none, "none"},
+        {ShaderStage::vertex, "vertex"},
+        {ShaderStage::hull, "hull"},
+        {ShaderStage::domain, "domain"},
+        {ShaderStage::geometry, "geometry"},
+        {ShaderStage::fragment, "fragment"},
+        {ShaderStage::compute, "compute"},
+        {ShaderStage::ray_generation, "ray_generation"},
+        {ShaderStage::intersection, "intersection"},
+        {ShaderStage::any_hit, "any_hit"},
+        {ShaderStage::closest_hit, "closest_hit"},
+        {ShaderStage::miss, "miss"},
+        {ShaderStage::callable, "callable"},
+        {ShaderStage::mesh, "mesh"},
+        {ShaderStage::amplification, "amplification"},
+    }
+);
+KALI_ENUM_REGISTER(ShaderStage);
+
 enum class ComparisonFunc {
     never,
     less,
