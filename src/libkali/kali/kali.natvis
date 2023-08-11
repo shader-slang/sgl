@@ -2,26 +2,26 @@
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
     <!-- Object reference -->
     <Type Name="kali::ref&lt;*&gt;">
-        <SmartPointer Usage="Minimal">mPtr</SmartPointer>
+        <SmartPointer Usage="Minimal">m_ptr</SmartPointer>
         <DisplayString Condition="m_ptr == 0">nullptr</DisplayString>
-        <DisplayString>{(void*)m_ptr} refCount={m_ptr-&gt;ref_count()} {*m_ptr}</DisplayString>
+        <DisplayString>{(void*)m_ptr} state={m_ptr-&gt;m_state} {*m_ptr}</DisplayString>
     </Type>
     <!-- Math types -->
     <Type Name="kali::math::vector&lt;*,1&gt;">
-        <DisplayString>{x,g}</DisplayString>
+        <DisplayString>{{ {x,g} }}</DisplayString>
         <Expand>
             <Item Name="x">x</Item>
         </Expand>
     </Type>
     <Type Name="kali::math::vector&lt;*,2&gt;">
-        <DisplayString>{x,g}, {y,g}</DisplayString>
+        <DisplayString>{{ {x,g}, {y,g} }}</DisplayString>
         <Expand>
             <Item Name="x">x</Item>
             <Item Name="y">y</Item>
         </Expand>
     </Type>
     <Type Name="kali::math::vector&lt;*,3&gt;">
-        <DisplayString>{x,g}, {y,g}, {z,g}</DisplayString>
+        <DisplayString>{{ {x,g}, {y,g}, {z,g} }}</DisplayString>
         <Expand>
             <Item Name="x">x</Item>
             <Item Name="y">y</Item>
@@ -29,7 +29,7 @@
         </Expand>
     </Type>
     <Type Name="kali::math::vector&lt;*,4&gt;">
-        <DisplayString>{x,g}, {y,g}, {z,g}, {w,g}</DisplayString>
+        <DisplayString>{{ {x,g}, {y,g}, {z,g}, {w,g} }}</DisplayString>
         <Expand>
             <Item Name="x">x</Item>
             <Item Name="y">y</Item>
@@ -38,52 +38,52 @@
         </Expand>
     </Type>
     <Type Name="kali::math::matrix&lt;*,3,3&gt;">
-        <DisplayString>[{mRows[0],g}] [{mRows[1],g}] [{mRows[2],g}]</DisplayString>
+        <DisplayString>[{m_rows[0],g}] [{m_rows[1],g}] [{m_rows[2],g}]</DisplayString>
         <Expand>
             <Synthetic Name="[row 0]">
-                <DisplayString>[{mRows[0]}]</DisplayString>
+                <DisplayString>[{m_rows[0]}]</DisplayString>
             </Synthetic>
             <Synthetic Name="[row 1]">
-                <DisplayString>[{mRows[1]}]</DisplayString>
+                <DisplayString>[{m_rows[1]}]</DisplayString>
             </Synthetic>
             <Synthetic Name="[row 2]">
-                <DisplayString>[{mRows[2]}]</DisplayString>
+                <DisplayString>[{m_rows[2]}]</DisplayString>
             </Synthetic>
         </Expand>
     </Type>
     <Type Name="kali::math::matrix&lt;*,3,4&gt;">
-        <DisplayString>[{mRows[0],g}] [{mRows[1],g}] [{mRows[2],g}]</DisplayString>
+        <DisplayString>[{m_rows[0],g}] [{m_rows[1],g}] [{m_rows[2],g}]</DisplayString>
         <Expand>
             <Synthetic Name="[row 0]">
-                <DisplayString>[{mRows[0]}]</DisplayString>
+                <DisplayString>[{m_rows[0]}]</DisplayString>
             </Synthetic>
             <Synthetic Name="[row 1]">
-                <DisplayString>[{mRows[1]}]</DisplayString>
+                <DisplayString>[{m_rows[1]}]</DisplayString>
             </Synthetic>
             <Synthetic Name="[row 2]">
-                <DisplayString>[{mRows[2]}]</DisplayString>
+                <DisplayString>[{m_rows[2]}]</DisplayString>
             </Synthetic>
         </Expand>
     </Type>
     <Type Name="kali::math::matrix&lt;*,4,4&gt;">
-        <DisplayString>[{mRows[0],g}] [{mRows[1],g}] [{mRows[2],g}] [{mRows[3],g}]</DisplayString>
+        <DisplayString>[{m_rows[0],g}] [{m_rows[1],g}] [{m_rows[2],g}] [{m_rows[3],g}]</DisplayString>
         <Expand>
             <Synthetic Name="[row 0]">
-                <DisplayString>[{mRows[0]}]</DisplayString>
+                <DisplayString>[{m_rows[0]}]</DisplayString>
             </Synthetic>
             <Synthetic Name="[row 1]">
-                <DisplayString>[{mRows[1]}]</DisplayString>
+                <DisplayString>[{m_rows[1]}]</DisplayString>
             </Synthetic>
             <Synthetic Name="[row 2]">
-                <DisplayString>[{mRows[2]}]</DisplayString>
+                <DisplayString>[{m_rows[2]}]</DisplayString>
             </Synthetic>
             <Synthetic Name="[row 3]">
-                <DisplayString>[{mRows[3]}]</DisplayString>
+                <DisplayString>[{m_rows[3]}]</DisplayString>
             </Synthetic>
         </Expand>
     </Type>
     <Type Name="kali::math::quat&lt;*&gt;">
-        <DisplayString>({x,g}, {y,g}, {z,g}), {w,g}</DisplayString>
+        <DisplayString>{{ {w,g} | {x,g}, {y,g}, {z,g} }}</DisplayString>
         <Expand>
             <Item Name="x">x</Item>
             <Item Name="y">y</Item>
