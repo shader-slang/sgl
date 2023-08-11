@@ -257,16 +257,16 @@ public:
         bool success{false};
         switch (m_file_format) {
         case ImageFileFormat::png:
-            success = stbi_write_png_to_func(write_func, m_stream.get(), width, height, component_count, buffer, 0);
+            success = stbi_write_png_to_func(write_func, m_stream, width, height, component_count, buffer, 0);
             break;
         case ImageFileFormat::jpg:
-            success = stbi_write_jpg_to_func(write_func, m_stream.get(), width, height, component_count, buffer, 100);
+            success = stbi_write_jpg_to_func(write_func, m_stream, width, height, component_count, buffer, 100);
             break;
         case ImageFileFormat::bmp:
-            success = stbi_write_bmp_to_func(write_func, m_stream.get(), width, height, component_count, buffer);
+            success = stbi_write_bmp_to_func(write_func, m_stream, width, height, component_count, buffer);
             break;
         case ImageFileFormat::tga:
-            success = stbi_write_tga_to_func(write_func, m_stream.get(), width, height, component_count, buffer);
+            success = stbi_write_tga_to_func(write_func, m_stream, width, height, component_count, buffer);
             break;
         case ImageFileFormat::hdr:
             success = stbi_write_hdr_to_func(

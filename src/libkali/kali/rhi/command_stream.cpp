@@ -66,13 +66,13 @@ void CommandStream::submit()
 void CommandStream::signal(Fence* fence, uint64_t value)
 {
     KALI_ASSERT(fence);
-    fence->signal(m_command_queue.get(), value);
+    fence->signal(m_command_queue, value);
 }
 
 void CommandStream::wait_device(Fence* fence, uint64_t value)
 {
     KALI_ASSERT(fence);
-    fence->wait_device(m_command_queue.get(), value);
+    fence->wait_device(m_command_queue, value);
 }
 
 void CommandStream::wait_host(Fence* fence, uint64_t value, uint64_t timeout_ns)
@@ -385,13 +385,13 @@ void CommandStream::dispatch_compute(
 {
     // Use default pipeline cache if none is provided.
     if (!pipeline_cache)
-        pipeline_cache = m_compute_pipeline_cache.get();
+        pipeline_cache = m_compute_pipeline_cache;
 
     // Get current program version and setup pipeline.
     const ProgramVersion* program_version = program->get_active_version();
     ref<ComputePipelineState> pipeline = pipeline_cache->get_pipeline_state({.program_version = program_version});
 
-    ShaderObject shader_object = bind_compute_pipeline(pipeline.get());
+    ShaderObject shader_object = bind_compute_pipeline(pipeline);
 
     if (set_vars)
         set_vars(gfx::ShaderCursor(shader_object.get_gfx_shader_object()));

@@ -46,19 +46,19 @@ int main()
 
         auto stream = device->get_command_stream();
 
-        stream->buffer_barrier(buffer.get(), ResourceState::unordered_access);
+        stream->buffer_barrier(buffer, ResourceState::unordered_access);
 
         stream->dispatch_compute(
-            program.get(),
+            program,
             uint3{1024, 1, 1},
             [&](auto cursor) { cursor["g_buffer"].setResource(buffer->get_uav(0, 1024)->get_gfx_resource_view()); }
         );
 
-        stream->buffer_barrier(buffer.get(), ResourceState::copy_source);
+        stream->buffer_barrier(buffer, ResourceState::copy_source);
         stream->submit();
         stream->wait_host();
 
-        std::vector<uint32_t> data = device->read_buffer<uint32_t>(buffer.get(), 0, 16);
+        std::vector<uint32_t> data = device->read_buffer<uint32_t>(buffer, 0, 16);
         for (size_t i = 0; i < data.size(); ++i) {
             log_info("data[{}] = {}", i, data[i]);
         }

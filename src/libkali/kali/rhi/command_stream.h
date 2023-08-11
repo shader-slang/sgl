@@ -36,7 +36,7 @@ public:
     CommandStream(CommandStreamDesc desc, ref<Device> device);
 
     Device* get_device() const { return m_device; }
-    CommandQueue* get_command_queue() const { return m_command_queue.get(); }
+    CommandQueue* get_command_queue() const { return m_command_queue; }
 
     void submit();
 

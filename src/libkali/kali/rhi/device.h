@@ -207,9 +207,9 @@ public:
 
     ref<CommandStream> create_command_stream(CommandStreamDesc desc);
 
-    ProgramManager* get_program_manager() const { return m_program_manager.get(); }
+    ProgramManager* get_program_manager() const { return m_program_manager; }
 
-    CommandStream* get_command_stream() const { return m_command_stream.get(); }
+    CommandStream* get_command_stream() const { return m_command_stream; }
 
     void read_buffer(const Buffer* buffer, size_t offset, size_t size, void* out_data);
 
@@ -222,7 +222,7 @@ public:
     }
 
 
-    gfx::IDevice* get_gfx_device() const { return m_gfx_device.get(); }
+    gfx::IDevice* get_gfx_device() const { return m_gfx_device; }
 
     /// Returns the native API handle:
     /// - D3D12: ID3D12Device* (0)

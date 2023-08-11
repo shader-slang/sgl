@@ -108,7 +108,7 @@ const ProgramVersion* Program::get_active_version()
         ProgramVersionKey key{m_defines, m_type_conformances};
         auto it = m_versions.find(key);
         if (it != m_versions.end()) {
-            m_active_version = it->second.get();
+            m_active_version = it->second;
             return m_active_version;
         }
         // Create a new version.
@@ -117,7 +117,7 @@ const ProgramVersion* Program::get_active_version()
         if (!version)
             KALI_THROW("Failed to compile program:\n{}", log);
         m_versions.emplace(key, version);
-        m_active_version = version.get();
+        m_active_version = version;
     }
 
     return m_active_version;

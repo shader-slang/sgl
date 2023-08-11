@@ -453,6 +453,9 @@ public:
     /// Return a pointer to the referenced object.
     T* get() const { return m_ptr; }
 
+    /// Return a pointer to the referenced object.
+    operator T*() const { return m_ptr; }
+
     /// Check if the object is defined
     operator bool() const { return m_ptr != nullptr; }
 
