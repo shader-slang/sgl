@@ -13,7 +13,7 @@ static void (*object_inc_ref_py)(PyObject*) noexcept = nullptr;
 static void (*object_dec_ref_py)(PyObject*) noexcept = nullptr;
 
 #if KALI_ENABLE_OBJECT_TRACKING
-static std::recursive_mutex s_tracked_objects_mutex;
+static std::mutex s_tracked_objects_mutex;
 static std::set<const Object*> s_tracked_objects;
 #endif
 
@@ -24,7 +24,7 @@ void Object::inc_ref() const noexcept
     // TODO check this
 #if KALI_ENABLE_OBJECT_TRACKING
     if (m_state == 1) {
-        std::lock_guard<std::recursive_mutex> lock(s_tracked_objects_mutex);
+        std::lock_guard<std::mutex> lock(s_tracked_objects_mutex);
         s_tracked_objects.insert(this);
     }
 #endif
@@ -53,8 +53,10 @@ void Object::dec_ref(bool dealloc) const noexcept
             } else if (value == 3) {
                 if (dealloc) {
 #if KALI_ENABLE_OBJECT_TRACKING
-                    std::lock_guard<std::recursive_mutex> lock(s_tracked_objects_mutex);
-                    s_tracked_objects.erase(this);
+                    {
+                        std::lock_guard<std::mutex> lock(s_tracked_objects_mutex);
+                        s_tracked_objects.erase(this);
+                    }
 #endif
                     delete this;
                 } else {
@@ -109,7 +111,7 @@ PyObject* Object::self_py() const noexcept
 
 void Object::report_alive_objects()
 {
-    std::lock_guard<std::recursive_mutex> lock(s_tracked_objects_mutex);
+    std::lock_guard<std::mutex> lock(s_tracked_objects_mutex);
     log_info("Alive objects:");
     for (const Object* object : s_tracked_objects)
         object->report_refs();
