@@ -1,6 +1,7 @@
 #pragma once
 
 #include "kali/rhi/fwd.h"
+#include "kali/rhi/types.h"
 #include "kali/rhi/native_handle.h"
 #include "kali/rhi/resource.h"
 
@@ -235,7 +236,7 @@ public:
 private:
     DeviceDesc m_desc;
     DeviceInfo m_info;
-    ShaderModel m_supported_shader_model;
+    ShaderModel m_supported_shader_model{ShaderModel::unknown};
     Slang::ComPtr<gfx::IDevice> m_gfx_device;
     Slang::ComPtr<slang::IGlobalSession> m_slang_session;
 
