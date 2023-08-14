@@ -19,7 +19,7 @@ class CommandQueue : public Object {
     KALI_OBJECT(CommandQueue)
 public:
     /// Constructor.
-    /// Do not use directly, instead use @ref Device::create_command_queue.
+    /// Do not use directly, instead use @see Device::create_command_queue.
     CommandQueue(CommandQueueDesc desc, ref<Device> device);
 
     const CommandQueueDesc& get_desc() const { return m_desc; }

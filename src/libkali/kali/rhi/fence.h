@@ -22,24 +22,24 @@ public:
     static constexpr uint64_t TIMEOUT_INFINITE = uint64_t(-1);
 
     /// Constructor.
-    /// Do not use directly, instead use @ref Device::create_fence.
+    /// Do not use directly, instead use @see Device::create_fence.
     Fence(FenceDesc desc, ref<Device> device);
 
     /// Signal the fence on the device.
     /// @param queue The command queue to signal the fence on.
-    /// @param value The value to signal. If @ref AUTO, the signaled value will be auto-incremented.
+    /// @param value The value to signal. If @see AUTO, the signaled value will be auto-incremented.
     ///
     void signal(CommandQueue* queue, uint64_t value = AUTO);
 
     /// Wait for the fence to be signaled on the device.
     /// @param queue The command queue to wait on.
-    /// @param value The value to wait for. If @ref AUTO, wait for the last signaled value.
+    /// @param value The value to wait for. If @see AUTO, wait for the last signaled value.
     ///
     void wait_device(CommandQueue* queue, uint64_t value = AUTO);
 
     /// Wait for the fence to be signaled on the host.
-    /// @param value The value to wait for. If @ref AUTO, wait for the last signaled value.
-    /// @param timeout_ns The timeout in nanoseconds. If @ref TIMEOUT_INFINITE, the function will block indefinitely.
+    /// @param value The value to wait for. If @see AUTO, wait for the last signaled value.
+    /// @param timeout_ns The timeout in nanoseconds. If @see TIMEOUT_INFINITE, the function will block indefinitely.
     ///
     void wait_host(uint64_t value = AUTO, uint64_t timeout_ns = TIMEOUT_INFINITE);
 
@@ -54,7 +54,7 @@ public:
 
     gfx::IFence* get_gfx_fence() const { return m_gfx_fence; }
 
-    /// Get the shared fence handle. Only valid if created with @ref FenceDesc::shared.
+    /// Get the shared fence handle. Only valid if created with @see FenceDesc::shared.
     SharedFenceHandle get_shared_handle() const;
 
     /// Returns the native API handle:

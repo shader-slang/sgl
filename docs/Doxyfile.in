@@ -1,0 +1,12 @@
+PROJECT_NAME            = kali
+OUTPUT_DIRECTORY        = @DOXYGEN_OUTPUT_DIR@
+INPUT                   = @DOXYGEN_INPUT_DIR@
+RECURSIVE               = YES
+EXTRACT_ALL             = YES
+WARN_IF_UNDOCUMENTED    = NO
+SHOW_FILES              = NO
+VERBATIM_HEADERS        = NO
+HAVE_DOT                = NO
+GENERATE_HTML           = NO
+GENERATE_LATEX          = NO
+GENERATE_XML            = YES

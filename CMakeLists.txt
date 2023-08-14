@@ -32,6 +32,9 @@ set(KALI_ENABLE_ASAN OFF CACHE BOOL "Enable address sanitizer")
 # If enabled, additional targets are generated to validate that headers are self sufficient.
 set(KALI_ENABLE_HEADER_VALIDATION OFF CACHE BOOL "Enable header validation")
 
+# Enable/disable building documentation.
+set(KALI_BUILD_DOC OFF CACHE BOOL "Build documentation")
+
 # -----------------------------------------------------------------------------
 # Check platform
 # -----------------------------------------------------------------------------
@@ -209,6 +212,9 @@ add_subdirectory(src/kali_ext)
 add_subdirectory(src/editor)
 add_subdirectory(src/examples)
 
+if(KALI_BUILD_DOC)
+    add_subdirectory(docs)
+endif()
 
 # -----------------------------------------------------------------------------
 # misc
