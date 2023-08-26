@@ -179,7 +179,12 @@ Device::~Device()
 
 ref<Swapchain> Device::create_swapchain(SwapchainDesc desc, ref<Window> window)
 {
-    return make_ref<Swapchain>(std::move(desc), window, ref<Device>(this));
+    return make_ref<Swapchain>(
+        std::move(desc),
+        std::move(window),
+        ref<CommandQueue>(m_command_stream->get_command_queue()),
+        ref<Device>(this)
+    );
 }
 
 ref<Buffer> Device::create_buffer(BufferDesc desc, const void* init_data)
@@ -234,6 +239,11 @@ ref<Buffer> Device::create_structured_buffer(
 ref<Texture> Device::create_texture(TextureDesc desc, const void* init_data)
 {
     return make_ref<Texture>(std::move(desc), init_data, ref<Device>(this));
+}
+
+ref<Texture> Device::create_texture_from_resource(TextureDesc desc, gfx::ITextureResource* resource)
+{
+    return make_ref<Texture>(std::move(desc), resource, ref<Device>(this));
 }
 
 ref<Sampler> Device::create_sampler(SamplerDesc desc)
@@ -351,6 +361,11 @@ std::vector<AdapterInfo> Device::enumerate_adapters(DeviceType type)
     }
 
     return adapters;
+}
+
+void Device::report_live_objects()
+{
+    gfx::gfxReportLiveObjects();
 }
 
 } // namespace kali

@@ -20,8 +20,8 @@
 namespace kali {
 
 class Window;
-enum class ShaderModel;
 
+/// Adapter LUID (locally unique identifier).
 using AdapterLUID = std::array<uint8_t, 16>;
 
 struct AdapterInfo {
@@ -188,6 +188,8 @@ public:
 
     ref<Texture> create_texture(TextureDesc desc, const void* init_data = nullptr);
 
+    ref<Texture> create_texture_from_resource(TextureDesc desc, gfx::ITextureResource* resource);
+
     ref<Sampler> create_sampler(SamplerDesc desc);
 
     ref<Fence> create_fence(FenceDesc desc);
@@ -232,6 +234,10 @@ public:
 
     /// Enumerates all available adapters of a given device type.
     static std::vector<AdapterInfo> enumerate_adapters(DeviceType type = DeviceType::automatic);
+
+    /// Report live objects in the slang/gfx layer.
+    /// This is useful for checking clean shutdown with all resources released properly.
+    static void report_live_objects();
 
 private:
     DeviceDesc m_desc;
