@@ -2,6 +2,8 @@
 #include "kali/core/logger.h"
 #include "kali/core/platform.h"
 
+#include <thread>
+
 namespace kali {
 
 static ExceptionDiagnosticFlags s_exception_diagnostic_flags{
@@ -19,25 +21,23 @@ void throw_exception(const std::source_location& loc, std::string_view msg)
 
     bool debugger_present = is_debugger_present();
 
-    if (!debugger_present)
-        error_msg += "\nStack trace:\n" + format_stacktrace(backtrace());
-
     if (is_set(s_exception_diagnostic_flags, ExceptionDiagnosticFlags::log))
         log_fatal(error_msg);
 
     if (is_set(s_exception_diagnostic_flags, ExceptionDiagnosticFlags::break_debugger) && debugger_present)
         debug_break();
 
+    if (!debugger_present)
+        error_msg += "\nStack trace:\n" + format_stacktrace(backtrace());
+
     throw std::runtime_error(error_msg.c_str());
 }
 
-void report_assertion(const std::source_location& loc, std::string_view cond, std::string_view msg)
+void report_assertion(const std::source_location& loc, std::string_view cond)
 {
-    std::string error_msg = msg.empty() ? fmt::format("Assertion failed: {}\n", cond)
-                                        : fmt::format("Assertion failed: {} {}\n", cond, msg);
+    std::string error_msg = fmt::format("Assertion failed: {}\n", cond);
 
     error_msg += fmt::format("{}({}) in function {}", loc.file_name(), loc.line(), loc.function_name());
-
 
     bool debugger_present = is_debugger_present();
 

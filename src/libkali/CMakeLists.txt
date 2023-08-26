@@ -200,8 +200,6 @@ target_compile_definitions(kali
         $<$<CXX_COMPILER_ID:Clang>:_MSC_EXTENSIONS> # enable MS extensions
         # Always enable asserts unless KALI_DISABLE_ASSERTS is set.
         KALI_ENABLE_ASSERTS=$<NOT:$<BOOL:${KALI_DISABLE_ASSERTS}>>
-        # Enable slow asserts in Debug build unless KALI_DISABLE_SLOW_ASSERTS is set.
-        KALI_ENABLE_SLOW_ASSERTS=$<AND:$<CONFIG:Debug>,$<NOT:$<BOOL:${KALI_DISABLE_SLOW_ASSERTS}>>>
         # Feature flags.
         KALI_HAS_D3D12=$<BOOL:${KALI_HAS_D3D12}>
         KALI_HAS_VULKAN=$<BOOL:${KALI_HAS_VULKAN}>

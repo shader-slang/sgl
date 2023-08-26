@@ -52,13 +52,13 @@ struct vector<T, 1> {
 
     [[nodiscard]] constexpr T& operator[](int index) noexcept
     {
-        KALI_SLOW_ASSERT_LT(index, dimension);
+        KALI_ASSERT_LT(index, dimension);
         return (&(this->x))[index];
     }
 
     [[nodiscard]] constexpr const T& operator[](int index) const noexcept
     {
-        KALI_SLOW_ASSERT_LT(index, dimension);
+        KALI_ASSERT_LT(index, dimension);
         return (&(this->x))[index];
     }
 
@@ -107,13 +107,13 @@ struct vector<T, 2> {
 
     [[nodiscard]] constexpr T& operator[](int index) noexcept
     {
-        KALI_SLOW_ASSERT_LT(index, dimension);
+        KALI_ASSERT_LT(index, dimension);
         return (&(this->x))[index];
     }
 
     [[nodiscard]] constexpr const T& operator[](int index) const noexcept
     {
-        KALI_SLOW_ASSERT_LT(index, dimension);
+        KALI_ASSERT_LT(index, dimension);
         return (&(this->x))[index];
     }
 
@@ -169,13 +169,13 @@ struct vector<T, 3> {
 
     [[nodiscard]] constexpr T& operator[](int index) noexcept
     {
-        KALI_SLOW_ASSERT_LT(index, dimension);
+        KALI_ASSERT_LT(index, dimension);
         return (&(this->x))[index];
     }
 
     [[nodiscard]] constexpr const T& operator[](int index) const noexcept
     {
-        KALI_SLOW_ASSERT_LT(index, dimension);
+        KALI_ASSERT_LT(index, dimension);
         return (&(this->x))[index];
     }
 
@@ -240,13 +240,13 @@ struct vector<T, 4> {
 
     [[nodiscard]] constexpr T& operator[](int index) noexcept
     {
-        KALI_SLOW_ASSERT_LT(index, dimension);
+        KALI_ASSERT_LT(index, dimension);
         return (&(this->x))[index];
     }
 
     [[nodiscard]] constexpr const T& operator[](int index) const noexcept
     {
-        KALI_SLOW_ASSERT_LT(index, dimension);
+        KALI_ASSERT_LT(index, dimension);
         return (&(this->x))[index];
     }
 

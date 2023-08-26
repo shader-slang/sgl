@@ -23,19 +23,14 @@ using source_location = std::experimental::source_location;
  * @brief Error handling utilities.
  *
  * Exceptions:
- * - KALI_THROW(msg)
+ * - KALI_THROW(msg, ...)
+ * - KALI_CHECK(cond, msg, ...)
  * - KALI_UNIMPLEMENTED()
  * - KALI_UNREACHABLE()
  *
  * Assertions:
  * - KALI_ASSERT(cond)
- * - KALI_ASSERT_MSG(cond, msg)
  * - KALI_ASSERT_OP(a, b, op)
- *
- * Slow assertions:
- * - KALI_SLOW_ASSERT(cond)
- * - KALI_SLOW_ASSERT_MSG(cond, msg)
- * - KALI_SLOW_ASSERT_OP(a, b, op)
  *
  */
 
@@ -47,14 +42,12 @@ namespace kali {
 
 enum class ExceptionDiagnosticFlags {
     none = 0,
-    break_debugger = 1,
-    log = 2,
+    break_debugger = 1, ///< Break into debugger when throwing an exception.
+    log = 2,            ///< Log exception message.
 };
 KALI_ENUM_CLASS_OPERATORS(ExceptionDiagnosticFlags);
 
 /// Set exception diagnostic options.
-/// - ExceptionDiagnosticFlags::break_debugger:  break into debugger when throwing an exception
-/// - ExceptionDiagnosticFlags::log: log exception message
 void KALI_API set_exception_diagnostics(ExceptionDiagnosticFlags flags);
 
 
@@ -79,7 +72,15 @@ namespace detail {
 
 /// Helper for throwing exceptions.
 /// Logs the exception and a stack trace before throwing.
-#define KALI_THROW(...) ::kali::detail::throw_exception(std::source_location::current(), __VA_ARGS__);
+#define KALI_THROW(...) ::kali::detail::throw_exception(std::source_location::current(), __VA_ARGS__)
+
+/// Helper for checking conditions and throwing exceptions.
+/// Logs the exception and a stack trace before throwing.
+#define KALI_CHECK(cond, ...)                                                                                          \
+    do {                                                                                                               \
+        if (!(cond))                                                                                                   \
+            KALI_THROW(__VA_ARGS__);                                                                                   \
+    } while (0)
 
 /// Helper for marking unimplemented functions.
 #define KALI_UNIMPLEMENTED() KALI_THROW("Unimplemented")
@@ -94,8 +95,7 @@ namespace detail {
 namespace kali {
 
 /// Report a failed assertion.
-[[noreturn]] KALI_API void
-report_assertion(const std::source_location& loc, std::string_view cond, std::string_view msg = {});
+[[noreturn]] KALI_API void report_assertion(const std::source_location& loc, std::string_view cond);
 
 } // namespace kali
 
@@ -104,11 +104,6 @@ report_assertion(const std::source_location& loc, std::string_view cond, std::st
 #define KALI_ASSERT(cond)                                                                                              \
     if (!(cond)) {                                                                                                     \
         ::kali::report_assertion(std::source_location::current(), #cond);                                              \
-    }
-
-#define KALI_ASSERT_MSG(cond, msg)                                                                                     \
-    if (!(cond)) {                                                                                                     \
-        ::kali::report_assertion(std::source_location::current(), #cond, msg);                                         \
     }
 
 #define KALI_ASSERT_OP(a, b, op)                                                                                       \
@@ -124,9 +119,6 @@ report_assertion(const std::source_location& loc, std::string_view cond, std::st
 #define KALI_ASSERT(a)                                                                                                 \
     {                                                                                                                  \
     }
-#define KALI_ASSERT_MSG(a, msg)                                                                                        \
-    {                                                                                                                  \
-    }
 #define KALI_ASSERT_OP(a, b, op)                                                                                       \
     {                                                                                                                  \
     }
@@ -139,50 +131,3 @@ report_assertion(const std::source_location& loc, std::string_view cond, std::st
 #define KALI_ASSERT_GT(a, b) KALI_ASSERT_OP(a, b, >)
 #define KALI_ASSERT_LE(a, b) KALI_ASSERT_OP(a, b, <=)
 #define KALI_ASSERT_LT(a, b) KALI_ASSERT_OP(a, b, <)
-
-// -------------------------------------------------------------------------------------------------
-// Slow assertions
-// -------------------------------------------------------------------------------------------------
-
-#if KALI_ENABLE_SLOW_ASSERTS
-
-#define KALI_SLOW_ASSERT(cond)                                                                                         \
-    if (!(cond)) {                                                                                                     \
-        ::kali::report_assertion(std::source_location::current(), #cond);                                              \
-    }
-
-#define KALI_SLOW_ASSERT_MSG(cond, msg)                                                                                \
-    if (!(cond)) {                                                                                                     \
-        ::kali::report_assertion(std::source_location::current(), #cond, msg);                                         \
-    }
-
-#define KALI_SLOW_ASSERT_OP(a, b, op)                                                                                  \
-    if (!((a)op(b))) {                                                                                                 \
-        ::kali::report_assertion(                                                                                      \
-            std::source_location::current(),                                                                           \
-            fmt::format("{} {} {} ({} {} {})", #a, #op, #b, a, #op, b)                                                 \
-        );                                                                                                             \
-    }
-
-#else // KALI_ENABLE_SLOW_ASSERTS
-
-#define KALI_SLOW_ASSERT(cond)                                                                                         \
-    {                                                                                                                  \
-    }
-
-#define KALI_SLOW_ASSERT_MSG(cond, msg)                                                                                \
-    {                                                                                                                  \
-    }
-
-#define KALI_SLOW_ASSERT_OP(a, b, op)                                                                                  \
-    {                                                                                                                  \
-    }
-
-#endif // KALI_ENABLE_SLOW_ASSERTS
-
-#define KALI_SLOW_ASSERT_EQ(a, b) KALI_SLOW_ASSERT_OP(a, b, ==)
-#define KALI_SLOW_ASSERT_NE(a, b) KALI_SLOW_ASSERT_OP(a, b, !=)
-#define KALI_SLOW_ASSERT_GE(a, b) KALI_SLOW_ASSERT_OP(a, b, >=)
-#define KALI_SLOW_ASSERT_GT(a, b) KALI_SLOW_ASSERT_OP(a, b, >)
-#define KALI_SLOW_ASSERT_LE(a, b) KALI_SLOW_ASSERT_OP(a, b, <=)
-#define KALI_SLOW_ASSERT_LT(a, b) KALI_SLOW_ASSERT_OP(a, b, <)

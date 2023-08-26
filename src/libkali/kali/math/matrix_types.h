@@ -92,35 +92,35 @@ public:
 
     RowType& operator[](int r)
     {
-        KALI_SLOW_ASSERT_LT(r, RowCount);
+        KALI_ASSERT_LT(r, RowCount);
         return m_rows[r];
     }
     const RowType& operator[](int r) const
     {
-        KALI_SLOW_ASSERT_LT(r, RowCount);
+        KALI_ASSERT_LT(r, RowCount);
         return m_rows[r];
     }
 
     RowType& get_row(int r)
     {
-        KALI_SLOW_ASSERT_LT(r, RowCount);
+        KALI_ASSERT_LT(r, RowCount);
         return m_rows[r];
     }
     const RowType& get_row(int r) const
     {
-        KALI_SLOW_ASSERT_LT(r, RowCount);
+        KALI_ASSERT_LT(r, RowCount);
         return m_rows[r];
     }
 
     void set_row(int r, const RowType& v)
     {
-        KALI_SLOW_ASSERT_LT(r, RowCount);
+        KALI_ASSERT_LT(r, RowCount);
         m_rows[r] = v;
     }
 
     ColType get_col(int col) const
     {
-        KALI_SLOW_ASSERT_LT(col, ColCount);
+        KALI_ASSERT_LT(col, ColCount);
         ColType result;
         for (int r = 0; r < RowCount; ++r)
             result[r] = m_rows[r][col];
@@ -129,7 +129,7 @@ public:
 
     void set_col(int col, const ColType& v)
     {
-        KALI_SLOW_ASSERT_LT(col, ColCount);
+        KALI_ASSERT_LT(col, ColCount);
         for (int r = 0; r < RowCount; ++r)
             m_rows[r][col] = v[r];
     }
