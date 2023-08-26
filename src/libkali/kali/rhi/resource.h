@@ -456,7 +456,7 @@ struct TextureDesc {
     uint32_t width{0};
     /// Height in pixels (1 for 1D textures).
     uint32_t height{1};
-    /// Depth in pixels (1for 1D/2D textures).
+    /// Depth in pixels (1 for 1D/2D textures).
     uint32_t depth{1};
     /// Number of array slices (0 for non-array textures).
     uint32_t array_size{0};
@@ -480,6 +480,7 @@ class KALI_API Texture : public Resource {
     KALI_OBJECT(Texture)
 public:
     Texture(TextureDesc desc, const void* init_data, ref<Device> device);
+    Texture(TextureDesc desc, gfx::ITextureResource* resource, ref<Device> device);
 
     const TextureDesc& get_desc() const { return m_desc; }
 
