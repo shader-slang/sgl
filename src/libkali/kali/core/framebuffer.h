@@ -5,13 +5,11 @@
 
 namespace kali {
 
-struct FramebufferDesc {
-
-};
+struct FramebufferDesc { };
 
 class Framebuffer : public Object {
     KALI_OBJECT(Framebuffer)
 public:
 };
 
-}
+} // namespace kali

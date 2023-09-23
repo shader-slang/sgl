@@ -406,7 +406,8 @@ void CommandStream::dispatch_compute(
     // log_info(dump_type_reflection(program_version->get_program_layout()->get_globals_type()));
 
     if (set_vars) {
-        // KALI_ASSERT_EQ((void*)shader_object->get_gfx_shader_object()->getElementTypeLayout(), (void*)program_version->get_program_layout()->get_globals_type()->get_slang_type_layout());
+        // KALI_ASSERT_EQ((void*)shader_object->get_gfx_shader_object()->getElementTypeLayout(),
+        // (void*)program_version->get_program_layout()->get_globals_type()->get_slang_type_layout());
         // set_vars(ShaderCursor(shader_object, program_version->get_program_layout()->get_globals_type()));
         set_vars(gfx::ShaderCursor(shader_object->get_gfx_shader_object()));
     }

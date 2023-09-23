@@ -12,7 +12,9 @@
 
 #include <functional>
 
-namespace gfx { struct ShaderCursor; };
+namespace gfx {
+struct ShaderCursor;
+};
 
 namespace kali {
 
