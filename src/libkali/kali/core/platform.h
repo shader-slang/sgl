@@ -32,10 +32,16 @@ using SharedLibraryHandle = void*;
 #endif
 
 /// Initialize the platform layer.
+/// This function must be called before any other platform function.
+/// It is safe to call this function multiple times,
+/// but it must be matched with the same number of calls to shutdown_platform().
 KALI_API void init_platform();
 
 /// Shutdown the platform layer.
 KALI_API void shutdown_platform();
+
+/// Returns true if platform is initialized.
+KALI_API bool is_platform_initialized();
 
 /// Set the window icon.
 KALI_API void set_window_icon(WindowHandle handle, const std::filesystem::path& path);
@@ -188,7 +194,7 @@ using ResolvedStackTrace = std::vector<ResolvedStackFrame>;
 /// Generate a backtrace.
 [[nodiscard]] KALI_API StackTrace backtrace(size_t skip_frames = 1);
 
-// Resolve a stack trace with symbol information.
+/// Resolve a stack trace with symbol information.
 [[nodiscard]] KALI_API ResolvedStackTrace resolve_stacktrace(std::span<const StackFrame> trace);
 
 /// Convert resolved stack trace to a human readable string.

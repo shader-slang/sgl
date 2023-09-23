@@ -19,9 +19,9 @@
 
 namespace kali {
 
-void init_platform() { }
+void init_platform_internal() { }
 
-void shutdown_platform() { }
+void shutdown_platform_internal() { }
 
 void set_window_icon(WindowHandle handle, const std::filesystem::path& path)
 {

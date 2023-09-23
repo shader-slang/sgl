@@ -30,28 +30,14 @@
 
 namespace kali {
 
-static std::mutex s_mutex;
-static bool s_initialized;
-
-void init_platform()
+void init_platform_internal()
 {
-    std::lock_guard<std::mutex> lock(s_mutex);
-    if (s_initialized)
-        return;
-
     WINDOWS_CALL(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE));
-    s_initialized = true;
 }
 
-void shutdown_platform()
+void shutdown_platform_internal()
 {
-    std::lock_guard<std::mutex> lock(s_mutex);
-    if (!s_initialized)
-        return;
-
     CoUninitialize();
-
-    s_initialized = false;
 }
 
 void set_window_icon(WindowHandle handle, const std::filesystem::path& path)
@@ -147,7 +133,7 @@ template<typename DialogType>
 static std::optional<std::filesystem::path>
 file_dialog_common(std::span<const FileDialogFilter> filters, DWORD options, const CLSID clsid)
 {
-    KALI_ASSERT(s_initialized == true);
+    KALI_CHECK(is_platform_initialized(), "Platform not initialized.");
 
     FilterSpec fs(filters, typeid(DialogType) == typeid(IFileOpenDialog));
 
