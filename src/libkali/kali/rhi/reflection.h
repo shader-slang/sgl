@@ -1,5 +1,7 @@
 #pragma once
 
+#include "kali/rhi/shader_offset.h"
+
 #include "kali/core/macros.h"
 #include "kali/core/object.h"
 #include "kali/core/enum.h"
@@ -7,6 +9,7 @@
 #include "kali/math/vector_types.h"
 
 #include <slang.h>
+#include <slang-com-ptr.h>
 
 #include <map>
 #include <string>
@@ -14,206 +17,6 @@
 namespace kali {
 
 class ProgramVersion;
-
-/**
- * Represents the offset of a uniform shader variable relative to its enclosing type/buffer/block.
- *
- * A `UniformShaderVarOffset` is a simple wrapper around a byte offset for a uniform shader variable.
- * It is used to make API signatures less ambiguous (e.g., about whether an integer represents an
- * index, an offset, a count, etc.
- *
- * A `UniformShaderVarOffset` can also encode an invalid offset (represented as an all-ones bit pattern),
- * to indicate that a particular uniform variable is not present.
- *
- * A `UniformShaderVarOffset` can be obtained from a reflection type or `ParameterBlock` using the
- * `[]` subscript operator:
- *
- * UniformShaderVarOffset aOffset = pSomeType["a"]; // get offset of field `a` inside `pSomeType`
- * UniformShaderVarOffset bOffset = pBlock["b"]; // get offset of parameter `b` inside parameter block
- */
-struct UniformShaderVarOffset {
-    /// Underlying byte offset type.
-    using ByteOffset = uint32_t;
-
-    /// Default constructor. Creates an invalid offset.
-    UniformShaderVarOffset() = default;
-
-    /// Constructor.
-    explicit UniformShaderVarOffset(ByteOffset offset)
-        : m_offset(offset)
-    {
-    }
-
-    /// Check whether this offset is valid.
-    bool is_valid() const { return m_offset != INVALID; }
-
-    /// Get the underlying byte offset.
-    ByteOffset get_byte_offset() const { return m_offset; }
-
-    /// Comparison.
-    auto operator<=>(const UniformShaderVarOffset&) const = default;
-
-    /// Add an additional byte offset to this offset.
-    /// Returns an invalid offset if the current offset is invalid.
-    UniformShaderVarOffset operator+(ByteOffset offset) const
-    {
-        if (!is_valid())
-            return {};
-        return UniformShaderVarOffset(m_offset + offset);
-    }
-
-    /// Adds another offset to this offset.
-    /// Returns an invalid offset if either offset is invalid.
-    UniformShaderVarOffset operator+(UniformShaderVarOffset other) const
-    {
-        if (!is_valid() || !other.is_valid())
-            return {};
-        return UniformShaderVarOffset(m_offset + other.m_offset);
-    }
-
-private:
-    /// Invalid offset value.
-    static constexpr ByteOffset INVALID = ByteOffset(-1);
-
-    ByteOffset m_offset{INVALID};
-};
-
-/**
- * Represents the offset of a resource-type shader variable relative to its enclosing type/buffer/block.
- *
- * A `ResourceShaderVarOffset` records the index of a descriptor range and an array index within that range.
- *
- * A `ResourceShaderVarOffset` can also encode an invalid offset (represented as an all-ones bit pattern
- * for both the range and array indices), to indicate that a particular resource variable is not present.
- *
- * A `ResourceShaderVarOffset` can be obtained from a reflection type or `ParameterBlock` using the
- * `[]` subscript operator:
- *
- * ResourceShaderVarOffset texOffset = pSomeType["tex"]; // get offset of texture `tex` inside `pSomeType`
- * ResourceShaderVarOffset sampOffset = pBlock["samp"]; // get offset of sampler `samp` inside block
- *
- * Please note that the concepts of resource "ranges" are largely an implementation detail of
- * the `ParameterBlock` type, and most user code should not attempt to explicitly work with
- * or reason about resource ranges. In particular, there is *no* correspondence between resource
- * range indices and the `register`s or `binding`s assigned to shader parameters.
- */
-struct ResourceShaderVarOffset {
-public:
-    using RangeIndex = uint32_t;
-    using ArrayIndex = uint32_t;
-
-    /// Default constructor. Creates an invalid offset.
-    ResourceShaderVarOffset() = default;
-
-    /// Constructor.
-    explicit ResourceShaderVarOffset(RangeIndex range_index, ArrayIndex array_index = 0)
-        : m_range_index(range_index)
-        , m_array_index(array_index)
-    {
-    }
-
-    /// Check whether this offset is valid.
-    bool is_valid() const { return m_range_index != INVALID; }
-
-    /// Get the underlying resource/descriptor range index.
-    RangeIndex get_range_index() const { return m_range_index; }
-
-    /// Get the underlying array index into the resource/descriptor range.
-    ArrayIndex get_array_index() const { return m_array_index; }
-
-    /// Comparison.
-    auto operator<=>(const ResourceShaderVarOffset&) const = default;
-
-    /// Adds another offset to this offset.
-    /// Returns an invalid offset if either offset is invalid.
-    ResourceShaderVarOffset operator+(ResourceShaderVarOffset other) const
-    {
-        if (!is_valid() || !other.is_valid())
-            return {};
-        return ResourceShaderVarOffset(m_range_index + other.m_range_index, m_array_index + other.m_array_index);
-    }
-
-private:
-    /// Invalid range index value.
-    static constexpr RangeIndex INVALID = RangeIndex(-1);
-
-    RangeIndex m_range_index{INVALID};
-    ArrayIndex m_array_index{0};
-};
-
-/**
- * Represents the offset of a shader variable relative to its enclosing type/buffer/block.
- *
- * A `ShaderVarOffset` can be used to store the offset of a shader variable that might use
- * ordinary/uniform data, resources like textures/buffers/samplers, or some combination.
- * It effectively stores both a `UniformShaderVarOffset` and a `ResourceShaderVarOffset`
- *
- * A `ShaderVarOffset` can also encode an invalid offset, to indicate that a particular
- * shader variable is not present.
- *
- * A `ShaderVarOffset` can be obtained from a reflection type or `ParameterBlock` using the
- * `[]` subscript operator:
- *
- * ShaderVarOffset lightOffset = pSomeType["light"]; // get offset of variable `light` inside `pSomeType`
- * ShaderVarOffset materialOffset = pBlock["material"]; // get offset of variable `material` inside block
- *
- */
-struct ShaderVarOffset {
-public:
-    using ByteOffset = UniformShaderVarOffset::ByteOffset;
-    using RangeIndex = ResourceShaderVarOffset::RangeIndex;
-    using ArrayIndex = ResourceShaderVarOffset::ArrayIndex;
-
-    /// Default constructor. Creates an invalid offset.
-    ShaderVarOffset() = default;
-
-    /// Constructor.
-    explicit ShaderVarOffset(UniformShaderVarOffset uniform, ResourceShaderVarOffset resource)
-        : m_uniform(uniform)
-        , m_resource(resource)
-    {
-    }
-
-    /// Check whether this offset is valid.
-    bool is_valid() const { return m_uniform.is_valid() && m_resource.is_valid(); }
-
-    /// Get the underlying uniform offset.
-    UniformShaderVarOffset get_uniform() const { return m_uniform; }
-
-    /// Implicit conversion to the underlying uniform offset.
-    operator UniformShaderVarOffset() const { return m_uniform; }
-
-    /// Get the underlying resource offset.
-    ResourceShaderVarOffset get_resource() const { return m_resource; }
-
-    /// Implicit conversion to the underlying resource offset.
-    operator ResourceShaderVarOffset() const { return m_resource; }
-
-    /// Get the underlying byte offset.
-    ByteOffset get_byte_offset() const { return m_uniform.get_byte_offset(); }
-
-    /// Get the underlying resource/descriptor range index.
-    RangeIndex get_range_index() const { return m_resource.get_range_index(); }
-
-    /// Get the underlying array index into the resource/descriptor range.
-    ArrayIndex get_array_index() const { return m_resource.get_array_index(); }
-
-    /// Comparison.
-    auto operator<=>(const ShaderVarOffset&) const = default;
-
-    /// Adds another offset to this offset.
-    /// Returns an invalid offset if either offset is invalid.
-    ShaderVarOffset operator+(const ShaderVarOffset& other) const
-    {
-        if (!is_valid() || !other.is_valid())
-            return {};
-        return ShaderVarOffset(m_uniform + other.m_uniform, m_resource + other.m_resource);
-    }
-
-protected:
-    UniformShaderVarOffset m_uniform;
-    ResourceShaderVarOffset m_resource;
-};
 
 class TypeReflection;
 class ArrayTypeReflection;
@@ -223,10 +26,14 @@ class ResourceTypeReflection;
 class InterfaceTypeReflection;
 class VariableReflection;
 
-
 class KALI_API TypeReflection : public Object {
     KALI_OBJECT(TypeReflection)
 public:
+    TypeReflection(slang::TypeLayoutReflection* slang_type_layout)
+        : m_slang_type_layout(slang_type_layout)
+    {
+    }
+
     enum class Kind {
         struct_,   ///< StructTypeReflection
         array,     ///< ArrayTypeReflection
@@ -261,15 +68,25 @@ public:
 
     /// Dynamic cast to InterfaceTypeReflection.
     const InterfaceTypeReflection* as_interface_type() const;
+
+    slang::TypeLayoutReflection* get_slang_type_layout() const { return m_slang_type_layout; }
+
+protected:
+    slang::TypeLayoutReflection* m_slang_type_layout;
 };
 
 KALI_ENUM_REGISTER(TypeReflection::Kind);
 
-class StructTypeReflection : public TypeReflection {
+class KALI_API StructTypeReflection : public TypeReflection {
     KALI_OBJECT(StructTypeReflection)
 public:
-    StructTypeReflection(std::string name, std::vector<ref<VariableReflection>> members)
-        : m_name(std::move(name))
+    StructTypeReflection(
+        slang::TypeLayoutReflection* slang_type_layout,
+        std::string name,
+        std::vector<ref<VariableReflection>> members
+    )
+        : TypeReflection(slang_type_layout)
+        , m_name(std::move(name))
         , m_members(std::move(members))
     {
     }
@@ -289,11 +106,17 @@ private:
     std::vector<ref<VariableReflection>> m_members;
 };
 
-class ArrayTypeReflection : public TypeReflection {
+class KALI_API ArrayTypeReflection : public TypeReflection {
     KALI_OBJECT(ArrayTypeReflection)
 public:
-    ArrayTypeReflection(ref<TypeReflection> element_type, uint32_t element_count, uint32_t element_stride)
-        : m_element_type(std::move(element_type))
+    ArrayTypeReflection(
+        slang::TypeLayoutReflection* slang_type_layout,
+        ref<TypeReflection> element_type,
+        uint32_t element_count,
+        uint32_t element_stride
+    )
+        : TypeReflection(slang_type_layout)
+        , m_element_type(std::move(element_type))
         , m_element_count(element_count)
         , m_element_stride(element_stride)
     {
@@ -317,7 +140,7 @@ private:
     uint32_t m_element_stride;
 };
 
-class BasicTypeReflection : public TypeReflection {
+class KALI_API BasicTypeReflection : public TypeReflection {
     KALI_OBJECT(BasicTypeReflection)
 public:
     enum class ScalarType {
@@ -399,8 +222,15 @@ public:
         Unknown = -1
     };
 
-    BasicTypeReflection(ScalarType scalar_type, uint8_t row_count, uint8_t col_count, bool is_row_major)
-        : m_scalar_type(scalar_type)
+    BasicTypeReflection(
+        slang::TypeLayoutReflection* slang_type_layout,
+        ScalarType scalar_type,
+        uint8_t row_count,
+        uint8_t col_count,
+        bool is_row_major
+    )
+        : TypeReflection(slang_type_layout)
+        , m_scalar_type(scalar_type)
         , m_row_count(row_count)
         , m_col_count(col_count)
         , m_row_major(is_row_major)
@@ -426,7 +256,7 @@ private:
 
 KALI_ENUM_REGISTER(BasicTypeReflection::ScalarType);
 
-class ResourceTypeReflection : public TypeReflection {
+class KALI_API ResourceTypeReflection : public TypeReflection {
     KALI_OBJECT(ResourceTypeReflection)
 public:
     /// Type of the resource.
@@ -529,6 +359,7 @@ public:
     );
 
     ResourceTypeReflection(
+        slang::TypeLayoutReflection* slang_type_layout,
         Type type,
         Dimensions dimensions,
         StructuredType structured_type,
@@ -536,7 +367,8 @@ public:
         ShaderAccess shader_access,
         ref<TypeReflection> element_type
     )
-        : m_type(type)
+        : TypeReflection(slang_type_layout)
+        , m_type(type)
         , m_dimensions(dimensions)
         , m_structured_type(structured_type)
         , m_return_type(return_type)
@@ -569,10 +401,13 @@ KALI_ENUM_REGISTER(ResourceTypeReflection::StructuredType);
 KALI_ENUM_REGISTER(ResourceTypeReflection::ReturnType);
 KALI_ENUM_REGISTER(ResourceTypeReflection::ShaderAccess);
 
-class InterfaceTypeReflection : public TypeReflection {
+class KALI_API InterfaceTypeReflection : public TypeReflection {
     KALI_OBJECT(InterfaceTypeReflection)
 public:
-    InterfaceTypeReflection() { }
+    InterfaceTypeReflection(slang::TypeLayoutReflection* slang_type_layout)
+        : TypeReflection(slang_type_layout)
+    {
+    }
 
     Kind get_kind() const override { return Kind::interface; }
 };
@@ -580,7 +415,7 @@ public:
 class KALI_API VariableReflection : public Object {
     KALI_OBJECT(VariableReflection)
 public:
-    VariableReflection(std::string name, ref<TypeReflection> type, const ShaderVarOffset& offset)
+    VariableReflection(std::string name, ref<TypeReflection> type, const ShaderOffset& offset)
         : m_name(std::move(name))
         , m_type(std::move(type))
         , m_offset(offset)
@@ -591,121 +426,16 @@ public:
 
     TypeReflection* get_type() const { return m_type; }
 
-    const ShaderVarOffset& get_offset() const { return m_offset; }
+    const ShaderOffset& get_offset() const { return m_offset; }
 
 private:
     std::string m_name;
     ref<TypeReflection> m_type;
-    ShaderVarOffset m_offset;
+    ShaderOffset m_offset;
 };
 
-#if 0
-class TypeReflection {
-public:
-    TypeReflection(slang::TypeReflection* type)
-        : m_type(type)
-    {
-    }
-
-    enum class Kind {
-        none = SLANG_TYPE_KIND_NONE,
-        struct_ = SLANG_TYPE_KIND_STRUCT,
-        array = SLANG_TYPE_KIND_ARRAY,
-        matrix = SLANG_TYPE_KIND_MATRIX,
-        vector = SLANG_TYPE_KIND_VECTOR,
-        scalar = SLANG_TYPE_KIND_SCALAR,
-        constant_buffer = SLANG_TYPE_KIND_CONSTANT_BUFFER,
-        resource = SLANG_TYPE_KIND_RESOURCE,
-        sampler_state = SLANG_TYPE_KIND_SAMPLER_STATE,
-        texture_buffer = SLANG_TYPE_KIND_TEXTURE_BUFFER,
-        shader_storage_buffer = SLANG_TYPE_KIND_SHADER_STORAGE_BUFFER,
-        parameter_block = SLANG_TYPE_KIND_PARAMETER_BLOCK,
-        generic_type_parameter = SLANG_TYPE_KIND_GENERIC_TYPE_PARAMETER,
-        interface = SLANG_TYPE_KIND_INTERFACE,
-        output_stream = SLANG_TYPE_KIND_OUTPUT_STREAM,
-        specialized = SLANG_TYPE_KIND_SPECIALIZED,
-        feedback = SLANG_TYPE_KIND_FEEDBACK,
-        pointer = SLANG_TYPE_KIND_POINTER,
-    };
-
-    enum class ScalarType {
-        none = SLANG_SCALAR_TYPE_NONE,
-        void_ = SLANG_SCALAR_TYPE_VOID,
-        bool_ = SLANG_SCALAR_TYPE_BOOL,
-        int32 = SLANG_SCALAR_TYPE_INT32,
-        uint32 = SLANG_SCALAR_TYPE_UINT32,
-        int64 = SLANG_SCALAR_TYPE_INT64,
-        uint64 = SLANG_SCALAR_TYPE_UINT64,
-        float16 = SLANG_SCALAR_TYPE_FLOAT16,
-        float32 = SLANG_SCALAR_TYPE_FLOAT32,
-        float64 = SLANG_SCALAR_TYPE_FLOAT64,
-        int8 = SLANG_SCALAR_TYPE_INT8,
-        uint8 = SLANG_SCALAR_TYPE_UINT8,
-        int16 = SLANG_SCALAR_TYPE_INT16,
-        uint16 = SLANG_SCALAR_TYPE_UINT16,
-    };
-
-    Kind get_kind() const { return Kind(m_type->getKind()); }
-
-    bool is_struct() const { return get_kind() == Kind::struct_; }
-
-    bool is_array() const { return get_kind() == Kind::array; }
-
-    TypeReflection unwrap_array() const
-    {
-        if (!is_array())
-            KALI_THROW("Type is not array");
-        TypeReflection type = *this;
-        // while (type.is_array())
-        //     type = type.get_element_type();
-        return type;
-    }
-
-    bool is_scalar() const { return get_kind() == Kind::scalar; }
-
-    ScalarType get_scalar_type() const
-    {
-        if (!is_scalar())
-            KALI_THROW("Type is not scalar");
-
-        return ScalarType(m_type->getScalarType());
-    }
-
-
-private:
-    slang::TypeReflection* m_type;
-};
-
-class TypeLayoutReflection {
-public:
-    TypeLayoutReflection(slang::TypeLayoutReflection* type_layout)
-        : m_type_layout(type_layout)
-    {
-    }
-
-    TypeReflection get_type() const { return TypeReflection(m_type_layout->getType()); }
-
-private:
-    slang::TypeLayoutReflection* m_type_layout;
-};
-
-class VariableLayoutReflection {
-public:
-    VariableLayoutReflection(slang::VariableLayoutReflection* layout)
-        : m_layout(layout)
-    {
-    }
-
-    const char* get_name() const { return m_layout->getName(); }
-
-    TypeLayoutReflection get_type_layout() const { return TypeLayoutReflection(m_layout->getTypeLayout()); }
-
-private:
-    slang::VariableLayoutReflection* m_layout;
-};
-#endif
-
-class KALI_API ProgramLayout {
+class KALI_API ProgramLayout : public Object {
+    KALI_OBJECT(ProgramLayout)
 public:
     ProgramLayout(const ProgramVersion* program_version, slang::ProgramLayout* layout);
 
@@ -713,6 +443,8 @@ public:
     // {
     //     return TypeLayoutReflection(m_layout->getGlobalParamsTypeLayout());
     // }
+
+    const ref<StructTypeReflection>& get_globals_type() const { return m_globals_type; }
 
     /// Return a hash to string map of all hashed strings in the program.
     std::map<uint32_t, std::string> get_hashed_strings() const;
@@ -741,5 +473,10 @@ private:
     uint32_t m_entry_point;
     slang::EntryPointLayout* m_layout;
 };
+
+// TODO temporary utilities
+
+KALI_API ref<TypeReflection> get_type_reflection(slang::TypeLayoutReflection* slang_type_layout);
+KALI_API std::string dump_type_reflection(const TypeReflection* type_reflection);
 
 } // namespace kali

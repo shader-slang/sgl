@@ -139,11 +139,7 @@ ProgramVersion::ProgramVersion(
     , m_linked_entry_point_components(std::move(linked_entry_point_components))
 {
     KALI_ASSERT(m_program);
-}
-
-ProgramLayout ProgramVersion::get_program_layout() const
-{
-    return ProgramLayout(this, m_program_component->getLayout());
+    m_program_layout = make_ref<ProgramLayout>(this, m_program_component->getLayout());
 }
 
 EntryPointLayout ProgramVersion::get_entry_point_layout(uint32_t entry_point) const

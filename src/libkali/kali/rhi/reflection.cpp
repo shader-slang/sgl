@@ -88,6 +88,15 @@ const InterfaceTypeReflection* TypeReflection::as_interface_type() const
 // StructTypeReflection
 // ----------------------------------------------------------------------------
 
+VariableReflection* StructTypeReflection::find_member(std::string_view name) const
+{
+    for (const auto& member : m_members) {
+        if (member->get_name() == name)
+            return member;
+    }
+    return nullptr;
+}
+
 // ----------------------------------------------------------------------------
 // ArrayTypeReflection
 // ----------------------------------------------------------------------------
@@ -218,7 +227,7 @@ static ref<StructTypeReflection> reflect_struct_type(slang::TypeLayoutReflection
             members.push_back(std::move(member));
     }
 
-    return make_ref<StructTypeReflection>(name, members);
+    return make_ref<StructTypeReflection>(type_layout, name, members);
 }
 
 static ref<ArrayTypeReflection> reflect_array_type(slang::TypeLayoutReflection* type_layout)
@@ -227,7 +236,7 @@ static ref<ArrayTypeReflection> reflect_array_type(slang::TypeLayoutReflection* 
     uint32_t element_count = narrow_cast<uint32_t>(type_layout->getElementCount());
     uint32_t element_stride = narrow_cast<uint32_t>(type_layout->getElementStride(SLANG_PARAMETER_CATEGORY_UNIFORM));
 
-    return make_ref<ArrayTypeReflection>(element_type, element_count, element_stride);
+    return make_ref<ArrayTypeReflection>(type_layout, element_type, element_count, element_stride);
 }
 
 static ref<BasicTypeReflection> reflect_basic_type(slang::TypeLayoutReflection* type_layout)
@@ -237,7 +246,7 @@ static ref<BasicTypeReflection> reflect_basic_type(slang::TypeLayoutReflection* 
     uint8_t col_count = narrow_cast<uint8_t>(type_layout->getColumnCount());
     bool is_row_major = type_layout->getMatrixLayoutMode() == SLANG_MATRIX_LAYOUT_ROW_MAJOR;
 
-    return make_ref<BasicTypeReflection>(scalar_type, row_count, col_count, is_row_major);
+    return make_ref<BasicTypeReflection>(type_layout, scalar_type, row_count, col_count, is_row_major);
 }
 
 inline ResourceTypeReflection::Type get_resource_type(slang::TypeReflection* type)
@@ -397,6 +406,7 @@ static ref<ResourceTypeReflection> reflect_resource_type(slang::TypeLayoutReflec
     ref<TypeReflection> element_type = reflect_type(type_layout->getElementTypeLayout());
 
     return make_ref<ResourceTypeReflection>(
+        type_layout,
         type,
         dimensions,
         structured_type,
@@ -408,8 +418,7 @@ static ref<ResourceTypeReflection> reflect_resource_type(slang::TypeLayoutReflec
 
 static ref<InterfaceTypeReflection> reflect_interface_type(slang::TypeLayoutReflection* type_layout)
 {
-    KALI_UNUSED(type_layout);
-    return make_ref<InterfaceTypeReflection>();
+    return make_ref<InterfaceTypeReflection>(type_layout);
 }
 
 static ref<TypeReflection> reflect_type(slang::TypeLayoutReflection* type_layout
@@ -419,7 +428,7 @@ static ref<TypeReflection> reflect_type(slang::TypeLayoutReflection* type_layout
 )
 {
     KALI_ASSERT(type_layout);
-    switch (type_layout->getType()->getKind()) {
+    switch (type_layout->getKind()) {
     case slang::TypeReflection::Kind::None:
         return nullptr;
     case slang::TypeReflection::Kind::Struct:
@@ -462,7 +471,7 @@ static ref<VariableReflection> reflect_variable(slang::VariableLayoutReflection*
 
     // auto byteOffset = (ShaderVarOffset::ByteOffset)variable_layout->getOffset(SLANG_PARAMETER_CATEGORY_UNIFORM);
 
-    return make_ref<VariableReflection>(name, type, ShaderVarOffset());
+    return make_ref<VariableReflection>(name, type, ShaderOffset());
 }
 
 ProgramLayout::ProgramLayout(const ProgramVersion* program_version, slang::ProgramLayout* layout)
@@ -477,7 +486,7 @@ ProgramLayout::ProgramLayout(const ProgramVersion* program_version, slang::Progr
         if (global)
             globals.push_back(std::move(global));
     }
-    m_globals_type = make_ref<StructTypeReflection>("", globals);
+    m_globals_type = make_ref<StructTypeReflection>(m_layout->getGlobalParamsTypeLayout(), "", globals);
 }
 
 std::map<uint32_t, std::string> ProgramLayout::get_hashed_strings() const
@@ -504,6 +513,18 @@ uint3 EntryPointLayout::get_compute_thread_group_size() const
     SlangUInt size[3];
     m_layout->getComputeThreadGroupSize(3, size);
     return uint3(narrow_cast<uint32_t>(size[0]), narrow_cast<uint32_t>(size[1]), narrow_cast<uint32_t>(size[2]));
+}
+
+ref<TypeReflection> get_type_reflection(slang::TypeLayoutReflection* slang_type_layout)
+{
+    return reflect_type(slang_type_layout);
+}
+
+std::string dump_type_reflection(const TypeReflection* type_reflection)
+{
+    ReflectionWriter writer;
+    writer.write(type_reflection);
+    return writer.str();
 }
 
 } // namespace kali

@@ -18,6 +18,9 @@ class Buffer;
 struct TextureDesc;
 class Texture;
 
+struct ResourceViewDesc;
+class ResourceView;
+
 struct SamplerDesc;
 class Sampler;
 
@@ -42,6 +45,7 @@ class CommandQueue;
 struct CommandStreamDesc;
 class CommandStream;
 
+class ShaderCursor;
 class ShaderObject;
 
 } // namespace kali

@@ -356,13 +356,18 @@ void CommandStream::upload_texture_subresource_data(
 // Compute
 // ----------------------------------------------------------------------------
 
-ShaderObject CommandStream::bind_compute_pipeline(const ComputePipelineState* pipeline)
+ref<ShaderObject> CommandStream::bind_compute_pipeline(const ComputePipelineState* pipeline)
 {
     gfx::IShaderObject* shader_object = get_compute_command_encoder()->bindPipeline(pipeline->get_gfx_pipeline_state());
-    return ShaderObject(shader_object);
+    return make_ref<TransientShaderObject>(shader_object);
 }
 
-// void CommandStream::bind_compute_pipeline(const ComputePipelineState* pipeline, ShaderObject* shader_object);
+void CommandStream::bind_compute_pipeline(const ComputePipelineState* pipeline, const ShaderObject* shader_object)
+{
+    KALI_UNUSED(pipeline);
+    KALI_UNUSED(shader_object);
+    KALI_UNIMPLEMENTED();
+}
 
 void CommandStream::dispatch_compute(uint3 thread_group_count)
 {
@@ -391,10 +396,20 @@ void CommandStream::dispatch_compute(
     const ProgramVersion* program_version = program->get_active_version();
     ref<ComputePipelineState> pipeline = pipeline_cache->get_pipeline_state({.program_version = program_version});
 
-    ShaderObject shader_object = bind_compute_pipeline(pipeline);
+    ref<ShaderObject> shader_object = bind_compute_pipeline(pipeline);
 
-    if (set_vars)
-        set_vars(gfx::ShaderCursor(shader_object.get_gfx_shader_object()));
+    log_info(dump_type_reflection(get_type_reflection(shader_object->get_gfx_shader_object()->getElementTypeLayout())));
+    // log_info(dump_type_reflection(get_type_reflection(shader_object->get_gfx_shader_object()->getEntryPoint(0)->getElementTypeLayout())));
+    // KALI_PRINT(shader_object->get_gfx_shader_object()->getEntryPointCount());
+    // log_info(dump_type_reflection(get_type_reflection(shader_object->get_gfx_shader_object()->getEntryPoint(0)->getElementTypeLayout())));
+
+    // log_info(dump_type_reflection(program_version->get_program_layout()->get_globals_type()));
+
+    if (set_vars) {
+        // KALI_ASSERT_EQ((void*)shader_object->get_gfx_shader_object()->getElementTypeLayout(), (void*)program_version->get_program_layout()->get_globals_type()->get_slang_type_layout());
+        // set_vars(ShaderCursor(shader_object, program_version->get_program_layout()->get_globals_type()));
+        set_vars(gfx::ShaderCursor(shader_object->get_gfx_shader_object()));
+    }
 
     uint3 thread_group_size = program_version->get_entry_point_layout(0).get_compute_thread_group_size();
     uint3 thread_group_count{

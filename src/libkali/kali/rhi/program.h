@@ -16,6 +16,7 @@
 #include <vector>
 #include <filesystem>
 #include <map>
+#include <compare>
 
 namespace kali {
 
@@ -333,7 +334,7 @@ public:
         std::vector<Slang::ComPtr<slang::IComponentType>> linked_entry_point_components
     );
 
-    ProgramLayout get_program_layout() const;
+    const ref<ProgramLayout>& get_program_layout() const { return m_program_layout; }
     EntryPointLayout get_entry_point_layout(uint32_t entry_point) const;
 
     gfx::IShaderProgram* get_gfx_shader_program() const;
@@ -345,6 +346,7 @@ private:
     std::vector<Slang::ComPtr<slang::IComponentType>> m_entry_point_components;
     std::vector<Slang::ComPtr<slang::IComponentType>> m_linked_entry_point_components;
     mutable Slang::ComPtr<gfx::IShaderProgram> m_gfx_shader_program;
+    ref<ProgramLayout> m_program_layout;
 };
 
 class KALI_API ProgramManager : public Object {

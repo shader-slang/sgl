@@ -90,6 +90,11 @@ target_sources(kali PRIVATE
     kali/rhi/sampler.h
     kali/rhi/shader_cursor.cpp
     kali/rhi/shader_cursor.h
+    kali/rhi/shader_cursor2.cpp
+    kali/rhi/shader_cursor2.h
+    kali/rhi/shader_object.cpp
+    kali/rhi/shader_object.h
+    kali/rhi/shader_offset.h
     kali/rhi/shared_handle.h
     kali/rhi/swapchain.cpp
     kali/rhi/swapchain.h

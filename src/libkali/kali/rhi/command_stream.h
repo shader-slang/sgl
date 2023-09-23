@@ -4,6 +4,7 @@
 #include "kali/rhi/command_queue.h"
 #include "kali/rhi/resource.h"
 #include "kali/rhi/fence.h"
+#include "kali/rhi/shader_cursor2.h"
 #include "kali/rhi/shader_object.h"
 
 #include "kali/core/macros.h"
@@ -11,9 +12,7 @@
 
 #include <functional>
 
-namespace gfx {
-struct ShaderCursor;
-}
+namespace gfx { struct ShaderCursor; };
 
 namespace kali {
 
@@ -194,8 +193,8 @@ public:
     // Compute
     // ------------------------------------------------------------------------
 
-    ShaderObject bind_compute_pipeline(const ComputePipelineState* pipeline);
-    // void bind_compute_pipeline(const ComputePipelineState* pipeline, ShaderObject* shader_object);
+    ref<ShaderObject> bind_compute_pipeline(const ComputePipelineState* pipeline);
+    void bind_compute_pipeline(const ComputePipelineState* pipeline, const ShaderObject* shader_object);
     void dispatch_compute(uint3 thread_group_count);
     void dispatch_compute_indirect(Buffer* cmd_buffer, DeviceOffset offset);
 

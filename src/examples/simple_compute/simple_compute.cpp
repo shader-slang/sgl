@@ -21,6 +21,10 @@ int main()
 
         ref<Program> program = device->create_program(ProgramDesc::create_compute("compute.cs.slang", "main"));
 
+#if 1
+        // program->get_active_version()->get_program_layout()->dump();
+#endif
+
 #if 0
         ProgramDesc desc;
         desc.add_shader_module().add_string(R"(
@@ -51,6 +55,7 @@ int main()
         stream->dispatch_compute(
             program,
             uint3{1024, 1, 1},
+            // [&](auto cursor) { cursor["g_buffer"] = buffer->get_uav(0, 1024); }
             [&](auto cursor) { cursor["g_buffer"].setResource(buffer->get_uav(0, 1024)->get_gfx_resource_view()); }
         );
 
@@ -62,10 +67,6 @@ int main()
         for (size_t i = 0; i < data.size(); ++i) {
             log_info("data[{}] = {}", i, data[i]);
         }
-
-#if 1
-        program->get_active_version()->get_program_layout().dump();
-#endif
 
 #if 0
         auto program = device->create_program(ProgramDesc::create_compute("compute.cs.slang", "main"));

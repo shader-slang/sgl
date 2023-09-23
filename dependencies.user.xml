@@ -1,0 +1,6 @@
+<project toolsVersion="6.0">
+    <!-- UNCOMMENT THIS TO USE A CUSTOM SLANG BUILD IN THE PARENT FOLDER -->
+    <!-- <dependency name="slang">
+        <source path="../slang"/>
+    </dependency> -->
+</project>
