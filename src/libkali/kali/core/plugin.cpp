@@ -1,6 +1,6 @@
 #include "plugin.h"
 #include "kali/core/logger.h"
-#include "kali/core/cpu_timer.h"
+#include "kali/core/timer.h"
 
 #include <chrono>
 
@@ -25,7 +25,7 @@ bool PluginManager::load_plugin_by_name(const std::filesystem::path& plugin_dir,
 
 void PluginManager::load_plugins_by_name(const std::filesystem::path& plugin_dir, std::span<const std::string> names)
 {
-    CpuTimer timer;
+    Timer timer;
 
     size_t loaded_count = 0;
     for (const auto& name : names) {

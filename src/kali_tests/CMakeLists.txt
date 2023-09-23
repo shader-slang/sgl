@@ -6,7 +6,6 @@ add_executable(kali_tests)
 target_sources(kali_tests PRIVATE
     kali_tests.cpp
     testing.cpp
-    core/test_cpu_timer.cpp
     core/test_enum.cpp
     core/test_maths.cpp
     core/test_memory_mapped_file.cpp
@@ -15,6 +14,7 @@ target_sources(kali_tests PRIVATE
     core/test_plugin.cpp
     core/test_stream.cpp
     core/test_string_utils.cpp
+    core/test_timer.cpp
     device/test_device.cpp
     device/test_formats.cpp
     device/test_program.cpp

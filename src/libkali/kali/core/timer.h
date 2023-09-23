@@ -7,12 +7,12 @@
 namespace kali {
 
 /// High resolution CPU timer.
-class KALI_API CpuTimer {
+class KALI_API Timer {
 public:
     // Time point in nanoseconds.
     using TimePoint = uint64_t;
 
-    CpuTimer() { reset(); }
+    Timer() { reset(); }
 
     /// Reset the timer.
     void reset() { m_start = now(); }

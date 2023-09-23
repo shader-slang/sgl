@@ -7,8 +7,6 @@ add_library(kali SHARED)
 target_sources(kali PRIVATE
     kali/kali.natvis
 
-    kali/core/cpu_timer.cpp
-    kali/core/cpu_timer.h
     kali/core/enum.h
     kali/core/error.cpp
     kali/core/error.h
@@ -39,6 +37,8 @@ target_sources(kali PRIVATE
     kali/core/stream.h
     kali/core/string_utils.cpp
     kali/core/string_utils.h
+    kali/core/timer.cpp
+    kali/core/timer.h
     kali/core/traits.h
     kali/core/type_utils.h
     kali/core/version.cpp
