@@ -1,8 +1,8 @@
 #pragma once
 
-#include "kali/rhi/fwd.h"
-#include "kali/rhi/shader_offset.h"
-#include "kali/rhi/reflection.h"
+#include "kali/device/fwd.h"
+#include "kali/device/shader_offset.h"
+#include "kali/device/reflection.h"
 
 #include "kali/core/macros.h"
 

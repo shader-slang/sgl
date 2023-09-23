@@ -1,7 +1,7 @@
 #pragma once
 
-#include "kali/rhi/fwd.h"
-#include "kali/rhi/native_handle.h"
+#include "kali/device/fwd.h"
+#include "kali/device/native_handle.h"
 
 #include "kali/core/object.h"
 

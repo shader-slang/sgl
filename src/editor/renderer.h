@@ -2,8 +2,8 @@
 
 #include "kali/core/object.h"
 #include "kali/core/window.h"
-#include "kali/rhi/device.h"
-#include "kali/rhi/swapchain.h"
+#include "kali/device/device.h"
+#include "kali/device/swapchain.h"
 
 namespace kali {
 

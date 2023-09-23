@@ -1,8 +1,8 @@
 #include "swapchain.h"
 
-#include "kali/rhi/device.h"
-#include "kali/rhi/command_queue.h"
-#include "kali/rhi/helpers.h"
+#include "kali/device/device.h"
+#include "kali/device/command_queue.h"
+#include "kali/device/helpers.h"
 
 #include "kali/core/error.h"
 #include "kali/core/window.h"

@@ -2,8 +2,8 @@
 
 #include "kali/core/macros.h"
 
-#include "kali/rhi/device.h"
-#include "kali/rhi/program.h"
+#include "kali/device/device.h"
+#include "kali/device/program.h"
 
 #include <map>
 

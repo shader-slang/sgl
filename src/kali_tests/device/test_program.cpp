@@ -1,5 +1,5 @@
 #include "testing.h"
-#include "kali/rhi/program.h"
+#include "kali/device/program.h"
 
 using namespace kali;
 

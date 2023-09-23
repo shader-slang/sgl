@@ -46,6 +46,42 @@ target_sources(kali PRIVATE
     kali/core/window.cpp
     kali/core/window.h
 
+    kali/device/command_queue.cpp
+    kali/device/command_queue.h
+    kali/device/command_stream.cpp
+    kali/device/command_stream.h
+    kali/device/device.cpp
+    kali/device/device.h
+    kali/device/fence.cpp
+    kali/device/fence.h
+    kali/device/formats.cpp
+    kali/device/formats.h
+    kali/device/fwd.h
+    kali/device/helpers.h
+    kali/device/native_formats.h
+    kali/device/pipeline.cpp
+    kali/device/pipeline.h
+    kali/device/program.cpp
+    kali/device/program.h
+    kali/device/reflection.cpp
+    kali/device/reflection.h
+    kali/device/resource.cpp
+    kali/device/resource.h
+    kali/device/sampler.cpp
+    kali/device/sampler.h
+    kali/device/shader_cursor.cpp
+    kali/device/shader_cursor.h
+    kali/device/shader_cursor2.cpp
+    kali/device/shader_cursor2.h
+    kali/device/shader_object.cpp
+    kali/device/shader_object.h
+    kali/device/shader_offset.h
+    kali/device/shared_handle.h
+    kali/device/swapchain.cpp
+    kali/device/swapchain.h
+    kali/device/types.h
+    kali/device/types.inl
+
     kali/imageio/imageio.cpp
     kali/imageio/imageio.h
 
@@ -64,42 +100,6 @@ target_sources(kali PRIVATE
     kali/math/vector_math.h
     kali/math/vector_types.h
     kali/math/vector.h
-
-    kali/rhi/command_queue.cpp
-    kali/rhi/command_queue.h
-    kali/rhi/command_stream.cpp
-    kali/rhi/command_stream.h
-    kali/rhi/device.cpp
-    kali/rhi/device.h
-    kali/rhi/fence.cpp
-    kali/rhi/fence.h
-    kali/rhi/formats.cpp
-    kali/rhi/formats.h
-    kali/rhi/fwd.h
-    kali/rhi/helpers.h
-    kali/rhi/native_formats.h
-    kali/rhi/pipeline.cpp
-    kali/rhi/pipeline.h
-    kali/rhi/program.cpp
-    kali/rhi/program.h
-    kali/rhi/reflection.cpp
-    kali/rhi/reflection.h
-    kali/rhi/resource.cpp
-    kali/rhi/resource.h
-    kali/rhi/sampler.cpp
-    kali/rhi/sampler.h
-    kali/rhi/shader_cursor.cpp
-    kali/rhi/shader_cursor.h
-    kali/rhi/shader_cursor2.cpp
-    kali/rhi/shader_cursor2.h
-    kali/rhi/shader_object.cpp
-    kali/rhi/shader_object.h
-    kali/rhi/shader_offset.h
-    kali/rhi/shared_handle.h
-    kali/rhi/swapchain.cpp
-    kali/rhi/swapchain.h
-    kali/rhi/types.h
-    kali/rhi/types.inl
 )
 
 target_include_directories(kali PUBLIC .)

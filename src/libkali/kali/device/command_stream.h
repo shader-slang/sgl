@@ -1,11 +1,11 @@
 #pragma once
 
-#include "kali/rhi/fwd.h"
-#include "kali/rhi/command_queue.h"
-#include "kali/rhi/resource.h"
-#include "kali/rhi/fence.h"
-#include "kali/rhi/shader_cursor2.h"
-#include "kali/rhi/shader_object.h"
+#include "kali/device/fwd.h"
+#include "kali/device/command_queue.h"
+#include "kali/device/resource.h"
+#include "kali/device/fence.h"
+#include "kali/device/shader_cursor2.h"
+#include "kali/device/shader_object.h"
 
 #include "kali/core/macros.h"
 #include "kali/core/object.h"

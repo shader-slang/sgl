@@ -1,8 +1,8 @@
 #include "shader_object.h"
 
-#include "kali/rhi/resource.h"
-#include "kali/rhi/sampler.h"
-#include "kali/rhi/helpers.h"
+#include "kali/device/resource.h"
+#include "kali/device/sampler.h"
+#include "kali/device/helpers.h"
 
 namespace kali {
 

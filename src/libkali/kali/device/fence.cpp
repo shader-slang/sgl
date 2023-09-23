@@ -2,10 +2,10 @@
 
 #include "kali/core/macros.h"
 
-#include "kali/rhi/device.h"
-#include "kali/rhi/command_queue.h"
-#include "kali/rhi/native_handle_traits.h"
-#include "kali/rhi/helpers.h"
+#include "kali/device/device.h"
+#include "kali/device/command_queue.h"
+#include "kali/device/native_handle_traits.h"
+#include "kali/device/helpers.h"
 
 namespace kali {
 

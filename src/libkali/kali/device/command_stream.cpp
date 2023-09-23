@@ -1,11 +1,11 @@
 #include "command_stream.h"
 
-#include "kali/rhi/device.h"
-#include "kali/rhi/program.h"
-#include "kali/rhi/reflection.h"
-#include "kali/rhi/pipeline.h"
-#include "kali/rhi/shader_cursor.h"
-#include "kali/rhi/helpers.h"
+#include "kali/device/device.h"
+#include "kali/device/program.h"
+#include "kali/device/reflection.h"
+#include "kali/device/pipeline.h"
+#include "kali/device/shader_cursor.h"
+#include "kali/device/helpers.h"
 
 #include "kali/core/error.h"
 #include "kali/core/maths.h"

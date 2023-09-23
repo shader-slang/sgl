@@ -1,13 +1,13 @@
 #include "object_python.h"
 #include "helpers.h"
 
-#include "kali/rhi/types.h"
-#include "kali/rhi/device.h"
-#include "kali/rhi/swapchain.h"
-#include "kali/rhi/resource.h"
-#include "kali/rhi/sampler.h"
-#include "kali/rhi/program.h"
-#include "kali/rhi/command_stream.h"
+#include "kali/device/types.h"
+#include "kali/device/device.h"
+#include "kali/device/swapchain.h"
+#include "kali/device/resource.h"
+#include "kali/device/sampler.h"
+#include "kali/device/program.h"
+#include "kali/device/command_stream.h"
 
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/array.h>
@@ -21,7 +21,7 @@ using namespace nb::literals;
 
 namespace kali {
 
-void register_kali_rhi(nb::module_& m)
+void register_kali_device(nb::module_& m)
 {
     // ------------------------------------------------------------------------
     // types.h

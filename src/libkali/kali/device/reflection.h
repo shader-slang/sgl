@@ -1,6 +1,6 @@
 #pragma once
 
-#include "kali/rhi/shader_offset.h"
+#include "kali/device/shader_offset.h"
 
 #include "kali/core/macros.h"
 #include "kali/core/object.h"

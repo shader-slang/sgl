@@ -1,5 +1,5 @@
 #pragma once
-#include "kali/rhi/formats.h"
+#include "kali/device/formats.h"
 #include "kali/core/macros.h"
 
 #if __has_include(<dxgiformat.h>)

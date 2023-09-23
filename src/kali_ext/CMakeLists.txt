@@ -5,9 +5,9 @@ nanobind_add_module(kali_ext NB_STATIC LTO
     kali_ext.cpp
     object_python.h
     kali_core_python.cpp
+    kali_device_python.cpp
     kali_imageio_python.cpp
     kali_math_python.cpp
-    kali_rhi_python.cpp
 )
 target_link_libraries(kali_ext PRIVATE kali)
 set_target_properties(kali_ext PROPERTIES

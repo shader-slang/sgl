@@ -1,7 +1,7 @@
 #include "formats.h"
 
-#include "kali/rhi/native_formats.h"
-#include "kali/rhi/helpers.h"
+#include "kali/device/native_formats.h"
+#include "kali/device/helpers.h"
 
 #include "kali/core/error.h"
 

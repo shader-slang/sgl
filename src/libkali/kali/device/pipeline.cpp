@@ -1,9 +1,9 @@
 #include "pipeline.h"
 
-#include "kali/rhi/device.h"
-#include "kali/rhi/program.h"
-#include "kali/rhi/helpers.h"
-#include "kali/rhi/native_handle_traits.h"
+#include "kali/device/device.h"
+#include "kali/device/program.h"
+#include "kali/device/helpers.h"
+#include "kali/device/native_handle_traits.h"
 
 
 namespace kali {

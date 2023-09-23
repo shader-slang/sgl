@@ -15,14 +15,14 @@ target_sources(kali_tests PRIVATE
     core/test_plugin.cpp
     core/test_stream.cpp
     core/test_string_utils.cpp
+    device/test_device.cpp
+    device/test_formats.cpp
+    device/test_program.cpp
     imageio/test_imageio.cpp
     math/test_float16.cpp
     math/test_matrix.cpp
     math/test_quaternion.cpp
     math/test_vector.cpp
-    rhi/test_device.cpp
-    rhi/test_formats.cpp
-    rhi/test_program.cpp
 )
 target_include_directories(kali_tests BEFORE PRIVATE .)
 target_link_libraries(kali_tests PRIVATE doctest kali)

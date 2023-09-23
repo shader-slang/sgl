@@ -1,7 +1,7 @@
 #include "testing.h"
-#include "kali/rhi/device.h"
-#include "kali/rhi/resource.h"
-#include "kali/rhi/program.h"
+#include "kali/device/device.h"
+#include "kali/device/resource.h"
+#include "kali/device/program.h"
 
 using namespace kali;
 
@@ -28,7 +28,7 @@ TEST_CASE_GPU("create_raw_buffer")
 TEST_CASE_GPU("create_program")
 {
     // ref<Program> program = ctx.device->create_program(desc);
-    ref<Program> program = ctx.device->create_program(ProgramDesc::create_compute("rhi/test.slang", "main")
+    ref<Program> program = ctx.device->create_program(ProgramDesc::create_compute("device/test.slang", "main")
                                                           .set_compiler_flags(ShaderCompilerFlags::dump_intermediates));
     CHECK(program);
 }

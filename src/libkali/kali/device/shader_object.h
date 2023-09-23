@@ -3,8 +3,8 @@
 #include "kali/core/object.h"
 #include "kali/core/type_utils.h"
 
-#include "kali/rhi/fwd.h"
-#include "kali/rhi/shader_offset.h"
+#include "kali/device/fwd.h"
+#include "kali/device/shader_offset.h"
 
 #include <slang-gfx.h>
 

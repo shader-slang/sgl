@@ -1,8 +1,8 @@
 #pragma once
 
-#include "kali/rhi/fwd.h"
-#include "kali/rhi/formats.h"
-#include "kali/rhi/native_handle.h"
+#include "kali/device/fwd.h"
+#include "kali/device/formats.h"
+#include "kali/device/native_handle.h"
 
 #include "kali/core/macros.h"
 #include "kali/core/enum.h"
