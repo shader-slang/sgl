@@ -29,8 +29,7 @@ TEST_CASE_GPU("create_program")
 {
     // ref<Program> program = ctx.device->create_program(desc);
     ref<Program> program = ctx.device->create_program(ProgramDesc::create_compute("rhi/test.slang", "main")
-                                                          .set_compiler_flags(ShaderCompilerFlags::dump_intermediates)
-                                                          .set_shader_model(ShaderModel::sm_6_0));
+                                                          .set_compiler_flags(ShaderCompilerFlags::dump_intermediates));
     CHECK(program);
 }
 

@@ -54,7 +54,8 @@ public:
 
     gfx::IFence* get_gfx_fence() const { return m_gfx_fence; }
 
-    /// Get the shared fence handle. Only valid if created with @see FenceDesc::shared.
+    /// Get the shared fence handle.
+    /// Throws if the fence was not created with the @see FenceDesc::shared flag.
     SharedFenceHandle get_shared_handle() const;
 
     /// Returns the native API handle:

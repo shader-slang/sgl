@@ -10,6 +10,9 @@
 #include "kali/rhi/command_stream.h"
 
 #include <nanobind/nanobind.h>
+#include <nanobind/stl/array.h>
+#include <nanobind/stl/vector.h>
+#include <nanobind/stl/string.h>
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/bind_map.h>
 
@@ -176,6 +179,12 @@ void register_kali_rhi(nb::module_& m)
     // device.h
     // ------------------------------------------------------------------------
 
+    nb::class_<AdapterInfo>(m, "AdapterInfo")
+        .def_ro("name", &AdapterInfo::name)
+        .def_ro("vendor_id", &AdapterInfo::vendor_id)
+        .def_ro("device_id", &AdapterInfo::device_id)
+        .def_ro("luid", &AdapterInfo::luid);
+
     nb::kali_enum<DeviceType>(m, "DeviceType");
 
     nb::class_<DeviceLimits>(m, "DeviceLimits")
@@ -205,13 +214,15 @@ void register_kali_rhi(nb::module_& m)
     nb::class_<Device, Object> device(m, "Device");
     device.def(
         "__init__",
-        [](Device* device, DeviceType type)
+        [](Device* device, DeviceType type, bool enable_debug_layers)
         {
             new (device) Device(DeviceDesc{
                 .type = type,
+                .enable_debug_layers = enable_debug_layers,
             });
         },
-        "type"_a = DeviceType::automatic
+        "type"_a = DeviceType::automatic,
+        "enable_debug_layers"_a = false
     );
     device.def_prop_ro("info", &Device::get_info);
     device.def(
@@ -326,6 +337,8 @@ void register_kali_rhi(nb::module_& m)
         "min_lod"_a = -1000.f,
         "max_lod"_a = 1000.f
     );
+    device.def_static("enumerate_adapters", &Device::enumerate_adapters, "type"_a = DeviceType::automatic);
+    device.def_static("report_live_objects", &Device::report_live_objects);
 
     // device.def("create_program", nb::overload_cast<const ProgramDesc&>(&Device::create_program), "desc"_a);
     // device.def(

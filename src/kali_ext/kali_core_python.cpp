@@ -51,14 +51,16 @@ void register_kali_core(nb::module_& m)
         .def_ro("git_branch", &Version::git_branch)
         .def_ro("git_dirty", &Version::git_dirty)
         .def_ro("short_tag", &Version::short_tag)
-        .def_ro("long_tag", &Version::long_tag);
-    m.def("get_version", []() { return get_version(); });
+        .def_ro("long_tag", &Version::long_tag)
+        .def("__str__", [](const Version& self) { return self.long_tag; });
+    m.attr("version") = get_version();
 
     // ------------------------------------------------------------------------
     // logger.h
     // ------------------------------------------------------------------------
 
     nb::enum_<LogLevel>(m, "LogLevel")
+        .value("none", LogLevel::none)
         .value("debug", LogLevel::debug)
         .value("info", LogLevel::info)
         .value("warn", LogLevel::warn)

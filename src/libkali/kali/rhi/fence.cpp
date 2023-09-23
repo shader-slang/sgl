@@ -68,6 +68,7 @@ void Fence::set_current_value(uint64_t value)
 
 SharedFenceHandle Fence::get_shared_handle() const
 {
+    KALI_CHECK(m_desc.shared, "Fence must be created with shared flag.");
     gfx::InteropHandle handle;
     SLANG_CALL(m_gfx_fence->getSharedHandle(&handle));
     return reinterpret_cast<SharedFenceHandle>(handle.handleValue);

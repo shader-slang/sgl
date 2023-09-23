@@ -342,7 +342,7 @@ static void check_desc(const TextureDesc& desc)
     KALI_ASSERT(desc.height > 0);
     KALI_ASSERT(desc.depth > 0);
     KALI_ASSERT(desc.mip_count > 0);
-    KALI_ASSERT(desc.array_size > 0);
+    // KALI_ASSERT(desc.array_size > 0);
     KALI_ASSERT(desc.format != Format::unknown);
 }
 
