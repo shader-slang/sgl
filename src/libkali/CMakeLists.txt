@@ -223,14 +223,14 @@ target_compile_definitions(kali
 
 target_link_libraries(kali
     PUBLIC
-        fmt
+        fmt::fmt
         slang slang-gfx
-        Vulkan-Headers
+        Vulkan::Headers
         # $<$<BOOL:${KALI_HAS_CUDA}>:CUDA::cuda_driver>
         # $<$<BOOL:${KALI_HAS_CUDA}>:CUDA::cudart_static>
     PRIVATE
         git_version
-        glfw stb tinyexr
+        glfw stb tinyexr PNG::PNG JPEG::JPEG OpenEXR::OpenEXR
         # $<$<BOOL:${KALI_HAS_D3D12}>:d3d12>
         # $<$<BOOL:${KALI_HAS_D3D12_AGILITY_SDK}>:agility-sdk>
         # $<$<BOOL:${KALI_HAS_AFTERMATH}>:aftermath>

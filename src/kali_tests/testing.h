@@ -1,6 +1,6 @@
 #pragma once
 
-#include <doctest.h>
+#include <doctest/doctest.h>
 
 namespace kali {
 

@@ -191,6 +191,23 @@ function(kali_copy_library target)
 endfunction()
 
 # -----------------------------------------------------------------------------
+# Dependencies
+# -----------------------------------------------------------------------------
+
+find_package(doctest REQUIRED)
+find_package(fmt REQUIRED)
+find_package(glfw3 REQUIRED)
+find_package(JPEG REQUIRED)
+find_package(libjpeg-turbo CONFIG REQUIRED)
+find_package(PNG REQUIRED)
+find_package(OpenEXR CONFIG REQUIRED)
+find_package(pugixml CONFIG REQUIRED)
+find_package(Stb REQUIRED)
+add_library(stb INTERFACE)
+target_include_directories(stb INTERFACE ${Stb_INCLUDE_DIR})
+find_package(VulkanHeaders CONFIG REQUIRED)
+
+# -----------------------------------------------------------------------------
 # Sources
 # -----------------------------------------------------------------------------
 

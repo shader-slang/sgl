@@ -1,25 +1,7 @@
-
-# doctest
-
-add_library(doctest INTERFACE)
-target_include_directories(doctest INTERFACE doctest/include)
-
-# fmtlib
-
-add_subdirectory(fmt)
-
 # nanobind
 
 add_subdirectory(nanobind)
 nanobind_build_library(nanobind SHARED)
-
-# glfw
-
-set(GLFW_BUILD_EXAMPLES OFF)
-set(GLFW_BUILD_TESTS OFF)
-set(GLFW_BUILD_DOCS OFF)
-set(GLFW_INSTALL OFF)
-add_subdirectory(glfw)
 
 # tinyexr
 
@@ -29,8 +11,8 @@ target_include_directories(tinyexr PUBLIC tinyexr)
 
 # stb
 
-add_library(stb INTERFACE)
-target_include_directories(stb INTERFACE stb)
+# add_library(stb INTERFACE)
+# target_include_directories(stb INTERFACE stb)
 
 # slang
 
@@ -93,6 +75,3 @@ if(EXISTS ${AGILITY_SDK_DIR}/build/native/include/d3d12.h)
 else()
     set(KALI_HAS_AGILITY_SDK OFF PARENT_SCOPE)
 endif()
-
-# vulkan-headers
-add_subdirectory(vulkan-headers)

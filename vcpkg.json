@@ -2,10 +2,10 @@
     "name": "kali",
     "version-string": "0.0.1",
     "dependencies": [
+        "doctest",
         "fmt",
         "glfw3",
         "stb",
-        "tinyexr",
         "vulkan-headers",
         "libjpeg-turbo",
         "libpng",

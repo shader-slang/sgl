@@ -11,6 +11,7 @@
             "description": "Base configuration inherited by all presets.",
             "hidden": true,
             "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/external/vcpkg/scripts/buildsystems/vcpkg.cmake",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
             },
             "cmakeExecutable": "${sourceDir}/tools/cmake/bin/cmake",
