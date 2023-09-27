@@ -1,0 +1,15 @@
+{
+    "name": "kali",
+    "version-string": "0.0.1",
+    "dependencies": [
+        "fmt",
+        "glfw3",
+        "stb",
+        "tinyexr",
+        "vulkan-headers",
+        "libjpeg-turbo",
+        "libpng",
+        "openexr",
+        "pugixml"
+    ]
+}
