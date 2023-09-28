@@ -4,6 +4,7 @@
     "dependencies": [
         "slang",
         "dxc",
+        "agility-sdk",
         "doctest",
         "fmt",
         "glfw3",

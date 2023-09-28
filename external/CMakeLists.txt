@@ -60,12 +60,11 @@ endif()
 
 # agility-sdk
 
-set(AGILITY_SDK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/agility-sdk)
-if(EXISTS ${AGILITY_SDK_DIR}/build/native/include/d3d12.h)
+if(KALI_WINDOWS)
     add_library(agility-sdk INTERFACE)
-    target_include_directories(agility-sdk INTERFACE ${AGILITY_SDK_DIR}/build/native/include)
-    kali_copy_binary(${AGILITY_SDK_DIR}/build/native/bin/x64/D3D12Core.dll D3D12)
-    kali_copy_binary(${AGILITY_SDK_DIR}/build/native/bin/x64/d3d12SDKLayers.dll D3D12)
+    target_include_directories(agility-sdk INTERFACE ${VCPKG_DIR}/include/include)
+    kali_copy_binary(${VCPKG_DIR}/bin/D3D12Core.dll D3D12)
+    kali_copy_binary(${VCPKG_DIR}/bin/d3d12SDKLayers.dll D3D12)
     set(KALI_HAS_AGILITY_SDK ON PARENT_SCOPE)
 else()
     set(KALI_HAS_AGILITY_SDK OFF PARENT_SCOPE)

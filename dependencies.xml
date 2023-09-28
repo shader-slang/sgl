@@ -13,8 +13,4 @@
     <dependency name="tools_clang-format" linkPath="tools/clang-format">
         <package name="clang-format" version="15.0.6-windows-x86_64" platforms="windows-x86_64"/>
     </dependency>
-    <!-- Libraries -->
-    <dependency name="agility-sdk" linkPath="external/agility-sdk">
-        <package name="agility-sdk" version="1.4.10" platforms="windows-x86_64"/>
-    </dependency>
 </project>
