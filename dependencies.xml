@@ -14,15 +14,6 @@
         <package name="clang-format" version="15.0.6-windows-x86_64" platforms="windows-x86_64"/>
     </dependency>
     <!-- Libraries -->
-    <remote name="github-slang-windows" type="https" packageLocation="github.com/shader-slang/slang/releases/download/v${version}/slang-${version}-win64.zip"/>
-    <remote name="github-slang-linux" type="https" packageLocation="github.com/shader-slang/slang/releases/download/v${version}/slang-${version}-linux-x86_64.zip"/>
-    <dependency name="slang" linkPath="external/slang">
-        <package name="slang" version="2023.0.3" remotes="github-slang-windows" platforms="windows-x86_64"/>
-        <package name="slang" version="2023.0.3" remotes="github-slang-linux" platforms="linux-x86_64" />
-    </dependency>
-    <dependency name="dxcompiler" linkPath="external/dxcompiler">
-        <package name="dxcompiler" version="1.7.2207" platforms="windows-x86_64" />
-    </dependency>
     <dependency name="agility-sdk" linkPath="external/agility-sdk">
         <package name="agility-sdk" version="1.4.10" platforms="windows-x86_64"/>
     </dependency>
