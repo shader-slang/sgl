@@ -1,0 +1,8 @@
+{
+  "name": "slang",
+  "version": "2023.3.12",
+  "description": "Slang shading language",
+  "homepage": "https://github.com/shader-slang/slang",
+  "license": "MIT",
+  "dependencies": []
+}
