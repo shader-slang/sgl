@@ -224,7 +224,7 @@ target_compile_definitions(kali
 target_link_libraries(kali
     PUBLIC
         fmt::fmt
-        slang slang-gfx
+        slang::slang slang::gfx
         Vulkan::Headers
         # $<$<BOOL:${KALI_HAS_CUDA}>:CUDA::cuda_driver>
         # $<$<BOOL:${KALI_HAS_CUDA}>:CUDA::cudart_static>

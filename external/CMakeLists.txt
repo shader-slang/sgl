@@ -9,58 +9,53 @@ add_library(tinyexr STATIC)
 target_sources(tinyexr PRIVATE tinyexr/miniz.c)
 target_include_directories(tinyexr PUBLIC tinyexr)
 
-# stb
-
-# add_library(stb INTERFACE)
-# target_include_directories(stb INTERFACE stb)
+set(VCPKG_DIR ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET})
 
 # slang
 
-set(SLANG_DIR ${CMAKE_CURRENT_SOURCE_DIR}/slang)
-set(KALI_SLANG_CONFIG release)
+set(SLANG_INCLUDE_DIR ${VCPKG_DIR}/include)
+set(SLANG_BIN_DIR ${VCPKG_DIR}/bin)
+set(SLANG_LIB_DIR ${VCPKG_DIR}/lib)
 if(KALI_WINDOWS)
-    add_library(slang SHARED IMPORTED GLOBAL)
-    set_target_properties(slang PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES ${SLANG_DIR}
-        IMPORTED_IMPLIB ${SLANG_DIR}/bin/windows-x64/${KALI_SLANG_CONFIG}/slang.lib
-        IMPORTED_LOCATION ${SLANG_DIR}/bin/windows-x64/${KALI_SLANG_CONFIG}/slang.dll
+    add_library(slang::slang SHARED IMPORTED GLOBAL)
+    set_target_properties(slang::slang PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES ${SLANG_INCLUDE_DIR}
+        IMPORTED_IMPLIB ${SLANG_LIB_DIR}/slang.lib
+        IMPORTED_LOCATION ${SLANG_BIN_DIR}/slang.dll
     )
 elseif(KALI_LINUX)
-    add_library(slang SHARED IMPORTED GLOBAL)
-    set_target_properties(slang PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES ${SLANG_DIR}
-        IMPORTED_LOCATION ${SLANG_DIR}/bin/linux-x64/${KALI_SLANG_CONFIG}/libslang.so
+    add_library(slang::slang SHARED IMPORTED GLOBAL)
+    set_target_properties(slang::slang PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES ${SLANG_INCLUDE_DIR}
+        IMPORTED_LOCATION ${SLANG_BIN_DIR}/libslang.so
     )
 endif()
-kali_copy_library(slang)
 
 # slang-gfx
 
 if(KALI_WINDOWS)
-    add_library(slang-gfx SHARED IMPORTED GLOBAL)
-    set_target_properties(slang-gfx PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES ${SLANG_DIR}
-        IMPORTED_IMPLIB ${SLANG_DIR}/bin/windows-x64/${KALI_SLANG_CONFIG}/gfx.lib
-        IMPORTED_LOCATION ${SLANG_DIR}/bin/windows-x64/${KALI_SLANG_CONFIG}/gfx.dll
+    add_library(slang::gfx SHARED IMPORTED GLOBAL)
+    set_target_properties(slang::gfx PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES ${SLANG_INCLUDE_DIR}
+        IMPORTED_IMPLIB ${SLANG_LIB_DIR}/gfx.lib
+        IMPORTED_LOCATION ${SLANG_BIN_DIR}/gfx.dll
     )
-    kali_copy_binary(${SLANG_DIR}/bin/windows-x64/${KALI_SLANG_CONFIG}/slang-glslang.dll .)
-    kali_copy_binary(${SLANG_DIR}/bin/windows-x64/${KALI_SLANG_CONFIG}/slang-llvm.dll .)
-    kali_copy_binary(${SLANG_DIR}/bin/windows-x64/${KALI_SLANG_CONFIG}/slang-rt.dll .)
+    # kali_copy_binary(${SLANG_BIN_DIR}/bin/windows-x64/${KALI_SLANG_CONFIG}/slang-glslang.dll .)
+    # kali_copy_binary(${SLANG_BIN_DIR}/bin/windows-x64/${KALI_SLANG_CONFIG}/slang-llvm.dll .)
+    # kali_copy_binary(${SLANG_BIN_DIR}/bin/windows-x64/${KALI_SLANG_CONFIG}/slang-rt.dll .)
 elseif(KALI_LINUX)
-    add_library(slang-gfx SHARED IMPORTED GLOBAL)
-    set_target_properties(slang-gfx PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES ${SLANG_DIR}
-        IMPORTED_LOCATION ${SLANG_DIR}/bin/linux-x64/${KALI_SLANG_CONFIG}/libgfx.so
+    add_library(slang::gfx SHARED IMPORTED GLOBAL)
+    set_target_properties(slang::gfx PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES ${SLANG_INCLUDE_DIR}
+        IMPORTED_LOCATION ${SLANG_BIN_DIR}/libgfx.so
     )
 endif()
-kali_copy_library(slang-gfx)
 
-# dxcompiler
+# dxc
 
-set(DXCOMPILER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/dxcompiler)
 if(KALI_WINDOWS)
-    kali_copy_binary(${DXCOMPILER_DIR}/bin/x64/dxcompiler.dll .)
-    kali_copy_binary(${DXCOMPILER_DIR}/bin/x64/dxil.dll .)
+    kali_copy_binary(${VCPKG_DIR}/bin/dxcompiler.dll .)
+    kali_copy_binary(${VCPKG_DIR}/bin/dxil.dll .)
 endif()
 
 # agility-sdk

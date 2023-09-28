@@ -2,6 +2,8 @@
     "name": "kali",
     "version-string": "0.0.1",
     "dependencies": [
+        "slang",
+        "dxc",
         "doctest",
         "fmt",
         "glfw3",
