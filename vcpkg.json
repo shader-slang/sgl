@@ -3,8 +3,14 @@
     "version-string": "0.0.1",
     "dependencies": [
         "slang",
-        "dxc",
-        "agility-sdk",
+        {
+            "name": "dxc",
+            "platform": "windows"
+        },
+        {
+            "name": "agility-sdk",
+            "platform": "windows"
+        },
         "doctest",
         "fmt",
         "glfw3",
