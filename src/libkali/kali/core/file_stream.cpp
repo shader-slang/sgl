@@ -9,11 +9,11 @@ namespace kali {
 inline std::ios::openmode get_openmode(FileStream::Mode mode)
 {
     switch (mode) {
-    case FileStream::Mode::Read:
+    case FileStream::Mode::read:
         return std::ios::in | std::ios::binary;
-    case FileStream::Mode::Write:
+    case FileStream::Mode::write:
         return std::ios::out | std::ios::binary;
-    case FileStream::Mode::ReadWrite:
+    case FileStream::Mode::read_write:
         return std::ios::in | std::ios::out | std::ios::binary;
     default:
         KALI_UNREACHABLE();
@@ -90,7 +90,7 @@ void FileStream::seek(size_t pos)
 
 void FileStream::truncate(size_t size)
 {
-    if (m_mode == Mode::Read)
+    if (m_mode == Mode::read)
         KALI_THROW("{}: attempting to truncate a read-only file", m_path);
 
     flush();
@@ -105,7 +105,7 @@ void FileStream::truncate(size_t size)
     std::filesystem::resize_file(m_path, size);
 
 #if KALI_WINDOWS
-    m_stream->open(m_path, get_openmode(Mode::ReadWrite));
+    m_stream->open(m_path, get_openmode(Mode::read_write));
     if (!m_stream->good())
         KALI_THROW("{}: I/O error while attempting to open file: {}", m_path, strerror_safe(errno));
 #endif

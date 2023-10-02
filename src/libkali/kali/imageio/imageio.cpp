@@ -640,7 +640,7 @@ ref<ImageInput> ImageInput::open(const std::filesystem::path& path, Options opti
 {
     ImageFileFormat file_format = extension_to_format(get_extension_from_path(path));
 
-    ref<Stream> stream = make_ref<FileStream>(path, FileStream::Mode::Read);
+    ref<Stream> stream = make_ref<FileStream>(path, FileStream::Mode::read);
 
     return open(stream, file_format, options);
 }
@@ -690,7 +690,7 @@ ref<ImageOutput> ImageOutput::open(const std::filesystem::path& path, ImageSpec 
 {
     ImageFileFormat file_format = extension_to_format(get_extension_from_path(path));
 
-    ref<Stream> stream = make_ref<FileStream>(path, FileStream::Mode::Write);
+    ref<Stream> stream = make_ref<FileStream>(path, FileStream::Mode::write);
 
     return open(stream, file_format, spec, options);
 }

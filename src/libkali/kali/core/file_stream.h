@@ -27,9 +27,9 @@ class KALI_API FileStream : public Stream {
     KALI_OBJECT(FileStream)
 public:
     enum class Mode {
-        Read,
-        Write,
-        ReadWrite,
+        read,
+        write,
+        read_write,
     };
 
     FileStream(const std::filesystem::path& path, Mode mode);
@@ -39,8 +39,8 @@ public:
     Mode mode() const { return m_mode; }
 
     bool is_open() const override;
-    bool is_readable() const override { return m_mode == Mode::Read || m_mode == Mode::ReadWrite; }
-    bool is_writable() const override { return m_mode == Mode::Write || m_mode == Mode::ReadWrite; }
+    bool is_readable() const override { return m_mode == Mode::read || m_mode == Mode::read_write; }
+    bool is_writable() const override { return m_mode == Mode::write || m_mode == Mode::read_write; }
 
     void close() override;
 

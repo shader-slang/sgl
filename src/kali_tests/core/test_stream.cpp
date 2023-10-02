@@ -151,14 +151,14 @@ TEST_CASE("FileStream")
 
     SUBCASE("open non-exist file")
     {
-        CHECK_THROWS(FileStream("__file_that_does_not_exist__", FileStream::Mode::Read));
+        CHECK_THROWS(FileStream("__file_that_does_not_exist__", FileStream::Mode::read));
     }
 
     SUBCASE("write")
     {
-        FileStream stream("file_stream_write.bin", FileStream::Mode::Write);
+        FileStream stream("file_stream_write.bin", FileStream::Mode::write);
         CHECK_EQ(stream.path(), "file_stream_write.bin");
-        CHECK_EQ(stream.mode(), FileStream::Mode::Write);
+        CHECK_EQ(stream.mode(), FileStream::Mode::write);
         CHECK(stream.is_open());
         CHECK_FALSE(stream.is_readable());
         CHECK(stream.is_writable());
@@ -205,9 +205,9 @@ TEST_CASE("FileStream")
         file.write("12345678abcdefgh", 16);
         file.close();
 
-        FileStream stream("file_stream_read.bin", FileStream::Mode::Read);
+        FileStream stream("file_stream_read.bin", FileStream::Mode::read);
         CHECK_EQ(stream.path(), "file_stream_read.bin");
-        CHECK_EQ(stream.mode(), FileStream::Mode::Read);
+        CHECK_EQ(stream.mode(), FileStream::Mode::read);
         CHECK(stream.is_open());
         CHECK(stream.is_readable());
         CHECK_FALSE(stream.is_writable());
