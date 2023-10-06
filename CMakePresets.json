@@ -26,7 +26,8 @@
             "hidden": true,
             "inherits": "base",
             "cacheVariables": {
-                "CMAKE_SYSTEM_VERSION": "10.0.19041.0"
+                "CMAKE_SYSTEM_VERSION": "10.0.19041.0",
+                "VCPKG_TARGET_TRIPLET": "x64-windows-static-md"
             }
         },
         {
@@ -67,6 +68,7 @@
             },
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": "${sourceDir}/tools/ninja/ninja.exe",
+                "CMAKE_C_COMPILER": "cl",
                 "CMAKE_CXX_COMPILER": "cl"
             },
             "vendor": {
@@ -82,6 +84,25 @@
             "displayName": "Windows/MSVC",
             "inherits": [
                 "windows-msvc-base"
+            ]
+        },
+        {
+            "name": "windows-clang-base",
+            "description": "Base configuration using clang.",
+            "hidden": true,
+            "inherits": "windows-base",
+            "generator": "Ninja Multi-Config",
+            "cacheVariables": {
+                "CMAKE_MAKE_PROGRAM": "${sourceDir}/tools/ninja/ninja.exe",
+                "CMAKE_C_COMPILER": "clang.exe",
+                "CMAKE_CXX_COMPILER": "clang++.exe"
+            }
+        },
+        {
+            "name": "windows-clang",
+            "displayName": "Windows/clang",
+            "inherits": [
+                "windows-clang-base"
             ]
         },
         {
@@ -140,6 +161,18 @@
             "name": "windows-msvc-debug",
             "displayName": "Debug",
             "configurePreset": "windows-msvc",
+            "configuration": "Debug"
+        },
+        {
+            "name": "windows-clang-release",
+            "displayName": "Release",
+            "configurePreset": "windows-clang",
+            "configuration": "Release"
+        },
+        {
+            "name": "windows-clang-debug",
+            "displayName": "Debug",
+            "configurePreset": "windows-clang",
             "configuration": "Debug"
         },
         {
