@@ -1,5 +1,3 @@
-set(VCPKG_POLICY_DLLS_WITHOUT_LIBS enabled)
-vcpkg_check_linkage(ONLY_DYNAMIC_LIBRARY)
 set(TAG "2023_08_14")
 
 if (VCPKG_TARGET_IS_WINDOWS)

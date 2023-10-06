@@ -1,6 +1,3 @@
-set(VCPKG_POLICY_DLLS_WITHOUT_LIBS enabled)
-vcpkg_check_linkage(ONLY_DYNAMIC_LIBRARY)
-
 if (VCPKG_TARGET_IS_WINDOWS)
 	set(SLANG_EXE_SUFFIX ".exe")
 	set(SLANG_LIB_PREFIX "")

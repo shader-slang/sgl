@@ -1,6 +1,3 @@
-set(VCPKG_POLICY_DLLS_WITHOUT_LIBS enabled)
-vcpkg_check_linkage(ONLY_DYNAMIC_LIBRARY)
-
 if (VCPKG_TARGET_IS_WINDOWS)
 	if (VCPKG_TARGET_ARCHITECTURE MATCHES "x64")
 		vcpkg_download_distfile(
