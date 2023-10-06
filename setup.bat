@@ -3,18 +3,8 @@
 @echo off
 setlocal
 
-set VCPKG=%~dp0\external\vcpkg\vcpkg.exe
-set VCPKG_TRIPLET=x64-windows
-set VCPKG_MANIFEST_ROOT=%~dp0
-set VCPKG_INSTALL_ROOT=%~dp0\external\installed
 set PACKMAN=%~dp0\tools\packman\packman.cmd
 set PLATFORM=windows-x86_64
-
-echo Installing dependencies using vcpkg ...
-
-cmd.exe /C %~dp0\external\vcpkg\bootstrap-vcpkg.bat -disableMetrics
-cmd.exe /C %VCPKG% install --triplet=%VCPKG_TRIPLET% --x-manifest-root=%VCPKG_MANIFEST_ROOT% --x-install-root=%VCPKG_INSTALL_ROOT%
-: --overlay-ports=overlay-ports --overlay-triplets=overlay-triplets
 
 echo Updating git submodules ...
 
