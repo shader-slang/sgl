@@ -38,7 +38,7 @@ void register_kali_core(nb::module_& m)
         m,
         "Object",
         nb::intrusive_ptr<Object>([](Object* o, PyObject* po) noexcept { o->set_self_py(po); })
-    );
+    ).def("__repr__", &Object::to_string);
 
     // ------------------------------------------------------------------------
     // version.h

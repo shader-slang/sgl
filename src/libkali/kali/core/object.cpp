@@ -98,6 +98,11 @@ void Object::set_self_py(PyObject* o) noexcept
     }
 }
 
+std::string Object::to_string() const
+{
+    return fmt::format("{}({})", get_class_name(), fmt::ptr(this));
+}
+
 PyObject* Object::self_py() const noexcept
 {
     uintptr_t value = m_state.load(std::memory_order_relaxed);

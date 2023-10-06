@@ -6,6 +6,7 @@
 #include <atomic>
 #include <type_traits>
 #include <utility>
+#include <string>
 #include <cstdint>
 
 extern "C" {
@@ -104,7 +105,7 @@ public:
     virtual ~Object() = default;
 
     /// Return the name of the class.
-    /// Note: This reports the actual class name if KALI_OBJECT() is used.
+    /// Note: This reports the actual class name if \c KALI_OBJECT() is used.
     virtual const char* get_class_name() const { return "Object"; }
 
     /// Increase the object's reference count.
@@ -121,6 +122,10 @@ public:
 
     /// Set the Python object associated with this instance
     void set_self_py(PyObject* self) noexcept;
+
+    /// Return a string representation of this object.
+    /// This is used for debugging purposes.
+    virtual std::string to_string() const;
 
 #if KALI_ENABLE_OBJECT_TRACKING
     /// Report all objects that are currently alive.
