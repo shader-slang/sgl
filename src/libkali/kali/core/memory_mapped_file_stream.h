@@ -20,6 +20,8 @@ public:
 
     const std::filesystem::path& path() const { return m_path; }
 
+    std::string to_string() const override;
+
 public:
     std::filesystem::path m_path;
     std::unique_ptr<MemoryMappedFile> m_file;

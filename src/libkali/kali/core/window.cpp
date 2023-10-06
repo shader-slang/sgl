@@ -432,6 +432,20 @@ std::optional<std::string> Window::get_clipboard() const
     return text ? std::optional<std::string>(text) : std::nullopt;
 }
 
+std::string Window::to_string() const
+{
+    return fmt::format(
+        "Window(\n"
+        "    width={},\n"
+        "    height={},\n"
+        "    title=\"{}\"\n"
+        ")",
+        m_width,
+        m_height,
+        m_title
+    );
+}
+
 void Window::poll_gamepad_input()
 {
     // Check if a gamepad is connected.

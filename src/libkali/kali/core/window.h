@@ -81,6 +81,8 @@ public:
     void set_on_drop_files(DropFilesCallback on_drop_files) { m_on_drop_files = on_drop_files; }
     DropFilesCallback get_on_drop_files() const { return m_on_drop_files; }
 
+    std::string to_string() const override;
+
 private:
     void poll_gamepad_input();
 

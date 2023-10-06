@@ -239,6 +239,8 @@ public:
     /// This is useful for checking clean shutdown with all resources released properly.
     static void report_live_objects();
 
+    std::string to_string() const override;
+
 private:
     DeviceDesc m_desc;
     DeviceInfo m_info;

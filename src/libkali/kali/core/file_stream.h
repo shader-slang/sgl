@@ -1,6 +1,7 @@
 #pragma once
 
 #include "kali/core/stream.h"
+#include "kali/core/enum.h"
 
 #include <exception>
 #include <filesystem>
@@ -32,6 +33,15 @@ public:
         read_write,
     };
 
+    KALI_ENUM_INFO(
+        Mode,
+        {
+            {Mode::read, "read"},
+            {Mode::write, "write"},
+            {Mode::read_write, "read_write"},
+        }
+    );
+
     FileStream(const std::filesystem::path& path, Mode mode);
     virtual ~FileStream();
 
@@ -52,10 +62,14 @@ public:
     size_t size() const override;
     void flush() override;
 
+    std::string to_string() const override;
+
 private:
     std::filesystem::path m_path;
     Mode m_mode;
     std::unique_ptr<std::fstream> m_stream;
 };
+
+KALI_ENUM_REGISTER(FileStream::Mode);
 
 } // namespace kali

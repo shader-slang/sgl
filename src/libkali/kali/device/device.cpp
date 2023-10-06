@@ -368,4 +368,18 @@ void Device::report_live_objects()
     gfx::gfxReportLiveObjects();
 }
 
+std::string Device::to_string() const
+{
+    return fmt::format(
+        "Device(\n"
+        "    type={}\n"
+        "    enable_debug_layers={}\n"
+        "    shader_cache_path={}\n"
+        ")",
+        m_desc.type,
+        m_desc.enable_debug_layers,
+        m_desc.shader_cache_path
+    );
+}
+
 } // namespace kali
