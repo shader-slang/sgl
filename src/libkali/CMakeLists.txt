@@ -7,6 +7,8 @@ add_library(kali SHARED)
 target_sources(kali PRIVATE
     kali/kali.natvis
 
+    kali/core/bitmap.h
+    kali/core/bitmap.cpp
     kali/core/enum.h
     kali/core/error.cpp
     kali/core/error.h

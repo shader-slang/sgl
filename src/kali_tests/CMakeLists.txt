@@ -6,6 +6,7 @@ add_executable(kali_tests)
 target_sources(kali_tests PRIVATE
     kali_tests.cpp
     testing.cpp
+    core/test_bitmap.cpp
     core/test_enum.cpp
     core/test_maths.cpp
     core/test_memory_mapped_file.cpp
