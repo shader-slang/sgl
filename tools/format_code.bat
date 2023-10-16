@@ -1,10 +1,10 @@
 @echo off
 
-set pwd=%~dp0
-set project_dir=%pwd%..\
-set python=%project_dir%tools\python\python.exe
-set clang_format=%project_dir%tools\clang-format\clang-format.exe
+set DIR=%~dp0
+set PROJECT_DIR=%DIR%..\
+set PYTHON=%PROJECT_DIR%tools\python\python.exe
+set CLANG_FORMAT=%PROJECT_DIR%tools\clang-format\clang-format.exe
 
-pushd %project_dir%
-call %python% %pwd%run_clang_format.py --clang-format-executable=%clang_format% -i -r src
+pushd %PROJECT_DIR%
+call %PYTHON% %DIR%run_clang_format.py --clang-format-executable=%CLANG_FORMAT% -i -r src
 popd
