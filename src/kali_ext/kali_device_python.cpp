@@ -1,5 +1,4 @@
-#include "object_python.h"
-#include "helpers.h"
+#include "nanobind.h"
 
 #include "kali/device/types.h"
 #include "kali/device/device.h"
@@ -9,15 +8,8 @@
 #include "kali/device/program.h"
 #include "kali/device/command_stream.h"
 
-#include <nanobind/nanobind.h>
-#include <nanobind/stl/array.h>
-#include <nanobind/stl/vector.h>
-#include <nanobind/stl/string.h>
-#include <nanobind/stl/optional.h>
-#include <nanobind/stl/bind_map.h>
-
-namespace nb = nanobind;
-using namespace nb::literals;
+NB_MAKE_OPAQUE(std::map<kali::TypeConformance, uint32_t>);
+NB_MAKE_OPAQUE(std::map<std::string, std::string, std::less<>>);
 
 namespace kali {
 
@@ -83,19 +75,21 @@ void register_kali_device(nb::module_& m)
         .def_rw("memory_type", &TextureDesc::memory_type)
         .def_rw("debug_name", &TextureDesc::debug_name);
 
+    nb::class_<Texture, Resource>(m, "Texture");
+
     // ------------------------------------------------------------------------
     // sampler.h
     // ------------------------------------------------------------------------
 
     nb::class_<Sampler, Object> sampler(m, "Sampler");
-    sampler.def_prop_ro("desc", &Sampler::get_desc);
+    // sampler.def_prop_ro("desc", &Sampler::get_desc);
 
     // ------------------------------------------------------------------------
     // swapchain.h
     // ------------------------------------------------------------------------
 
     nb::class_<Swapchain, Object> swapchain(m, "Swapchain");
-    swapchain.def_prop_ro("desc", &Swapchain::get_desc);
+    // swapchain.def_prop_ro("desc", &Swapchain::get_desc);
     swapchain.def("get_image", &Swapchain::get_image, "index"_a);
     swapchain.def("present", &Swapchain::present);
     swapchain.def("acquire_next_image", &Swapchain::acquire_next_image);

@@ -1,16 +1,9 @@
-#include "object_python.h"
+#include "nanobind.h"
 
 #include "kali/math/vector.h"
 #include "kali/math/matrix.h"
 #include "kali/math/quaternion.h"
 #include "kali/core/traits.h"
-
-#include <nanobind/nanobind.h>
-#include <nanobind/operators.h>
-#include <nanobind/stl/string.h>
-
-namespace nb = nanobind;
-using namespace nb::literals;
 
 namespace kali {
 

@@ -3,7 +3,6 @@
 # -----------------------------------------------------------------------------
 nanobind_add_module(kali_ext NB_STATIC LTO
     kali_ext.cpp
-    object_python.h
     kali_core_python.cpp
     kali_device_python.cpp
     kali_imageio_python.cpp

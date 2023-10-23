@@ -1,18 +1,9 @@
-#include "object_python.h"
+#include "nanobind.h"
 
 #include "kali/imageio/imageio.h"
 
 #include "kali/core/error.h"
 #include "kali/core/type_utils.h"
-
-#include <nanobind/nanobind.h>
-#include <nanobind/ndarray.h>
-#include <nanobind/stl/optional.h>
-#include <nanobind/stl/filesystem.h>
-#include <nanobind/stl/map.h>
-
-namespace nb = nanobind;
-using namespace nb::literals;
 
 namespace kali {
 

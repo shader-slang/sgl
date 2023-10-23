@@ -1,6 +1,4 @@
-#include <nanobind/nanobind.h>
-
-namespace nb = nanobind;
+#include "nanobind.h"
 
 namespace kali {
 void register_kali_core(nb::module_& m);

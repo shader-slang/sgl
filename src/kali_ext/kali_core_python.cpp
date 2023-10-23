@@ -1,17 +1,9 @@
-#include "object_python.h"
+#include "nanobind.h"
 
 #include "kali/core/error.h"
 #include "kali/core/logger.h"
 #include "kali/core/window.h"
 #include "kali/core/version.h"
-
-#include <nanobind/nanobind.h>
-#include <nanobind/operators.h>
-#include <nanobind/stl/string.h>
-#include <nanobind/stl/function.h>
-
-namespace nb = nanobind;
-using namespace nb::literals;
 
 namespace kali {
 
