@@ -65,7 +65,7 @@ namespace {
         case GLFW_KEY_INSERT:
             return KeyCode::insert;
         case GLFW_KEY_DELETE:
-            return KeyCode::del;
+            return KeyCode::delete_;
         case GLFW_KEY_RIGHT:
             return KeyCode::right;
         case GLFW_KEY_LEFT:
@@ -457,7 +457,7 @@ void Window::poll_gamepad_input()
                 m_gamepad_id = id;
                 m_gamepad_prev_state = {};
 
-                GamepadEvent event{.type = GamepadEvent::Type::connect};
+                GamepadEvent event{.type = GamepadEventType::connect};
                 handle_gamepad_event(event);
                 break;
             }
@@ -470,7 +470,7 @@ void Window::poll_gamepad_input()
             log_info("Gamepad disconnected.");
             m_gamepad_id = INVALID_GAMEPAD_ID;
 
-            GamepadEvent event{.type = GamepadEvent::Type::disconnect};
+            GamepadEvent event{.type = GamepadEventType::disconnect};
             handle_gamepad_event(event);
         }
     }
@@ -516,12 +516,12 @@ void Window::poll_gamepad_input()
     for (size_t i = 0; i < std::size(GLFW_BUTTONS); ++i) {
         if (state.buttons & (1 << i)) {
             if (!(m_gamepad_prev_state.buttons & (1 << i))) {
-                GamepadEvent event{.type = GamepadEvent::Type::button_down, .button = (GamepadButton)i};
+                GamepadEvent event{.type = GamepadEventType::button_down, .button = (GamepadButton)i};
                 handle_gamepad_event(event);
             }
         } else {
             if (m_gamepad_prev_state.buttons & (1 << i)) {
-                GamepadEvent event{.type = GamepadEvent::Type::button_up, .button = (GamepadButton)i};
+                GamepadEvent event{.type = GamepadEventType::button_up, .button = (GamepadButton)i};
                 handle_gamepad_event(event);
             }
         }

@@ -197,7 +197,7 @@ void register_kali_core(nb::module_& m)
         .value("enter", KeyCode::enter)
         .value("backspace", KeyCode::backspace)
         .value("insert", KeyCode::insert)
-        .value("del", KeyCode::del)
+        .value("delete", KeyCode::delete_)
         .value("right", KeyCode::right)
         .value("left", KeyCode::left)
         .value("down", KeyCode::down)
@@ -286,6 +286,12 @@ void register_kali_core(nb::module_& m)
         .def("is_scroll", &MouseEvent::is_scroll)
         .def("has_modifier", &MouseEvent::has_modifier);
 
+    nb::enum_<GamepadEventType>(m, "GamepadEventType")
+        .value("button_down", GamepadEventType::button_down)
+        .value("button_up", GamepadEventType::button_up)
+        .value("connect", GamepadEventType::connect)
+        .value("disconnect", GamepadEventType::disconnect);
+
     nb::enum_<GamepadButton>(m, "GamepadButton")
         .value("a", GamepadButton::a)
         .value("b", GamepadButton::b)
@@ -358,7 +364,7 @@ void register_kali_core(nb::module_& m)
     window.def_prop_rw("on_mouse_event", &Window::get_on_mouse_event, &Window::set_on_mouse_event);
     window.def_prop_rw("on_gamepad_event", &Window::get_on_gamepad_event, &Window::set_on_gamepad_event);
     window.def_prop_rw("on_gamepad_state", &Window::get_on_gamepad_state, &Window::set_on_gamepad_state);
-    window.def_prop_rw("on_drop_files", &Window::get_on_drop_files, &Window::set_on_drop_files);
+    // window.def_prop_rw("on_drop_files", &Window::get_on_drop_files, &Window::set_on_drop_files);
 }
 
 } // namespace kali

@@ -84,7 +84,7 @@ enum class KeyCode : uint32_t {
     enter,
     backspace,
     insert,
-    del,
+    delete_,
     right,
     left,
     down,
@@ -169,7 +169,6 @@ enum class MouseEventType {
 };
 
 struct MouseEvent {
-
     MouseEventType type;
     float2 pos{0.f, 0.f};
     float2 scroll{0.f, 0.f};
@@ -182,6 +181,13 @@ struct MouseEvent {
     bool is_scroll() const { return type == MouseEventType::scroll; }
 
     bool has_modifier(KeyModifier mod) const { return is_set(mods, (KeyModifierFlags)mod); }
+};
+
+enum class GamepadEventType {
+    button_down,
+    button_up,
+    connect,
+    disconnect,
 };
 
 enum class GamepadButton : uint32_t {
@@ -203,14 +209,7 @@ enum class GamepadButton : uint32_t {
 };
 
 struct GamepadEvent {
-    enum class Type {
-        button_down,
-        button_up,
-        connect,
-        disconnect,
-    };
-
-    Type type;
+    GamepadEventType type;
     GamepadButton button;
 };
 
