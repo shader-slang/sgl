@@ -83,7 +83,11 @@
 #define KALI_INLINE __attribute__((always_inline))
 #endif
 
-#define KALI_UNUSED(x) (void)x
+// clang-format off
+namespace kali::detail { template<typename... Args> inline void unused(Args&&...) {} }
+// clang-format on
+
+#define KALI_UNUSED(...) ::kali::detail::unused(__VA_ARGS__)
 
 #define KALI_STRINGIZE(a) #a
 #define KALI_CONCAT_STRINGS_(a, b) a##b
