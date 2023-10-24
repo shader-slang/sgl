@@ -1,0 +1,8 @@
+{
+  "name": "nvapi",
+  "version": "535",
+  "description": "NVIDIA NVAPI",
+  "homepage": "https://github.com/microsoft/DirectXShaderCompiler",
+  "supports": "windows and x64",
+  "dependencies": []
+}

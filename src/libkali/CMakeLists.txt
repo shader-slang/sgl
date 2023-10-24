@@ -242,9 +242,9 @@ target_link_libraries(kali
         git_version
         glfw stb tinyexr PNG::PNG JPEG::JPEG OpenEXR::OpenEXR
         # $<$<BOOL:${KALI_HAS_D3D12}>:d3d12>
-        # $<$<BOOL:${KALI_HAS_D3D12_AGILITY_SDK}>:agility-sdk>
+        $<$<BOOL:${KALI_HAS_AGILITY_SDK}>:agility-sdk>
         # $<$<BOOL:${KALI_HAS_AFTERMATH}>:aftermath>
-        # $<$<BOOL:${KALI_HAS_NVAPI}>:nvapi>
+        $<$<BOOL:${KALI_HAS_NVAPI}>:nvapi>
         # Windows system libraries.
         $<$<PLATFORM_ID:Windows>:Dbghelp>
         # $<$<PLATFORM_ID:Windows>:shcore.lib>

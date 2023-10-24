@@ -4,6 +4,10 @@
     "dependencies": [
         "slang",
         {
+            "name": "nvapi",
+            "platform": "windows"
+        },
+        {
             "name": "dxc",
             "platform": "windows"
         },

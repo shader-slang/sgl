@@ -216,6 +216,7 @@ add_subdirectory(external)
 message(STATUS "Feature flags:")
 message(STATUS "KALI_HAS_D3D12: ${KALI_HAS_D3D12}")
 message(STATUS "KALI_HAS_VULKAN: ${KALI_HAS_VULKAN}")
+message(STATUS "KALI_HAS_NVAPI: ${KALI_HAS_NVAPI}")
 message(STATUS "KALI_HAS_AGILITY_SDK: ${KALI_HAS_AGILITY_SDK}")
 
 add_subdirectory(src/libkali)

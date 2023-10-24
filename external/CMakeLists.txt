@@ -51,6 +51,19 @@ elseif(KALI_LINUX)
     )
 endif()
 
+# nvapi
+
+if(KALI_WINDOWS)
+    add_library(nvapi STATIC IMPORTED GLOBAL)
+    set_target_properties(nvapi PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES ${VCPKG_DIR}/include
+        IMPORTED_LOCATION ${VCPKG_DIR}/lib/nvapi64.lib
+    )
+    set(KALI_HAS_NVAPI ON PARENT_SCOPE)
+else()
+    set(KALI_HAS_NVAPI OFF PARENT_SCOPE)
+endif()
+
 # dxc
 
 if(KALI_WINDOWS)
