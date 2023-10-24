@@ -82,7 +82,7 @@ std::string get_extension_from_path(const std::filesystem::path& path)
         if (ext.size() > 0 && ext[0] == '.')
             ext.erase(0, 1);
         // Convert to lower-case.
-        std::transform(ext.begin(), ext.end(), ext.begin(), [](char c) { return std::tolower(c); });
+        std::transform(ext.begin(), ext.end(), ext.begin(), [](char c) { return (char)std::tolower(c); });
     }
     return ext;
 }

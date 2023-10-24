@@ -114,12 +114,20 @@ target_compile_options(kali
         $<$<COMPILE_LANG_AND_ID:CXX,MSVC>:
             /MP                             # enable multi-processor compilation
             /Zi                             # generate debug symbols
+            # Configure warnings
             /WX                             # warnings as errors
             /W4                             # increase warning level
             /wd4251                         # 'type' : class 'type1' needs to have dll-interface to be used by clients of class 'type2'
             /wd4201                         # nonstandard extension used: nameless struct/union
             /wd4189                         # local variable is initialized but not referenced
             /wd4275                         # non dll-interface class 'type' used as base for dll-interface class 'type2'
+            /external:templates-            # Allows warnings from external headers when they occur in a template that's instantiated in your code.
+            # Enable warnings that are disabled with /W4
+            /we4263                         # 'function': member function does not override any base class virtual member function
+            /we4264                         # 'virtual_function': no override available for virtual member function from base 'class'; function is hidden
+            /we5038                         # data member 'member1' will be initialized after data member 'member2'
+            /we5259                         # 'specialized-type': explicit specialization requires 'template <>'
+            /we5263                         # calling 'std::move' on a temporary object prevents copy elision
         >
         # Clang/GCC flags.
         $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:
