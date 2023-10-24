@@ -41,7 +41,7 @@ void PipelineState::break_strong_reference_to_device()
 // ComputePipelineState
 // ----------------------------------------------------------------------------
 
-ComputePipelineState::ComputePipelineState(ComputePipelineStateDesc desc, ref<Device> device)
+ComputePipelineState::ComputePipelineState(ref<Device> device, ComputePipelineStateDesc desc)
     : PipelineState(std::move(device))
     , m_desc(std::move(desc))
 {
@@ -69,7 +69,7 @@ ref<ComputePipelineState> ComputePipelineCache::get_pipeline_state(ComputePipeli
     if (it != m_pipelines.end())
         return it->second;
 
-    ref<ComputePipelineState> pipeline = make_ref<ComputePipelineState>(std::move(desc), m_device);
+    ref<ComputePipelineState> pipeline = make_ref<ComputePipelineState>(m_device, std::move(desc));
     pipeline->break_strong_reference_to_device();
     m_pipelines.emplace(pipeline->get_desc(), pipeline);
     return pipeline;
@@ -84,7 +84,7 @@ void ComputePipelineCache::break_strong_reference_to_device()
 // GraphicsPipelineState
 // ----------------------------------------------------------------------------
 
-GraphicsPipelineState::GraphicsPipelineState(GraphicsPipelineStateDesc desc, ref<Device> device)
+GraphicsPipelineState::GraphicsPipelineState(ref<Device> device, GraphicsPipelineStateDesc desc)
     : PipelineState(std::move(device))
     , m_desc(std::move(desc))
     , m_program(m_desc.program)

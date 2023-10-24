@@ -126,9 +126,9 @@ inline gfx::IResourceView::Type get_gfx_resource_view_type(ResourceViewType type
 // Resource
 // ----------------------------------------------------------------------------
 
-Resource::Resource(ResourceType type, ref<Device> device)
-    : m_type(type)
-    , m_device(device)
+Resource::Resource(ref<Device> device, ResourceType type)
+    : m_device(device)
+    , m_type(type)
 {
 }
 
@@ -241,8 +241,8 @@ NativeHandle ResourceView::get_native_handle() const
 // Buffer
 // ----------------------------------------------------------------------------
 
-Buffer::Buffer(BufferDesc desc, const void* init_data, ref<Device> device)
-    : Resource(ResourceType::buffer, std::move(device))
+Buffer::Buffer(ref<Device> device, BufferDesc desc, const void* init_data)
+    : Resource(std::move(device), ResourceType::buffer)
     , m_desc(std::move(desc))
 {
     KALI_ASSERT(m_desc.size > 0);
@@ -346,8 +346,8 @@ static void check_desc(const TextureDesc& desc)
     KALI_ASSERT(desc.format != Format::unknown);
 }
 
-Texture::Texture(TextureDesc desc, const void* init_data, ref<Device> device)
-    : Resource(ResourceType(desc.type), std::move(device))
+Texture::Texture(ref<Device> device, TextureDesc desc, const void* init_data)
+    : Resource(std::move(device), ResourceType(desc.type))
     , m_desc(std::move(desc))
 {
     check_desc(m_desc);
@@ -376,8 +376,8 @@ Texture::Texture(TextureDesc desc, const void* init_data, ref<Device> device)
     SLANG_CALL(m_device->get_gfx_device()->createTextureResource(gfx_desc, gfx_init_data, m_gfx_texture.writeRef()));
 }
 
-Texture::Texture(TextureDesc desc, gfx::ITextureResource* resource, ref<Device> device)
-    : Resource(ResourceType(desc.type), std::move(device))
+Texture::Texture(ref<Device> device, TextureDesc desc, gfx::ITextureResource* resource)
+    : Resource(std::move(device), ResourceType(desc.type))
     , m_desc(std::move(desc))
 {
     check_desc(m_desc);

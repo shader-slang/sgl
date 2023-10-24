@@ -31,7 +31,7 @@ struct SamplerDesc {
 class Sampler : public Object {
     KALI_OBJECT(Sampler)
 public:
-    Sampler(SamplerDesc desc, ref<Device> device);
+    Sampler(ref<Device> device, SamplerDesc desc);
 
     const SamplerDesc& get_desc() const { return m_desc; }
 
@@ -43,8 +43,8 @@ public:
     NativeHandle get_native_handle() const;
 
 private:
-    SamplerDesc m_desc;
     ref<Device> m_device;
+    SamplerDesc m_desc;
     Slang::ComPtr<gfx::ISamplerState> m_gfx_sampler_state;
 };
 

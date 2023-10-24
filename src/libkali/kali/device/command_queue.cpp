@@ -15,9 +15,9 @@ inline gfx::ICommandQueue::QueueType get_gfx_command_queue_type(CommandQueueType
     return gfx::ICommandQueue::QueueType(type);
 }
 
-CommandQueue::CommandQueue(CommandQueueDesc desc, ref<Device> device)
-    : m_desc(std::move(desc))
-    , m_device(std::move(device))
+CommandQueue::CommandQueue(ref<Device> device, CommandQueueDesc desc)
+    : m_device(std::move(device))
+    , m_desc(std::move(desc))
 {
     gfx::ICommandQueue::Desc gfx_desc{
         .type = get_gfx_command_queue_type(m_desc.type),

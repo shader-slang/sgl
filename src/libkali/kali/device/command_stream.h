@@ -34,7 +34,7 @@ class KALI_API CommandStream : public Object {
 public:
     using SetShaderVariablesCallback = std::function<void(gfx::ShaderCursor)>;
 
-    CommandStream(CommandStreamDesc desc, ref<Device> device);
+    CommandStream(ref<Device> device, CommandStreamDesc desc);
 
     Device* get_device() const { return m_device; }
     CommandQueue* get_command_queue() const { return m_command_queue; }
@@ -250,8 +250,8 @@ private:
     gfx::IRayTracingCommandEncoder* get_raytracing_command_encoder();
     gfx::ICommandEncoder* request_encoder(EncoderType type);
 
-    CommandStreamDesc m_desc;
     breakable_ref<Device> m_device;
+    CommandStreamDesc m_desc;
     ref<CommandQueue> m_command_queue;
     ref<ComputePipelineCache> m_compute_pipeline_cache;
 

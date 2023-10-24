@@ -20,7 +20,7 @@ class CommandQueue : public Object {
 public:
     /// Constructor.
     /// Do not use directly, instead use @see Device::create_command_queue.
-    CommandQueue(CommandQueueDesc desc, ref<Device> device);
+    CommandQueue(ref<Device> device, CommandQueueDesc desc);
 
     const CommandQueueDesc& get_desc() const { return m_desc; }
 
@@ -34,8 +34,8 @@ public:
     void break_strong_reference_to_device();
 
 private:
-    CommandQueueDesc m_desc;
     breakable_ref<Device> m_device;
+    CommandQueueDesc m_desc;
     Slang::ComPtr<gfx::ICommandQueue> m_gfx_command_queue;
 };
 

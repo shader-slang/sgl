@@ -18,9 +18,9 @@ namespace kali {
 // defined in resource.cpp
 gfx::ResourceState get_gfx_resource_state(ResourceState resource_state);
 
-CommandStream::CommandStream(CommandStreamDesc desc, ref<Device> device)
-    : m_desc(std::move(desc))
-    , m_device(std::move(device))
+CommandStream::CommandStream(ref<Device> device, CommandStreamDesc desc)
+    : m_device(std::move(device))
+    , m_desc(std::move(desc))
 {
     m_command_queue = m_device->create_command_queue({.type = m_desc.queue_type});
     m_command_queue->break_strong_reference_to_device();

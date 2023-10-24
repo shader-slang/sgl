@@ -42,7 +42,7 @@ struct ComputePipelineStateDesc {
 
 class KALI_API ComputePipelineState : public PipelineState {
 public:
-    ComputePipelineState(ComputePipelineStateDesc desc, ref<Device> device);
+    ComputePipelineState(ref<Device> device, ComputePipelineStateDesc desc);
 
     const ComputePipelineStateDesc& get_desc() const { return m_desc; }
 
@@ -80,7 +80,7 @@ struct GraphicsPipelineStateDesc {
 
 class KALI_API GraphicsPipelineState : public PipelineState {
 public:
-    GraphicsPipelineState(GraphicsPipelineStateDesc desc, ref<Device> device);
+    GraphicsPipelineState(ref<Device> device, GraphicsPipelineStateDesc desc);
 
     const GraphicsPipelineStateDesc& get_desc() const { return m_desc; }
 

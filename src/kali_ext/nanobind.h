@@ -52,7 +52,7 @@ struct type_caster<kali::ref<T>> {
 
     explicit operator Value*() { return &value; }
     explicit operator Value&() { return value; }
-    explicit operator Value&&() && { return (Value&&)value; }
+    explicit operator Value&&() && { return (Value &&) value; }
 };
 
 NAMESPACE_END(detail)

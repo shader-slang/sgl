@@ -23,7 +23,7 @@ public:
 
     /// Constructor.
     /// Do not use directly, instead use @see Device::create_fence.
-    Fence(FenceDesc desc, ref<Device> device);
+    Fence(ref<Device> device, FenceDesc desc);
 
     /// Signal the fence on the device.
     /// @param queue The command queue to signal the fence on.
@@ -66,8 +66,8 @@ public:
     void break_strong_reference_to_device();
 
 public:
-    FenceDesc m_desc;
     breakable_ref<Device> m_device;
+    FenceDesc m_desc;
     Slang::ComPtr<gfx::IFence> m_gfx_fence;
     uint64_t m_signaled_value;
 };

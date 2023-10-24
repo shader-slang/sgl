@@ -189,7 +189,7 @@ ref<Swapchain> Device::create_swapchain(SwapchainDesc desc, ref<Window> window)
 
 ref<Buffer> Device::create_buffer(BufferDesc desc, const void* init_data)
 {
-    return make_ref<Buffer>(std::move(desc), init_data, ref<Device>(this));
+    return make_ref<Buffer>(ref<Device>(this), std::move(desc), init_data);
 }
 
 ref<Buffer> Device::create_raw_buffer(size_t size, ResourceUsage usage, MemoryType memory_type, const void* init_data)
@@ -238,17 +238,17 @@ ref<Buffer> Device::create_structured_buffer(
 
 ref<Texture> Device::create_texture(TextureDesc desc, const void* init_data)
 {
-    return make_ref<Texture>(std::move(desc), init_data, ref<Device>(this));
+    return make_ref<Texture>(ref<Device>(this), std::move(desc), init_data);
 }
 
 ref<Texture> Device::create_texture_from_resource(TextureDesc desc, gfx::ITextureResource* resource)
 {
-    return make_ref<Texture>(std::move(desc), resource, ref<Device>(this));
+    return make_ref<Texture>(ref<Device>(this), std::move(desc), resource);
 }
 
 ref<Sampler> Device::create_sampler(SamplerDesc desc)
 {
-    return make_ref<Sampler>(std::move(desc), ref<Device>(this));
+    return make_ref<Sampler>(ref<Device>(this), std::move(desc));
 }
 
 ref<Program> Device::create_program(ProgramDesc desc)
@@ -258,7 +258,7 @@ ref<Program> Device::create_program(ProgramDesc desc)
 
 ref<Fence> Device::create_fence(FenceDesc desc)
 {
-    return make_ref<Fence>(std::move(desc), ref<Device>(this));
+    return make_ref<Fence>(ref<Device>(this), std::move(desc));
 }
 
 ref<Fence> Device::create_fence(uint64_t initial_value, bool shared)
@@ -271,7 +271,7 @@ ref<Fence> Device::create_fence(uint64_t initial_value, bool shared)
 
 ref<ComputePipelineState> Device::create_compute_pipeline_state(ComputePipelineStateDesc desc)
 {
-    return make_ref<ComputePipelineState>(std::move(desc), ref<Device>(this));
+    return make_ref<ComputePipelineState>(ref<Device>(this), std::move(desc));
 }
 
 ref<ComputePipelineCache> Device::create_compute_pipeline_cache()
@@ -281,17 +281,17 @@ ref<ComputePipelineCache> Device::create_compute_pipeline_cache()
 
 ref<GraphicsPipelineState> Device::create_graphics_pipeline_state(GraphicsPipelineStateDesc desc)
 {
-    return make_ref<GraphicsPipelineState>(std::move(desc), ref<Device>(this));
+    return make_ref<GraphicsPipelineState>(ref<Device>(this), std::move(desc));
 }
 
 ref<CommandQueue> Device::create_command_queue(CommandQueueDesc desc)
 {
-    return make_ref<CommandQueue>(std::move(desc), ref<Device>(this));
+    return make_ref<CommandQueue>(ref<Device>(this), std::move(desc));
 }
 
 ref<CommandStream> Device::create_command_stream(CommandStreamDesc desc)
 {
-    return make_ref<CommandStream>(std::move(desc), ref<Device>(this));
+    return make_ref<CommandStream>(ref<Device>(this), std::move(desc));
 }
 
 void Device::read_buffer(const Buffer* buffer, size_t offset, size_t size, void* out_data)

@@ -9,9 +9,9 @@
 
 namespace kali {
 
-Fence::Fence(FenceDesc desc, ref<Device> device)
-    : m_desc(std::move(desc))
-    , m_device(std::move(device))
+Fence::Fence(ref<Device> device, FenceDesc desc)
+    : m_device(std::move(device))
+    , m_desc(std::move(desc))
 {
     KALI_ASSERT(m_device);
 

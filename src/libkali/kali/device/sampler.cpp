@@ -10,9 +10,9 @@
 
 namespace kali {
 
-Sampler::Sampler(SamplerDesc desc, ref<Device> device)
-    : m_desc(std::move(desc))
-    , m_device(std::move(device))
+Sampler::Sampler(ref<Device> device, SamplerDesc desc)
+    : m_device(std::move(device))
+    , m_desc(std::move(desc))
 {
     gfx::ISamplerState::Desc gfx_desc{
         .minFilter = get_gfx_texture_filtering_mode(m_desc.min_filter),

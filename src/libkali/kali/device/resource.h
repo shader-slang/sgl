@@ -320,12 +320,12 @@ public:
 
 protected:
     Resource() = delete;
-    Resource(ResourceType type, ref<Device> device);
+    Resource(ref<Device> device, ResourceType type);
 
     void set_global_state(ResourceState global_state) const { KALI_UNUSED(global_state); }
 
-    ResourceType m_type;
     ref<Device> m_device;
+    ResourceType m_type;
 
     mutable std::unordered_map<ResourceViewDesc, ref<ResourceView>> m_views;
 
@@ -373,7 +373,7 @@ struct BufferDesc {
 class KALI_API Buffer : public Resource {
     KALI_OBJECT(Buffer)
 public:
-    Buffer(BufferDesc desc, const void* init_data, ref<Device> device);
+    Buffer(ref<Device> device, BufferDesc desc, const void* init_data);
 
     const BufferDesc& get_desc() const { return m_desc; }
 
@@ -479,8 +479,8 @@ struct TextureDesc {
 class KALI_API Texture : public Resource {
     KALI_OBJECT(Texture)
 public:
-    Texture(TextureDesc desc, const void* init_data, ref<Device> device);
-    Texture(TextureDesc desc, gfx::ITextureResource* resource, ref<Device> device);
+    Texture(ref<Device> device, TextureDesc desc, const void* init_data);
+    Texture(ref<Device> device, TextureDesc desc, gfx::ITextureResource* resource);
 
     const TextureDesc& get_desc() const { return m_desc; }
 
