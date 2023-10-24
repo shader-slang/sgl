@@ -55,6 +55,41 @@ void register_kali_device(nb::module_& m)
         .def_rw("debug_name", &BufferDesc::debug_name);
 
     nb::class_<Buffer, Resource>(m, "Buffer")
+        .def(
+            "__init__",
+            [](Buffer* self,
+               ref<Device> device,
+               size_t size,
+               size_t struct_size,
+               Format format,
+               ResourceState initial_state,
+               ResourceUsage usage,
+               MemoryType memory_type,
+               std::string debug_name)
+            {
+                new (self) Buffer(
+                    std::move(device),
+                    BufferDesc{
+                        .size = size,
+                        .struct_size = struct_size,
+                        .format = format,
+                        .initial_state = initial_state,
+                        .usage = usage,
+                        .memory_type = memory_type,
+                        .debug_name = std::move(debug_name),
+                    },
+                    nullptr
+                );
+            },
+            "device"_a,
+            "size"_a = 0,
+            "struct_size"_a = 0,
+            "format"_a = Format::unknown,
+            "initial_state"_a = ResourceState::undefined,
+            "usage"_a = ResourceUsage::none,
+            "memory_type"_a = MemoryType::device_local,
+            "debug_name"_a = ""
+        )
         .def_prop_ro("desc", &Buffer::get_desc)
         .def_prop_ro("size", &Buffer::get_size)
         .def_prop_ro("struct_size", &Buffer::get_struct_size)
