@@ -88,7 +88,7 @@ template<typename T>
 // Functions
 // ----------------------------------------------------------------------------
 
-/// Tranpose a matrix.
+/// Transpose a matrix.
 template<typename T, int R, int C>
 matrix<T, C, R> transpose(const matrix<T, R, C>& m)
 {
@@ -724,8 +724,8 @@ bool lex_lt(const matrix<T, R, C>& lhs, const matrix<T, R, C>& rhs)
 } // namespace kali::math
 
 template<typename T, int R, int C>
-struct fmt::formatter<kali::math::matrix<T, R, C>> : formatter<typename kali::math::matrix<T, R, C>::RowType> {
-    using MatrixRowType = typename kali::math::matrix<T, R, C>::RowType;
+struct fmt::formatter<kali::math::matrix<T, R, C>> : formatter<typename kali::math::matrix<T, R, C>::row_type> {
+    using row_type = typename kali::math::matrix<T, R, C>::row_type;
 
     template<typename FormatContext>
     auto format(const kali::math::matrix<T, R, C>& matrix, FormatContext& ctx) const
@@ -733,7 +733,7 @@ struct fmt::formatter<kali::math::matrix<T, R, C>> : formatter<typename kali::ma
         auto out = ctx.out();
         for (int r = 0; r < R; ++r) {
             out = ::fmt::format_to(out, "{}", (r == 0) ? "{" : ", ");
-            out = formatter<MatrixRowType>::format(matrix.get_row(r), ctx);
+            out = formatter<row_type>::format(matrix.get_row(r), ctx);
         }
         out = fmt::format_to(out, "}}");
         return out;

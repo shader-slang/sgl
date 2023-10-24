@@ -1688,21 +1688,21 @@ template<typename T>
 }
 
 /// length
-template<typename T, int N>
+template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
 [[nodiscard]] constexpr T length(const vector<T, N>& v)
 {
     return sqrt(dot(v, v));
 }
 
 /// normalize
-template<typename T, int N>
+template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
 [[nodiscard]] constexpr vector<T, N> normalize(const vector<T, N>& v)
 {
     return v * rsqrt(dot(v, v));
 }
 
 /// reflect
-template<typename T, int N>
+template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
 [[nodiscard]] constexpr vector<T, N> reflect(const vector<T, N>& v, const vector<T, N>& n)
 {
     return v - T(2) * dot(v, n) * n;

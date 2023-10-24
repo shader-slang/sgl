@@ -4,6 +4,8 @@
 #include "kali/math/vector_types.h"
 #include "kali/core/error.h"
 
+#include <array>
+#include <initializer_list>
 #include <limits>
 
 namespace kali::math {
@@ -34,8 +36,8 @@ private:
 
 public:
     using value_type = T;
-    using RowType = vector<T, ColCount>;
-    using ColType = vector<T, RowCount>;
+    using row_type = vector<T, ColCount>;
+    using col_type = vector<T, RowCount>;
 
     static constexpr int get_row_count() { return RowCount; }
     static constexpr int get_col_count() { return ColCount; }
@@ -45,12 +47,20 @@ public:
     {
     }
 
-    template<typename U>
-    matrix(std::initializer_list<U> v)
+    template<typename U, std::enable_if_t<is_arithmetic_v<U>, bool> = false>
+    explicit matrix(std::initializer_list<U> a)
     {
         T* f = &m_rows[0][0];
-        for (auto it = v.begin(); it != v.end(); ++it, ++f)
+        for (auto it = a.begin(); it != a.end(); ++it, ++f)
             *f = static_cast<T>(*it);
+    }
+
+    template<typename U>
+    explicit matrix(const std::array<U, RowCount * ColCount>& a)
+    {
+        T* f = &m_rows[0][0];
+        for (const auto v : a)
+            *f++ = static_cast<T>(v);
     }
 
     matrix(const matrix&) = default;
@@ -90,44 +100,44 @@ public:
     T* data() { return &m_rows[0][0]; }
     const T* data() const { return &m_rows[0][0]; }
 
-    RowType& operator[](int r)
+    row_type& operator[](int r)
     {
         KALI_ASSERT_LT(r, RowCount);
         return m_rows[r];
     }
-    const RowType& operator[](int r) const
-    {
-        KALI_ASSERT_LT(r, RowCount);
-        return m_rows[r];
-    }
-
-    RowType& get_row(int r)
-    {
-        KALI_ASSERT_LT(r, RowCount);
-        return m_rows[r];
-    }
-    const RowType& get_row(int r) const
+    const row_type& operator[](int r) const
     {
         KALI_ASSERT_LT(r, RowCount);
         return m_rows[r];
     }
 
-    void set_row(int r, const RowType& v)
+    row_type& get_row(int r)
+    {
+        KALI_ASSERT_LT(r, RowCount);
+        return m_rows[r];
+    }
+    const row_type& get_row(int r) const
+    {
+        KALI_ASSERT_LT(r, RowCount);
+        return m_rows[r];
+    }
+
+    void set_row(int r, const row_type& v)
     {
         KALI_ASSERT_LT(r, RowCount);
         m_rows[r] = v;
     }
 
-    ColType get_col(int col) const
+    col_type get_col(int col) const
     {
         KALI_ASSERT_LT(col, ColCount);
-        ColType result;
+        col_type result;
         for (int r = 0; r < RowCount; ++r)
             result[r] = m_rows[r][col];
         return result;
     }
 
-    void set_col(int col, const ColType& v)
+    void set_col(int col, const col_type& v)
     {
         KALI_ASSERT_LT(col, ColCount);
         for (int r = 0; r < RowCount; ++r)
@@ -150,7 +160,7 @@ private:
         case Form::Undefined:
 #ifdef _DEBUG
             for (int i = 0; i < RowCount; ++i)
-                m_rows[i] = RowType(std::numeric_limits<T>::quiet_NaN());
+                m_rows[i] = row_type(std::numeric_limits<T>::quiet_NaN());
 #endif
             break;
         case Form::Zeros:
@@ -164,7 +174,7 @@ private:
         }
     }
 
-    RowType m_rows[RowCount];
+    row_type m_rows[RowCount];
 };
 
 using float2x2 = matrix<float, 2, 2>;

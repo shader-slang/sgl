@@ -50,6 +50,12 @@ struct vector<T, 1> {
     {
     }
 
+    template<typename U>
+    constexpr vector(const std::array<U, 1>& a) noexcept
+        : x{T(a[0])}
+    {
+    }
+
     [[nodiscard]] constexpr T& operator[](int index) noexcept
     {
         KALI_ASSERT_LT(index, dimension);
@@ -102,6 +108,13 @@ struct vector<T, 2> {
     constexpr vector(const vector<U, 2>& other) noexcept
         : x{T(other.x)}
         , y{T(other.y)}
+    {
+    }
+
+    template<typename U>
+    constexpr vector(const std::array<U, 2>& a) noexcept
+        : x{T(a[0])}
+        , y{T(a[1])}
     {
     }
 
@@ -164,6 +177,14 @@ struct vector<T, 3> {
         : x{T(other.x)}
         , y{T(other.y)}
         , z{T(other.z)}
+    {
+    }
+
+    template<typename U>
+    constexpr vector(const std::array<U, 3>& a) noexcept
+        : x{T(a[0])}
+        , y{T(a[1])}
+        , z{T(a[2])}
     {
     }
 
@@ -235,6 +256,15 @@ struct vector<T, 4> {
         , y{T(other.y)}
         , z{T(other.z)}
         , w{T(other.w)}
+    {
+    }
+
+    template<typename U>
+    constexpr vector(const std::array<U, 4>& a) noexcept
+        : x{T(a[0])}
+        , y{T(a[1])}
+        , z{T(a[2])}
+        , w{T(a[3])}
     {
     }
 
