@@ -71,6 +71,14 @@ void register_kali_core(nb::module_& m)
     // clang-format on
 
     nb::class_<Logger>(m, "Logger")
+        .def(
+            "__init__",
+            [](Logger* self, LogLevel level, std::string_view module, bool use_default_outputs)
+            { new (self) Logger(level, module, use_default_outputs); },
+            "level"_a = LogLevel::info,
+            "module"_a = "",
+            "use_default_outputs"_a = true
+        )
         .def_prop_rw("level", &Logger::get_level, &Logger::set_level)
         .def("add_console_output", &Logger::add_console_output, "colored"_a = true)
         .def("add_file_output", &Logger::add_file_output, "path"_a)
