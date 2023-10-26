@@ -272,3 +272,54 @@ foreach(file IN ZIP_LISTS binary_files_src binary_files_dst)
     # if dst is directory create it
     add_custom_command(TARGET kali POST_BUILD COMMAND ${CMAKE_COMMAND} -E make_directory ${file_1} COMMAND ${CMAKE_COMMAND} -E copy_if_different ${file_0} ${file_1}/)
 endforeach()
+
+
+
+
+
+# -----------------------------------------------------------------------------
+# kali python bindings
+# -----------------------------------------------------------------------------
+
+nanobind_add_module(kali_ext NB_STATIC LTO
+    kali/python/kali_ext.cpp
+    kali/core/python/object.cpp
+    kali/core/python/input.cpp
+    kali/core/python/logger.cpp
+    kali/core/python/timer.cpp
+    kali/core/python/version.cpp
+    kali/core/python/window.cpp
+    kali/device/python/device.cpp
+    kali/device/python/formats.cpp
+    kali/device/python/program.cpp
+    kali/device/python/resource.cpp
+    kali/device/python/sampler.cpp
+    kali/device/python/swapchain.cpp
+    kali/device/python/types.cpp
+    kali/math/python/math.cpp
+)
+
+target_include_directories(kali_ext PRIVATE kali/python)
+
+target_link_libraries(kali_ext PRIVATE kali)
+set_target_properties(kali_ext PROPERTIES
+    OUTPUT_NAME kali_ext
+    ARCHIVE_OUTPUT_NAME kali_ext
+    RUNTIME_OUTPUT_DIRECTORY ${KALI_OUTPUT_DIRECTORY}/python/kali
+    LIBRARY_OUTPUT_DIRECTORY ${KALI_OUTPUT_DIRECTORY}/python/kali
+)
+
+# Generate python stub files.
+if(KALI_WINDOWS)
+    add_custom_command(
+        TARGET kali_ext POST_BUILD
+        COMMAND ${KALI_OUTPUT_DIRECTORY}/setpath.bat & ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/resources/generate_stubs.py ${KALI_OUTPUT_DIRECTORY}/python
+        )
+endif()
+if(KALI_LINUX)
+    add_custom_command(
+        TARGET kali_ext POST_BUILD
+        WORKING_DIRECTORY ${KALI_OUTPUT_DIRECTORY}
+        COMMAND ${CMAKE_SOURCE_DIR}/resources/wrap_setpath.sh ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/resources/generate_stubs.py ${KALI_OUTPUT_DIRECTORY}/python
+    )
+endif()

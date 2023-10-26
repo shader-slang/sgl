@@ -518,12 +518,11 @@ inline void register_kali_math(nb::module_& m)
 
 } // namespace kali::math
 
-namespace kali {
-
-void register_kali_math(nb::module_& m)
+KALI_PY_EXPORT(math)
 {
     nb::module_ math = m.def_submodule("math", "Math module");
-    math::register_kali_math(math);
+
+    kali::math::register_kali_math(math);
 
     m.attr("float1") = math.attr("float1");
     m.attr("float2") = math.attr("float2");
@@ -551,5 +550,3 @@ void register_kali_math(nb::module_& m)
 
     m.attr("quatf") = math.attr("quatf");
 }
-
-} // namespace kali
