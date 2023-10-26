@@ -4,3 +4,6 @@
 [submodule "external/vcpkg"]
 	path = external/vcpkg
 	url = https://github.com/microsoft/vcpkg.git
+[submodule "tools/nanobind-stubgen"]
+	path = tools/nanobind-stubgen
+	url = https://github.com/westlicht/nanobind-stubgen.git
