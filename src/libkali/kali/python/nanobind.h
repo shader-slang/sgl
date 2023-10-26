@@ -65,6 +65,6 @@ public:
 
 NAMESPACE_END(NB_NAMESPACE)
 
-#define KALI_PY_DECLARE(name) extern void kali_python_export_##name(nb::module_ &m)
+#define KALI_PY_DECLARE(name) extern void kali_python_export_##name(nb::module_& m)
 #define KALI_PY_EXPORT(name) void kali_python_export_##name([[maybe_unused]] ::nb::module_& m)
 #define KALI_PY_IMPORT(name) kali_python_export_##name(m)
