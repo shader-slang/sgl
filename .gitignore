@@ -1,10 +1,9 @@
 build/
-external/slang
-external/dxcompiler
-external/agility-sdk
-external/installed
-tools/*
-!tools/packman/
+external/vcpkg
+tools/clang-format
+tools/cmake
+tools/ninja
+tools/python
 .vscode/
 
 *.pyc
