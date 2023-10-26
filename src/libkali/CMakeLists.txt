@@ -189,7 +189,7 @@ endif()
 if(KALI_ENABLE_PCH)
     target_precompile_headers(kali
         PRIVATE
-            kali_pch.h
+            kali/kali_pch.h
     )
 endif()
 
