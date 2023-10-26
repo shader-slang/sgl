@@ -313,14 +313,16 @@ set_target_properties(kali_ext PROPERTIES
 if(KALI_WINDOWS)
     add_custom_command(
         TARGET kali_ext POST_BUILD
-        COMMAND ${KALI_OUTPUT_DIRECTORY}/setpath.bat & ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/resources/generate_stubs.py ${KALI_OUTPUT_DIRECTORY}/python
+        COMMAND ${KALI_OUTPUT_DIRECTORY}/setpath.bat & ${Python_EXECUTABLE} -m nanobind_stubgen --out ${KALI_OUTPUT_DIRECTORY}/python kali
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tools/nanobind-stubgen
         )
 endif()
 if(KALI_LINUX)
     add_custom_command(
         TARGET kali_ext POST_BUILD
         WORKING_DIRECTORY ${KALI_OUTPUT_DIRECTORY}
-        COMMAND ${CMAKE_SOURCE_DIR}/resources/wrap_setpath.sh ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/resources/generate_stubs.py ${KALI_OUTPUT_DIRECTORY}/python
+        COMMAND ${CMAKE_SOURCE_DIR}/tools/wrap_setpath.sh ${Python_EXECUTABLE} -m nanobind_stubgen --out ${KALI_OUTPUT_DIRECTORY}/python kali
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tools/nanobind-stubgen
     )
 endif()
 
