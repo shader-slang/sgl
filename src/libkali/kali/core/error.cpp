@@ -28,7 +28,7 @@ void throw_exception(const std::source_location& loc, std::string_view msg)
         debug_break();
 
     if (!debugger_present)
-        error_msg += "\nStack trace:\n" + format_stacktrace(backtrace());
+        error_msg += "\nStack trace:\n" + format_stacktrace(backtrace(), 10);
 
     throw std::runtime_error(error_msg.c_str());
 }
@@ -42,7 +42,7 @@ void report_assertion(const std::source_location& loc, std::string_view cond)
     bool debugger_present = is_debugger_present();
 
     if (!debugger_present)
-        error_msg += "\nStack trace:\n" + format_stacktrace(backtrace());
+        error_msg += "\nStack trace:\n" + format_stacktrace(backtrace(), 10);
 
     log_fatal(error_msg);
 

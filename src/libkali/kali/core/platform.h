@@ -198,10 +198,10 @@ using ResolvedStackTrace = std::vector<ResolvedStackFrame>;
 [[nodiscard]] KALI_API ResolvedStackTrace resolve_stacktrace(std::span<const StackFrame> trace);
 
 /// Convert resolved stack trace to a human readable string.
-[[nodiscard]] KALI_API std::string format_stacktrace(std::span<const ResolvedStackFrame> trace);
+[[nodiscard]] KALI_API std::string format_stacktrace(std::span<const ResolvedStackFrame> trace, size_t max_frames = 0);
 
 /// Convert resolved stack trace to a human readable string.
-[[nodiscard]] KALI_API std::string format_stacktrace(std::span<const StackFrame> trace);
+[[nodiscard]] KALI_API std::string format_stacktrace(std::span<const StackFrame> trace, size_t max_frames = 0);
 
 
 } // namespace kali
