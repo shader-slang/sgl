@@ -323,3 +323,43 @@ if(KALI_LINUX)
         COMMAND ${CMAKE_SOURCE_DIR}/resources/wrap_setpath.sh ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/resources/generate_stubs.py ${KALI_OUTPUT_DIRECTORY}/python
     )
 endif()
+
+
+# -----------------------------------------------------------------------------
+# kali unit tests
+# -----------------------------------------------------------------------------
+
+add_executable(kali_tests)
+target_sources(kali_tests PRIVATE
+    kali/tests/kali_tests.cpp
+    kali/tests/testing.cpp
+    kali/core/tests/test_bitmap.cpp
+    kali/core/tests/test_enum.cpp
+    kali/core/tests/test_maths.cpp
+    kali/core/tests/test_memory_mapped_file.cpp
+    kali/core/tests/test_object.cpp
+    kali/core/tests/test_platform.cpp
+    kali/core/tests/test_plugin.cpp
+    kali/core/tests/test_stream.cpp
+    kali/core/tests/test_string_utils.cpp
+    kali/core/tests/test_timer.cpp
+    kali/device/tests/test_device.cpp
+    kali/device/tests/test_formats.cpp
+    kali/device/tests/test_program.cpp
+    kali/imageio/tests/test_imageio.cpp
+    kali/math/tests/test_float16.cpp
+    kali/math/tests/test_matrix.cpp
+    kali/math/tests/test_quaternion.cpp
+    kali/math/tests/test_vector.cpp
+)
+target_include_directories(kali_tests BEFORE PRIVATE kali/tests)
+target_link_libraries(kali_tests PRIVATE doctest::doctest kali)
+target_compile_definitions(kali_tests PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+
+set_target_properties(kali_tests PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${KALI_RUNTIME_OUTPUT_DIRECTORY}
+    LIBRARY_OUTPUT_DIRECTORY ${KALI_LIBRARY_OUTPUT_DIRECTORY}
+)
+
+add_test(NAME kali_tests COMMAND $<TARGET_FILE:kali_tests>)
+add_test(NAME python_tests COMMAND ${Python_EXECUTABLE} -m pytest ${CMAKE_SOURCE_DIR}/src)

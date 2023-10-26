@@ -220,7 +220,6 @@ message(STATUS "KALI_HAS_NVAPI: ${KALI_HAS_NVAPI}")
 message(STATUS "KALI_HAS_AGILITY_SDK: ${KALI_HAS_AGILITY_SDK}")
 
 add_subdirectory(src/libkali)
-add_subdirectory(src/kali_tests)
 add_subdirectory(src/editor)
 add_subdirectory(src/examples)
 
