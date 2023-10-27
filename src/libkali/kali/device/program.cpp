@@ -194,7 +194,7 @@ ProgramManager::ProgramManager(Device* device, slang::IGlobalSession* slang_sess
 
     m_global_defines
         = { {"KALI_NVAPI_AVAILABLE", (KALI_NVAPI_AVAILABLE && m_device->get_type() == DeviceType::d3d12) ? "1" : "0"},
-#if KALI_NVAPI_AVAILABLE
+#if KALI_HAS_NVAPI
             {"NV_SHADER_EXTN_SLOT", "u999"},
             {"__SHADER_TARGET_MAJOR",
              std::to_string(get_shader_model_major_version(m_device->get_supported_shader_model()))},

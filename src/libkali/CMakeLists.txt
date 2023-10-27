@@ -221,10 +221,10 @@ target_compile_definitions(kali
         # Feature flags.
         KALI_HAS_D3D12=$<BOOL:${KALI_HAS_D3D12}>
         KALI_HAS_VULKAN=$<BOOL:${KALI_HAS_VULKAN}>
-        # KALI_HAS_AFTERMATH=$<BOOL:${KALI_HAS_AFTERMATH}>
-        # KALI_HAS_NVAPI=$<BOOL:${KALI_HAS_NVAPI}>
         # KALI_HAS_CUDA=$<BOOL:${KALI_HAS_CUDA}>
-        # KALI_HAS_D3D12_AGILITY_SDK=$<BOOL:${KALI_HAS_D3D12_AGILITY_SDK}>
+        KALI_HAS_NVAPI=$<BOOL:${KALI_HAS_NVAPI}>
+        KALI_HAS_AGILITY_SDK=$<BOOL:${KALI_HAS_AGILITY_SDK}>
+        # KALI_HAS_AFTERMATH=$<BOOL:${KALI_HAS_AFTERMATH}>
     PRIVATE
         KALI_DLL
         # $<$<PLATFORM_ID:Windows>:IMGUI_API=__declspec\(dllexport\)>
@@ -244,7 +244,7 @@ target_link_libraries(kali
     PRIVATE
         git_version
         glfw stb tinyexr PNG::PNG JPEG::JPEG OpenEXR::OpenEXR
-        # $<$<BOOL:${KALI_HAS_D3D12}>:d3d12>
+        $<$<BOOL:${KALI_HAS_D3D12}>:d3d12>
         $<$<BOOL:${KALI_HAS_AGILITY_SDK}>:agility-sdk>
         # $<$<BOOL:${KALI_HAS_AFTERMATH}>:aftermath>
         $<$<BOOL:${KALI_HAS_NVAPI}>:nvapi>

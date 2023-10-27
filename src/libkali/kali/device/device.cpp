@@ -14,6 +14,12 @@
 #include "kali/core/error.h"
 #include "kali/core/window.h"
 
+#if KALI_HAS_D3D12
+#include <dxgi.h>
+#include <d3d12.h>
+#include <comdef.h>
+#endif
+
 namespace kali {
 
 class DebugLogger : public gfx::IDebugCallback {
@@ -366,6 +372,65 @@ std::vector<AdapterInfo> Device::enumerate_adapters(DeviceType type)
 void Device::report_live_objects()
 {
     gfx::gfxReportLiveObjects();
+}
+
+bool Device::enable_agility_sdk()
+{
+#if KALI_HAS_D3D12 && KALI_HAS_AGILITY_SDK
+    std::filesystem::path exe_dir = get_executable_directory();
+    std::filesystem::path sdk_dir = get_runtime_directory() / KALI_AGILITY_SDK_PATH;
+
+    // Agility SDK can only be loaded from a relative path to the executable. Make sure both paths use the same driver
+    // letter.
+    if (std::tolower(exe_dir.string()[0]) != std::tolower(sdk_dir.string()[0])) {
+        log_warn(
+            "Cannot enable D3D12 Agility SDK: "
+            "Executable directory '{}' is not on the same drive as the SDK directory '{}'.",
+            exe_dir,
+            sdk_dir
+        );
+        return false;
+    }
+
+    // Get relative path and make sure there is the required trailing path delimiter.
+    auto rel_path = std::filesystem::relative(sdk_dir, exe_dir) / "";
+
+    // Load D3D12 library.
+    LoadLibraryA("d3d12.dll");
+    HMODULE handle = GetModuleHandleA("d3d12.dll");
+
+    // Get the D3D12GetInterface procedure.
+    typedef HRESULT(WINAPI * D3D12GetInterfaceFn)(REFCLSID rclsid, REFIID riid, void** ppvDebug);
+    D3D12GetInterfaceFn pD3D12GetInterface
+        = handle ? (D3D12GetInterfaceFn)GetProcAddress(handle, "D3D12GetInterface") : nullptr;
+    if (!pD3D12GetInterface) {
+        log_warn("Cannot enable D3D12 Agility SDK: "
+                 "Failed to get D3D12GetInterface.");
+        return false;
+    }
+
+    // Local definition of CLSID_D3D12SDKConfiguration from d3d12.h
+    const GUID CLSID_D3D12SDKConfiguration__
+        = {0x7cda6aca, 0xa03e, 0x49c8, {0x94, 0x58, 0x03, 0x34, 0xd2, 0x0e, 0x07, 0xce}};
+    // Get the D3D12SDKConfiguration interface.
+    _COM_SMARTPTR_TYPEDEF(ID3D12SDKConfiguration, __uuidof(ID3D12SDKConfiguration));
+    ID3D12SDKConfigurationPtr pD3D12SDKConfiguration;
+    if (!SUCCEEDED(pD3D12GetInterface(CLSID_D3D12SDKConfiguration__, IID_PPV_ARGS(&pD3D12SDKConfiguration)))) {
+        log_warn("Cannot enable D3D12 Agility SDK: "
+                 "Failed to get D3D12SDKConfiguration interface.");
+        return false;
+    }
+
+    // Set the SDK version and path.
+    if (!SUCCEEDED(pD3D12SDKConfiguration->SetSDKVersion(KALI_AGILITY_SDK_VERSION, rel_path.string().c_str()))) {
+        log_warn("Cannot enable D3D12 Agility SDK: "
+                 "Calling SetSDKVersion failed.");
+        return false;
+    }
+
+    return true;
+#endif
+    return false;
 }
 
 std::string Device::to_string() const

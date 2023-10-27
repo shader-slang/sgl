@@ -239,6 +239,23 @@ public:
     /// This is useful for checking clean shutdown with all resources released properly.
     static void report_live_objects();
 
+    /**
+     * Try to enable D3D12 Agility SDK at runtime.
+     * Note: This must be called before creating a device to have any effect.
+     *
+     * Prefer adding KALI_EXPORT_AGILITY_SDK to the main translation unit of executables
+     * to tag the application binary to load the D3D12 Agility SDK.
+     *
+     * When using kali through as a Python extension tagging the main application
+     * (Python interpreter) is not possible. The alternative is to use the
+     * D3D12SDKConfiguration API introduced in Windows SDK 20348. This however
+     * requires "Developer Mode" to be enabled and the executed Python interpreter to be
+     * stored on the same drive as the kali library.
+     *
+     * @return Return true if D3D12 Agility SDK was successfully enabled.
+     */
+    static bool enable_agility_sdk();
+
     std::string to_string() const override;
 
 private:

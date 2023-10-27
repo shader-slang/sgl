@@ -1,6 +1,7 @@
 #include "nanobind.h"
 
 #include "kali/kali.h"
+#include "kali/device/device.h"
 
 KALI_PY_DECLARE(core_input);
 KALI_PY_DECLARE(core_logger);
@@ -26,6 +27,8 @@ KALI_PY_DECLARE(math_quaternion);
 NB_MODULE(kali_ext, m)
 {
     kali::static_init();
+
+    kali::Device::enable_agility_sdk();
 
     KALI_PY_IMPORT(core_object);
     KALI_PY_IMPORT(core_input);
