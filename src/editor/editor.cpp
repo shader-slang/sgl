@@ -1,5 +1,6 @@
 #include "renderer.h"
 
+#include "kali/kali.h"
 #include "kali/core/window.h"
 #include "kali/core/version.h"
 #include "kali/core/error.h"
@@ -13,7 +14,7 @@ using namespace kali;
 
 int main()
 {
-    init_platform();
+    kali::static_init();
 
     Logger::get().add_file_output("editor.log");
 
@@ -64,6 +65,8 @@ int main()
     Renderer renderer(window);
 
     window->main_loop();
+
+    kali::static_shutdown();
 
     return 0;
 }

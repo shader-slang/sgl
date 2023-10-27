@@ -8,33 +8,6 @@
 
 namespace kali {
 
-void init_platform_internal();
-void shutdown_platform_internal();
-
-static std::mutex s_platform_init_mutex;
-static uint32_t s_platform_init_count;
-
-void init_platform()
-{
-    std::lock_guard<std::mutex> lock(s_platform_init_mutex);
-    if (s_platform_init_count++ == 0)
-        init_platform_internal();
-}
-
-void shutdown_platform()
-{
-    std::lock_guard<std::mutex> lock(s_platform_init_mutex);
-    KALI_CHECK(s_platform_init_count > 0, "Platform not initialized.");
-    if (s_platform_init_count-- == 1)
-        shutdown_platform_internal();
-}
-
-bool is_platform_initialized()
-{
-    std::lock_guard<std::mutex> lock(s_platform_init_mutex);
-    return s_platform_init_count > 0;
-}
-
 float get_display_scale_factor()
 {
     float xscale = 1.f;

@@ -32,16 +32,10 @@ using SharedLibraryHandle = void*;
 #endif
 
 /// Initialize the platform layer.
-/// This function must be called before any other platform function.
-/// It is safe to call this function multiple times,
-/// but it must be matched with the same number of calls to shutdown_platform().
-KALI_API void init_platform();
+KALI_API void platform_static_init();
 
 /// Shutdown the platform layer.
-KALI_API void shutdown_platform();
-
-/// Returns true if platform is initialized.
-KALI_API bool is_platform_initialized();
+KALI_API void platform_static_shutdown();
 
 /// Set the window icon.
 KALI_API void set_window_icon(WindowHandle handle, const std::filesystem::path& path);
