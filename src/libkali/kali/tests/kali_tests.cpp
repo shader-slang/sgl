@@ -1,4 +1,5 @@
 #include "testing.h"
+#include "kali/kali.h"
 #include "kali/core/object.h"
 #include "kali/core/logger.h"
 #include "kali/core/error.h"
@@ -8,6 +9,8 @@
 
 int main(int argc, char** argv)
 {
+    kali::static_init();
+
     kali::Logger::get().remove_all_outputs();
     kali::Logger::get().add_debug_console_output();
     kali::Logger::get().add_file_output("kali_tests.log");
@@ -33,6 +36,8 @@ int main(int argc, char** argv)
     kali::Logger::global().add_console_output();
     kali::Object::report_alive_objects();
 #endif
+
+    kali::static_shutdown();
 
     return result;
 }

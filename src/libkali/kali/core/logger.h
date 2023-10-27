@@ -129,6 +129,9 @@ public:
     /// Returns the global logger instance.
     static Logger& get();
 
+    static void static_init();
+    static void static_shutdown();
+
 private:
     /// Checks if the given message has already been logged.
     bool is_duplicate(const std::string_view msg);

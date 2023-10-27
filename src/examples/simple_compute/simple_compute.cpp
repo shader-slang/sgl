@@ -1,3 +1,4 @@
+#include "kali/kali.h"
 #include "kali/core/logger.h"
 #include "kali/core/platform.h"
 #include "kali/device/device.h"
@@ -14,6 +15,8 @@ using namespace kali;
 
 int main()
 {
+    kali::static_init();
+
     {
         ref<Device> device = Device::create({.type = DeviceType::automatic, .enable_debug_layers = true});
 
@@ -88,6 +91,7 @@ int main()
     Object::report_alive_objects();
 #endif
 
+    kali::static_shutdown();
     return 0;
 
 #if 0
@@ -162,6 +166,7 @@ int main()
     compute_kernel(ctx, (N, 1, 1), a=a, b=b, c=c, size=N)
 
 #endif
+    kali::static_shutdown();
     return 0;
 #endif
 }

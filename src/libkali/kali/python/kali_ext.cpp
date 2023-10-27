@@ -1,5 +1,7 @@
 #include "nanobind.h"
 
+#include "kali/kali.h"
+
 KALI_PY_DECLARE(core_input);
 KALI_PY_DECLARE(core_logger);
 KALI_PY_DECLARE(core_object);
@@ -23,6 +25,8 @@ KALI_PY_DECLARE(math_quaternion);
 
 NB_MODULE(kali_ext, m)
 {
+    kali::static_init();
+
     KALI_PY_IMPORT(core_object);
     KALI_PY_IMPORT(core_input);
     KALI_PY_IMPORT(core_logger);
@@ -43,4 +47,13 @@ NB_MODULE(kali_ext, m)
     KALI_PY_IMPORT(device_program);
     KALI_PY_IMPORT(device_swapchain);
     KALI_PY_IMPORT(device_device);
+
+    // Register a cleanup callback function.
+    auto atexit = nb::module_::import_("atexit");
+    atexit.attr("register")(nb::cpp_function(
+        []()
+        {
+            kali::static_shutdown();
+        }
+    ));
 }

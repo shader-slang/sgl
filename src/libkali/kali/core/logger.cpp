@@ -1,5 +1,6 @@
 #include "logger.h"
 #include "kali/core/macros.h"
+#include "kali/core/error.h"
 #include "kali/core/platform.h"
 
 #include <fmt/color.h>
@@ -212,11 +213,22 @@ void Logger::log(LogLevel level, const std::string_view msg, LogFrequency freque
         output->write(level, m_module, msg);
 }
 
+static Logger* s_logger;
+
 Logger& Logger::get()
 {
-    static Logger logger;
-    // TODO(@skallweit): return per thread logger
-    return logger;
+    KALI_ASSERT(s_logger);
+    return *s_logger;
+}
+
+void Logger::static_init()
+{
+    s_logger = new Logger();
+}
+
+void Logger::static_shutdown()
+{
+    delete s_logger;
 }
 
 bool Logger::is_duplicate(const std::string_view msg)
