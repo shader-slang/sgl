@@ -67,12 +67,6 @@ void ConsoleLoggerOutput::write(LogLevel level, const std::string_view module, c
     ::fflush(stream);
 }
 
-ref<ConsoleLoggerOutput> ConsoleLoggerOutput::get()
-{
-    static ref<ConsoleLoggerOutput> output = make_ref<ConsoleLoggerOutput>();
-    return output;
-}
-
 bool ConsoleLoggerOutput::enable_ansi_control_sequences()
 {
     if (auto value = get_environment_variable("NO_COLOR"); value && !value->empty())
@@ -132,12 +126,6 @@ void DebugConsoleLoggerOutput::write(LogLevel level, const std::string_view modu
 #endif
 }
 
-ref<DebugConsoleLoggerOutput> DebugConsoleLoggerOutput::get()
-{
-    static ref<DebugConsoleLoggerOutput> output = make_ref<DebugConsoleLoggerOutput>();
-    return output;
-}
-
 Logger::Logger(LogLevel log_level, const std::string_view module, bool use_default_outputs)
     : m_level(log_level)
     , m_module(module)
@@ -146,9 +134,9 @@ Logger::Logger(LogLevel log_level, const std::string_view module, bool use_defau
         m_module = fmt::format("[{}]", m_module);
 
     if (use_default_outputs) {
-        add_output(ConsoleLoggerOutput::get());
+        add_output(make_ref<ConsoleLoggerOutput>());
         if (is_debugger_present())
-            add_output(DebugConsoleLoggerOutput::get());
+            add_output(make_ref<DebugConsoleLoggerOutput>());
     }
 }
 

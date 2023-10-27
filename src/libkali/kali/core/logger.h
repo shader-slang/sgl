@@ -41,8 +41,6 @@ public:
 
     virtual void write(LogLevel level, const std::string_view module, const std::string_view msg) override;
 
-    static ref<ConsoleLoggerOutput> get();
-
 private:
     static bool enable_ansi_control_sequences();
 
@@ -65,8 +63,6 @@ private:
 class KALI_API DebugConsoleLoggerOutput : public LoggerOutput {
 public:
     virtual void write(LogLevel level, const std::string_view module, const std::string_view msg) override;
-
-    static ref<DebugConsoleLoggerOutput> get();
 };
 
 /// Defines a family of logging functions for a given log level.
