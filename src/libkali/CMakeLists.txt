@@ -283,9 +283,9 @@ endforeach()
 
 nanobind_add_module(kali_ext NB_STATIC LTO
     kali/python/kali_ext.cpp
-    kali/core/python/object.cpp
     kali/core/python/input.cpp
     kali/core/python/logger.cpp
+    kali/core/python/object.cpp
     kali/core/python/timer.cpp
     kali/core/python/version.cpp
     kali/core/python/window.cpp
@@ -296,7 +296,10 @@ nanobind_add_module(kali_ext NB_STATIC LTO
     kali/device/python/sampler.cpp
     kali/device/python/swapchain.cpp
     kali/device/python/types.cpp
-    kali/math/python/math.cpp
+    kali/math/python/matrix.cpp
+    kali/math/python/quaternion.cpp
+    kali/math/python/scalar.cpp
+    kali/math/python/vector.cpp
 )
 
 target_include_directories(kali_ext PRIVATE kali/python)
