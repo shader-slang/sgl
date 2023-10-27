@@ -9,11 +9,8 @@ Kali is the Hindu goddess of destruction and rebirth, and is often associated wi
 | `data`           | Binary data (git lfs submodule).              |
 | `external`       | Third-party libraries.                        |
 | `resources`      | Text resources.                               |
-| `src`            | Source code.                                  |
-| `src/libkali`    | `kali` library.                               |
-| `src/kali_ext`   | `kali_ext` python module.                     |
-| `src/kali_tests` | Unit tests (C++ and Python).                  |
 | `src/editor`     | Editor application.                           |
 | `src/examples`   | Example applications.                         |
+| `src/libkali`    | `kali` library.                               |
+| `src`            | Source code.                                  |
 | `tools`          | Host tools (cmake, ninja, clang-tools, etc.). |
-
