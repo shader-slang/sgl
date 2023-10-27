@@ -35,7 +35,6 @@ struct type_caster<kali::ref<T>> {
             return false;
 
         value = Value(caster.operator T*());
-
         return true;
     }
 

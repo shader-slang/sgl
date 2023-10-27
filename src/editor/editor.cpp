@@ -15,7 +15,7 @@ int main()
 {
     init_platform();
 
-    Logger::global().add_file_output("editor.log");
+    Logger::get().add_file_output("editor.log");
 
     log_info("{}", get_version().long_tag);
 

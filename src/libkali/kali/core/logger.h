@@ -41,7 +41,7 @@ public:
 
     virtual void write(LogLevel level, const std::string_view module, const std::string_view msg) override;
 
-    static ref<ConsoleLoggerOutput> global();
+    static ref<ConsoleLoggerOutput> get();
 
 private:
     static bool enable_ansi_control_sequences();
@@ -66,7 +66,7 @@ class KALI_API DebugConsoleLoggerOutput : public LoggerOutput {
 public:
     virtual void write(LogLevel level, const std::string_view module, const std::string_view msg) override;
 
-    static ref<DebugConsoleLoggerOutput> global();
+    static ref<DebugConsoleLoggerOutput> get();
 };
 
 /// Defines a family of logging functions for a given log level.
@@ -130,8 +130,8 @@ public:
     KALI_LOG_FUNC_FAMILY(error, LogLevel::error, log)
     KALI_LOG_FUNC_FAMILY(fatal, LogLevel::fatal, log)
 
-    /// Returns the global logger.
-    static Logger& global();
+    /// Returns the global logger instance.
+    static Logger& get();
 
 private:
     /// Checks if the given message has already been logged.
@@ -147,15 +147,15 @@ private:
 };
 
 // Define global logging functions.
-KALI_LOG_FUNC_FAMILY(log_debug, LogLevel::debug, Logger::global().log)
-KALI_LOG_FUNC_FAMILY(log_info, LogLevel::info, Logger::global().log)
-KALI_LOG_FUNC_FAMILY(log_warn, LogLevel::warn, Logger::global().log)
-KALI_LOG_FUNC_FAMILY(log_error, LogLevel::error, Logger::global().log)
-KALI_LOG_FUNC_FAMILY(log_fatal, LogLevel::fatal, Logger::global().log)
+KALI_LOG_FUNC_FAMILY(log_debug, LogLevel::debug, Logger::get().log)
+KALI_LOG_FUNC_FAMILY(log_info, LogLevel::info, Logger::get().log)
+KALI_LOG_FUNC_FAMILY(log_warn, LogLevel::warn, Logger::get().log)
+KALI_LOG_FUNC_FAMILY(log_error, LogLevel::error, Logger::get().log)
+KALI_LOG_FUNC_FAMILY(log_fatal, LogLevel::fatal, Logger::get().log)
 
 #undef KALI_LOG_FUNC_FAMILY
 
 } // namespace kali
 
 /// Prints the given variable name and value.
-#define KALI_PRINT(var) ::kali::Logger::global().log(::kali::LogLevel::none, ::fmt::format("{} = {}", #var, var))
+#define KALI_PRINT(var) ::kali::Logger::get().log(::kali::LogLevel::none, ::fmt::format("{} = {}", #var, var))

@@ -21,7 +21,7 @@ public:
     DebugLogger()
     {
         m_logger = Logger::create(LogLevel::debug, "DEVICE", false);
-        m_logger->use_same_outputs(Logger::global());
+        m_logger->use_same_outputs(Logger::get());
     }
 
     virtual SLANG_NO_THROW void SLANG_MCALL

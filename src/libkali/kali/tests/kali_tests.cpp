@@ -8,9 +8,9 @@
 
 int main(int argc, char** argv)
 {
-    kali::Logger::global().remove_all_outputs();
-    kali::Logger::global().add_debug_console_output();
-    kali::Logger::global().add_file_output("kali_tests.log");
+    kali::Logger::get().remove_all_outputs();
+    kali::Logger::get().add_debug_console_output();
+    kali::Logger::get().add_file_output("kali_tests.log");
 
     /// Do not break debugger on exceptions when running tests.
     kali::set_exception_diagnostics(kali::ExceptionDiagnosticFlags::none);

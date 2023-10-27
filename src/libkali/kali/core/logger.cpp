@@ -67,7 +67,7 @@ void ConsoleLoggerOutput::write(LogLevel level, const std::string_view module, c
     ::fflush(stream);
 }
 
-ref<ConsoleLoggerOutput> ConsoleLoggerOutput::global()
+ref<ConsoleLoggerOutput> ConsoleLoggerOutput::get()
 {
     static ref<ConsoleLoggerOutput> output = make_ref<ConsoleLoggerOutput>();
     return output;
@@ -132,7 +132,7 @@ void DebugConsoleLoggerOutput::write(LogLevel level, const std::string_view modu
 #endif
 }
 
-ref<DebugConsoleLoggerOutput> DebugConsoleLoggerOutput::global()
+ref<DebugConsoleLoggerOutput> DebugConsoleLoggerOutput::get()
 {
     static ref<DebugConsoleLoggerOutput> output = make_ref<DebugConsoleLoggerOutput>();
     return output;
@@ -146,9 +146,9 @@ Logger::Logger(LogLevel log_level, const std::string_view module, bool use_defau
         m_module = fmt::format("[{}]", m_module);
 
     if (use_default_outputs) {
-        add_output(ConsoleLoggerOutput::global());
+        add_output(ConsoleLoggerOutput::get());
         if (is_debugger_present())
-            add_output(DebugConsoleLoggerOutput::global());
+            add_output(DebugConsoleLoggerOutput::get());
     }
 }
 
@@ -224,7 +224,7 @@ void Logger::log(LogLevel level, const std::string_view msg, LogFrequency freque
         output->write(level, m_module, msg);
 }
 
-Logger& Logger::global()
+Logger& Logger::get()
 {
     static Logger logger;
     // TODO(@skallweit): return per thread logger

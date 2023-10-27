@@ -6,6 +6,7 @@ KALI_PY_DECLARE(core_object);
 KALI_PY_DECLARE(core_timer);
 KALI_PY_DECLARE(core_version);
 KALI_PY_DECLARE(core_window);
+
 KALI_PY_DECLARE(device_device);
 KALI_PY_DECLARE(device_formats);
 KALI_PY_DECLARE(device_program);
@@ -13,6 +14,7 @@ KALI_PY_DECLARE(device_resource);
 KALI_PY_DECLARE(device_sampler);
 KALI_PY_DECLARE(device_swapchain);
 KALI_PY_DECLARE(device_types);
+
 KALI_PY_DECLARE(math_scalar);
 KALI_PY_DECLARE(math_vector);
 KALI_PY_DECLARE(math_matrix);

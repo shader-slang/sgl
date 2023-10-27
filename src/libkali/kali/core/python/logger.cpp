@@ -17,9 +17,11 @@ KALI_PY_EXPORT(core_logger)
     nb::enum_<LogFrequency>(m, "LogFrequency").value("always", LogFrequency::always).value("once", LogFrequency::once);
 
     nb::class_<LoggerOutput>(m, "LoggerOutput");
-    nb::class_<ConsoleLoggerOutput, LoggerOutput>(m, "ConsoleLoggerOutput");
+    nb::class_<ConsoleLoggerOutput, LoggerOutput>(m, "ConsoleLoggerOutput")
+        .def_static("get", &ConsoleLoggerOutput::get, nb::rv_policy::reference);
     nb::class_<FileLoggerOutput, LoggerOutput>(m, "FileLoggerOutput");
-    nb::class_<DebugConsoleLoggerOutput, LoggerOutput>(m, "DebugConsoleLoggerOutput");
+    nb::class_<DebugConsoleLoggerOutput, LoggerOutput>(m, "DebugConsoleLoggerOutput")
+        .def_static("get", &DebugConsoleLoggerOutput::get, nb::rv_policy::reference);
 
     // clang-format off
 #define DEF_LOG_METHOD(name) def(#name, [](Logger& self, const std::string_view msg) { self.name(msg); }, "msg"_a)
@@ -51,7 +53,8 @@ KALI_PY_EXPORT(core_logger)
         .DEF_LOG_METHOD(info_once)
         .DEF_LOG_METHOD(warn_once)
         .DEF_LOG_METHOD(error_once)
-        .DEF_LOG_METHOD(fatal_once);
+        .DEF_LOG_METHOD(fatal_once)
+        .def_static("get", &Logger::get, nb::rv_policy::reference);
 
 #undef DEF_LOG_METHOD
 
@@ -62,7 +65,7 @@ KALI_PY_EXPORT(core_logger)
     m.def(
          "log",
          [](const LogLevel level, const std::string_view msg, const LogFrequency frequency)
-         { Logger::global().log(level, msg, frequency); },
+         { Logger::get().log(level, msg, frequency); },
          "level"_a,
          "msg"_a,
          "frequency"_a = LogFrequency::always
