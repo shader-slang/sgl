@@ -16,12 +16,12 @@ KALI_PY_EXPORT(core_logger)
 
     nb::enum_<LogFrequency>(m, "LogFrequency").value("always", LogFrequency::always).value("once", LogFrequency::once);
 
-    nb::class_<LoggerOutput>(m, "LoggerOutput");
+    nb::class_<LoggerOutput, Object>(m, "LoggerOutput");
     nb::class_<ConsoleLoggerOutput, LoggerOutput>(m, "ConsoleLoggerOutput")
-        .def_static("get", &ConsoleLoggerOutput::get, nb::rv_policy::reference);
+        .def_static("get", &ConsoleLoggerOutput::get);
     nb::class_<FileLoggerOutput, LoggerOutput>(m, "FileLoggerOutput");
     nb::class_<DebugConsoleLoggerOutput, LoggerOutput>(m, "DebugConsoleLoggerOutput")
-        .def_static("get", &DebugConsoleLoggerOutput::get, nb::rv_policy::reference);
+        .def_static("get", &DebugConsoleLoggerOutput::get);
 
     // clang-format off
 #define DEF_LOG_METHOD(name) def(#name, [](Logger& self, const std::string_view msg) { self.name(msg); }, "msg"_a)
