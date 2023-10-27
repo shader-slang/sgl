@@ -50,10 +50,5 @@ NB_MODULE(kali_ext, m)
 
     // Register a cleanup callback function.
     auto atexit = nb::module_::import_("atexit");
-    atexit.attr("register")(nb::cpp_function(
-        []()
-        {
-            kali::static_shutdown();
-        }
-    ));
+    atexit.attr("register")(nb::cpp_function([]() { kali::static_shutdown(); }));
 }
