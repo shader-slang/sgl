@@ -2,7 +2,7 @@ if (VCPKG_TARGET_IS_WINDOWS)
 	if (VCPKG_TARGET_ARCHITECTURE MATCHES "x64")
 		vcpkg_download_distfile(
 			ARCHIVE
-			URLS "https://www.nuget.org/api/v2/package/Microsoft.Direct3D.D3D12/1.610.5"
+			URLS "https://www.nuget.org/api/v2/package/Microsoft.Direct3D.D3D12/1.611.5"
 			FILENAME "agility-sdk-${VERSION}.zip"
             SKIP_SHA512
         )

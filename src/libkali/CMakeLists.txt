@@ -51,6 +51,7 @@ target_sources(kali PRIVATE
     kali/core/window.cpp
     kali/core/window.h
 
+    kali/device/agility_sdk.h
     kali/device/command_queue.cpp
     kali/device/command_queue.h
     kali/device/command_stream.cpp

@@ -10,6 +10,7 @@
 #include "kali/device/command_stream.h"
 #include "kali/device/helpers.h"
 #include "kali/device/native_handle_traits.h"
+#include "kali/device/agility_sdk.h"
 
 #include "kali/core/error.h"
 #include "kali/core/window.h"
