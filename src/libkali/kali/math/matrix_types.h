@@ -68,7 +68,7 @@ public:
 
     /// Construct matrix from another matrix with different dimensions.
     /// In HLSL/Slang, destination matrix must be equal or smaller than source matrix.
-    /// In Falcor, destination matrix can be larger than source matrix (initialized with identity).
+    /// In kali, destination matrix can be larger than source matrix (initialized with identity).
     template<int R, int C>
     matrix(const matrix<T, R, C>& other)
         : matrix(Form::Identity)

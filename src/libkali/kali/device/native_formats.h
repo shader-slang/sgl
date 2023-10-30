@@ -325,16 +325,16 @@ typedef enum VkFormat {
 
 namespace kali {
 
-/// Convert from Falcor to DXGI format.
+/// Convert from kali to DXGI format.
 DXGI_FORMAT KALI_API get_dxgi_format(Format format);
 
-/// Convert from DXGI to Falcor format.
+/// Convert from DXGI to kali format.
 Format KALI_API get_format(DXGI_FORMAT dxgi_format);
 
-/// Convert from Falcor to Vulkan format.
+/// Convert from kali to Vulkan format.
 VkFormat KALI_API get_vulkan_format(Format format);
 
-/// Convert from Vulkan to Falcor format.
+/// Convert from Vulkan to kali format.
 Format KALI_API get_format(VkFormat vk_format);
 
 } // namespace kali
