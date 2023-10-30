@@ -22,11 +22,9 @@ Program::Program(ProgramDesc desc, ProgramManager* program_manager)
 {
     KALI_ASSERT(m_program_manager);
 
-    ShaderModel supported_shader_model = m_program_manager->get_device()->get_supported_shader_model();
-
-    // If no shader model is selected, use the most recent supported one.
+    // If no shader model is selected, use the default shader model.
     if (m_desc.shader_model == ShaderModel::unknown)
-        m_desc.shader_model = supported_shader_model;
+        m_desc.shader_model = m_program_manager->get_device()->get_default_shader_model();
 
     // Validate descriptor.
     if (m_desc.shader_modules.empty())
@@ -47,7 +45,7 @@ Program::Program(ProgramDesc desc, ProgramManager* program_manager)
                 entry_point_group.shader_module_index
             );
     }
-    if (m_desc.shader_model > supported_shader_model)
+    if (m_desc.shader_model > m_program_manager->get_device()->get_supported_shader_model())
         KALI_THROW("Shader model {} is not supported by the device", m_desc.shader_model);
 
     m_program_manager->add_loaded_program(this);
@@ -196,10 +194,6 @@ ProgramManager::ProgramManager(Device* device, slang::IGlobalSession* slang_sess
         = { {"KALI_NVAPI_AVAILABLE", (KALI_NVAPI_AVAILABLE && m_device->get_type() == DeviceType::d3d12) ? "1" : "0"},
 #if KALI_HAS_NVAPI
             {"NV_SHADER_EXTN_SLOT", "u999"},
-            {"__SHADER_TARGET_MAJOR",
-             std::to_string(get_shader_model_major_version(m_device->get_supported_shader_model()))},
-            {"__SHADER_TARGET_MINOR",
-             std::to_string(get_shader_model_minor_version(m_device->get_supported_shader_model()))},
 #endif
           };
 
@@ -299,13 +293,11 @@ ref<ProgramVersion> ProgramManager::create_program_version(const Program& progra
     // Add target define.
     add_macro(target_define, "1");
 
-    // Add shader model define.
-    std::string shader_model_define = fmt::format(
-        "__SM_{}_{}__",
-        get_shader_model_major_version(program_desc.shader_model),
-        get_shader_model_minor_version(program_desc.shader_model)
-    );
-    add_macro(shader_model_define.c_str(), "1");
+    // Add shader model defines.
+    std::string shader_model_major = std::to_string(get_shader_model_major_version(program_desc.shader_model));
+    std::string shader_model_minor = std::to_string(get_shader_model_minor_version(program_desc.shader_model));
+    add_macro("__SHADER_TARGET_MAJOR", shader_model_major.c_str());
+    add_macro("__SHADER_TARGET_MINOR", shader_model_minor.c_str());
 
     session_desc.preprocessorMacros = macros.data();
     session_desc.preprocessorMacroCount = narrow_cast<SlangInt>(macros.size());

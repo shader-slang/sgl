@@ -80,7 +80,7 @@ endif()
 
 if(KALI_WINDOWS)
     add_library(agility-sdk INTERFACE)
-    target_include_directories(agility-sdk INTERFACE ${VCPKG_DIR}/include/include)
+    target_include_directories(agility-sdk INTERFACE ${VCPKG_DIR}/include)
     kali_copy_binary(${VCPKG_DIR}/bin/D3D12Core.dll D3D12)
     kali_copy_binary(${VCPKG_DIR}/bin/d3d12SDKLayers.dll D3D12)
     set(KALI_HAS_AGILITY_SDK ON PARENT_SCOPE)

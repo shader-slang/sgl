@@ -168,6 +168,13 @@ Device::Device(const DeviceDesc& desc)
         }
     }
 
+    // Set default shader model.
+    m_default_shader_model = m_desc.default_shader_model;
+    if (m_default_shader_model > m_supported_shader_model) {
+        log_warn("Shader model {} is not supported, falling back to {}.", m_default_shader_model, m_supported_shader_model);
+        m_default_shader_model = m_supported_shader_model;
+    }
+
     m_program_manager = make_ref<ProgramManager>(this, m_slang_session);
 
     m_command_stream = create_command_stream({.queue_type = CommandQueueType::graphics});

@@ -65,6 +65,9 @@ struct DeviceDesc {
     /// If not null, the device will be created on the specified adapter.
     AdapterLUID* adapter_luid{nullptr};
 
+    /// Default shader model to use when compiling shaders.
+    ShaderModel default_shader_model = ShaderModel::sm_6_6;
+
     /// Path to the shader cache directory. Leave empty to disable shader cache.
     std::filesystem::path shader_cache_path;
 };
@@ -134,6 +137,7 @@ public:
     const DeviceInfo& get_info() const { return m_info; }
 
     ShaderModel get_supported_shader_model() const { return m_supported_shader_model; }
+    ShaderModel get_default_shader_model() const { return m_default_shader_model; }
 
     ref<Swapchain> create_swapchain(SwapchainDesc desc, ref<Window> window);
 
@@ -262,6 +266,7 @@ private:
     DeviceDesc m_desc;
     DeviceInfo m_info;
     ShaderModel m_supported_shader_model{ShaderModel::unknown};
+    ShaderModel m_default_shader_model{ShaderModel::unknown};
     Slang::ComPtr<gfx::IDevice> m_gfx_device;
     Slang::ComPtr<slang::IGlobalSession> m_slang_session;
 
