@@ -6,7 +6,7 @@ if (VCPKG_TARGET_IS_WINDOWS)
 			ARCHIVE
 			URLS "https://github.com/NVIDIA/nvapi/archive/${COMMIT}.zip"
 			FILENAME "nvapi-${VERSION}-win64.zip"
-            SKIP_SHA512
+            SHA512 fe50033a61c0e78db7f60e9b5c8255ecc18e63060ea486e2fc4569fb465ef4ddc6cf9e93a3c6be0e66c50b26eda1625874d00e0febfc964c8716cfd351c4f3fc
         )
 
 		vcpkg_extract_source_archive(
