@@ -4,7 +4,7 @@
 #include "kali/device/sampler.h"
 #include "kali/device/resource.h"
 #include "kali/device/swapchain.h"
-#include "kali/device/program.h"
+#include "kali/device/shader.h"
 
 KALI_PY_EXPORT(device_device)
 {
@@ -45,9 +45,9 @@ KALI_PY_EXPORT(device_device)
     nb::class_<Device, Object> device(m, "Device");
     device.def(
         "__init__",
-        [](Device* device, DeviceType type, bool enable_debug_layers)
+        [](Device* self, DeviceType type, bool enable_debug_layers)
         {
-            new (device) Device(DeviceDesc{
+            new (self) Device(DeviceDesc{
                 .type = type,
                 .enable_debug_layers = enable_debug_layers,
             });
@@ -58,12 +58,12 @@ KALI_PY_EXPORT(device_device)
     device.def_prop_ro("info", &Device::get_info);
     device.def(
         "create_buffer",
-        [](Device* device, const BufferDesc& desc) { return device->create_buffer(desc); },
+        [](Device* self, const BufferDesc& desc) { return self->create_buffer(desc); },
         "desc"_a
     );
     device.def(
         "create_buffer",
-        [](Device* device,
+        [](Device* self,
            size_t size,
            size_t struct_size,
            Format format,
@@ -71,7 +71,7 @@ KALI_PY_EXPORT(device_device)
            MemoryType memory_type,
            std::string debug_name)
         {
-            return device->create_buffer(BufferDesc{
+            return self->create_buffer(BufferDesc{
                 .size = size,
                 .struct_size = struct_size,
                 .format = format,
@@ -89,12 +89,12 @@ KALI_PY_EXPORT(device_device)
     );
     device.def(
         "create_texture",
-        [](Device* device, const TextureDesc& desc) { return device->create_texture(desc); },
+        [](Device* self, const TextureDesc& desc) { return self->create_texture(desc); },
         "desc"_a
     );
     device.def(
         "create_texture",
-        [](Device* device,
+        [](Device* self,
            TextureType type,
            Format format,
            uint32_t width,
@@ -103,7 +103,7 @@ KALI_PY_EXPORT(device_device)
            uint32_t array_size,
            uint32_t mip_count)
         {
-            return device->create_texture(TextureDesc{
+            return self->create_texture(TextureDesc{
                 .type = type,
                 .format = format,
                 .width = width,
@@ -123,7 +123,7 @@ KALI_PY_EXPORT(device_device)
     );
     device.def(
         "create_sampler",
-        [](Device* device,
+        [](Device* self,
            TextureFilteringMode min_filter,
            TextureFilteringMode mag_filter,
            TextureFilteringMode mip_filter,
@@ -138,7 +138,7 @@ KALI_PY_EXPORT(device_device)
            float min_lod,
            float max_lod)
         {
-            return device->create_sampler(SamplerDesc{
+            return self->create_sampler(SamplerDesc{
                 .min_filter = min_filter,
                 .mag_filter = mag_filter,
                 .mip_filter = mip_filter,
@@ -168,9 +168,13 @@ KALI_PY_EXPORT(device_device)
         "min_lod"_a = -1000.f,
         "max_lod"_a = 1000.f
     );
+    device.def("create_slang_session", [](Device* self) { return self->create_slang_session(SlangSessionDesc{}); });
+    device.def("load_module", &Device::load_module, "path"_a);
+    device.def("load_module_from_source", &Device::load_module_from_source, "source"_a);
 
     device.def_static("enumerate_adapters", &Device::enumerate_adapters, "type"_a = DeviceType::automatic);
     device.def_static("report_live_objects", &Device::report_live_objects);
+
 
     // device.def("create_program", nb::overload_cast<const ProgramDesc&>(&Device::create_program), "desc"_a);
     // device.def(

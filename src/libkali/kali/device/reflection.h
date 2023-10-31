@@ -437,7 +437,7 @@ private:
 class KALI_API ProgramLayout : public Object {
     KALI_OBJECT(ProgramLayout)
 public:
-    ProgramLayout(const ProgramVersion* program_version, slang::ProgramLayout* layout);
+    ProgramLayout(slang::ProgramLayout* layout);
 
     // TypeLayoutReflection get_globals_type_layout() const
     // {
@@ -457,20 +457,14 @@ private:
     ref<StructTypeReflection> m_globals_type;
 };
 
-class KALI_API EntryPointLayout {
+class KALI_API EntryPointLayout : public Object {
+    KALI_OBJECT(EntryPointLayout)
 public:
-    EntryPointLayout(const ProgramVersion* program_version, uint32_t entry_point, slang::EntryPointLayout* layout)
-        : m_program_version(program_version)
-        , m_entry_point(entry_point)
-        , m_layout(layout)
-    {
-    }
+    EntryPointLayout(slang::EntryPointLayout* layout);
 
     uint3 get_compute_thread_group_size() const;
 
 private:
-    const ProgramVersion* m_program_version;
-    uint32_t m_entry_point;
     slang::EntryPointLayout* m_layout;
 };
 

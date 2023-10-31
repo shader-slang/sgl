@@ -201,13 +201,13 @@ public:
     void dispatch_compute_indirect(Buffer* cmd_buffer, DeviceOffset offset);
 
     void dispatch_compute(
-        Program* program,
+        ShaderProgram* program,
         uint3 thread_count,
         SetShaderVariablesCallback set_vars,
         ComputePipelineCache* pipeline_cache = nullptr
     );
     void dispatch_compute_indirect(
-        Program* program,
+        ShaderProgram* program,
         SetShaderVariablesCallback set_vars,
         Buffer* cmd_buffer,
         DeviceOffset offset,

@@ -35,8 +35,8 @@ protected:
 
 struct ComputePipelineStateDesc {
     // TODO we should introduce a weak_ref and use that here
-    // This would allow the cache to check if the program version is still available
-    const ProgramVersion* program_version;
+    // This would allow the cache to check if the program is still available
+    const ShaderProgram* program;
     auto operator<=>(const ComputePipelineStateDesc&) const = default;
 };
 
@@ -68,7 +68,7 @@ private:
 
 
 struct GraphicsPipelineStateDesc {
-    ref<Program> program;
+    ShaderProgram* program;
 
     // ref<InputLayout> input_layout;
     // ref<FramebufferLayout> framebuffer_layout;
@@ -86,7 +86,6 @@ public:
 
 private:
     GraphicsPipelineStateDesc m_desc;
-    ref<Program> m_program;
 };
 
 

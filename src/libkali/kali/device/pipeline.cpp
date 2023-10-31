@@ -1,7 +1,7 @@
 #include "pipeline.h"
 
 #include "kali/device/device.h"
-#include "kali/device/program.h"
+#include "kali/device/shader.h"
 #include "kali/device/helpers.h"
 #include "kali/device/native_handle_traits.h"
 
@@ -45,7 +45,7 @@ ComputePipelineState::ComputePipelineState(ref<Device> device, ComputePipelineSt
     : PipelineState(std::move(device))
     , m_desc(std::move(desc))
 {
-    gfx::ComputePipelineStateDesc gfx_desc{.program = m_desc.program_version->get_gfx_shader_program()};
+    gfx::ComputePipelineStateDesc gfx_desc{.program = m_desc.program->get_gfx_shader_program()};
     SLANG_CALL(m_device->get_gfx_device()->createComputePipelineState(gfx_desc, m_gfx_pipeline_state.writeRef()));
 }
 
@@ -87,7 +87,6 @@ void ComputePipelineCache::break_strong_reference_to_device()
 GraphicsPipelineState::GraphicsPipelineState(ref<Device> device, GraphicsPipelineStateDesc desc)
     : PipelineState(std::move(device))
     , m_desc(std::move(desc))
-    , m_program(m_desc.program)
 {
 }
 

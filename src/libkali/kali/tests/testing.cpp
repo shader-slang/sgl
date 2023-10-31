@@ -3,7 +3,6 @@
 #include "kali/core/macros.h"
 
 #include "kali/device/device.h"
-#include "kali/device/program.h"
 
 #include <map>
 
@@ -38,7 +37,6 @@ void run_gpu_test(void (*func)(GpuTestContext&))
                     .enable_debug_layers = true,
                 };
                 device = Device::create(desc);
-                device->get_program_manager()->add_search_path(SOURCE_DIR);
                 s_cached_devices[device_type] = device;
             }
 

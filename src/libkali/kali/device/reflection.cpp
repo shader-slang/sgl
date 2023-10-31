@@ -474,9 +474,8 @@ static ref<VariableReflection> reflect_variable(slang::VariableLayoutReflection*
     return make_ref<VariableReflection>(name, type, ShaderOffset());
 }
 
-ProgramLayout::ProgramLayout(const ProgramVersion* program_version, slang::ProgramLayout* layout)
-    : m_program_version(program_version)
-    , m_layout(layout)
+ProgramLayout::ProgramLayout(slang::ProgramLayout* layout)
+    : m_layout(layout)
 {
     // m_globals_type = reflect_struct_type(m_layout->getGlobalParamsTypeLayout());
 
@@ -506,6 +505,11 @@ void ProgramLayout::dump()
     ReflectionWriter writer;
     writer.write(m_globals_type);
     log_info("\n\n{}\n\n", writer.str());
+}
+
+EntryPointLayout::EntryPointLayout(slang::EntryPointLayout* layout)
+    : m_layout(layout)
+{
 }
 
 uint3 EntryPointLayout::get_compute_thread_group_size() const

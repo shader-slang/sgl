@@ -67,8 +67,6 @@ target_sources(kali PRIVATE
     kali/device/native_formats.h
     kali/device/pipeline.cpp
     kali/device/pipeline.h
-    kali/device/program.cpp
-    kali/device/program.h
     kali/device/reflection.cpp
     kali/device/reflection.h
     kali/device/resource.cpp
@@ -82,6 +80,8 @@ target_sources(kali PRIVATE
     kali/device/shader_object.cpp
     kali/device/shader_object.h
     kali/device/shader_offset.h
+    kali/device/shader.cpp
+    kali/device/shader.h
     kali/device/shared_handle.h
     kali/device/swapchain.cpp
     kali/device/swapchain.h
@@ -295,9 +295,10 @@ nanobind_add_module(kali_ext NB_STATIC LTO
     kali/core/python/window.cpp
     kali/device/python/device.cpp
     kali/device/python/formats.cpp
-    kali/device/python/program.cpp
+    kali/device/python/reflection.cpp
     kali/device/python/resource.cpp
     kali/device/python/sampler.cpp
+    kali/device/python/shader.cpp
     kali/device/python/swapchain.cpp
     kali/device/python/types.cpp
     kali/math/python/matrix.cpp
@@ -354,7 +355,7 @@ target_sources(kali_tests PRIVATE
     kali/core/tests/test_timer.cpp
     kali/device/tests/test_device.cpp
     kali/device/tests/test_formats.cpp
-    kali/device/tests/test_program.cpp
+    kali/device/tests/test_shader.cpp
     kali/imageio/tests/test_imageio.cpp
     kali/math/tests/test_float16.cpp
     kali/math/tests/test_matrix.cpp

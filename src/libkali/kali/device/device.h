@@ -200,9 +200,10 @@ public:
 
     ref<Fence> create_fence(uint64_t initial_value = 0, bool shared = false);
 
-    ref<Program> create_program(ProgramDesc desc);
+    ref<SlangSession> create_slang_session(SlangSessionDesc desc);
 
-    // ref<Program> create_program(std::filesystem::path path, std::string entrypoint);
+    ref<SlangModule> load_module(const std::filesystem::path& path);
+    ref<SlangModule> load_module_from_source(const std::string& source);
 
     ref<ComputePipelineState> create_compute_pipeline_state(ComputePipelineStateDesc desc);
 
@@ -213,8 +214,6 @@ public:
     ref<CommandQueue> create_command_queue(CommandQueueDesc desc);
 
     ref<CommandStream> create_command_stream(CommandStreamDesc desc);
-
-    ProgramManager* get_program_manager() const { return m_program_manager; }
 
     CommandStream* get_command_stream() const { return m_command_stream; }
 
@@ -230,6 +229,7 @@ public:
 
 
     gfx::IDevice* get_gfx_device() const { return m_gfx_device; }
+    slang::IGlobalSession* get_global_session() const { return m_global_session; }
 
     /// Returns the native API handle:
     /// - D3D12: ID3D12Device* (0)
@@ -268,9 +268,8 @@ private:
     ShaderModel m_supported_shader_model{ShaderModel::unknown};
     ShaderModel m_default_shader_model{ShaderModel::unknown};
     Slang::ComPtr<gfx::IDevice> m_gfx_device;
-    Slang::ComPtr<slang::IGlobalSession> m_slang_session;
+    Slang::ComPtr<slang::IGlobalSession> m_global_session;
 
-    ref<ProgramManager> m_program_manager;
     ref<CommandStream> m_command_stream;
 };
 

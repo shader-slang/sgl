@@ -4,7 +4,7 @@
 #include "kali/device/resource.h"
 #include "kali/device/sampler.h"
 #include "kali/device/fence.h"
-#include "kali/device/program.h"
+#include "kali/device/shader.h"
 #include "kali/device/pipeline.h"
 #include "kali/device/command_queue.h"
 #include "kali/device/command_stream.h"
@@ -91,7 +91,7 @@ Device::Device(const DeviceDesc& desc)
 {
     inc_ref();
 
-    SLANG_CALL(slang::createGlobalSession(m_slang_session.writeRef()));
+    SLANG_CALL(slang::createGlobalSession(m_global_session.writeRef()));
 
     gfx::gfxSetDebugCallback(&get_debug_logger());
     if (m_desc.enable_debug_layers) {
@@ -109,7 +109,7 @@ Device::Device(const DeviceDesc& desc)
     gfx::IDevice::Desc gfx_desc{
         .deviceType = get_gfx_device_type(m_desc.type),
         .slang{
-            .slangGlobalSession = m_slang_session,
+            .slangGlobalSession = m_global_session,
         },
     };
     if (SLANG_FAILED(gfx::gfxCreateDevice(&gfx_desc, m_gfx_device.writeRef())))
@@ -171,11 +171,13 @@ Device::Device(const DeviceDesc& desc)
     // Set default shader model.
     m_default_shader_model = m_desc.default_shader_model;
     if (m_default_shader_model > m_supported_shader_model) {
-        log_warn("Shader model {} is not supported, falling back to {}.", m_default_shader_model, m_supported_shader_model);
+        log_warn(
+            "Shader model {} is not supported, falling back to {}.",
+            m_default_shader_model,
+            m_supported_shader_model
+        );
         m_default_shader_model = m_supported_shader_model;
     }
-
-    m_program_manager = make_ref<ProgramManager>(this, m_slang_session);
 
     m_command_stream = create_command_stream({.queue_type = CommandQueueType::graphics});
     m_command_stream->break_strong_reference_to_device();
@@ -186,7 +188,6 @@ Device::Device(const DeviceDesc& desc)
 Device::~Device()
 {
     m_command_stream.reset();
-    m_program_manager.reset();
 
     m_gfx_device.setNull();
 }
@@ -265,11 +266,6 @@ ref<Sampler> Device::create_sampler(SamplerDesc desc)
     return make_ref<Sampler>(ref<Device>(this), std::move(desc));
 }
 
-ref<Program> Device::create_program(ProgramDesc desc)
-{
-    return m_program_manager->create_program(std::move(desc));
-}
-
 ref<Fence> Device::create_fence(FenceDesc desc)
 {
     return make_ref<Fence>(ref<Device>(this), std::move(desc));
@@ -281,6 +277,23 @@ ref<Fence> Device::create_fence(uint64_t initial_value, bool shared)
         .initial_value = initial_value,
         .shared = shared,
     });
+}
+
+ref<SlangSession> Device::create_slang_session(SlangSessionDesc desc)
+{
+    return make_ref<SlangSession>(ref<Device>(this), std::move(desc));
+}
+
+ref<SlangModule> Device::load_module(const std::filesystem::path& path)
+{
+    ref<SlangSession> session = create_slang_session({});
+    return session->load_module(path);
+}
+
+ref<SlangModule> Device::load_module_from_source(const std::string& source)
+{
+    ref<SlangSession> session = create_slang_session({});
+    return session->load_module_from_source(source);
 }
 
 ref<ComputePipelineState> Device::create_compute_pipeline_state(ComputePipelineStateDesc desc)

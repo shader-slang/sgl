@@ -1,9 +1,9 @@
 #include "testing.h"
-#include "kali/device/program.h"
+#include "kali/device/shader.h"
 
 using namespace kali;
 
-TEST_SUITE_BEGIN("program");
+TEST_SUITE_BEGIN("shader");
 
 TEST_CASE("DefineList")
 {

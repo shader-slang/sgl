@@ -1,7 +1,7 @@
 #include "command_stream.h"
 
 #include "kali/device/device.h"
-#include "kali/device/program.h"
+#include "kali/device/shader.h"
 #include "kali/device/reflection.h"
 #include "kali/device/pipeline.h"
 #include "kali/device/shader_cursor.h"
@@ -382,7 +382,7 @@ void CommandStream::dispatch_compute_indirect(Buffer* cmd_buffer, DeviceOffset o
 }
 
 void CommandStream::dispatch_compute(
-    Program* program,
+    ShaderProgram* program,
     uint3 thread_count,
     SetShaderVariablesCallback set_vars,
     ComputePipelineCache* pipeline_cache
@@ -392,9 +392,8 @@ void CommandStream::dispatch_compute(
     if (!pipeline_cache)
         pipeline_cache = m_compute_pipeline_cache;
 
-    // Get current program version and setup pipeline.
-    const ProgramVersion* program_version = program->get_active_version();
-    ref<ComputePipelineState> pipeline = pipeline_cache->get_pipeline_state({.program_version = program_version});
+    // Get compute pipeline from cache.
+    ref<ComputePipelineState> pipeline = pipeline_cache->get_pipeline_state({.program = program});
 
     ref<ShaderObject> shader_object = bind_compute_pipeline(pipeline);
 
@@ -412,7 +411,7 @@ void CommandStream::dispatch_compute(
         set_vars(gfx::ShaderCursor(shader_object->get_gfx_shader_object()));
     }
 
-    uint3 thread_group_size = program_version->get_entry_point_layout(0).get_compute_thread_group_size();
+    uint3 thread_group_size = program->entry_point_layout(0)->get_compute_thread_group_size();
     uint3 thread_group_count{
         div_round_up(thread_count.x, thread_group_size.x),
         div_round_up(thread_count.y, thread_group_size.y),
@@ -421,7 +420,7 @@ void CommandStream::dispatch_compute(
 }
 
 void CommandStream::dispatch_compute_indirect(
-    Program* program,
+    ShaderProgram* program,
     SetShaderVariablesCallback set_vars,
     Buffer* cmd_buffer,
     DeviceOffset offset,
