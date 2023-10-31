@@ -46,7 +46,7 @@ namespace kali::string {
  * @param[in] delim Delimiter to split strings by
  * @return Array of split strings excluding delimiters.
  */
-[[nodiscard]] KALI_API std::vector<std::string> split_string(std::string_view str, std::string_view delim);
+[[nodiscard]] KALI_API std::vector<std::string> split(std::string_view str, std::string_view delim);
 
 /**
  * Join an array of strings separated by another set string
@@ -54,7 +54,7 @@ namespace kali::string {
  * @param[in] separator String placed between each string to be joined.
  * @return Joined string.
  */
-[[nodiscard]] KALI_API std::string join_strings(std::span<const std::string> strings, std::string_view separator);
+[[nodiscard]] KALI_API std::string join(std::span<const std::string> strings, std::string_view separator);
 
 /**
  * Remove leading whitespace.

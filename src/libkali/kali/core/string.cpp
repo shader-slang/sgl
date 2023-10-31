@@ -39,7 +39,7 @@ bool has_suffix(std::string_view str, std::string_view suffix, bool case_sensiti
         return to_lower(str).ends_with(to_lower(suffix));
 }
 
-std::vector<std::string> split_string(std::string_view str, std::string_view delim)
+std::vector<std::string> split(std::string_view str, std::string_view delim)
 {
     std::string token;
     std::vector<std::string> result;
@@ -61,7 +61,7 @@ std::vector<std::string> split_string(std::string_view str, std::string_view del
     return result;
 }
 
-std::string join_strings(std::span<const std::string> strings, std::string_view separator)
+std::string join(std::span<const std::string> strings, std::string_view separator)
 {
     std::string result;
     for (auto it = strings.begin(); it != strings.end(); it++) {

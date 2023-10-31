@@ -1,78 +1,78 @@
 #include "testing.h"
 #include "kali/core/string.h"
 
-using namespace kali::string;
+using namespace kali;
 
 TEST_SUITE_BEGIN("string");
 
 TEST_CASE("to_upper")
 {
-    CHECK_EQ(to_upper("hello"), "HELLO");
-    CHECK_EQ(to_upper("HELLO"), "HELLO");
-    CHECK_EQ(to_upper("Hello"), "HELLO");
-    CHECK_EQ(to_upper("hElLo"), "HELLO");
+    CHECK_EQ(string::to_upper("hello"), "HELLO");
+    CHECK_EQ(string::to_upper("HELLO"), "HELLO");
+    CHECK_EQ(string::to_upper("Hello"), "HELLO");
+    CHECK_EQ(string::to_upper("hElLo"), "HELLO");
 }
 
 TEST_CASE("to_lower")
 {
-    CHECK_EQ(to_lower("hello"), "hello");
-    CHECK_EQ(to_lower("HELLO"), "hello");
-    CHECK_EQ(to_lower("Hello"), "hello");
-    CHECK_EQ(to_lower("hElLo"), "hello");
+    CHECK_EQ(string::to_lower("hello"), "hello");
+    CHECK_EQ(string::to_lower("HELLO"), "hello");
+    CHECK_EQ(string::to_lower("Hello"), "hello");
+    CHECK_EQ(string::to_lower("hElLo"), "hello");
 }
 
 TEST_CASE("has_prefix")
 {
-    CHECK(has_prefix("hello", "he", true));
-    CHECK(has_prefix("hello", "He", false));
-    CHECK(has_prefix("hello", "HELLO", false));
-    CHECK(!has_prefix("hello", "HE", true));
-    CHECK(has_prefix("hello", "HE", false));
+    CHECK(string::has_prefix("hello", "he", true));
+    CHECK(string::has_prefix("hello", "He", false));
+    CHECK(string::has_prefix("hello", "HELLO", false));
+    CHECK(!string::has_prefix("hello", "HE", true));
+    CHECK(string::has_prefix("hello", "HE", false));
 }
 
 TEST_CASE("has_suffix")
 {
-    CHECK(has_suffix("hello", "lo", true));
-    CHECK(has_suffix("hello", "Lo", false));
-    CHECK(has_suffix("hello", "HELLO", false));
-    CHECK(!has_suffix("hello", "LO", true));
-    CHECK(has_suffix("hello", "LO", false));
+    CHECK(string::has_suffix("hello", "lo", true));
+    CHECK(string::has_suffix("hello", "Lo", false));
+    CHECK(string::has_suffix("hello", "HELLO", false));
+    CHECK(!string::has_suffix("hello", "LO", true));
+    CHECK(string::has_suffix("hello", "LO", false));
 }
 
 TEST_CASE("split_string")
 {
-    CHECK_EQ(split_string("hello world", " "), (std::vector<std::string>{"hello", "world"}));
-    CHECK_EQ(split_string("hello world", "o"), (std::vector<std::string>{"hell", " w", "rld"}));
-    CHECK_EQ(split_string("hello world", "e"), (std::vector<std::string>{"h", "llo world"}));
-    CHECK_EQ(split_string("hello world", " "), (std::vector<std::string>{"hello", "world"}));
-    CHECK_EQ(split_string("hello world", "o"), (std::vector<std::string>{"hell", " w", "rld"}));
-    CHECK_EQ(split_string("hello world", "e"), (std::vector<std::string>{"h", "llo world"}));
+    CHECK_EQ(string::split("hello world", " "), (std::vector<std::string>{"hello", "world"}));
+    CHECK_EQ(string::split("hello world", "o"), (std::vector<std::string>{"hell", " w", "rld"}));
+    CHECK_EQ(string::split("hello world", "e"), (std::vector<std::string>{"h", "llo world"}));
+    CHECK_EQ(string::split("hello world", " "), (std::vector<std::string>{"hello", "world"}));
+    CHECK_EQ(string::split("hello world", "o"), (std::vector<std::string>{"hell", " w", "rld"}));
+    CHECK_EQ(string::split("hello world", "e"), (std::vector<std::string>{"h", "llo world"}));
 }
 
 TEST_CASE("join_strings")
 {
-    CHECK_EQ(join_strings(std::vector<std::string>{"hello", "world"}, " "), "hello world");
-    CHECK_EQ(join_strings(std::vector<std::string>{"hello", "world"}, "o"), "hellooworld");
-    CHECK_EQ(join_strings(std::vector<std::string>{"hello", "world"}, "e"), "helloeworld");
-    CHECK_EQ(join_strings(std::vector<std::string>{"hello", "world"}, " "), "hello world");
-    CHECK_EQ(join_strings(std::vector<std::string>{"hello", "world"}, "o"), "hellooworld");
-    CHECK_EQ(join_strings(std::vector<std::string>{"hello", "world"}, "e"), "helloeworld");
+    CHECK_EQ(string::join(std::vector<std::string>{"hello", "world"}, " "), "hello world");
+    CHECK_EQ(string::join(std::vector<std::string>{"hello", "world"}, "o"), "hellooworld");
+    CHECK_EQ(string::join(std::vector<std::string>{"hello", "world"}, "e"), "helloeworld");
+    CHECK_EQ(string::join(std::vector<std::string>{"hello", "world"}, " "), "hello world");
+    CHECK_EQ(string::join(std::vector<std::string>{"hello", "world"}, "o"), "hellooworld");
+    CHECK_EQ(string::join(std::vector<std::string>{"hello", "world"}, "e"), "helloeworld");
 }
 
 TEST_CASE("remove_whitespace")
 {
     const char* whitespace = " \t\n\r";
-    CHECK_EQ(remove_leading_whitespace("  \t\t\n\n\r\rtest", whitespace), "test");
-    CHECK_EQ(remove_leading_whitespace("test", whitespace), "test");
-    CHECK_EQ(remove_leading_whitespace("test  \t\t\n\n\r\r", whitespace), "test  \t\t\n\n\r\r");
+    CHECK_EQ(string::remove_leading_whitespace("  \t\t\n\n\r\rtest", whitespace), "test");
+    CHECK_EQ(string::remove_leading_whitespace("test", whitespace), "test");
+    CHECK_EQ(string::remove_leading_whitespace("test  \t\t\n\n\r\r", whitespace), "test  \t\t\n\n\r\r");
 
-    CHECK_EQ(remove_trailing_whitespace("  \t\t\n\n\r\rtest", whitespace), "  \t\t\n\n\r\rtest");
-    CHECK_EQ(remove_trailing_whitespace("test", whitespace), "test");
-    CHECK_EQ(remove_trailing_whitespace("test  \t\t\n\n\r\r", whitespace), "test");
+    CHECK_EQ(string::remove_trailing_whitespace("  \t\t\n\n\r\rtest", whitespace), "  \t\t\n\n\r\rtest");
+    CHECK_EQ(string::remove_trailing_whitespace("test", whitespace), "test");
+    CHECK_EQ(string::remove_trailing_whitespace("test  \t\t\n\n\r\r", whitespace), "test");
 
-    CHECK_EQ(remove_leading_trailing_whitespace("  \t\t\n\n\r\rtest", whitespace), "test");
-    CHECK_EQ(remove_leading_trailing_whitespace("test", whitespace), "test");
-    CHECK_EQ(remove_leading_trailing_whitespace("test  \t\t\n\n\r\r", whitespace), "test");
+    CHECK_EQ(string::remove_leading_trailing_whitespace("  \t\t\n\n\r\rtest", whitespace), "test");
+    CHECK_EQ(string::remove_leading_trailing_whitespace("test", whitespace), "test");
+    CHECK_EQ(string::remove_leading_trailing_whitespace("test  \t\t\n\n\r\r", whitespace), "test");
 }
 
 TEST_CASE("format_byte_size")
@@ -82,28 +82,28 @@ TEST_CASE("format_byte_size")
     const size_t GB = 1073741824ull;
     const size_t TB = 1099511627776ull;
 
-    CHECK_EQ(format_byte_size(0), "0 B");
-    CHECK_EQ(format_byte_size(100), "100 B");
-    CHECK_EQ(format_byte_size(1023), "1023 B");
-    CHECK_EQ(format_byte_size(kB), "1.00 kB");
-    CHECK_EQ(format_byte_size(100 * kB), "100.00 kB");
-    CHECK_EQ(format_byte_size(1023 * kB), "1023.00 kB");
-    CHECK_EQ(format_byte_size(MB), "1.00 MB");
-    CHECK_EQ(format_byte_size(10 * MB), "10.00 MB");
-    CHECK_EQ(format_byte_size(1023 * MB), "1023.00 MB");
-    CHECK_EQ(format_byte_size(GB), "1.00 GB");
-    CHECK_EQ(format_byte_size(10 * GB), "10.00 GB");
-    CHECK_EQ(format_byte_size(1023 * GB), "1023.00 GB");
-    CHECK_EQ(format_byte_size(TB), "1.00 TB");
-    CHECK_EQ(format_byte_size(10 * TB), "10.00 TB");
+    CHECK_EQ(string::format_byte_size(0), "0 B");
+    CHECK_EQ(string::format_byte_size(100), "100 B");
+    CHECK_EQ(string::format_byte_size(1023), "1023 B");
+    CHECK_EQ(string::format_byte_size(kB), "1.00 kB");
+    CHECK_EQ(string::format_byte_size(100 * kB), "100.00 kB");
+    CHECK_EQ(string::format_byte_size(1023 * kB), "1023.00 kB");
+    CHECK_EQ(string::format_byte_size(MB), "1.00 MB");
+    CHECK_EQ(string::format_byte_size(10 * MB), "10.00 MB");
+    CHECK_EQ(string::format_byte_size(1023 * MB), "1023.00 MB");
+    CHECK_EQ(string::format_byte_size(GB), "1.00 GB");
+    CHECK_EQ(string::format_byte_size(10 * GB), "10.00 GB");
+    CHECK_EQ(string::format_byte_size(1023 * GB), "1023.00 GB");
+    CHECK_EQ(string::format_byte_size(TB), "1.00 TB");
+    CHECK_EQ(string::format_byte_size(10 * TB), "10.00 TB");
 }
 
 TEST_CASE("base64")
 {
     auto test_encode_decode = [&](std::string decoded, std::string encoded)
     {
-        CHECK_EQ(encode_base64(std::vector<uint8_t>(decoded.begin(), decoded.end())), encoded);
-        CHECK_EQ(decode_base64(encoded), std::vector<uint8_t>(decoded.begin(), decoded.end()));
+        CHECK_EQ(string::encode_base64(std::vector<uint8_t>(decoded.begin(), decoded.end())), encoded);
+        CHECK_EQ(string::decode_base64(encoded), std::vector<uint8_t>(decoded.begin(), decoded.end()));
     };
 
     test_encode_decode("", "");
