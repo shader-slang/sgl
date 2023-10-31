@@ -39,13 +39,13 @@ bool has_suffix(std::string_view str, std::string_view suffix, bool case_sensiti
         return to_lower(str).ends_with(to_lower(suffix));
 }
 
-std::vector<std::string> split(std::string_view str, std::string_view delim)
+std::vector<std::string> split(std::string_view str, std::string_view delimiters)
 {
     std::string token;
     std::vector<std::string> result;
 
     for (const char c : str) {
-        if (delim.find(c) != std::string::npos) {
+        if (delimiters.find(c) != std::string::npos) {
             if (!token.empty()) {
                 result.push_back(std::move(token));
                 token.clear();
@@ -68,6 +68,17 @@ std::string join(std::span<const std::string> strings, std::string_view separato
         result += *it;
         if (it != strings.end() - 1)
             result += separator;
+    }
+    return result;
+}
+
+std::string indent(std::string_view str, std::string_view indentation)
+{
+    std::string result;
+    for (auto c : str) {
+        result += c;
+        if (c == '\n')
+            result += indentation;
     }
     return result;
 }
@@ -206,4 +217,4 @@ std::vector<uint8_t> decode_base64(std::string_view str)
     return out;
 }
 
-} // namespace kali
+} // namespace kali::string
