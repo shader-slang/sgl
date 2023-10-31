@@ -58,17 +58,33 @@ private:
     template<typename T>
     void set(const T& value) const;
 
-    // clang-format off
-    template<> void set(const ref<Buffer>& value) const { set_buffer(value); }
-    template<> void set(const ref<Texture>& value) const { set_texture(value); }
-    template<> void set(const ref<ResourceView>& value) const { set_resource(value); }
-    template<> void set(const ref<Sampler>& value) const { set_sampler(value); }
-    // clang-format on
-
     ShaderObject* m_object{nullptr};
     TypeReflection* m_type{nullptr};
     ShaderOffset m_offset;
 };
 
+template<>
+inline void ShaderCursor::set(const ref<Buffer>& value) const
+{
+    set_buffer(value);
+}
+
+template<>
+inline void ShaderCursor::set(const ref<Texture>& value) const
+{
+    set_texture(value);
+}
+
+template<>
+inline void ShaderCursor::set(const ref<ResourceView>& value) const
+{
+    set_resource(value);
+}
+
+template<>
+inline void ShaderCursor::set(const ref<Sampler>& value) const
+{
+    set_sampler(value);
+}
 
 } // namespace kali
