@@ -95,7 +95,7 @@ bool CommandStream::buffer_barrier(const Buffer* buffer, ResourceState new_state
     KALI_ASSERT(buffer);
 
     bool recorded = false;
-    ResourceState current_state = buffer->get_global_state();
+    ResourceState current_state = buffer->global_state();
     if (current_state != new_state) {
         auto encoder = get_resource_command_encoder();
         gfx::IBufferResource* gfx_buffer_resource = buffer->get_gfx_buffer_resource();
@@ -118,7 +118,7 @@ bool CommandStream::texture_barrier(const Texture* texture, ResourceState new_st
     KALI_ASSERT(texture);
 
     bool recorded = false;
-    ResourceState current_state = texture->get_global_state();
+    ResourceState current_state = texture->global_state();
     if (current_state != new_state) {
         auto encoder = get_resource_command_encoder();
         gfx::ITextureResource* gfx_texture_resource = texture->get_gfx_texture_resource();
@@ -141,7 +141,7 @@ void CommandStream::uav_barrier(const Resource* resource)
     KALI_ASSERT(resource);
 
     auto encoder = get_resource_command_encoder();
-    if (resource->get_type() == ResourceType::buffer) {
+    if (resource->type() == ResourceType::buffer) {
         gfx::IBufferResource* buffer = static_cast<gfx::IBufferResource*>(resource->get_gfx_resource());
         encoder->bufferBarrier(1, &buffer, gfx::ResourceState::UnorderedAccess, gfx::ResourceState::UnorderedAccess);
     } else {
@@ -212,8 +212,8 @@ void CommandStream::copy_buffer_region(
     // TODO(@skallweit): check for overlapping copies within same buffer?
     KALI_ASSERT(dst);
     KALI_ASSERT(src);
-    KALI_ASSERT_LE(dst_offset + size, dst->get_size());
-    KALI_ASSERT_LE(src_offset + size, src->get_size());
+    KALI_ASSERT_LE(dst_offset + size, dst->size());
+    KALI_ASSERT_LE(src_offset + size, src->size());
 
     buffer_barrier(dst, ResourceState::copy_destination);
     buffer_barrier(src, ResourceState::copy_source);
@@ -276,7 +276,7 @@ void CommandStream::copy_texture_region(
 void CommandStream::upload_buffer_data(const Buffer* buffer, size_t offset, size_t size, const void* data)
 {
     KALI_ASSERT(buffer);
-    KALI_ASSERT_LE(offset + size, buffer->get_size());
+    KALI_ASSERT_LE(offset + size, buffer->size());
     KALI_ASSERT(data);
 
     buffer_barrier(buffer, ResourceState::copy_destination);
@@ -291,7 +291,7 @@ void CommandStream::upload_texture_data(const Texture* texture, const void* data
     KALI_ASSERT(texture);
     KALI_ASSERT(data);
 
-    upload_texture_subresource_data(texture, 0, texture->get_subresource_count(), data);
+    upload_texture_subresource_data(texture, 0, texture->subresource_count(), data);
 }
 
 void CommandStream::upload_texture_subresource_data(
@@ -304,8 +304,8 @@ void CommandStream::upload_texture_subresource_data(
 )
 {
     KALI_ASSERT(texture);
-    KALI_ASSERT_LT(subresource_index, texture->get_subresource_count());
-    KALI_ASSERT_LE(subresource_index + subresource_count, texture->get_subresource_count());
+    KALI_ASSERT_LT(subresource_index, texture->subresource_count());
+    KALI_ASSERT_LE(subresource_index + subresource_count, texture->subresource_count());
     KALI_ASSERT_GE(subresource_count, 1);
     KALI_ASSERT(data);
 
@@ -327,7 +327,7 @@ void CommandStream::upload_texture_subresource_data(
         narrow_cast<gfx::GfxCount>(size.z),
     };
     gfx::FormatInfo format_info = {};
-    SLANG_CALL(gfx::gfxGetFormatInfo(get_gfx_format(texture->get_format()), &format_info));
+    SLANG_CALL(gfx::gfxGetFormatInfo(get_gfx_format(texture->format()), &format_info));
     for (uint32_t i = subresource_index; i < subresource_index + subresource_count; i++) {
         gfx::SubresourceRange sr_range = {};
         // sr_range.baseArrayLayer = narrow_cast<gfx::GfxIndex>(pTexture->getSubresourceArraySlice(i));

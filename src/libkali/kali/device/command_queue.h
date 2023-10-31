@@ -22,7 +22,7 @@ public:
     /// Do not use directly, instead use @see Device::create_command_queue.
     CommandQueue(ref<Device> device, CommandQueueDesc desc);
 
-    const CommandQueueDesc& get_desc() const { return m_desc; }
+    const CommandQueueDesc& desc() const { return m_desc; }
 
     /// Returns the native API handle for the command queue:
     /// - D3D12: ID3D12CommandQueue*

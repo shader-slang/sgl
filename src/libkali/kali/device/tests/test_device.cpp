@@ -22,7 +22,7 @@ TEST_CASE_GPU("create_raw_buffer")
 {
     ref<Buffer> buffer = ctx.device->create_raw_buffer(1024);
     CHECK(buffer);
-    CHECK_EQ(buffer->get_size(), 1024);
+    CHECK_EQ(buffer->size(), 1024);
 }
 
 // TEST_CASE_GPU("create_program")

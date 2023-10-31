@@ -21,10 +21,10 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
 
     // If no shader model is selected, use the default shader model.
     if (m_desc.shader_model == ShaderModel::unknown)
-        m_desc.shader_model = m_device->get_default_shader_model();
+        m_desc.shader_model = m_device->default_shader_model();
 
     // Check that requested shader model is supported.
-    ShaderModel supported_shader_model = m_device->get_supported_shader_model();
+    ShaderModel supported_shader_model = m_device->supported_shader_model();
     KALI_CHECK(
         m_desc.shader_model <= supported_shader_model,
         "Shader model {} is not supported (max shader model is {})",
@@ -32,7 +32,7 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
         supported_shader_model
     );
 
-    DeviceType device_type = m_device->get_type();
+    DeviceType device_type = m_device->type();
 
     slang::SessionDesc session_desc{};
 
@@ -141,7 +141,7 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
     session_desc.defaultMatrixLayoutMode
         = use_column_major ? SLANG_MATRIX_LAYOUT_COLUMN_MAJOR : SLANG_MATRIX_LAYOUT_ROW_MAJOR;
 
-    SLANG_CALL(m_device->get_global_session()->createSession(session_desc, m_session.writeRef()));
+    SLANG_CALL(m_device->get_global_session()->createSession(session_desc, m_slang_session.writeRef()));
 }
 
 SlangSession::~SlangSession() { }
@@ -186,7 +186,7 @@ SlangModule::SlangModule(ref<SlangSession> session, SlangModuleDesc desc)
     , m_desc(std::move(desc))
 {
     // Create compile request.
-    SLANG_CALL(m_session->get_session()->createCompileRequest(m_compile_request.writeRef()));
+    SLANG_CALL(m_session->get_slang_session()->createCompileRequest(m_compile_request.writeRef()));
 
     // Disable warnings.
     // for (int warning : m_disabled_warnings)
@@ -295,13 +295,13 @@ ref<ShaderProgram> SlangModule::create_program(ref<SlangGlobalScope> global_scop
 {
     std::vector<ref<SlangEntryPoint>> entry_points(1);
     entry_points[0] = std::move(entry_point);
-    return make_ref<ShaderProgram>(m_session->get_device(), std::move(global_scope), std::move(entry_points));
+    return make_ref<ShaderProgram>(m_session->device(), std::move(global_scope), std::move(entry_points));
 }
 
 ref<ShaderProgram>
 SlangModule::create_program(ref<SlangGlobalScope> global_scope, std::vector<ref<SlangEntryPoint>> entry_points)
 {
-    return make_ref<ShaderProgram>(m_session->get_device(), std::move(global_scope), std::move(entry_points));
+    return make_ref<ShaderProgram>(m_session->device(), std::move(global_scope), std::move(entry_points));
 }
 
 SlangComponentType::SlangComponentType(ref<SlangModule> module, Slang::ComPtr<slang::IComponentType> component_type)

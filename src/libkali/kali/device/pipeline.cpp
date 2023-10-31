@@ -22,11 +22,11 @@ NativeHandle PipelineState::get_native_handle() const
     gfx::InteropHandle handle = {};
     SLANG_CALL(m_gfx_pipeline_state->getNativeHandle(&handle));
 #if KALI_HAS_D3D12
-    if (m_device->get_type() == DeviceType::d3d12)
+    if (m_device->type() == DeviceType::d3d12)
         return NativeHandle(reinterpret_cast<ID3D12PipelineState*>(handle.handleValue));
 #endif
 #if KALI_HAS_VULKAN
-    if (m_device->get_type() == DeviceType::vulkan)
+    if (m_device->type() == DeviceType::vulkan)
         return NativeHandle(reinterpret_cast<VkPipeline>(handle.handleValue));
 #endif
     return {};
@@ -71,7 +71,7 @@ ref<ComputePipelineState> ComputePipelineCache::get_pipeline_state(ComputePipeli
 
     ref<ComputePipelineState> pipeline = make_ref<ComputePipelineState>(m_device, std::move(desc));
     pipeline->break_strong_reference_to_device();
-    m_pipelines.emplace(pipeline->get_desc(), pipeline);
+    m_pipelines.emplace(pipeline->desc(), pipeline);
     return pipeline;
 }
 

@@ -33,7 +33,7 @@ class Sampler : public Object {
 public:
     Sampler(ref<Device> device, SamplerDesc desc);
 
-    const SamplerDesc& get_desc() const { return m_desc; }
+    const SamplerDesc& desc() const { return m_desc; }
 
     gfx::ISamplerState* get_gfx_sampler_state() const { return m_gfx_sampler_state; }
 

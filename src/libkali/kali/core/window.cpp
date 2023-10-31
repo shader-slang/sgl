@@ -381,7 +381,7 @@ Window::~Window()
     terminate_glfw();
 }
 
-WindowHandle Window::get_window_handle() const
+WindowHandle Window::window_handle() const
 {
     WindowHandle handle{};
 #if KALI_WINDOWS

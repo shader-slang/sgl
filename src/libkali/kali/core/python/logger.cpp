@@ -34,7 +34,7 @@ KALI_PY_EXPORT(core_logger)
             "module"_a = "",
             "use_default_outputs"_a = true
         )
-        .def_prop_rw("level", &Logger::get_level, &Logger::set_level)
+        .def_prop_rw("level", &Logger::level, &Logger::set_level)
         .def("add_console_output", &Logger::add_console_output, "colored"_a = true)
         .def("add_file_output", &Logger::add_file_output, "path"_a)
         .def("add_debug_console_output", &Logger::add_debug_console_output)

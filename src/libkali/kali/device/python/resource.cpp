@@ -63,10 +63,10 @@ KALI_PY_EXPORT(device_resource)
             "memory_type"_a = MemoryType::device_local,
             "debug_name"_a = ""
         )
-        .def_prop_ro("desc", &Buffer::get_desc)
-        .def_prop_ro("size", &Buffer::get_size)
-        .def_prop_ro("struct_size", &Buffer::get_struct_size)
-        .def_prop_ro("format", &Buffer::get_format);
+        .def_prop_ro("desc", &Buffer::desc)
+        .def_prop_ro("size", &Buffer::size)
+        .def_prop_ro("struct_size", &Buffer::struct_size)
+        .def_prop_ro("format", &Buffer::format);
 
     nb::kali_enum<TextureType>(m, "TextureType");
 

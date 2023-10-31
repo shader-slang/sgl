@@ -187,16 +187,16 @@ void Logger::remove_all_outputs()
     m_outputs.clear();
 }
 
+LogLevel Logger::level() const
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return m_level;
+}
+
 void Logger::set_level(LogLevel level)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_level = level;
-}
-
-LogLevel Logger::get_level() const
-{
-    std::lock_guard<std::mutex> lock(m_mutex);
-    return m_level;
 }
 
 void Logger::log(LogLevel level, const std::string_view msg, LogFrequency frequency)

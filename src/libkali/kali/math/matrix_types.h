@@ -39,8 +39,8 @@ public:
     using row_type = vector<T, ColCount>;
     using col_type = vector<T, RowCount>;
 
-    static constexpr int get_row_count() { return RowCount; }
-    static constexpr int get_col_count() { return ColCount; }
+    static constexpr int row_count() { return RowCount; }
+    static constexpr int col_count() { return ColCount; }
 
     matrix()
         : matrix(Form::Identity)

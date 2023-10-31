@@ -55,7 +55,7 @@ KALI_PY_EXPORT(device_device)
         "type"_a = DeviceType::automatic,
         "enable_debug_layers"_a = false
     );
-    device.def_prop_ro("info", &Device::get_info);
+    device.def_prop_ro("info", &Device::info);
     device.def(
         "create_buffer",
         [](Device* self, const BufferDesc& desc) { return self->create_buffer(desc); },

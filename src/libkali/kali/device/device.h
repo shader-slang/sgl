@@ -130,14 +130,14 @@ public:
 
     static ref<Device> create(const DeviceDesc& desc = DeviceDesc{}) { return make_ref<Device>(desc); }
 
-    const DeviceDesc& get_desc() const { return m_desc; }
+    const DeviceDesc& desc() const { return m_desc; }
 
-    DeviceType get_type() const { return m_desc.type; }
+    DeviceType type() const { return m_desc.type; }
 
-    const DeviceInfo& get_info() const { return m_info; }
+    const DeviceInfo& info() const { return m_info; }
 
-    ShaderModel get_supported_shader_model() const { return m_supported_shader_model; }
-    ShaderModel get_default_shader_model() const { return m_default_shader_model; }
+    ShaderModel supported_shader_model() const { return m_supported_shader_model; }
+    ShaderModel default_shader_model() const { return m_default_shader_model; }
 
     ref<Swapchain> create_swapchain(SwapchainDesc desc, ref<Window> window);
 
@@ -215,7 +215,7 @@ public:
 
     ref<CommandStream> create_command_stream(CommandStreamDesc desc);
 
-    CommandStream* get_command_stream() const { return m_command_stream; }
+    CommandStream* command_stream() const { return m_command_stream; }
 
     void read_buffer(const Buffer* buffer, size_t offset, size_t size, void* out_data);
 

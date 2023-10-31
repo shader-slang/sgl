@@ -100,7 +100,7 @@ void Object::set_self_py(PyObject* o) noexcept
 
 std::string Object::to_string() const
 {
-    return fmt::format("{}({})", get_class_name(), fmt::ptr(this));
+    return fmt::format("{}({})", class_name(), fmt::ptr(this));
 }
 
 PyObject* Object::self_py() const noexcept
@@ -124,7 +124,7 @@ void Object::report_alive_objects()
 
 void Object::report_refs() const
 {
-    log_info("Object (class={} address={}) has {} reference(s)", get_class_name(), fmt::ptr(this), ref_count());
+    log_info("Object (class={} address={}) has {} reference(s)", class_name(), fmt::ptr(this), ref_count());
 #if KALI_ENABLE_REF_TRACKING
     std::lock_guard<std::mutex> lock(m_ref_trackers_mutex);
     for (const auto& it : m_ref_trackers) {

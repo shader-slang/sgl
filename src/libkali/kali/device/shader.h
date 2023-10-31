@@ -176,6 +176,7 @@ public:
     SlangSession(ref<Device> device, SlangSessionDesc desc);
     virtual ~SlangSession();
 
+    const ref<Device> device() const { return m_device; }
     const SlangSessionDesc& desc() const { return m_desc; }
 
     ref<SlangModule> load_module(const std::filesystem::path& path);
@@ -187,13 +188,12 @@ public:
 
     std::filesystem::path resolve_path(const std::filesystem::path& path);
 
-    const ref<Device> get_device() const { return m_device; }
-    slang::ISession* get_session() const { return m_session; }
+    slang::ISession* get_slang_session() const { return m_slang_session; }
 
 private:
     ref<Device> m_device;
     SlangSessionDesc m_desc;
-    Slang::ComPtr<slang::ISession> m_session;
+    Slang::ComPtr<slang::ISession> m_slang_session;
 };
 
 struct SlangModuleDesc {

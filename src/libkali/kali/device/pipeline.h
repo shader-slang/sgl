@@ -44,7 +44,7 @@ class KALI_API ComputePipelineState : public PipelineState {
 public:
     ComputePipelineState(ref<Device> device, ComputePipelineStateDesc desc);
 
-    const ComputePipelineStateDesc& get_desc() const { return m_desc; }
+    const ComputePipelineStateDesc& desc() const { return m_desc; }
 
 private:
     ComputePipelineStateDesc m_desc;
@@ -82,7 +82,7 @@ class KALI_API GraphicsPipelineState : public PipelineState {
 public:
     GraphicsPipelineState(ref<Device> device, GraphicsPipelineStateDesc desc);
 
-    const GraphicsPipelineStateDesc& get_desc() const { return m_desc; }
+    const GraphicsPipelineStateDesc& desc() const { return m_desc; }
 
 private:
     GraphicsPipelineStateDesc m_desc;

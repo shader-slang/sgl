@@ -22,5 +22,5 @@ KALI_PY_EXPORT(device_sampler)
         .def_rw("max_lod", &SamplerDesc::max_lod);
 
     nb::class_<Sampler, Object> sampler(m, "Sampler");
-    sampler.def_prop_ro("desc", &Sampler::get_desc);
+    sampler.def_prop_ro("desc", &Sampler::desc);
 }

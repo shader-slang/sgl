@@ -28,7 +28,7 @@ public:
     ~Swapchain();
 
     /// Returns the swapchain description.
-    const SwapchainDesc& get_desc() const { return m_desc; }
+    const SwapchainDesc& desc() const { return m_desc; }
 
     /// Returns the back buffer image at position `index`.
     const ref<Texture>& get_image(uint32_t index) const;
@@ -47,7 +47,7 @@ public:
     /// Returns true if the window is occluded.
     bool is_occluded() const;
 
-    bool get_fullscreen_mode() const { return m_fullscreen; }
+    bool fullscreen_mode() const { return m_fullscreen; }
     void set_fullscreen_mode(bool fullscreen);
 
 

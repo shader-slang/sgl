@@ -324,7 +324,7 @@ ref<CommandStream> Device::create_command_stream(CommandStreamDesc desc)
 void Device::read_buffer(const Buffer* buffer, size_t offset, size_t size, void* out_data)
 {
     Slang::ComPtr<ISlangBlob> blob;
-    if (offset + size > buffer->get_size())
+    if (offset + size > buffer->size())
         KALI_THROW("Buffer read out of bounds");
     SLANG_CALL(m_gfx_device->readBufferResource(buffer->get_gfx_buffer_resource(), offset, size, blob.writeRef()));
     std::memcpy(out_data, blob->getBufferPointer(), size);
@@ -337,14 +337,14 @@ NativeHandle Device::get_native_handle(uint32_t index) const
 
 #if KALI_HAS_D3D12
     KALI_ASSERT(index == 0);
-    if (get_type() == DeviceType::d3d12) {
+    if (type() == DeviceType::d3d12) {
         if (index == 0)
             return NativeHandle(reinterpret_cast<ID3D12Device*>(handles.handles[0].handleValue));
     }
 #endif
 #if KALI_HAS_VULKAN
     KALI_ASSERT(index < 3);
-    if (get_type() == DeviceType::vulkan) {
+    if (type() == DeviceType::vulkan) {
         if (index == 0)
             return NativeHandle(reinterpret_cast<VkInstance>(handles.handles[0].handleValue));
         else if (index == 1)

@@ -106,7 +106,7 @@ public:
 
     /// Return the name of the class.
     /// Note: This reports the actual class name if \c KALI_OBJECT() is used.
-    virtual const char* get_class_name() const { return "Object"; }
+    virtual const char* class_name() const { return "Object"; }
 
     /// Increase the object's reference count.
     void inc_ref() const noexcept;
@@ -165,7 +165,7 @@ private:
 /// Macro to declare the object class name.
 #define KALI_OBJECT(class_)                                                                                            \
 public:                                                                                                                \
-    const char* get_class_name() const override                                                                        \
+    const char* class_name() const override                                                                            \
     {                                                                                                                  \
         return #class_;                                                                                                \
     }

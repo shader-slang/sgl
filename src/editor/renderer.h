@@ -15,8 +15,8 @@ public:
 
         SwapchainDesc swapchain_desc{
             .format = Format::rgba8_unorm_srgb,
-            .width = window->get_width(),
-            .height = window->get_height(),
+            .width = window->width(),
+            .height = window->height(),
             .image_count = 3,
         };
         m_swapchain = m_device->create_swapchain(swapchain_desc, window);

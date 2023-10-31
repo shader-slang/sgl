@@ -53,7 +53,7 @@ int main()
             MemoryType::device_local
         );
 
-        auto stream = device->get_command_stream();
+        auto stream = device->command_stream();
 
         stream->buffer_barrier(buffer, ResourceState::unordered_access);
 

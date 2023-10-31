@@ -45,15 +45,15 @@ void Fence::wait_device(CommandQueue* queue, uint64_t value)
 void Fence::wait_host(uint64_t value, uint64_t timeout_ns)
 {
     uint64_t wait_value = value == AUTO ? m_signaled_value : value;
-    uint64_t current_value = get_current_value();
-    if (current_value < wait_value) {
+    uint64_t cur_value = current_value();
+    if (cur_value < wait_value) {
         gfx::IFence* fences[] = {m_gfx_fence};
         uint64_t wait_values[] = {wait_value};
         SLANG_CALL(m_device->get_gfx_device()->waitForFences(1, fences, wait_values, true, timeout_ns));
     }
 }
 
-uint64_t Fence::get_current_value()
+uint64_t Fence::current_value()
 {
     uint64_t value;
     SLANG_CALL(m_gfx_fence->getCurrentValue(&value));
@@ -79,7 +79,7 @@ NativeHandle Fence::get_native_handle() const
     gfx::InteropHandle handle = {};
     SLANG_CALL(m_gfx_fence->getNativeHandle(&handle));
 #if KALI_HAS_D3D12
-    if (m_device->get_type() == DeviceType::d3d12)
+    if (m_device->type() == DeviceType::d3d12)
         return NativeHandle(reinterpret_cast<ID3D12Fence*>(handle.handleValue));
 #endif
 #if KALI_HAS_VULKAN

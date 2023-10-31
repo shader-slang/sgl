@@ -31,11 +31,11 @@ NativeHandle CommandQueue::get_native_handle() const
     gfx::InteropHandle handle = {};
     SLANG_CALL(m_gfx_command_queue->getNativeHandle(&handle));
 #if KALI_HAS_D3D12
-    if (m_device->get_type() == DeviceType::d3d12)
+    if (m_device->type() == DeviceType::d3d12)
         return NativeHandle(reinterpret_cast<ID3D12CommandQueue*>(handle.handleValue));
 #endif
 #if KALI_HAS_VULKAN
-    if (m_device->get_type() == DeviceType::vulkan)
+    if (m_device->type() == DeviceType::vulkan)
         return NativeHandle(reinterpret_cast<VkQueue>(handle.handleValue));
 #endif
     return {};

@@ -38,17 +38,17 @@ public:
 
     static ref<Window> create(WindowDesc desc) { return make_ref<Window>(desc); }
 
-    WindowHandle get_window_handle() const;
+    WindowHandle window_handle() const;
 
+    uint32_t width() const { return m_width; }
+    uint32_t height() const { return m_height; }
     void resize(uint32_t width, uint32_t height);
-    uint32_t get_width() const { return m_width; }
-    uint32_t get_height() const { return m_height; }
 
     // void set_position(uint2 position);
     // uint2 get_position() const { return m_position; }
 
+    const std::string& title() const { return m_title; }
     void set_title(std::string title);
-    const std::string& get_title() const { return m_title; }
 
     void set_icon(const std::filesystem::path& path);
 
@@ -68,18 +68,32 @@ public:
     using GamepadStateCallback = std::function<void(const GamepadState& /* state */)>;
     using DropFilesCallback = std::function<void(const std::span<const char*> /* files */)>;
 
-    void set_on_resize(ResizeCallback on_resize) { m_on_resize = on_resize; }
-    ResizeCallback get_on_resize() const { return m_on_resize; }
-    void set_on_keyboard_event(KeyboardEventCallback on_keyboard_event) { m_on_keyboard_event = on_keyboard_event; }
-    KeyboardEventCallback get_on_keyboard_event() const { return m_on_keyboard_event; }
-    void set_on_mouse_event(MouseEventCallback on_mouse_event) { m_on_mouse_event = on_mouse_event; }
-    MouseEventCallback get_on_mouse_event() const { return m_on_mouse_event; }
-    void set_on_gamepad_event(GamepadEventCallback on_gamepad_event) { m_on_gamepad_event = on_gamepad_event; }
-    GamepadEventCallback get_on_gamepad_event() const { return m_on_gamepad_event; }
-    void set_on_gamepad_state(GamepadStateCallback on_gamepad_state) { m_on_gamepad_state = on_gamepad_state; }
-    GamepadStateCallback get_on_gamepad_state() const { return m_on_gamepad_state; }
-    void set_on_drop_files(DropFilesCallback on_drop_files) { m_on_drop_files = on_drop_files; }
-    DropFilesCallback get_on_drop_files() const { return m_on_drop_files; }
+    const ResizeCallback& on_resize() const { return m_on_resize; }
+    void set_on_resize(ResizeCallback on_resize) { m_on_resize = std::move(on_resize); }
+
+    const KeyboardEventCallback& on_keyboard_event() const { return m_on_keyboard_event; }
+    void set_on_keyboard_event(KeyboardEventCallback on_keyboard_event)
+    {
+        m_on_keyboard_event = std::move(on_keyboard_event);
+    }
+
+    const MouseEventCallback& on_mouse_event() const { return m_on_mouse_event; }
+    void set_on_mouse_event(MouseEventCallback on_mouse_event) { m_on_mouse_event = std::move(on_mouse_event); }
+
+    const GamepadEventCallback& on_gamepad_event() const { return m_on_gamepad_event; }
+    void set_on_gamepad_event(GamepadEventCallback on_gamepad_event)
+    {
+        m_on_gamepad_event = std::move(on_gamepad_event);
+    }
+
+    const GamepadStateCallback& on_gamepad_state() const { return m_on_gamepad_state; }
+    void set_on_gamepad_state(GamepadStateCallback on_gamepad_state)
+    {
+        m_on_gamepad_state = std::move(on_gamepad_state);
+    }
+
+    const DropFilesCallback& on_drop_files() const { return m_on_drop_files; }
+    void set_on_drop_files(DropFilesCallback on_drop_files) { m_on_drop_files = std::move(on_drop_files); }
 
     std::string to_string() const override;
 

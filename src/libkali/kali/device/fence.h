@@ -44,13 +44,13 @@ public:
     void wait_host(uint64_t value = AUTO, uint64_t timeout_ns = TIMEOUT_INFINITE);
 
     /// Returns the currently signaled value on the device.
-    uint64_t get_current_value();
+    uint64_t current_value();
 
     /// Set the currently signaled value on the device.
     void set_current_value(uint64_t value);
 
     /// Returns the last signaled value on the device.
-    uint64_t get_signaled_value();
+    uint64_t signaled_value();
 
     gfx::IFence* get_gfx_fence() const { return m_gfx_fence; }
 

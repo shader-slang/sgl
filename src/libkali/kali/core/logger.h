@@ -114,8 +114,9 @@ public:
     void remove_output(ref<LoggerOutput> output);
     void remove_all_outputs();
 
+    /// The log level.
+    LogLevel level() const;
     void set_level(LogLevel level);
-    LogLevel get_level() const;
 
     void log(LogLevel level, const std::string_view msg, LogFrequency frequency = LogFrequency::always);
 

@@ -264,7 +264,7 @@ public:
     ResourceView(const ResourceViewDesc& desc, const Buffer* buffer);
     ResourceView(const ResourceViewDesc& desc, const Texture* texture);
 
-    ResourceViewType get_type() const { return m_desc.type; }
+    ResourceViewType type() const { return m_desc.type; }
 
     gfx::IResourceView* get_gfx_resource_view() const { return m_gfx_resource_view; }
 
@@ -289,17 +289,17 @@ class KALI_API Resource : public Object {
 public:
     virtual ~Resource();
 
-    ResourceType get_type() const { return m_type; };
+    ResourceType type() const { return m_type; };
 
-    Format get_format() const { return Format::unknown; }
+    Format format() const { return Format::unknown; }
 
     /// Return true if the whole resource has the same resource state.
     bool has_global_state() const { return true; }
 
-    ResourceState get_global_state() const { return ResourceState::undefined; }
+    ResourceState global_state() const { return ResourceState::undefined; }
 
+    const char* debug_name() const;
     void set_debug_name(const char* name);
-    const char* get_debug_name() const;
 
     // virtual ref<ResourceView> get_rtv() const;
     // virtual ref<ResourceView> get_dsv() const;
@@ -375,11 +375,11 @@ class KALI_API Buffer : public Resource {
 public:
     Buffer(ref<Device> device, BufferDesc desc, const void* init_data);
 
-    const BufferDesc& get_desc() const { return m_desc; }
+    const BufferDesc& desc() const { return m_desc; }
 
-    size_t get_size() const { return m_desc.size; }
-    size_t get_struct_size() const { return m_desc.struct_size; }
-    Format get_format() const { return m_desc.format; }
+    size_t size() const { return m_desc.size; }
+    size_t struct_size() const { return m_desc.struct_size; }
+    Format format() const { return m_desc.format; }
 
     /// Map the whole buffer.
     /// Only available for buffers created with MemoryType::upload or MemoryType::read_back.
@@ -482,7 +482,7 @@ public:
     Texture(ref<Device> device, TextureDesc desc, const void* init_data);
     Texture(ref<Device> device, TextureDesc desc, gfx::ITextureResource* resource);
 
-    const TextureDesc& get_desc() const { return m_desc; }
+    const TextureDesc& desc() const { return m_desc; }
 
     uint32_t get_width(MipLevel mip_level = 0) const
     {
@@ -500,11 +500,11 @@ public:
         return 0;
     }
 
-    uint32_t get_array_size() const { return 1; }
-    uint32_t get_mip_count() const { return 1; }
-    uint32_t get_subresource_count() const
+    uint32_t array_size() const { return 1; }
+    uint32_t mip_count() const { return 1; }
+    uint32_t subresource_count() const
     {
-        return get_array_size() * get_mip_count() * (get_type() == ResourceType::texture_cube ? 6 : 1);
+        return array_size() * mip_count() * (type() == ResourceType::texture_cube ? 6 : 1);
     }
 
     /// Get a resource view. Views are cached and reused.
