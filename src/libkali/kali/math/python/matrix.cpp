@@ -17,7 +17,6 @@ void bind_matrix_type(nb::module_& m, const char* name)
     auto constexpr col_count = T::col_count();
     using value_type = typename T::value_type;
     using row_type = typename T::row_type;
-    using col_type = typename T::col_type;
 
     mat.def(nb::init<>());
 
