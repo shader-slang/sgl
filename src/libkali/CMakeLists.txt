@@ -329,7 +329,7 @@ if(KALI_LINUX)
     add_custom_command(
         TARGET kali_ext POST_BUILD
         WORKING_DIRECTORY ${KALI_OUTPUT_DIRECTORY}
-        COMMAND ${CMAKE_SOURCE_DIR}/tools/wrap_setpath.sh ${Python_EXECUTABLE} -m nanobind_stubgen --out ${KALI_OUTPUT_DIRECTORY}/python kali
+        COMMAND /bin/bash -c \"source ${KALI_OUTPUT_DIRECTORY}/setpath.sh && ${Python_EXECUTABLE} -m nanobind_stubgen --out ${KALI_OUTPUT_DIRECTORY}/python kali\"
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tools/nanobind-stubgen
     )
 endif()
