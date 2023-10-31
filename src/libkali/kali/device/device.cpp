@@ -458,13 +458,17 @@ std::string Device::to_string() const
 {
     return fmt::format(
         "Device(\n"
-        "    type={}\n"
-        "    enable_debug_layers={}\n"
-        "    shader_cache_path={}\n"
+        "    type={},\n"
+        "    enable_debug_layers={},\n"
+        "    shader_cache_path=\"{}\",\n"
+        "    default_shader_model={},\n"
+        "    supported_shader_model={}\n"
         ")",
         m_desc.type,
         m_desc.enable_debug_layers,
-        m_desc.shader_cache_path
+        m_desc.shader_cache_path,
+        m_default_shader_model,
+        m_supported_shader_model
     );
 }
 

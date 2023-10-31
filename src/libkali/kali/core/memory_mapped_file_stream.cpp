@@ -27,7 +27,7 @@ MemoryMappedFileStream::~MemoryMappedFileStream()
 
 std::string MemoryMappedFileStream::to_string() const
 {
-    return fmt::format("MemoryMappedFileStream(path={})", m_path);
+    return fmt::format("MemoryMappedFileStream(path=\"{}\")", m_path);
 }
 
 } // namespace kali
