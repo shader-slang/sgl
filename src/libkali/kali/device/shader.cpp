@@ -336,10 +336,10 @@ SlangEntryPoint::SlangEntryPoint(ref<SlangModule> module, Slang::ComPtr<slang::I
     m_stage = get_shader_stage(reflection->getStage());
 }
 
-ref<SlangEntryPoint> SlangEntryPoint::rename(const std::string& name)
+ref<SlangEntryPoint> SlangEntryPoint::rename(const std::string& new_name)
 {
     Slang::ComPtr<slang::IComponentType> renamed_entry_point;
-    SLANG_CALL(m_component_type->renameEntryPoint(name.c_str(), renamed_entry_point.writeRef()));
+    SLANG_CALL(m_component_type->renameEntryPoint(new_name.c_str(), renamed_entry_point.writeRef()));
     return make_ref<SlangEntryPoint>(m_module, renamed_entry_point);
 }
 
@@ -403,6 +403,15 @@ ShaderProgram::ShaderProgram(
     if (diagnostics) {
         log_warn("Slang compiler warnings:\n{}", (const char*)diagnostics->getBufferPointer());
     }
+}
+
+std::vector<ref<const EntryPointLayout>> ShaderProgram::entry_point_layouts() const
+{
+    std::vector<ref<const EntryPointLayout>> layouts(m_entry_points.size());
+    for (size_t i = 0; i < m_entry_points.size(); ++i) {
+        layouts[i] = m_entry_points[i]->layout();
+    }
+    return layouts;
 }
 
 std::string ShaderProgram::to_string() const

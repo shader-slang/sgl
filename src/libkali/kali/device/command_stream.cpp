@@ -397,7 +397,7 @@ void CommandStream::dispatch_compute(
 
     ref<ShaderObject> shader_object = bind_compute_pipeline(pipeline);
 
-    log_info(dump_type_reflection(get_type_reflection(shader_object->get_gfx_shader_object()->getElementTypeLayout())));
+    // log_info(dump_type_reflection(get_type_reflection(shader_object->get_gfx_shader_object()->getElementTypeLayout())));
     // log_info(dump_type_reflection(get_type_reflection(shader_object->get_gfx_shader_object()->getEntryPoint(0)->getElementTypeLayout())));
     // KALI_PRINT(shader_object->get_gfx_shader_object()->getEntryPointCount());
     // log_info(dump_type_reflection(get_type_reflection(shader_object->get_gfx_shader_object()->getEntryPoint(0)->getElementTypeLayout())));
@@ -411,7 +411,7 @@ void CommandStream::dispatch_compute(
         set_vars(gfx::ShaderCursor(shader_object->get_gfx_shader_object()));
     }
 
-    uint3 thread_group_size = program->entry_point_layout(0)->get_compute_thread_group_size();
+    uint3 thread_group_size = program->entry_point_layout(0)->compute_thread_group_size();
     uint3 thread_group_count{
         div_round_up(thread_count.x, thread_group_size.x),
         div_round_up(thread_count.y, thread_group_size.y),

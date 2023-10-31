@@ -1,6 +1,7 @@
 #include "nanobind.h"
 
 #include "kali/device/shader.h"
+#include "kali/device/reflection.h"
 
 NB_MAKE_OPAQUE(std::map<kali::TypeConformance, uint32_t>);
 NB_MAKE_OPAQUE(std::map<std::string, std::string, std::less<>>);
@@ -84,7 +85,13 @@ KALI_PY_EXPORT(device_shader)
     nb::class_<SlangGlobalScope, SlangComponentType>(m, "SlangGlobalScope");
 
     nb::class_<SlangEntryPoint, SlangComponentType>(m, "SlangEntryPoint")
-        .def("rename", &SlangEntryPoint::rename, "name"_a);
+        .def_prop_ro("name", &SlangEntryPoint::name)
+        .def_prop_ro("stage", &SlangEntryPoint::stage)
+        .def_prop_ro("layout", &SlangEntryPoint::layout)
+        .def("rename", &SlangEntryPoint::rename, "new_name"_a);
 
-    nb::class_<ShaderProgram, Object>(m, "ShaderProgram");
+    nb::class_<ShaderProgram, Object>(m, "ShaderProgram")
+        .def_prop_ro("program_layout", &ShaderProgram::program_layout)
+        .def_prop_ro("entry_point_layouts", &ShaderProgram::entry_point_layouts)
+        .def("entry_point_layout", &ShaderProgram::entry_point_layout, "index"_a);
 }

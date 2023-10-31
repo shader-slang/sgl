@@ -16,8 +16,6 @@
 
 namespace kali {
 
-class ProgramVersion;
-
 class TypeReflection;
 class ArrayTypeReflection;
 class StructTypeReflection;
@@ -52,24 +50,27 @@ public:
         }
     );
 
-    virtual Kind get_kind() const = 0;
+    /// The kind of type.
+    virtual Kind kind() const = 0;
 
-    /// Dynamic-cast the current object to StructTypeReflection.
+    /// Dynamically cast to \c StructTypeReflection.
     const StructTypeReflection* as_struct_type() const;
 
-    /// Dynamic-cast the current object to ArrayTypeReflection.
+    /// Dynamically cast to \c ArrayTypeReflection.
     const ArrayTypeReflection* as_array_type() const;
 
-    /// Dynamic-cast the current object to BasicTypeReflection.
+    /// Dynamically cast to \c BasicTypeReflection.
     const BasicTypeReflection* as_basic_type() const;
 
-    /// Dynamic-cast the current object to ResourceTypeReflection.
+    /// Dynamically cast to \c ResourceTypeReflection.
     const ResourceTypeReflection* as_resource_type() const;
 
-    /// Dynamic cast to InterfaceTypeReflection.
+    /// Dynamically cast to \c InterfaceTypeReflection.
     const InterfaceTypeReflection* as_interface_type() const;
 
     slang::TypeLayoutReflection* get_slang_type_layout() const { return m_slang_type_layout; }
+
+    virtual std::string to_string() const override;
 
 protected:
     slang::TypeLayoutReflection* m_slang_type_layout;
@@ -91,15 +92,19 @@ public:
     {
     }
 
-    Kind get_kind() const override { return Kind::struct_; }
+    Kind kind() const override { return Kind::struct_; }
 
-    const std::string& get_name() const { return m_name; }
+    /// The struct name.
+    const std::string& name() const { return m_name; }
 
-    const std::vector<ref<VariableReflection>> get_members() const { return m_members; }
+    /// The struct members.
+    const std::vector<ref<VariableReflection>>& members() const { return m_members; }
 
     VariableReflection* find_member(std::string_view name) const;
 
     void add_member(ref<VariableReflection> member) { m_members.push_back(std::move(member)); }
+
+    virtual std::string to_string() const override;
 
 private:
     std::string m_name;
@@ -122,17 +127,19 @@ public:
     {
     }
 
-    Kind get_kind() const override { return Kind::array; }
+    Kind kind() const override { return Kind::array; }
 
-    /// Get the type of the elements in the array.
-    TypeReflection* get_element_type() const { return m_element_type; }
+    /// The type of the elements in the array.
+    TypeReflection* element_type() const { return m_element_type; }
 
-    /// Get the number of elements in the array.
-    uint32_t get_element_count() const { return m_element_count; }
+    /// The number of elements in the array.
+    uint32_t element_count() const { return m_element_count; }
 
-    /// Get the stride of the elements in the array (i.e. the number of bytes between elements).
-    /// Note: This does not necessarily match the size of the element type.
-    uint32_t get_element_stride() const { return m_element_stride; }
+    /// The stride of the elements in the array (i.e. the number of bytes between elements).
+    /// \note This does not necessarily match the size of the element type.
+    uint32_t element_stride() const { return m_element_stride; }
+
+    virtual std::string to_string() const override;
 
 private:
     ref<TypeReflection> m_element_type;
@@ -197,7 +204,6 @@ public:
         // Matrix types.
         // clang-format on
 
-
         Float16_2x2,
         Float16_2x3,
         Float16_2x4,
@@ -237,15 +243,17 @@ public:
     {
     }
 
-    Kind get_kind() const override { return Kind::basic; }
+    Kind kind() const override { return Kind::basic; }
 
-    ScalarType get_scalar_type() const { return m_scalar_type; }
-    uint8_t get_row_count() const { return m_row_count; }
-    uint8_t get_col_count() const { return m_col_count; }
+    ScalarType scalar_type() const { return m_scalar_type; }
+    uint8_t row_count() const { return m_row_count; }
+    uint8_t col_count() const { return m_col_count; }
     bool is_row_major() const { return m_row_major != 0; }
 
     bool is_vector() const { return (m_row_count == 1 && m_col_count > 1) || (m_row_count > 1 && m_col_count == 1); }
     bool is_matrix() const { return m_row_count > 1 && m_col_count > 1; }
+
+    virtual std::string to_string() const override;
 
 private:
     ScalarType m_scalar_type;
@@ -377,14 +385,16 @@ public:
     {
     }
 
-    Kind get_kind() const override { return Kind::resource; }
+    Kind kind() const override { return Kind::resource; }
 
-    Type get_type() const { return m_type; }
-    Dimensions get_dimensions() const { return m_dimensions; }
-    StructuredType get_structured_type() const { return m_structured_type; }
-    ReturnType get_return_type() const { return m_return_type; }
-    ShaderAccess get_shader_access() const { return m_shader_access; }
-    TypeReflection* get_element_type() const { return m_element_type; }
+    Type type() const { return m_type; }
+    Dimensions dimensions() const { return m_dimensions; }
+    StructuredType structured_type() const { return m_structured_type; }
+    ReturnType return_type() const { return m_return_type; }
+    ShaderAccess shader_access() const { return m_shader_access; }
+    TypeReflection* element_type() const { return m_element_type; }
+
+    virtual std::string to_string() const override;
 
 private:
     Type m_type;
@@ -409,7 +419,9 @@ public:
     {
     }
 
-    Kind get_kind() const override { return Kind::interface; }
+    Kind kind() const override { return Kind::interface; }
+
+    virtual std::string to_string() const override;
 };
 
 class KALI_API VariableReflection : public Object {
@@ -422,11 +434,13 @@ public:
     {
     }
 
-    const std::string& get_name() const { return m_name; }
+    const std::string& name() const { return m_name; }
 
-    TypeReflection* get_type() const { return m_type; }
+    TypeReflection* type() const { return m_type; }
 
-    const ShaderOffset& get_offset() const { return m_offset; }
+    const ShaderOffset& offset() const { return m_offset; }
+
+    virtual std::string to_string() const override;
 
 private:
     std::string m_name;
@@ -444,17 +458,17 @@ public:
     //     return TypeLayoutReflection(m_layout->getGlobalParamsTypeLayout());
     // }
 
-    const ref<StructTypeReflection>& get_globals_type() const { return m_globals_type; }
+    const ref<StructTypeReflection>& globals_type() const { return m_globals_type; }
 
     /// Return a hash to string map of all hashed strings in the program.
-    std::map<uint32_t, std::string> get_hashed_strings() const;
+    const std::map<uint32_t, std::string>& hashed_strings() const;
 
-    void dump();
+    virtual std::string to_string() const override;
 
 private:
-    const ProgramVersion* m_program_version;
     slang::ProgramLayout* m_layout;
     ref<StructTypeReflection> m_globals_type;
+    mutable std::map<uint32_t, std::string> m_hashed_strings;
 };
 
 class KALI_API EntryPointLayout : public Object {
@@ -462,7 +476,13 @@ class KALI_API EntryPointLayout : public Object {
 public:
     EntryPointLayout(slang::EntryPointLayout* layout);
 
-    uint3 get_compute_thread_group_size() const;
+    /// The name of the entry point.
+    std::string name() const { return m_layout->getName(); }
+
+    /// The thread group size if this is a compute stage entry point.
+    uint3 compute_thread_group_size() const;
+
+    virtual std::string to_string() const override;
 
 private:
     slang::EntryPointLayout* m_layout;
@@ -471,6 +491,5 @@ private:
 // TODO temporary utilities
 
 KALI_API ref<TypeReflection> get_type_reflection(slang::TypeLayoutReflection* slang_type_layout);
-KALI_API std::string dump_type_reflection(const TypeReflection* type_reflection);
 
 } // namespace kali

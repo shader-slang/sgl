@@ -9,6 +9,7 @@
 #include <exception>
 #include <map>
 #include <vector>
+#include <string>
 
 namespace kali {
 
@@ -252,7 +253,7 @@ public:
 
     const ref<const ProgramLayout>& layout() const;
 
-    std::string to_string() const;
+    virtual std::string to_string() const override;
 
 private:
     mutable ref<const ProgramLayout> m_layout;
@@ -266,12 +267,11 @@ public:
 
     const std::string& name() const { return m_name; }
     ShaderStage stage() const { return m_stage; }
-
-    ref<SlangEntryPoint> rename(const std::string& name);
-
     const ref<const EntryPointLayout>& layout() const;
 
-    std::string to_string() const;
+    ref<SlangEntryPoint> rename(const std::string& new_name);
+
+    virtual std::string to_string() const override;
 
 private:
     std::string m_name;
@@ -290,11 +290,15 @@ public:
     virtual ~ShaderProgram() = default;
 
     const ref<const ProgramLayout>& program_layout() const { return m_global_scope->layout(); }
-    const ref<const EntryPointLayout>& entry_point_layout(uint32_t index) const { return m_entry_points[index]->layout(); }
+    std::vector<ref<const EntryPointLayout>> entry_point_layouts() const;
+    const ref<const EntryPointLayout>& entry_point_layout(uint32_t index) const
+    {
+        return m_entry_points[index]->layout();
+    }
 
     gfx::IShaderProgram* get_gfx_shader_program() const { return m_gfx_shader_program; }
 
-    std::string to_string() const;
+    virtual std::string to_string() const override;
 
 private:
     ref<Device> m_device;

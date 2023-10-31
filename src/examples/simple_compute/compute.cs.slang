@@ -26,7 +26,7 @@ struct Test {
 
 RWStructuredBuffer<uint> g_buffer;
 
-Test g_array[4];
+// Test g_array[4];
 
 // ConstantBuffer<BasicTypes> cb_basic_types;
 

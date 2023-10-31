@@ -2,27 +2,29 @@
 #include "kali/core/logger.h"
 #include "kali/core/platform.h"
 #include "kali/device/device.h"
-#include "kali/device/program.h"
+#include "kali/device/shader.h"
 #include "kali/device/reflection.h"
 #include "kali/device/pipeline.h"
 #include "kali/device/command_stream.h"
 #include "kali/device/shader_cursor.h"
 #include "kali/math/vector.h"
-
+#include "kali/device/agility_sdk.h"
 
 using namespace kali;
+
+KALI_EXPORT_AGILITY_SDK
 
 
 int main()
 {
     kali::static_init();
+    kali::Device::enable_agility_sdk();
 
     {
         ref<Device> device = Device::create({.type = DeviceType::automatic, .enable_debug_layers = true});
 
-        device->get_program_manager()->add_search_path(get_project_directory() / "src/examples/simple_compute");
-
-        ref<Program> program = device->create_program(ProgramDesc::create_compute("compute.cs.slang", "main"));
+        auto path = get_project_directory() / "src/examples/simple_compute/compute.cs.slang";
+        ref<ShaderProgram> program = device->load_module(path)->create_program("main");
 
 #if 1
         // program->get_active_version()->get_program_layout()->dump();

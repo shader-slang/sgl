@@ -3,57 +3,56 @@
 #include "kali/core/type_utils.h"
 #include "kali/core/format.h"
 
+#include "kali/math/vector_math.h"
+
+
+template<>
+struct fmt::formatter<kali::ShaderOffset> : formatter<std::string> {
+    template<typename FormatContext>
+    auto format(const kali::ShaderOffset& v, FormatContext& ctx) const
+    {
+        if (v.is_valid())
+            return ::fmt::format_to(
+                ctx.out(),
+                "{{uniform_offset={}, binding_range_index={}, binding_array_index={}}}",
+                v.uniform_offset,
+                v.binding_range_index,
+                v.binding_array_index
+            );
+        else
+            return ::fmt::format_to(ctx.out(), "{{invalid}}");
+    }
+};
+
 namespace kali {
 
-class StringWriter {
-public:
-    void indent(int offset)
+namespace {
+    std::string indent(std::string_view str)
     {
-        m_indent = std::max(0, m_indent + offset);
-        m_padding = std::string(m_indent, ' ');
+        std::string result;
+        for (auto c : str) {
+            result += c;
+            if (c == '\n')
+                result += "    ";
+        }
+        return result;
     }
 
-    void print(std::string_view str) { m_str += str; }
-
-    void println(std::string_view str)
+    template<typename T>
+    std::string objects_to_string(const std::vector<T>& objects)
     {
-        m_str += m_padding;
-        m_str += str;
-        m_str += '\n';
+        if (objects.empty())
+            return "[]";
+        std::string result = "[\n";
+        for (const auto& object : objects) {
+            result += "    " + indent(object->to_string());
+            result += ",\n";
+        }
+        result += "]";
+        return result;
     }
 
-    template<typename... Args>
-    void print(fmt::format_string<Args...> fmt, Args&&... args)
-    {
-        print(fmt::format(fmt, std::forward<Args>(args)...));
-    }
-
-    template<typename... Args>
-    void println(fmt::format_string<Args...> fmt, Args&&... args)
-    {
-        println(fmt::format(fmt, std::forward<Args>(args)...));
-    }
-
-    StringWriter& operator()(std::string_view str)
-    {
-        println(str);
-        return *this;
-    }
-
-    template<typename... Args>
-    StringWriter& operator()(fmt::format_string<Args...> fmt, Args&&... args)
-    {
-        println(fmt::format(fmt, std::forward<Args>(args)...));
-        return *this;
-    }
-
-    std::string str() const { return m_str; }
-
-private:
-    std::string m_str;
-    int m_indent{0};
-    std::string m_padding;
-};
+} // namespace
 
 // ----------------------------------------------------------------------------
 // TypeReflection
@@ -61,27 +60,32 @@ private:
 
 const StructTypeReflection* TypeReflection::as_struct_type() const
 {
-    return get_kind() == Kind::struct_ ? static_cast<const StructTypeReflection*>(this) : nullptr;
+    return kind() == Kind::struct_ ? static_cast<const StructTypeReflection*>(this) : nullptr;
 }
 
 const ArrayTypeReflection* TypeReflection::as_array_type() const
 {
-    return get_kind() == Kind::array ? static_cast<const ArrayTypeReflection*>(this) : nullptr;
+    return kind() == Kind::array ? static_cast<const ArrayTypeReflection*>(this) : nullptr;
 }
 
 const BasicTypeReflection* TypeReflection::as_basic_type() const
 {
-    return get_kind() == Kind::basic ? static_cast<const BasicTypeReflection*>(this) : nullptr;
+    return kind() == Kind::basic ? static_cast<const BasicTypeReflection*>(this) : nullptr;
 }
 
 const ResourceTypeReflection* TypeReflection::as_resource_type() const
 {
-    return get_kind() == Kind::resource ? static_cast<const ResourceTypeReflection*>(this) : nullptr;
+    return kind() == Kind::resource ? static_cast<const ResourceTypeReflection*>(this) : nullptr;
 }
 
 const InterfaceTypeReflection* TypeReflection::as_interface_type() const
 {
-    return get_kind() == Kind::interface ? static_cast<const InterfaceTypeReflection*>(this) : nullptr;
+    return kind() == Kind::interface ? static_cast<const InterfaceTypeReflection*>(this) : nullptr;
+}
+
+std::string TypeReflection::to_string() const
+{
+    return fmt::format("TypeReflection(kind={})", kind());
 }
 
 // ----------------------------------------------------------------------------
@@ -91,119 +95,99 @@ const InterfaceTypeReflection* TypeReflection::as_interface_type() const
 VariableReflection* StructTypeReflection::find_member(std::string_view name) const
 {
     for (const auto& member : m_members) {
-        if (member->get_name() == name)
+        if (member->name() == name)
             return member;
     }
     return nullptr;
+}
+
+std::string StructTypeReflection::to_string() const
+{
+    return fmt::format(
+        "StructTypeReflection(\n"
+        "    name=\"{}\",\n"
+        "    members={}\n"
+        ")",
+        name(),
+        indent(objects_to_string(members()))
+    );
 }
 
 // ----------------------------------------------------------------------------
 // ArrayTypeReflection
 // ----------------------------------------------------------------------------
 
+std::string ArrayTypeReflection::to_string() const
+{
+    return fmt::format(
+        "ArrayTypeReflection(\n"
+        "    element_count={},\n",
+        "    element_stride={},\n",
+        "    element_type={}\n"
+        ")",
+        element_count(),
+        element_stride(),
+        indent(element_type()->to_string())
+    );
+}
+
 // ----------------------------------------------------------------------------
 // BasicTypeReflection
 // ----------------------------------------------------------------------------
+
+std::string BasicTypeReflection::to_string() const
+{
+    return fmt::format(
+        "BasicTypeReflection(scalar_type={}, row_count={}, col_count={}, is_row_major={})",
+        scalar_type(),
+        row_count(),
+        col_count(),
+        is_row_major()
+    );
+}
 
 // ----------------------------------------------------------------------------
 // ResourceTypeReflection
 // ----------------------------------------------------------------------------
 
+std::string ResourceTypeReflection::to_string() const
+{
+    return fmt::format(
+        "ResourceTypeReflection(type={}, dimensions={}, structured_type={}, return_type={}, shader_access={})",
+        type(),
+        dimensions(),
+        structured_type(),
+        return_type(),
+        shader_access()
+    );
+}
+
 // ----------------------------------------------------------------------------
-// InterfaceReflectionType
+// InterfaceTypeReflection
 // ----------------------------------------------------------------------------
+
+std::string InterfaceTypeReflection::to_string() const
+{
+    return fmt::format("InterfaceTypeReflection()");
+}
 
 // ----------------------------------------------------------------------------
 // VariableReflection
 // ----------------------------------------------------------------------------
 
-// ----------------------------------------------------------------------------
-// InterfaceReflectionType
-// ----------------------------------------------------------------------------
-
-class ReflectionWriter : public StringWriter {
-public:
-    void write(const TypeReflection* type)
-    {
-        if (!type)
-            return;
-        if (type->as_struct_type()) {
-            write(type->as_struct_type());
-        } else if (type->as_array_type()) {
-            write(type->as_array_type());
-        } else if (type->as_basic_type()) {
-            write(type->as_basic_type());
-        } else if (type->as_resource_type()) {
-            write(type->as_resource_type());
-        } else if (type->as_interface_type()) {
-            write(type->as_interface_type());
-        }
-    }
-
-    void write(const StructTypeReflection* type)
-    {
-        println("StructTypeReflection(name=\"{}\")", type->get_name());
-        indent(4);
-        for (auto&& member : type->get_members()) {
-            write(member.get());
-        }
-        indent(-4);
-    }
-
-    void write(const ArrayTypeReflection* type)
-    {
-        println(
-            "ArrayTypeReflection(element_count={}, element_stride={})",
-            type->get_element_count(),
-            type->get_element_stride()
-        );
-        indent(4);
-        write(type->get_element_type());
-        indent(-4);
-    }
-
-    void write(const BasicTypeReflection* type)
-    {
-        KALI_UNUSED(type);
-        println(
-            "BasicTypeReflection(scalar_type={}, row_count={}, col_count={}, is_row_major={})",
-            enum_to_string(type->get_scalar_type()),
-            type->get_row_count(),
-            type->get_col_count(),
-            type->is_row_major()
-        );
-    }
-
-    void write(const ResourceTypeReflection* type)
-    {
-        KALI_UNUSED(type);
-        println(
-            "ResourceTypeReflection(type={}, dimensions={}, structured_type={}, return_type={}, access={})",
-            enum_to_string(type->get_type()),
-            enum_to_string(type->get_dimensions()),
-            enum_to_string(type->get_structured_type()),
-            enum_to_string(type->get_return_type()),
-            enum_to_string(type->get_shader_access())
-        );
-        indent(4);
-        write(type->get_element_type());
-        indent(-4);
-    }
-
-    void write(const InterfaceTypeReflection* type)
-    {
-        KALI_UNUSED(type);
-        println("InterfaceTypeReflection()");
-    }
-
-    void write(const VariableReflection* var)
-    {
-        println("VariableReflection(name=\"{}\")", var->get_name());
-        indent(4);
-        write(var->get_type());
-        indent(-4);
-    }
-};
+std::string VariableReflection::to_string() const
+{
+    return fmt::format(
+        "VariableReflection(\n"
+        "    name=\"{}\",\n"
+        "    offset={},\n"
+        "    type={}\n"
+        ")",
+        name(),
+        offset(),
+        indent(type()->to_string())
+    );
+}
 
 
 static ref<TypeReflection> reflect_type(slang::TypeLayoutReflection* type_layout);
@@ -221,8 +205,7 @@ static ref<StructTypeReflection> reflect_struct_type(slang::TypeLayoutReflection
     for (uint32_t i = 0; i < type_layout->getFieldCount(); i++) {
         slang::VariableLayoutReflection* field = type_layout->getFieldByIndex(i);
 
-        ref<VariableReflection> member = reflect_variable(field); //, pType->getResourceRangeCount(), pBlock,
-                                                                  //&fieldPath, pProgramVersion);
+        ref<VariableReflection> member = reflect_variable(field);
         if (member)
             members.push_back(std::move(member));
     }
@@ -421,11 +404,7 @@ static ref<InterfaceTypeReflection> reflect_interface_type(slang::TypeLayoutRefl
     return make_ref<InterfaceTypeReflection>(type_layout);
 }
 
-static ref<TypeReflection> reflect_type(slang::TypeLayoutReflection* type_layout
-                                        // ParameterBlockReflection* pBlock,
-                                        // ReflectionPath* pPath,
-                                        // ProgramVersion const* pProgramVersion
-)
+static ref<TypeReflection> reflect_type(slang::TypeLayoutReflection* type_layout)
 {
     KALI_ASSERT(type_layout);
     switch (type_layout->getKind()) {
@@ -488,23 +467,29 @@ ProgramLayout::ProgramLayout(slang::ProgramLayout* layout)
     m_globals_type = make_ref<StructTypeReflection>(m_layout->getGlobalParamsTypeLayout(), "", globals);
 }
 
-std::map<uint32_t, std::string> ProgramLayout::get_hashed_strings() const
+const std::map<uint32_t, std::string>& ProgramLayout::hashed_strings() const
 {
-    std::map<uint32_t, std::string> result;
-    for (uint32_t i = 0; i < m_layout->getHashedStringCount(); ++i) {
-        size_t size;
-        const char* str = m_layout->getHashedString(i, &size);
-        uint32_t hash = spComputeStringHash(str, size);
-        result.emplace(hash, std::string(str, str + size));
+    if (m_hashed_strings.empty() && m_layout->getHashedStringCount() > 0) {
+        for (uint32_t i = 0; i < m_layout->getHashedStringCount(); ++i) {
+            size_t size;
+            const char* str = m_layout->getHashedString(i, &size);
+            uint32_t hash = spComputeStringHash(str, size);
+            m_hashed_strings.emplace(hash, std::string(str, str + size));
+        }
     }
-    return result;
+    return m_hashed_strings;
 }
 
-void ProgramLayout::dump()
+std::string ProgramLayout::to_string() const
 {
-    ReflectionWriter writer;
-    writer.write(m_globals_type);
-    log_info("\n\n{}\n\n", writer.str());
+    return fmt::format(
+        "ProgramLayout(\n"
+        "    globals_type={},\n"
+        "    hashed_strings={}\n"
+        ")",
+        indent(globals_type()->to_string()),
+        hashed_strings().size()
+    );
 }
 
 EntryPointLayout::EntryPointLayout(slang::EntryPointLayout* layout)
@@ -512,23 +497,28 @@ EntryPointLayout::EntryPointLayout(slang::EntryPointLayout* layout)
 {
 }
 
-uint3 EntryPointLayout::get_compute_thread_group_size() const
+uint3 EntryPointLayout::compute_thread_group_size() const
 {
     SlangUInt size[3];
     m_layout->getComputeThreadGroupSize(3, size);
     return uint3(narrow_cast<uint32_t>(size[0]), narrow_cast<uint32_t>(size[1]), narrow_cast<uint32_t>(size[2]));
 }
 
+std::string EntryPointLayout::to_string() const
+{
+    return fmt::format(
+        "EntryPointLayout(\n"
+        "    name=\"{}\",\n"
+        "    compute_thread_group_size={}\n"
+        ")",
+        name(),
+        compute_thread_group_size()
+    );
+}
+
 ref<TypeReflection> get_type_reflection(slang::TypeLayoutReflection* slang_type_layout)
 {
     return reflect_type(slang_type_layout);
-}
-
-std::string dump_type_reflection(const TypeReflection* type_reflection)
-{
-    ReflectionWriter writer;
-    writer.write(type_reflection);
-    return writer.str();
 }
 
 } // namespace kali
