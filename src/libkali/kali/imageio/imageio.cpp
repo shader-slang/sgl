@@ -2,7 +2,6 @@
 
 #include "kali/core/macros.h"
 #include "kali/core/error.h"
-#include "kali/core/string_utils.h"
 #include "kali/core/type_utils.h"
 #include "kali/core/platform.h"
 #include "kali/core/file_stream.h"

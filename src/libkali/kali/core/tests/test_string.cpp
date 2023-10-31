@@ -1,9 +1,9 @@
 #include "testing.h"
-#include "kali/core/string_utils.h"
+#include "kali/core/string.h"
 
-using namespace kali;
+using namespace kali::string;
 
-TEST_SUITE_BEGIN("string_utils");
+TEST_SUITE_BEGIN("string");
 
 TEST_CASE("to_upper")
 {

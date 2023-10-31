@@ -40,8 +40,8 @@ target_sources(kali PRIVATE
     kali/core/plugin.h
     kali/core/resolver.h
     kali/core/stream.h
-    kali/core/string_utils.cpp
-    kali/core/string_utils.h
+    kali/core/string.cpp
+    kali/core/string.h
     kali/core/timer.cpp
     kali/core/timer.h
     kali/core/traits.h
@@ -351,7 +351,7 @@ target_sources(kali_tests PRIVATE
     kali/core/tests/test_platform.cpp
     kali/core/tests/test_plugin.cpp
     kali/core/tests/test_stream.cpp
-    kali/core/tests/test_string_utils.cpp
+    kali/core/tests/test_string.cpp
     kali/core/tests/test_timer.cpp
     kali/device/tests/test_device.cpp
     kali/device/tests/test_formats.cpp

@@ -4,7 +4,7 @@
 
 #include "kali/core/error.h"
 #include "kali/core/format.h"
-#include "kali/core/string_utils.h"
+#include "kali/core/string.h"
 
 #ifndef WINDOWS_LEAN_AND_MEAN
 #define WINDOWS_LEAN_AND_MEAN
@@ -111,8 +111,8 @@ struct FilterSpec {
 
         std::wstring all;
         for (const auto& f : filters) {
-            descs.push_back(to_wstring(f.desc));
-            ext.push_back(L"*." + to_wstring(f.ext));
+            descs.push_back(string::to_wstring(f.desc));
+            ext.push_back(L"*." + string::to_wstring(f.ext));
             com_dlg.push_back({descs.back().c_str(), ext.back().c_str()});
             all += ext.back() + L";";
         }

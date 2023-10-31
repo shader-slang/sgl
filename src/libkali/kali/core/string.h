@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace kali {
+namespace kali::string {
 
 [[nodiscard]] KALI_API std::string to_lower(std::string_view str);
 [[nodiscard]] KALI_API std::string to_upper(std::string_view str);
@@ -113,4 +113,4 @@ remove_leading_trailing_whitespace(std::string_view str, std::string_view whites
  */
 [[nodiscard]] KALI_API std::vector<uint8_t> decode_base64(std::string_view str);
 
-} // namespace kali
+} // namespace kali::string

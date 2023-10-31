@@ -1,11 +1,11 @@
-#include "string_utils.h"
+#include "string.h"
 #include "kali/core/error.h"
 #include "kali/core/format.h"
 
 #include <algorithm>
 #include <cctype>
 
-namespace kali {
+namespace kali::string {
 
 std::string to_lower(std::string_view str)
 {
