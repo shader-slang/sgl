@@ -17,7 +17,7 @@
                 "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/external/vcpkg/scripts/buildsystems/vcpkg.cmake",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
             },
-            "cmakeExecutable": "${sourceDir}/tools/cmake/bin/cmake",
+            "cmakeExecutable": "${sourceDir}/tools/host/cmake/bin/cmake",
             "binaryDir": "${sourceDir}/build/${presetName}"
         },
         {
@@ -67,7 +67,7 @@
                 "strategy": "external"
             },
             "cacheVariables": {
-                "CMAKE_MAKE_PROGRAM": "${sourceDir}/tools/ninja/ninja.exe",
+                "CMAKE_MAKE_PROGRAM": "${sourceDir}/tools/host/ninja/ninja.exe",
                 "CMAKE_C_COMPILER": "cl",
                 "CMAKE_CXX_COMPILER": "cl"
             },
@@ -93,7 +93,7 @@
             "inherits": "windows-base",
             "generator": "Ninja Multi-Config",
             "cacheVariables": {
-                "CMAKE_MAKE_PROGRAM": "${sourceDir}/tools/ninja/ninja.exe",
+                "CMAKE_MAKE_PROGRAM": "${sourceDir}/tools/host/ninja/ninja.exe",
                 "CMAKE_C_COMPILER": "clang.exe",
                 "CMAKE_CXX_COMPILER": "clang++.exe"
             }
@@ -118,7 +118,7 @@
             "inherits": "linux-base",
             "generator": "Ninja Multi-Config",
             "cacheVariables": {
-                "CMAKE_MAKE_PROGRAM": "${sourceDir}/tools/ninja/ninja",
+                "CMAKE_MAKE_PROGRAM": "${sourceDir}/tools/host/ninja/ninja",
                 "CMAKE_C_COMPILER": "clang",
                 "CMAKE_CXX_COMPILER": "clang++"
             }
@@ -137,7 +137,7 @@
             "inherits": "linux-base",
             "generator": "Ninja Multi-Config",
             "cacheVariables": {
-                "CMAKE_MAKE_PROGRAM": "${sourceDir}/tools/ninja/ninja",
+                "CMAKE_MAKE_PROGRAM": "${sourceDir}/tools/host/ninja/ninja",
                 "CMAKE_C_COMPILER": "gcc",
                 "CMAKE_CXX_COMPILER": "g++"
             }

@@ -1,9 +1,7 @@
 build/
 external/vcpkg
-tools/clang-format
-tools/cmake
-tools/ninja
-tools/python
+tools/download
+tools/host
 .vscode/
 
 *.pyc
