@@ -1,6 +1,7 @@
 #include "fence.h"
 
 #include "kali/core/macros.h"
+#include "kali/core/string.h"
 
 #include "kali/device/device.h"
 #include "kali/device/command_queue.h"
@@ -53,7 +54,7 @@ void Fence::wait_host(uint64_t value, uint64_t timeout_ns)
     }
 }
 
-uint64_t Fence::current_value()
+uint64_t Fence::current_value() const
 {
     uint64_t value;
     SLANG_CALL(m_gfx_fence->getCurrentValue(&value));
@@ -91,6 +92,22 @@ NativeHandle Fence::get_native_handle() const
 void Fence::break_strong_reference_to_device()
 {
     m_device.break_strong_reference();
+}
+
+std::string Fence::to_string() const
+{
+    return fmt::format(
+        "Fence(\n"
+        "   device={},\n"
+        "   desc={},\n"
+        "   current_value={},\n"
+        "   signaled_value={}\n"
+        ")",
+        m_device,
+        string::indent(m_desc.to_string()),
+        current_value(),
+        m_signaled_value
+    );
 }
 
 } // namespace kali
