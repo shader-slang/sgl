@@ -6,6 +6,7 @@
 #include "kali/device/resource.h"
 #include "kali/device/swapchain.h"
 #include "kali/device/shader.h"
+#include "kali/device/command.h"
 #include "kali/device/command_stream.h"
 
 KALI_PY_EXPORT(device_device)
@@ -205,6 +206,14 @@ KALI_PY_EXPORT(device_device)
     device.def("create_slang_session", [](Device* self) { return self->create_slang_session(SlangSessionDesc{}); });
     device.def("load_module", &Device::load_module, "path"_a);
     device.def("load_module_from_source", &Device::load_module_from_source, "source"_a);
+
+    device.def("create_command_queue", &Device::create_command_queue, "desc"_a);
+    device.def(
+        "create_command_queue",
+        [](Device* self, CommandQueueType type) { return self->create_command_queue({.type = type}); },
+        "type"_a = CommandQueueType::graphics
+    );
+
     device.def_prop_ro("command_stream", &Device::command_stream, nb::rv_policy::reference_internal);
     device.def("wait", &Device::wait);
 

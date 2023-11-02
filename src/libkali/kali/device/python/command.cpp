@@ -1,11 +1,20 @@
 #include "nanobind.h"
 
-#include "kali/device/command_queue.h"
+#include "kali/device/command.h"
 #include "kali/device/command_stream.h"
 
 KALI_PY_EXPORT(device_command)
 {
     using namespace kali;
+
+    nb::kali_enum<CommandQueueType>(m, "CommandQueueType");
+
+    nb::class_<CommandQueueDesc>(m, "CommandQueueDesc")
+        .def(nb::init<>())
+        .def_rw("type", &CommandQueueDesc::type)
+        .def("__repr__", &CommandQueueDesc::to_string);
+
+    nb::class_<CommandQueue, Object>(m, "CommandQueue").def("desc", &CommandQueue::desc);
 
     nb::class_<CommandStream, Object>(m, "CommandStream")
         .def("submit", &CommandStream::submit)

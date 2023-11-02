@@ -4,6 +4,7 @@
 #include "kali/device/native_handle.h"
 
 #include "kali/core/object.h"
+#include "kali/core/enum.h"
 
 #include <slang-gfx.h>
 
@@ -11,15 +12,33 @@ namespace kali {
 
 enum CommandQueueType { graphics };
 
+KALI_ENUM_INFO(
+    CommandQueueType,
+    {
+        {CommandQueueType::graphics, "graphics"},
+    }
+);
+KALI_ENUM_REGISTER(CommandQueueType);
+
 struct CommandQueueDesc {
     CommandQueueType type;
+
+    std::string to_string() const
+    {
+        return fmt::format(
+            "CommandQueueDesc(\n"
+            "    type={}\n"
+            ")",
+            type
+        );
+    }
 };
 
-class CommandQueue : public Object {
+class KALI_API CommandQueue : public Object {
     KALI_OBJECT(CommandQueue)
 public:
     /// Constructor.
-    /// Do not use directly, instead use @see Device::create_command_queue.
+    /// Do not use directly, instead use @c Device::create_command_queue.
     CommandQueue(ref<Device> device, CommandQueueDesc desc);
 
     const CommandQueueDesc& desc() const { return m_desc; }
@@ -33,10 +52,17 @@ public:
 
     void break_strong_reference_to_device();
 
+    std::string to_string() const override;
+
 private:
     breakable_ref<Device> m_device;
     CommandQueueDesc m_desc;
     Slang::ComPtr<gfx::ICommandQueue> m_gfx_command_queue;
+};
+
+class CommandBuffer : public Object {
+    KALI_OBJECT(CommandBuffer)
+public:
 };
 
 } // namespace kali

@@ -1,10 +1,11 @@
-#include "command_queue.h"
+#include "command.h"
 
 #include "kali/device/device.h"
 #include "kali/device/native_handle_traits.h"
 #include "kali/device/helpers.h"
 
 #include "kali/core/error.h"
+#include "kali/core/string.h"
 
 namespace kali {
 
@@ -44,6 +45,16 @@ NativeHandle CommandQueue::get_native_handle() const
 void CommandQueue::break_strong_reference_to_device()
 {
     m_device.break_strong_reference();
+}
+
+std::string CommandQueue::to_string() const
+{
+    return fmt::format(
+        "CommandQueue("
+        "    desc={}\n",
+        ")",
+        string::indent(m_desc.to_string())
+    );
 }
 
 } // namespace kali

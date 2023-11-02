@@ -4,7 +4,6 @@
 #include "kali/core/string.h"
 
 #include "kali/device/device.h"
-#include "kali/device/command_queue.h"
 #include "kali/device/native_handle_traits.h"
 #include "kali/device/helpers.h"
 

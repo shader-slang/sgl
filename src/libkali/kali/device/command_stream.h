@@ -1,7 +1,7 @@
 #pragma once
 
 #include "kali/device/fwd.h"
-#include "kali/device/command_queue.h"
+#include "kali/device/command.h"
 #include "kali/device/resource.h"
 #include "kali/device/fence.h"
 #include "kali/device/shader_cursor2.h"
