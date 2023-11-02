@@ -2,6 +2,7 @@
 
 #include "kali/device/device.h"
 #include "kali/device/sampler.h"
+#include "kali/device/fence.h"
 #include "kali/device/resource.h"
 #include "kali/device/swapchain.h"
 #include "kali/device/shader.h"
@@ -17,6 +18,15 @@ KALI_PY_EXPORT(device_device)
         .def_ro("luid", &AdapterInfo::luid);
 
     nb::kali_enum<DeviceType>(m, "DeviceType");
+
+    nb::class_<DeviceDesc>(m, "DeviceDesc")
+        .def(nb::init<>())
+        .def_rw("type", &DeviceDesc::type)
+        .def_rw("enable_debug_layers", &DeviceDesc::enable_debug_layers)
+        .def_rw("adapter_luid", &DeviceDesc::adapter_luid)
+        .def_rw("default_shader_model", &DeviceDesc::default_shader_model)
+        .def_rw("shader_cache_path", &DeviceDesc::shader_cache_path)
+        .def("__repr__", &DeviceDesc::to_string);
 
     nb::class_<DeviceLimits>(m, "DeviceLimits")
         .def_ro("max_texture_dimension_1d", &DeviceLimits::max_texture_dimension_1d)
@@ -45,16 +55,28 @@ KALI_PY_EXPORT(device_device)
     nb::class_<Device, Object> device(m, "Device");
     device.def(
         "__init__",
-        [](Device* self, DeviceType type, bool enable_debug_layers)
+        [](Device* self,
+           DeviceType type,
+           bool enable_debug_layers,
+           std::optional<AdapterLUID> adapter_luid,
+           ShaderModel default_shader_model,
+           std::string shader_cache_path)
         {
             new (self) Device(DeviceDesc{
                 .type = type,
                 .enable_debug_layers = enable_debug_layers,
+                .adapter_luid = adapter_luid ? &adapter_luid.value() : nullptr,
+                .default_shader_model = default_shader_model,
+                .shader_cache_path = std::move(shader_cache_path),
             });
         },
         "type"_a = DeviceType::automatic,
-        "enable_debug_layers"_a = false
+        "enable_debug_layers"_a = false,
+        "adapter_luid"_a = std::optional<AdapterLUID>{},
+        "default_shader_model"_a = ShaderModel::sm_6_6,
+        "shader_cache_path"_a = std::string{}
     );
+    device.def_prop_ro("desc", &Device::desc);
     device.def_prop_ro("info", &Device::info);
     device.def(
         "create_buffer",

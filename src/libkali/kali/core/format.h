@@ -5,6 +5,7 @@
 KALI_DIAGNOSTIC_PUSH
 KALI_DISABLE_MSVC_WARNING(4061 4459)
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 KALI_DIAGNOSTIC_POP
 
 #include <filesystem>
