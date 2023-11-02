@@ -11,6 +11,7 @@ KALI_PY_DECLARE(core_timer);
 KALI_PY_DECLARE(core_version);
 KALI_PY_DECLARE(core_window);
 
+KALI_PY_DECLARE(device_command);
 KALI_PY_DECLARE(device_device);
 KALI_PY_DECLARE(device_fence);
 KALI_PY_DECLARE(device_formats);
@@ -55,6 +56,7 @@ NB_MODULE(kali_ext, m)
     KALI_PY_IMPORT(device_reflection);
     KALI_PY_IMPORT(device_shader);
     KALI_PY_IMPORT(device_swapchain);
+    KALI_PY_IMPORT(device_command);
     KALI_PY_IMPORT(device_device);
 
     // Register a cleanup callback function.
