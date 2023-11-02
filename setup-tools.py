@@ -11,34 +11,64 @@ PROJECT_DIR = Path(__file__).parent
 DOWNLOAD_DIR = PROJECT_DIR / "tools/download"
 INSTALL_DIR = PROJECT_DIR / "tools/host"
 
-PLATFORM = "windows-x64"
 
-ARCHIVE_EXTENSIONS = [".zip", ".tar.gz", ".tar.bz2", ".7z"]
+def get_platform():
+    """
+    Returns the platform name.
+    """
+    if sys.platform.startswith("win"):
+        return "windows-x64"
+    elif sys.platform.startswith("linux"):
+        if os.uname().machine == "aarch64":
+            return "linux-arm64"
+        else:
+            return "linux-x64"
+    elif sys.platform.startswith("darwin"):
+        if os.uname().machine == "arm64":
+            return "macos-arm64"
+        else:
+            return "macos-x64"
+    else:
+        raise Exception(f"Unsupported platform: {sys.platform}")
 
 
 def is_archive_path(path: Path):
+    """
+    Returns True if the path is an archive file.
+    """
+    ARCHIVE_EXTENSIONS = [".zip", ".tar.gz", ".tar.bz2", ".7z"]
     return path.suffix in ARCHIVE_EXTENSIONS
 
 
-def download_progress_hook(count, block_size, total_size):
-    if total_size <= 0:
-        return
-    percent = int(count * block_size * 100 / total_size)
-    sys.stdout.write(f"\r{percent}%")
-    sys.stdout.flush()
+def download_file(url: str, path: Path):
+    """
+    Download a file from the given URL to the given path.
+    """
 
+    def progress_hook(count, block_size, total_size):
+        if total_size <= 0:
+            return
+        percent = int(count * block_size * 100 / total_size)
+        sys.stdout.write(f"\r{percent}%")
+        sys.stdout.flush()
 
-def download_file(url, path: Path):
     try:
-        urlretrieve(url, path, reporthook=download_progress_hook)
+        urlretrieve(url, path, reporthook=progress_hook)
     except Exception as e:
         raise Exception(f"Failed to download {url} ({e}))")
 
 
-def decompress_file(_7za_path: Path, path: Path, dest_dir: Path, strip: int):
+def decompress_file(_7za_path: Path, path: Path, dest_dir: Path, strip: bool):
+    """
+    Decompress the given archive file to the given directory.
+    Optionally strip the root directory from the archive.
+    """
+
     args = [str(_7za_path), "x", "-y", "-spe", "-o" + str(dest_dir), str(path)]
     print(f"Decompressing {path} ...")
-    subprocess.run(args)
+    p = subprocess.run(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    if p.returncode != 0:
+        raise Exception(f"Failed to decompress {path} ({p.returncode})")
 
     # strip directories
     if strip > 0:
@@ -146,15 +176,15 @@ class cmake(Package):
         self.infos = {
             "windows-x64": {
                 "url": f"https://github.com/Kitware/CMake/releases/download/v{self.version}/cmake-{self.version}-windows-x86_64.zip",
-                "strip": 1,
+                "strip": True,
             },
             "linux-x64": {
                 "url": f"https://github.com/Kitware/CMake/releases/download/v{self.version}/cmake-{self.version}-linux-x86_64.tar.gz",
-                "strip": 1,
+                "strip": True,
             },
             "linux-arm64": {
                 "url": f"https://github.com/Kitware/CMake/releases/download/v{self.version}/cmake-{self.version}-linux-aarch64.tar.gz",
-                "strip": 1,
+                "strip": True,
             },
         }
 
@@ -189,7 +219,7 @@ class clang_format(Package):
         }
 
 
-ctx = Context(PLATFORM, DOWNLOAD_DIR, INSTALL_DIR)
+ctx = Context(get_platform(), DOWNLOAD_DIR, INSTALL_DIR)
 
 _7za().install(ctx)
 cmake().install(ctx)

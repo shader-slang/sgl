@@ -1,10 +1,7 @@
-: This script is fetching all dependencies via packman.
+: This script is fetching all dependencies.
 
 @echo off
 setlocal
-
-set PACKMAN=%~dp0\tools\packman\packman.cmd
-set PLATFORM=windows-x86_64
 
 echo Updating git submodules ...
 
@@ -19,8 +16,11 @@ if errorlevel 1 (
 
 echo Fetching dependencies ...
 
-call %PACKMAN% pull --platform %PLATFORM% %~dp0\dependencies.xml
-if errorlevel 1 goto error
+call python setup-tools.py
+if errorlevel 1 (
+    echo Failed to fetch dependencies!
+    exit /b 1
+)
 
 if not exist %~dp0\.vscode\ (
     echo Setting up VS Code workspace ...
@@ -28,7 +28,3 @@ if not exist %~dp0\.vscode\ (
 )
 
 exit /b 0
-
-:error
-echo Failed to fetch dependencies!
-exit /b 1

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# This script is fetching all dependencies via packman.
+# This script is fetching all dependencies.
 
 if [ "$OSTYPE" = "msys" ]; then
     echo "Do not use "$0" on Windows, use setup.bat instead."
@@ -8,8 +8,6 @@ if [ "$OSTYPE" = "msys" ]; then
 fi
 
 BASE_DIR=$(dirname "$0")
-PACKMAN=${BASE_DIR}/tools/packman/packman
-PLATFORM=linux-x86_64
 
 echo "Updating git submodules ..."
 
@@ -23,7 +21,7 @@ fi
 
 echo "Fetching dependencies ..."
 
-${PACKMAN} pull --platform ${PLATFORM} ${BASE_DIR}/dependencies.xml
+python setup-tools.py
 if [ $? -ne 0 ]; then
     echo "Failed to fetch dependencies!"
     exit 1
