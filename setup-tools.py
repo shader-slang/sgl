@@ -236,6 +236,7 @@ class _7za(Package):
             },
             "linux-x64": {
                 "url": "https://github.com/develar/7zip-bin/raw/master/linux/x64/7za",
+                "sha512": "796188635271cbd7dbd6a7f37cb4d4d5b394c8a302dc62008c40b4be507382925eeb8a550ca11e81c791d5dbda238f95dedecbdd0daddf84907c4fa3a9b1ca59",
                 "chmod": "+x",
             },
             "linux-arm64": {
@@ -265,6 +266,7 @@ class cmake(Package):
             },
             "linux-x64": {
                 "url": f"https://github.com/Kitware/CMake/releases/download/v{self.version}/cmake-{self.version}-linux-x86_64.tar.gz",
+                "sha512": "37d63a47d5d5b35a0da201d6486d558f06a23b95d06950729f8f353b1d583b764ddaeb327b5e97a296001ce772bdd3212f249d7ff5332a024cc1c16f35822da3",
                 "strip": True,
             },
             "linux-arm64": {
@@ -285,6 +287,7 @@ class ninja(Package):
             },
             "linux-x64": {
                 "url": f"https://github.com/ninja-build/ninja/releases/download/v{self.version}/ninja-linux.zip",
+                "sha512": "6403dac9196baffcff614fa73ea530752997c8db6bbfbaa0446b4b09d7327e2aa6e8615d1283c961d3bf0df497e85ba86604149f1505ee75f89d600245a45dde",
             },
         }
 
@@ -301,6 +304,7 @@ class clang_format(Package):
             },
             "linux-x64": {
                 "url": f"https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-f4f85437/clang-format-{self.version}_linux-amd64",
+                "sha512": "b83942b5eda44dcf094e6ae13425ad12a2fa97b106c35eb25863ab11c7bf50854b9660870f645151b65c873011c7feef62f2405dc13d27d0c869b3f3b5dc2cef",
                 "rename": "clang-format",
                 "chmod": "+x",
             },
