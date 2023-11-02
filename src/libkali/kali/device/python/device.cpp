@@ -15,7 +15,8 @@ KALI_PY_EXPORT(device_device)
         .def_ro("name", &AdapterInfo::name)
         .def_ro("vendor_id", &AdapterInfo::vendor_id)
         .def_ro("device_id", &AdapterInfo::device_id)
-        .def_ro("luid", &AdapterInfo::luid);
+        .def_ro("luid", &AdapterInfo::luid)
+        .def("__repr__", &AdapterInfo::to_string);
 
     nb::kali_enum<DeviceType>(m, "DeviceType");
 
@@ -53,6 +54,7 @@ KALI_PY_EXPORT(device_device)
         .def_ro("limits", &DeviceInfo::limits);
 
     nb::class_<Device, Object> device(m, "Device");
+    device.def(nb::init<DeviceDesc>(), "desc"_a);
     device.def(
         "__init__",
         [](Device* self,
@@ -65,7 +67,7 @@ KALI_PY_EXPORT(device_device)
             new (self) Device(DeviceDesc{
                 .type = type,
                 .enable_debug_layers = enable_debug_layers,
-                .adapter_luid = adapter_luid ? &adapter_luid.value() : nullptr,
+                .adapter_luid = adapter_luid,
                 .default_shader_model = default_shader_model,
                 .shader_cache_path = std::move(shader_cache_path),
             });

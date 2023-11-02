@@ -14,6 +14,7 @@
 
 #include <array>
 #include <filesystem>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -36,6 +37,22 @@ struct AdapterInfo {
 
     /// Logically unique identifier of the adapter.
     AdapterLUID luid;
+
+    std::string to_string() const
+    {
+        return fmt::format(
+            "AdapterInfo(\n"
+            "   name=\"{}\",\n"
+            "   vendor_id=0x{:x},\n"
+            "   device_id=0x{:x},\n"
+            "   luid={}\n"
+            ")",
+            name,
+            vendor_id,
+            device_id,
+            luid
+        );
+    }
 };
 
 enum class DeviceType {
@@ -62,8 +79,8 @@ struct DeviceDesc {
     DeviceType type{DeviceType::automatic};
     bool enable_debug_layers{false};
 
-    /// If not null, the device will be created on the specified adapter.
-    AdapterLUID* adapter_luid{nullptr};
+    /// Adapter LUID to select adapeter on which the device will be created.
+    std::optional<AdapterLUID> adapter_luid;
 
     /// Default shader model to use when compiling shaders.
     ShaderModel default_shader_model = ShaderModel::sm_6_6;
@@ -79,7 +96,7 @@ struct DeviceDesc {
             "   enable_debug_layers={},\n"
             "   adapter_luid={},\n"
             "   default_shader_model={},\n"
-            "   shader_cache_path={}\n"
+            "   shader_cache_path=\"{}\"\n"
             ")",
             type,
             enable_debug_layers,
