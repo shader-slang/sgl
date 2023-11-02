@@ -121,6 +121,7 @@ KALI_PY_EXPORT(device_device)
         "array_size"_a = 0,
         "mip_count"_a = 0
     );
+    device.def("create_sampler", &Device::create_sampler, "desc"_a);
     device.def(
         "create_sampler",
         [](Device* self,

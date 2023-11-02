@@ -7,6 +7,7 @@ KALI_PY_EXPORT(device_sampler)
     using namespace kali;
 
     nb::class_<SamplerDesc>(m, "SamplerDesc")
+        .def(nb::init<>())
         .def_rw("min_filter", &SamplerDesc::min_filter)
         .def_rw("mag_filter", &SamplerDesc::mag_filter)
         .def_rw("mip_filter", &SamplerDesc::mip_filter)
@@ -19,8 +20,8 @@ KALI_PY_EXPORT(device_sampler)
         .def_rw("comparison_func", &SamplerDesc::comparison_func)
         .def_rw("border_color", &SamplerDesc::border_color)
         .def_rw("min_lod", &SamplerDesc::min_lod)
-        .def_rw("max_lod", &SamplerDesc::max_lod);
+        .def_rw("max_lod", &SamplerDesc::max_lod)
+        .def("__repr__", &SamplerDesc::to_string);
 
-    nb::class_<Sampler, Object> sampler(m, "Sampler");
-    sampler.def_prop_ro("desc", &Sampler::desc);
+    nb::class_<Sampler, Object>(m, "Sampler").def_prop_ro("desc", &Sampler::desc);
 }
