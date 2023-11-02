@@ -63,6 +63,7 @@ def download_file(url: str, path: Path):
 
     try:
         urlretrieve(url, path, reporthook=progress_hook)
+        print("\rDone")
     except Exception as e:
         raise Exception(f"Failed to download {url} ({e}))")
 
@@ -107,7 +108,7 @@ def decompress_7za(_7za_path: Path, path: Path, dest_dir: Path, strip: bool):
     if strip > 0:
         dirs = list(dest_dir.iterdir())
         if len(dirs) == 1:
-            print(f"Stripping {dirs[0].stem} ...")
+            print(f"Stripping {dirs[0].name} ...")
             for path in dirs[0].iterdir():
                 shutil.move(str(path), str(dest_dir))
             shutil.rmtree(str(dirs[0]))
@@ -166,8 +167,13 @@ class Package:
                 print(f"Using cached {self.basename}")
                 return
         download_file(self.url, self.download_path)
-        write_sha512_file(self.download_sha512_path, compute_sha512(self.download_path))
-        print("")
+        sha512 = compute_sha512(self.download_path)
+        if "sha512" in self.info:
+            if sha512 != self.info["sha512"]:
+                raise Exception(
+                    f"SHA512 mismatch for {self.basename}:\nExpected: {self.info['sha512']}\nComputed: {sha512}"
+                )
+        write_sha512_file(self.download_sha512_path, sha512)
 
     def deploy(self, ctx: Context):
         self.create_install_dir(ctx)
@@ -226,6 +232,7 @@ class _7za(Package):
         self.infos = {
             "windows-x64": {
                 "url": "https://github.com/develar/7zip-bin/raw/master/win/x64/7za.exe",
+                "sha512": "544949f1213817599fdb09dbb9834aeeb370b3f6225c3d835a29797b006bd36aa37b8a246a22204277f40d3865a01bc8d029a531d17d6bb43d9ddd3db7370580",
             },
             "linux-x64": {
                 "url": "https://github.com/develar/7zip-bin/raw/master/linux/x64/7za",
@@ -253,6 +260,7 @@ class cmake(Package):
         self.infos = {
             "windows-x64": {
                 "url": f"https://github.com/Kitware/CMake/releases/download/v{self.version}/cmake-{self.version}-windows-x86_64.zip",
+                "sha512": "eea422bdf5ec01f3ef9e9c3becb12df59a26cda1089a2ff03c1faa2d7f8d478bd14a8a41bf014c5b8a4653b7bf2b26d3a55a45356550b30ac0cda351ad689497",
                 "strip": True,
             },
             "linux-x64": {
@@ -273,6 +281,7 @@ class ninja(Package):
         self.infos = {
             "windows-x64": {
                 "url": f"https://github.com/ninja-build/ninja/releases/download/v{self.version}/ninja-win.zip",
+                "sha512": "a700e794c32eb67b9f87040db7f1ba3a8e891636696fc54d416b01661c2421ff46fa517c97fd904adacdf8e621df3e68ea380105b909ae8b6651a78ae7eb3199",
             },
             "linux-x64": {
                 "url": f"https://github.com/ninja-build/ninja/releases/download/v{self.version}/ninja-linux.zip",
@@ -287,6 +296,7 @@ class clang_format(Package):
         self.infos = {
             "windows-x64": {
                 "url": f"https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-f4f85437/clang-format-{self.version}_windows-amd64.exe",
+                "sha512": "5c9768de9adfdf9c181c42509d7fa3c0fb41f99298665067cafb88ebaa1c3b9992b37f90309def32fe9d256e6a4cde43b3a11ec3616a2b34044480a08e44ba7a",
                 "rename": "clang-format.exe",
             },
             "linux-x64": {
