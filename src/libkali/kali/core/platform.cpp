@@ -8,6 +8,18 @@
 
 namespace kali {
 
+static bool s_is_python_active = false;
+
+bool is_python_active()
+{
+    return s_is_python_active;
+}
+
+void set_python_active(bool active)
+{
+    s_is_python_active = active;
+}
+
 float get_display_scale_factor()
 {
     float xscale = 1.f;

@@ -37,6 +37,13 @@ KALI_API void platform_static_init();
 /// Shutdown the platform layer.
 KALI_API void platform_static_shutdown();
 
+/// Inform the platform that the library is loaded from python.
+KALI_API void set_python_active(bool active);
+
+/// Check if the library is loaded from python.
+[[nodiscard]] KALI_API bool is_python_active();
+
+
 /// Set the window icon.
 KALI_API void set_window_icon(WindowHandle handle, const std::filesystem::path& path);
 
