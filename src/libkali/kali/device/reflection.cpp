@@ -2,6 +2,7 @@
 
 #include "kali/core/type_utils.h"
 #include "kali/core/format.h"
+#include "kali/core/string.h"
 
 #include "kali/math/vector_math.h"
 
@@ -27,17 +28,6 @@ struct fmt::formatter<kali::ShaderOffset> : formatter<std::string> {
 namespace kali {
 
 namespace {
-    std::string indent(std::string_view str)
-    {
-        std::string result;
-        for (auto c : str) {
-            result += c;
-            if (c == '\n')
-                result += "    ";
-        }
-        return result;
-    }
-
     template<typename T>
     std::string objects_to_string(const std::vector<T>& objects)
     {
@@ -45,7 +35,7 @@ namespace {
             return "[]";
         std::string result = "[\n";
         for (const auto& object : objects) {
-            result += "    " + indent(object->to_string());
+            result += "    " + string::indent(object->to_string());
             result += ",\n";
         }
         result += "]";
@@ -109,7 +99,7 @@ std::string StructTypeReflection::to_string() const
         "    members={}\n"
         ")",
         name(),
-        indent(objects_to_string(members()))
+        string::indent(objects_to_string(members()))
     );
 }
 
@@ -127,7 +117,7 @@ std::string ArrayTypeReflection::to_string() const
         ")",
         element_count(),
         element_stride(),
-        indent(element_type()->to_string())
+        string::indent(element_type()->to_string())
     );
 }
 
@@ -185,7 +175,7 @@ std::string VariableReflection::to_string() const
         ")",
         name(),
         offset(),
-        indent(type()->to_string())
+        string::indent(type()->to_string())
     );
 }
 
@@ -487,7 +477,7 @@ std::string ProgramLayout::to_string() const
         "    globals_type={},\n"
         "    hashed_strings={}\n"
         ")",
-        indent(globals_type()->to_string()),
+        string::indent(globals_type()->to_string()),
         hashed_strings().size()
     );
 }
