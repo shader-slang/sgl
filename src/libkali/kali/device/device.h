@@ -250,6 +250,8 @@ public:
 
     CommandStream* command_stream() const { return m_command_stream; }
 
+    void wait();
+
     void read_buffer(const Buffer* buffer, size_t offset, size_t size, void* out_data);
 
     template<typename T>

@@ -63,27 +63,21 @@ void CommandStream::submit()
 // Synchronization
 // ----------------------------------------------------------------------------
 
-void CommandStream::signal(Fence* fence, uint64_t value)
+uint64_t CommandStream::signal(Fence* fence, uint64_t value)
 {
-    KALI_ASSERT(fence);
-    fence->signal(m_command_queue, value);
+    KALI_CHECK(fence, "'fence' must not be null");
+    uint64_t signal_value = fence->update_signaled_value(value);
+    m_command_queue->get_gfx_command_queue()->executeCommandBuffers(0, nullptr, fence->get_gfx_fence(), signal_value);
+    return signal_value;
 }
 
-void CommandStream::wait_device(Fence* fence, uint64_t value)
+void CommandStream::wait(Fence* fence, uint64_t value)
 {
-    KALI_ASSERT(fence);
-    fence->wait_device(m_command_queue, value);
-}
-
-void CommandStream::wait_host(Fence* fence, uint64_t value, uint64_t timeout_ns)
-{
-    KALI_ASSERT(fence);
-    fence->wait_host(value, timeout_ns);
-}
-
-void CommandStream::wait_host()
-{
-    m_command_queue->get_gfx_command_queue()->waitOnHost();
+    KALI_CHECK(fence, "'fence' must not be null");
+    uint64_t wait_value = value == Fence::AUTO ? fence->signaled_value() : value;
+    gfx::IFence* fences[] = {fence->get_gfx_fence()};
+    uint64_t wait_values[] = {wait_value};
+    SLANG_CALL(m_command_queue->get_gfx_command_queue()->waitForFenceValuesOnDevice(1, fences, wait_values));
 }
 
 // ----------------------------------------------------------------------------
@@ -229,9 +223,9 @@ void CommandStream::copy_texture_region(
     uint32_t dst_sub_index,
     const Texture* src,
     uint32_t src_sub_index,
-    const uint3& dstOffset,
-    const uint3& srcOffset,
-    const uint3& size
+    uint3 dstOffset,
+    uint3 srcOffset,
+    uint3 size
 )
 {
     texture_barrier(dst, ResourceState::copy_destination);

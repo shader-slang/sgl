@@ -26,24 +26,14 @@ Fence::Fence(ref<Device> device, FenceDesc desc)
     m_signaled_value = m_desc.initial_value;
 }
 
-void Fence::signal(CommandQueue* queue, uint64_t value)
+uint64_t Fence::signal(uint64_t value)
 {
-    KALI_ASSERT(queue);
-    uint64_t signal_value = value == AUTO ? m_signaled_value + 1 : value;
-    queue->get_gfx_command_queue()->executeCommandBuffer(nullptr, m_gfx_fence, signal_value);
-    m_signaled_value = signal_value;
+    uint64_t signal_value = update_signaled_value(value);
+    SLANG_CALL(m_gfx_fence->setCurrentValue(signal_value));
+    return signal_value;
 }
 
-void Fence::wait_device(CommandQueue* queue, uint64_t value)
-{
-    KALI_ASSERT(queue);
-    uint64_t wait_value = value == AUTO ? m_signaled_value : value;
-    gfx::IFence* fences[] = {m_gfx_fence};
-    uint64_t wait_values[] = {wait_value};
-    SLANG_CALL(queue->get_gfx_command_queue()->waitForFenceValuesOnDevice(1, fences, wait_values));
-}
-
-void Fence::wait_host(uint64_t value, uint64_t timeout_ns)
+void Fence::wait(uint64_t value, uint64_t timeout_ns)
 {
     uint64_t wait_value = value == AUTO ? m_signaled_value : value;
     uint64_t cur_value = current_value();
@@ -61,10 +51,10 @@ uint64_t Fence::current_value() const
     return value;
 }
 
-void Fence::set_current_value(uint64_t value)
+uint64_t Fence::update_signaled_value(uint64_t value)
 {
-    SLANG_CALL(m_gfx_fence->setCurrentValue(value));
-    m_signaled_value = value;
+    m_signaled_value = value == AUTO ? m_signaled_value + 1 : value;
+    return m_signaled_value;
 }
 
 SharedFenceHandle Fence::get_shared_handle() const

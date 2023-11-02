@@ -66,7 +66,7 @@ int main()
 
         stream->buffer_barrier(buffer, ResourceState::copy_source);
         stream->submit();
-        stream->wait_host();
+        device->wait();
 
         std::vector<uint32_t> data = device->read_buffer<uint32_t>(buffer, 0, 16);
         for (size_t i = 0; i < data.size(); ++i) {

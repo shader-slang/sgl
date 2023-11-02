@@ -45,13 +45,22 @@ public:
     // Synchronization
     // ------------------------------------------------------------------------
 
-    void signal(Fence* fence, uint64_t value = Fence::AUTO);
+    /**
+     * Signal a fence.
+     * @param pFence The fence to signal.
+     * @param value The value to signal. If @c Fence::AUTO, the signaled value will be auto-incremented.
+     * @return The signaled value.
+     */
+    uint64_t signal(Fence* fence, uint64_t value = Fence::AUTO);
 
-    void wait_device(Fence* fence, uint64_t value = Fence::AUTO);
-
-    void wait_host(Fence* fence, uint64_t value = Fence::AUTO, uint64_t timeout_ns = Fence::TIMEOUT_INFINITE);
-
-    void wait_host();
+    /**
+     * Wait for a fence to be signaled on the device.
+     * Queues a device-side wait and returns immediately.
+     * The device will wait until the fence reaches or exceeds the specified value.
+     * @param pFence The fence to wait for.
+     * @param value The value to wait for. If @c Fence::AUTO, wait for the last signaled value.
+     */
+    void wait(Fence* fence, uint64_t value = Fence::AUTO);
 
     // ------------------------------------------------------------------------
     // Barriers
@@ -125,9 +134,9 @@ public:
         uint32_t dst_sub_index,
         const Texture* src,
         uint32_t src_sub_index,
-        const uint3& dst_offset,
-        const uint3& src_offset,
-        const uint3& size
+        uint3 dst_offset,
+        uint3 src_offset,
+        uint3 size
     );
 
 

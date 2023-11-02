@@ -314,6 +314,11 @@ ref<CommandStream> Device::create_command_stream(CommandStreamDesc desc)
     return make_ref<CommandStream>(ref<Device>(this), std::move(desc));
 }
 
+void Device::wait()
+{
+    m_command_stream->get_command_queue()->get_gfx_command_queue()->waitOnHost();
+}
+
 void Device::read_buffer(const Buffer* buffer, size_t offset, size_t size, void* out_data)
 {
     Slang::ComPtr<ISlangBlob> blob;
