@@ -2,11 +2,6 @@
 
 # This script is fetching all dependencies.
 
-if [ "$OSTYPE" = "msys" ]; then
-    echo "Do not use "$0" on Windows, use setup.bat instead."
-    exit 1
-fi
-
 BASE_DIR=$(dirname "$0")
 
 echo "Updating git submodules ..."
