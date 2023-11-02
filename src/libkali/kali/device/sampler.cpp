@@ -5,6 +5,7 @@
 #include "kali/device/native_handle_traits.h"
 
 #include "kali/core/error.h"
+#include "kali/core/string.h"
 
 #include "types.inl"
 
@@ -45,6 +46,18 @@ NativeHandle Sampler::get_native_handle() const
         return NativeHandle(reinterpret_cast<VkSampler>(handle.handleValue));
 #endif
     return {};
+}
+
+std::string Sampler::to_string() const
+{
+    return fmt::format(
+        "Sampler(\n"
+        "   device={},\n"
+        "   desc={}\n"
+        ")",
+        m_device,
+        string::indent(m_desc.to_string())
+    );
 }
 
 } // namespace kali
