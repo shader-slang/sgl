@@ -5,6 +5,7 @@ import subprocess
 from pathlib import Path
 from urllib.parse import urlparse
 from urllib.request import urlretrieve
+from hashlib import sha512
 
 PROJECT_DIR = Path(__file__).parent
 
@@ -39,6 +40,7 @@ def is_archive_path(path: Path):
     ARCHIVE_EXTENSIONS = [".zip", ".tar.gz", ".tar.bz2", ".7z"]
     return any(path.name.endswith(ext) for ext in ARCHIVE_EXTENSIONS)
 
+
 def is_tar_path(path: Path):
     """
     Returns True if the path is a tar file.
@@ -63,6 +65,30 @@ def download_file(url: str, path: Path):
         urlretrieve(url, path, reporthook=progress_hook)
     except Exception as e:
         raise Exception(f"Failed to download {url} ({e}))")
+
+
+def compute_sha512(path: Path):
+    """
+    Compute the SHA512 hash of the given file.
+    """
+    with open(path, "rb") as f:
+        return sha512(f.read()).hexdigest()
+
+
+def write_sha512_file(path: Path, sha512: str):
+    """
+    Write the SHA512 hash of the given file to a file.
+    """
+    with open(path, "w") as f:
+        f.write(sha512)
+
+
+def read_sha512_file(path: Path):
+    """
+    Read the SHA512 hash of the given file from a file.
+    """
+    with open(path, "r") as f:
+        return f.read()
 
 
 def decompress_7za(_7za_path: Path, path: Path, dest_dir: Path, strip: bool):
@@ -127,12 +153,20 @@ class Package:
         self.url = self.info["url"]
         self.basename = os.path.basename(urlparse(self.url).path)
         self.download_path = ctx.download_dir / self.basename
-        self.sha512_path = ctx.download_dir / f"{self.basename}.sha512"
+        self.download_sha512_path = ctx.download_dir / f"{self.basename}.sha512"
         self.install_dir = ctx.install_dir / self.name
+        self.install_sha512_path = self.install_dir / f"{self.name}.sha512"
 
     def download(self, ctx: Context):
         print(f"Downloading {self.url} ...")
+        if self.download_path.exists() and self.download_sha512_path.exists():
+            if compute_sha512(self.download_path) == read_sha512_file(
+                self.download_sha512_path
+            ):
+                print(f"Using cached {self.basename}")
+                return
         download_file(self.url, self.download_path)
+        write_sha512_file(self.download_sha512_path, compute_sha512(self.download_path))
         print("")
 
     def deploy(self, ctx: Context):
@@ -141,8 +175,11 @@ class Package:
             self.decompress_to_install_dir(ctx)
         else:
             self.copy_to_install_dir(ctx)
+        shutil.copy(self.download_sha512_path, self.install_sha512_path)
 
     def create_install_dir(self, ctx: Context):
+        if self.install_dir.exists():
+            shutil.rmtree(self.install_dir)
         if not self.install_dir.exists():
             self.install_dir.mkdir(parents=True)
 
@@ -168,6 +205,16 @@ class Package:
     def install(self, ctx: Context):
         print(f"Installing package '{self.name}' ...")
         self.setup(ctx)
+        if (
+            self.download_sha512_path.exists()
+            and self.install_dir.exists()
+            and self.install_sha512_path.exists()
+        ):
+            download_sha512 = read_sha512_file(self.download_sha512_path)
+            install_sha512 = read_sha512_file(self.install_sha512_path)
+            if download_sha512 == install_sha512:
+                print(f"Skipping, already intalled.")
+                return
         self.download(ctx)
         self.deploy(ctx)
 
@@ -197,10 +244,6 @@ class _7za(Package):
                 "chmod": "+x",
             },
         }
-
-    def deploy(self, ctx: Context):
-        self.create_install_dir(ctx)
-        self.copy_to_install_dir(ctx)
 
 
 class cmake(Package):
