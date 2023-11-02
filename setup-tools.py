@@ -37,7 +37,14 @@ def is_archive_path(path: Path):
     Returns True if the path is an archive file.
     """
     ARCHIVE_EXTENSIONS = [".zip", ".tar.gz", ".tar.bz2", ".7z"]
-    return path.suffix in ARCHIVE_EXTENSIONS
+    return any(path.name.endswith(ext) for ext in ARCHIVE_EXTENSIONS)
+
+def is_tar_path(path: Path):
+    """
+    Returns True if the path is a tar file.
+    """
+    TAR_EXTENSIONS = [".tar.gz", ".tar.bz2"]
+    return any(path.name.endswith(ext) for ext in TAR_EXTENSIONS)
 
 
 def download_file(url: str, path: Path):
@@ -58,7 +65,7 @@ def download_file(url: str, path: Path):
         raise Exception(f"Failed to download {url} ({e}))")
 
 
-def decompress_file(_7za_path: Path, path: Path, dest_dir: Path, strip: bool):
+def decompress_7za(_7za_path: Path, path: Path, dest_dir: Path, strip: bool):
     """
     Decompress the given archive file to the given directory.
     Optionally strip the root directory from the archive.
@@ -78,6 +85,22 @@ def decompress_file(_7za_path: Path, path: Path, dest_dir: Path, strip: bool):
             for path in dirs[0].iterdir():
                 shutil.move(str(path), str(dest_dir))
             shutil.rmtree(str(dirs[0]))
+
+
+def decompress_tar(path: Path, dest_dir: Path, strip: bool):
+    """
+    Decompress the given tar file to the given directory.
+    Optionally strip the root directory from the archive.
+    """
+
+    args = ["tar", "xf", str(path), "-C", str(dest_dir)]
+    if strip:
+        args += ["--strip-components", "1"]
+
+    print(f"Decompressing {path} ...")
+    p = subprocess.run(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    if p.returncode != 0:
+        raise Exception(f"Failed to decompress {path} ({p.returncode})")
 
 
 class Context:
@@ -125,6 +148,10 @@ class Package:
 
     def copy_to_install_dir(self, ctx: Context):
         shutil.copy(self.download_path, self.install_dir)
+        if "chmod" in self.info:
+            subprocess.run(
+                ["chmod", self.info["chmod"], self.install_dir / self.basename]
+            )
         if "rename" in self.info:
             shutil.move(
                 self.install_dir / self.basename,
@@ -133,7 +160,10 @@ class Package:
 
     def decompress_to_install_dir(self, ctx: Context):
         strip = self.info.get("strip", 0)
-        decompress_file(ctx._7za_path, self.download_path, self.install_dir, strip)
+        if is_tar_path(self.download_path):
+            decompress_tar(self.download_path, self.install_dir, strip)
+        else:
+            decompress_7za(ctx._7za_path, self.download_path, self.install_dir, strip)
 
     def install(self, ctx: Context):
         print(f"Installing package '{self.name}' ...")
@@ -152,15 +182,19 @@ class _7za(Package):
             },
             "linux-x64": {
                 "url": "https://github.com/develar/7zip-bin/raw/master/linux/x64/7za",
+                "chmod": "+x",
             },
             "linux-arm64": {
                 "url": "https://github.com/develar/7zip-bin/raw/master/linux/arm64/7za",
+                "chmod": "+x",
             },
             "macos-x64": {
                 "url": "https://github.com/develar/7zip-bin/raw/master/mac/x64/7za",
+                "chmod": "+x",
             },
             "macos-arm64": {
                 "url": "https://github.com/develar/7zip-bin/raw/master/mac/arm64/7za",
+                "chmod": "+x",
             },
         }
 
@@ -215,6 +249,7 @@ class clang_format(Package):
             "linux-x64": {
                 "url": f"https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-f4f85437/clang-format-{self.version}_linux-amd64",
                 "rename": "clang-format",
+                "chmod": "+x",
             },
         }
 
