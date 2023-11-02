@@ -11,6 +11,7 @@ KALI_PY_DECLARE(core_version);
 KALI_PY_DECLARE(core_window);
 
 KALI_PY_DECLARE(device_device);
+KALI_PY_DECLARE(device_fence);
 KALI_PY_DECLARE(device_formats);
 KALI_PY_DECLARE(device_reflection);
 KALI_PY_DECLARE(device_resource);
@@ -48,6 +49,7 @@ NB_MODULE(kali_ext, m)
     KALI_PY_IMPORT(device_formats);
     KALI_PY_IMPORT(device_resource);
     KALI_PY_IMPORT(device_sampler);
+    KALI_PY_IMPORT(device_fence);
     KALI_PY_IMPORT(device_reflection);
     KALI_PY_IMPORT(device_shader);
     KALI_PY_IMPORT(device_swapchain);

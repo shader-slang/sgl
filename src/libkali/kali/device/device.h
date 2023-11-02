@@ -198,8 +198,6 @@ public:
 
     ref<Fence> create_fence(FenceDesc desc);
 
-    ref<Fence> create_fence(uint64_t initial_value = 0, bool shared = false);
-
     ref<SlangSession> create_slang_session(SlangSessionDesc desc);
 
     ref<SlangModule> load_module(const std::filesystem::path& path);

@@ -271,14 +271,6 @@ ref<Fence> Device::create_fence(FenceDesc desc)
     return make_ref<Fence>(ref<Device>(this), std::move(desc));
 }
 
-ref<Fence> Device::create_fence(uint64_t initial_value, bool shared)
-{
-    return create_fence({
-        .initial_value = initial_value,
-        .shared = shared,
-    });
-}
-
 ref<SlangSession> Device::create_slang_session(SlangSessionDesc desc)
 {
     return make_ref<SlangSession>(ref<Device>(this), std::move(desc));

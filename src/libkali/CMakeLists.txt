@@ -294,6 +294,7 @@ nanobind_add_module(kali_ext NB_STATIC LTO
     kali/core/python/version.cpp
     kali/core/python/window.cpp
     kali/device/python/device.cpp
+    kali/device/python/fence.cpp
     kali/device/python/formats.cpp
     kali/device/python/reflection.cpp
     kali/device/python/resource.cpp

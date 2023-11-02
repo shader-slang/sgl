@@ -169,6 +169,14 @@ KALI_PY_EXPORT(device_device)
         "min_lod"_a = -1000.f,
         "max_lod"_a = 1000.f
     );
+    device.def("create_fence", &Device::create_fence, "desc"_a);
+    device.def(
+        "create_fence",
+        [](Device* self, uint64_t initial_value, bool shared)
+        { return self->create_fence({.initial_value = initial_value, .shared = shared}); },
+        "initial_value"_a = 0,
+        "shared"_a = false
+    );
     device.def("create_slang_session", [](Device* self) { return self->create_slang_session(SlangSessionDesc{}); });
     device.def("load_module", &Device::load_module, "path"_a);
     device.def("load_module_from_source", &Device::load_module_from_source, "source"_a);
