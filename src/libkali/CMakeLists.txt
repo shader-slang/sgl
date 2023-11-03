@@ -54,8 +54,6 @@ target_sources(kali PRIVATE
     kali/device/agility_sdk.h
     kali/device/command.cpp
     kali/device/command.h
-    kali/device/command_stream.cpp
-    kali/device/command_stream.h
     kali/device/device.cpp
     kali/device/device.h
     kali/device/fence.cpp

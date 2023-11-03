@@ -63,12 +63,10 @@ struct GraphicsPipelineStateDesc;
 class GraphicsPipelineState;
 class GraphicsPipelineCache;
 
-// command_queue.h
+// command.h
 
 struct CommandQueueDesc;
 class CommandQueue;
-
-// command_stream.h
 
 struct CommandStreamDesc;
 class CommandStream;

@@ -1,7 +1,6 @@
 #include "nanobind.h"
 
 #include "kali/device/command.h"
-#include "kali/device/command_stream.h"
 
 KALI_PY_EXPORT(device_command)
 {

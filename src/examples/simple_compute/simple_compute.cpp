@@ -5,7 +5,7 @@
 #include "kali/device/shader.h"
 #include "kali/device/reflection.h"
 #include "kali/device/pipeline.h"
-#include "kali/device/command_stream.h"
+#include "kali/device/command.h"
 #include "kali/device/shader_cursor.h"
 #include "kali/math/vector.h"
 #include "kali/device/agility_sdk.h"

@@ -7,7 +7,6 @@
 #include "kali/device/shader.h"
 #include "kali/device/pipeline.h"
 #include "kali/device/command.h"
-#include "kali/device/command_stream.h"
 #include "kali/device/helpers.h"
 #include "kali/device/native_handle_traits.h"
 #include "kali/device/agility_sdk.h"

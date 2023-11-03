@@ -7,7 +7,6 @@
 #include "kali/device/swapchain.h"
 #include "kali/device/shader.h"
 #include "kali/device/command.h"
-#include "kali/device/command_stream.h"
 
 KALI_PY_EXPORT(device_device)
 {
