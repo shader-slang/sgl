@@ -8,48 +8,6 @@
 
 namespace kali {
 
-inline gfx::IResource::Type get_gfx_resource_type(ResourceType resource_type)
-{
-    static_assert(uint32_t(ResourceType::unknown) == uint32_t(gfx::IResource::Type::Unknown));
-    static_assert(uint32_t(ResourceType::buffer) == uint32_t(gfx::IResource::Type::Buffer));
-    static_assert(uint32_t(ResourceType::texture_1d) == uint32_t(gfx::IResource::Type::Texture1D));
-    static_assert(uint32_t(ResourceType::texture_2d) == uint32_t(gfx::IResource::Type::Texture2D));
-    static_assert(uint32_t(ResourceType::texture_3d) == uint32_t(gfx::IResource::Type::Texture3D));
-    static_assert(uint32_t(ResourceType::texture_cube) == uint32_t(gfx::IResource::Type::TextureCube));
-    KALI_ASSERT(uint32_t(resource_type) <= uint32_t(ResourceType::texture_cube));
-    return gfx::IResource::Type(resource_type);
-}
-
-gfx::ResourceState get_gfx_resource_state(ResourceState resource_state)
-{
-    // clang-format off
-    static_assert(uint32_t(ResourceState::undefined) == uint32_t(gfx::ResourceState::Undefined));
-    static_assert(uint32_t(ResourceState::general) == uint32_t(gfx::ResourceState::General));
-    static_assert(uint32_t(ResourceState::pre_initialized) == uint32_t(gfx::ResourceState::PreInitialized));
-    static_assert(uint32_t(ResourceState::vertex_buffer) == uint32_t(gfx::ResourceState::VertexBuffer));
-    static_assert(uint32_t(ResourceState::index_buffer) == uint32_t(gfx::ResourceState::IndexBuffer));
-    static_assert(uint32_t(ResourceState::constant_buffer) == uint32_t(gfx::ResourceState::ConstantBuffer));
-    static_assert(uint32_t(ResourceState::stream_output) == uint32_t(gfx::ResourceState::StreamOutput));
-    static_assert(uint32_t(ResourceState::shader_resource) == uint32_t(gfx::ResourceState::ShaderResource));
-    static_assert(uint32_t(ResourceState::unordered_access) == uint32_t(gfx::ResourceState::UnorderedAccess));
-    static_assert(uint32_t(ResourceState::render_target) == uint32_t(gfx::ResourceState::RenderTarget));
-    static_assert(uint32_t(ResourceState::depth_read) == uint32_t(gfx::ResourceState::DepthRead));
-    static_assert(uint32_t(ResourceState::depth_write) == uint32_t(gfx::ResourceState::DepthWrite));
-    static_assert(uint32_t(ResourceState::present) == uint32_t(gfx::ResourceState::Present));
-    static_assert(uint32_t(ResourceState::indirect_argument) == uint32_t(gfx::ResourceState::IndirectArgument));
-    static_assert(uint32_t(ResourceState::copy_source) == uint32_t(gfx::ResourceState::CopySource));
-    static_assert(uint32_t(ResourceState::copy_destination) == uint32_t(gfx::ResourceState::CopyDestination));
-    static_assert(uint32_t(ResourceState::resolve_source) == uint32_t(gfx::ResourceState::ResolveSource));
-    static_assert(uint32_t(ResourceState::resolve_destination) == uint32_t(gfx::ResourceState::ResolveDestination));
-    static_assert(uint32_t(ResourceState::acceleration_structure) == uint32_t(gfx::ResourceState::AccelerationStructure));
-    static_assert(uint32_t(ResourceState::acceleration_structure_build_output) == uint32_t(gfx::ResourceState::AccelerationStructureBuildInput));
-    static_assert(uint32_t(ResourceState::pixel_shader_resource) == uint32_t(gfx::ResourceState::PixelShaderResource));
-    static_assert(uint32_t(ResourceState::non_pixel_shader_resource) == uint32_t(gfx::ResourceState::NonPixelShaderResource));
-    // clang-format on
-    KALI_ASSERT(uint32_t(resource_state) <= uint32_t(ResourceState::non_pixel_shader_resource));
-    return gfx::ResourceState(resource_state);
-}
-
 inline gfx::ResourceStateSet get_gfx_allowed_states(ResourceUsage usage)
 {
     gfx::ResourceStateSet states(gfx::ResourceState::CopyDestination, gfx::ResourceState::CopySource);
@@ -98,28 +56,6 @@ inline gfx::ResourceState get_gfx_initial_state(ResourceUsage usage)
         return gfx::ResourceState::AccelerationStructure;
     }
     return gfx::ResourceState::General;
-}
-
-inline gfx::MemoryType get_gfx_memory_type(MemoryType memory_type)
-{
-    static_assert(uint32_t(MemoryType::device_local) == uint32_t(gfx::MemoryType::DeviceLocal));
-    static_assert(uint32_t(MemoryType::upload) == uint32_t(gfx::MemoryType::Upload));
-    static_assert(uint32_t(MemoryType::read_back) == uint32_t(gfx::MemoryType::ReadBack));
-    KALI_ASSERT(uint32_t(memory_type) <= uint32_t(MemoryType::read_back));
-    return gfx::MemoryType(memory_type);
-}
-
-inline gfx::IResourceView::Type get_gfx_resource_view_type(ResourceViewType type)
-{
-    static_assert(uint32_t(ResourceViewType::shader_resource) == uint32_t(gfx::IResourceView::Type::ShaderResource));
-    static_assert(uint32_t(ResourceViewType::unordered_access) == uint32_t(gfx::IResourceView::Type::UnorderedAccess));
-    static_assert(uint32_t(ResourceViewType::render_target) == uint32_t(gfx::IResourceView::Type::RenderTarget));
-    static_assert(uint32_t(ResourceViewType::depth_stencil) == uint32_t(gfx::IResourceView::Type::DepthStencil));
-    static_assert(
-        uint32_t(ResourceViewType::acceleration_structure) == uint32_t(gfx::IResourceView::Type::AccelerationStructure)
-    );
-    KALI_ASSERT(uint32_t(type) <= uint32_t(ResourceViewType::acceleration_structure));
-    return gfx::IResourceView::Type(type);
 }
 
 // ----------------------------------------------------------------------------
@@ -176,7 +112,7 @@ ResourceView::ResourceView(const ResourceViewDesc& desc, const Buffer* buffer)
     KALI_ASSERT(m_desc.type == ResourceViewType::shader_resource || m_desc.type == ResourceViewType::unordered_access);
 
     gfx::IResourceView::Desc gfx_desc{
-        .type = get_gfx_resource_view_type(m_desc.type),
+        .type = static_cast<gfx::IResourceView::Type>(m_desc.type),
         .format = get_gfx_format(m_desc.format),
         .bufferRange{
             .firstElement = m_desc.buffer_range.first_element,
@@ -203,7 +139,7 @@ ResourceView::ResourceView(const ResourceViewDesc& desc, const Texture* texture)
     );
 
     gfx::IResourceView::Desc gfx_desc{
-        .type = get_gfx_resource_view_type(m_desc.type),
+        .type = static_cast<gfx::IResourceView::Type>(m_desc.type),
         .format = get_gfx_format(m_desc.format),
     };
     SLANG_CALL(texture->m_device->get_gfx_device()
@@ -251,9 +187,9 @@ Buffer::Buffer(ref<Device> device, BufferDesc desc, const void* init_data)
 
     gfx::IBufferResource::Desc gfx_desc{};
     gfx_desc.type = gfx::IResource::Type::Buffer;
-    gfx_desc.defaultState = get_gfx_resource_state(m_desc.initial_state);
+    gfx_desc.defaultState = static_cast<gfx::ResourceState>(m_desc.initial_state);
     gfx_desc.allowedStates = get_gfx_allowed_states(m_desc.usage);
-    gfx_desc.memoryType = get_gfx_memory_type(m_desc.memory_type);
+    gfx_desc.memoryType = static_cast<gfx::MemoryType>(m_desc.memory_type);
     // TODO(@skallweit): add support for existing handles
     // gfx_desc.existingHandle =
     gfx_desc.isShared = is_set(m_desc.usage, ResourceUsage::shared);
@@ -380,10 +316,10 @@ Texture::Texture(ref<Device> device, TextureDesc desc, const void* init_data)
     check_desc(m_desc);
 
     gfx::ITextureResource::Desc gfx_desc{};
-    gfx_desc.type = get_gfx_resource_type(ResourceType(m_desc.type));
-    gfx_desc.defaultState = get_gfx_resource_state(m_desc.initial_state);
+    gfx_desc.type = static_cast<gfx::IResource::Type>(m_desc.type);
+    gfx_desc.defaultState = static_cast<gfx::ResourceState>(m_desc.initial_state);
     gfx_desc.allowedStates = get_gfx_allowed_states(m_desc.usage);
-    gfx_desc.memoryType = get_gfx_memory_type(m_desc.memory_type);
+    gfx_desc.memoryType = static_cast<gfx::MemoryType>(m_desc.memory_type);
     // TODO(@skallweit): add support for existing handles
     // gfx_desc.existingHandle =
     gfx_desc.isShared = is_set(m_desc.usage, ResourceUsage::shared);

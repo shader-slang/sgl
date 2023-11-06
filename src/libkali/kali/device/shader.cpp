@@ -9,8 +9,6 @@
 
 #include <slang.h>
 
-#include "kali/device/types.inl"
-
 namespace kali {
 
 
@@ -336,7 +334,7 @@ SlangEntryPoint::SlangEntryPoint(ref<SlangModule> module, Slang::ComPtr<slang::I
 {
     slang::EntryPointLayout* layout = m_component_type->getLayout()->getEntryPointByIndex(0);
     m_name = layout->getNameOverride() ? layout->getNameOverride() : layout->getName();
-    m_stage = get_shader_stage(layout->getStage());
+    m_stage = static_cast<ShaderStage>(layout->getStage());
 }
 
 ref<SlangEntryPoint> SlangEntryPoint::rename(const std::string& new_name)

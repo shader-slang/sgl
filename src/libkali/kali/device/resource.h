@@ -20,12 +20,12 @@ using DeviceOffset = uint64_t;
 using DeviceSize = uint64_t;
 
 enum class ResourceType : uint32_t {
-    unknown,
-    buffer,
-    texture_1d,
-    texture_2d,
-    texture_3d,
-    texture_cube,
+    unknown = gfx::IResource::Type::Unknown,
+    buffer = gfx::IResource::Type::Buffer,
+    texture_1d = gfx::IResource::Type::Texture1D,
+    texture_2d = gfx::IResource::Type::Texture2D,
+    texture_3d = gfx::IResource::Type::Texture3D,
+    texture_cube = gfx::IResource::Type::TextureCube,
 };
 
 KALI_ENUM_INFO(
@@ -42,28 +42,28 @@ KALI_ENUM_INFO(
 KALI_ENUM_REGISTER(ResourceType);
 
 enum class ResourceState : uint32_t {
-    undefined,
-    general,
-    pre_initialized,
-    vertex_buffer,
-    index_buffer,
-    constant_buffer,
-    stream_output,
-    shader_resource,
-    unordered_access,
-    render_target,
-    depth_read,
-    depth_write,
-    present,
-    indirect_argument,
-    copy_source,
-    copy_destination,
-    resolve_source,
-    resolve_destination,
-    acceleration_structure,
-    acceleration_structure_build_output,
-    pixel_shader_resource,
-    non_pixel_shader_resource,
+    undefined = gfx::ResourceState::Undefined,
+    general = gfx::ResourceState::General,
+    pre_initialized = gfx::ResourceState::PreInitialized,
+    vertex_buffer = gfx::ResourceState::VertexBuffer,
+    index_buffer = gfx::ResourceState::IndexBuffer,
+    constant_buffer = gfx::ResourceState::ConstantBuffer,
+    stream_output = gfx::ResourceState::StreamOutput,
+    shader_resource = gfx::ResourceState::ShaderResource,
+    unordered_access = gfx::ResourceState::UnorderedAccess,
+    render_target = gfx::ResourceState::RenderTarget,
+    depth_read = gfx::ResourceState::DepthRead,
+    depth_write = gfx::ResourceState::DepthWrite,
+    present = gfx::ResourceState::Present,
+    indirect_argument = gfx::ResourceState::IndirectArgument,
+    copy_source = gfx::ResourceState::CopySource,
+    copy_destination = gfx::ResourceState::CopyDestination,
+    resolve_source = gfx::ResourceState::ResolveSource,
+    resolve_destination = gfx::ResourceState::ResolveDestination,
+    acceleration_structure = gfx::ResourceState::AccelerationStructure,
+    acceleration_structure_build_output = gfx::ResourceState::AccelerationStructureBuildInput,
+    pixel_shader_resource = gfx::ResourceState::PixelShaderResource,
+    non_pixel_shader_resource = gfx::ResourceState::NonPixelShaderResource,
 };
 
 KALI_ENUM_INFO(
@@ -133,9 +133,9 @@ KALI_ENUM_REGISTER(ResourceUsage);
 KALI_ENUM_CLASS_OPERATORS(ResourceUsage)
 
 enum class MemoryType : uint32_t {
-    device_local,
-    upload,
-    read_back,
+    device_local = gfx::MemoryType::DeviceLocal,
+    upload = gfx::MemoryType::Upload,
+    read_back = gfx::MemoryType::ReadBack,
 };
 
 KALI_ENUM_INFO(
@@ -185,12 +185,12 @@ struct ResourceViewRange {
 };
 
 enum class ResourceViewType {
-    unknown,
-    render_target,
-    depth_stencil,
-    shader_resource,
-    unordered_access,
-    acceleration_structure,
+    unknown = gfx::IResourceView::Type::Unknown,
+    render_target = gfx::IResourceView::Type::RenderTarget,
+    depth_stencil = gfx::IResourceView::Type::DepthStencil,
+    shader_resource = gfx::IResourceView::Type::ShaderResource,
+    unordered_access = gfx::IResourceView::Type::UnorderedAccess,
+    acceleration_structure = gfx::IResourceView::Type::AccelerationStructure,
 };
 
 KALI_ENUM_INFO(

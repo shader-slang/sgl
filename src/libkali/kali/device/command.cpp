@@ -65,9 +65,6 @@ std::string CommandQueue::to_string() const
     );
 }
 
-// defined in resource.cpp
-gfx::ResourceState get_gfx_resource_state(ResourceState resource_state);
-
 CommandStream::CommandStream(ref<Device> device, CommandStreamDesc desc)
     : m_device(std::move(device))
     , m_desc(std::move(desc))
@@ -146,8 +143,8 @@ bool CommandStream::buffer_barrier(const Buffer* buffer, ResourceState new_state
         encoder->bufferBarrier(
             1,
             &gfx_buffer_resource,
-            get_gfx_resource_state(current_state),
-            get_gfx_resource_state(new_state)
+            static_cast<gfx::ResourceState>(current_state),
+            static_cast<gfx::ResourceState>(new_state)
         );
         buffer->set_global_state(new_state);
         mark_pending();
@@ -169,8 +166,8 @@ bool CommandStream::texture_barrier(const Texture* texture, ResourceState new_st
         encoder->textureBarrier(
             1,
             &gfx_texture_resource,
-            get_gfx_resource_state(current_state),
-            get_gfx_resource_state(new_state)
+            static_cast<gfx::ResourceState>(current_state),
+            static_cast<gfx::ResourceState>(new_state)
         );
         texture->set_global_state(new_state);
         mark_pending();

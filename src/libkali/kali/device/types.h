@@ -45,21 +45,21 @@ inline uint32_t get_shader_model_minor_version(ShaderModel sm)
 }
 
 enum class ShaderStage {
-    none,
-    vertex,
-    hull,
-    domain,
-    geometry,
-    fragment,
-    compute,
-    ray_generation,
-    intersection,
-    any_hit,
-    closest_hit,
-    miss,
-    callable,
-    mesh,
-    amplification,
+    none = SLANG_STAGE_NONE,
+    vertex = SLANG_STAGE_VERTEX,
+    hull = SLANG_STAGE_HULL,
+    domain = SLANG_STAGE_DOMAIN,
+    geometry = SLANG_STAGE_GEOMETRY,
+    fragment = SLANG_STAGE_FRAGMENT,
+    compute = SLANG_STAGE_COMPUTE,
+    ray_generation = SLANG_STAGE_RAY_GENERATION,
+    intersection = SLANG_STAGE_INTERSECTION,
+    any_hit = SLANG_STAGE_ANY_HIT,
+    closest_hit = SLANG_STAGE_CLOSEST_HIT,
+    miss = SLANG_STAGE_MISS,
+    callable = SLANG_STAGE_CALLABLE,
+    mesh = SLANG_STAGE_MESH,
+    amplification = SLANG_STAGE_AMPLIFICATION,
 };
 
 KALI_ENUM_INFO(
@@ -85,14 +85,14 @@ KALI_ENUM_INFO(
 KALI_ENUM_REGISTER(ShaderStage);
 
 enum class ComparisonFunc {
-    never,
-    less,
-    equal,
-    less_equal,
-    greater,
-    not_equal,
-    greater_equal,
-    always,
+    never = gfx::ComparisonFunc::Never,
+    less = gfx::ComparisonFunc::Less,
+    equal = gfx::ComparisonFunc::Equal,
+    less_equal = gfx::ComparisonFunc::LessEqual,
+    greater = gfx::ComparisonFunc::Greater,
+    not_equal = gfx::ComparisonFunc::NotEqual,
+    greater_equal = gfx::ComparisonFunc::GreaterEqual,
+    always = gfx::ComparisonFunc::Always,
 };
 
 KALI_ENUM_INFO(
@@ -111,8 +111,8 @@ KALI_ENUM_INFO(
 KALI_ENUM_REGISTER(ComparisonFunc);
 
 enum class TextureFilteringMode {
-    point,
-    linear,
+    point = gfx::TextureFilteringMode::Point,
+    linear = gfx::TextureFilteringMode::Linear,
 };
 
 KALI_ENUM_INFO(
@@ -125,11 +125,11 @@ KALI_ENUM_INFO(
 KALI_ENUM_REGISTER(TextureFilteringMode);
 
 enum class TextureAddressingMode {
-    wrap,
-    clamp_to_edge,
-    clamp_to_border,
-    mirror_repeat,
-    mirror_once,
+    wrap = gfx::TextureAddressingMode::Wrap,
+    clamp_to_edge = gfx::TextureAddressingMode::ClampToEdge,
+    clamp_to_border = gfx::TextureAddressingMode::ClampToBorder,
+    mirror_repeat = gfx::TextureAddressingMode::MirrorRepeat,
+    mirror_once = gfx::TextureAddressingMode::MirrorOnce,
 };
 
 KALI_ENUM_INFO(
@@ -145,10 +145,10 @@ KALI_ENUM_INFO(
 KALI_ENUM_REGISTER(TextureAddressingMode);
 
 enum class TextureReductionOp {
-    average,
-    comparison,
-    minimum,
-    maximum,
+    average = gfx::TextureReductionOp::Average,
+    comparison = gfx::TextureReductionOp::Comparison,
+    minimum = gfx::TextureReductionOp::Minimum,
+    maximum = gfx::TextureReductionOp::Maximum,
 };
 
 KALI_ENUM_INFO(

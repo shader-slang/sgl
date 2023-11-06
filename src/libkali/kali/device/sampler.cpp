@@ -7,8 +7,6 @@
 #include "kali/core/error.h"
 #include "kali/core/string.h"
 
-#include "types.inl"
-
 namespace kali {
 
 Sampler::Sampler(ref<Device> device, SamplerDesc desc)
@@ -16,16 +14,16 @@ Sampler::Sampler(ref<Device> device, SamplerDesc desc)
     , m_desc(std::move(desc))
 {
     gfx::ISamplerState::Desc gfx_desc{
-        .minFilter = get_gfx_texture_filtering_mode(m_desc.min_filter),
-        .magFilter = get_gfx_texture_filtering_mode(m_desc.mag_filter),
-        .mipFilter = get_gfx_texture_filtering_mode(m_desc.mip_filter),
-        .reductionOp = get_gfx_texture_reduction_op(m_desc.reduction_op),
-        .addressU = get_gfx_texture_addressing_mode(m_desc.address_u),
-        .addressV = get_gfx_texture_addressing_mode(m_desc.address_v),
-        .addressW = get_gfx_texture_addressing_mode(m_desc.address_w),
+        .minFilter = static_cast<gfx::TextureFilteringMode>(m_desc.min_filter),
+        .magFilter = static_cast<gfx::TextureFilteringMode>(m_desc.mag_filter),
+        .mipFilter = static_cast<gfx::TextureFilteringMode>(m_desc.mip_filter),
+        .reductionOp = static_cast<gfx::TextureReductionOp>(m_desc.reduction_op),
+        .addressU = static_cast<gfx::TextureAddressingMode>(m_desc.address_u),
+        .addressV = static_cast<gfx::TextureAddressingMode>(m_desc.address_v),
+        .addressW = static_cast<gfx::TextureAddressingMode>(m_desc.address_w),
         .mipLODBias = m_desc.mip_lod_bias,
         .maxAnisotropy = m_desc.max_anisotropy,
-        .comparisonFunc = get_gfx_comparison_func(m_desc.comparison_func),
+        .comparisonFunc = static_cast<gfx::ComparisonFunc>(m_desc.comparison_func),
         .borderColor = {m_desc.border_color.x, m_desc.border_color.y, m_desc.border_color.z, m_desc.border_color.w},
         .minLOD = m_desc.min_lod,
         .maxLOD = m_desc.max_lod,

@@ -84,7 +84,6 @@ target_sources(kali PRIVATE
     kali/device/swapchain.cpp
     kali/device/swapchain.h
     kali/device/types.h
-    kali/device/types.inl
 
     kali/imageio/imageio.cpp
     kali/imageio/imageio.h
