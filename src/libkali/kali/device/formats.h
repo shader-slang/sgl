@@ -167,7 +167,7 @@ struct FormatInfo {
     bool is_compressed;
     uint32_t block_width;
     uint32_t block_height;
-    int channel_bit_count[4];
+    uint32_t channel_bit_count[4];
     uint32_t dxgi_format;
     uint32_t vk_format;
 

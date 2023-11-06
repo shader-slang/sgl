@@ -2,19 +2,33 @@
 
 #include "kali/device/kernel.h"
 #include "kali/device/command.h"
+#include "kali/device/resource.h"
+#include "kali/device/sampler.h"
 
 namespace kali {
-inline void assign_vars(ShaderCursor cursor, const nb::dict& vars)
+
+inline void bind_python_var(ShaderCursor cursor, nb::handle var)
 {
-    for (const auto& [key, value] : vars) {
-        std::string_view key_str = nb::cast<std::string_view>(key);
-        if (nb::isinstance<Buffer*>(value)) {
-            cursor[key_str] = ref<Buffer>(nb::cast<Buffer*>(value));
-        } else if (nb::isinstance<nb::dict>(value)) {
-            assign_vars(cursor[key_str], nb::cast<nb::dict>(value));
-        }
+    if (nb::isinstance<ResourceView>(var)) {
+        cursor = ref<ResourceView>(nb::cast<ResourceView*>(var));
+    } else if (nb::isinstance<Buffer>(var)) {
+        cursor = ref<Buffer>(nb::cast<Buffer*>(var));
+    } else if (nb::isinstance<Texture>(var)) {
+        cursor = ref<Texture>(nb::cast<Texture*>(var));
+    } else if (nb::isinstance<Sampler>(var)) {
+        cursor = ref<Sampler>(nb::cast<Sampler*>(var));
+    } else if (nb::isinstance<nb::list>(var)) {
+        uint32_t index = 0;
+        for (const auto& value : nb::cast<nb::list>(var))
+            bind_python_var(cursor[index++], value);
+    } else if (nb::isinstance<nb::dict>(var)) {
+        for (const auto& [key, value] : nb::cast<nb::dict>(var))
+            bind_python_var(cursor[nb::cast<std::string_view>(key)], value);
+    } else {
+        KALI_THROW("Unsupported variable type!");
     }
 }
+
 } // namespace kali
 
 KALI_PY_EXPORT(device_kernel)
@@ -28,15 +42,15 @@ KALI_PY_EXPORT(device_kernel)
             "dispatch",
             [](ComputeKernel* self, uint3 thread_count, nb::dict vars, CommandStream* stream, nb::kwargs kwargs)
             {
-                auto set_vars = [&](ShaderCursor cursor)
+                auto bind_vars = [&](ShaderCursor cursor)
                 {
-                    // assign locals
+                    // bind locals
                     if (kwargs.size() > 0)
-                        assign_vars(cursor.find_entry_point(0), kwargs);
-                    // assign globals
-                    assign_vars(cursor, vars);
+                        bind_python_var(cursor.find_entry_point(0), kwargs);
+                    // bind globals
+                    bind_python_var(cursor, vars);
                 };
-                self->dispatch(thread_count, set_vars, stream);
+                self->dispatch(thread_count, bind_vars, stream);
             },
             "thread_count"_a,
             "vars"_a = nb::dict(),

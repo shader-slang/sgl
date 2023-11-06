@@ -320,6 +320,8 @@ void Device::wait()
 
 void Device::read_buffer(const Buffer* buffer, size_t offset, size_t size, void* out_data)
 {
+    m_command_stream->buffer_barrier(buffer, ResourceState::copy_source);
+
     Slang::ComPtr<ISlangBlob> blob;
     if (offset + size > buffer->size())
         KALI_THROW("Buffer read out of bounds");

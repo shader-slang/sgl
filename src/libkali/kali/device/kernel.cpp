@@ -24,14 +24,14 @@ ComputePipelineState* ComputeKernel::pipeline_state() const
     return m_pipeline_state;
 }
 
-void ComputeKernel::dispatch(uint3 thread_count, SetShaderVariablesCallback set_vars, CommandStream* stream)
+void ComputeKernel::dispatch(uint3 thread_count, BindVarsCallback bind_vars, CommandStream* stream)
 {
     if (stream == nullptr)
         stream = m_program->device()->command_stream();
 
     ref<ShaderObject> shader_object = stream->bind_compute_pipeline(pipeline_state());
-    if (set_vars)
-        set_vars(ShaderCursor(shader_object));
+    if (bind_vars)
+        bind_vars(ShaderCursor(shader_object));
 
     uint3 thread_group_count{
         div_round_up(thread_count.x, m_thread_group_size.x),

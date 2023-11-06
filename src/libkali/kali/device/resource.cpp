@@ -271,6 +271,7 @@ ref<ResourceView> Buffer::get_srv(uint64_t first_element, uint64_t element_count
         .type = ResourceViewType::shader_resource,
         .format = m_desc.format,
         .buffer_range{.first_element = first_element, .element_count = element_count},
+        .buffer_element_size = m_desc.struct_size,
     };
     return get_view(desc);
 }
@@ -281,6 +282,7 @@ ref<ResourceView> Buffer::get_uav(uint64_t first_element, uint64_t element_count
         .type = ResourceViewType::unordered_access,
         .format = m_desc.format,
         .buffer_range{.first_element = first_element, .element_count = element_count},
+        .buffer_element_size = m_desc.struct_size,
     };
     return get_view(desc);
 }

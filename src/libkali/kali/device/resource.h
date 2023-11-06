@@ -291,6 +291,8 @@ class KALI_API Resource : public Object {
 public:
     virtual ~Resource();
 
+    Device* device() const { return m_device; }
+
     ResourceType type() const { return m_type; };
 
     Format format() const { return Format::unknown; }

@@ -16,7 +16,7 @@ void set_exception_diagnostics(ExceptionDiagnosticFlags flags)
 
 void throw_exception(const std::source_location& loc, std::string_view msg)
 {
-    std::string error_msg = fmt::format("Exception: {}\n", msg);
+    std::string error_msg = fmt::format("{}\n", msg);
     error_msg += fmt::format("{}({}) in function {}", loc.file_name(), loc.line(), loc.function_name());
 
     bool debugger_present = is_debugger_present();

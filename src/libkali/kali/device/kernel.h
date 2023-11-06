@@ -21,11 +21,11 @@ public:
     ComputeKernel(Device* device, ref<ShaderProgram> program);
     virtual ~ComputeKernel() = default;
 
-    using SetShaderVariablesCallback = std::function<void(ShaderCursor)>;
+    using BindVarsCallback = std::function<void(ShaderCursor)>;
 
     ComputePipelineState* pipeline_state() const;
 
-    void dispatch(uint3 thread_count, SetShaderVariablesCallback set_vars, CommandStream* stream = nullptr);
+    void dispatch(uint3 thread_count, BindVarsCallback bind_vars, CommandStream* stream = nullptr);
 
 private:
     Device* m_device;

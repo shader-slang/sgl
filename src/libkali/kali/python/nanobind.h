@@ -15,6 +15,7 @@
 
 #include "kali/core/object.h"
 #include "kali/core/enum.h"
+#include "kali/core/type_utils.h"
 
 namespace nb = nanobind;
 using namespace nb::literals;
@@ -63,6 +64,27 @@ public:
 };
 
 NAMESPACE_END(NB_NAMESPACE)
+
+namespace kali {
+
+template<typename... Args>
+size_t is_ndarray_contiguous(const nb::ndarray<Args...>& array)
+{
+    if (array.ndim() == 0)
+        return false;
+    size_t prod = 1;
+    for (size_t i = array.ndim() - 1;;) {
+        if (array.stride(i) != narrow_cast<int64_t>(prod))
+            return false;
+        prod *= array.shape(i);
+        if (i == 0)
+            break;
+        --i;
+    }
+    return true;
+}
+
+} // namespace kali
 
 #define KALI_PY_DECLARE(name) extern void kali_python_export_##name(nb::module_& m)
 #define KALI_PY_EXPORT(name) void kali_python_export_##name([[maybe_unused]] ::nb::module_& m)
