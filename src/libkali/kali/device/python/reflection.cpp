@@ -42,19 +42,19 @@ KALI_PY_EXPORT(device_reflection)
         .def_prop_ro("variable", &VariableLayoutReflection::variable)
         .def_prop_ro("type_layout", &VariableLayoutReflection::type_layout);
 
-    nb::class_<EntryPointReflection>(m, "EntryPointReflection").def("__repr__", &EntryPointReflection::to_string);
+    nb::class_<EntryPointLayout>(m, "EntryPointLayout").def("__repr__", &EntryPointLayout::to_string);
 
-    nb::class_<ProgramReflection> program_reflection(m, "ProgramReflection");
+    nb::class_<ProgramLayout> program_layout(m, "ProgramLayout");
 
-    nb::class_<ProgramReflection::HashedString>(program_reflection, "HashedString")
-        .def_ro("string", &ProgramReflection::HashedString::string)
-        .def_ro("hash", &ProgramReflection::HashedString::hash);
+    nb::class_<ProgramLayout::HashedString>(program_layout, "HashedString")
+        .def_ro("string", &ProgramLayout::HashedString::string)
+        .def_ro("hash", &ProgramLayout::HashedString::hash);
 
-    program_reflection //
-        .def_prop_ro("globals_type_layout", &ProgramReflection::globals_type_layout)
-        .def_prop_ro("globals_variable_layout", &ProgramReflection::globals_variable_layout)
-        .def_prop_ro("parameters", &ProgramReflection::parameters)
-        .def_prop_ro("entry_points", &ProgramReflection::entry_points)
-        .def_prop_ro("hashed_strings", &ProgramReflection::hashed_strings)
-        .def("__repr__", &ProgramReflection::to_string);
+    program_layout //
+        .def_prop_ro("globals_type_layout", &ProgramLayout::globals_type_layout)
+        .def_prop_ro("globals_variable_layout", &ProgramLayout::globals_variable_layout)
+        .def_prop_ro("parameters", &ProgramLayout::parameters)
+        .def_prop_ro("entry_points", &ProgramLayout::entry_points)
+        .def_prop_ro("hashed_strings", &ProgramLayout::hashed_strings)
+        .def("__repr__", &ProgramLayout::to_string);
 }

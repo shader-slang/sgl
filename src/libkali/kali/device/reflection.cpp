@@ -90,10 +90,10 @@ std::string VariableLayoutReflection::to_string() const
     );
 }
 
-std::string EntryPointReflection::to_string() const
+std::string EntryPointLayout::to_string() const
 {
     return fmt::format(
-        "EntryPointReflection(\n"
+        "EntryPointLayout(\n"
         "    name={},\n"
         "    name_override={},\n"
         "    stage={},\n"
@@ -108,10 +108,10 @@ std::string EntryPointReflection::to_string() const
     );
 }
 
-std::string ProgramReflection::to_string() const
+std::string ProgramLayout::to_string() const
 {
     return fmt::format(
-        "ProgramReflection(\n"
+        "ProgramLayout(\n"
         "    globals_type={},\n"
         "    parameters={}\n"
         "    entry_points={}\n"

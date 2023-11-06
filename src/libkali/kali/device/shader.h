@@ -254,7 +254,7 @@ public:
     SlangGlobalScope(ref<SlangModule> module, Slang::ComPtr<slang::IComponentType> component_type);
     virtual ~SlangGlobalScope() = default;
 
-    const ProgramReflection* layout() const;
+    const ProgramLayout* layout() const;
 
     virtual std::string to_string() const override;
 };
@@ -267,7 +267,7 @@ public:
 
     const std::string& name() const { return m_name; }
     ShaderStage stage() const { return m_stage; }
-    const EntryPointReflection* layout() const;
+    const EntryPointLayout* layout() const;
 
     ref<SlangEntryPoint> rename(const std::string& new_name);
 
@@ -290,9 +290,9 @@ public:
 
     const ref<Device>& device() const { return m_device; }
 
-    const ProgramReflection* program_layout() const { return m_global_scope->layout(); }
-    std::vector<const EntryPointReflection*> entry_point_layouts() const;
-    const EntryPointReflection* entry_point_layout(uint32_t index) const { return m_entry_points[index]->layout(); }
+    const ProgramLayout* program_layout() const { return m_global_scope->layout(); }
+    std::vector<const EntryPointLayout*> entry_point_layouts() const;
+    const EntryPointLayout* entry_point_layout(uint32_t index) const { return m_entry_points[index]->layout(); }
 
     gfx::IShaderProgram* get_gfx_shader_program() const { return m_gfx_shader_program; }
 

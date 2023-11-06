@@ -321,9 +321,9 @@ SlangGlobalScope::SlangGlobalScope(ref<SlangModule> module, Slang::ComPtr<slang:
 {
 }
 
-const ProgramReflection* SlangGlobalScope::layout() const
+const ProgramLayout* SlangGlobalScope::layout() const
 {
-    return ProgramReflection::from_slang(m_component_type->getLayout());
+    return ProgramLayout::from_slang(m_component_type->getLayout());
 }
 
 std::string SlangGlobalScope::to_string() const
@@ -334,9 +334,9 @@ std::string SlangGlobalScope::to_string() const
 SlangEntryPoint::SlangEntryPoint(ref<SlangModule> module, Slang::ComPtr<slang::IComponentType> component_type)
     : SlangComponentType(std::move(module), std::move(component_type))
 {
-    slang::EntryPointReflection* reflection = m_component_type->getLayout()->getEntryPointByIndex(0);
-    m_name = reflection->getNameOverride() ? reflection->getNameOverride() : reflection->getName();
-    m_stage = get_shader_stage(reflection->getStage());
+    slang::EntryPointLayout* layout = m_component_type->getLayout()->getEntryPointByIndex(0);
+    m_name = layout->getNameOverride() ? layout->getNameOverride() : layout->getName();
+    m_stage = get_shader_stage(layout->getStage());
 }
 
 ref<SlangEntryPoint> SlangEntryPoint::rename(const std::string& new_name)
@@ -346,9 +346,9 @@ ref<SlangEntryPoint> SlangEntryPoint::rename(const std::string& new_name)
     return make_ref<SlangEntryPoint>(m_module, renamed_entry_point);
 }
 
-const EntryPointReflection* SlangEntryPoint::layout() const
+const EntryPointLayout* SlangEntryPoint::layout() const
 {
-    return EntryPointReflection::from_slang(m_component_type->getLayout()->getEntryPointByIndex(0));
+    return EntryPointLayout::from_slang(m_component_type->getLayout()->getEntryPointByIndex(0));
 }
 
 std::string SlangEntryPoint::to_string() const
@@ -405,10 +405,10 @@ ShaderProgram::ShaderProgram(
     }
 }
 
-std::vector<const EntryPointReflection*> ShaderProgram::entry_point_layouts() const
+std::vector<const EntryPointLayout*> ShaderProgram::entry_point_layouts() const
 {
     return {};
-    // std::vector<const EntryPointReflection> layouts;
+    // std::vector<const EntryPointLayout> layouts;
     // for (size_t i = 0; i < m_entry_points.size(); ++i)
     //     layouts.push_back(m_entry_points[i]->layout());
     // return layouts;

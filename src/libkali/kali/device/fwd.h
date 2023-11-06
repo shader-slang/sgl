@@ -55,8 +55,8 @@ class TypeReflection;
 class TypeLayoutReflection;
 class VariableReflection;
 class VariableLayoutReflection;
-class ProgramReflection;
-class EntryPointReflection;
+class ProgramLayout;
+class EntryPointLayout;
 
 // kernel.h
 

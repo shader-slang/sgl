@@ -20,8 +20,8 @@ class TypeReflection;
 class TypeLayoutReflection;
 class VariableReflection;
 class VariableLayoutReflection;
-class EntryPointReflection;
-class ProgramReflection;
+class EntryPointLayout;
+class ProgramLayout;
 
 namespace detail {
     inline const TypeReflection* from_slang(slang::TypeReflection* type_reflection)
@@ -40,17 +40,17 @@ namespace detail {
     {
         return reinterpret_cast<const VariableLayoutReflection*>(variable_layout_reflection);
     }
-    inline const EntryPointReflection* from_slang(slang::EntryPointReflection* entry_point_reflection)
+    inline const EntryPointLayout* from_slang(slang::EntryPointLayout* entry_point_reflection)
     {
-        return reinterpret_cast<const EntryPointReflection*>(entry_point_reflection);
+        return reinterpret_cast<const EntryPointLayout*>(entry_point_reflection);
     }
-    inline const ProgramReflection* from_slang(slang::ProgramLayout* program_layout)
+    inline const ProgramLayout* from_slang(slang::ProgramLayout* program_layout)
     {
-        return reinterpret_cast<const ProgramReflection*>(program_layout);
+        return reinterpret_cast<const ProgramLayout*>(program_layout);
     }
 } // namespace detail
 
-class KALI_API TypeReflection {
+class KALI_API TypeReflection : private slang::TypeReflection {
 public:
     enum class Kind {
         none = SLANG_TYPE_KIND_NONE,
@@ -190,29 +190,29 @@ public:
         existential_object_param = SLANG_PARAMETER_CATEGORY_EXISTENTIAL_OBJECT_PARAM,
     };
 
-    Kind kind() const { return static_cast<Kind>(slang()->getKind()); }
+    Kind kind() const { return static_cast<Kind>(base()->getKind()); }
 
-    char const* name() const { return slang()->getName(); }
+    char const* name() const { return base()->getName(); }
 
     bool is_struct() const { return kind() == Kind::struct_; }
 
     uint32_t field_count() const
     {
         KALI_CHECK(is_struct(), "Type is not a struct");
-        return slang()->getFieldCount();
+        return base()->getFieldCount();
     }
 
     const VariableReflection* get_field_by_index(uint32_t index) const
     {
         KALI_CHECK(is_struct(), "Type is not a struct");
-        return detail::from_slang(slang()->getFieldByIndex(index));
+        return detail::from_slang(base()->getFieldByIndex(index));
     }
 
     std::vector<const VariableReflection*> fields() const
     {
         std::vector<const VariableReflection*> result;
-        for (uint32_t i = 0; i < slang()->getFieldCount(); ++i) {
-            result.push_back(detail::from_slang(slang()->getFieldByIndex(i)));
+        for (uint32_t i = 0; i < base()->getFieldCount(); ++i) {
+            result.push_back(detail::from_slang(base()->getFieldByIndex(i)));
         }
         return result;
     }
@@ -222,7 +222,7 @@ public:
     size_t element_count() const
     {
         KALI_CHECK(is_array(), "Type is not an array");
-        return slang()->getElementCount();
+        return base()->getElementCount();
     }
 
     size_t total_element_count() const
@@ -240,7 +240,7 @@ public:
     const TypeReflection* element_type() const
     {
         KALI_CHECK(is_array(), "Type is not an array");
-        return detail::from_slang(slang()->getElementType());
+        return detail::from_slang(base()->getElementType());
     }
 
     const TypeReflection* unwrap_array() const
@@ -252,13 +252,13 @@ public:
         return type;
     }
 
-    uint32_t row_count() const { return slang()->getRowCount(); }
+    uint32_t row_count() const { return base()->getRowCount(); }
 
-    uint32_t col_count() const { return slang()->getColumnCount(); }
+    uint32_t col_count() const { return base()->getColumnCount(); }
 
-    ScalarType scalar_type() const { return static_cast<ScalarType>(slang()->getScalarType()); }
+    ScalarType scalar_type() const { return static_cast<ScalarType>(base()->getScalarType()); }
 
-    const TypeReflection* resource_result_type() const { return detail::from_slang(slang()->getResourceResultType()); }
+    const TypeReflection* resource_result_type() const { return detail::from_slang(base()->getResourceResultType()); }
 
 #if 0
     SlangResourceShape getResourceShape() { return spReflectionType_GetResourceShape((SlangReflectionType*)this); }
@@ -279,28 +279,30 @@ public:
     std::string to_string() const;
 
 private:
-    slang::TypeReflection* slang() const { return (slang::TypeReflection*)(this); }
+    /// Cast to non-const base pointer.
+    /// The underlying slang API is not const-correct.
+    slang::TypeReflection* base() const { return (slang::TypeReflection*)(this); }
 };
 
 KALI_ENUM_REGISTER(TypeReflection::Kind);
 KALI_ENUM_REGISTER(TypeReflection::ScalarType);
 
-class KALI_API TypeLayoutReflection {
+class KALI_API TypeLayoutReflection : private slang::TypeLayoutReflection {
 public:
     static const TypeLayoutReflection* from_slang(slang::TypeLayoutReflection* type_layout_reflection)
     {
         return detail::from_slang(type_layout_reflection);
     }
 
-    const TypeReflection* type() const { return detail::from_slang(slang()->getType()); }
+    const TypeReflection* type() const { return detail::from_slang(base()->getType()); }
 
-    TypeReflection::Kind kind() const { return static_cast<TypeReflection::Kind>(slang()->getKind()); }
+    TypeReflection::Kind kind() const { return static_cast<TypeReflection::Kind>(base()->getKind()); }
 
-    const char* name() const { return slang()->getName(); }
+    const char* name() const { return base()->getName(); }
 
-    size_t size() const { return slang()->getSize(); }
-    size_t stride() const { return slang()->getStride(); }
-    int32_t alignment() const { return slang()->getAlignment(); }
+    size_t size() const { return base()->getSize(); }
+    size_t stride() const { return base()->getStride(); }
+    int32_t alignment() const { return base()->getAlignment(); }
 
 #if 0
     size_t getSize(SlangParameterCategory category = SLANG_PARAMETER_CATEGORY_UNIFORM)
@@ -319,32 +321,32 @@ public:
     }
 #endif
 
-    uint32_t field_count() const { return slang()->getFieldCount(); }
+    uint32_t field_count() const { return base()->getFieldCount(); }
 
     const VariableLayoutReflection* get_field_by_index(uint32_t index) const
     {
         // TODO field_count() does not always return the right number of fields
         // KALI_CHECK(index < field_count(), "Field index out of range");
-        return detail::from_slang(slang()->getFieldByIndex(index));
+        return detail::from_slang(base()->getFieldByIndex(index));
     }
 
     int32_t find_field_index_by_name(const char* name_begin, const char* name_end = nullptr) const
     {
-        return narrow_cast<int32_t>(slang()->findFieldIndexByName(name_begin, name_end));
+        return narrow_cast<int32_t>(base()->findFieldIndexByName(name_begin, name_end));
     }
 
     const VariableLayoutReflection* find_field_by_name(const char* name_begin, const char* name_end = nullptr) const
     {
-        if (auto index = slang()->findFieldIndexByName(name_begin, name_end); index >= 0)
-            return detail::from_slang(slang()->getFieldByIndex(narrow_cast<unsigned int>(index)));
+        if (auto index = base()->findFieldIndexByName(name_begin, name_end); index >= 0)
+            return detail::from_slang(base()->getFieldByIndex(narrow_cast<unsigned int>(index)));
         return nullptr;
     }
 
     std::vector<const VariableLayoutReflection*> fields() const
     {
         std::vector<const VariableLayoutReflection*> result;
-        for (uint32_t i = 0; i < slang()->getFieldCount(); ++i) {
-            result.push_back(detail::from_slang(slang()->getFieldByIndex(i)));
+        for (uint32_t i = 0; i < base()->getFieldCount(); ++i) {
+            result.push_back(detail::from_slang(base()->getFieldByIndex(i)));
         }
         return result;
     }
@@ -382,23 +384,23 @@ public:
 
     const TypeLayoutReflection* element_type_layout() const
     {
-        return detail::from_slang(slang()->getElementTypeLayout());
+        return detail::from_slang(base()->getElementTypeLayout());
     }
 
     const VariableLayoutReflection* element_var_layout() const
     {
-        return detail::from_slang(slang()->getElementVarLayout());
+        return detail::from_slang(base()->getElementVarLayout());
     }
 
     const VariableLayoutReflection* container_var_layout() const
     {
-        return detail::from_slang(slang()->getContainerVarLayout());
+        return detail::from_slang(base()->getContainerVarLayout());
     }
 
     // How is this type supposed to be bound?
     TypeReflection::ParameterCategory parameter_category() const
     {
-        return static_cast<TypeReflection::ParameterCategory>(slang()->getParameterCategory());
+        return static_cast<TypeReflection::ParameterCategory>(base()->getParameterCategory());
     }
 
 #if 0
@@ -477,7 +479,7 @@ public:
 
     uint32_t get_field_binding_range_offset(uint32_t field_index) const
     {
-        return narrow_cast<uint32_t>(slang()->getFieldBindingRangeOffset(field_index));
+        return narrow_cast<uint32_t>(base()->getFieldBindingRangeOffset(field_index));
     }
 
 #if 0
@@ -595,19 +597,21 @@ public:
     std::string to_string() const;
 
 private:
-    slang::TypeLayoutReflection* slang() const { return (slang::TypeLayoutReflection*)(this); }
+    /// Cast to non-const base pointer.
+    /// The underlying slang API is not const-correct.
+    slang::TypeLayoutReflection* base() const { return (slang::TypeLayoutReflection*)(this); }
 };
 
-class KALI_API VariableReflection {
+class KALI_API VariableReflection : private slang::VariableReflection {
 public:
     static const VariableReflection* from_slang(slang::VariableReflection* variable_reflection)
     {
         return detail::from_slang(variable_reflection);
     }
 
-    const char* name() const { return slang()->getName(); }
+    const char* name() const { return base()->getName(); }
 
-    const TypeReflection* type() const { return detail::from_slang(slang()->getType()); }
+    const TypeReflection* type() const { return detail::from_slang(base()->getType()); }
 
 #if 0
     Modifier* findModifier(Modifier::ID id)
@@ -631,20 +635,22 @@ public:
 #endif
 
 private:
-    slang::VariableReflection* slang() const { return (slang::VariableReflection*)(this); }
+    /// Cast to non-const base pointer.
+    /// The underlying slang API is not const-correct.
+    slang::VariableReflection* base() const { return (slang::VariableReflection*)(this); }
 };
 
-class KALI_API VariableLayoutReflection {
+class KALI_API VariableLayoutReflection : private slang::VariableLayoutReflection {
 public:
-    const VariableReflection* variable() const { return detail::from_slang(slang()->getVariable()); }
+    const VariableReflection* variable() const { return detail::from_slang(base()->getVariable()); }
 
-    const char* name() const { return slang()->getName(); }
+    const char* name() const { return base()->getName(); }
 
 #if 0
     Modifier* findModifier(Modifier::ID id) { return getVariable()->findModifier(id); }
 #endif
 
-    const TypeLayoutReflection* type_layout() const { return detail::from_slang(slang()->getTypeLayout()); }
+    const TypeLayoutReflection* type_layout() const { return detail::from_slang(base()->getTypeLayout()); }
 
 #if 0
     ParameterCategory getCategory() { return getTypeLayout()->getParameterCategory(); }
@@ -656,7 +662,7 @@ public:
 
     size_t offset(SlangParameterCategory category = SLANG_PARAMETER_CATEGORY_UNIFORM) const
     {
-        return slang()->getOffset(category);
+        return base()->getOffset(category);
     }
 
 #if 0
@@ -694,35 +700,37 @@ public:
     std::string to_string() const;
 
 private:
-    slang::VariableLayoutReflection* slang() const { return (slang::VariableLayoutReflection*)(this); }
+    /// Cast to non-const base pointer.
+    /// The underlying slang API is not const-correct.
+    slang::VariableLayoutReflection* base() const { return (slang::VariableLayoutReflection*)(this); }
 };
 
-class KALI_API EntryPointReflection {
+class KALI_API EntryPointLayout : private slang::EntryPointLayout {
 public:
-    static const EntryPointReflection* from_slang(slang::EntryPointReflection* entry_point_reflection)
+    static const EntryPointLayout* from_slang(slang::EntryPointLayout* entry_point_reflection)
     {
         return detail::from_slang(entry_point_reflection);
     }
 
-    const char* name() const { return slang()->getName(); }
+    const char* name() const { return base()->getName(); }
 
-    const char* name_override() const { return slang()->getNameOverride(); }
+    const char* name_override() const { return base()->getNameOverride(); }
 
-    ShaderStage stage() const { return static_cast<ShaderStage>(slang()->getStage()); }
+    ShaderStage stage() const { return static_cast<ShaderStage>(base()->getStage()); }
 
-    uint32_t parameter_count() const { return slang()->getParameterCount(); }
+    uint32_t parameter_count() const { return base()->getParameterCount(); }
 
     const VariableLayoutReflection* get_parameter_by_index(uint32_t index) const
     {
         KALI_CHECK(index < parameter_count(), "Parameter index out of range");
-        return detail::from_slang(slang()->getParameterByIndex(index));
+        return detail::from_slang(base()->getParameterByIndex(index));
     }
 
     std::vector<const VariableLayoutReflection*> parameters() const
     {
         std::vector<const VariableLayoutReflection*> result;
-        for (uint32_t i = 0; i < slang()->getParameterCount(); ++i) {
-            result.push_back(detail::from_slang(slang()->getParameterByIndex(i)));
+        for (uint32_t i = 0; i < base()->getParameterCount(); ++i) {
+            result.push_back(detail::from_slang(base()->getParameterByIndex(i)));
         }
         return result;
     }
@@ -730,11 +738,11 @@ public:
     uint3 compute_thread_group_size() const
     {
         SlangUInt size[3];
-        slang()->getComputeThreadGroupSize(3, size);
+        base()->getComputeThreadGroupSize(3, size);
         return uint3(narrow_cast<uint32_t>(size[0]), narrow_cast<uint32_t>(size[1]), narrow_cast<uint32_t>(size[2]));
     }
 
-    bool uses_any_sample_rate_input() const { return slang()->usesAnySampleRateInput(); }
+    bool uses_any_sample_rate_input() const { return base()->usesAnySampleRateInput(); }
 
 #if 0
     VariableLayoutReflection* getVarLayout()
@@ -758,44 +766,46 @@ public:
     std::string to_string() const;
 
 private:
-    slang::EntryPointReflection* slang() const { return (slang::EntryPointReflection*)(this); }
+    /// Cast to non-const base pointer.
+    /// The underlying slang API is not const-correct.
+    slang::EntryPointLayout* base() const { return (slang::EntryPointLayout*)(this); }
 };
 
-class KALI_API ProgramReflection {
+class KALI_API ProgramLayout : private slang::ProgramLayout {
 public:
-    static const ProgramReflection* from_slang(slang::ProgramLayout* program_layout)
+    static const ProgramLayout* from_slang(slang::ProgramLayout* program_layout)
     {
         return detail::from_slang(program_layout);
     }
 
     const TypeLayoutReflection* globals_type_layout() const
     {
-        return detail::from_slang(slang()->getGlobalParamsTypeLayout());
+        return detail::from_slang(base()->getGlobalParamsTypeLayout());
     }
 
     const VariableLayoutReflection* globals_variable_layout() const
     {
-        return detail::from_slang(slang()->getGlobalParamsVarLayout());
+        return detail::from_slang(base()->getGlobalParamsVarLayout());
     }
 
-    uint32_t parameter_count() const { return slang()->getParameterCount(); }
+    uint32_t parameter_count() const { return base()->getParameterCount(); }
 
     const VariableLayoutReflection* get_parameter_by_index(uint32_t index) const
     {
         KALI_CHECK(index < parameter_count(), "Parameter index out of range");
-        return detail::from_slang(slang()->getParameterByIndex(index));
+        return detail::from_slang(base()->getParameterByIndex(index));
     }
 
     std::vector<const VariableLayoutReflection*> parameters() const
     {
         std::vector<const VariableLayoutReflection*> result;
-        for (uint32_t i = 0; i < slang()->getParameterCount(); ++i) {
-            result.push_back(detail::from_slang(slang()->getParameterByIndex(i)));
+        for (uint32_t i = 0; i < base()->getParameterCount(); ++i) {
+            result.push_back(detail::from_slang(base()->getParameterByIndex(i)));
         }
         return result;
     }
 
-    uint32_t type_parameter_count() const { return slang()->getTypeParameterCount(); }
+    uint32_t type_parameter_count() const { return base()->getTypeParameterCount(); }
 
 #if 0
     TypeParameterReflection get_type_parameter_by_index(uint32_t index) const
@@ -809,32 +819,32 @@ public:
     }
 #endif
 
-    uint32_t entry_point_count() const { return narrow_cast<uint32_t>(slang()->getEntryPointCount()); }
+    uint32_t entry_point_count() const { return narrow_cast<uint32_t>(base()->getEntryPointCount()); }
 
-    const EntryPointReflection* get_entry_point_by_index(uint32_t index) const
+    const EntryPointLayout* get_entry_point_by_index(uint32_t index) const
     {
         KALI_CHECK(index < entry_point_count(), "Entry point index out of range");
-        return detail::from_slang(slang()->getEntryPointByIndex(index));
+        return detail::from_slang(base()->getEntryPointByIndex(index));
     }
 
-    const EntryPointReflection* get_entry_point_by_name(const char* name) const
+    const EntryPointLayout* get_entry_point_by_name(const char* name) const
     {
-        return detail::from_slang(slang()->findEntryPointByName(name));
+        return detail::from_slang(base()->findEntryPointByName(name));
     }
 
-    const EntryPointReflection* find_entry_point_by_name(const char* name) const
+    const EntryPointLayout* find_entry_point_by_name(const char* name) const
     {
-        if (auto entry_point = slang()->findEntryPointByName(name)) {
+        if (auto entry_point = base()->findEntryPointByName(name)) {
             return detail::from_slang(entry_point);
         }
         return nullptr;
     }
 
-    std::vector<const EntryPointReflection*> entry_points() const
+    std::vector<const EntryPointLayout*> entry_points() const
     {
-        std::vector<const EntryPointReflection*> result;
-        for (uint32_t i = 0; i < slang()->getEntryPointCount(); ++i) {
-            result.push_back(detail::from_slang(slang()->getEntryPointByIndex(i)));
+        std::vector<const EntryPointLayout*> result;
+        for (uint32_t i = 0; i < base()->getEntryPointCount(); ++i) {
+            result.push_back(detail::from_slang(base()->getEntryPointByIndex(i)));
         }
         return result;
     }
@@ -875,7 +885,7 @@ public:
     }
 #endif
 
-    uint32_t hashed_string_count() const { return narrow_cast<uint32_t>(slang()->getHashedStringCount()); }
+    uint32_t hashed_string_count() const { return narrow_cast<uint32_t>(base()->getHashedStringCount()); }
 
     struct HashedString {
         std::string string;
@@ -886,16 +896,16 @@ public:
     {
         KALI_CHECK(index < hashed_string_count(), "Hashed string index out of range");
         size_t size;
-        const char* str = slang()->getHashedString(index, &size);
+        const char* str = base()->getHashedString(index, &size);
         return {std::string(str, str + size), spComputeStringHash(str, size)};
     }
 
     std::vector<HashedString> hashed_strings() const
     {
         std::vector<HashedString> result;
-        for (uint32_t i = 0; i < slang()->getHashedStringCount(); ++i) {
+        for (uint32_t i = 0; i < base()->getHashedStringCount(); ++i) {
             size_t size;
-            const char* str = slang()->getHashedString(i, &size);
+            const char* str = base()->getHashedString(i, &size);
             result.push_back({std::string(str, str + size), spComputeStringHash(str, size)});
         }
         return result;
@@ -904,9 +914,9 @@ public:
     std::map<uint32_t, std::string> hashed_strings_map() const
     {
         std::map<uint32_t, std::string> result;
-        for (uint32_t i = 0; i < slang()->getHashedStringCount(); ++i) {
+        for (uint32_t i = 0; i < base()->getHashedStringCount(); ++i) {
             size_t size;
-            const char* str = slang()->getHashedString(i, &size);
+            const char* str = base()->getHashedString(i, &size);
             uint32_t hash = spComputeStringHash(str, size);
             result.emplace(hash, std::string(str, str + size));
         }
@@ -916,8 +926,9 @@ public:
     std::string to_string() const;
 
 private:
-    slang::ProgramLayout* slang() const { return (slang::ProgramLayout*)(this); }
+    /// Cast to non-const base pointer.
+    /// The underlying slang API is not const-correct.
+    slang::ProgramLayout* base() const { return (slang::ProgramLayout*)(this); }
 };
-
 
 } // namespace kali
