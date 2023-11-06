@@ -441,18 +441,16 @@ public:
         return type_layout;
     }
 
+    size_t element_count() const { return type()->element_count(); }
+
 #if 0
-    // only useful if `getKind() == Kind::Array`
-    size_t getElementCount() { return getType()->getElementCount(); }
-
     size_t getTotalArrayElementCount() { return getType()->getTotalArrayElementCount(); }
-
-    size_t getElementStride(SlangParameterCategory category)
-    {
-        return spReflectionTypeLayout_GetElementStride((SlangReflectionTypeLayout*)this, category);
-    }
 #endif
 
+    size_t element_stride(TypeReflection::ParameterCategory category = TypeReflection::ParameterCategory::uniform) const
+    {
+        return base()->getElementStride(static_cast<SlangParameterCategory>(category));
+    }
 
     const TypeLayoutReflection* element_type_layout() const
     {

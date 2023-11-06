@@ -40,7 +40,7 @@ ShaderCursor ShaderCursor::operator[](std::string_view name) const
 {
     KALI_CHECK(is_valid(), "Invalid cursor");
     ShaderCursor result = find_field(name);
-    KALI_CHECK(result.is_valid(), "Member '{}' not found.", name);
+    KALI_CHECK(result.is_valid(), "Field '{}' not found.", name);
     return result;
 }
 
@@ -109,12 +109,12 @@ ShaderCursor ShaderCursor::find_field(std::string_view name) const
         // * Range #0 comprises 4 textures, representing `g[...].t`
         // * Range #1 comprises 4 textures, representing `g[...].u`
         //
-        // A cursor for `g[2]` would have a `bindingRangeIndex` of zero but
-        // a `bindingArrayIndex` of 2, iindicating that we could end up
+        // A cursor for `g[2]` would have a `binding_range_index` of zero but
+        // a `binding_array_index` of 2, iindicating that we could end up
         // referencing either range, but no matter what we know the index
         // is 2. Thus when we form a cursor for `g[2].u` we want to
-        // apply the binding range offset to get a `bindingRangeIndex` of
-        // 1, while the `bindingArrayIndex` is unmodified.
+        // apply the binding range offset to get a `binding_range_index` of
+        // 1, while the `binding_array_index` is unmodified.
         //
         // The result is that `g[2].u` is stored in range #1 at array index 2.
         //
@@ -150,10 +150,10 @@ ShaderCursor ShaderCursor::find_field(std::string_view name) const
     //
     // TODO: figure out whether we should support this long-term.
     //
-    auto entryPointCount = (GfxIndex)m_baseObject->getEntryPointCount();
+    auto entryPointCount = (GfxIndex)m_shader_object->getEntryPointCount();
     for (GfxIndex e = 0; e < entryPointCount; ++e) {
         ComPtr<IShaderObject> entryPoint;
-        m_baseObject->getEntryPoint(e, entryPoint.writeRef());
+        m_shader_object->getEntryPoint(e, entryPoint.writeRef());
 
         ShaderCursor entryPointCursor(entryPoint);
 
@@ -170,7 +170,45 @@ ShaderCursor ShaderCursor::find_element(uint32_t index) const
     if (!is_valid())
         return *this;
 
-    KALI_UNUSED(index);
+#if 0
+    if (m_containerType != ShaderObjectContainerType::None) {
+        ShaderCursor element_cursor;
+        element_cursor.m_shader_object = m_shader_object;
+        element_cursor.m_type_layout = m_type_layout->getElementTypeLayout();
+        element_cursor.m_containerType = m_containerType;
+        element_cursor.m_offset.uniform_offset = index * m_type_layout->getStride();
+        element_cursor.m_offset.binding_range_index = 0;
+        element_cursor.m_offset.binding_array_index = index;
+        return element_cursor;
+    }
+#endif
+
+    switch (m_type_layout->kind()) {
+    case TypeReflection::Kind::array: {
+        ShaderCursor element_cursor;
+        element_cursor.m_shader_object = m_shader_object;
+        element_cursor.m_type_layout = m_type_layout->element_type_layout();
+        element_cursor.m_offset.uniform_offset
+            = m_offset.uniform_offset + index * narrow_cast<uint32_t>(m_type_layout->element_stride());
+        element_cursor.m_offset.binding_range_index = m_offset.binding_range_index;
+        element_cursor.m_offset.binding_array_index
+            = m_offset.binding_array_index * narrow_cast<uint32_t>(m_type_layout->element_count()) + index;
+        return element_cursor;
+    } break;
+
+    case TypeReflection::Kind::vector:
+    case TypeReflection::Kind::matrix: {
+        ShaderCursor field_cursor;
+        field_cursor.m_shader_object = m_shader_object;
+        field_cursor.m_type_layout = m_type_layout->element_type_layout();
+        field_cursor.m_offset.uniform_offset
+            = m_offset.uniform_offset + narrow_cast<uint32_t>(m_type_layout->element_stride()) * index;
+        field_cursor.m_offset.binding_range_index = m_offset.binding_range_index;
+        field_cursor.m_offset.binding_array_index = m_offset.binding_array_index;
+        return field_cursor;
+    } break;
+    }
+
     return {};
 }
 
