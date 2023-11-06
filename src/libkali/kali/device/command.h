@@ -141,6 +141,8 @@ public:
      */
     bool texture_barrier(const Texture* texture, ResourceState new_state);
 
+    bool resource_barrier(const Resource* resource, ResourceState new_state);
+
 #if 0
     /**
      * Insert a resource barrier

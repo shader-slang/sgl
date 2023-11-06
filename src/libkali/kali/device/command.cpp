@@ -180,6 +180,15 @@ bool CommandStream::texture_barrier(const Texture* texture, ResourceState new_st
     return recorded;
 }
 
+bool CommandStream::resource_barrier(const Resource* resource, ResourceState new_state)
+{
+    if (resource->type() == ResourceType::buffer) {
+        return buffer_barrier(static_cast<const Buffer*>(resource), new_state);
+    } else {
+        return texture_barrier(static_cast<const Texture*>(resource), new_state);
+    }
+}
+
 void CommandStream::uav_barrier(const Resource* resource)
 {
     KALI_ASSERT(resource);
