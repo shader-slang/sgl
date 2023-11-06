@@ -377,7 +377,7 @@ void CommandStream::upload_texture_subresource_data(
         narrow_cast<gfx::GfxCount>(size.z),
     };
     gfx::FormatInfo format_info = {};
-    SLANG_CALL(gfx::gfxGetFormatInfo(get_gfx_format(texture->format()), &format_info));
+    SLANG_CALL(gfx::gfxGetFormatInfo(static_cast<gfx::Format>(texture->format()), &format_info));
     for (uint32_t i = subresource_index; i < subresource_index + subresource_count; i++) {
         gfx::SubresourceRange sr_range = {};
         // sr_range.baseArrayLayer = narrow_cast<gfx::GfxIndex>(pTexture->getSubresourceArraySlice(i));

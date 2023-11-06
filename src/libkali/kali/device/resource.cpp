@@ -113,7 +113,7 @@ ResourceView::ResourceView(const ResourceViewDesc& desc, const Buffer* buffer)
 
     gfx::IResourceView::Desc gfx_desc{
         .type = static_cast<gfx::IResourceView::Type>(m_desc.type),
-        .format = get_gfx_format(m_desc.format),
+        .format = static_cast<gfx::Format>(m_desc.format),
         .bufferRange{
             .firstElement = m_desc.buffer_range.first_element,
             .elementCount = m_desc.buffer_range.element_count,
@@ -140,7 +140,7 @@ ResourceView::ResourceView(const ResourceViewDesc& desc, const Texture* texture)
 
     gfx::IResourceView::Desc gfx_desc{
         .type = static_cast<gfx::IResourceView::Type>(m_desc.type),
-        .format = get_gfx_format(m_desc.format),
+        .format = static_cast<gfx::Format>(m_desc.format),
     };
     SLANG_CALL(texture->m_device->get_gfx_device()
                    ->createTextureView(texture->get_gfx_texture_resource(), gfx_desc, m_gfx_resource_view.writeRef()));
@@ -193,9 +193,9 @@ Buffer::Buffer(ref<Device> device, BufferDesc desc, const void* init_data)
     // TODO(@skallweit): add support for existing handles
     // gfx_desc.existingHandle =
     gfx_desc.isShared = is_set(m_desc.usage, ResourceUsage::shared);
-    gfx_desc.sizeInBytes = gfx::Size(m_desc.size);
-    gfx_desc.elementSize = gfx::Size(m_desc.struct_size);
-    gfx_desc.format = get_gfx_format(m_desc.format);
+    gfx_desc.sizeInBytes = static_cast<gfx::Size>(m_desc.size);
+    gfx_desc.elementSize = static_cast<gfx::Size>(m_desc.struct_size);
+    gfx_desc.format = static_cast<gfx::Format>(m_desc.format);
 
     SLANG_CALL(m_device->get_gfx_device()->createBufferResource(gfx_desc, init_data, m_gfx_buffer.writeRef()));
 }
@@ -323,13 +323,13 @@ Texture::Texture(ref<Device> device, TextureDesc desc, const void* init_data)
     // TODO(@skallweit): add support for existing handles
     // gfx_desc.existingHandle =
     gfx_desc.isShared = is_set(m_desc.usage, ResourceUsage::shared);
-    gfx_desc.size.width = gfx::Size(m_desc.width);
-    gfx_desc.size.height = gfx::Size(m_desc.height);
-    gfx_desc.size.depth = gfx::Size(m_desc.depth);
-    gfx_desc.numMipLevels = gfx::Size(m_desc.mip_count);
-    gfx_desc.arraySize = gfx::Size(m_desc.array_size);
-    gfx_desc.format = get_gfx_format(m_desc.format);
-    gfx_desc.sampleDesc.numSamples = gfx::GfxCount(m_desc.sample_count);
+    gfx_desc.size.width = static_cast<gfx::Size>(m_desc.width);
+    gfx_desc.size.height = static_cast<gfx::Size>(m_desc.height);
+    gfx_desc.size.depth = static_cast<gfx::Size>(m_desc.depth);
+    gfx_desc.numMipLevels = static_cast<gfx::Size>(m_desc.mip_count);
+    gfx_desc.arraySize = static_cast<gfx::Size>(m_desc.array_size);
+    gfx_desc.format = static_cast<gfx::Format>(m_desc.format);
+    gfx_desc.sampleDesc.numSamples = static_cast<gfx::GfxCount>(m_desc.sample_count);
     gfx_desc.sampleDesc.quality = m_desc.quality;
 
     // TODO(@skallweit): add support for init data

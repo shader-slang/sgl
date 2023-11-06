@@ -17,10 +17,10 @@ Swapchain::Swapchain(SwapchainDesc desc, WindowHandle window_handle, ref<Command
     KALI_ASSERT(m_device);
 
     gfx::ISwapchain::Desc gfx_desc{
-        .format = get_gfx_format(m_desc.format),
-        .width = gfx::GfxCount(m_desc.width),
-        .height = gfx::GfxCount(m_desc.height),
-        .imageCount = gfx::GfxCount(m_desc.image_count),
+        .format = static_cast<gfx::Format>(m_desc.format),
+        .width = static_cast<gfx::GfxCount>(m_desc.width),
+        .height = static_cast<gfx::GfxCount>(m_desc.height),
+        .imageCount = static_cast<gfx::GfxCount>(m_desc.image_count),
         .queue = m_queue->get_gfx_command_queue(),
         .enableVSync = m_desc.enable_vsync,
     };
