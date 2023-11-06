@@ -13,15 +13,15 @@ void bind_matrix_type(nb::module_& m, const char* name)
 {
     nb::class_<T> mat(m, name);
 
-    auto constexpr row_count = T::row_count();
-    auto constexpr col_count = T::col_count();
+    auto constexpr rows = T::rows;
+    auto constexpr cols = T::cols;
     using value_type = typename T::value_type;
     using row_type = typename T::row_type;
 
     mat.def(nb::init<>());
 
     // Initialization from array (to allow implicit conversion from python lists).
-    mat.def(nb::init_implicit<std::array<value_type, row_count * col_count>>());
+    mat.def(nb::init_implicit<std::array<value_type, rows * cols>>());
 
     mat.def("__getitem__", [](const T& self, int i) { return self[i]; });
     mat.def("__setitem__", [](T& self, int i, const row_type& v) { self[i] = v; });
@@ -46,7 +46,7 @@ void bind_matrix_type(nb::module_& m, const char* name)
 
     m.def("transpose", [](const T& m) { return transpose(m); });
 
-    if constexpr (row_count == col_count) {
+    if constexpr (rows == cols) {
         m.def("determinant", [](const T& m) { return determinant(m); });
         m.def("inverse", [](const T& m) { return inverse(m); });
     }

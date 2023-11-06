@@ -35,12 +35,11 @@ private:
     friend class matrix;
 
 public:
+    static constexpr int rows = RowCount;
+    static constexpr int cols = ColCount;
     using value_type = T;
     using row_type = vector<T, ColCount>;
     using col_type = vector<T, RowCount>;
-
-    static constexpr int row_count() { return RowCount; }
-    static constexpr int col_count() { return ColCount; }
 
     matrix()
         : matrix(Form::Identity)
