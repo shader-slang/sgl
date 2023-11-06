@@ -1,15 +1,12 @@
 #include "kali/kali.h"
-#include "kali/core/logger.h"
 #include "kali/core/platform.h"
 #include "kali/device/device.h"
 #include "kali/device/shader.h"
-#include "kali/device/reflection.h"
-#include "kali/device/pipeline.h"
 #include "kali/device/command.h"
-#include "kali/device/shader_cursor.h"
 #include "kali/device/kernel.h"
-#include "kali/math/vector.h"
 #include "kali/device/agility_sdk.h"
+
+KALI_EXPORT_AGILITY_SDK
 
 using namespace kali;
 
