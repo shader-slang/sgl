@@ -12,6 +12,9 @@ KALI_PY_EXPORT(device_reflection)
 
     nb::kali_enum<TypeReflection::Kind>(type_reflection, "Kind");
     nb::kali_enum<TypeReflection::ScalarType>(type_reflection, "ScalarType");
+    nb::kali_enum<TypeReflection::ResourceShape>(type_reflection, "ResourceShape");
+    nb::kali_enum<TypeReflection::ResourceAccess>(type_reflection, "ResourceAccess");
+    nb::kali_enum<TypeReflection::ParameterCategory>(type_reflection, "ParameterCategory");
 
     type_reflection //
         .def_prop_ro("kind", &TypeReflection::kind)
@@ -23,6 +26,8 @@ KALI_PY_EXPORT(device_reflection)
         .def_prop_ro("col_count", &TypeReflection::col_count)
         .def_prop_ro("scalar_type", &TypeReflection::scalar_type)
         .def_prop_ro("resource_result_type", &TypeReflection::resource_result_type)
+        .def_prop_ro("resource_shape", &TypeReflection::resource_shape)
+        .def_prop_ro("resource_access", &TypeReflection::resource_access)
         .def("__repr__", &TypeReflection::to_string);
 
     nb::class_<TypeLayoutReflection>(m, "TypeLayoutReflection")

@@ -134,38 +134,81 @@ public:
         }
     );
 
-#if 0
     enum class ResourceShape {
-        SLANG_RESOURCE_BASE_SHAPE_MASK      = 0x0F,
+        base_shape_mask = SLANG_RESOURCE_BASE_SHAPE_MASK,
 
-        SLANG_RESOURCE_NONE                 = 0x00,
+        none = SLANG_RESOURCE_NONE,
+        texture_1d = SLANG_TEXTURE_1D,
+        texture_2d = SLANG_TEXTURE_2D,
+        texture_3d = SLANG_TEXTURE_3D,
+        texture_cube = SLANG_TEXTURE_CUBE,
+        texture_buffer = SLANG_TEXTURE_BUFFER,
 
-        SLANG_TEXTURE_1D                    = 0x01,
-        SLANG_TEXTURE_2D                    = 0x02,
-        SLANG_TEXTURE_3D                    = 0x03,
-        SLANG_TEXTURE_CUBE                  = 0x04,
-        SLANG_TEXTURE_BUFFER                = 0x05,
+        structured_buffer = SLANG_STRUCTURED_BUFFER,
+        byte_address_buffer = SLANG_BYTE_ADDRESS_BUFFER,
+        unknown = SLANG_RESOURCE_UNKNOWN,
+        acceleration_structure = SLANG_ACCELERATION_STRUCTURE,
 
-        SLANG_STRUCTURED_BUFFER             = 0x06,
-        SLANG_BYTE_ADDRESS_BUFFER           = 0x07,
-        SLANG_RESOURCE_UNKNOWN              = 0x08,
-        SLANG_ACCELERATION_STRUCTURE        = 0x09,
+        ext_shape_mask = SLANG_RESOURCE_EXT_SHAPE_MASK,
 
-        SLANG_RESOURCE_EXT_SHAPE_MASK       = 0xF0,
+        texture_feedback_flag = SLANG_TEXTURE_FEEDBACK_FLAG,
+        texture_array_flag = SLANG_TEXTURE_ARRAY_FLAG,
+        texture_multisample_flag = SLANG_TEXTURE_MULTISAMPLE_FLAG,
 
-        SLANG_TEXTURE_FEEDBACK_FLAG         = 0x10,
-        SLANG_TEXTURE_ARRAY_FLAG            = 0x40,
-        SLANG_TEXTURE_MULTISAMPLE_FLAG      = 0x80,
+        texture_1d_array = texture_1d | texture_array_flag,
+        texture_2d_array = texture_2d | texture_array_flag,
+        texture_cube_array = texture_cube | texture_array_flag,
 
-        SLANG_TEXTURE_1D_ARRAY              = SLANG_TEXTURE_1D   | SLANG_TEXTURE_ARRAY_FLAG,
-        SLANG_TEXTURE_2D_ARRAY              = SLANG_TEXTURE_2D   | SLANG_TEXTURE_ARRAY_FLAG,
-        SLANG_TEXTURE_CUBE_ARRAY            = SLANG_TEXTURE_CUBE | SLANG_TEXTURE_ARRAY_FLAG,
-
-        SLANG_TEXTURE_2D_MULTISAMPLE        = SLANG_TEXTURE_2D | SLANG_TEXTURE_MULTISAMPLE_FLAG,
-        SLANG_TEXTURE_2D_MULTISAMPLE_ARRAY  = SLANG_TEXTURE_2D | SLANG_TEXTURE_MULTISAMPLE_FLAG | SLANG_TEXTURE_ARRAY_FLAG,
-    }
+        texture_2d_multisample = texture_2d | texture_multisample_flag,
+        texture_2d_multisample_array = texture_2d | texture_multisample_flag | texture_array_flag,
     };
-#endif
+
+    KALI_ENUM_INFO(
+        ResourceShape,
+        {
+            {ResourceShape::none, "none"},
+            {ResourceShape::texture_1d, "texture_1d"},
+            {ResourceShape::texture_2d, "texture_2d"},
+            {ResourceShape::texture_3d, "texture_3d"},
+            {ResourceShape::texture_cube, "texture_cube"},
+            {ResourceShape::texture_buffer, "texture_buffer"},
+            {ResourceShape::structured_buffer, "structured_buffer"},
+            {ResourceShape::byte_address_buffer, "byte_address_buffer"},
+            {ResourceShape::unknown, "unknown"},
+            {ResourceShape::acceleration_structure, "acceleration_structure"},
+            {ResourceShape::texture_feedback_flag, "texture_feedback_flag"},
+            {ResourceShape::texture_array_flag, "texture_array_flag"},
+            {ResourceShape::texture_multisample_flag, "texture_multisample_flag"},
+            {ResourceShape::texture_1d_array, "texture_1d_array"},
+            {ResourceShape::texture_2d_array, "texture_2d_array"},
+            {ResourceShape::texture_cube_array, "texture_cube_array"},
+            {ResourceShape::texture_2d_multisample, "texture_2d_multisample"},
+            {ResourceShape::texture_2d_multisample_array, "texture_2d_multisample_array"},
+        }
+    );
+
+    enum class ResourceAccess {
+        none = SLANG_RESOURCE_ACCESS_NONE,
+        read = SLANG_RESOURCE_ACCESS_READ,
+        read_write = SLANG_RESOURCE_ACCESS_READ_WRITE,
+        raster_ordered = SLANG_RESOURCE_ACCESS_RASTER_ORDERED,
+        access_append = SLANG_RESOURCE_ACCESS_APPEND,
+        access_consume = SLANG_RESOURCE_ACCESS_CONSUME,
+        access_write = SLANG_RESOURCE_ACCESS_WRITE,
+    };
+
+    KALI_ENUM_INFO(
+        ResourceAccess,
+        {
+            {ResourceAccess::none, "none"},
+            {ResourceAccess::read, "read"},
+            {ResourceAccess::read_write, "read_write"},
+            {ResourceAccess::raster_ordered, "raster_ordered"},
+            {ResourceAccess::access_append, "access_append"},
+            {ResourceAccess::access_consume, "access_consume"},
+            {ResourceAccess::access_write, "access_write"},
+        }
+    );
 
     enum class ParameterCategory {
         none = SLANG_PARAMETER_CATEGORY_NONE,
@@ -189,6 +232,32 @@ public:
         existential_type_param = SLANG_PARAMETER_CATEGORY_EXISTENTIAL_TYPE_PARAM,
         existential_object_param = SLANG_PARAMETER_CATEGORY_EXISTENTIAL_OBJECT_PARAM,
     };
+
+    KALI_ENUM_INFO(
+        ParameterCategory,
+        {
+            {ParameterCategory::none, "none"},
+            {ParameterCategory::mixed, "mixed"},
+            {ParameterCategory::constant_buffer, "constant_buffer"},
+            {ParameterCategory::shader_resource, "shader_resource"},
+            {ParameterCategory::unordered_access, "unordered_access"},
+            {ParameterCategory::varying_input, "varying_input"},
+            {ParameterCategory::varying_output, "varying_output"},
+            {ParameterCategory::sampler_state, "sampler_state"},
+            {ParameterCategory::uniform, "uniform"},
+            {ParameterCategory::descriptor_table_slot, "descriptor_table_slot"},
+            {ParameterCategory::specialization_constant, "specialization_constant"},
+            {ParameterCategory::push_constant_buffer, "push_constant_buffer"},
+            {ParameterCategory::register_space, "register_space"},
+            {ParameterCategory::generic, "generic"},
+            {ParameterCategory::ray_payload, "ray_payload"},
+            {ParameterCategory::hit_attributes, "hit_attributes"},
+            {ParameterCategory::callable_payload, "callable_payload"},
+            {ParameterCategory::shader_record, "shader_record"},
+            {ParameterCategory::existential_type_param, "existential_type_param"},
+            {ParameterCategory::existential_object_param, "existential_object_param"},
+        }
+    );
 
     Kind kind() const { return static_cast<Kind>(base()->getKind()); }
 
@@ -260,11 +329,11 @@ public:
 
     const TypeReflection* resource_result_type() const { return detail::from_slang(base()->getResourceResultType()); }
 
+    ResourceShape resource_shape() const { return static_cast<ResourceShape>(base()->getResourceShape()); }
+
+    ResourceAccess resource_access() { return static_cast<ResourceAccess>(base()->getResourceAccess()); }
+
 #if 0
-    SlangResourceShape getResourceShape() { return spReflectionType_GetResourceShape((SlangReflectionType*)this); }
-
-    SlangResourceAccess getResourceAccess() { return spReflectionType_GetResourceAccess((SlangReflectionType*)this); }
-
     unsigned int getUserAttributeCount() { return spReflectionType_GetUserAttributeCount((SlangReflectionType*)this); }
     UserAttribute* getUserAttributeByIndex(unsigned int index)
     {
@@ -286,6 +355,9 @@ private:
 
 KALI_ENUM_REGISTER(TypeReflection::Kind);
 KALI_ENUM_REGISTER(TypeReflection::ScalarType);
+KALI_ENUM_REGISTER(TypeReflection::ResourceShape);
+KALI_ENUM_REGISTER(TypeReflection::ResourceAccess);
+KALI_ENUM_REGISTER(TypeReflection::ParameterCategory);
 
 class KALI_API TypeLayoutReflection : private slang::TypeLayoutReflection {
 public:
