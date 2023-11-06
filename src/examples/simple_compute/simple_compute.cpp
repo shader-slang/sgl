@@ -60,12 +60,11 @@ int main()
             }
         );
 
-        stream->buffer_barrier(buffer_c, ResourceState::copy_source);
         stream->submit();
         device->wait();
 
-        std::vector<uint32_t> data_c = device->read_buffer<uint32_t>(buffer_c, 0, 16);
-        for (size_t i = 0; i < data_c.size(); ++i) {
+        std::vector<uint32_t> data_c = device->read_buffer<uint32_t>(buffer_c, 0, N);
+        for (size_t i = 0; i < 16; ++i) {
             log_info("data_c[{}] = {}", i, data_c[i]);
         }
     }
