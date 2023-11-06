@@ -3,6 +3,7 @@
 #include "kali/device/device.h"
 #include "kali/device/helpers.h"
 #include "kali/device/reflection.h"
+#include "kali/device/kernel.h"
 
 #include "kali/core/type_utils.h"
 
@@ -302,6 +303,11 @@ ref<ShaderProgram>
 SlangModule::create_program(ref<SlangGlobalScope> global_scope, std::vector<ref<SlangEntryPoint>> entry_points)
 {
     return make_ref<ShaderProgram>(m_session->device(), std::move(global_scope), std::move(entry_points));
+}
+
+ref<ComputeKernel> SlangModule::create_compute_kernel(std::string_view entry_point_name)
+{
+    return make_ref<ComputeKernel>(m_session->device(), create_program(entry_point_name));
 }
 
 SlangComponentType::SlangComponentType(ref<SlangModule> module, Slang::ComPtr<slang::IComponentType> component_type)

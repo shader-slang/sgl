@@ -1,8 +1,10 @@
 #include "shader_object.h"
 
+#include "kali/device/reflection.h"
 #include "kali/device/resource.h"
 #include "kali/device/sampler.h"
 #include "kali/device/helpers.h"
+#include "kali/device/command.h"
 
 namespace kali {
 
@@ -15,7 +17,6 @@ inline gfx::ShaderOffset get_gfx_shader_offset(const ShaderOffset& offset)
     };
 }
 
-
 //
 // ShaderObject
 //
@@ -23,6 +24,11 @@ inline gfx::ShaderOffset get_gfx_shader_offset(const ShaderOffset& offset)
 ShaderObject::ShaderObject(gfx::IShaderObject* shader_object)
     : m_shader_object(shader_object)
 {
+}
+
+const TypeLayoutReflection* ShaderObject::element_type_layout() const
+{
+    return TypeLayoutReflection::from_slang(m_shader_object->getElementTypeLayout());
 }
 
 uint32_t ShaderObject::get_entry_point_count() const
@@ -35,9 +41,9 @@ void ShaderObject::set_object(const ShaderOffset& offset, const ref<ShaderObject
     SLANG_CALL(m_shader_object->setObject(get_gfx_shader_offset(offset), object->get_gfx_shader_object()));
 }
 
-void ShaderObject::set_data(const ShaderOffset& offset, void const* data, size_t size)
+void ShaderObject::set_resource(const ShaderOffset& offset, const ref<ResourceView>& resource_view)
 {
-    SLANG_CALL(m_shader_object->setData(get_gfx_shader_offset(offset), data, size));
+    SLANG_CALL(m_shader_object->setResource(get_gfx_shader_offset(offset), resource_view->get_gfx_resource_view()));
 }
 
 void ShaderObject::set_sampler(const ShaderOffset& offset, const ref<Sampler>& sampler)
@@ -45,45 +51,106 @@ void ShaderObject::set_sampler(const ShaderOffset& offset, const ref<Sampler>& s
     SLANG_CALL(m_shader_object->setSampler(get_gfx_shader_offset(offset), sampler->get_gfx_sampler_state()));
 }
 
-void ShaderObject::set_resource(const ShaderOffset& offset, const ref<ResourceView>& resource)
+void ShaderObject::set_data(const ShaderOffset& offset, void const* data, size_t size)
 {
-    SLANG_CALL(m_shader_object->setResource(get_gfx_shader_offset(offset), resource->get_gfx_resource_view()));
+    SLANG_CALL(m_shader_object->setData(get_gfx_shader_offset(offset), data, size));
 }
 
 //
 // TransientShaderObject
 //
 
-TransientShaderObject::TransientShaderObject(gfx::IShaderObject* shader_object)
+TransientShaderObject::TransientShaderObject(gfx::IShaderObject* shader_object, CommandStream* stream)
     : ShaderObject(shader_object)
+    , m_stream(stream)
 {
 }
 
 ref<ShaderObject> TransientShaderObject::get_entry_point(uint32_t index)
 {
-    return make_ref<TransientShaderObject>(m_shader_object->getEntryPoint(index));
+    auto object = make_ref<TransientShaderObject>(m_shader_object->getEntryPoint(index), m_stream);
+    m_sub_objects.push_back(object);
+    return object;
 }
 
 ref<ShaderObject> TransientShaderObject::get_object(const ShaderOffset& offset)
 {
-    return make_ref<TransientShaderObject>(m_shader_object->getObject(get_gfx_shader_offset(offset)));
+    auto object = make_ref<TransientShaderObject>(m_shader_object->getObject(get_gfx_shader_offset(offset)), m_stream);
+    m_sub_objects.push_back(object);
+    return object;
 }
 
 void TransientShaderObject::set_object(const ShaderOffset& offset, const ref<ShaderObject>& object)
 {
-    // TODO add barriers for object
+    if (ref<MutableShaderObject> mutable_object = dynamic_ref_cast<MutableShaderObject>(object)) {
+        mutable_object->insert_barriers(m_stream);
+    }
+
     ShaderObject::set_object(offset, object);
 }
 
-void TransientShaderObject::set_resource(const ShaderOffset& offset, const ref<ResourceView>& resource)
+void TransientShaderObject::set_resource(const ShaderOffset& offset, const ref<ResourceView>& resource_view)
 {
-    ShaderObject::set_resource(offset, resource);
-    // TODO add barrier
+    switch (resource_view->type()) {
+    case ResourceViewType::unknown:
+        break;
+    case ResourceViewType::render_target:
+        m_stream->resource_barrier(resource_view->resource(), ResourceState::render_target);
+        break;
+    case ResourceViewType::depth_stencil:
+        m_stream->resource_barrier(resource_view->resource(), ResourceState::render_target);
+        break;
+    case ResourceViewType::shader_resource:
+        m_stream->resource_barrier(resource_view->resource(), ResourceState::shader_resource);
+        break;
+    case ResourceViewType::unordered_access:
+        m_stream->resource_barrier(resource_view->resource(), ResourceState::unordered_access);
+        break;
+    case ResourceViewType::acceleration_structure:
+        m_stream->resource_barrier(resource_view->resource(), ResourceState::acceleration_structure);
+        break;
+    }
+
+    ShaderObject::set_resource(offset, resource_view);
 }
 
 //
 // MutableShaderObject
 //
 
+void MutableShaderObject::set_resource(const ShaderOffset& offset, const ref<ResourceView>& resource_view)
+{
+    ShaderObject::set_resource(offset, resource_view);
+
+    if (resource_view)
+        m_resource_views[offset] = resource_view;
+    else
+        m_resource_views.erase(offset);
+}
+
+void MutableShaderObject::insert_barriers(CommandStream* stream)
+{
+    for (auto& [offset, resource_view] : m_resource_views) {
+        switch (resource_view->type()) {
+        case ResourceViewType::unknown:
+            break;
+        case ResourceViewType::render_target:
+            stream->resource_barrier(resource_view->resource(), ResourceState::render_target);
+            break;
+        case ResourceViewType::depth_stencil:
+            stream->resource_barrier(resource_view->resource(), ResourceState::render_target);
+            break;
+        case ResourceViewType::shader_resource:
+            stream->resource_barrier(resource_view->resource(), ResourceState::shader_resource);
+            break;
+        case ResourceViewType::unordered_access:
+            stream->resource_barrier(resource_view->resource(), ResourceState::unordered_access);
+            break;
+        case ResourceViewType::acceleration_structure:
+            stream->resource_barrier(resource_view->resource(), ResourceState::acceleration_structure);
+            break;
+        }
+    }
+}
 
 } // namespace kali

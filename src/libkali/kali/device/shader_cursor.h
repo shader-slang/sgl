@@ -1,130 +1,68 @@
 #pragma once
 
+#include "kali/device/fwd.h"
+#include "kali/device/shader_offset.h"
+#include "kali/device/reflection.h"
+
 #include "kali/core/macros.h"
 
-#include "slang-gfx.h"
+#include <string_view>
 
-namespace gfx {
+namespace kali {
 
-/// Represents a "pointer" to the storage for a shader parameter of a (dynamically) known type.
-///
-/// A `ShaderCursor` serves as a pointer-like type for things stored inside a `ShaderObject`.
-///
-/// A cursor that points to the entire content of a shader object can be formed as
-/// `ShaderCursor(someObject)`. A cursor pointing to a structure field or array element can be
-/// formed from another cursor using `getField` or `getElement` respectively.
-///
-/// Given a cursor pointing to a value of some "primitive" type, we can set or get the value
-/// using operations like `setResource`, `getResource`, etc.
-///
-/// Because type information for shader parameters is being reflected dynamically, all type
-/// checking for shader cursors occurs at runtime, and errors may occur when attempting to
-/// set a parameter using a value of an inappropriate type. As much as possible, `ShaderCursor`
-/// attempts to protect against these cases and return an error `Result` or an invalid
-/// cursor, rather than allowing operations to proceed with incorrect types.
-///
-struct KALI_API ShaderCursor {
-    IShaderObject* m_baseObject = nullptr;
-    slang::TypeLayoutReflection* m_typeLayout = nullptr;
-    ShaderObjectContainerType m_containerType = ShaderObjectContainerType::None;
-    ShaderOffset m_offset;
+class KALI_API ShaderCursor {
+public:
+    ShaderCursor() = default;
 
-    /// Get the type (layout) of the value being pointed at by the cursor
-    slang::TypeLayoutReflection* getTypeLayout() const { return m_typeLayout; }
+    ShaderCursor(ShaderObject* shader_object);
 
-    /// Is this cursor valid (that is, does it seem to point to an actual location)?
-    ///
-    /// This check is equivalent to checking whether a pointer is null, so it is
-    /// a very weak sense of "valid." In particular, it is possible to form a
-    /// `ShaderCursor` for which `isValid()` is true, but attempting to get or
-    /// set the value would be an error (like dereferencing a garbage pointer).
-    ///
-    bool isValid() const { return m_baseObject != nullptr; }
+    bool is_valid() const { return m_offset.is_valid(); }
 
-    Result getDereferenced(ShaderCursor& outCursor) const;
+    ShaderCursor dereference() const;
 
-    ShaderCursor getDereferenced() const
-    {
-        ShaderCursor result;
-        getDereferenced(result);
-        return result;
-    }
+    //
+    // Navigation
+    //
 
-    /// Form a cursor pointing to the field with the given `name` within the value this cursor
-    /// points at.
-    ///
-    /// If the operation succeeds, then the field cursor is written to `outCursor`.
-    Result getField(const char* nameBegin, const char* nameEnd, ShaderCursor& outCursor) const;
+    ShaderCursor operator[](std::string_view name) const;
+    ShaderCursor operator[](uint32_t index) const;
 
-    ShaderCursor getField(const char* name) const
-    {
-        ShaderCursor cursor;
-        getField(name, nullptr, cursor);
-        return cursor;
-    }
+    ShaderCursor find_field(std::string_view name) const;
+    ShaderCursor find_element(uint32_t index) const;
 
-    ShaderCursor getElement(GfxIndex index) const;
+    ShaderCursor find_entry_point(uint32_t index) const;
 
-    static Result followPath(const char* path, ShaderCursor& ioCursor);
+    bool has_field(std::string_view name) const { return find_field(name).is_valid(); }
+    bool has_element(uint32_t index) const { return find_element(index).is_valid(); }
 
-    ShaderCursor getPath(const char* path) const
-    {
-        ShaderCursor result(*this);
-        followPath(path, result);
-        return result;
-    }
+    //
+    // Resource binding
+    //
 
-    ShaderCursor() { }
+    void set_resource(const ref<ResourceView>& resource_view) const;
+    void set_buffer(const ref<Buffer>& buffer) const;
+    void set_texture(const ref<Texture>& texture) const;
+    void set_sampler(const ref<Sampler>& sampler) const;
 
-    ShaderCursor(IShaderObject* object)
-        : m_baseObject(object)
-        , m_typeLayout(object->getElementTypeLayout())
-        , m_containerType(object->getContainerType())
-    {
-    }
-
-    SlangResult setData(void const* data, Size size) const { return m_baseObject->setData(m_offset, data, size); }
+    void set_data(const void* data, size_t size) const;
 
     template<typename T>
-    SlangResult setData(T const& data) const
+    void operator=(const T& value) const
     {
-        return setData(&data, sizeof(data));
+        set(value);
     }
 
-    SlangResult setObject(IShaderObject* object) const { return m_baseObject->setObject(m_offset, object); }
+private:
+    void set_scalar(const void* data, size_t size, TypeReflection::ScalarType scalar_type) const;
+    void set_vector(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int dimension) const;
+    void set_matrix(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int rows, int cols) const;
 
-    SlangResult setSpecializationArgs(const slang::SpecializationArg* args, GfxCount count) const
-    {
-        return m_baseObject->setSpecializationArgs(m_offset, args, count);
-    }
+    template<typename T>
+    void set(const T& value) const;
 
-    SlangResult setResource(IResourceView* resourceView) const
-    {
-        return m_baseObject->setResource(m_offset, resourceView);
-    }
-
-    SlangResult setSampler(ISamplerState* sampler) const { return m_baseObject->setSampler(m_offset, sampler); }
-
-    SlangResult setCombinedTextureSampler(IResourceView* textureView, ISamplerState* sampler) const
-    {
-        return m_baseObject->setCombinedTextureSampler(m_offset, textureView, sampler);
-    }
-
-    /// Produce a cursor to the field with the given `name`.
-    ///
-    /// This is a convenience wrapper around `getField()`.
-    ShaderCursor operator[](const char* name) const { return getField(name); }
-
-    /// Produce a cursor to the element or field with the given `index`.
-    ///
-    /// This is a convenience wrapper around `getElement()`.
-    ShaderCursor operator[](int64_t index) const { return getElement((GfxIndex)index); }
-    ShaderCursor operator[](uint64_t index) const { return getElement((GfxIndex)index); }
-    ShaderCursor operator[](int32_t index) const { return getElement((GfxIndex)index); }
-    ShaderCursor operator[](uint32_t index) const { return getElement((GfxIndex)index); }
-    ShaderCursor operator[](int16_t index) const { return getElement((GfxIndex)index); }
-    ShaderCursor operator[](uint16_t index) const { return getElement((GfxIndex)index); }
-    ShaderCursor operator[](int8_t index) const { return getElement((GfxIndex)index); }
-    ShaderCursor operator[](uint8_t index) const { return getElement((GfxIndex)index); }
+    ShaderObject* m_shader_object{nullptr};
+    const TypeLayoutReflection* m_type_layout{nullptr};
+    ShaderOffset m_offset;
 };
-} // namespace gfx
+
+} // namespace kali

@@ -224,6 +224,8 @@ public:
     ref<ShaderProgram>
     create_program(ref<SlangGlobalScope> global_scope, std::vector<ref<SlangEntryPoint>> entry_points);
 
+    ref<ComputeKernel> create_compute_kernel(std::string_view entry_point_name);
+
 private:
     ref<SlangSession> m_session;
     SlangModuleDesc m_desc;

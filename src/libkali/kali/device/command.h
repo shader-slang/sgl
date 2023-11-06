@@ -4,7 +4,7 @@
 #include "kali/device/native_handle.h"
 #include "kali/device/resource.h"
 #include "kali/device/fence.h"
-#include "kali/device/shader_cursor2.h"
+#include "kali/device/shader_cursor.h"
 #include "kali/device/shader_object.h"
 
 #include "kali/core/macros.h"
@@ -269,20 +269,6 @@ public:
     void bind_compute_pipeline(const ComputePipelineState* pipeline, const ShaderObject* shader_object);
     void dispatch_compute(uint3 thread_group_count);
     void dispatch_compute_indirect(Buffer* cmd_buffer, DeviceOffset offset);
-
-    void dispatch_compute(
-        ShaderProgram* program,
-        uint3 thread_count,
-        SetShaderVariablesCallback set_vars,
-        ComputePipelineCache* pipeline_cache = nullptr
-    );
-    void dispatch_compute_indirect(
-        ShaderProgram* program,
-        SetShaderVariablesCallback set_vars,
-        Buffer* cmd_buffer,
-        DeviceOffset offset,
-        ComputePipelineCache* pipeline_cache = nullptr
-    );
 
     // ------------------------------------------------------------------------
     // Graphics

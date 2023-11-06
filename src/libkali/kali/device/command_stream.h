@@ -4,7 +4,7 @@
 #include "kali/device/command.h"
 #include "kali/device/resource.h"
 #include "kali/device/fence.h"
-#include "kali/device/shader_cursor2.h"
+#include "kali/device/shader_cursor.h"
 #include "kali/device/shader_object.h"
 
 #include "kali/core/macros.h"

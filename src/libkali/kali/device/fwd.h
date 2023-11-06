@@ -58,6 +58,10 @@ class VariableLayoutReflection;
 class ProgramReflection;
 class EntryPointReflection;
 
+// kernel.h
+
+class Kernel;
+class ComputeKernel;
 
 // pipeline.h
 

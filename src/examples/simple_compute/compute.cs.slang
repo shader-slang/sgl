@@ -24,7 +24,18 @@ struct Test {
 //     float4x3 f4x3;
 // }
 
-RWStructuredBuffer<uint> g_buffer;
+StructuredBuffer<uint> buffer_a;
+StructuredBuffer<uint> buffer_b;
+RWStructuredBuffer<uint> buffer_c;
+
+struct Processor {
+    StructuredBuffer<uint> a;
+    StructuredBuffer<uint> b;
+    RWStructuredBuffer<uint> c;
+    void process(uint index) { c[index] = a[index] + b[index]; }
+};
+
+ParameterBlock<Processor> processor;
 
 // Test g_array[4];
 
@@ -36,6 +47,24 @@ RWStructuredBuffer<uint> g_buffer;
 [numthreads(32, 1, 1)]
 void main(uint3 tid: SV_DispatchThreadID)
 {
-    if (tid.x < 1024)
-        g_buffer[tid.x] = tid.x;
+    uint index = tid.x;
+    if (index < 1024)
+        processor.process(index);
+    // if (index < 1024)
+    //     buffer_c[index] = buffer_a[index] + buffer_b[index];
+}
+
+[shader("compute")]
+[numthreads(32, 1, 1)]
+void main2(
+    uint3 tid: SV_DispatchThreadID,
+    uniform uint N,
+    uniform StructuredBuffer<uint> a,
+    uniform StructuredBuffer<uint> b,
+    uniform RWStructuredBuffer<uint> c
+)
+{
+    uint index = tid.x;
+    if (index < N)
+        c[index] = a[index] + b[index];
 }

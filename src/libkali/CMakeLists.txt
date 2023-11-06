@@ -62,6 +62,8 @@ target_sources(kali PRIVATE
     kali/device/formats.h
     kali/device/fwd.h
     kali/device/helpers.h
+    kali/device/kernel.cpp
+    kali/device/kernel.h
     kali/device/native_formats.h
     kali/device/pipeline.cpp
     kali/device/pipeline.h
@@ -73,8 +75,6 @@ target_sources(kali PRIVATE
     kali/device/sampler.h
     kali/device/shader_cursor.cpp
     kali/device/shader_cursor.h
-    kali/device/shader_cursor2.cpp
-    kali/device/shader_cursor2.h
     kali/device/shader_object.cpp
     kali/device/shader_object.h
     kali/device/shader_offset.h
@@ -295,9 +295,12 @@ nanobind_add_module(kali_ext NB_STATIC LTO
     kali/device/python/device.cpp
     kali/device/python/fence.cpp
     kali/device/python/formats.cpp
+    kali/device/python/kernel.cpp
     kali/device/python/reflection.cpp
     kali/device/python/resource.cpp
     kali/device/python/sampler.cpp
+    kali/device/python/shader_cursor.cpp
+    kali/device/python/shader_object.cpp
     kali/device/python/shader.cpp
     kali/device/python/swapchain.cpp
     kali/device/python/types.cpp

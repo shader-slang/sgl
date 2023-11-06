@@ -9,6 +9,7 @@
 #include <slang-gfx.h>
 
 #include <string_view>
+#include <map>
 
 namespace kali {
 
@@ -17,15 +18,17 @@ class ShaderObject : public Object {
 public:
     ShaderObject(gfx::IShaderObject* shader_object);
 
+    virtual const TypeLayoutReflection* element_type_layout() const;
+
     virtual uint32_t get_entry_point_count() const;
     virtual ref<ShaderObject> get_entry_point(uint32_t index) = 0;
 
     virtual ref<ShaderObject> get_object(const ShaderOffset& offset) = 0;
     virtual void set_object(const ShaderOffset& offset, const ref<ShaderObject>& object);
 
-    virtual void set_data(const ShaderOffset& offset, void const* data, size_t size);
-    virtual void set_resource(const ShaderOffset& offset, const ref<ResourceView>& resource);
+    virtual void set_resource(const ShaderOffset& offset, const ref<ResourceView>& resource_view);
     virtual void set_sampler(const ShaderOffset& offset, const ref<Sampler>& sampler);
+    virtual void set_data(const ShaderOffset& offset, void const* data, size_t size);
 
     gfx::IShaderObject* get_gfx_shader_object() const { return m_shader_object; }
 
@@ -36,20 +39,31 @@ protected:
 class TransientShaderObject : public ShaderObject {
     KALI_OBJECT(TransientShaderObject)
 public:
-    TransientShaderObject(gfx::IShaderObject* shader_object);
+    TransientShaderObject(gfx::IShaderObject* shader_object, CommandStream* stream);
 
     virtual ref<ShaderObject> get_entry_point(uint32_t index) override;
 
     virtual ref<ShaderObject> get_object(const ShaderOffset& offset) override;
     virtual void set_object(const ShaderOffset& offset, const ref<ShaderObject>& object) override;
 
-    virtual void set_resource(const ShaderOffset& offset, const ref<ResourceView>& resource) override;
+    virtual void set_resource(const ShaderOffset& offset, const ref<ResourceView>& resource_view) override;
+
+private:
+    CommandStream* m_stream;
+    std::vector<ref<TransientShaderObject>> m_sub_objects;
 };
 
 class MutableShaderObject : public ShaderObject {
     KALI_OBJECT(MutableShaderObject)
 public:
     MutableShaderObject(gfx::IShaderObject* shader_object);
+
+    virtual void set_resource(const ShaderOffset& offset, const ref<ResourceView>& resource_view) override;
+
+    void insert_barriers(CommandStream* stream);
+
+private:
+    std::map<ShaderOffset, ref<ResourceView>> m_resource_views;
 };
 
 } // namespace kali

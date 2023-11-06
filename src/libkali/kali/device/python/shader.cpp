@@ -2,6 +2,7 @@
 
 #include "kali/device/shader.h"
 #include "kali/device/reflection.h"
+#include "kali/device/kernel.h"
 
 NB_MAKE_OPAQUE(std::map<kali::TypeConformance, uint32_t>);
 NB_MAKE_OPAQUE(std::map<std::string, std::string, std::less<>>);
@@ -79,7 +80,8 @@ KALI_PY_EXPORT(device_shader)
             nb::overload_cast<ref<SlangGlobalScope>, std::vector<ref<SlangEntryPoint>>>(&SlangModule::create_program),
             "global_scope"_a,
             "entry_points"_a
-        );
+        )
+        .def("create_compute_kernel", &SlangModule::create_compute_kernel, "entry_point_name"_a);
 
     nb::class_<SlangComponentType, Object>(m, "SlangComponentType");
     nb::class_<SlangGlobalScope, SlangComponentType>(m, "SlangGlobalScope");

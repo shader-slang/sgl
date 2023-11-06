@@ -1,42 +1,75 @@
 #include "shader_cursor.h"
 
-namespace gfx {
+#include "kali/device/shader_object.h"
+#include "kali/device/resource.h"
 
-Result gfx::ShaderCursor::getDereferenced(ShaderCursor& outCursor) const
+#include "kali/core/error.h"
+
+#include "kali/math/vector_types.h"
+#include "kali/math/matrix_types.h"
+
+namespace kali {
+
+ShaderCursor::ShaderCursor(ShaderObject* shader_object)
+    : m_shader_object(shader_object)
+    , m_type_layout(shader_object->element_type_layout())
+    , m_offset(ShaderOffset::zero())
 {
-    switch (m_typeLayout->getKind()) {
-    default:
-        return SLANG_E_INVALID_ARG;
+    KALI_ASSERT(m_shader_object);
+    KALI_ASSERT(m_type_layout);
+    KALI_ASSERT(m_offset.is_valid());
+}
 
-    case slang::TypeReflection::Kind::ConstantBuffer:
-    case slang::TypeReflection::Kind::ParameterBlock: {
-        auto subObject = m_baseObject->getObject(m_offset);
-        outCursor = ShaderCursor(subObject);
-        return SLANG_OK;
-    }
+ShaderCursor ShaderCursor::dereference() const
+{
+    KALI_CHECK(is_valid(), "Invalid cursor");
+    switch (m_type_layout->kind()) {
+    case TypeReflection::Kind::constant_buffer:
+    case TypeReflection::Kind::parameter_block:
+        return ShaderCursor(m_shader_object->get_object(m_offset));
+    default:
+        return {};
     }
 }
 
-Result ShaderCursor::getField(const char* name, const char* nameEnd, ShaderCursor& outCursor) const
+//
+// Navigation
+//
+
+ShaderCursor ShaderCursor::operator[](std::string_view name) const
 {
-    // If this cursor is invalid, then can't possible fetch a field.
-    //
-    if (!isValid())
-        return SLANG_E_INVALID_ARG;
+    KALI_CHECK(is_valid(), "Invalid cursor");
+    ShaderCursor result = find_field(name);
+    KALI_CHECK(result.is_valid(), "Member '{}' not found.", name);
+    return result;
+}
+
+ShaderCursor ShaderCursor::operator[](uint32_t index) const
+{
+    KALI_CHECK(is_valid(), "Invalid cursor");
+    ShaderCursor result = find_element(index);
+    KALI_CHECK(result.is_valid(), "Element '{}' not found.", index);
+    return result;
+}
+
+ShaderCursor ShaderCursor::find_field(std::string_view name) const
+{
+    if (!is_valid())
+        return *this;
 
     // If the cursor is valid, we want to consider the type of data
     // it is referencing.
     //
-    switch (m_typeLayout->getKind()) {
+    switch (m_type_layout->kind()) {
         // The easy/expected case is when the value has a structure type.
         //
-    case slang::TypeReflection::Kind::Struct: {
+    case TypeReflection::Kind::struct_: {
         // We start by looking up the index of a field matching `name`.
         //
         // If there is no such field, we have an error.
         //
-        SlangInt fieldIndex = m_typeLayout->findFieldIndexByName(name, nameEnd);
-        if (fieldIndex == -1)
+        int32_t field_index = m_type_layout->find_field_index_by_name(name.data(), name.data() + name.size());
+        if (field_index < 0)
             break;
 
         // Once we know the index of the field being referenced,
@@ -44,23 +77,23 @@ Result ShaderCursor::getField(const char* name, const char* nameEnd, ShaderCurso
         // the offset information already in this cursor, plus
         // offsets derived from the field's layout.
         //
-        slang::VariableLayoutReflection* fieldLayout = m_typeLayout->getFieldByIndex((unsigned int)fieldIndex);
-        ShaderCursor fieldCursor;
+        const VariableLayoutReflection* field_layout = m_type_layout->get_field_by_index(field_index);
+        ShaderCursor field_cursor;
 
         // The field cursorwill point into the same parent object.
         //
-        fieldCursor.m_baseObject = m_baseObject;
+        field_cursor.m_shader_object = m_shader_object;
 
         // The type being pointed to is the tyep of the field.
         //
-        fieldCursor.m_typeLayout = fieldLayout->getTypeLayout();
+        field_cursor.m_type_layout = field_layout->type_layout();
 
         // The byte offset is the current offset plus the relative offset of the field.
         // The offset in binding ranges is computed similarly.
         //
-        fieldCursor.m_offset.uniformOffset = m_offset.uniformOffset + fieldLayout->getOffset();
-        fieldCursor.m_offset.bindingRangeIndex
-            = m_offset.bindingRangeIndex + (GfxIndex)m_typeLayout->getFieldBindingRangeOffset(fieldIndex);
+        field_cursor.m_offset.uniform_offset = m_offset.uniform_offset + narrow_cast<uint32_t>(field_layout->offset());
+        field_cursor.m_offset.binding_range_index
+            = m_offset.binding_range_index + m_type_layout->get_field_binding_range_offset(field_index);
 
         // The index of the field within any binding ranges will be the same
         // as the index computed for the parent structure.
@@ -85,27 +118,27 @@ Result ShaderCursor::getField(const char* name, const char* nameEnd, ShaderCurso
         //
         // The result is that `g[2].u` is stored in range #1 at array index 2.
         //
-        fieldCursor.m_offset.bindingArrayIndex = m_offset.bindingArrayIndex;
+        field_cursor.m_offset.binding_array_index = m_offset.binding_array_index;
 
-        outCursor = fieldCursor;
-        return SLANG_OK;
-    } break;
+        return field_cursor;
+    }
 
     // In some cases the user might be trying to acess a field by name
     // from a cursor that references a constant buffer or parameter block,
     // and in these cases we want the access to Just Work.
     //
-    case slang::TypeReflection::Kind::ConstantBuffer:
-    case slang::TypeReflection::Kind::ParameterBlock: {
+    case TypeReflection::Kind::constant_buffer:
+    case TypeReflection::Kind::parameter_block: {
         // We basically need to "dereference" the current cursor
         // to go from a pointer to a constant buffer to a pointer
         // to the *contents* of the constant buffer.
         //
-        ShaderCursor d = getDereferenced();
-        return d.getField(name, nameEnd, outCursor);
-    } break;
+        ShaderCursor d = dereference();
+        return d.find_field(name);
+    }
     }
 
+#if 0
     // If a cursor is pointing at a root shader object (created for a
     // program), then we will also iterate over the entry point shader
     // objects attached to it and look for a matching parameter name
@@ -128,163 +161,231 @@ Result ShaderCursor::getField(const char* name, const char* nameEnd, ShaderCurso
         if (SLANG_SUCCEEDED(result))
             return result;
     }
-
-    return SLANG_E_INVALID_ARG;
+#endif
+    return {};
 }
 
-ShaderCursor ShaderCursor::getElement(GfxIndex index) const
+ShaderCursor ShaderCursor::find_element(uint32_t index) const
 {
-    if (m_containerType != ShaderObjectContainerType::None) {
-        ShaderCursor elementCursor;
-        elementCursor.m_baseObject = m_baseObject;
-        elementCursor.m_typeLayout = m_typeLayout->getElementTypeLayout();
-        elementCursor.m_containerType = m_containerType;
-        elementCursor.m_offset.uniformOffset = index * m_typeLayout->getStride();
-        elementCursor.m_offset.bindingRangeIndex = 0;
-        elementCursor.m_offset.bindingArrayIndex = index;
-        return elementCursor;
+    if (!is_valid())
+        return *this;
+
+    KALI_UNUSED(index);
+    return {};
+}
+
+ShaderCursor ShaderCursor::find_entry_point(uint32_t index) const
+{
+    if (!is_valid())
+        return *this;
+
+    // TODO check index
+    // uint32_t count = m_shader_object->get_entry_point_count();
+    return ShaderCursor(m_shader_object->get_entry_point(index));
+}
+
+//
+// Resource binding
+//
+
+void ShaderCursor::set_resource(const ref<ResourceView>& resource_view) const
+{
+    switch (m_type_layout->parameter_category()) {
+    case TypeReflection::ParameterCategory::shader_resource:
+        KALI_CHECK(
+            resource_view->type() == ResourceViewType::shader_resource,
+            "'{}' expects a shader resource view",
+            m_type_layout->name()
+        );
+        break;
+    case TypeReflection::ParameterCategory::unordered_access:
+        KALI_CHECK(
+            resource_view->type() == ResourceViewType::unordered_access,
+            "'{}' expects an unordered access view",
+            m_type_layout->name()
+        );
+        break;
+    default:
+        KALI_THROW("'{}' expects unhandled resource view", m_type_layout->name());
+        break;
+    }
+    m_shader_object->set_resource(m_offset, resource_view);
+}
+
+void ShaderCursor::set_buffer(const ref<Buffer>& buffer) const
+{
+    switch (m_type_layout->parameter_category()) {
+    case TypeReflection::ParameterCategory::shader_resource:
+        set_resource(buffer->get_srv());
+        break;
+    case TypeReflection::ParameterCategory::unordered_access:
+        set_resource(buffer->get_uav());
+        break;
+    default:
+        KALI_THROW("'{}' cannot bind a buffer", m_type_layout->name());
+        break;
+    }
+}
+
+void ShaderCursor::set_texture(const ref<Texture>& texture) const
+{
+    switch (m_type_layout->parameter_category()) {
+    case TypeReflection::ParameterCategory::shader_resource:
+        set_resource(texture->get_srv());
+        break;
+    case TypeReflection::ParameterCategory::unordered_access:
+        set_resource(texture->get_uav());
+        break;
+    default:
+        KALI_THROW("'{}' cannot bind a texture", m_type_layout->name());
+        break;
+    }
+}
+
+void ShaderCursor::set_sampler(const ref<Sampler>& sampler) const
+{
+    if (m_type_layout->parameter_category() != TypeReflection::ParameterCategory::sampler_state)
+        KALI_THROW("'{}' cannot bind a sampler", m_type_layout->name());
+    m_shader_object->set_sampler(m_offset, sampler);
+}
+
+void ShaderCursor::set_data(const void* data, size_t size) const
+{
+    if (m_type_layout->parameter_category() != TypeReflection::ParameterCategory::uniform)
+        KALI_THROW("'{}' cannot bind data", m_type_layout->name());
+    m_shader_object->set_data(m_offset, data, size);
+}
+
+void ShaderCursor::set_scalar(const void* data, size_t size, TypeReflection::ScalarType scalar_type) const
+{
+    KALI_UNUSED(scalar_type);
+    // TODO type checking
+    m_shader_object->set_data(m_offset, data, size);
+}
+
+void ShaderCursor::set_vector(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int dimension)
+    const
+{
+    KALI_UNUSED(scalar_type, dimension);
+    // TODO type checking
+    m_shader_object->set_data(m_offset, data, size);
+}
+
+void ShaderCursor::set_matrix(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int rows, int cols)
+    const
+{
+    KALI_UNUSED(scalar_type, rows, cols);
+    m_shader_object->set_data(m_offset, data, size);
+}
+
+//
+// Setter specializations
+//
+
+template<>
+KALI_API void ShaderCursor::set(const ref<Buffer>& value) const
+{
+    set_buffer(value);
+}
+
+template<>
+KALI_API void ShaderCursor::set(const ref<Texture>& value) const
+{
+    set_texture(value);
+}
+
+template<>
+KALI_API void ShaderCursor::set(const ref<ResourceView>& value) const
+{
+    set_resource(value);
+}
+
+template<>
+KALI_API void ShaderCursor::set(const ref<Sampler>& value) const
+{
+    set_sampler(value);
+}
+
+#define SET_SCALAR(type, scalar_type)                                                                                  \
+    template<>                                                                                                         \
+    KALI_API void ShaderCursor::set(const type& value) const                                                           \
+    {                                                                                                                  \
+        set_scalar(&value, sizeof(value), TypeReflection::ScalarType::scalar_type);                                    \
     }
 
-    switch (m_typeLayout->getKind()) {
-    case slang::TypeReflection::Kind::Array: {
-        ShaderCursor elementCursor;
-        elementCursor.m_baseObject = m_baseObject;
-        elementCursor.m_typeLayout = m_typeLayout->getElementTypeLayout();
-        elementCursor.m_offset.uniformOffset
-            = m_offset.uniformOffset + index * m_typeLayout->getElementStride(SLANG_PARAMETER_CATEGORY_UNIFORM);
-        elementCursor.m_offset.bindingRangeIndex = m_offset.bindingRangeIndex;
-        elementCursor.m_offset.bindingArrayIndex
-            = m_offset.bindingArrayIndex * (GfxCount)m_typeLayout->getElementCount() + index;
-        return elementCursor;
-    } break;
-
-    case slang::TypeReflection::Kind::Struct: {
-        // The logic here is similar to `getField()` except that we don't
-        // need to look up the field index based on a name first.
-        //
-        auto fieldIndex = index;
-        slang::VariableLayoutReflection* fieldLayout = m_typeLayout->getFieldByIndex((unsigned int)fieldIndex);
-        if (!fieldLayout)
-            return ShaderCursor();
-
-        ShaderCursor fieldCursor;
-        fieldCursor.m_baseObject = m_baseObject;
-        fieldCursor.m_typeLayout = fieldLayout->getTypeLayout();
-        fieldCursor.m_offset.uniformOffset = m_offset.uniformOffset + fieldLayout->getOffset();
-        fieldCursor.m_offset.bindingRangeIndex
-            = m_offset.bindingRangeIndex + (GfxIndex)m_typeLayout->getFieldBindingRangeOffset(fieldIndex);
-        fieldCursor.m_offset.bindingArrayIndex = m_offset.bindingArrayIndex;
-
-        return fieldCursor;
-    } break;
-
-    case slang::TypeReflection::Kind::Vector:
-    case slang::TypeReflection::Kind::Matrix: {
-        ShaderCursor fieldCursor;
-        fieldCursor.m_baseObject = m_baseObject;
-        fieldCursor.m_typeLayout = m_typeLayout->getElementTypeLayout();
-        fieldCursor.m_offset.uniformOffset
-            = m_offset.uniformOffset + m_typeLayout->getElementStride(SLANG_PARAMETER_CATEGORY_UNIFORM) * index;
-        fieldCursor.m_offset.bindingRangeIndex = m_offset.bindingRangeIndex;
-        fieldCursor.m_offset.bindingArrayIndex = m_offset.bindingArrayIndex;
-        return fieldCursor;
-    } break;
+#define SET_VECTOR(type, scalar_type)                                                                                  \
+    template<>                                                                                                         \
+    KALI_API void ShaderCursor::set(const type& value) const                                                           \
+    {                                                                                                                  \
+        set_vector(&value, sizeof(value), TypeReflection::ScalarType::scalar_type, type::dimension);                   \
     }
 
-    return ShaderCursor();
-}
-
-
-static int _peek(const char* slice)
-{
-    const char* b = slice;
-    if (!b || !*b)
-        return -1;
-    return *b;
-}
-
-static int _get(const char*& slice)
-{
-    const char* b = slice;
-    if (!b || !*b)
-        return -1;
-    auto result = *b++;
-    slice = b;
-    return result;
-}
-
-Result ShaderCursor::followPath(const char* path, ShaderCursor& ioCursor)
-{
-    ShaderCursor cursor = ioCursor;
-
-    enum {
-        ALLOW_NAME = 0x1,
-        ALLOW_SUBSCRIPT = 0x2,
-        ALLOW_DOT = 0x4,
-    };
-    int state = ALLOW_NAME | ALLOW_SUBSCRIPT;
-
-    const char* rest = path;
-    for (;;) {
-        int c = _peek(rest);
-
-        if (c == -1)
-            break;
-        else if (c == '.') {
-            if (!(state & ALLOW_DOT))
-                return SLANG_E_INVALID_ARG;
-
-            _get(rest);
-            state = ALLOW_NAME;
-            continue;
-        } else if (c == '[') {
-            if (!(state & ALLOW_SUBSCRIPT))
-                return SLANG_E_INVALID_ARG;
-
-            _get(rest);
-            GfxCount index = 0;
-            while (_peek(rest) != ']') {
-                int d = _get(rest);
-                if (d >= '0' && d <= '9') {
-                    index = index * 10 + (d - '0');
-                } else {
-                    return SLANG_E_INVALID_ARG;
-                }
-            }
-
-            if (_peek(rest) != ']')
-                return SLANG_E_INVALID_ARG;
-            _get(rest);
-
-            cursor = cursor.getElement(index);
-            state = ALLOW_DOT | ALLOW_SUBSCRIPT;
-            continue;
-        } else {
-            const char* nameBegin = rest;
-            for (;;) {
-                switch (_peek(rest)) {
-                default:
-                    _get(rest);
-                    continue;
-
-                case -1:
-                case '.':
-                case '[':
-                    break;
-                }
-                break;
-            }
-            char const* nameEnd = rest;
-            ShaderCursor newCursor;
-            cursor.getField(nameBegin, nameEnd, newCursor);
-            cursor = newCursor;
-            state = ALLOW_DOT | ALLOW_SUBSCRIPT;
-            continue;
-        }
+#define SET_MATRIX(type, scalar_type)                                                                                  \
+    template<>                                                                                                         \
+    KALI_API void ShaderCursor::set(const type& value) const                                                           \
+    {                                                                                                                  \
+        set_matrix(&value, sizeof(value), TypeReflection::ScalarType::scalar_type, type::rows, type::cols);            \
     }
 
-    ioCursor = cursor;
-    return SLANG_OK;
+SET_SCALAR(float16_t, float16);
+SET_VECTOR(float16_t2, float16);
+SET_VECTOR(float16_t3, float16);
+SET_VECTOR(float16_t4, float16);
+
+SET_SCALAR(float, float32);
+SET_VECTOR(float2, float32);
+SET_VECTOR(float3, float32);
+SET_VECTOR(float4, float32);
+
+SET_SCALAR(uint, uint32);
+SET_VECTOR(uint2, uint32);
+SET_VECTOR(uint3, uint32);
+SET_VECTOR(uint4, uint32);
+
+SET_SCALAR(int, int32);
+SET_VECTOR(int2, int32);
+SET_VECTOR(int3, int32);
+SET_VECTOR(int4, int32);
+
+SET_MATRIX(float1x4, float32);
+SET_MATRIX(float2x4, float32);
+SET_MATRIX(float3x4, float32);
+SET_MATRIX(float4x4, float32);
+
+#undef SET_SCALAR
+#undef SET_VECTOR
+#undef SET_MATRIX
+
+// Template specialization to allow setting booleans on a parameter block.
+// On the host side a bool is 1B and the device 4B. We cast bools to 32-bit integers here.
+// Note that this applies to our boolN vectors as well, which are currently 1B per element.
+
+template<>
+KALI_API void ShaderCursor::set(const bool& value) const
+{
+    uint v = value ? 1 : 0;
+    set_scalar(&v, sizeof(v), TypeReflection::ScalarType::uint32);
 }
 
-} // namespace gfx
+template<>
+KALI_API void ShaderCursor::set(const bool2& value) const
+{
+    uint2 v = {value.x ? 1 : 0, value.y ? 1 : 0};
+    set_vector(&v, sizeof(v), TypeReflection::ScalarType::uint32, 2);
+}
+
+template<>
+KALI_API void ShaderCursor::set(const bool3& value) const
+{
+    uint3 v = {value.x ? 1 : 0, value.y ? 1 : 0, value.z ? 1 : 0};
+    set_vector(&v, sizeof(v), TypeReflection::ScalarType::uint32, 3);
+}
+
+template<>
+KALI_API void ShaderCursor::set(const bool4& value) const
+{
+    uint4 v = {value.x ? 1 : 0, value.y ? 1 : 0, value.z ? 1 : 0, value.w ? 1 : 0};
+    set_vector(&v, sizeof(v), TypeReflection::ScalarType::uint32, 4);
+}
+
+} // namespace kali

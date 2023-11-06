@@ -57,5 +57,4 @@ KALI_PY_EXPORT(device_reflection)
         .def_prop_ro("entry_points", &ProgramReflection::entry_points)
         .def_prop_ro("hashed_strings", &ProgramReflection::hashed_strings)
         .def("__repr__", &ProgramReflection::to_string);
-
 }

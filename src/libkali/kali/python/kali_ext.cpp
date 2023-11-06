@@ -15,9 +15,12 @@ KALI_PY_DECLARE(device_command);
 KALI_PY_DECLARE(device_device);
 KALI_PY_DECLARE(device_fence);
 KALI_PY_DECLARE(device_formats);
+KALI_PY_DECLARE(device_kernel);
 KALI_PY_DECLARE(device_reflection);
 KALI_PY_DECLARE(device_resource);
 KALI_PY_DECLARE(device_sampler);
+KALI_PY_DECLARE(device_shader_cursor);
+KALI_PY_DECLARE(device_shader_object);
 KALI_PY_DECLARE(device_shader);
 KALI_PY_DECLARE(device_swapchain);
 KALI_PY_DECLARE(device_types);
@@ -55,8 +58,11 @@ NB_MODULE(kali_ext, m)
     KALI_PY_IMPORT(device_fence);
     KALI_PY_IMPORT(device_reflection);
     KALI_PY_IMPORT(device_shader);
+    KALI_PY_IMPORT(device_shader_object);
+    KALI_PY_IMPORT(device_shader_cursor);
     KALI_PY_IMPORT(device_swapchain);
     KALI_PY_IMPORT(device_command);
+    KALI_PY_IMPORT(device_kernel);
     KALI_PY_IMPORT(device_device);
 
     // Register a cleanup callback function.
