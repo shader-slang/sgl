@@ -315,12 +315,9 @@ SlangGlobalScope::SlangGlobalScope(ref<SlangModule> module, Slang::ComPtr<slang:
 {
 }
 
-const ref<const ProgramLayout>& SlangGlobalScope::layout() const
+const ProgramReflection* SlangGlobalScope::layout() const
 {
-    // TODO handle diagnostics
-    if (!m_layout)
-        m_layout = make_ref<const ProgramLayout>(m_component_type->getLayout());
-    return m_layout;
+    return ProgramReflection::from_slang(m_component_type->getLayout());
 }
 
 std::string SlangGlobalScope::to_string() const
@@ -343,12 +340,9 @@ ref<SlangEntryPoint> SlangEntryPoint::rename(const std::string& new_name)
     return make_ref<SlangEntryPoint>(m_module, renamed_entry_point);
 }
 
-const ref<const EntryPointLayout>& SlangEntryPoint::layout() const
+const EntryPointReflection* SlangEntryPoint::layout() const
 {
-    // TODO handle diagnostics
-    if (!m_layout)
-        m_layout = make_ref<const EntryPointLayout>(m_component_type->getLayout()->getEntryPointByIndex(0));
-    return m_layout;
+    return EntryPointReflection::from_slang(m_component_type->getLayout()->getEntryPointByIndex(0));
 }
 
 std::string SlangEntryPoint::to_string() const
@@ -405,13 +399,13 @@ ShaderProgram::ShaderProgram(
     }
 }
 
-std::vector<ref<const EntryPointLayout>> ShaderProgram::entry_point_layouts() const
+std::vector<const EntryPointReflection*> ShaderProgram::entry_point_layouts() const
 {
-    std::vector<ref<const EntryPointLayout>> layouts(m_entry_points.size());
-    for (size_t i = 0; i < m_entry_points.size(); ++i) {
-        layouts[i] = m_entry_points[i]->layout();
-    }
-    return layouts;
+    return {};
+    // std::vector<const EntryPointReflection> layouts;
+    // for (size_t i = 0; i < m_entry_points.size(); ++i)
+    //     layouts.push_back(m_entry_points[i]->layout());
+    // return layouts;
 }
 
 std::string ShaderProgram::to_string() const

@@ -51,8 +51,13 @@ class ShaderProgram;
 
 // reflection.h
 
-class ProgramLayout;
-class EntryPointLayout;
+class TypeReflection;
+class TypeLayoutReflection;
+class VariableReflection;
+class VariableLayoutReflection;
+class ProgramReflection;
+class EntryPointReflection;
+
 
 // pipeline.h
 

@@ -2,6 +2,7 @@
 
 #include "kali/device/fwd.h"
 #include "kali/device/types.h"
+#include "kali/device/reflection.h"
 
 #include "kali/core/object.h"
 #include "kali/core/enum.h"
@@ -251,12 +252,9 @@ public:
     SlangGlobalScope(ref<SlangModule> module, Slang::ComPtr<slang::IComponentType> component_type);
     virtual ~SlangGlobalScope() = default;
 
-    const ref<const ProgramLayout>& layout() const;
+    const ProgramReflection* layout() const;
 
     virtual std::string to_string() const override;
-
-private:
-    mutable ref<const ProgramLayout> m_layout;
 };
 
 class KALI_API SlangEntryPoint : public SlangComponentType {
@@ -267,7 +265,7 @@ public:
 
     const std::string& name() const { return m_name; }
     ShaderStage stage() const { return m_stage; }
-    const ref<const EntryPointLayout>& layout() const;
+    const EntryPointReflection* layout() const;
 
     ref<SlangEntryPoint> rename(const std::string& new_name);
 
@@ -276,7 +274,6 @@ public:
 private:
     std::string m_name;
     ShaderStage m_stage;
-    mutable ref<const EntryPointLayout> m_layout;
 };
 
 class KALI_API ShaderProgram : public Object {
@@ -289,12 +286,11 @@ public:
     );
     virtual ~ShaderProgram() = default;
 
-    const ref<const ProgramLayout>& program_layout() const { return m_global_scope->layout(); }
-    std::vector<ref<const EntryPointLayout>> entry_point_layouts() const;
-    const ref<const EntryPointLayout>& entry_point_layout(uint32_t index) const
-    {
-        return m_entry_points[index]->layout();
-    }
+    const ref<Device>& device() const { return m_device; }
+
+    const ProgramReflection* program_layout() const { return m_global_scope->layout(); }
+    std::vector<const EntryPointReflection*> entry_point_layouts() const;
+    const EntryPointReflection* entry_point_layout(uint32_t index) const { return m_entry_points[index]->layout(); }
 
     gfx::IShaderProgram* get_gfx_shader_program() const { return m_gfx_shader_program; }
 

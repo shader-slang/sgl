@@ -8,41 +8,54 @@ KALI_PY_EXPORT(device_reflection)
 {
     using namespace kali;
 
-    nb::class_<TypeReflection, Object> type_reflection(m, "TypeReflection");
+    nb::class_<TypeReflection> type_reflection(m, "TypeReflection");
 
     nb::kali_enum<TypeReflection::Kind>(type_reflection, "Kind");
+    nb::kali_enum<TypeReflection::ScalarType>(type_reflection, "ScalarType");
 
     type_reflection //
         .def_prop_ro("kind", &TypeReflection::kind)
-        .def("as_struct_type", &TypeReflection::as_struct_type, nb::rv_policy::reference_internal)
-        .def("as_array_type", &TypeReflection::as_array_type, nb::rv_policy::reference_internal)
-        .def("as_basic_type", &TypeReflection::as_basic_type, nb::rv_policy::reference_internal)
-        .def("as_resource_type", &TypeReflection::as_resource_type, nb::rv_policy::reference_internal)
-        .def("as_interface_type", &TypeReflection::as_interface_type, nb::rv_policy::reference_internal);
+        .def_prop_ro("name", &TypeReflection::name)
+        .def_prop_ro("fields", &TypeReflection::fields)
+        .def_prop_ro("element_count", &TypeReflection::element_count)
+        .def_prop_ro("element_type", &TypeReflection::element_type)
+        .def_prop_ro("row_count", &TypeReflection::row_count)
+        .def_prop_ro("col_count", &TypeReflection::col_count)
+        .def_prop_ro("scalar_type", &TypeReflection::scalar_type)
+        .def_prop_ro("resource_result_type", &TypeReflection::resource_result_type)
+        .def("__repr__", &TypeReflection::to_string);
 
-    nb::class_<StructTypeReflection, TypeReflection>(m, "StructTypeReflection")
-        .def_prop_ro("name", &StructTypeReflection::name)
-        .def_prop_ro("members", &StructTypeReflection::members);
+    nb::class_<TypeLayoutReflection>(m, "TypeLayoutReflection")
+        .def_prop_ro("kind", &TypeLayoutReflection::kind)
+        .def_prop_ro("name", &TypeLayoutReflection::name)
+        .def_prop_ro("type", &TypeLayoutReflection::type)
+        .def_prop_ro("fields", &TypeLayoutReflection::fields)
+        .def("unwrap_array", &TypeLayoutReflection::unwrap_array)
+        .def("__repr__", &TypeLayoutReflection::to_string);
 
-    nb::class_<ArrayTypeReflection, TypeReflection>(m, "ArrayTypeReflection")
-        .def_prop_ro("element_type", &ArrayTypeReflection::element_type)
-        .def_prop_ro("element_count", &ArrayTypeReflection::element_count)
-        .def_prop_ro("element_stride", &ArrayTypeReflection::element_stride);
+    nb::class_<VariableReflection>(m, "VariableReflection")
+        .def_prop_ro("name", &VariableReflection::name)
+        .def_prop_ro("type", &VariableReflection::type);
 
-    nb::class_<BasicTypeReflection, TypeReflection>(m, "BasicTypeReflection")
-        .def_prop_ro("scalar_type", &BasicTypeReflection::scalar_type)
-        .def_prop_ro("row_count", &BasicTypeReflection::row_count)
-        .def_prop_ro("col_count", &BasicTypeReflection::col_count)
-        .def_prop_ro("is_row_major", &BasicTypeReflection::is_row_major)
-        .def_prop_ro("is_vector", &BasicTypeReflection::is_vector)
-        .def_prop_ro("is_matrix", &BasicTypeReflection::is_matrix);
+    nb::class_<VariableLayoutReflection>(m, "VariableLayoutReflection")
+        .def_prop_ro("name", &VariableLayoutReflection::name)
+        .def_prop_ro("variable", &VariableLayoutReflection::variable)
+        .def_prop_ro("type_layout", &VariableLayoutReflection::type_layout);
 
-    nb::class_<ResourceTypeReflection, TypeReflection>(m, "ResourceTypeReflection");
-    nb::class_<InterfaceTypeReflection, TypeReflection>(m, "InterfaceTypeReflection");
+    nb::class_<EntryPointReflection>(m, "EntryPointReflection").def("__repr__", &EntryPointReflection::to_string);
 
-    nb::class_<ProgramLayout, Object>(m, "ProgramLayout").def_prop_ro("globals_type", &ProgramLayout::globals_type);
+    nb::class_<ProgramReflection> program_reflection(m, "ProgramReflection");
 
-    nb::class_<EntryPointLayout, Object>(m, "EntryPointLayout")
-        .def_prop_ro("name", &EntryPointLayout::name)
-        .def_prop_ro("compute_thread_group_size", &EntryPointLayout::compute_thread_group_size);
+    nb::class_<ProgramReflection::HashedString>(program_reflection, "HashedString")
+        .def_ro("string", &ProgramReflection::HashedString::string)
+        .def_ro("hash", &ProgramReflection::HashedString::hash);
+
+    program_reflection //
+        .def_prop_ro("globals_type_layout", &ProgramReflection::globals_type_layout)
+        .def_prop_ro("globals_variable_layout", &ProgramReflection::globals_variable_layout)
+        .def_prop_ro("parameters", &ProgramReflection::parameters)
+        .def_prop_ro("entry_points", &ProgramReflection::entry_points)
+        .def_prop_ro("hashed_strings", &ProgramReflection::hashed_strings)
+        .def("__repr__", &ProgramReflection::to_string);
+
 }

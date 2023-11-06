@@ -87,11 +87,11 @@ KALI_PY_EXPORT(device_shader)
     nb::class_<SlangEntryPoint, SlangComponentType>(m, "SlangEntryPoint")
         .def_prop_ro("name", &SlangEntryPoint::name)
         .def_prop_ro("stage", &SlangEntryPoint::stage)
-        .def_prop_ro("layout", &SlangEntryPoint::layout)
+        .def_prop_ro("layout", &SlangEntryPoint::layout, nb::rv_policy::reference_internal)
         .def("rename", &SlangEntryPoint::rename, "new_name"_a);
 
     nb::class_<ShaderProgram, Object>(m, "ShaderProgram")
-        .def_prop_ro("program_layout", &ShaderProgram::program_layout)
-        .def_prop_ro("entry_point_layouts", &ShaderProgram::entry_point_layouts)
-        .def("entry_point_layout", &ShaderProgram::entry_point_layout, "index"_a);
+        .def_prop_ro("program_layout", &ShaderProgram::program_layout, nb::rv_policy::reference_internal)
+        // .def_prop_ro("entry_point_layouts", &ShaderProgram::entry_point_layouts)
+        .def("entry_point_layout", &ShaderProgram::entry_point_layout, "index"_a, nb::rv_policy::reference_internal);
 }

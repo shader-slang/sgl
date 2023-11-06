@@ -1,157 +1,104 @@
 #pragma once
 
-#include "kali/device/shader_offset.h"
+#include "kali/device/types.h"
 
-#include "kali/core/macros.h"
-#include "kali/core/object.h"
 #include "kali/core/enum.h"
+#include "kali/core/error.h"
+#include "kali/core/type_utils.h"
 
 #include "kali/math/vector_types.h"
 
 #include <slang.h>
-#include <slang-com-ptr.h>
 
 #include <map>
 #include <string>
+#include <vector>
 
 namespace kali {
 
 class TypeReflection;
-class ArrayTypeReflection;
-class StructTypeReflection;
-class BasicTypeReflection;
-class ResourceTypeReflection;
-class InterfaceTypeReflection;
+class TypeLayoutReflection;
 class VariableReflection;
+class VariableLayoutReflection;
+class EntryPointReflection;
+class ProgramReflection;
 
-class KALI_API TypeReflection : public Object {
-    KALI_OBJECT(TypeReflection)
-public:
-    TypeReflection(slang::TypeLayoutReflection* slang_type_layout)
-        : m_slang_type_layout(slang_type_layout)
+namespace detail {
+    inline const TypeReflection* from_slang(slang::TypeReflection* type_reflection)
     {
+        return reinterpret_cast<const TypeReflection*>(type_reflection);
     }
+    inline const TypeLayoutReflection* from_slang(slang::TypeLayoutReflection* type_layout_reflection)
+    {
+        return reinterpret_cast<const TypeLayoutReflection*>(type_layout_reflection);
+    }
+    inline const VariableReflection* from_slang(slang::VariableReflection* variable_reflection)
+    {
+        return reinterpret_cast<const VariableReflection*>(variable_reflection);
+    }
+    inline const VariableLayoutReflection* from_slang(slang::VariableLayoutReflection* variable_layout_reflection)
+    {
+        return reinterpret_cast<const VariableLayoutReflection*>(variable_layout_reflection);
+    }
+    inline const EntryPointReflection* from_slang(slang::EntryPointReflection* entry_point_reflection)
+    {
+        return reinterpret_cast<const EntryPointReflection*>(entry_point_reflection);
+    }
+    inline const ProgramReflection* from_slang(slang::ProgramLayout* program_layout)
+    {
+        return reinterpret_cast<const ProgramReflection*>(program_layout);
+    }
+} // namespace detail
 
+class KALI_API TypeReflection {
+public:
     enum class Kind {
-        struct_,   ///< StructTypeReflection
-        array,     ///< ArrayTypeReflection
-        basic,     ///< BasicTypeReflection
-        resource,  ///< ResourceTypeReflection
-        interface, ///< InterfaceTypeReflection
+        none = SLANG_TYPE_KIND_NONE,
+        struct_ = SLANG_TYPE_KIND_STRUCT,
+        array = SLANG_TYPE_KIND_ARRAY,
+        matrix = SLANG_TYPE_KIND_MATRIX,
+        vector = SLANG_TYPE_KIND_VECTOR,
+        scalar = SLANG_TYPE_KIND_SCALAR,
+        constant_buffer = SLANG_TYPE_KIND_CONSTANT_BUFFER,
+        resource = SLANG_TYPE_KIND_RESOURCE,
+        sampler_state = SLANG_TYPE_KIND_SAMPLER_STATE,
+        texture_buffer = SLANG_TYPE_KIND_TEXTURE_BUFFER,
+        shader_storage_buffer = SLANG_TYPE_KIND_SHADER_STORAGE_BUFFER,
+        parameter_block = SLANG_TYPE_KIND_PARAMETER_BLOCK,
+        generic_type_parameter = SLANG_TYPE_KIND_GENERIC_TYPE_PARAMETER,
+        interface = SLANG_TYPE_KIND_INTERFACE,
+        output_stream = SLANG_TYPE_KIND_OUTPUT_STREAM,
+        specialized = SLANG_TYPE_KIND_SPECIALIZED,
+        feedback = SLANG_TYPE_KIND_FEEDBACK,
+        pointer = SLANG_TYPE_KIND_POINTER,
     };
+
     KALI_ENUM_INFO(
         Kind,
         {
+            {Kind::none, "none"},
             {Kind::struct_, "struct"},
             {Kind::array, "array"},
-            {Kind::basic, "basic"},
+            {Kind::matrix, "matrix"},
+            {Kind::vector, "vector"},
+            {Kind::scalar, "scalar"},
+            {Kind::constant_buffer, "constant_buffer"},
             {Kind::resource, "resource"},
+            {Kind::sampler_state, "sampler_state"},
+            {Kind::texture_buffer, "texture_buffer"},
+            {Kind::shader_storage_buffer, "shader_storage_buffer"},
+            {Kind::parameter_block, "parameter_block"},
+            {Kind::generic_type_parameter, "generic_type_parameter"},
             {Kind::interface, "interface"},
+            {Kind::output_stream, "output_stream"},
+            {Kind::specialized, "specialized"},
+            {Kind::feedback, "feedback"},
+            {Kind::pointer, "pointer"},
         }
     );
 
-    /// The kind of type.
-    virtual Kind kind() const = 0;
-
-    /// Dynamically cast to \c StructTypeReflection.
-    const StructTypeReflection* as_struct_type() const;
-
-    /// Dynamically cast to \c ArrayTypeReflection.
-    const ArrayTypeReflection* as_array_type() const;
-
-    /// Dynamically cast to \c BasicTypeReflection.
-    const BasicTypeReflection* as_basic_type() const;
-
-    /// Dynamically cast to \c ResourceTypeReflection.
-    const ResourceTypeReflection* as_resource_type() const;
-
-    /// Dynamically cast to \c InterfaceTypeReflection.
-    const InterfaceTypeReflection* as_interface_type() const;
-
-    slang::TypeLayoutReflection* get_slang_type_layout() const { return m_slang_type_layout; }
-
-    virtual std::string to_string() const override;
-
-protected:
-    slang::TypeLayoutReflection* m_slang_type_layout;
-};
-
-KALI_ENUM_REGISTER(TypeReflection::Kind);
-
-class KALI_API StructTypeReflection : public TypeReflection {
-    KALI_OBJECT(StructTypeReflection)
-public:
-    StructTypeReflection(
-        slang::TypeLayoutReflection* slang_type_layout,
-        std::string name,
-        std::vector<ref<VariableReflection>> members
-    )
-        : TypeReflection(slang_type_layout)
-        , m_name(std::move(name))
-        , m_members(std::move(members))
-    {
-    }
-
-    Kind kind() const override { return Kind::struct_; }
-
-    /// The struct name.
-    const std::string& name() const { return m_name; }
-
-    /// The struct members.
-    const std::vector<ref<VariableReflection>>& members() const { return m_members; }
-
-    VariableReflection* find_member(std::string_view name) const;
-
-    void add_member(ref<VariableReflection> member) { m_members.push_back(std::move(member)); }
-
-    virtual std::string to_string() const override;
-
-private:
-    std::string m_name;
-    std::vector<ref<VariableReflection>> m_members;
-};
-
-class KALI_API ArrayTypeReflection : public TypeReflection {
-    KALI_OBJECT(ArrayTypeReflection)
-public:
-    ArrayTypeReflection(
-        slang::TypeLayoutReflection* slang_type_layout,
-        ref<TypeReflection> element_type,
-        uint32_t element_count,
-        uint32_t element_stride
-    )
-        : TypeReflection(slang_type_layout)
-        , m_element_type(std::move(element_type))
-        , m_element_count(element_count)
-        , m_element_stride(element_stride)
-    {
-    }
-
-    Kind kind() const override { return Kind::array; }
-
-    /// The type of the elements in the array.
-    TypeReflection* element_type() const { return m_element_type; }
-
-    /// The number of elements in the array.
-    uint32_t element_count() const { return m_element_count; }
-
-    /// The stride of the elements in the array (i.e. the number of bytes between elements).
-    /// \note This does not necessarily match the size of the element type.
-    uint32_t element_stride() const { return m_element_stride; }
-
-    virtual std::string to_string() const override;
-
-private:
-    ref<TypeReflection> m_element_type;
-    uint32_t m_element_count;
-    uint32_t m_element_stride;
-};
-
-class KALI_API BasicTypeReflection : public TypeReflection {
-    KALI_OBJECT(BasicTypeReflection)
-public:
     enum class ScalarType {
-        none = SLANG_SCALAR_TYPE_NONE,
+        none_ = SLANG_SCALAR_TYPE_NONE,
         void_ = SLANG_SCALAR_TYPE_VOID,
         bool_ = SLANG_SCALAR_TYPE_BOOL,
         int32 = SLANG_SCALAR_TYPE_INT32,
@@ -166,10 +113,11 @@ public:
         int16 = SLANG_SCALAR_TYPE_INT16,
         uint16 = SLANG_SCALAR_TYPE_UINT16,
     };
+
     KALI_ENUM_INFO(
         ScalarType,
         {
-            {ScalarType::none, "none"},
+            {ScalarType::none_, "none"},
             {ScalarType::void_, "void"},
             {ScalarType::bool_, "bool"},
             {ScalarType::int32, "int32"},
@@ -186,310 +134,790 @@ public:
         }
     );
 
-    enum class CompositeType {
-        // clang-format off
-        // Scalar & vector types
-        bool_, bool2, bool3, bool4,
-        uint8, uint8_2, uint8_3, uint8_4,
-        uint16, uint16_2, uint16_3, uint16_4,
-        uint, uint2, uint3, uint4,
-        uint64, uint64_2, uint64_3, uint64_4,
-        int8, int8_2, int8_3, int8_4,
-        int16, int16_2, int16_3, int16_4,
-        int_, int2, int3, int4,
-        int64, int64_2, int64_3, int64_4,
-        float16, float16_2, float16_3, float16_4,
-        float_, float2, float3, float4,
-        float64, float64_2, float64_3, float64_4,
-        // Matrix types.
-        // clang-format on
+#if 0
+    enum class ResourceShape {
+        SLANG_RESOURCE_BASE_SHAPE_MASK      = 0x0F,
 
-        Float16_2x2,
-        Float16_2x3,
-        Float16_2x4,
-        Float16_3x2,
-        Float16_3x3,
-        Float16_3x4,
-        Float16_4x2,
-        Float16_4x3,
-        Float16_4x4,
+        SLANG_RESOURCE_NONE                 = 0x00,
 
-        Float2x2,
-        Float2x3,
-        Float2x4,
-        Float3x2,
-        Float3x3,
-        Float3x4,
-        Float4x2,
-        Float4x3,
-        Float4x4,
+        SLANG_TEXTURE_1D                    = 0x01,
+        SLANG_TEXTURE_2D                    = 0x02,
+        SLANG_TEXTURE_3D                    = 0x03,
+        SLANG_TEXTURE_CUBE                  = 0x04,
+        SLANG_TEXTURE_BUFFER                = 0x05,
 
+        SLANG_STRUCTURED_BUFFER             = 0x06,
+        SLANG_BYTE_ADDRESS_BUFFER           = 0x07,
+        SLANG_RESOURCE_UNKNOWN              = 0x08,
+        SLANG_ACCELERATION_STRUCTURE        = 0x09,
 
-        Unknown = -1
+        SLANG_RESOURCE_EXT_SHAPE_MASK       = 0xF0,
+
+        SLANG_TEXTURE_FEEDBACK_FLAG         = 0x10,
+        SLANG_TEXTURE_ARRAY_FLAG            = 0x40,
+        SLANG_TEXTURE_MULTISAMPLE_FLAG      = 0x80,
+
+        SLANG_TEXTURE_1D_ARRAY              = SLANG_TEXTURE_1D   | SLANG_TEXTURE_ARRAY_FLAG,
+        SLANG_TEXTURE_2D_ARRAY              = SLANG_TEXTURE_2D   | SLANG_TEXTURE_ARRAY_FLAG,
+        SLANG_TEXTURE_CUBE_ARRAY            = SLANG_TEXTURE_CUBE | SLANG_TEXTURE_ARRAY_FLAG,
+
+        SLANG_TEXTURE_2D_MULTISAMPLE        = SLANG_TEXTURE_2D | SLANG_TEXTURE_MULTISAMPLE_FLAG,
+        SLANG_TEXTURE_2D_MULTISAMPLE_ARRAY  = SLANG_TEXTURE_2D | SLANG_TEXTURE_MULTISAMPLE_FLAG | SLANG_TEXTURE_ARRAY_FLAG,
+    }
+    };
+#endif
+
+    enum class ParameterCategory {
+        none = SLANG_PARAMETER_CATEGORY_NONE,
+        mixed = SLANG_PARAMETER_CATEGORY_MIXED,
+        constant_buffer = SLANG_PARAMETER_CATEGORY_CONSTANT_BUFFER,
+        shader_resource = SLANG_PARAMETER_CATEGORY_SHADER_RESOURCE,
+        unordered_access = SLANG_PARAMETER_CATEGORY_UNORDERED_ACCESS,
+        varying_input = SLANG_PARAMETER_CATEGORY_VARYING_INPUT,
+        varying_output = SLANG_PARAMETER_CATEGORY_VARYING_OUTPUT,
+        sampler_state = SLANG_PARAMETER_CATEGORY_SAMPLER_STATE,
+        uniform = SLANG_PARAMETER_CATEGORY_UNIFORM,
+        descriptor_table_slot = SLANG_PARAMETER_CATEGORY_DESCRIPTOR_TABLE_SLOT,
+        specialization_constant = SLANG_PARAMETER_CATEGORY_SPECIALIZATION_CONSTANT,
+        push_constant_buffer = SLANG_PARAMETER_CATEGORY_PUSH_CONSTANT_BUFFER,
+        register_space = SLANG_PARAMETER_CATEGORY_REGISTER_SPACE,
+        generic = SLANG_PARAMETER_CATEGORY_GENERIC,
+        ray_payload = SLANG_PARAMETER_CATEGORY_RAY_PAYLOAD,
+        hit_attributes = SLANG_PARAMETER_CATEGORY_HIT_ATTRIBUTES,
+        callable_payload = SLANG_PARAMETER_CATEGORY_CALLABLE_PAYLOAD,
+        shader_record = SLANG_PARAMETER_CATEGORY_SHADER_RECORD,
+        existential_type_param = SLANG_PARAMETER_CATEGORY_EXISTENTIAL_TYPE_PARAM,
+        existential_object_param = SLANG_PARAMETER_CATEGORY_EXISTENTIAL_OBJECT_PARAM,
     };
 
-    BasicTypeReflection(
-        slang::TypeLayoutReflection* slang_type_layout,
-        ScalarType scalar_type,
-        uint8_t row_count,
-        uint8_t col_count,
-        bool is_row_major
+    Kind kind() const { return static_cast<Kind>(slang()->getKind()); }
+
+    char const* name() const { return slang()->getName(); }
+
+    bool is_struct() const { return kind() == Kind::struct_; }
+
+    uint32_t field_count() const
+    {
+        KALI_CHECK(is_struct(), "Type is not a struct");
+        return slang()->getFieldCount();
+    }
+
+    const VariableReflection* get_field_by_index(uint32_t index) const
+    {
+        KALI_CHECK(is_struct(), "Type is not a struct");
+        return detail::from_slang(slang()->getFieldByIndex(index));
+    }
+
+    std::vector<const VariableReflection*> fields() const
+    {
+        std::vector<const VariableReflection*> result;
+        for (uint32_t i = 0; i < slang()->getFieldCount(); ++i) {
+            result.push_back(detail::from_slang(slang()->getFieldByIndex(i)));
+        }
+        return result;
+    }
+
+    bool is_array() const { return kind() == Kind::array; }
+
+    size_t element_count() const
+    {
+        KALI_CHECK(is_array(), "Type is not an array");
+        return slang()->getElementCount();
+    }
+
+    size_t total_element_count() const
+    {
+        KALI_CHECK(is_array(), "Type is not an array");
+        size_t result = 1;
+        const TypeReflection* type = this;
+        while (type->is_array()) {
+            result *= type->element_count();
+            type = type->element_type();
+        }
+        return result;
+    }
+
+    const TypeReflection* element_type() const
+    {
+        KALI_CHECK(is_array(), "Type is not an array");
+        return detail::from_slang(slang()->getElementType());
+    }
+
+    const TypeReflection* unwrap_array() const
+    {
+        const TypeReflection* type = this;
+        while (type->is_array()) {
+            type = type->element_type();
+        }
+        return type;
+    }
+
+    uint32_t row_count() const { return slang()->getRowCount(); }
+
+    uint32_t col_count() const { return slang()->getColumnCount(); }
+
+    ScalarType scalar_type() const { return static_cast<ScalarType>(slang()->getScalarType()); }
+
+    const TypeReflection* resource_result_type() const { return detail::from_slang(slang()->getResourceResultType()); }
+
+#if 0
+    SlangResourceShape getResourceShape() { return spReflectionType_GetResourceShape((SlangReflectionType*)this); }
+
+    SlangResourceAccess getResourceAccess() { return spReflectionType_GetResourceAccess((SlangReflectionType*)this); }
+
+    unsigned int getUserAttributeCount() { return spReflectionType_GetUserAttributeCount((SlangReflectionType*)this); }
+    UserAttribute* getUserAttributeByIndex(unsigned int index)
+    {
+        return (UserAttribute*)spReflectionType_GetUserAttribute((SlangReflectionType*)this, index);
+    }
+    UserAttribute* findUserAttributeByName(char const* name)
+    {
+        return (UserAttribute*)spReflectionType_FindUserAttributeByName((SlangReflectionType*)this, name);
+    }
+#endif
+
+    std::string to_string() const;
+
+private:
+    slang::TypeReflection* slang() const { return (slang::TypeReflection*)(this); }
+};
+
+KALI_ENUM_REGISTER(TypeReflection::Kind);
+KALI_ENUM_REGISTER(TypeReflection::ScalarType);
+
+class KALI_API TypeLayoutReflection {
+public:
+    static const TypeLayoutReflection* from_slang(slang::TypeLayoutReflection* type_layout_reflection)
+    {
+        return detail::from_slang(type_layout_reflection);
+    }
+
+    const TypeReflection* type() const { return detail::from_slang(slang()->getType()); }
+
+    TypeReflection::Kind kind() const { return static_cast<TypeReflection::Kind>(slang()->getKind()); }
+
+    const char* name() const { return slang()->getName(); }
+
+    size_t size() const { return slang()->getSize(); }
+    size_t stride() const { return slang()->getStride(); }
+    int32_t alignment() const { return slang()->getAlignment(); }
+
+#if 0
+    size_t getSize(SlangParameterCategory category = SLANG_PARAMETER_CATEGORY_UNIFORM)
+    {
+        return spReflectionTypeLayout_GetSize((SlangReflectionTypeLayout*)this, category);
+    }
+
+    size_t getStride(SlangParameterCategory category = SLANG_PARAMETER_CATEGORY_UNIFORM)
+    {
+        return spReflectionTypeLayout_GetStride((SlangReflectionTypeLayout*)this, category);
+    }
+
+    int32_t getAlignment(SlangParameterCategory category = SLANG_PARAMETER_CATEGORY_UNIFORM)
+    {
+        return spReflectionTypeLayout_getAlignment((SlangReflectionTypeLayout*)this, category);
+    }
+#endif
+
+    uint32_t field_count() const { return slang()->getFieldCount(); }
+
+    const VariableLayoutReflection* get_field_by_index(uint32_t index) const
+    {
+        // TODO field_count() does not always return the right number of fields
+        // KALI_CHECK(index < field_count(), "Field index out of range");
+        return detail::from_slang(slang()->getFieldByIndex(index));
+    }
+
+    int32_t find_field_index_by_name(const char* name_begin, const char* name_end = nullptr) const
+    {
+        return narrow_cast<int32_t>(slang()->findFieldIndexByName(name_begin, name_end));
+    }
+
+    const VariableLayoutReflection* find_field_by_name(const char* name_begin, const char* name_end = nullptr) const
+    {
+        if (auto index = slang()->findFieldIndexByName(name_begin, name_end); index >= 0)
+            return detail::from_slang(slang()->getFieldByIndex(narrow_cast<unsigned int>(index)));
+        return nullptr;
+    }
+
+    std::vector<const VariableLayoutReflection*> fields() const
+    {
+        std::vector<const VariableLayoutReflection*> result;
+        for (uint32_t i = 0; i < slang()->getFieldCount(); ++i) {
+            result.push_back(detail::from_slang(slang()->getFieldByIndex(i)));
+        }
+        return result;
+    }
+
+#if 0
+    VariableLayoutReflection* getExplicitCounter()
+    {
+        return (VariableLayoutReflection*)spReflectionTypeLayout_GetExplicitCounter((SlangReflectionTypeLayout*)this);
+    }
+#endif
+
+    bool is_array() const { return type()->is_array(); }
+
+    const TypeLayoutReflection* unwrap_array() const
+    {
+        const TypeLayoutReflection* type_layout = this;
+        while (type_layout->is_array()) {
+            type_layout = type_layout->element_type_layout();
+        }
+        return type_layout;
+    }
+
+#if 0
+    // only useful if `getKind() == Kind::Array`
+    size_t getElementCount() { return getType()->getElementCount(); }
+
+    size_t getTotalArrayElementCount() { return getType()->getTotalArrayElementCount(); }
+
+    size_t getElementStride(SlangParameterCategory category)
+    {
+        return spReflectionTypeLayout_GetElementStride((SlangReflectionTypeLayout*)this, category);
+    }
+#endif
+
+
+    const TypeLayoutReflection* element_type_layout() const
+    {
+        return detail::from_slang(slang()->getElementTypeLayout());
+    }
+
+    const VariableLayoutReflection* element_var_layout() const
+    {
+        return detail::from_slang(slang()->getElementVarLayout());
+    }
+
+    const VariableLayoutReflection* container_var_layout() const
+    {
+        return detail::from_slang(slang()->getContainerVarLayout());
+    }
+
+    // How is this type supposed to be bound?
+    TypeReflection::ParameterCategory parameter_category() const
+    {
+        return static_cast<TypeReflection::ParameterCategory>(slang()->getParameterCategory());
+    }
+
+#if 0
+    unsigned int getCategoryCount()
+    {
+        return spReflectionTypeLayout_GetCategoryCount((SlangReflectionTypeLayout*)this);
+    }
+
+    ParameterCategory getCategoryByIndex(unsigned int index)
+    {
+        return (ParameterCategory)spReflectionTypeLayout_GetCategoryByIndex((SlangReflectionTypeLayout*)this, index);
+    }
+
+    unsigned getRowCount() { return getType()->getRowCount(); }
+
+    unsigned getColumnCount() { return getType()->getColumnCount(); }
+
+    TypeReflection::ScalarType getScalarType() { return getType()->getScalarType(); }
+
+    TypeReflection* getResourceResultType() { return getType()->getResourceResultType(); }
+
+    SlangResourceShape getResourceShape() { return getType()->getResourceShape(); }
+
+    SlangResourceAccess getResourceAccess() { return getType()->getResourceAccess(); }
+
+    SlangMatrixLayoutMode getMatrixLayoutMode()
+    {
+        return spReflectionTypeLayout_GetMatrixLayoutMode((SlangReflectionTypeLayout*)this);
+    }
+
+    int getGenericParamIndex() { return spReflectionTypeLayout_getGenericParamIndex((SlangReflectionTypeLayout*)this); }
+
+    TypeLayoutReflection* getPendingDataTypeLayout()
+    {
+        return (TypeLayoutReflection*)spReflectionTypeLayout_getPendingDataTypeLayout((SlangReflectionTypeLayout*)this);
+    }
+
+    VariableLayoutReflection* getSpecializedTypePendingDataVarLayout()
+    {
+        return (VariableLayoutReflection*)spReflectionTypeLayout_getSpecializedTypePendingDataVarLayout(
+            (SlangReflectionTypeLayout*)this
+        );
+    }
+
+    SlangInt getBindingRangeCount()
+    {
+        return spReflectionTypeLayout_getBindingRangeCount((SlangReflectionTypeLayout*)this);
+    }
+
+    BindingType getBindingRangeType(SlangInt index)
+    {
+        return (BindingType)spReflectionTypeLayout_getBindingRangeType((SlangReflectionTypeLayout*)this, index);
+    }
+
+    SlangInt getBindingRangeBindingCount(SlangInt index)
+    {
+        return spReflectionTypeLayout_getBindingRangeBindingCount((SlangReflectionTypeLayout*)this, index);
+    }
+
+    /*
+    SlangInt getBindingRangeIndexOffset(SlangInt index)
+    {
+        return spReflectionTypeLayout_getBindingRangeIndexOffset(
+            (SlangReflectionTypeLayout*) this,
+            index);
+    }
+
+    SlangInt getBindingRangeSpaceOffset(SlangInt index)
+    {
+        return spReflectionTypeLayout_getBindingRangeSpaceOffset(
+            (SlangReflectionTypeLayout*) this,
+            index);
+    }
+    */
+#endif
+
+    uint32_t get_field_binding_range_offset(uint32_t field_index) const
+    {
+        return narrow_cast<uint32_t>(slang()->getFieldBindingRangeOffset(field_index));
+    }
+
+#if 0
+    SlangInt getExplicitCounterBindingRangeOffset()
+    {
+        return spReflectionTypeLayout_getExplicitCounterBindingRangeOffset((SlangReflectionTypeLayout*)this);
+    }
+
+    TypeLayoutReflection* getBindingRangeLeafTypeLayout(SlangInt index)
+    {
+        return (TypeLayoutReflection*)
+            spReflectionTypeLayout_getBindingRangeLeafTypeLayout((SlangReflectionTypeLayout*)this, index);
+    }
+
+    VariableReflection* getBindingRangeLeafVariable(SlangInt index)
+    {
+        return (VariableReflection*)
+            spReflectionTypeLayout_getBindingRangeLeafVariable((SlangReflectionTypeLayout*)this, index);
+    }
+
+    SlangInt getBindingRangeDescriptorSetIndex(SlangInt index)
+    {
+        return spReflectionTypeLayout_getBindingRangeDescriptorSetIndex((SlangReflectionTypeLayout*)this, index);
+    }
+
+    SlangInt getBindingRangeFirstDescriptorRangeIndex(SlangInt index)
+    {
+        return spReflectionTypeLayout_getBindingRangeFirstDescriptorRangeIndex((SlangReflectionTypeLayout*)this, index);
+    }
+
+    SlangInt getBindingRangeDescriptorRangeCount(SlangInt index)
+    {
+        return spReflectionTypeLayout_getBindingRangeDescriptorRangeCount((SlangReflectionTypeLayout*)this, index);
+    }
+
+    SlangInt getDescriptorSetCount()
+    {
+        return spReflectionTypeLayout_getDescriptorSetCount((SlangReflectionTypeLayout*)this);
+    }
+
+    SlangInt getDescriptorSetSpaceOffset(SlangInt setIndex)
+    {
+        return spReflectionTypeLayout_getDescriptorSetSpaceOffset((SlangReflectionTypeLayout*)this, setIndex);
+    }
+
+    SlangInt getDescriptorSetDescriptorRangeCount(SlangInt setIndex)
+    {
+        return spReflectionTypeLayout_getDescriptorSetDescriptorRangeCount((SlangReflectionTypeLayout*)this, setIndex);
+    }
+
+    SlangInt getDescriptorSetDescriptorRangeIndexOffset(SlangInt setIndex, SlangInt rangeIndex)
+    {
+        return spReflectionTypeLayout_getDescriptorSetDescriptorRangeIndexOffset(
+            (SlangReflectionTypeLayout*)this,
+            setIndex,
+            rangeIndex
+        );
+    }
+
+    SlangInt getDescriptorSetDescriptorRangeDescriptorCount(SlangInt setIndex, SlangInt rangeIndex)
+    {
+        return spReflectionTypeLayout_getDescriptorSetDescriptorRangeDescriptorCount(
+            (SlangReflectionTypeLayout*)this,
+            setIndex,
+            rangeIndex
+        );
+    }
+
+    BindingType getDescriptorSetDescriptorRangeType(SlangInt setIndex, SlangInt rangeIndex)
+    {
+        return (BindingType)spReflectionTypeLayout_getDescriptorSetDescriptorRangeType(
+            (SlangReflectionTypeLayout*)this,
+            setIndex,
+            rangeIndex
+        );
+    }
+
+    ParameterCategory getDescriptorSetDescriptorRangeCategory(SlangInt setIndex, SlangInt rangeIndex)
+    {
+        return (ParameterCategory)spReflectionTypeLayout_getDescriptorSetDescriptorRangeCategory(
+            (SlangReflectionTypeLayout*)this,
+            setIndex,
+            rangeIndex
+        );
+    }
+
+    SlangInt getSubObjectRangeCount()
+    {
+        return spReflectionTypeLayout_getSubObjectRangeCount((SlangReflectionTypeLayout*)this);
+    }
+
+    SlangInt getSubObjectRangeBindingRangeIndex(SlangInt subObjectRangeIndex)
+    {
+        return spReflectionTypeLayout_getSubObjectRangeBindingRangeIndex(
+            (SlangReflectionTypeLayout*)this,
+            subObjectRangeIndex
+        );
+    }
+
+    SlangInt getSubObjectRangeSpaceOffset(SlangInt subObjectRangeIndex)
+    {
+        return spReflectionTypeLayout_getSubObjectRangeSpaceOffset(
+            (SlangReflectionTypeLayout*)this,
+            subObjectRangeIndex
+        );
+    }
+
+    VariableLayoutReflection* getSubObjectRangeOffset(SlangInt subObjectRangeIndex)
+    {
+        return (VariableLayoutReflection*)
+            spReflectionTypeLayout_getSubObjectRangeOffset((SlangReflectionTypeLayout*)this, subObjectRangeIndex);
+    }
+#endif
+
+    std::string to_string() const;
+
+private:
+    slang::TypeLayoutReflection* slang() const { return (slang::TypeLayoutReflection*)(this); }
+};
+
+class KALI_API VariableReflection {
+public:
+    static const VariableReflection* from_slang(slang::VariableReflection* variable_reflection)
+    {
+        return detail::from_slang(variable_reflection);
+    }
+
+    const char* name() const { return slang()->getName(); }
+
+    const TypeReflection* type() const { return detail::from_slang(slang()->getType()); }
+
+#if 0
+    Modifier* findModifier(Modifier::ID id)
+    {
+        return (Modifier*)spReflectionVariable_FindModifier((SlangReflectionVariable*)this, (SlangModifierID)id);
+    }
+
+    unsigned int getUserAttributeCount()
+    {
+        return spReflectionVariable_GetUserAttributeCount((SlangReflectionVariable*)this);
+    }
+    UserAttribute* getUserAttributeByIndex(unsigned int index)
+    {
+        return (UserAttribute*)spReflectionVariable_GetUserAttribute((SlangReflectionVariable*)this, index);
+    }
+    UserAttribute* findUserAttributeByName(SlangSession* session, char const* name)
+    {
+        return (UserAttribute*)
+            spReflectionVariable_FindUserAttributeByName((SlangReflectionVariable*)this, session, name);
+    }
+#endif
+
+private:
+    slang::VariableReflection* slang() const { return (slang::VariableReflection*)(this); }
+};
+
+class KALI_API VariableLayoutReflection {
+public:
+    const VariableReflection* variable() const { return detail::from_slang(slang()->getVariable()); }
+
+    const char* name() const { return slang()->getName(); }
+
+#if 0
+    Modifier* findModifier(Modifier::ID id) { return getVariable()->findModifier(id); }
+#endif
+
+    const TypeLayoutReflection* type_layout() const { return detail::from_slang(slang()->getTypeLayout()); }
+
+#if 0
+    ParameterCategory getCategory() { return getTypeLayout()->getParameterCategory(); }
+
+    unsigned int getCategoryCount() { return getTypeLayout()->getCategoryCount(); }
+
+    ParameterCategory getCategoryByIndex(unsigned int index) { return getTypeLayout()->getCategoryByIndex(index); }
+#endif
+
+    size_t offset(SlangParameterCategory category = SLANG_PARAMETER_CATEGORY_UNIFORM) const
+    {
+        return slang()->getOffset(category);
+    }
+
+#if 0
+    TypeReflection* getType() { return getVariable()->getType(); }
+
+    unsigned getBindingIndex() { return spReflectionParameter_GetBindingIndex((SlangReflectionVariableLayout*)this); }
+
+    unsigned getBindingSpace() { return spReflectionParameter_GetBindingSpace((SlangReflectionVariableLayout*)this); }
+
+    size_t getBindingSpace(SlangParameterCategory category)
+    {
+        return spReflectionVariableLayout_GetSpace((SlangReflectionVariableLayout*)this, category);
+    }
+
+    char const* getSemanticName()
+    {
+        return spReflectionVariableLayout_GetSemanticName((SlangReflectionVariableLayout*)this);
+    }
+
+    size_t getSemanticIndex()
+    {
+        return spReflectionVariableLayout_GetSemanticIndex((SlangReflectionVariableLayout*)this);
+    }
+
+    SlangStage getStage() { return spReflectionVariableLayout_getStage((SlangReflectionVariableLayout*)this); }
+
+    VariableLayoutReflection* getPendingDataLayout()
+    {
+        return (VariableLayoutReflection*)spReflectionVariableLayout_getPendingDataLayout(
+            (SlangReflectionVariableLayout*)this
+        );
+    }
+#endif
+
+    std::string to_string() const;
+
+private:
+    slang::VariableLayoutReflection* slang() const { return (slang::VariableLayoutReflection*)(this); }
+};
+
+class KALI_API EntryPointReflection {
+public:
+    static const EntryPointReflection* from_slang(slang::EntryPointReflection* entry_point_reflection)
+    {
+        return detail::from_slang(entry_point_reflection);
+    }
+
+    const char* name() const { return slang()->getName(); }
+
+    const char* name_override() const { return slang()->getNameOverride(); }
+
+    ShaderStage stage() const { return static_cast<ShaderStage>(slang()->getStage()); }
+
+    uint32_t parameter_count() const { return slang()->getParameterCount(); }
+
+    const VariableLayoutReflection* get_parameter_by_index(uint32_t index) const
+    {
+        KALI_CHECK(index < parameter_count(), "Parameter index out of range");
+        return detail::from_slang(slang()->getParameterByIndex(index));
+    }
+
+    std::vector<const VariableLayoutReflection*> parameters() const
+    {
+        std::vector<const VariableLayoutReflection*> result;
+        for (uint32_t i = 0; i < slang()->getParameterCount(); ++i) {
+            result.push_back(detail::from_slang(slang()->getParameterByIndex(i)));
+        }
+        return result;
+    }
+
+    uint3 compute_thread_group_size() const
+    {
+        SlangUInt size[3];
+        slang()->getComputeThreadGroupSize(3, size);
+        return uint3(narrow_cast<uint32_t>(size[0]), narrow_cast<uint32_t>(size[1]), narrow_cast<uint32_t>(size[2]));
+    }
+
+    bool uses_any_sample_rate_input() const { return slang()->usesAnySampleRateInput(); }
+
+#if 0
+    VariableLayoutReflection* getVarLayout()
+    {
+        return (VariableLayoutReflection*)spReflectionEntryPoint_getVarLayout((SlangReflectionEntryPoint*)this);
+    }
+
+    TypeLayoutReflection* getTypeLayout() { return getVarLayout()->getTypeLayout(); }
+
+    VariableLayoutReflection* getResultVarLayout()
+    {
+        return (VariableLayoutReflection*)spReflectionEntryPoint_getResultVarLayout((SlangReflectionEntryPoint*)this);
+    }
+
+    bool hasDefaultConstantBuffer()
+    {
+        return spReflectionEntryPoint_hasDefaultConstantBuffer((SlangReflectionEntryPoint*)this) != 0;
+    }
+#endif
+
+    std::string to_string() const;
+
+private:
+    slang::EntryPointReflection* slang() const { return (slang::EntryPointReflection*)(this); }
+};
+
+class KALI_API ProgramReflection {
+public:
+    static const ProgramReflection* from_slang(slang::ProgramLayout* program_layout)
+    {
+        return detail::from_slang(program_layout);
+    }
+
+    const TypeLayoutReflection* globals_type_layout() const
+    {
+        return detail::from_slang(slang()->getGlobalParamsTypeLayout());
+    }
+
+    const VariableLayoutReflection* globals_variable_layout() const
+    {
+        return detail::from_slang(slang()->getGlobalParamsVarLayout());
+    }
+
+    uint32_t parameter_count() const { return slang()->getParameterCount(); }
+
+    const VariableLayoutReflection* get_parameter_by_index(uint32_t index) const
+    {
+        KALI_CHECK(index < parameter_count(), "Parameter index out of range");
+        return detail::from_slang(slang()->getParameterByIndex(index));
+    }
+
+    std::vector<const VariableLayoutReflection*> parameters() const
+    {
+        std::vector<const VariableLayoutReflection*> result;
+        for (uint32_t i = 0; i < slang()->getParameterCount(); ++i) {
+            result.push_back(detail::from_slang(slang()->getParameterByIndex(i)));
+        }
+        return result;
+    }
+
+    uint32_t type_parameter_count() const { return slang()->getTypeParameterCount(); }
+
+#if 0
+    TypeParameterReflection get_type_parameter_by_index(uint32_t index) const
+    {
+        return (TypeParameterReflection*)spReflection_GetTypeParameterByIndex((SlangReflection*)this, index);
+    }
+
+    TypeParameterReflection* findTypeParameter(char const* name)
+    {
+        return (TypeParameterReflection*)spReflection_FindTypeParameter((SlangReflection*)this, name);
+    }
+#endif
+
+    uint32_t entry_point_count() const { return narrow_cast<uint32_t>(slang()->getEntryPointCount()); }
+
+    const EntryPointReflection* get_entry_point_by_index(uint32_t index) const
+    {
+        KALI_CHECK(index < entry_point_count(), "Entry point index out of range");
+        return detail::from_slang(slang()->getEntryPointByIndex(index));
+    }
+
+    const EntryPointReflection* get_entry_point_by_name(const char* name) const
+    {
+        return detail::from_slang(slang()->findEntryPointByName(name));
+    }
+
+    const EntryPointReflection* find_entry_point_by_name(const char* name) const
+    {
+        if (auto entry_point = slang()->findEntryPointByName(name)) {
+            return detail::from_slang(entry_point);
+        }
+        return nullptr;
+    }
+
+    std::vector<const EntryPointReflection*> entry_points() const
+    {
+        std::vector<const EntryPointReflection*> result;
+        for (uint32_t i = 0; i < slang()->getEntryPointCount(); ++i) {
+            result.push_back(detail::from_slang(slang()->getEntryPointByIndex(i)));
+        }
+        return result;
+    }
+
+#if 0
+    SlangUInt getGlobalConstantBufferBinding()
+    {
+        return spReflection_getGlobalConstantBufferBinding((SlangReflection*)this);
+    }
+
+    size_t getGlobalConstantBufferSize() { return spReflection_getGlobalConstantBufferSize((SlangReflection*)this); }
+
+    TypeReflection* findTypeByName(const char* name)
+    {
+        return (TypeReflection*)spReflection_FindTypeByName((SlangReflection*)this, name);
+    }
+
+    TypeLayoutReflection* getTypeLayout(TypeReflection* type, LayoutRules rules = LayoutRules::Default)
+    {
+        return (TypeLayoutReflection*)
+            spReflection_GetTypeLayout((SlangReflection*)this, (SlangReflectionType*)type, SlangLayoutRules(rules));
+    }
+
+    TypeReflection* specializeType(
+        TypeReflection* type,
+        SlangInt specializationArgCount,
+        TypeReflection* const* specializationArgs,
+        ISlangBlob** outDiagnostics
     )
-        : TypeReflection(slang_type_layout)
-        , m_scalar_type(scalar_type)
-        , m_row_count(row_count)
-        , m_col_count(col_count)
-        , m_row_major(is_row_major)
     {
+        return (TypeReflection*)spReflection_specializeType(
+            (SlangReflection*)this,
+            (SlangReflectionType*)type,
+            specializationArgCount,
+            (SlangReflectionType* const*)specializationArgs,
+            outDiagnostics
+        );
     }
+#endif
 
-    Kind kind() const override { return Kind::basic; }
+    uint32_t hashed_string_count() const { return narrow_cast<uint32_t>(slang()->getHashedStringCount()); }
 
-    ScalarType scalar_type() const { return m_scalar_type; }
-    uint8_t row_count() const { return m_row_count; }
-    uint8_t col_count() const { return m_col_count; }
-    bool is_row_major() const { return m_row_major != 0; }
-
-    bool is_vector() const { return (m_row_count == 1 && m_col_count > 1) || (m_row_count > 1 && m_col_count == 1); }
-    bool is_matrix() const { return m_row_count > 1 && m_col_count > 1; }
-
-    virtual std::string to_string() const override;
-
-private:
-    ScalarType m_scalar_type;
-    uint8_t m_row_count;
-    uint8_t m_col_count;
-    uint8_t m_row_major;
-};
-
-KALI_ENUM_REGISTER(BasicTypeReflection::ScalarType);
-
-class KALI_API ResourceTypeReflection : public TypeReflection {
-    KALI_OBJECT(ResourceTypeReflection)
-public:
-    /// Type of the resource.
-    enum class Type {
-        texture,
-        structured_buffer,
-        raw_buffer,
-        typed_buffer,
-        sampler,
-        constant_buffer,
-        acceleration_structure,
+    struct HashedString {
+        std::string string;
+        uint32_t hash;
     };
-    KALI_ENUM_INFO(
-        Type,
-        {
-            {Type::texture, "texture"},
-            {Type::structured_buffer, "structured_buffer"},
-            {Type::raw_buffer, "raw_buffer"},
-            {Type::typed_buffer, "typed_buffer"},
-            {Type::sampler, "sampler"},
-            {Type::constant_buffer, "constant_buffer"},
-            {Type::acceleration_structure, "acceleration_structure"},
-        }
-    );
 
-    /// Dimensions of the resource.
-    enum class Dimensions {
-        unknown,
-        texture1d,
-        texture2d,
-        texture3d,
-        texture_cube,
-        texture1d_array,
-        texture2d_array,
-        texture2dms,
-        texture2dms_array,
-        texture_cube_array,
-        acceleration_structure,
-        buffer,
-    };
-    KALI_ENUM_INFO(
-        Dimensions,
-        {
-            {Dimensions::unknown, "unknown"},
-            {Dimensions::texture1d, "texture1d"},
-            {Dimensions::texture2d, "texture2d"},
-            {Dimensions::texture3d, "texture3d"},
-            {Dimensions::texture_cube, "texture_cube"},
-            {Dimensions::texture1d_array, "texture1d_array"},
-            {Dimensions::texture2d_array, "texture2d_array"},
-            {Dimensions::texture2dms, "texture2dms"},
-            {Dimensions::texture2dms_array, "texture2dms_array"},
-            {Dimensions::texture_cube_array, "texture_cube_array"},
-            {Dimensions::acceleration_structure, "acceleration_structure"},
-            {Dimensions::buffer, "buffer"},
-        }
-    );
-
-    /// For Type::structured_buffer, describes the type of the buffer.
-    enum class StructuredType {
-        none,    ///< Not a structured buffer
-        regular, ///< Regular structured buffer
-        counter, ///< RWStructuredBuffer with counter
-        append,  ///< AppendStructuredBuffer
-        consume  ///< ConsumeStructuredBuffer
-    };
-    KALI_ENUM_INFO(
-        StructuredType,
-        {
-            {StructuredType::none, "none"},
-            {StructuredType::regular, "regular"},
-            {StructuredType::counter, "counter"},
-            {StructuredType::append, "append"},
-            {StructuredType::consume, "consume"},
-        }
-    );
-
-    /// The expected return type.
-    enum class ReturnType { unknown, float_, double_, int_, uint };
-    KALI_ENUM_INFO(
-        ReturnType,
-        {
-            {ReturnType::unknown, "unknown"},
-            {ReturnType::float_, "float"},
-            {ReturnType::double_, "double"},
-            {ReturnType::int_, "int"},
-            {ReturnType::uint, "uint"},
-        }
-    );
-
-    /// Describes how the shader will access the resource.
-    enum class ShaderAccess { undefined, read, read_write };
-    KALI_ENUM_INFO(
-        ShaderAccess,
-        {
-            {ShaderAccess::undefined, "undefined"},
-            {ShaderAccess::read, "read"},
-            {ShaderAccess::read_write, "read_write"},
-        }
-    );
-
-    ResourceTypeReflection(
-        slang::TypeLayoutReflection* slang_type_layout,
-        Type type,
-        Dimensions dimensions,
-        StructuredType structured_type,
-        ReturnType return_type,
-        ShaderAccess shader_access,
-        ref<TypeReflection> element_type
-    )
-        : TypeReflection(slang_type_layout)
-        , m_type(type)
-        , m_dimensions(dimensions)
-        , m_structured_type(structured_type)
-        , m_return_type(return_type)
-        , m_shader_access(shader_access)
-        , m_element_type(std::move(element_type))
+    HashedString get_hashed_string(uint32_t index) const
     {
+        KALI_CHECK(index < hashed_string_count(), "Hashed string index out of range");
+        size_t size;
+        const char* str = slang()->getHashedString(index, &size);
+        return {std::string(str, str + size), spComputeStringHash(str, size)};
     }
 
-    Kind kind() const override { return Kind::resource; }
-
-    Type type() const { return m_type; }
-    Dimensions dimensions() const { return m_dimensions; }
-    StructuredType structured_type() const { return m_structured_type; }
-    ReturnType return_type() const { return m_return_type; }
-    ShaderAccess shader_access() const { return m_shader_access; }
-    TypeReflection* element_type() const { return m_element_type; }
-
-    virtual std::string to_string() const override;
-
-private:
-    Type m_type;
-    Dimensions m_dimensions;
-    StructuredType m_structured_type;
-    ReturnType m_return_type;
-    ShaderAccess m_shader_access;
-    ref<TypeReflection> m_element_type;
-};
-
-KALI_ENUM_REGISTER(ResourceTypeReflection::Type);
-KALI_ENUM_REGISTER(ResourceTypeReflection::Dimensions);
-KALI_ENUM_REGISTER(ResourceTypeReflection::StructuredType);
-KALI_ENUM_REGISTER(ResourceTypeReflection::ReturnType);
-KALI_ENUM_REGISTER(ResourceTypeReflection::ShaderAccess);
-
-class KALI_API InterfaceTypeReflection : public TypeReflection {
-    KALI_OBJECT(InterfaceTypeReflection)
-public:
-    InterfaceTypeReflection(slang::TypeLayoutReflection* slang_type_layout)
-        : TypeReflection(slang_type_layout)
+    std::vector<HashedString> hashed_strings() const
     {
+        std::vector<HashedString> result;
+        for (uint32_t i = 0; i < slang()->getHashedStringCount(); ++i) {
+            size_t size;
+            const char* str = slang()->getHashedString(i, &size);
+            result.push_back({std::string(str, str + size), spComputeStringHash(str, size)});
+        }
+        return result;
     }
 
-    Kind kind() const override { return Kind::interface; }
-
-    virtual std::string to_string() const override;
-};
-
-class KALI_API VariableReflection : public Object {
-    KALI_OBJECT(VariableReflection)
-public:
-    VariableReflection(std::string name, ref<TypeReflection> type, const ShaderOffset& offset)
-        : m_name(std::move(name))
-        , m_type(std::move(type))
-        , m_offset(offset)
+    std::map<uint32_t, std::string> hashed_strings_map() const
     {
+        std::map<uint32_t, std::string> result;
+        for (uint32_t i = 0; i < slang()->getHashedStringCount(); ++i) {
+            size_t size;
+            const char* str = slang()->getHashedString(i, &size);
+            uint32_t hash = spComputeStringHash(str, size);
+            result.emplace(hash, std::string(str, str + size));
+        }
+        return result;
     }
 
-    const std::string& name() const { return m_name; }
-
-    TypeReflection* type() const { return m_type; }
-
-    const ShaderOffset& offset() const { return m_offset; }
-
-    virtual std::string to_string() const override;
+    std::string to_string() const;
 
 private:
-    std::string m_name;
-    ref<TypeReflection> m_type;
-    ShaderOffset m_offset;
+    slang::ProgramLayout* slang() const { return (slang::ProgramLayout*)(this); }
 };
 
-class KALI_API ProgramLayout : public Object {
-    KALI_OBJECT(ProgramLayout)
-public:
-    ProgramLayout(slang::ProgramLayout* layout);
-
-    // TypeLayoutReflection get_globals_type_layout() const
-    // {
-    //     return TypeLayoutReflection(m_layout->getGlobalParamsTypeLayout());
-    // }
-
-    const ref<StructTypeReflection>& globals_type() const { return m_globals_type; }
-
-    /// Return a hash to string map of all hashed strings in the program.
-    const std::map<uint32_t, std::string>& hashed_strings() const;
-
-    virtual std::string to_string() const override;
-
-private:
-    slang::ProgramLayout* m_layout;
-    ref<StructTypeReflection> m_globals_type;
-    mutable std::map<uint32_t, std::string> m_hashed_strings;
-};
-
-class KALI_API EntryPointLayout : public Object {
-    KALI_OBJECT(EntryPointLayout)
-public:
-    EntryPointLayout(slang::EntryPointLayout* layout);
-
-    /// The name of the entry point.
-    std::string name() const { return m_layout->getName(); }
-
-    /// The thread group size if this is a compute stage entry point.
-    uint3 compute_thread_group_size() const;
-
-    virtual std::string to_string() const override;
-
-private:
-    slang::EntryPointLayout* m_layout;
-};
-
-// TODO temporary utilities
-
-KALI_API ref<TypeReflection> get_type_reflection(slang::TypeLayoutReflection* slang_type_layout);
 
 } // namespace kali
