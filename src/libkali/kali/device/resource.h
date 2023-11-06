@@ -266,6 +266,8 @@ public:
 
     ResourceViewType type() const { return m_desc.type; }
 
+    const Resource* resource() const { return m_resource; }
+
     gfx::IResourceView* get_gfx_resource_view() const { return m_gfx_resource_view; }
 
     /// Returns the native API handle:
@@ -381,6 +383,12 @@ public:
     size_t struct_size() const { return m_desc.struct_size; }
     Format format() const { return m_desc.format; }
 
+    bool is_structured() const { return m_desc.struct_size > 0; }
+    bool is_typed() const { return m_desc.format != Format::unknown; }
+
+    size_t element_size() const;
+    size_t element_count() const;
+
     /// Map the whole buffer.
     /// Only available for buffers created with MemoryType::upload or MemoryType::read_back.
     void* map() const;
@@ -402,7 +410,7 @@ public:
     bool is_mapped() const { return m_mapped_ptr != nullptr; }
 
     /// Get a resource view. Views are cached and reused.
-    ref<ResourceView> get_view(const ResourceViewDesc& desc) const;
+    ref<ResourceView> get_view(ResourceViewDesc desc) const;
 
     /// Get a shader resource view for a range of the buffer.
     ref<ResourceView> get_srv(uint64_t first_element, uint64_t element_count = BufferRange::WHOLE) const;

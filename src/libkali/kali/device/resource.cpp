@@ -264,6 +264,21 @@ Buffer::Buffer(ref<Device> device, BufferDesc desc, const void* init_data)
     SLANG_CALL(m_device->get_gfx_device()->createBufferResource(gfx_desc, init_data, m_gfx_buffer.writeRef()));
 }
 
+size_t Buffer::element_size() const
+{
+    if (is_structured())
+        return m_desc.struct_size;
+    else if (is_typed())
+        return get_format_info(m_desc.format).bytes_per_block;
+    else
+        return 4;
+}
+
+size_t Buffer::element_count() const
+{
+    return size() / element_size();
+}
+
 void* Buffer::map() const
 {
     KALI_ASSERT(m_desc.memory_type != MemoryType::device_local);
@@ -292,8 +307,20 @@ void Buffer::unmap() const
     m_mapped_ptr = nullptr;
 }
 
-ref<ResourceView> Buffer::get_view(const ResourceViewDesc& desc) const
+ref<ResourceView> Buffer::get_view(ResourceViewDesc desc) const
 {
+    size_t element_count = this->element_count();
+    KALI_CHECK(desc.buffer_range.first_element < element_count, "'first_element' out of range");
+    KALI_CHECK(
+        desc.buffer_range.element_count == BufferRange::WHOLE
+            || desc.buffer_range.first_element + desc.buffer_range.element_count <= element_count,
+        "'element_count' out of range"
+    );
+
+    if (desc.buffer_range.element_count == BufferRange::WHOLE) {
+        desc.buffer_range.element_count = element_count - desc.buffer_range.first_element;
+    }
+
     auto it = m_views.find(desc);
     if (it != m_views.end())
         return it->second;
