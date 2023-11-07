@@ -148,42 +148,6 @@ KALI_ENUM_INFO(
 );
 KALI_ENUM_REGISTER(MemoryType);
 
-struct ResourceViewRange {
-    static constexpr uint32_t MAX_POSSIBLE = 0xffffffff;
-
-    // Textures
-    uint32_t most_detailed_mip = 0;
-    uint32_t mip_count = MAX_POSSIBLE;
-    uint32_t first_array_slice = 0;
-    uint32_t array_size = MAX_POSSIBLE;
-
-    // Buffers
-    uint32_t first_element = 0;
-    uint32_t element_count = MAX_POSSIBLE;
-
-    ResourceViewRange() = default;
-    ResourceViewRange(uint32_t most_detailed_mip, uint32_t mip_count, uint32_t first_array_slice, uint32_t array_size)
-        : most_detailed_mip(most_detailed_mip)
-        , mip_count(mip_count)
-        , first_array_slice(first_array_slice)
-        , array_size(array_size)
-    {
-    }
-
-    ResourceViewRange(uint32_t first_element, uint32_t element_count)
-        : first_element(first_element)
-        , element_count(element_count)
-    {
-    }
-
-    bool operator==(const ResourceViewRange& other) const
-    {
-        return (first_array_slice == other.first_array_slice) && (array_size == other.array_size)
-            && (mip_count == other.mip_count) && (most_detailed_mip == other.most_detailed_mip)
-            && (first_element == other.first_element) && (element_count == other.element_count);
-    }
-};
-
 enum class ResourceViewType {
     unknown = gfx::IResourceView::Type::Unknown,
     render_target = gfx::IResourceView::Type::RenderTarget,
@@ -207,17 +171,35 @@ KALI_ENUM_INFO(
 KALI_ENUM_REGISTER(ResourceViewType);
 
 struct BufferRange {
-    static constexpr uint64_t WHOLE = std::numeric_limits<uint64_t>::max();
+    static constexpr uint64_t ALL = std::numeric_limits<uint64_t>::max();
     uint64_t first_element{0};
-    uint64_t element_count{WHOLE};
+    uint64_t element_count{ALL};
+};
+
+enum class TextureAspect : uint32_t {
+    default_ = gfx::TextureAspect::Default,
+    color = gfx::TextureAspect::Color,
+    depth = gfx::TextureAspect::Depth,
+    stencil = gfx::TextureAspect::Stencil,
+    meta_data = gfx::TextureAspect::MetaData,
+    plane0 = gfx::TextureAspect::Plane0,
+    plane1 = gfx::TextureAspect::Plane1,
+    plane2 = gfx::TextureAspect::Plane2,
+    depth_stencil = depth | stencil,
 };
 
 struct SubresourceRange {
-    // TextureAspect aspectMask;
-    uint32_t mip_level;
-    uint32_t mip_level_count;
-    uint32_t base_array_layer; // For Texture3D, this is WSlice.
-    uint32_t layer_count;      // For cube maps, this is a multiple of 6.
+    static constexpr uint32_t ALL = std::numeric_limits<uint32_t>::max();
+    /// Texture aspect.
+    TextureAspect texture_aspect{TextureAspect::default_};
+    /// Most detailed mip level.
+    uint32_t mip_level{0};
+    /// Number of mip levels.
+    uint32_t mip_count{ALL};
+    /// First array layer.
+    uint32_t base_array_layer{0}; // For Texture3D, this is WSlice.
+    /// Number of array layers.
+    uint32_t layer_count{ALL}; // For cube maps, this is a multiple of 6.
 };
 
 struct ResourceViewDesc {
@@ -264,6 +246,8 @@ public:
     ResourceView(const ResourceViewDesc& desc, const Buffer* buffer);
     ResourceView(const ResourceViewDesc& desc, const Texture* texture);
 
+    const ResourceViewDesc& desc() const { return m_desc; }
+
     ResourceViewType type() const { return m_desc.type; }
 
     const Resource* resource() const { return m_resource; }
@@ -277,14 +261,9 @@ public:
 
 private:
     ResourceViewDesc m_desc;
-
     const Resource* m_resource{nullptr};
-
     Slang::ComPtr<gfx::IResourceView> m_gfx_resource_view;
 };
-
-using MipLevel = uint32_t;
-using ArraySlice = uint32_t;
 
 class KALI_API Resource : public Object {
     KALI_OBJECT(Resource)
@@ -314,7 +293,6 @@ public:
     /// Get a unordered access view for the entire resource.
     virtual ref<ResourceView> get_uav() const = 0;
 
-    virtual DeviceAddress get_device_address() const = 0;
     virtual gfx::IResource* get_gfx_resource() const = 0;
 
     /// Returns the native API handle:
@@ -351,27 +329,6 @@ struct BufferDesc {
     MemoryType memory_type{MemoryType::device_local};
 
     std::string debug_name;
-
-#if 0
-    static BufferDesc create() { return {}; }
-    static BufferDesc create_raw(size_t size) { return {.size = size}; }
-    static BufferDesc create_typed(Format format, size_t element_count) { return {.size = size, .format = format}; };
-    static BufferDesc create_structured(size_t struct_size, size_t struct_count)
-    {
-        return {.size = size, .struct_size = struct_size};
-    }
-    template<typename T>
-    // static BufferDesc create_structured()
-#endif
-
-    // clang-format off
-    BufferDesc& set_desc(size_t size_) { size = size_; return *this; }
-    BufferDesc& set_struct_size(size_t struct_size_) { struct_size = struct_size_; return *this; }
-    BufferDesc& set_format(Format format_) { format = format_; return *this; }
-    // clang-format on
-
-    // bool shared
-    // existing handle
 };
 
 class KALI_API Buffer : public Resource {
@@ -392,7 +349,7 @@ public:
     size_t element_count() const;
 
     /// Map the whole buffer.
-    /// Only available for buffers created with MemoryType::upload or MemoryType::read_back.
+    /// Only available for buffers created with @c MemoryType::upload or @c MemoryType::read_back.
     void* map() const;
 
     template<typename T>
@@ -402,8 +359,14 @@ public:
     }
 
     /// Map a range of the buffer.
-    /// Only available for buffers created with MemoryType::upload or MemoryType::read_back.
+    /// Only available for buffers created with @c MemoryType::upload or @c MemoryType::read_back.
     void* map(DeviceOffset offset, DeviceSize size_in_bytes) const;
+
+    template<typename T>
+    T* map(size_t offset, size_t count) const
+    {
+        return reinterpret_cast<T*>(map(offset * sizeof(T), count * sizeof(T)));
+    }
 
     /// Unmap the buffer.
     void unmap() const;
@@ -411,14 +374,16 @@ public:
     /// Returns true if buffer is currently mapped.
     bool is_mapped() const { return m_mapped_ptr != nullptr; }
 
+    DeviceAddress device_address() const { return m_gfx_buffer->getDeviceAddress(); }
+
     /// Get a resource view. Views are cached and reused.
     ref<ResourceView> get_view(ResourceViewDesc desc) const;
 
     /// Get a shader resource view for a range of the buffer.
-    ref<ResourceView> get_srv(uint64_t first_element, uint64_t element_count = BufferRange::WHOLE) const;
+    ref<ResourceView> get_srv(uint64_t first_element, uint64_t element_count = BufferRange::ALL) const;
 
     /// Get a unordered access view for a range of the buffer.
-    ref<ResourceView> get_uav(uint64_t first_element, uint64_t element_count = BufferRange::WHOLE) const;
+    ref<ResourceView> get_uav(uint64_t first_element, uint64_t element_count = BufferRange::ALL) const;
 
     /// Get a shader resource view for the entire buffer.
     virtual ref<ResourceView> get_srv() const override;
@@ -426,7 +391,6 @@ public:
     /// Get a unordered access view for the entire buffer.
     virtual ref<ResourceView> get_uav() const override;
 
-    virtual DeviceAddress get_device_address() const override { return m_gfx_buffer->getDeviceAddress(); }
     virtual gfx::IResource* get_gfx_resource() const override { return m_gfx_buffer; }
     gfx::IBufferResource* get_gfx_buffer_resource() const { return m_gfx_buffer; }
 
@@ -464,16 +428,16 @@ struct TextureDesc {
     Format format{Format::unknown};
     /// Width in pixels.
     uint32_t width{0};
-    /// Height in pixels (1 for 1D textures).
-    uint32_t height{1};
-    /// Depth in pixels (1 for 1D/2D textures).
-    uint32_t depth{1};
-    /// Number of array slices (0 for non-array textures).
-    uint32_t array_size{0};
+    /// Height in pixels.
+    uint32_t height{0};
+    /// Depth in pixels.
+    uint32_t depth{0};
+    /// Number of array slices (1 for non-array textures).
+    uint32_t array_size{1};
     /// Number of mip levels (0 for auto-generated mips).
     uint32_t mip_count{0};
-    /// Number of samples per pixel (0 for non-multisampled textures).
-    uint32_t sample_count{0};
+    /// Number of samples per pixel (1 for non-multisampled textures).
+    uint32_t sample_count{1};
     /// Quality level for multisampled textures.
     uint32_t quality{0};
 
@@ -494,31 +458,60 @@ public:
 
     const TextureDesc& desc() const { return m_desc; }
 
-    uint32_t get_width(MipLevel mip_level = 0) const
-    {
-        KALI_UNUSED(mip_level);
-        return 0;
-    }
-    uint32_t get_height(MipLevel mip_level = 0) const
-    {
-        KALI_UNUSED(mip_level);
-        return 0;
-    }
-    uint32_t get_depth(MipLevel mip_level = 0) const
-    {
-        KALI_UNUSED(mip_level);
-        return 0;
-    }
+    Format format() const { return m_desc.format; }
+    uint32_t width() const { return m_desc.width; }
+    uint32_t height() const { return m_desc.height; }
+    uint32_t depth() const { return m_desc.depth; }
 
-    uint32_t array_size() const { return 1; }
-    uint32_t mip_count() const { return 1; }
+    uint32_t array_size() const { return m_desc.array_size; }
+    uint32_t mip_count() const { return m_desc.mip_count; }
     uint32_t subresource_count() const
     {
         return array_size() * mip_count() * (type() == ResourceType::texture_cube ? 6 : 1);
     }
 
+    uint32_t get_subresource_index(uint32_t mip_level, uint32_t array_slice) const
+    {
+        return mip_level + array_slice * mip_count();
+    }
+
+    uint32_t get_subresource_array_slice(uint32_t subresource) const { return subresource / mip_count(); }
+
+    uint32_t get_subresource_mip_level(uint32_t subresource) const { return subresource % mip_count(); }
+
+    uint32_t get_mip_width(uint32_t mip_level = 0) const
+    {
+        return (mip_level == 0) || (mip_level < mip_count()) ? std::max(1U, width() >> mip_level) : 0;
+    }
+
+    uint32_t get_mip_height(uint32_t mip_level = 0) const
+    {
+        return (mip_level == 0) || (mip_level < mip_count()) ? std::max(1U, height() >> mip_level) : 0;
+    }
+
+    uint32_t get_mip_depth(uint32_t mip_level = 0) const
+    {
+        return (mip_level == 0) || (mip_level < mip_count()) ? std::max(1U, depth() >> mip_level) : 0;
+    }
+
     /// Get a resource view. Views are cached and reused.
-    ref<ResourceView> get_view(const ResourceViewDesc& desc) const;
+    ref<ResourceView> get_view(ResourceViewDesc desc) const;
+
+    ref<ResourceView> get_srv(
+        uint32_t mip_level,
+        uint32_t mip_count = SubresourceRange::ALL,
+        uint32_t base_array_layer = 0,
+        uint32_t layer_count = SubresourceRange::ALL
+    ) const;
+
+    ref<ResourceView>
+    get_uav(uint32_t mip_level, uint32_t base_array_layer = 0, uint32_t layer_count = SubresourceRange::ALL) const;
+
+    ref<ResourceView>
+    get_dsv(uint32_t mip_level, uint32_t base_array_layer = 0, uint32_t layer_count = SubresourceRange::ALL) const;
+
+    ref<ResourceView>
+    get_rtv(uint32_t mip_level, uint32_t base_array_layer = 0, uint32_t layer_count = SubresourceRange::ALL) const;
 
     /// Get a shader resource view for the entire texture.
     virtual ref<ResourceView> get_srv() const override;
@@ -526,7 +519,6 @@ public:
     /// Get a unordered access view for the entire texture.
     virtual ref<ResourceView> get_uav() const override;
 
-    virtual DeviceAddress get_device_address() const override { return 0; }
     virtual gfx::IResource* get_gfx_resource() const override { return m_gfx_texture; }
     gfx::ITextureResource* get_gfx_texture_resource() const { return m_gfx_texture; }
 

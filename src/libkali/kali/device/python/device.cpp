@@ -126,7 +126,12 @@ KALI_PY_EXPORT(device_device)
            uint32_t height,
            uint32_t depth,
            uint32_t array_size,
-           uint32_t mip_count)
+           uint32_t mip_count,
+           uint32_t sample_count,
+           uint32_t quality,
+           ResourceUsage usage,
+           MemoryType memory_type,
+           std::string debug_name)
         {
             return self->create_texture(TextureDesc{
                 .type = type,
@@ -136,15 +141,24 @@ KALI_PY_EXPORT(device_device)
                 .depth = depth,
                 .array_size = array_size,
                 .mip_count = mip_count,
-            });
+                .sample_count = sample_count,
+                .quality = quality,
+                .usage = usage,
+                .memory_type = memory_type,
+                .debug_name = std::move(debug_name)});
         },
         "type"_a = TextureType::unknown,
         "format"_a = Format::unknown,
-        "width"_a = 1,
-        "height"_a = 1,
-        "depth"_a = 1,
-        "array_size"_a = 0,
-        "mip_count"_a = 0
+        "width"_a = 0,
+        "height"_a = 0,
+        "depth"_a = 0,
+        "array_size"_a = 1,
+        "mip_count"_a = 0,
+        "sample_count"_a = 1,
+        "quality"_a = 0,
+        "usage"_a = ResourceUsage::none,
+        "memory_type"_a = MemoryType::device_local,
+        "debug_name"_a = ""
     );
     device.def("create_sampler", &Device::create_sampler, "desc"_a);
     device.def(

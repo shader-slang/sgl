@@ -385,11 +385,15 @@ void CommandStream::upload_texture_subresource_data(
         sr_range.layerCount = 1;
         sr_range.mipLevelCount = 1;
         if (!copy_region) {
-            gfx_size.width
-                = align_to(format_info.blockWidth, narrow_cast<gfx::GfxCount>(texture->get_width(sr_range.mipLevel)));
-            gfx_size.height
-                = align_to(format_info.blockHeight, narrow_cast<gfx::GfxCount>(texture->get_height(sr_range.mipLevel)));
-            gfx_size.depth = narrow_cast<gfx::GfxCount>(texture->get_depth(sr_range.mipLevel));
+            gfx_size.width = align_to(
+                format_info.blockWidth,
+                narrow_cast<gfx::GfxCount>(texture->get_mip_width(sr_range.mipLevel))
+            );
+            gfx_size.height = align_to(
+                format_info.blockHeight,
+                narrow_cast<gfx::GfxCount>(texture->get_mip_height(sr_range.mipLevel))
+            );
+            gfx_size.depth = narrow_cast<gfx::GfxCount>(texture->get_mip_depth(sr_range.mipLevel));
         }
         gfx::ITextureResource::SubresourceData sr_data = {};
         sr_data.data = data_ptr;

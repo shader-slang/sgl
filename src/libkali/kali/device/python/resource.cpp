@@ -25,8 +25,7 @@ inline std::optional<nb::dlpack::dtype> resource_format_to_dtype(Format format)
     if (channel_bit_count != 8 && channel_bit_count != 16 && channel_bit_count != 32 && channel_bit_count != 64)
         return {};
 
-    switch (info.type)
-    {
+    switch (info.type) {
     case FormatType::float_:
         return nb::dlpack::dtype{(uint8_t)nb::dlpack::dtype_code::Float, (uint8_t)channel_bit_count, 1};
     case FormatType::uint:
@@ -48,26 +47,18 @@ inline nb::ndarray<nb::numpy> buffer_to_numpy(Buffer* self)
 
     nb::capsule owner(cpu_data, [](void* p) noexcept { delete[] reinterpret_cast<uint8_t*>(p); });
 
-    if (auto dtype = resource_format_to_dtype(self->format()))
-    {
+    if (auto dtype = resource_format_to_dtype(self->format())) {
         uint32_t channel_count = get_format_info(self->format()).channel_count;
-        if (channel_count == 1)
-        {
+        if (channel_count == 1) {
             size_t shape[1] = {self->element_count()};
             return nb::ndarray<nb::numpy>(cpu_data, 1, shape, owner, nullptr, *dtype, nb::device::cpu::value);
-        }
-        else
-        {
+        } else {
             size_t shape[2] = {self->element_count(), channel_count};
             return nb::ndarray<nb::numpy>(cpu_data, 2, shape, owner, nullptr, *dtype, nb::device::cpu::value);
         }
-    }
-    else
-    {
+    } else {
         size_t shape[1] = {buffer_size};
-        return nb::ndarray<nb::numpy>(
-            cpu_data, 1, shape, owner, nullptr, nb::dtype<uint8_t>(), nb::device::cpu::value
-        );
+        return nb::ndarray<nb::numpy>(cpu_data, 1, shape, owner, nullptr, nb::dtype<uint8_t>(), nb::device::cpu::value);
     }
 }
 
@@ -80,6 +71,97 @@ inline void buffer_from_numpy(Buffer* self, nb::ndarray<nb::numpy> data)
     KALI_CHECK(data_size <= buffer_size, "numpy array is larger than the buffer ({} > {})", data_size, buffer_size);
 
     self->device()->command_stream()->upload_buffer_data(self, 0, data_size, data.data());
+}
+
+/**
+ * Python binding wrapper for returning the content of a texture as a numpy array.
+ */
+inline nb::ndarray<nb::numpy> texture_to_numpy(Texture* self, uint32_t mip_level, uint32_t array_slice)
+{
+    KALI_CHECK(
+        mip_level < self->mip_count(),
+        "'mip_level' ({}) is out of bounds. Only {} level(s) available.",
+        mip_level,
+        self->mip_count()
+    );
+    KALI_CHECK(
+        array_slice < self->array_size(),
+        "'array_slice' ({}) is out of bounds. Only {} slice(s) available.",
+        array_slice,
+        self->array_size()
+    );
+
+    // Get image dimensions.
+    uint32_t width = self->get_mip_width(mip_level);
+    uint32_t height = self->get_mip_height(mip_level);
+    uint32_t depth = self->get_mip_depth(mip_level);
+
+    uint32_t subresource = self->get_subresource_index(array_slice, mip_level);
+    // Texture::SubresourceLayout layout = self.getSubresourceLayout(subresource);
+
+    // size_t subresourceSize = layout.getTotalByteSize();
+    // void* cpuData = new uint8_t[subresourceSize];
+    // self.getSubresourceBlob(subresource, cpuData, subresourceSize);
+
+    // pybind11::capsule owner(cpuData, [](void* p) noexcept { delete[] reinterpret_cast<uint8_t*>(p); });
+
+    // if (auto dtype = resourceFormatToDtype(self.getFormat())) {
+    //     uint32_t channelCount = getFormatChannelCount(self.getFormat());
+    //     std::vector<pybind11::size_t> shape;
+    //     if (depth > 1)
+    //         shape.push_back(depth);
+    //     if (height > 1)
+    //         shape.push_back(height);
+    //     shape.push_back(width);
+    //     if (channelCount > 1)
+    //         shape.push_back(channelCount);
+    //     return pybind11::ndarray<
+    //         pybind11::numpy>(cpuData, shape.size(), shape.data(), owner, nullptr, *dtype,
+    //         pybind11::device::cpu::value);
+    // } else {
+    //     pybind11::size_t shape[1] = {subresourceSize};
+    //     return pybind11::ndarray<pybind11::numpy>(
+    //         cpuData,
+    //         1,
+    //         shape,
+    //         owner,
+    //         nullptr,
+    //         pybind11::dtype<uint8_t>(),
+    //         pybind11::device::cpu::value
+    //     );
+    // }
+    return {};
+}
+
+inline void texture_from_numpy(Texture* self, nb::ndarray<nb::numpy> data, uint32_t mip_level, uint32_t array_slice)
+{
+    KALI_CHECK(is_ndarray_contiguous(data), "numpy array is not contiguous");
+    KALI_CHECK(
+        mip_level < self->mip_count(),
+        "'mip_level' ({}) is out of bounds. Only {} level(s) available.",
+        mip_level,
+        self->mip_count()
+    );
+    KALI_CHECK(
+        array_slice < self->array_size(),
+        "'array_slice' ({}) is out of bounds. Only {} slice(s) available.",
+        array_slice,
+        self->array_size()
+    );
+
+    // uint32_t subresource = self.getSubresourceIndex(array_slice, mip_level);
+    // Texture::SubresourceLayout layout = self.getSubresourceLayout(subresource);
+
+    // size_t subresourceSize = layout.getTotalByteSize();
+    // size_t dataSize = getNdarrayByteSize(data);
+    // FALCOR_CHECK(
+    //     dataSize == subresourceSize,
+    //     "numpy array is doesn't match the subresource size ({} != {})",
+    //     dataSize,
+    //     subresourceSize
+    // );
+
+    // self.setSubresourceBlob(subresource, data.data(), dataSize);
 }
 
 } // namespace kali
@@ -97,7 +179,13 @@ KALI_PY_EXPORT(device_resource)
 
     nb::kali_enum<MemoryType>(m, "MemoryType");
 
-    nb::class_<Resource, Object>(m, "Resource").def("device_address", &Resource::get_device_address);
+    nb::class_<Resource, Object>(m, "Resource").def("get_srv", &Resource::get_srv).def("get_uav", &Resource::get_uav);
+
+    nb::kali_enum<ResourceViewType>(m, "ResourceViewType");
+
+    nb::class_<ResourceView, Object>(m, "ResourceView")
+        .def_prop_ro("type", &ResourceView::type)
+        .def_prop_ro("resource", &ResourceView::resource);
 
     nb::class_<BufferDesc>(m, "BufferDesc")
         .def_rw("size", &BufferDesc::size)
@@ -109,62 +197,88 @@ KALI_PY_EXPORT(device_resource)
         .def_rw("debug_name", &BufferDesc::debug_name);
 
     nb::class_<Buffer, Resource>(m, "Buffer")
-        .def(
-            "__init__",
-            [](Buffer* self,
-               ref<Device> device,
-               size_t size,
-               size_t struct_size,
-               Format format,
-               ResourceState initial_state,
-               ResourceUsage usage,
-               MemoryType memory_type,
-               std::string debug_name)
-            {
-                new (self) Buffer(
-                    std::move(device),
-                    BufferDesc{
-                        .size = size,
-                        .struct_size = struct_size,
-                        .format = format,
-                        .initial_state = initial_state,
-                        .usage = usage,
-                        .memory_type = memory_type,
-                        .debug_name = std::move(debug_name),
-                    },
-                    nullptr
-                );
-            },
-            "device"_a,
-            "size"_a = 0,
-            "struct_size"_a = 0,
-            "format"_a = Format::unknown,
-            "initial_state"_a = ResourceState::undefined,
-            "usage"_a = ResourceUsage::none,
-            "memory_type"_a = MemoryType::device_local,
-            "debug_name"_a = ""
-        )
         .def_prop_ro("desc", &Buffer::desc)
         .def_prop_ro("size", &Buffer::size)
         .def_prop_ro("struct_size", &Buffer::struct_size)
         .def_prop_ro("format", &Buffer::format)
+        .def_prop_ro("device_address", &Buffer::device_address)
+        .def(
+            "get_srv",
+            nb::overload_cast<uint64_t, uint64_t>(&Buffer::get_srv, nb::const_),
+            "first_element"_a = 0,
+            "element_count"_a = BufferRange::ALL
+        )
+        .def(
+            "get_uav",
+            nb::overload_cast<uint64_t, uint64_t>(&Buffer::get_uav, nb::const_),
+            "first_element"_a = 0,
+            "element_count"_a = BufferRange::ALL
+        )
         .def("to_numpy", &buffer_to_numpy)
-        .def("from_numpy", &buffer_from_numpy);
+        .def("from_numpy", &buffer_from_numpy, "data"_a);
 
     nb::kali_enum<TextureType>(m, "TextureType");
 
     nb::class_<TextureDesc>(m, "TextureDesc")
         .def_rw("type", &TextureDesc::type)
+        .def_rw("format", &TextureDesc::format)
         .def_rw("width", &TextureDesc::width)
         .def_rw("height", &TextureDesc::height)
         .def_rw("depth", &TextureDesc::depth)
         .def_rw("array_size", &TextureDesc::array_size)
         .def_rw("mip_count", &TextureDesc::mip_count)
-        .def_rw("format", &TextureDesc::format)
+        .def_rw("sample_count", &TextureDesc::sample_count)
+        .def_rw("quality", &TextureDesc::quality)
         .def_rw("initial_state", &TextureDesc::initial_state)
         .def_rw("usage", &TextureDesc::usage)
         .def_rw("memory_type", &TextureDesc::memory_type)
         .def_rw("debug_name", &TextureDesc::debug_name);
 
-    nb::class_<Texture, Resource>(m, "Texture");
+    nb::class_<Texture, Resource>(m, "Texture")
+        .def_prop_ro("desc", &Texture::desc)
+        .def_prop_ro("type", &Texture::type)
+        .def_prop_ro("format", &Texture::format)
+        .def_prop_ro("width", &Texture::width)
+        .def_prop_ro("height", &Texture::height)
+        .def_prop_ro("depth", &Texture::depth)
+        .def_prop_ro("array_size", &Texture::array_size)
+        .def_prop_ro("mip_count", &Texture::mip_count)
+        .def_prop_ro("subresource_count", &Texture::subresource_count)
+        .def("get_subresource_index", &Texture::get_subresource_index, "array_slice"_a, "mip_level"_a = 0)
+        .def("get_subresource_array_slice", &Texture::get_subresource_array_slice, "subresource"_a)
+        .def("get_subresource_mip_level", &Texture::get_subresource_mip_level, "subresource"_a)
+        .def("get_mip_width", &Texture::get_mip_width, "mip_level"_a = 0)
+        .def("get_mip_height", &Texture::get_mip_height, "mip_level"_a = 0)
+        .def("get_mip_depth", &Texture::get_mip_depth, "mip_level"_a = 0)
+        .def(
+            "get_srv",
+            nb::overload_cast<uint32_t, uint32_t, uint32_t, uint32_t>(&Texture::get_srv, nb::const_),
+            "mip_level"_a = 0,
+            "mip_count"_a = SubresourceRange::ALL,
+            "base_array_layer"_a = 0,
+            "layer_count"_a = SubresourceRange::ALL
+        )
+        .def(
+            "get_uav",
+            nb::overload_cast<uint32_t, uint32_t, uint32_t>(&Texture::get_uav, nb::const_),
+            "mip_level"_a = 0,
+            "base_array_layer"_a = 0,
+            "layer_count"_a = SubresourceRange::ALL
+        )
+        .def(
+            "get_dsv",
+            &Texture::get_dsv,
+            "mip_level"_a = 0,
+            "base_array_layer"_a = 0,
+            "layer_count"_a = SubresourceRange::ALL
+        )
+        .def(
+            "get_rtv",
+            &Texture::get_rtv,
+            "mip_level"_a = 0,
+            "base_array_layer"_a = 0,
+            "layer_count"_a = SubresourceRange::ALL
+        )
+        .def("to_numpy", &texture_to_numpy, "mip_level"_a = 0, "array_slice"_a = 0)
+        .def("from_numpy", &texture_from_numpy, "data"_a, "mip_level"_a = 0, "array_slice"_a = 0);
 }

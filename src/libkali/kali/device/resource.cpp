@@ -6,6 +6,8 @@
 
 #include "kali/core/error.h"
 
+#include <bit>
+
 namespace kali {
 
 inline gfx::ResourceStateSet get_gfx_allowed_states(ResourceUsage usage)
@@ -141,6 +143,13 @@ ResourceView::ResourceView(const ResourceViewDesc& desc, const Texture* texture)
     gfx::IResourceView::Desc gfx_desc{
         .type = static_cast<gfx::IResourceView::Type>(m_desc.type),
         .format = static_cast<gfx::Format>(m_desc.format),
+        .subresourceRange{
+            .aspectMask = static_cast<gfx::TextureAspect>(m_desc.subresource_range.texture_aspect),
+            .mipLevel = static_cast<gfx::GfxIndex>(m_desc.subresource_range.mip_level),
+            .mipLevelCount = static_cast<gfx::GfxIndex>(m_desc.subresource_range.mip_count),
+            .baseArrayLayer = static_cast<gfx::GfxIndex>(m_desc.subresource_range.base_array_layer),
+            .layerCount = static_cast<gfx::GfxIndex>(m_desc.subresource_range.layer_count),
+        },
     };
     SLANG_CALL(texture->m_device->get_gfx_device()
                    ->createTextureView(texture->get_gfx_texture_resource(), gfx_desc, m_gfx_resource_view.writeRef()));
@@ -248,12 +257,12 @@ ref<ResourceView> Buffer::get_view(ResourceViewDesc desc) const
     size_t element_count = this->element_count();
     KALI_CHECK(desc.buffer_range.first_element < element_count, "'first_element' out of range");
     KALI_CHECK(
-        desc.buffer_range.element_count == BufferRange::WHOLE
-            || desc.buffer_range.first_element + desc.buffer_range.element_count <= element_count,
+        (desc.buffer_range.element_count == BufferRange::ALL)
+            || (desc.buffer_range.first_element + desc.buffer_range.element_count <= element_count),
         "'element_count' out of range"
     );
 
-    if (desc.buffer_range.element_count == BufferRange::WHOLE) {
+    if (desc.buffer_range.element_count == BufferRange::ALL) {
         desc.buffer_range.element_count = element_count - desc.buffer_range.first_element;
     }
 
@@ -267,24 +276,22 @@ ref<ResourceView> Buffer::get_view(ResourceViewDesc desc) const
 
 ref<ResourceView> Buffer::get_srv(uint64_t first_element, uint64_t element_count) const
 {
-    ResourceViewDesc desc{
+    return get_view({
         .type = ResourceViewType::shader_resource,
         .format = m_desc.format,
         .buffer_range{.first_element = first_element, .element_count = element_count},
         .buffer_element_size = m_desc.struct_size,
-    };
-    return get_view(desc);
+    });
 }
 
 ref<ResourceView> Buffer::get_uav(uint64_t first_element, uint64_t element_count) const
 {
-    ResourceViewDesc desc{
+    return get_view({
         .type = ResourceViewType::unordered_access,
         .format = m_desc.format,
         .buffer_range{.first_element = first_element, .element_count = element_count},
         .buffer_element_size = m_desc.struct_size,
-    };
-    return get_view(desc);
+    });
 }
 
 ref<ResourceView> Buffer::get_srv() const
@@ -301,21 +308,50 @@ ref<ResourceView> Buffer::get_uav() const
 // Texture
 // ----------------------------------------------------------------------------
 
-static void check_desc(const TextureDesc& desc)
+inline void process_texture_desc(TextureDesc& desc)
 {
-    KALI_ASSERT(desc.width > 0);
-    KALI_ASSERT(desc.height > 0);
-    KALI_ASSERT(desc.depth > 0);
-    KALI_ASSERT(desc.mip_count > 0);
-    // KALI_ASSERT(desc.array_size > 0);
-    KALI_ASSERT(desc.format != Format::unknown);
+    KALI_CHECK(desc.format != Format::unknown, "Invalid texture format.");
+
+    // Try to infer texture type from dimensions.
+    if (desc.type == TextureType::unknown) {
+        if (desc.width > 0 && desc.height == 0 && desc.depth == 0) {
+            desc.type = TextureType::texture_1d;
+        } else if (desc.width > 0 && desc.height > 0 && desc.depth == 0) {
+            desc.type = TextureType::texture_2d;
+        } else if (desc.width > 0 && desc.height > 0 && desc.depth > 0) {
+            desc.type = TextureType::texture_3d;
+        } else {
+            KALI_THROW("Failed to infer texture type from dimensions.");
+        }
+    } else {
+        switch (desc.type) {
+        case TextureType::texture_1d:
+            KALI_CHECK(desc.width > 0 && desc.height == 0 && desc.depth == 0, "Invalid dimensions for 1D texture.");
+            break;
+        case TextureType::texture_2d:
+            KALI_CHECK(desc.width > 0 && desc.height > 0 && desc.depth == 0, "Invalid dimensions for 2D texture.");
+            break;
+        case TextureType::texture_3d:
+            KALI_CHECK(desc.width > 0 && desc.height > 0 && desc.depth > 0, "Invalid dimensions for 3D texture.");
+            break;
+        case TextureType::texture_cube:
+            KALI_CHECK(desc.width > 0 && desc.height > 0 && desc.depth == 0, "Invalid dimensions for cube texture.");
+            break;
+        }
+    }
+
+    if (desc.mip_count == 0) {
+        desc.mip_count = std::bit_width(std::max({desc.width, desc.height, desc.depth}));
+    }
+    KALI_CHECK(desc.array_size >= 1, "Invalid array size.");
+    KALI_CHECK(desc.sample_count >= 1, "Invalid sample count.");
 }
 
 Texture::Texture(ref<Device> device, TextureDesc desc, const void* init_data)
     : Resource(std::move(device), ResourceType(desc.type))
     , m_desc(std::move(desc))
 {
-    check_desc(m_desc);
+    process_texture_desc(m_desc);
 
     gfx::ITextureResource::Desc gfx_desc{};
     gfx_desc.type = static_cast<gfx::IResource::Type>(m_desc.type);
@@ -345,13 +381,34 @@ Texture::Texture(ref<Device> device, TextureDesc desc, gfx::ITextureResource* re
     : Resource(std::move(device), ResourceType(desc.type))
     , m_desc(std::move(desc))
 {
-    check_desc(m_desc);
+    process_texture_desc(m_desc);
 
     m_gfx_texture = resource;
 }
 
-ref<ResourceView> Texture::get_view(const ResourceViewDesc& desc) const
+ref<ResourceView> Texture::get_view(ResourceViewDesc desc) const
 {
+    uint32_t mip_count = this->mip_count();
+    KALI_CHECK(desc.subresource_range.mip_level < mip_count, "'mip_level' out of range");
+    KALI_CHECK(
+        desc.subresource_range.mip_count == SubresourceRange::ALL
+            || desc.subresource_range.mip_level + desc.subresource_range.mip_count <= mip_count,
+        "'mip_count' out of range"
+    );
+    if (desc.subresource_range.mip_count == SubresourceRange::ALL) {
+        desc.subresource_range.mip_count = mip_count - desc.subresource_range.mip_level;
+    }
+    uint32_t array_size = this->array_size();
+    KALI_CHECK(desc.subresource_range.base_array_layer < array_size, "'base_array_layer' out of range");
+    KALI_CHECK(
+        (desc.subresource_range.layer_count == SubresourceRange::ALL)
+            || (desc.subresource_range.base_array_layer + desc.subresource_range.layer_count <= array_size),
+        "'layer_count' out of range"
+    );
+    if (desc.subresource_range.layer_count == SubresourceRange::ALL) {
+        desc.subresource_range.layer_count = array_size - desc.subresource_range.base_array_layer;
+    }
+
     auto it = m_views.find(desc);
     if (it != m_views.end())
         return it->second;
@@ -360,14 +417,75 @@ ref<ResourceView> Texture::get_view(const ResourceViewDesc& desc) const
     return view;
 }
 
+ref<ResourceView>
+Texture::get_srv(uint32_t mip_level, uint32_t mip_count, uint32_t base_array_layer, uint32_t layer_count) const
+{
+    return get_view({
+        .type = ResourceViewType::shader_resource,
+        .format = m_desc.format,
+        .subresource_range = {
+            .texture_aspect = TextureAspect::color,
+            .mip_level = mip_level,
+            .mip_count = mip_count,
+            .base_array_layer = base_array_layer,
+            .layer_count = layer_count,
+        },
+    });
+}
+
+ref<ResourceView> Texture::get_uav(uint32_t mip_level, uint32_t base_array_layer, uint32_t layer_count) const
+{
+    return get_view({
+        .type = ResourceViewType::unordered_access,
+        .format = m_desc.format,
+        .subresource_range = {
+            .texture_aspect = TextureAspect::color,
+            .mip_level = mip_level,
+            .mip_count = 1,
+            .base_array_layer = base_array_layer,
+            .layer_count = layer_count,
+        },
+    });
+}
+
+ref<ResourceView> Texture::get_dsv(uint32_t mip_level, uint32_t base_array_layer, uint32_t layer_count) const
+{
+    return get_view({
+        .type = ResourceViewType::depth_stencil,
+        .format = m_desc.format,
+        .subresource_range = {
+            .texture_aspect = TextureAspect::depth_stencil,
+            .mip_level = mip_level,
+            .mip_count = 1,
+            .base_array_layer = base_array_layer,
+            .layer_count = layer_count,
+        },
+    });
+}
+
+ref<ResourceView> Texture::get_rtv(uint32_t mip_level, uint32_t base_array_layer, uint32_t layer_count) const
+{
+    return get_view({
+        .type = ResourceViewType::render_target,
+        .format = m_desc.format,
+        .subresource_range = {
+            .texture_aspect = TextureAspect::color,
+            .mip_level = mip_level,
+            .mip_count = 1,
+            .base_array_layer = base_array_layer,
+            .layer_count = layer_count,
+        },
+    });
+}
+
 ref<ResourceView> Texture::get_srv() const
 {
-    return {};
+    return get_srv(0);
 }
 
 ref<ResourceView> Texture::get_uav() const
 {
-    return {};
+    return get_uav(0);
 }
 
 } // namespace kali
