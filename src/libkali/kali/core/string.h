@@ -76,9 +76,33 @@ namespace kali::string {
  * Replace every newline with the specified indentation.
  * @param str Input string.
  * @param indentation Indentation string.
- * @return Return indented string.
+ * @return The indented string.
  */
 [[nodiscard]] KALI_API std::string indent(std::string_view str, std::string_view indentation = "    ");
+
+/**
+ * Convert a list of objects that have a to_string() method to a string. *
+ * @tparam T Type of objects.
+ * @param list List of objects.
+ * @return The list of objects as a string.
+ */
+template<typename T>
+inline std::string list_to_string(std::span<T> list, std::string_view indentation = "    ")
+{
+    if (list.empty())
+        return "[]";
+    std::string result = "[\n";
+    for (const auto& item : list) {
+        result += indentation;
+        if constexpr (std::is_pointer_v<T>)
+            result += string::indent(item->to_string());
+        else
+            result += string::indent(item.to_string());
+        result += ",\n";
+    }
+    result += "]";
+    return result;
+}
 
 /**
  * Remove leading whitespace.

@@ -10,8 +10,8 @@ target_sources(kali PRIVATE
     kali/kali.h
     kali/kali.cpp
 
-    kali/core/bitmap.h
     kali/core/bitmap.cpp
+    kali/core/bitmap.h
     kali/core/enum.h
     kali/core/error.cpp
     kali/core/error.h
@@ -42,6 +42,8 @@ target_sources(kali PRIVATE
     kali/core/stream.h
     kali/core/string.cpp
     kali/core/string.h
+    kali/core/struct.cpp
+    kali/core/struct.h
     kali/core/timer.cpp
     kali/core/timer.h
     kali/core/traits.h
@@ -287,6 +289,7 @@ nanobind_add_module(kali_ext NB_STATIC LTO
     kali/core/python/input.cpp
     kali/core/python/logger.cpp
     kali/core/python/object.cpp
+    kali/core/python/struct.cpp
     kali/core/python/timer.cpp
     kali/core/python/version.cpp
     kali/core/python/window.cpp

@@ -89,3 +89,13 @@ size_t is_ndarray_contiguous(const nb::ndarray<Args...>& array)
 #define KALI_PY_DECLARE(name) extern void kali_python_export_##name(nb::module_& m)
 #define KALI_PY_EXPORT(name) void kali_python_export_##name([[maybe_unused]] ::nb::module_& m)
 #define KALI_PY_IMPORT(name) kali_python_export_##name(m)
+
+
+#define def_enum_operators()                                                                                           \
+    def(nb::self == nb::self)                                                                                          \
+        .def(nb::self != nb::self)                                                                                     \
+        .def(nb::self | nb::self)                                                                                      \
+        .def(nb::self |= nb::self)                                                                                     \
+        .def(nb::self& nb::self)                                                                                       \
+        .def(nb::self &= nb::self)                                                                                     \
+        .def(~nb::self)\
