@@ -27,7 +27,8 @@ KALI_PY_EXPORT(core_struct)
         .def(nb::self != nb::self)
         .def("__repr__", &Struct::Field::to_string);
 
-    struct_.def(nb::init<bool, Struct::ByteOrder>(), "pack"_a = false, "byte_order"_a = Struct::ByteOrder::host)
+    struct_ //
+        .def(nb::init<bool, Struct::ByteOrder>(), "pack"_a = false, "byte_order"_a = Struct::ByteOrder::host)
         .def("append", nb::overload_cast<Struct::Field>(&Struct::append), "field"_a, nb::rv_policy::reference)
         .def(
             "append",
