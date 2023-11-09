@@ -8,21 +8,6 @@
 
 namespace kali {
 
-template<typename T>
-inline std::string vector_to_string(const std::vector<T>& vector)
-{
-    if (vector.empty())
-        return "[]";
-    std::string result = "[\n";
-    for (const auto& item : vector) {
-        result += "    " + string::indent(item->to_string());
-        result += ",\n";
-    }
-    result += "]";
-    return result;
-}
-
-
 std::string c_str_to_string(const char* str)
 {
     if (!str)
@@ -53,7 +38,7 @@ std::string TypeLayoutReflection::to_string() const
             ")",
             c_str_to_string(name()),
             kind(),
-            string::indent(vector_to_string(fields()))
+            string::indent(string::list_to_string(fields()))
         );
         break;
     case TypeReflection::Kind::resource:
@@ -104,7 +89,7 @@ std::string EntryPointLayout::to_string() const
         c_str_to_string(name_override()),
         stage(),
         compute_thread_group_size(),
-        string::indent(vector_to_string(parameters()))
+        string::indent(string::list_to_string(parameters()))
     );
 }
 
@@ -117,8 +102,8 @@ std::string ProgramLayout::to_string() const
         "    entry_points={}\n"
         ")",
         string::indent(globals_type_layout()->to_string()),
-        string::indent(vector_to_string(parameters())),
-        string::indent(vector_to_string(entry_points()))
+        string::indent(string::list_to_string(parameters())),
+        string::indent(string::list_to_string(entry_points()))
     );
 }
 

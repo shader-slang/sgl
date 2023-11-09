@@ -104,6 +104,12 @@ inline std::string list_to_string(std::span<T> list, std::string_view indentatio
     return result;
 }
 
+template<typename T>
+inline std::string list_to_string(const std::vector<T> list, std::string_view indentation = "    ")
+{
+    return list_to_string(std::span{list}, indentation);
+}
+
 /**
  * Remove leading whitespace.
  * @param str Input string.
