@@ -128,6 +128,9 @@ public:
         /// Inequality operator.
         bool operator!=(const Field& other) const { return !operator==(other); }
 
+        /// Compute hash from the field.
+        KALI_API friend size_t hash(const Field& field);
+
         std::string to_string() const;
     };
 
@@ -173,6 +176,9 @@ public:
 
     /// Inequality operator.
     bool operator!=(const Struct& other) const { return !operator==(other); }
+
+    /// Compute hash from the struct.
+    KALI_API friend size_t hash(const Struct& struct_);
 
     std::string to_string() const override;
 
