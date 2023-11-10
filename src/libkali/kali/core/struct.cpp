@@ -8,6 +8,8 @@
 #include "kali/math/float16.h"
 #include "kali/math/colorspace.h"
 
+#include <asmjit/asmjit.h>
+
 #include <bit>
 #include <limits>
 #include <unordered_map>
@@ -527,16 +529,16 @@ std::vector<Op> generate_code(const Struct& src_struct, const Struct& dst_struct
     return code;
 }
 
-/// Interface for conversion programs.
-struct Program {
-    virtual ~Program() = default;
-    virtual void execute(const void* src, void* dst, size_t count) const = 0;
-};
-
 /// Base class for compiling conversion programs.
 class Compiler {
 public:
-    using ConvertFunc = void (*)(const void* src, void* dst, size_t count);
+    /// Interface for conversion programs.
+    struct Program {
+        virtual ~Program() = default;
+        virtual void execute(const void* src, void* dst, size_t count) const = 0;
+    };
+
+    virtual ~Compiler() = default;
 
     const Program* compile(const Struct& src_struct, const Struct& dst_struct)
     {
@@ -548,7 +550,7 @@ public:
         return it2->second.get();
     }
 
-    virtual std::unique_ptr<Program> compile_program(const Struct& src_struct, const Struct& dst_struct) const = 0;
+    virtual std::unique_ptr<Program> compile_program(const Struct& src_struct, const Struct& dst_struct) = 0;
 
 private:
     std::unordered_map<
@@ -559,30 +561,30 @@ private:
         m_program_cache;
 };
 
-/// Conversion program for the virtual machine.
-struct VMProgram : public Program {
-    std::vector<Op> code;
-    size_t src_size;
-    size_t dst_size;
-
-    void execute(const void* src, void* dst, size_t count) const override
-    {
-        VM vm;
-        vm.src = static_cast<const uint8_t*>(src);
-        vm.dst = static_cast<uint8_t*>(dst);
-
-        for (size_t i = 0; i < count; ++i) {
-            vm.run(code);
-            vm.src += src_size;
-            vm.dst += dst_size;
-        }
-    }
-};
-
 /// Compiler for the virtual machine.
 class VMCompiler : public Compiler {
 public:
-    std::unique_ptr<Program> compile_program(const Struct& src_struct, const Struct& dst_struct) const override
+    /// Conversion program for the virtual machine.
+    struct VMProgram : public Program {
+        std::vector<Op> code;
+        size_t src_size;
+        size_t dst_size;
+
+        void execute(const void* src, void* dst, size_t count) const override
+        {
+            VM vm;
+            vm.src = static_cast<const uint8_t*>(src);
+            vm.dst = static_cast<uint8_t*>(dst);
+
+            for (size_t i = 0; i < count; ++i) {
+                vm.run(code);
+                vm.src += src_size;
+                vm.dst += dst_size;
+            }
+        }
+    };
+
+    std::unique_ptr<Program> compile_program(const Struct& src_struct, const Struct& dst_struct) override
     {
         auto program = std::make_unique<VMProgram>();
         program->code = generate_code(src_struct, dst_struct);
@@ -598,21 +600,45 @@ public:
     }
 };
 
-class JITCompiler : public Compiler {
+/// JIT compiler for x86.
+class X86Compiler : public Compiler {
 public:
-    JITCompiler() { }
+    using ConvertFunc = void (*)(const void* src, void* dst, size_t count);
 
-    std::unique_ptr<Program> compile_program(const Struct& src_struct, const Struct& dst_struct) const override
+    struct X86Program : public Program {
+        ConvertFunc func;
+        void execute(const void* src, void* dst, size_t count) const override { func(src, dst, count); }
+    };
+
+    std::unique_ptr<Program> compile_program(const Struct& src_struct, const Struct& dst_struct) override
     {
-        KALI_UNUSED(src_struct, dst_struct);
-        return {};
+        using namespace asmjit;
+
+        std::vector<Op> ops = generate_code(src_struct, dst_struct);
+
+        CodeHolder code;
+        code.init(m_runtime.environment(), m_runtime.cpuFeatures());
+        x86::Assembler a(&code);
+        a.ret();
+
+        ConvertFunc func;
+        Error err = m_runtime.add(&func, &code);
+        if (err) {
+            KALI_THROW("AsmJit failed: {}", DebugUtils::errorAsString(err));
+        }
+
+        auto program = std::make_unique<X86Program>();
+        program->func = func;
+        return program;
     }
 
-    static JITCompiler& get()
+    static X86Compiler& get()
     {
-        static JITCompiler instance;
+        static X86Compiler instance;
         return instance;
     }
+
+    asmjit::JitRuntime m_runtime;
 };
 
 StructConverter::StructConverter(ref<const Struct> src, ref<const Struct> dst)
@@ -632,9 +658,9 @@ void StructConverter::convert(const void* src, void* dst, size_t count) const
 #if 1
     Compiler& compiler = VMCompiler::get();
 #else
-    Compiler& compiler = JITCompiler::get();
+    Compiler& compiler = X86Compiler::get();
 #endif
-    const Program* program = compiler.compile(*m_src, *m_dst);
+    const Compiler::Program* program = compiler.compile(*m_src, *m_dst);
     KALI_CHECK(program, "Failed to compile conversion program.");
     program->execute(src, dst, count);
 }

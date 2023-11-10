@@ -245,6 +245,7 @@ target_link_libraries(kali
     PRIVATE
         git_version
         glfw stb tinyexr PNG::PNG JPEG::JPEG OpenEXR::OpenEXR
+        asmjit::asmjit
         $<$<BOOL:${KALI_HAS_D3D12}>:d3d12>
         $<$<BOOL:${KALI_HAS_AGILITY_SDK}>:agility-sdk>
         # $<$<BOOL:${KALI_HAS_AFTERMATH}>:aftermath>
