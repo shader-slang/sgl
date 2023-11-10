@@ -3,14 +3,22 @@
 #include "kali/core/format.h"
 #include "kali/core/maths.h"
 #include "kali/core/string.h"
+#include "kali/core/hash.h"
 
 #include "kali/math/float16.h"
 #include "kali/math/colorspace.h"
 
 #include <bit>
 #include <limits>
+#include <unordered_map>
+#include <memory>
 
 namespace kali {
+
+size_t hash(const Struct::Field& field)
+{
+    return hash(field.name, field.type, field.flags, field.size, field.offset, field.default_value);
+}
 
 std::string Struct::Field::to_string() const
 {
@@ -91,6 +99,14 @@ size_t Struct::alignment() const
     for (const auto& field : m_fields)
         alignment = std::max(alignment, field.size);
     return alignment;
+}
+
+size_t hash(const Struct& struct_)
+{
+    size_t hash = 0;
+    for (const auto& field : struct_.fields())
+        hash = hash_combine(hash, kali::hash(field));
+    return hash;
 }
 
 std::string Struct::to_string() const
@@ -209,122 +225,10 @@ namespace detail {
     }
 } // namespace detail
 
-struct Value {
-    Struct::Type type;
-    union {
-        /// Signed integer value (int8, int16, int32, int64).
-        int64_t i;
-        /// Unsigned integer value (uint8, uint16, uint32, uint64).
-        uint64_t u;
-        /// Single precision floating point value (float16, float32).
-        float s;
-        /// Double precision floating point value (float64).
-        double d;
-    };
-};
-
-/// Load a value from memory.
-inline Value load(const uint8_t* base, size_t offset, Struct::Type type, bool swap)
-{
-    Value value;
-    value.type = type;
-
-#define CASE(ctype, dst)                                                                                               \
-    {                                                                                                                  \
-        ctype v = *reinterpret_cast<const ctype*>(base + offset);                                                      \
-        if (swap) [[unlikely]]                                                                                         \
-            v = detail::byteswap(v);                                                                                   \
-        dst = v;                                                                                                       \
-        break;                                                                                                         \
-    }
-
-    switch (type) {
-    case Struct::Type::int8:
-        value.i = *reinterpret_cast<const int8_t*>(base + offset);
-        break;
-    case Struct::Type::int16:
-        CASE(int16_t, value.i)
-    case Struct::Type::int32:
-        CASE(int32_t, value.i)
-    case Struct::Type::int64:
-        CASE(int64_t, value.i)
-    case Struct::Type::uint8:
-        value.u = *reinterpret_cast<const uint8_t*>(base + offset);
-        break;
-    case Struct::Type::uint16:
-        CASE(uint16_t, value.u)
-    case Struct::Type::uint32:
-        CASE(uint32_t, value.u)
-    case Struct::Type::uint64:
-        CASE(uint64_t, value.u)
-    case Struct::Type::float16: {
-        uint16_t v = *reinterpret_cast<const uint16_t*>(base + offset);
-        if (swap) [[unlikely]]
-            v = detail::byteswap(v);
-        value.s = math::float16_to_float32(v);
-        break;
-    }
-    case Struct::Type::float32:
-        CASE(float, value.s)
-    case Struct::Type::float64:
-        CASE(double, value.d)
-    }
-
-#undef CASE
-
-    return value;
-}
-
-/// Save value to memory.
-inline void save(uint8_t* base, size_t offset, const Value& value, bool swap)
-{
-#define CASE(ctype, src)                                                                                               \
-    {                                                                                                                  \
-        ctype v = static_cast<ctype>(src);                                                                             \
-        if (swap) [[unlikely]]                                                                                         \
-            v = detail::byteswap(v);                                                                                   \
-        *reinterpret_cast<ctype*>(base + offset) = v;                                                                  \
-        break;                                                                                                         \
-    }
-
-    switch (value.type) {
-    case Struct::Type::int8:
-        *reinterpret_cast<int8_t*>(base + offset) = static_cast<int8_t>(value.i);
-        break;
-    case Struct::Type::int16:
-        CASE(int16_t, value.i)
-    case Struct::Type::int32:
-        CASE(int32_t, value.i)
-    case Struct::Type::int64:
-        CASE(int64_t, value.i)
-    case Struct::Type::uint8:
-        *reinterpret_cast<uint8_t*>(base + offset) = static_cast<uint8_t>(value.u);
-        break;
-    case Struct::Type::uint16:
-        CASE(uint16_t, value.u)
-    case Struct::Type::uint32:
-        CASE(uint32_t, value.u)
-    case Struct::Type::uint64:
-        CASE(uint64_t, value.u)
-    case Struct::Type::float16: {
-        uint16_t v = math::float32_to_float16(value.s);
-        if (swap) [[unlikely]]
-            v = detail::byteswap(v);
-        *reinterpret_cast<uint16_t*>(base + offset) = v;
-        break;
-    }
-    case Struct::Type::float32:
-        CASE(float, value.s)
-    case Struct::Type::float64:
-        CASE(double, value.d)
-    }
-
-#undef CASE
-}
 
 /// Op codes for conversion programs.
 struct Op {
-    enum class Type {
+    enum class Type : uint8_t {
         load_mem,
         load_imm,
         save_mem,
@@ -336,6 +240,7 @@ struct Op {
         clamp,
     };
     Type type;
+    uint8_t reg;
     union {
         struct {
             size_t offset;
@@ -366,13 +271,28 @@ struct Op {
 
 /// Virtual machine for running conversion programs.
 struct VM {
+    struct Value {
+        Struct::Type type;
+        union {
+            /// Signed integer value (int8, int16, int32, int64).
+            int64_t i;
+            /// Unsigned integer value (uint8, uint16, uint32, uint64).
+            uint64_t u;
+            /// Single precision floating point value (float16, float32).
+            float s;
+            /// Double precision floating point value (float64).
+            double d;
+        };
+    };
+
     const uint8_t* src;
     uint8_t* dst;
-    Value value;
+    Value registers[8];
 
-    void run(std::span<Op> code)
+    void run(std::span<const Op> code)
     {
         for (const Op& op : code) {
+            Value& value = registers[op.reg];
             switch (op.type) {
             case Op::Type::load_mem:
                 value = load(src, op.load_mem.offset, op.load_mem.type, op.load_mem.swap);
@@ -436,6 +356,105 @@ struct VM {
             }
         }
     }
+
+    /// Load a value from memory.
+    Value load(const uint8_t* base, size_t offset, Struct::Type type, bool swap)
+    {
+        Value value;
+        value.type = type;
+
+#define CASE(ctype, dst)                                                                                               \
+    {                                                                                                                  \
+        ctype v = *reinterpret_cast<const ctype*>(base + offset);                                                      \
+        if (swap) [[unlikely]]                                                                                         \
+            v = detail::byteswap(v);                                                                                   \
+        dst = v;                                                                                                       \
+        break;                                                                                                         \
+    }
+
+        switch (type) {
+        case Struct::Type::int8:
+            value.i = *reinterpret_cast<const int8_t*>(base + offset);
+            break;
+        case Struct::Type::int16:
+            CASE(int16_t, value.i)
+        case Struct::Type::int32:
+            CASE(int32_t, value.i)
+        case Struct::Type::int64:
+            CASE(int64_t, value.i)
+        case Struct::Type::uint8:
+            value.u = *reinterpret_cast<const uint8_t*>(base + offset);
+            break;
+        case Struct::Type::uint16:
+            CASE(uint16_t, value.u)
+        case Struct::Type::uint32:
+            CASE(uint32_t, value.u)
+        case Struct::Type::uint64:
+            CASE(uint64_t, value.u)
+        case Struct::Type::float16: {
+            uint16_t v = *reinterpret_cast<const uint16_t*>(base + offset);
+            if (swap) [[unlikely]]
+                v = detail::byteswap(v);
+            value.s = math::float16_to_float32(v);
+            break;
+        }
+        case Struct::Type::float32:
+            CASE(float, value.s)
+        case Struct::Type::float64:
+            CASE(double, value.d)
+        }
+
+#undef CASE
+
+        return value;
+    }
+
+    /// Save value to memory.
+    void save(uint8_t* base, size_t offset, const Value& value, bool swap)
+    {
+#define CASE(ctype, src)                                                                                               \
+    {                                                                                                                  \
+        ctype v = static_cast<ctype>(src);                                                                             \
+        if (swap) [[unlikely]]                                                                                         \
+            v = detail::byteswap(v);                                                                                   \
+        *reinterpret_cast<ctype*>(base + offset) = v;                                                                  \
+        break;                                                                                                         \
+    }
+
+        switch (value.type) {
+        case Struct::Type::int8:
+            *reinterpret_cast<int8_t*>(base + offset) = static_cast<int8_t>(value.i);
+            break;
+        case Struct::Type::int16:
+            CASE(int16_t, value.i)
+        case Struct::Type::int32:
+            CASE(int32_t, value.i)
+        case Struct::Type::int64:
+            CASE(int64_t, value.i)
+        case Struct::Type::uint8:
+            *reinterpret_cast<uint8_t*>(base + offset) = static_cast<uint8_t>(value.u);
+            break;
+        case Struct::Type::uint16:
+            CASE(uint16_t, value.u)
+        case Struct::Type::uint32:
+            CASE(uint32_t, value.u)
+        case Struct::Type::uint64:
+            CASE(uint64_t, value.u)
+        case Struct::Type::float16: {
+            uint16_t v = math::float32_to_float16(value.s);
+            if (swap) [[unlikely]]
+                v = detail::byteswap(v);
+            *reinterpret_cast<uint16_t*>(base + offset) = v;
+            break;
+        }
+        case Struct::Type::float32:
+            CASE(float, value.s)
+        case Struct::Type::float64:
+            CASE(double, value.d)
+        }
+
+#undef CASE
+    }
 };
 
 std::vector<Op> generate_code(const Struct& src_struct, const Struct& dst_struct)
@@ -451,7 +470,9 @@ std::vector<Op> generate_code(const Struct& src_struct, const Struct& dst_struct
             const auto& src_field = src_struct.field(dst_field.name);
 
             // Load value from source struct.
-            code.push_back({.type = Op::Type::load_mem, .load_mem = {src_field.offset, src_field.type, src_swap}});
+            code.push_back(
+                {.type = Op::Type::load_mem, .reg = 0, .load_mem = {src_field.offset, src_field.type, src_swap}}
+            );
 
             // Convert value if types don't match.
             Struct::Flags flag_mask = Struct::Flags::normalized | Struct::Flags::srgb;
@@ -460,40 +481,44 @@ std::vector<Op> generate_code(const Struct& src_struct, const Struct& dst_struct
                 const auto dst_range = Struct::type_range(dst_field.type);
 
                 // Convert to double.
-                code.push_back({.type = Op::Type::cast, .cast = {src_field.type, Struct::Type::float64}});
+                code.push_back({.type = Op::Type::cast, .reg = 0, .cast = {src_field.type, Struct::Type::float64}});
 
                 // Normalize source value.
                 if (Struct::is_integer(src_field.type) && is_set(src_field.flags, Struct::Flags::normalized))
-                    code.push_back({.type = Op::Type::multiply, .multiply = {1.0 / src_range.second}});
+                    code.push_back({.type = Op::Type::multiply, .reg = 0, .multiply = {1.0 / src_range.second}});
 
                 // Linearize source value.
                 if (is_set(src_field.flags, Struct::Flags::srgb))
-                    code.push_back({.type = Op::Type::srgb_to_linear});
+                    code.push_back({.type = Op::Type::srgb_to_linear, .reg = 0});
 
                 // De-linearize destination value.
                 if (is_set(dst_field.flags, Struct::Flags::srgb))
-                    code.push_back({.type = Op::Type::linear_to_srgb});
+                    code.push_back({.type = Op::Type::linear_to_srgb, .reg = 0});
 
                 // De-normalize destination value.
                 if (Struct::is_integer(dst_field.type) && is_set(dst_field.flags, Struct::Flags::normalized))
-                    code.push_back({.type = Op::Type::multiply, .multiply = {dst_range.second}});
+                    code.push_back({.type = Op::Type::multiply, .reg = 0, .multiply = {dst_range.second}});
 
                 // Round and clamp integers.
                 if (Struct::is_integer(dst_field.type)) {
-                    code.push_back({.type = Op::Type::round});
-                    code.push_back({.type = Op::Type::clamp, .clamp = {dst_range.first, dst_range.second}});
+                    code.push_back({.type = Op::Type::round, .reg = 0});
+                    code.push_back({.type = Op::Type::clamp, .reg = 0, .clamp = {dst_range.first, dst_range.second}});
                 }
 
-                code.push_back({.type = Op::Type::cast, .cast = {Struct::Type::float64, dst_field.type}});
+                code.push_back({.type = Op::Type::cast, .reg = 0, .cast = {Struct::Type::float64, dst_field.type}});
             }
 
             // Save value to source struct.
-            code.push_back({.type = Op::Type::save_mem, .save_mem = {dst_field.offset, dst_field.type, dst_swap}});
+            code.push_back(
+                {.type = Op::Type::save_mem, .reg = 0, .save_mem = {dst_field.offset, dst_field.type, dst_swap}}
+            );
         } else if (is_set(dst_field.flags, Struct::Flags::default_)) {
             // Set default value.
-            code.push_back({.type = Op::Type::load_imm, .load_imm = {dst_field.default_value}});
-            code.push_back({.type = Op::Type::cast, .cast = {Struct::Type::float64, dst_field.type}});
-            code.push_back({.type = Op::Type::save_mem, .save_mem = {dst_field.offset, dst_field.type, dst_swap}});
+            code.push_back({.type = Op::Type::load_imm, .reg = 0, .load_imm = {dst_field.default_value}});
+            code.push_back({.type = Op::Type::cast, .reg = 0, .cast = {Struct::Type::float64, dst_field.type}});
+            code.push_back(
+                {.type = Op::Type::save_mem, .reg = 0, .save_mem = {dst_field.offset, dst_field.type, dst_swap}}
+            );
         } else {
             KALI_THROW("Field \"{}\" not found in source struct.", dst_field.name);
         }
@@ -501,6 +526,94 @@ std::vector<Op> generate_code(const Struct& src_struct, const Struct& dst_struct
 
     return code;
 }
+
+/// Interface for conversion programs.
+struct Program {
+    virtual ~Program() = default;
+    virtual void execute(const void* src, void* dst, size_t count) const = 0;
+};
+
+/// Base class for compiling conversion programs.
+class Compiler {
+public:
+    using ConvertFunc = void (*)(const void* src, void* dst, size_t count);
+
+    const Program* compile(const Struct& src_struct, const Struct& dst_struct)
+    {
+        auto key = std::make_pair(src_struct, dst_struct);
+        auto it = m_program_cache.find(key);
+        if (it != m_program_cache.end())
+            return it->second.get();
+        auto [it2, inserted] = m_program_cache.emplace(key, compile_program(src_struct, dst_struct));
+        return it2->second.get();
+    }
+
+    virtual std::unique_ptr<Program> compile_program(const Struct& src_struct, const Struct& dst_struct) const = 0;
+
+private:
+    std::unordered_map<
+        std::pair<Struct, Struct>,
+        std::unique_ptr<Program>,
+        hasher<std::pair<Struct, Struct>>,
+        comparator<std::pair<Struct, Struct>>>
+        m_program_cache;
+};
+
+/// Conversion program for the virtual machine.
+struct VMProgram : public Program {
+    std::vector<Op> code;
+    size_t src_size;
+    size_t dst_size;
+
+    void execute(const void* src, void* dst, size_t count) const override
+    {
+        VM vm;
+        vm.src = static_cast<const uint8_t*>(src);
+        vm.dst = static_cast<uint8_t*>(dst);
+
+        for (size_t i = 0; i < count; ++i) {
+            vm.run(code);
+            vm.src += src_size;
+            vm.dst += dst_size;
+        }
+    }
+};
+
+/// Compiler for the virtual machine.
+class VMCompiler : public Compiler {
+public:
+    std::unique_ptr<Program> compile_program(const Struct& src_struct, const Struct& dst_struct) const override
+    {
+        auto program = std::make_unique<VMProgram>();
+        program->code = generate_code(src_struct, dst_struct);
+        program->src_size = src_struct.size();
+        program->dst_size = dst_struct.size();
+        return program;
+    }
+
+    static VMCompiler& get()
+    {
+        static VMCompiler instance;
+        return instance;
+    }
+};
+
+class JITCompiler : public Compiler {
+public:
+    JITCompiler() { }
+
+    std::unique_ptr<Program> compile_program(const Struct& src_struct, const Struct& dst_struct) const override
+    {
+        KALI_UNUSED(src_struct, dst_struct);
+        return {};
+    }
+
+    static JITCompiler& get()
+    {
+        static JITCompiler instance;
+        return instance;
+    }
+};
 
 StructConverter::StructConverter(ref<const Struct> src, ref<const Struct> dst)
     : m_src(std::move(src))
@@ -516,20 +629,14 @@ void StructConverter::convert(const void* src, void* dst, size_t count) const
         return;
     }
 
-    std::vector<Op> code = generate_code(*m_src, *m_dst);
-
-    VM vm;
-    vm.src = static_cast<const uint8_t*>(src);
-    vm.dst = static_cast<uint8_t*>(dst);
-
-    size_t src_size = m_src->size();
-    size_t dst_size = m_dst->size();
-
-    for (size_t i = 0; i < count; ++i) {
-        vm.run(code);
-        vm.src += src_size;
-        vm.dst += dst_size;
-    }
+#if 1
+    Compiler& compiler = VMCompiler::get();
+#else
+    Compiler& compiler = JITCompiler::get();
+#endif
+    const Program* program = compiler.compile(*m_src, *m_dst);
+    KALI_CHECK(program, "Failed to compile conversion program.");
+    program->execute(src, dst, count);
 }
 
 std::string StructConverter::to_string() const
