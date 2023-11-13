@@ -29,6 +29,30 @@
 #define KALI_GCC (KALI_COMPILER == KALI_COMPILER_GCC)
 
 // -------------------------------------------------------------------------------------------------
+// Architecture macros
+// -------------------------------------------------------------------------------------------------
+
+#define KALI_ARCH_X86_64 1
+#define KALI_ARCH_ARM64 2
+
+/**
+ * Determine the target architecture in use.
+ * http://sourceforge.net/p/predef/wiki/Architectures/
+ */
+#ifndef KALI_ARCH
+#if defined(_M_X64) || defined(__x86_64__)
+#define KALI_ARCH KALI_ARCH_X86_64
+#elif defined(_M_ARM64) || defined(__aarch64__)
+#define KALI_ARCH KALI_ARCH_ARM64
+#else
+#error "Unsupported target architecture"
+#endif
+#endif // KALI_ARCH
+
+#define KALI_X86_64 (KALI_ARCH == KALI_ARCH_X86_64)
+#define KALI_ARM64 (KALI_ARCH == KALI_ARCH_ARM64)
+
+// -------------------------------------------------------------------------------------------------
 // Platform macros
 // -------------------------------------------------------------------------------------------------
 

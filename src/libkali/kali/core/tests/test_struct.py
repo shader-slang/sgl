@@ -217,7 +217,7 @@ def test_roundtrip_normalization(param):
 
 
 @pytest.mark.parametrize("param", supported_types)
-def test08_roundtrip_normalization_int2int(param):
+def test_roundtrip_normalization_int2int(param):
     if Struct.is_float(param[1]):
         return
     s1_type = Struct.Type.int8 if Struct.is_signed(param[1]) else Struct.Type.uint8
