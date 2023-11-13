@@ -536,65 +536,33 @@ std::vector<Op> generate_code(const Struct& src_struct, const Struct& dst_struct
     return code;
 }
 
-/// Base class for compiling conversion programs.
-class Compiler {
-public:
-    /// Interface for conversion programs.
-    struct Program {
-        virtual ~Program() = default;
-        virtual void execute(const void* src, void* dst, size_t count) const = 0;
-    };
 
-    virtual ~Compiler() = default;
-
-    const Program* compile(const Struct& src_struct, const Struct& dst_struct)
-    {
-        auto key = std::make_pair(src_struct, dst_struct);
-        auto it = m_program_cache.find(key);
-        if (it != m_program_cache.end())
-            return it->second.get();
-        auto [it2, inserted] = m_program_cache.emplace(key, compile_program(src_struct, dst_struct));
-        return it2->second.get();
-    }
-
-    virtual std::unique_ptr<Program> compile_program(const Struct& src_struct, const Struct& dst_struct) = 0;
-
-    std::mutex& mutex() { return m_mutex; }
-
-private:
-    std::mutex m_mutex;
-    std::unordered_map<
-        std::pair<Struct, Struct>,
-        std::unique_ptr<Program>,
-        hasher<std::pair<Struct, Struct>>,
-        comparator<std::pair<Struct, Struct>>>
-        m_program_cache;
+/// Interface for conversion programs.
+struct Program {
+    virtual ~Program() = default;
+    virtual void execute(const void* src, void* dst, size_t count) const = 0;
 };
 
-/// Compiler for the virtual machine.
-class VMCompiler : public Compiler {
-public:
-    /// Conversion program for the virtual machine.
-    struct VMProgram : public Program {
-        std::vector<Op> code;
-        size_t src_size;
-        size_t dst_size;
+/// Conversion program for the virtual machine.
+struct VMProgram : public Program {
+    std::vector<Op> code;
+    size_t src_size;
+    size_t dst_size;
 
-        void execute(const void* src, void* dst, size_t count) const override
-        {
-            VM vm;
-            vm.src = static_cast<const uint8_t*>(src);
-            vm.dst = static_cast<uint8_t*>(dst);
+    void execute(const void* src, void* dst, size_t count) const override
+    {
+        VM vm;
+        vm.src = static_cast<const uint8_t*>(src);
+        vm.dst = static_cast<uint8_t*>(dst);
 
-            for (size_t i = 0; i < count; ++i) {
-                vm.run(code);
-                vm.src += src_size;
-                vm.dst += dst_size;
-            }
+        for (size_t i = 0; i < count; ++i) {
+            vm.run(code);
+            vm.src += src_size;
+            vm.dst += dst_size;
         }
-    };
+    }
 
-    std::unique_ptr<Program> compile_program(const Struct& src_struct, const Struct& dst_struct) override
+    static std::unique_ptr<Program> compile(const Struct& src_struct, const Struct& dst_struct)
     {
         auto program = std::make_unique<VMProgram>();
         program->code = generate_code(src_struct, dst_struct);
@@ -602,16 +570,11 @@ public:
         program->dst_size = dst_struct.size();
         return program;
     }
-
-    static VMCompiler& get()
-    {
-        static VMCompiler instance;
-        return instance;
-    }
 };
 
+
 /// JIT compiler for x86.
-class X86Compiler : public Compiler {
+class X86Compiler {
 public:
     using ConvertFunc = void (*)(const void* src, void* dst, size_t count);
 
@@ -622,17 +585,17 @@ public:
 
     X86Compiler()
     {
-        m_has_avx = m_runtime.cpuFeatures().x86().hasAVX();
+        m_has_avx = runtime().cpuFeatures().x86().hasAVX();
         // m_has_avx = false;
-        m_has_f16c = m_runtime.cpuFeatures().x86().hasF16C();
+        m_has_f16c = runtime().cpuFeatures().x86().hasF16C();
     }
 
-    std::unique_ptr<Program> compile_program(const Struct& src_struct, const Struct& dst_struct) override
+    std::unique_ptr<Program> compile(const Struct& src_struct, const Struct& dst_struct)
     {
         std::vector<Op> ops = generate_code(src_struct, dst_struct);
 
         asmjit::CodeHolder code;
-        code.init(m_runtime.environment(), m_runtime.cpuFeatures());
+        code.init(runtime().environment(), runtime().cpuFeatures());
 
 #if KALI_LOG_JIT_ASSEMBLY
         log_info("Compiling x86 program for converting from {} to {}", src_struct.to_string(), dst_struct.to_string());
@@ -780,16 +743,16 @@ public:
 #endif
 
         ConvertFunc func;
-        m_runtime.add(&func, &code);
+        runtime().add(&func, &code);
 
         auto program = std::make_unique<X86Program>();
         program->func = func;
         return program;
     }
 
-    static X86Compiler& get()
+    static asmjit::JitRuntime& runtime()
     {
-        static X86Compiler instance;
+        static asmjit::JitRuntime instance;
         return instance;
     }
 
@@ -1171,17 +1134,17 @@ private:
                 0.002531335520959116,
                 -0.00021805827098915798,
                 -3.7113872202050023e-6},
-               { 1.,
-                 10.723011300050162,
-                 29.70548706952188,
-                 30.50364355650628,
-                 13.297981743005433,
-                 2.575446652731678,
-                 0.21749170309546628,
-                 0.007244514696840552,
-                 0.00007045228641004039,
-                 -8.387527630781522e-9,
-                 2.2380622409188757e-11 }};
+               {1.,
+                10.723011300050162,
+                29.70548706952188,
+                30.50364355650628,
+                13.297981743005433,
+                2.575446652731678,
+                0.21749170309546628,
+                0.007244514696840552,
+                0.00007045228641004039,
+                -8.387527630781522e-9,
+                2.2380622409188757e-11}};
 
         // Rational polynomial fit, rel.err = 1.5*10^-15
         double from_srgb_coeffs[2][10]
@@ -1195,16 +1158,16 @@ private:
                 -14.786385491859248,
                 -0.5489744177844188,
                 -0.008042950896814532},
-               { 1.,
-                 -84.8098437770271,
-                 -1884.7738197074218,
-                 -8059.219012060384,
-                 -11916.470977597566,
-                 -7349.477378676199,
-                 -2013.8039726540235,
-                 -237.47722999429413,
-                 -9.646075249097724,
-                 -2.2132610916769585e-8 }};
+               {1.,
+                -84.8098437770271,
+                -1884.7738197074218,
+                -8059.219012060384,
+                -11916.470977597566,
+                -7349.477378676199,
+                -2013.8039726540235,
+                -237.47722999429413,
+                -9.646075249097724,
+                -2.2132610916769585e-8}};
 
         size_t ncoeffs
             = to_srgb ? std::extent_v<decltype(to_srgb_coeffs), 1> : std::extent_v<decltype(from_srgb_coeffs), 1>;
@@ -1279,12 +1242,56 @@ private:
 #endif
     }
 
-    asmjit::JitRuntime m_runtime;
     bool m_has_avx;
     bool m_has_f16c;
-
-    // asmjit::x86::Compiler c;
 };
+
+
+class ProgramCache {
+public:
+    const Program* get_program(const Struct& src_struct, const Struct& dst_struct)
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+
+        auto key = std::make_pair(src_struct, dst_struct);
+        auto it = m_programs.find(key);
+        if (it != m_programs.end())
+            return it->second.get();
+        auto [it2, inserted] = m_programs.emplace(key, compile_program(src_struct, dst_struct));
+        return it2->second.get();
+    }
+
+    static ProgramCache& get()
+    {
+        static ProgramCache instance;
+        return instance;
+    }
+
+private:
+    std::unique_ptr<Program> compile_program(const Struct& src_struct, const Struct& dst_struct)
+    {
+        std::unique_ptr<Program> program;
+#if KALI_X86_64
+        {
+            X86Compiler compiler;
+            program = compiler.compile(src_struct, dst_struct);
+        }
+#endif
+        if (!program) {
+            program = VMProgram::compile(src_struct, dst_struct);
+        }
+        return program;
+    }
+
+    std::mutex m_mutex;
+    std::unordered_map<
+        std::pair<Struct, Struct>,
+        std::unique_ptr<Program>,
+        hasher<std::pair<Struct, Struct>>,
+        comparator<std::pair<Struct, Struct>>>
+        m_programs;
+};
+
 
 StructConverter::StructConverter(ref<const Struct> src, ref<const Struct> dst)
     : m_src(std::move(src))
@@ -1300,20 +1307,7 @@ void StructConverter::convert(const void* src, void* dst, size_t count) const
         return;
     }
 
-    const Compiler::Program* program = nullptr;
-#if KALI_X86_64
-    {
-        Compiler& compiler = X86Compiler::get();
-        std::lock_guard<std::mutex> lock(compiler.mutex());
-        program = compiler.compile(*m_src, *m_dst);
-    }
-#endif
-    if (!program) {
-        Compiler& compiler = VMCompiler::get();
-        std::lock_guard<std::mutex> lock(compiler.mutex());
-        program = compiler.compile(*m_src, *m_dst);
-    }
-
+    const Program* program = ProgramCache::get().get_program(*m_src, *m_dst);
     KALI_CHECK(program, "Failed to compile conversion program.");
     program->execute(src, dst, count);
 }
