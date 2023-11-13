@@ -40,9 +40,9 @@ def check_conversion(
 
     print("\nsrc_values: " + str(src_values))
     src_data = struct.pack(src_fmt, *src_values)
-    print("src_data: " + binascii.hexlify(src_data).decode("utf8"))
+    # print("src_data: " + binascii.hexlify(src_data).decode("utf8"))
     dst_data = converter.convert(src_data)
-    print("dst_data: " + binascii.hexlify(dst_data).decode("utf8"))
+    # print("dst_data: " + binascii.hexlify(dst_data).decode("utf8"))
     dst_values = struct.unpack(dst_fmt, dst_data)
     print("dst_values: " + str(dst_values))
     ref = ref_values if ref_values is not None else src_values
