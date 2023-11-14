@@ -662,14 +662,28 @@ private:
         /// Load a constant value.
         asmjit::x86::Mem const_(double value) { return c.newDoubleConst(asmjit::ConstPoolScope::kGlobal, value); }
 
-        /// Floating point comparison.
+        /// Move operation (double word).
         template<typename X, typename Y>
-        void ucomisd(const X& x, const Y& y)
+        void movd(const X& x, const Y& y)
         {
-            has_avx ? c.vucomisd(x, y) : c.ucomisd(x, y);
+            has_avx ? c.vmovd(x, y) : c.movd(x, y);
         }
 
-        /// Floating point move operation.
+        /// Move operation (quad word).
+        template<typename X, typename Y>
+        void movq(const X& x, const Y& y)
+        {
+            has_avx ? c.vmovq(x, y) : c.movq(x, y);
+        }
+
+        /// Move operation (scalar single).
+        template<typename X, typename Y>
+        void movss(const X& x, const Y& y)
+        {
+            has_avx ? c.vmovss(x, y) : c.movss(x, y);
+        }
+
+        /// Move operation (scalar double).
         template<typename X, typename Y>
         void movsd(const X& x, const Y& y)
         {
@@ -679,6 +693,13 @@ private:
         void movsd(const asmjit::x86::Xmm& x, const asmjit::x86::Xmm& y)
         {
             has_avx ? c.vmovsd(x, x, y) : c.movsd(x, y);
+        }
+
+        /// Floating point comparison.
+        template<typename X, typename Y>
+        void ucomisd(const X& x, const Y& y)
+        {
+            has_avx ? c.vucomisd(x, y) : c.ucomisd(x, y);
         }
 
         /// Floating point addition operation.
@@ -714,6 +735,13 @@ private:
             has_avx ? c.vdivsd(x, x, y) : c.divsd(x, y);
         }
 
+        /// Floating point square root operation.
+        template<typename X, typename Y>
+        void sqrtsd(const X& x, const Y& y)
+        {
+            has_avx ? c.vsqrtsd(x, x, y) : c.sqrtsd(x, y);
+        }
+
         /// Floating point maximum operation.
         template<typename X, typename Y>
         void maxsd(const X& x, const Y& y)
@@ -735,6 +763,38 @@ private:
             has_avx ? c.vroundsd(x, x, y, mode) : c.roundsd(x, y, mode);
         }
 
+        /// Convert scalar double to signed integer.
+        template<typename X, typename Y>
+        void cvtsd2si(const X& x, const Y& y)
+        {
+            has_avx ? c.vcvtsd2si(x, y) : c.cvtsd2si(x, y);
+        }
+
+        /// Convert signed integer to scalar double.
+        template<typename X, typename Y>
+        void cvtsi2sd(const X& x, const Y& y)
+        {
+            has_avx ? c.vcvtsi2sd(x, x, y) : c.cvtsi2sd(x, y);
+        }
+
+        /// Convert scalar double to scalar float.
+        template<typename X, typename Y>
+        void cvtsd2ss(const X& x, const Y& y)
+        {
+            has_avx ? c.vcvtsd2ss(x, x, y) : c.cvtsd2ss(x, y);
+        }
+
+        /// Floating point fused multiply-add operation.
+        template<typename X, typename Y, typename Z>
+        void fmadd213sd(const X& x, const Y& y, const Z& z)
+        {
+            if (has_avx) {
+                c.vfmadd213sd(x, y, z);
+            } else {
+                c.mulsd(x, y);
+                c.addsd(x, z);
+            }
+        }
 
         void build(const Struct& src_struct, const Struct& dst_struct)
         {
@@ -809,13 +869,13 @@ private:
                 case Op::Type::linear_to_srgb: {
                     Register& reg = get_register(op.reg);
                     comment(fmt::format("linear_to_srgb (reg={})", op.reg));
-                    linear_to_srgb(reg);
+                    reg.xmm = gamma(reg.xmm, true);
                     break;
                 }
                 case Op::Type::srgb_to_linear: {
                     Register& reg = get_register(op.reg);
                     comment(fmt::format("srgb_to_linear (reg={})", op.reg));
-                    srgb_to_linear(reg);
+                    reg.xmm = gamma(reg.xmm, false);
                     break;
                 }
                 case Op::Type::multiply: {
@@ -939,15 +999,9 @@ private:
                     x86::Gp tmp = c.newUInt32();
                     c.mov(tmp, x86::dword_ptr(base, offset));
                     c.bswap(tmp);
-                    if (has_avx)
-                        c.vmovd(reg.xmm, tmp);
-                    else
-                        c.movd(reg.xmm, tmp);
+                    movd(reg.xmm, tmp);
                 } else {
-                    if (has_avx)
-                        c.vmovss(reg.xmm, x86::dword_ptr(base, offset));
-                    else
-                        c.movss(reg.xmm, x86::dword_ptr(base, offset));
+                    movss(reg.xmm, x86::dword_ptr(base, offset));
                 }
                 break;
             case Struct::Type::float64:
@@ -955,10 +1009,7 @@ private:
                     x86::Gp tmp = c.newUInt64();
                     c.mov(tmp, x86::qword_ptr(base, offset));
                     c.bswap(tmp);
-                    if (has_avx)
-                        c.vmovq(reg.xmm, tmp);
-                    else
-                        c.movq(reg.xmm, tmp);
+                    movq(reg.xmm, tmp);
                 } else {
                     movsd(reg.xmm, x86::qword_ptr(base, offset));
                 }
@@ -1034,26 +1085,17 @@ private:
             case Struct::Type::float32:
                 if (swap) {
                     x86::Gp tmp = c.newUInt32();
-                    if (has_avx)
-                        c.vmovd(tmp, reg.xmm);
-                    else
-                        c.movd(tmp, reg.xmm);
+                    movd(tmp, reg.xmm);
                     c.bswap(tmp);
                     c.mov(x86::dword_ptr(base, offset), tmp);
                 } else {
-                    if (has_avx)
-                        c.vmovss(x86::dword_ptr(base, offset), reg.xmm);
-                    else
-                        c.movss(x86::dword_ptr(base, offset), reg.xmm);
+                    movss(x86::dword_ptr(base, offset), reg.xmm);
                 }
                 break;
             case Struct::Type::float64:
                 if (swap) {
                     x86::Gp tmp = c.newUInt64();
-                    if (has_avx)
-                        c.vmovq(tmp, reg.xmm);
-                    else
-                        c.movq(tmp, reg.xmm);
+                    movq(tmp, reg.xmm);
                     c.bswap(tmp);
                     c.mov(x86::qword_ptr(base, offset), tmp);
                 } else {
@@ -1071,21 +1113,20 @@ private:
             x86::Xmm dbl = c.newXmm();
             if (Struct::is_integer(from)) {
                 if (from == Struct::Type::uint32 || from == Struct::Type::int64) {
-                    c.cvtsi2sd(dbl, reg.gp.r64());
+                    cvtsi2sd(dbl, reg.gp.r64());
                 } else if (from == Struct::Type::uint64) {
                     auto tmp = c.newUInt64();
                     c.mov(tmp, reg.gp.r64());
                     auto tmp2 = c.newUInt64Const(asmjit::ConstPoolScope::kGlobal, 0x7fffffffffffffffull);
                     c.and_(tmp, tmp2);
-                    // cvtsi2s(vr.xmm, tmp.r64());
-                    c.cvtsi2sd(dbl, tmp.r64());
+                    cvtsi2sd(dbl, tmp.r64());
                     c.test(reg.gp.r64(), reg.gp.r64());
                     Label done = c.newLabel();
                     c.jns(done);
                     addsd(dbl, c.newUInt64Const(asmjit::ConstPoolScope::kGlobal, 0x8000000000000000ull));
                     c.bind(done);
                 } else {
-                    c.cvtsi2sd(dbl, reg.gp.r32());
+                    cvtsi2sd(dbl, reg.gp.r32());
                 }
             } else {
                 if (from == Struct::Type::float64)
@@ -1096,27 +1137,19 @@ private:
             if (Struct::is_integer(to)) {
                 if (to == Struct::Type::uint32 || to == Struct::Type::int64) {
                     reg.gp = c.newInt64();
-                    c.cvtsd2si(reg.gp, dbl);
+                    cvtsd2si(reg.gp, dbl);
                 } else if (to == Struct::Type::uint64) {
                     reg.gp = c.newInt64();
-                    c.cvtsd2si(reg.gp.r64(), dbl);
-#if 1
+                    cvtsd2si(reg.gp.r64(), dbl);
+
                     x86::Xmm large_thresh = c.newXmm();
                     movsd(large_thresh, const_(9.223372036854776e18 /* 2^63 - 1 */));
-                    // if (has_avx)
-                    //     c.vmovss(large_thresh, const_(9.223372036854776e18 /* 2^63 - 1 */));
-                    // else
-                    //     c.movss(large_thresh, const_(9.223372036854776e18 /* 2^63 - 1 */));
 
                     x86::Xmm tmp = c.newXmm();
                     subsd(tmp, dbl, large_thresh);
 
                     x86::Gp tmp2 = c.newInt64();
-                    // cvts2si(tmp2, tmp);
-                    if (has_avx)
-                        c.vcvtsd2si(tmp2, tmp);
-                    else
-                        c.cvtsd2si(tmp2, tmp);
+                    cvtsd2si(tmp2, tmp);
 
                     x86::Gp large_result = c.newInt64();
                     c.mov(large_result, Imm(0x7fffffffffffffffull));
@@ -1124,17 +1157,16 @@ private:
 
                     ucomisd(dbl, large_thresh);
                     c.cmovnb(reg.gp.r64(), large_result);
-#endif
                 } else {
                     reg.gp = c.newInt32();
-                    c.cvtsd2si(reg.gp, dbl);
+                    cvtsd2si(reg.gp, dbl);
                 }
             } else {
                 reg.xmm = c.newXmm();
                 if (to == Struct::Type::float64)
                     movsd(reg.xmm, dbl);
                 else
-                    c.cvtsd2ss(reg.xmm, dbl);
+                    cvtsd2ss(reg.xmm, dbl);
             }
         }
 
@@ -1146,8 +1178,6 @@ private:
             x86::Xmm a = c.newXmm();
             x86::Xmm b = c.newXmm();
 
-            // movs(a, const_(to_srgb ? 12.92 : (1.0 / 12.92)));
-            // ucomis(x, const_(to_srgb ? 0.0031308 : 0.04045));
             movsd(a, const_(to_srgb ? 12.92 : (1.0 / 12.92)));
             ucomisd(x, const_(to_srgb ? 0.0031308 : 0.04045));
 
@@ -1157,18 +1187,15 @@ private:
             x86::Xmm y;
             if (to_srgb) {
                 y = c.newXmm();
-                // sqrts(y, x);
-                if (has_avx)
-                    c.vsqrtsd(y, y, x);
-                else
-                    c.sqrtsd(y, x);
+                sqrtsd(y, x);
             } else {
                 y = x;
             }
 
             // Rational polynomial fit, rel.err = 8*10^-15
-            double to_srgb_coeffs[2][11]
-                = {{-0.0031151377052754843,
+            double to_srgb_coeffs[2][11] = {
+                {
+                    -0.0031151377052754843,
                     0.5838023820686707,
                     8.450947414259522,
                     27.901125077137042,
@@ -1178,8 +1205,10 @@ private:
                     0.2263810267005674,
                     0.002531335520959116,
                     -0.00021805827098915798,
-                    -3.7113872202050023e-6},
-                   {1.,
+                    -3.7113872202050023e-6,
+                },
+                {
+                    1.,
                     10.723011300050162,
                     29.70548706952188,
                     30.50364355650628,
@@ -1189,11 +1218,14 @@ private:
                     0.007244514696840552,
                     0.00007045228641004039,
                     -8.387527630781522e-9,
-                    2.2380622409188757e-11}};
+                    2.2380622409188757e-11,
+                },
+            };
 
             // Rational polynomial fit, rel.err = 1.5*10^-15
-            double from_srgb_coeffs[2][10]
-                = {{-342.62884098034357,
+            double from_srgb_coeffs[2][10] = {
+                {
+                    -342.62884098034357,
                     -3483.4445569178347,
                     -9735.250875334352,
                     -10782.158977031822,
@@ -1202,8 +1234,10 @@ private:
                     -200.19589605282445,
                     -14.786385491859248,
                     -0.5489744177844188,
-                    -0.008042950896814532},
-                   {1.,
+                    -0.008042950896814532,
+                },
+                {
+                    1.,
                     -84.8098437770271,
                     -1884.7738197074218,
                     -8059.219012060384,
@@ -1212,7 +1246,9 @@ private:
                     -2013.8039726540235,
                     -237.47722999429413,
                     -9.646075249097724,
-                    -2.2132610916769585e-8}};
+                    -2.2132610916769585e-8,
+                },
+            };
 
             size_t ncoeffs
                 = to_srgb ? std::extent_v<decltype(to_srgb_coeffs), 1> : std::extent_v<decltype(from_srgb_coeffs), 1>;
@@ -1224,13 +1260,7 @@ private:
                     if (i == 0) {
                         movsd(v, coeff);
                     } else {
-                        // fmadd213(v, y, coeff);
-                        if (has_avx) {
-                            c.vfmadd213sd(v, y, coeff);
-                        } else {
-                            c.mulss(v, y);
-                            c.addss(v, coeff);
-                        }
+                        fmadd213sd(v, y, coeff);
                     }
                 }
             }
@@ -1240,36 +1270,6 @@ private:
             mulsd(a, x);
 
             return a;
-        }
-
-        void linear_to_srgb(Register& reg)
-        {
-            using namespace asmjit;
-
-#if 1
-            reg.xmm = gamma(reg.xmm, true);
-#else
-            auto func = math::linear_to_srgb<double>;
-            InvokeNode* node;
-            c.invoke(&node, imm((void*)func), FuncSignatureT<double, double>(CallConvId::kHost));
-            node->setArg(0, reg.xmm);
-            node->setRet(0, reg.xmm);
-#endif
-        }
-
-        void srgb_to_linear(Register& reg)
-        {
-            using namespace asmjit;
-
-#if 1
-            reg.xmm = gamma(reg.xmm, false);
-#else
-            auto func = math::srgb_to_linear<double>;
-            InvokeNode* node;
-            c.invoke(&node, imm((void*)func), FuncSignatureT<double, double>(CallConvId::kHost));
-            node->setArg(0, reg.xmm);
-            node->setRet(0, reg.xmm);
-#endif
         }
     };
 
