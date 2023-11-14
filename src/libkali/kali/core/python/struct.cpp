@@ -32,11 +32,14 @@ KALI_PY_EXPORT(core_struct)
         .def("append", nb::overload_cast<Struct::Field>(&Struct::append), "field"_a, nb::rv_policy::reference)
         .def(
             "append",
-            nb::overload_cast<std::string_view, Struct::Type, Struct::Flags, double>(&Struct::append),
+            nb::overload_cast<std::string_view, Struct::Type, Struct::Flags, double, const Struct::Field::BlendList&>(
+                &Struct::append
+            ),
             "name"_a,
             "type"_a,
             "flags"_a = Struct::Flags::none,
             "default_value"_a = 0.0,
+            "blend"_a = Struct::Field::BlendList(),
             nb::rv_policy::reference
         )
         .def("has_field", &Struct::has_field, "name"_a)

@@ -273,5 +273,42 @@ def test_gamma_2():
     check_conversion(s, "@" + ("f" * 256), "@" + ("B" * 256), src_data, dest_data)
 
 
+def test_blend():
+    src = Struct()
+    src.append("a", Struct.Type.float32)
+    src.append("b", Struct.Type.float32)
+
+    target = Struct()
+    target.append("v", Struct.Type.float32, blend=[(3.0, "a"), (4.0, "b")])
+
+    s = StructConverter(src, target)
+    check_conversion(s, "@ff", "@f", (1.0, 2.0), (3.0 + 8.0,))
+
+    src = Struct()
+    src.append("a", Struct.Type.uint8, Struct.Flags.normalized)
+    src.append("b", Struct.Type.uint8, Struct.Flags.normalized)
+
+    target = Struct()
+    target.append("v", Struct.Type.float32, blend=[(3.0, "a"), (4.0, "b")])
+
+    s = StructConverter(src, target)
+
+    check_conversion(s, "@BB", "@f", (255, 127), (3.0 + 4.0 * (127.0 / 255.0),))
+
+
+def test_blend_gamma():
+    src = Struct()
+    src.append("a", Struct.Type.uint8, Struct.Flags.normalized | Struct.Flags.srgb)
+    src.append("b", Struct.Type.uint8, Struct.Flags.normalized | Struct.Flags.srgb)
+
+    target = Struct()
+    target.append("v", Struct.Type.uint8, Struct.Flags.normalized | Struct.Flags.srgb, blend=[(1, "a"), (1, "b")])
+
+    s = StructConverter(src, target)
+    ref = int(np.round(to_srgb(from_srgb(100 / 255.0) + from_srgb(200 / 255.0)) * 255))
+
+    check_conversion(s, "@BB", "@B", (100, 200), (ref,))
+
+
 if __name__ == "__main__":
     pytest.main([__file__])

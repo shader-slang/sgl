@@ -16,6 +16,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <utility>
 
 #define KALI_LOG_JIT_ASSEMBLY 1
 
@@ -23,19 +24,27 @@ namespace kali {
 
 size_t hash(const Struct::Field& field)
 {
-    return hash(field.name, field.type, field.flags, field.size, field.offset, field.default_value);
+    size_t value = hash(field.name, field.type, field.flags, field.size, field.offset, field.default_value);
+    for (const auto& [weight, name] : field.blend)
+        value = hash_combine(value, hash(weight, name));
+    return value;
 }
 
 std::string Struct::Field::to_string() const
 {
+    std::vector<std::string> blend_strings;
+    for (const auto& [w, n] : blend)
+        blend_strings.push_back(fmt::format("({}, \"{}\")", w, n));
+
     return fmt::format(
-        "Field(name=\"{}\", type={}, flags={}, size={}, offset={}, default_value={})",
+        "Field(name=\"{}\", type={}, flags={}, size={}, offset={}, default_value={}, blend=[{}])",
         name,
         type,
         flags,
         size,
         offset,
-        default_value
+        default_value,
+        string::join(blend_strings, ", ")
     );
 }
 
@@ -57,7 +66,8 @@ Struct& Struct::append(Field field)
     return *this;
 }
 
-Struct& Struct::append(std::string_view name, Type type, Flags flags, double default_value)
+Struct&
+Struct::append(std::string_view name, Type type, Flags flags, double default_value, const Field::BlendList& blend)
 {
     size_t size = type_size(type);
     size_t offset = 0;
@@ -66,7 +76,7 @@ Struct& Struct::append(std::string_view name, Type type, Flags flags, double def
         if (!m_pack)
             offset = align_to(size, offset);
     }
-    return append({std::string(name), type, flags, size, offset, default_value});
+    return append({std::string(name), type, flags, size, offset, default_value, blend});
 }
 
 const Struct::Field& Struct::field(std::string_view name) const
@@ -242,9 +252,11 @@ struct Op {
         load_imm,
         save_mem,
         cast,
+        // all following ops are for floating point values only
         linear_to_srgb,
         srgb_to_linear,
         multiply,
+        multiply_add,
         round,
         clamp,
     };
@@ -271,6 +283,10 @@ struct Op {
         struct {
             double value;
         } multiply;
+        struct {
+            uint8_t reg;
+            double factor;
+        } multiply_add;
         struct {
             double min;
             double max;
@@ -353,6 +369,11 @@ struct VM {
             case Op::Type::multiply:
                 KALI_ASSERT(value.type == Struct::Type::float64);
                 value.d *= op.multiply.value;
+                break;
+            case Op::Type::multiply_add:
+                KALI_ASSERT(value.type == Struct::Type::float64);
+                KALI_ASSERT(registers[op.multiply_add.reg].type == Struct::Type::float64);
+                value.d += registers[op.multiply_add.reg].d * op.multiply_add.factor;
                 break;
             case Op::Type::round:
                 KALI_ASSERT(value.type == Struct::Type::float64);
@@ -471,14 +492,81 @@ struct VM {
 /// If using a JIT compiler, this code can be compiled to native code.
 std::vector<Op> generate_code(const Struct& src_struct, const Struct& dst_struct)
 {
-    std::vector<Op> code;
-
     const bool src_swap = src_struct.byte_order() != Struct::host_byte_order();
     const bool dst_swap = dst_struct.byte_order() != Struct::host_byte_order();
 
+    std::vector<Op> code;
+    std::map<std::string, uint8_t> src_regs;
+
     for (const auto& dst_field : dst_struct.fields()) {
 
-        if (src_struct.has_field(dst_field.name)) {
+        if (!dst_field.blend.empty()) {
+            // Initialize accumulator.
+            code.push_back({.type = Op::Type::load_imm, .reg = 0, .load_imm = {0.0}});
+
+            // Accumulate source fields.
+            for (const auto& [weight, name] : dst_field.blend) {
+                const auto& src_field = src_struct.field(name);
+                const auto src_range = Struct::type_range(src_field.type);
+                uint8_t src_reg;
+                auto it = src_regs.find(name);
+                if (it != src_regs.end()) {
+                    src_reg = it->second;
+                } else {
+                    // Load linear value from source.
+                    src_reg = static_cast<uint8_t>(src_regs.size() + 1);
+                    src_regs.emplace(name, src_reg);
+
+                    // Load value from source struct.
+                    code.push_back(
+                        {.type = Op::Type::load_mem,
+                         .reg = src_reg,
+                         .load_mem = {src_field.offset, src_field.type, src_swap}}
+                    );
+
+                    // Convert to double.
+                    code.push_back(
+                        {.type = Op::Type::cast, .reg = src_reg, .cast = {src_field.type, Struct::Type::float64}}
+                    );
+
+                    // Normalize source value.
+                    if (Struct::is_integer(src_field.type) && is_set(src_field.flags, Struct::Flags::normalized))
+                        code.push_back(
+                            {.type = Op::Type::multiply, .reg = src_reg, .multiply = {1.0 / src_range.second}}
+                        );
+
+                    // Linearize source value.
+                    if (is_set(src_field.flags, Struct::Flags::srgb))
+                        code.push_back({.type = Op::Type::srgb_to_linear, .reg = src_reg});
+                }
+
+                // Add weighted value to accumulator.
+                code.push_back({.type = Op::Type::multiply_add, .reg = 0, .multiply_add = {src_reg, weight}});
+            }
+            const auto dst_range = Struct::type_range(dst_field.type);
+
+            // De-linearize destination value.
+            if (is_set(dst_field.flags, Struct::Flags::srgb))
+                code.push_back({.type = Op::Type::linear_to_srgb, .reg = 0});
+
+            // De-normalize destination value.
+            if (Struct::is_integer(dst_field.type) && is_set(dst_field.flags, Struct::Flags::normalized))
+                code.push_back({.type = Op::Type::multiply, .reg = 0, .multiply = {dst_range.second}});
+
+            // Round and clamp integers.
+            if (Struct::is_integer(dst_field.type)) {
+                code.push_back({.type = Op::Type::round, .reg = 0});
+                code.push_back({.type = Op::Type::clamp, .reg = 0, .clamp = {dst_range.first, dst_range.second}});
+            }
+
+            code.push_back({.type = Op::Type::cast, .reg = 0, .cast = {Struct::Type::float64, dst_field.type}});
+
+            // Save value to destination struct.
+            code.push_back(
+                {.type = Op::Type::save_mem, .reg = 0, .save_mem = {dst_field.offset, dst_field.type, dst_swap}}
+            );
+
+        } else if (src_struct.has_field(dst_field.name)) {
             const auto& src_field = src_struct.field(dst_field.name);
 
             // Load value from source struct.
@@ -520,7 +608,7 @@ std::vector<Op> generate_code(const Struct& src_struct, const Struct& dst_struct
                 code.push_back({.type = Op::Type::cast, .reg = 0, .cast = {Struct::Type::float64, dst_field.type}});
             }
 
-            // Save value to source struct.
+            // Save value to destination struct.
             code.push_back(
                 {.type = Op::Type::save_mem, .reg = 0, .save_mem = {dst_field.offset, dst_field.type, dst_swap}}
             );
@@ -785,6 +873,18 @@ private:
             }
         }
 
+        /// Floating point fused multiply-add operation.
+        template<typename X, typename Y, typename Z>
+        void fmadd231sd(const X& x, const Y& y, const Z& z)
+        {
+            if (has_avx) {
+                c.vfmadd231sd(x, y, z);
+            } else {
+                c.mulsd(y, z);
+                c.addsd(x, y);
+            }
+        }
+
         void build(const Struct& src_struct, const Struct& dst_struct)
         {
             std::vector<Op> ops = generate_code(src_struct, dst_struct);
@@ -871,6 +971,18 @@ private:
                     const Register& reg = get_register(op.reg);
                     comment(fmt::format("multiply (reg={}, value={})", reg.index, op.multiply.value));
                     mulsd(reg.xmm, const_(op.multiply.value));
+                    break;
+                }
+                case Op::Type::multiply_add: {
+                    const Register& reg1 = get_register(op.reg);
+                    const Register& reg2 = get_register(op.multiply_add.reg);
+                    comment(fmt::format(
+                        "multiply_add (reg1={}, reg2={}, factor={})",
+                        reg1.index,
+                        reg2.index,
+                        op.multiply_add.factor
+                    ));
+                    fmadd231sd(reg1.xmm, reg2.xmm, const_(op.multiply_add.factor));
                     break;
                 }
                 case Op::Type::round: {

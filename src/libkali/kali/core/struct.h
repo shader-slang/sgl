@@ -106,6 +106,14 @@ public:
         /// Default value.
         double default_value{0.0};
 
+        using BlendList = std::vector<std::pair<double, std::string>>;
+
+        /// List of blend weights and names.
+        /// If set, the \c StructConverter will blend fields from the source struct
+        /// with the specified weights to generate the destination field.
+        /// Blending is done in linear space.
+        BlendList blend;
+
         /// Check if the field is an integer type.
         bool is_integer() const { return Struct::is_integer(type); }
 
@@ -122,7 +130,7 @@ public:
         bool operator==(const Field& other) const
         {
             return name == other.name && type == other.type && flags == other.flags && size == other.size
-                && offset == other.offset && default_value == other.default_value;
+                && offset == other.offset && default_value == other.default_value && blend == other.blend;
         }
 
         /// Inequality operator.
@@ -150,8 +158,15 @@ public:
     /// @param type Type of the field.
     /// @param flags Field flags.
     /// @param default_value Default value.
+    /// @param blend List of blend weights/names.
     /// @return Reference to the struct.
-    Struct& append(std::string_view name, Type type, Flags flags = Flags::none, double default_value = 0.0);
+    Struct& append(
+        std::string_view name,
+        Type type,
+        Flags flags = Flags::none,
+        double default_value = 0.0,
+        const Field::BlendList& blend = {}
+    );
 
     /// List of all fields.
     const std::vector<Field>& fields() const { return m_fields; }
