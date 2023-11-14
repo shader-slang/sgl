@@ -106,14 +106,13 @@ namespace detail {
     template<typename T, std::enable_if_t<has_enum_info_v<T>, bool> = true>
     inline std::string format_enum(T value)
     {
-        const std::string& name = EnumInfo<T>::name();
         const auto& items = EnumInfo<T>::items();
         // Check for single value.
         for (const auto& item : items)
             if (item.first == value)
-                return {fmt::format("{}::{}", name, item.second)};
+                return item.second;
         // Check for flags.
-        std::string str = name + "::(";
+        std::string str = "(";
         uint64_t bits = uint64_t(value);
         bool first = true;
         for (const auto& item : items) {
