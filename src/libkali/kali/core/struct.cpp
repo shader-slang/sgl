@@ -143,50 +143,40 @@ Struct::ByteOrder Struct::host_byte_order()
 
 std::pair<double, double> Struct::type_range(Type type)
 {
-    std::pair<double, double> range;
-
 #define RANGE(type)                                                                                                    \
-    range = std::make_pair<double, double>(                                                                            \
+    std::make_pair<double, double>(                                                                                    \
         static_cast<double>(std::numeric_limits<type>::min()),                                                         \
         static_cast<double>(std::numeric_limits<type>::max())                                                          \
-    );                                                                                                                 \
-    break;
+    )
 
     switch (type) {
     case Type::int8:
-        RANGE(int8_t);
+        return RANGE(int8_t);
     case Type::int16:
-        RANGE(int16_t);
+        return RANGE(int16_t);
     case Type::int32:
-        RANGE(int32_t);
+        return RANGE(int32_t);
     case Type::int64:
-        RANGE(int64_t);
+        return RANGE(int64_t);
     case Type::uint8:
-        RANGE(uint8_t);
+        return RANGE(uint8_t);
     case Type::uint16:
-        RANGE(uint16_t);
+        return RANGE(uint16_t);
     case Type::uint32:
-        RANGE(uint32_t);
-    case Type::uint64:
-        RANGE(uint64_t);
-    case Type::float16:
-        RANGE(math::float16_t);
-    case Type::float32:
-        RANGE(float);
-    case Type::float64:
-        RANGE(double);
-    default:
-        KALI_THROW("Invalid type.");
-    }
-
-    if (is_integer(type)) {
-        // Make bounds conservative to account for rounding errors.
-        if (range.first < 0.0)
-            range.first = std::nextafter(range.first, 0.0);
+        return RANGE(uint32_t);
+    case Type::uint64: {
+        auto range = RANGE(uint64_t);
         range.second = std::nextafter(range.second, 0.f);
+        return range;
     }
-
-    return range;
+    case Type::float16:
+        return RANGE(math::float16_t);
+    case Type::float32:
+        return RANGE(float);
+    case Type::float64:
+        return RANGE(double);
+    }
+    KALI_THROW("Invalid type.");
 }
 
 namespace detail {
@@ -646,7 +636,6 @@ private:
             : c(c)
         {
             has_avx = runtime().cpuFeatures().x86().hasAVX();
-            // has_avx = false;
             has_f16c = runtime().cpuFeatures().x86().hasF16C();
         }
 
@@ -1280,6 +1269,23 @@ private:
     }
 };
 
+/// Conversion program running just-in-time compiled ARM code.
+struct ARMProgram : public Program {
+    using ConvertFunc = void (*)(const void* src, void* dst, size_t count);
+
+    ConvertFunc func;
+
+    void execute(const void* src, void* dst, size_t count) const override { func(src, dst, count); }
+
+    static std::unique_ptr<Program> compile(const Struct& src_struct, const Struct& dst_struct)
+    {
+        // TODO: Implement ARM JIT.
+        log_warn_once("StructConverter JIT not implemented for ARM. Using VM instead.");
+        KALI_UNUSED(src_struct, dst_struct);
+        return {};
+    }
+};
+
 
 class ProgramCache {
 public:
@@ -1308,6 +1314,8 @@ private:
 
 #if KALI_X86_64
         program = X86Program::compile(src_struct, dst_struct);
+#elif KALI_ARM64
+        program = ARMProgram::compile(src_struct, dst_struct);
 #endif
         if (!program)
             program = VMProgram::compile(src_struct, dst_struct);
