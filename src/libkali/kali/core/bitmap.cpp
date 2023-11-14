@@ -5,6 +5,7 @@
 #include "kali/core/error.h"
 #include "kali/core/logger.h"
 #include "kali/core/file_stream.h"
+#include "kali/core/string.h"
 
 #include <png.h>
 #include <jpeglib.h>
@@ -13,23 +14,6 @@
 KALI_DISABLE_MSVC_WARNING(4611)
 
 namespace kali {
-
-inline size_t get_component_byte_size(Bitmap::ComponentType component_type)
-{
-    switch (component_type) {
-    case Bitmap::ComponentType::u8:
-        return 1;
-    case Bitmap::ComponentType::u16:
-        return 2;
-    case Bitmap::ComponentType::u32:
-        return 4;
-    case Bitmap::ComponentType::f16:
-        return 2;
-    case Bitmap::ComponentType::f32:
-        return 4;
-    }
-    KALI_THROW("Invalid component type");
-}
 
 inline std::vector<std::string> get_channel_names(Bitmap::PixelFormat pixel_format)
 {
@@ -55,7 +39,7 @@ Bitmap::Bitmap(
     uint32_t height,
     uint32_t channel_count,
     const std::vector<std::string>& channel_names,
-    const void* data
+    void* data
 )
     : m_pixel_format(pixel_format)
     , m_component_type(component_type)
@@ -63,6 +47,8 @@ Bitmap::Bitmap(
     , m_height(height)
     , m_channel_count(channel_count)
     , m_channel_names(channel_names)
+    , m_data(reinterpret_cast<uint8_t*>(data))
+    , m_owns_data(false)
 {
     KALI_CHECK(
         pixel_format != PixelFormat::multi_channel || channel_count > 0,
@@ -74,7 +60,10 @@ Bitmap::Bitmap(
         m_channel_count = static_cast<uint32_t>(m_channel_names.size());
     }
 
-    KALI_UNUSED(data);
+    if (!m_data) {
+        m_data = std::make_unique<uint8_t[]>(buffer_size());
+        m_owns_data = true;
+    }
 }
 
 Bitmap::Bitmap(const Bitmap& other)
@@ -112,7 +101,22 @@ Bitmap::Bitmap(const std::filesystem::path& path, FileFormat format)
     KALI_UNUSED(format);
 }
 
-Bitmap::~Bitmap() { }
+Bitmap::~Bitmap()
+{
+    if (!m_owns_data)
+        m_data.release();
+}
+
+#if 0
+ref<Bitmap> Bitmap::read(Stream* stream, FileFormat format)
+{
+    return make_ref<Bitmap>(stream, format);
+}
+
+ref<Bitmap> Bitmap::read(const std::filesystem::path& path, FileFormat format)
+{
+    return make_ref<Bitmap>(path, format);
+}
 
 std::future<ref<Bitmap>> Bitmap::read_async(ref<Stream> stream, FileFormat format)
 {
@@ -126,9 +130,68 @@ std::future<ref<Bitmap>> Bitmap::read_async(const std::filesystem::path& path, F
     auto stream = make_ref<FileStream>(path, FileStream::Mode::read);
     return read_async(stream, format);
 }
+#endif
 
 void Bitmap::write(Stream* stream, FileFormat format, int quality) const
 {
+    auto fs = dynamic_cast<FileStream*>(stream);
+
+    if (format == FileFormat::auto_) {
+        KALI_CHECK(fs, "Unable to determine image file format without a filename.");
+        std::string extension = string::to_lower(fs->path().extension().string());
+        if (extension == ".png")
+            format = FileFormat::png;
+        else if (extension == ".jpg" || extension == ".jpeg")
+            format = FileFormat::jpg;
+        else if (extension == ".bmp")
+            format = FileFormat::bmp;
+        else if (extension == ".tga")
+            format = FileFormat::tga;
+        else if (extension == ".hdr" || extension == ".rgbe")
+            format = FileFormat::hdr;
+        else if (extension == ".exr")
+            format = FileFormat::exr;
+        else
+            KALI_THROW("Unsupported image file extension \"%s\"", extension);
+    }
+
+    log_debug(
+        "Writing {} file \"{}\" ({}x{}, {}, {}) ...",
+        format,
+        fs ? fs->path().string() : "<stream>",
+        m_width,
+        m_height,
+        m_pixel_format,
+        m_component_type
+    );
+
+    switch (format) {
+    case FileFormat::png:
+        if (quality == -1)
+            quality = 5;
+        write_png(stream, quality);
+        break;
+    case FileFormat::jpg:
+        if (quality == -1)
+            quality = 100;
+        write_jpg(stream, quality);
+        break;
+    case FileFormat::bmp:
+        // write_bmp(stream);
+        break;
+    case FileFormat::tga:
+        // write_tga(stream);
+        break;
+    case FileFormat::hdr:
+        // write_hdr(stream);
+        break;
+    case FileFormat::exr:
+        // write_exr(stream, quality);
+        break;
+    default:
+        KALI_THROW("Invalid file format!");
+    }
+
     KALI_UNUSED(stream);
     KALI_UNUSED(format);
     KALI_UNUSED(quality);
@@ -160,7 +223,7 @@ std::future<void> Bitmap::write_async(const std::filesystem::path& path, FileFor
 
 size_t Bitmap::bytes_per_pixel() const
 {
-    return get_component_byte_size(m_component_type) * m_channel_count;
+    return Struct::type_size(m_component_type) * m_channel_count;
 }
 
 void Bitmap::clear()
@@ -188,6 +251,86 @@ bool Bitmap::operator==(const Bitmap& bitmap) const
         && m_width == bitmap.m_width && m_height == bitmap.m_height && m_channel_count == bitmap.m_channel_count
         && m_channel_names == bitmap.m_channel_names
         && std::memcmp(m_data.get(), bitmap.m_data.get(), buffer_size()) == 0;
+}
+
+std::string Bitmap::to_string() const
+{
+    return fmt::format(
+        "Bitmap(\n"
+        "  pixel_format = {},\n"
+        "  component_type = {},\n"
+        "  width = {},\n"
+        "  height = {},\n"
+        "  data = {},\n"
+        ")",
+        m_pixel_format,
+        m_component_type,
+        m_width,
+        m_height,
+        string::format_byte_size(buffer_size())
+    );
+}
+
+void Bitmap::read(Stream* stream, FileFormat format)
+{
+    if (format == FileFormat::auto_)
+        format = detect_file_format(stream);
+
+    switch (format) {
+    case FileFormat::png:
+        read_png(stream);
+        break;
+    case FileFormat::jpg:
+        read_jpg(stream);
+        break;
+    case FileFormat::bmp:
+        // read_bmp(stream);
+        // break;
+    case FileFormat::tga:
+        // read_tga(stream);
+        // break;
+    case FileFormat::hdr:
+        // read_hdr(stream);
+        // break;
+    case FileFormat::exr:
+        // read_exr(stream);
+        break;
+    }
+    KALI_THROW("Unknown file format!");
+}
+
+Bitmap::FileFormat Bitmap::detect_file_format(Stream* stream)
+{
+    FileFormat format = FileFormat::unknown;
+
+    size_t pos = stream->tell();
+    uint8_t header[8];
+    stream->read(header, 8);
+
+    if (header[0] == 'B' && header[1] == 'M') {
+        format = FileFormat::bmp;
+    } else if (header[0] == '#' && header[1] == '?') {
+        format = FileFormat::hdr;
+        // } else if (header[0] == 'P' && (header[1] == 'F' || header[1] == 'f')) {
+        //     format = FileFormat::PFM;
+        // } else if (header[0] == 'P' && header[1] == '6') {
+        //     format = FileFormat::PPM;
+    } else if (header[0] == 0xFF && header[1] == 0xD8) {
+        format = FileFormat::jpg;
+    } else if (png_sig_cmp(header, 0, 8) == 0) {
+        format = FileFormat::png;
+        // } else if (Imf::isImfMagic((const char*)header)) {
+        //     format = FileFormat::OpenEXR;
+    } else {
+        // Check for a TGAv2 file
+        char footer[18];
+        stream->seek(stream->size() - 18);
+        stream->read(footer, 18);
+        if (footer[17] == 0 && strncmp(footer, "TRUEVISION-XFILE.", 17) == 0)
+            format = FileFormat::tga;
+    }
+    stream->seek(pos);
+    return format;
 }
 
 //
@@ -235,7 +378,6 @@ void Bitmap::read_png(Stream* stream)
     }
 
     // Setup error handling.
-
     if (setjmp(png_jmpbuf(png_ptr))) {
         png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
         KALI_THROW("Error reading the PNG file!");
@@ -312,10 +454,10 @@ void Bitmap::read_png(Stream* stream)
 
     switch (bit_depth) {
     case 8:
-        m_component_type = ComponentType::u8;
+        m_component_type = ComponentType::uint8;
         break;
     case 16:
-        m_component_type = ComponentType::u16;
+        m_component_type = ComponentType::uint16;
         break;
     default:
         KALI_THROW("Unsupported bit depth {}!", bit_depth);
@@ -385,10 +527,10 @@ void Bitmap::write_png(Stream* stream, int compression) const
 
     int bit_depth;
     switch (m_component_type) {
-    case ComponentType::u8:
+    case ComponentType::uint8:
         bit_depth = 8;
         break;
-    case ComponentType::u16:
+    case ComponentType::uint16:
         bit_depth = 16;
         break;
     default:
@@ -601,7 +743,7 @@ void Bitmap::read_jpg(Stream* stream)
 
     m_width = cinfo.output_width;
     m_height = cinfo.output_height;
-    m_component_type = ComponentType::u8;
+    m_component_type = ComponentType::uint8;
 #if 0
     m_srgb_gamma = true;
     m_premultiplied_alpha = false;
@@ -669,8 +811,8 @@ void Bitmap::write_jpg(Stream* stream, int quality) const
         KALI_THROW("Unsupported pixel format!");
     }
 
-    if (m_component_type != ComponentType::u8)
-        KALI_THROW("Unsupported component format {}, expected {}.", m_component_type, ComponentType::u8);
+    if (m_component_type != ComponentType::uint8)
+        KALI_THROW("Unsupported component format {}, expected {}.", m_component_type, ComponentType::uint8);
 
     std::memset(&jbuf, 0, sizeof(jbuf_out_t));
     cinfo.err = jpeg_std_error(&jerr);

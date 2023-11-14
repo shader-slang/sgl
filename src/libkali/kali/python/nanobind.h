@@ -16,6 +16,7 @@
 #include "kali/core/object.h"
 #include "kali/core/enum.h"
 #include "kali/core/type_utils.h"
+#include "kali/core/struct.h"
 
 namespace nb = nanobind;
 using namespace nb::literals;
@@ -82,6 +83,45 @@ size_t is_ndarray_contiguous(const nb::ndarray<Args...>& array)
         --i;
     }
     return true;
+}
+
+inline std::optional<Struct::Type> dtype_to_struct_type(nb::dlpack::dtype dtype)
+{
+    switch (dtype.code) {
+    case uint8_t(nb::dlpack::dtype_code::Int):
+        switch (dtype.bits) {
+        case 8:
+            return Struct::Type::int8;
+        case 16:
+            return Struct::Type::int16;
+        case 32:
+            return Struct::Type::int32;
+        case 64:
+            return Struct::Type::int64;
+        }
+        break;
+    case uint8_t(nb::dlpack::dtype_code::UInt):
+        switch (dtype.bits) {
+        case 8:
+            return Struct::Type::uint8;
+        case 16:
+            return Struct::Type::uint16;
+        case 32:
+            return Struct::Type::uint32;
+        case 64:
+            return Struct::Type::uint64;
+        }
+    case uint8_t(nb::dlpack::dtype_code::Float):
+        switch (dtype.bits) {
+        case 16:
+            return Struct::Type::float16;
+        case 32:
+            return Struct::Type::float32;
+        case 64:
+            return Struct::Type::float64;
+        }
+    }
+    return {};
 }
 
 } // namespace kali

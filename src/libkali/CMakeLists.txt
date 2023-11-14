@@ -288,6 +288,7 @@ endforeach()
 
 nanobind_add_module(kali_ext NB_STATIC LTO
     kali/python/kali_ext.cpp
+    kali/core/python/bitmap.cpp
     kali/core/python/input.cpp
     kali/core/python/logger.cpp
     kali/core/python/object.cpp
@@ -350,7 +351,6 @@ add_executable(kali_tests)
 target_sources(kali_tests PRIVATE
     kali/tests/kali_tests.cpp
     kali/tests/testing.cpp
-    kali/core/tests/test_bitmap.cpp
     kali/core/tests/test_enum.cpp
     kali/core/tests/test_maths.cpp
     kali/core/tests/test_memory_mapped_file.cpp

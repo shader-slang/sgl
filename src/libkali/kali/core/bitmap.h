@@ -6,6 +6,7 @@
 #include "kali/core/object.h"
 #include "kali/core/enum.h"
 #include "kali/core/stream.h"
+#include "kali/core/struct.h"
 
 #include <filesystem>
 #include <future>
@@ -26,6 +27,7 @@ public:
         hdr,
         exr,
         auto_,
+        unknown,
     };
 
     KALI_ENUM_INFO(
@@ -38,6 +40,7 @@ public:
             {FileFormat::hdr, "hdr"},
             {FileFormat::exr, "exr"},
             {FileFormat::auto_, "auto"},
+            {FileFormat::unknown, "unknown"},
         }
     );
 
@@ -60,24 +63,7 @@ public:
         }
     );
 
-    enum class ComponentType {
-        u8,
-        u16,
-        u32,
-        f16,
-        f32,
-    };
-
-    KALI_ENUM_INFO(
-        ComponentType,
-        {
-            {ComponentType::u8, "u8"},
-            {ComponentType::u16, "u16"},
-            {ComponentType::u32, "u32"},
-            {ComponentType::f16, "f16"},
-            {ComponentType::f32, "f32"},
-        }
-    );
+    using ComponentType = Struct::Type;
 
     Bitmap(
         PixelFormat pixel_format,
@@ -86,7 +72,7 @@ public:
         uint32_t height,
         uint32_t channel_count = 0,
         const std::vector<std::string>& channel_names = {},
-        const void* data = nullptr
+        void* data = nullptr
     );
 
     Bitmap(Stream* stream, FileFormat format = FileFormat::auto_);
@@ -99,19 +85,32 @@ public:
 
     ~Bitmap();
 
-    static ref<Bitmap> read(Stream* stream, FileFormat format = FileFormat::auto_)
-    {
-        return make_ref<Bitmap>(stream, format);
-    }
+#if 0
+    /// Read a bitmap from a stream.
+    /// @param stream The stream to read from.
+    /// @param format The file format to read (auto-detect by default).
+    /// @return The loaded bitmap.
+    static ref<Bitmap> read(Stream* stream, FileFormat format = FileFormat::auto_);
 
-    static ref<Bitmap> read(const std::filesystem::path& path, FileFormat format = FileFormat::auto_)
-    {
-        return make_ref<Bitmap>(path, format);
-    }
+    /// Read a bitmap from a file.
+    /// @param path The file path to read from.
+    /// @param format The file format to read (auto-detect by default).
+    /// @return The loaded bitmap.
+    static ref<Bitmap> read(const std::filesystem::path& path, FileFormat format = FileFormat::auto_);
 
+    /// Read a bitmap from a stream asynchronously.
+    /// @param stream The stream to read from.
+    /// @param format The file format to read (auto-detect by default).
+    /// @return A future to the loaded bitmap.
     static std::future<ref<Bitmap>> read_async(ref<Stream> stream, FileFormat format = FileFormat::auto_);
+
+    /// Read a bitmap from a file asynchronously.
+    /// @param path The file path to read from.
+    /// @param format The file format to read (auto-detect by default).
+    /// @return A future to the loaded bitmap.
     static std::future<ref<Bitmap>>
     read_async(const std::filesystem::path& path, FileFormat format = FileFormat::auto_);
+#endif
 
     void write(Stream* stream, FileFormat format = FileFormat::auto_, int quality = -1) const;
     void write(const std::filesystem::path& path, FileFormat format = FileFormat::auto_, int quality = -1) const;
@@ -120,16 +119,26 @@ public:
     std::future<void>
     write_async(const std::filesystem::path& path, FileFormat format = FileFormat::auto_, int quality = -1) const;
 
+    /// The pixel format.
     PixelFormat pixel_format() const { return m_pixel_format; }
+
+    /// The component type.
     ComponentType component_type() const { return m_component_type; }
 
+    /// The width of the bitmap in pixels.
     uint32_t width() const { return m_width; }
+    /// The height of the bitmap in pixels.
     uint32_t height() const { return m_height; }
+    /// The total number of pixels in the bitmap.
     size_t pixel_count() const { return static_cast<size_t>(m_width) * m_height; }
+    /// The number of channels in the bitmap.
     uint32_t channel_count() const { return m_channel_count; }
+    /// Returns true if the bitmap has an alpha channel.
     bool has_alpha() const { return m_pixel_format == PixelFormat::ya || m_pixel_format == PixelFormat::rgba; }
 
+    /// The number of bytes per pixel.
     size_t bytes_per_pixel() const;
+    /// The total size of the bitmap in bytes.
     size_t buffer_size() const { return pixel_count() * bytes_per_pixel(); }
 
     void* data() { return m_data.get(); }
@@ -138,14 +147,25 @@ public:
     uint8_t* uint8_data() { return m_data.get(); }
     const uint8_t* uint8_data() const { return m_data.get(); }
 
+    /// Clears the bitmap to zeros.
     void clear();
+
+    /// Vertically flip the bitmap.
     void vflip();
 
+    /// Equality operator.
     bool operator==(const Bitmap& bitmap) const;
 
+    /// Inequality operator.
     bool operator!=(const Bitmap& bitmap) const { return !operator==(bitmap); }
 
+    std::string to_string() const override;
+
 private:
+    void read(Stream* stream, FileFormat format);
+
+    static FileFormat detect_file_format(Stream* stream);
+
     void read_png(Stream* stream);
     void write_png(Stream* stream, int compression) const;
 
@@ -159,10 +179,10 @@ private:
     uint32_t m_channel_count;
     std::vector<std::string> m_channel_names;
     std::unique_ptr<uint8_t[]> m_data;
+    bool m_owns_data;
 };
 
 KALI_ENUM_REGISTER(Bitmap::FileFormat);
 KALI_ENUM_REGISTER(Bitmap::PixelFormat);
-KALI_ENUM_REGISTER(Bitmap::ComponentType);
 
 } // namespace kali

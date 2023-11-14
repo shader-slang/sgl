@@ -4,6 +4,7 @@
 #include "kali/kali.h"
 #include "kali/device/device.h"
 
+KALI_PY_DECLARE(core_bitmap);
 KALI_PY_DECLARE(core_input);
 KALI_PY_DECLARE(core_logger);
 KALI_PY_DECLARE(core_object);
@@ -46,6 +47,7 @@ NB_MODULE(kali_ext, m)
     KALI_PY_IMPORT(core_version);
     KALI_PY_IMPORT(core_window);
     KALI_PY_IMPORT(core_struct);
+    KALI_PY_IMPORT(core_bitmap);
 
     m.def_submodule("math", "Math module");
     KALI_PY_IMPORT(math_scalar);
