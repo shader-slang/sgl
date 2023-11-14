@@ -20,27 +20,27 @@ class KALI_API Bitmap : public Object {
     KALI_OBJECT(Bitmap)
 public:
     enum class FileFormat {
+        unknown,
+        auto_,
         png,
         jpg,
         bmp,
         tga,
         hdr,
         exr,
-        auto_,
-        unknown,
     };
 
     KALI_ENUM_INFO(
         FileFormat,
         {
+            {FileFormat::unknown, "unknown"},
+            {FileFormat::auto_, "auto"},
             {FileFormat::png, "png"},
             {FileFormat::jpg, "jpg"},
             {FileFormat::bmp, "bmp"},
             {FileFormat::tga, "tga"},
             {FileFormat::hdr, "hdr"},
             {FileFormat::exr, "exr"},
-            {FileFormat::auto_, "auto"},
-            {FileFormat::unknown, "unknown"},
         }
     );
 
@@ -166,11 +166,23 @@ private:
 
     static FileFormat detect_file_format(Stream* stream);
 
+    void check_required_format(
+        Bitmap::FileFormat file_format,
+        std::vector<Bitmap::PixelFormat> allowed_pixel_formats,
+        std::vector<Bitmap::ComponentType> allowed_component_types
+    ) const;
+
     void read_png(Stream* stream);
     void write_png(Stream* stream, int compression) const;
 
     void read_jpg(Stream* stream);
     void write_jpg(Stream* stream, int quality) const;
+
+    void read_bmp(Stream* stream);
+    void write_bmp(Stream* stream) const;
+
+    void read_tga(Stream* stream);
+    void write_tga(Stream* stream) const;
 
     PixelFormat m_pixel_format;
     ComponentType m_component_type;

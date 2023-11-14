@@ -11,6 +11,14 @@
 #include <jpeglib.h>
 #include <turbojpeg.h>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
+
+#include <algorithm>
+
 KALI_DISABLE_MSVC_WARNING(4611)
 
 namespace kali {
@@ -177,7 +185,7 @@ void Bitmap::write(Stream* stream, FileFormat format, int quality) const
         write_jpg(stream, quality);
         break;
     case FileFormat::bmp:
-        // write_bmp(stream);
+        write_bmp(stream);
         break;
     case FileFormat::tga:
         // write_tga(stream);
@@ -284,8 +292,8 @@ void Bitmap::read(Stream* stream, FileFormat format)
         read_jpg(stream);
         break;
     case FileFormat::bmp:
-        // read_bmp(stream);
-        // break;
+        read_bmp(stream);
+        break;
     case FileFormat::tga:
         // read_tga(stream);
         // break;
@@ -331,6 +339,30 @@ Bitmap::FileFormat Bitmap::detect_file_format(Stream* stream)
     }
     stream->seek(pos);
     return format;
+}
+
+void Bitmap::check_required_format(
+    FileFormat file_format,
+    std::vector<Bitmap::PixelFormat> allowed_pixel_formats,
+    std::vector<Bitmap::ComponentType> allowed_component_types
+) const
+{
+    if (std::find(allowed_pixel_formats.begin(), allowed_pixel_formats.end(), m_pixel_format)
+        == allowed_pixel_formats.end())
+        KALI_THROW(
+            "Unsupported pixel format \"{}\" for writing \"{}\" image, expected one of: {}.",
+            m_pixel_format,
+            file_format,
+            fmt::join(allowed_pixel_formats, ", ")
+        );
+    if (std::find(allowed_component_types.begin(), allowed_component_types.end(), m_component_type)
+        == allowed_component_types.end())
+        KALI_THROW(
+            "Unsupported component type \"{}\" for writing \"{}\" image, expected one of: {}.",
+            m_component_type,
+            file_format,
+            fmt::join(allowed_component_types, ", ")
+        );
 }
 
 //
@@ -507,6 +539,12 @@ void Bitmap::read_png(Stream* stream)
 
 void Bitmap::write_png(Stream* stream, int compression) const
 {
+    check_required_format(
+        FileFormat::png,
+        {PixelFormat::y, PixelFormat::ya, PixelFormat::rgb, PixelFormat::rgba},
+        {ComponentType::uint8, ComponentType::uint16}
+    );
+
     int color_type;
     switch (m_pixel_format) {
     case PixelFormat::y:
@@ -795,6 +833,8 @@ void Bitmap::read_jpg(Stream* stream)
 
 void Bitmap::write_jpg(Stream* stream, int quality) const
 {
+    check_required_format(FileFormat::jpg, {PixelFormat::y, PixelFormat::rgb}, {ComponentType::uint8});
+
     struct jpeg_compress_struct cinfo;
     struct jpeg_error_mgr jerr;
     jbuf_out_t jbuf;
@@ -850,6 +890,51 @@ void Bitmap::write_jpg(Stream* stream, int quality) const
     // Release the libjpeg data structures.
     jpeg_finish_compress(&cinfo);
     jpeg_destroy_compress(&cinfo);
+}
+
+//
+// BMP I/O
+//
+
+static void stbi_write_func(void* context, void* data, int size)
+{
+    static_cast<Stream*>(context)->write(data, size);
+}
+
+void Bitmap::read_bmp(Stream* stream)
+{
+    KALI_UNUSED(stream);
+    KALI_UNIMPLEMENTED();
+}
+
+void Bitmap::write_bmp(Stream* stream) const
+{
+    check_required_format(
+        FileFormat::bmp,
+        {PixelFormat::y, PixelFormat::rgb, PixelFormat::rgba},
+        {ComponentType::uint8}
+    );
+
+    if (!stbi_write_bmp_to_func(&stbi_write_func, stream, m_width, m_height, channel_count(), data()))
+        KALI_THROW("Failed to write BMP file!");
+}
+
+void Bitmap::read_tga(Stream* stream)
+{
+    KALI_UNUSED(stream);
+    KALI_UNIMPLEMENTED();
+}
+
+void Bitmap::write_tga(Stream* stream) const
+{
+    check_required_format(
+        FileFormat::tga,
+        {PixelFormat::y, PixelFormat::rgb, PixelFormat::rgba},
+        {ComponentType::uint8}
+    );
+
+    if (!stbi_write_bmp_to_func(&stbi_write_func, stream, m_width, m_height, channel_count(), data()))
+        KALI_THROW("Failed to write BMP file!");
 }
 
 

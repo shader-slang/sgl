@@ -88,9 +88,6 @@ target_sources(kali PRIVATE
     kali/device/swapchain.h
     kali/device/types.h
 
-    kali/imageio/imageio.cpp
-    kali/imageio/imageio.h
-
     kali/math/constants.h
     kali/math/float16.cpp
     kali/math/float16.h
@@ -363,7 +360,6 @@ target_sources(kali_tests PRIVATE
     kali/device/tests/test_device.cpp
     kali/device/tests/test_formats.cpp
     kali/device/tests/test_shader.cpp
-    kali/imageio/tests/test_imageio.cpp
     kali/math/tests/test_float16.cpp
     kali/math/tests/test_matrix.cpp
     kali/math/tests/test_quaternion.cpp
