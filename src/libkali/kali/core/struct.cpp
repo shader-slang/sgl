@@ -644,7 +644,7 @@ private:
             auto it = registers.find(reg);
             if (it != registers.end())
                 return it->second;
-            auto [it2, inserted] = registers.emplace(reg, Register{reg});
+            auto [it2, inserted] = registers.emplace(reg, Register{.index = reg});
             return it2->second;
         }
 

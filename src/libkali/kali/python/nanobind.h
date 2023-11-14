@@ -98,5 +98,4 @@ size_t is_ndarray_contiguous(const nb::ndarray<Args...>& array)
         .def(nb::self |= nb::self)                                                                                     \
         .def(nb::self& nb::self)                                                                                       \
         .def(nb::self &= nb::self)                                                                                     \
-        .def(~nb::self)\
-
+        .def(~nb::self)

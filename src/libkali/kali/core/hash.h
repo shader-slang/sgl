@@ -16,11 +16,11 @@ size_t hash(const T& t)
     return std::hash<T>()(t);
 }
 
-template<typename T1, typename T2, typename ...Rest>
+template<typename T1, typename T2, typename... Rest>
 size_t hash(const T1& t1, const T2& t2, const Rest&... rest)
 {
     size_t result = hash_combine(hash(t1), hash(t2));
-    ((result = hash_combine(result, hash(rest))),...);
+    ((result = hash_combine(result, hash(rest))), ...);
     return result;
 }
 
