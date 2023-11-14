@@ -1,3 +1,5 @@
+# TODO: MITSUBA license
+
 import pytest
 from kali import Struct, StructConverter
 import struct

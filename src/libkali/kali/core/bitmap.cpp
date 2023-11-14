@@ -1,3 +1,5 @@
+// TODO: MITSUBA license
+
 #include "bitmap.h"
 #include "kali/core/macros.h"
 #include "kali/core/error.h"

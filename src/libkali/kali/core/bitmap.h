@@ -1,3 +1,5 @@
+// TODO: MITSUBA license
+
 #pragma once
 
 #include "kali/core/macros.h"

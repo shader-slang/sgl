@@ -1,3 +1,5 @@
+// TODO: MITSUBA license
+
 #include "struct.h"
 
 #include "kali/core/format.h"
