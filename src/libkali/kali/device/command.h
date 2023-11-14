@@ -21,8 +21,8 @@ struct ShaderCursor;
 
 namespace kali {
 
-enum CommandQueueType {
-    graphics = gfx::ICommandQueue::QueueType::Graphics,
+enum CommandQueueType : uint32_t {
+    graphics = static_cast<uint32_t>(gfx::ICommandQueue::QueueType::Graphics),
 };
 
 KALI_ENUM_INFO(

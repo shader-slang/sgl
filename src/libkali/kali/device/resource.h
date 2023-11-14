@@ -20,12 +20,12 @@ using DeviceOffset = uint64_t;
 using DeviceSize = uint64_t;
 
 enum class ResourceType : uint32_t {
-    unknown = gfx::IResource::Type::Unknown,
-    buffer = gfx::IResource::Type::Buffer,
-    texture_1d = gfx::IResource::Type::Texture1D,
-    texture_2d = gfx::IResource::Type::Texture2D,
-    texture_3d = gfx::IResource::Type::Texture3D,
-    texture_cube = gfx::IResource::Type::TextureCube,
+    unknown = static_cast<uint32_t>(gfx::IResource::Type::Unknown),
+    buffer = static_cast<uint32_t>(gfx::IResource::Type::Buffer),
+    texture_1d = static_cast<uint32_t>(gfx::IResource::Type::Texture1D),
+    texture_2d = static_cast<uint32_t>(gfx::IResource::Type::Texture2D),
+    texture_3d = static_cast<uint32_t>(gfx::IResource::Type::Texture3D),
+    texture_cube = static_cast<uint32_t>(gfx::IResource::Type::TextureCube),
 };
 
 KALI_ENUM_INFO(
@@ -42,28 +42,28 @@ KALI_ENUM_INFO(
 KALI_ENUM_REGISTER(ResourceType);
 
 enum class ResourceState : uint32_t {
-    undefined = gfx::ResourceState::Undefined,
-    general = gfx::ResourceState::General,
-    pre_initialized = gfx::ResourceState::PreInitialized,
-    vertex_buffer = gfx::ResourceState::VertexBuffer,
-    index_buffer = gfx::ResourceState::IndexBuffer,
-    constant_buffer = gfx::ResourceState::ConstantBuffer,
-    stream_output = gfx::ResourceState::StreamOutput,
-    shader_resource = gfx::ResourceState::ShaderResource,
-    unordered_access = gfx::ResourceState::UnorderedAccess,
-    render_target = gfx::ResourceState::RenderTarget,
-    depth_read = gfx::ResourceState::DepthRead,
-    depth_write = gfx::ResourceState::DepthWrite,
-    present = gfx::ResourceState::Present,
-    indirect_argument = gfx::ResourceState::IndirectArgument,
-    copy_source = gfx::ResourceState::CopySource,
-    copy_destination = gfx::ResourceState::CopyDestination,
-    resolve_source = gfx::ResourceState::ResolveSource,
-    resolve_destination = gfx::ResourceState::ResolveDestination,
-    acceleration_structure = gfx::ResourceState::AccelerationStructure,
-    acceleration_structure_build_output = gfx::ResourceState::AccelerationStructureBuildInput,
-    pixel_shader_resource = gfx::ResourceState::PixelShaderResource,
-    non_pixel_shader_resource = gfx::ResourceState::NonPixelShaderResource,
+    undefined = static_cast<uint32_t>(gfx::ResourceState::Undefined),
+    general = static_cast<uint32_t>(gfx::ResourceState::General),
+    pre_initialized = static_cast<uint32_t>(gfx::ResourceState::PreInitialized),
+    vertex_buffer = static_cast<uint32_t>(gfx::ResourceState::VertexBuffer),
+    index_buffer = static_cast<uint32_t>(gfx::ResourceState::IndexBuffer),
+    constant_buffer = static_cast<uint32_t>(gfx::ResourceState::ConstantBuffer),
+    stream_output = static_cast<uint32_t>(gfx::ResourceState::StreamOutput),
+    shader_resource = static_cast<uint32_t>(gfx::ResourceState::ShaderResource),
+    unordered_access = static_cast<uint32_t>(gfx::ResourceState::UnorderedAccess),
+    render_target = static_cast<uint32_t>(gfx::ResourceState::RenderTarget),
+    depth_read = static_cast<uint32_t>(gfx::ResourceState::DepthRead),
+    depth_write = static_cast<uint32_t>(gfx::ResourceState::DepthWrite),
+    present = static_cast<uint32_t>(gfx::ResourceState::Present),
+    indirect_argument = static_cast<uint32_t>(gfx::ResourceState::IndirectArgument),
+    copy_source = static_cast<uint32_t>(gfx::ResourceState::CopySource),
+    copy_destination = static_cast<uint32_t>(gfx::ResourceState::CopyDestination),
+    resolve_source = static_cast<uint32_t>(gfx::ResourceState::ResolveSource),
+    resolve_destination = static_cast<uint32_t>(gfx::ResourceState::ResolveDestination),
+    acceleration_structure = static_cast<uint32_t>(gfx::ResourceState::AccelerationStructure),
+    acceleration_structure_build_output = static_cast<uint32_t>(gfx::ResourceState::AccelerationStructureBuildInput),
+    pixel_shader_resource = static_cast<uint32_t>(gfx::ResourceState::PixelShaderResource),
+    non_pixel_shader_resource = static_cast<uint32_t>(gfx::ResourceState::NonPixelShaderResource),
 };
 
 KALI_ENUM_INFO(
@@ -133,9 +133,9 @@ KALI_ENUM_REGISTER(ResourceUsage);
 KALI_ENUM_CLASS_OPERATORS(ResourceUsage)
 
 enum class MemoryType : uint32_t {
-    device_local = gfx::MemoryType::DeviceLocal,
-    upload = gfx::MemoryType::Upload,
-    read_back = gfx::MemoryType::ReadBack,
+    device_local = static_cast<uint32_t>(gfx::MemoryType::DeviceLocal),
+    upload = static_cast<uint32_t>(gfx::MemoryType::Upload),
+    read_back = static_cast<uint32_t>(gfx::MemoryType::ReadBack),
 };
 
 KALI_ENUM_INFO(
@@ -148,13 +148,13 @@ KALI_ENUM_INFO(
 );
 KALI_ENUM_REGISTER(MemoryType);
 
-enum class ResourceViewType {
-    unknown = gfx::IResourceView::Type::Unknown,
-    render_target = gfx::IResourceView::Type::RenderTarget,
-    depth_stencil = gfx::IResourceView::Type::DepthStencil,
-    shader_resource = gfx::IResourceView::Type::ShaderResource,
-    unordered_access = gfx::IResourceView::Type::UnorderedAccess,
-    acceleration_structure = gfx::IResourceView::Type::AccelerationStructure,
+enum class ResourceViewType : uint32_t {
+    unknown = static_cast<uint32_t>(gfx::IResourceView::Type::Unknown),
+    render_target = static_cast<uint32_t>(gfx::IResourceView::Type::RenderTarget),
+    depth_stencil = static_cast<uint32_t>(gfx::IResourceView::Type::DepthStencil),
+    shader_resource = static_cast<uint32_t>(gfx::IResourceView::Type::ShaderResource),
+    unordered_access = static_cast<uint32_t>(gfx::IResourceView::Type::UnorderedAccess),
+    acceleration_structure = static_cast<uint32_t>(gfx::IResourceView::Type::AccelerationStructure),
 };
 
 KALI_ENUM_INFO(
@@ -177,14 +177,14 @@ struct BufferRange {
 };
 
 enum class TextureAspect : uint32_t {
-    default_ = gfx::TextureAspect::Default,
-    color = gfx::TextureAspect::Color,
-    depth = gfx::TextureAspect::Depth,
-    stencil = gfx::TextureAspect::Stencil,
-    meta_data = gfx::TextureAspect::MetaData,
-    plane0 = gfx::TextureAspect::Plane0,
-    plane1 = gfx::TextureAspect::Plane1,
-    plane2 = gfx::TextureAspect::Plane2,
+    default_ = static_cast<uint32_t>(gfx::TextureAspect::Default),
+    color = static_cast<uint32_t>(gfx::TextureAspect::Color),
+    depth = static_cast<uint32_t>(gfx::TextureAspect::Depth),
+    stencil = static_cast<uint32_t>(gfx::TextureAspect::Stencil),
+    meta_data = static_cast<uint32_t>(gfx::TextureAspect::MetaData),
+    plane0 = static_cast<uint32_t>(gfx::TextureAspect::Plane0),
+    plane1 = static_cast<uint32_t>(gfx::TextureAspect::Plane1),
+    plane2 = static_cast<uint32_t>(gfx::TextureAspect::Plane2),
     depth_stencil = depth | stencil,
 };
 

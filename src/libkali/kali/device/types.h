@@ -7,7 +7,7 @@
 
 namespace kali {
 
-enum class ShaderModel {
+enum class ShaderModel : uint32_t {
     unknown = 0,
     sm_6_0 = 60,
     sm_6_1 = 61,
@@ -44,7 +44,7 @@ inline uint32_t get_shader_model_minor_version(ShaderModel sm)
     return static_cast<uint32_t>(sm) % 10;
 }
 
-enum class ShaderStage {
+enum class ShaderStage : uint32_t {
     none = SLANG_STAGE_NONE,
     vertex = SLANG_STAGE_VERTEX,
     hull = SLANG_STAGE_HULL,
@@ -84,15 +84,15 @@ KALI_ENUM_INFO(
 );
 KALI_ENUM_REGISTER(ShaderStage);
 
-enum class ComparisonFunc {
-    never = gfx::ComparisonFunc::Never,
-    less = gfx::ComparisonFunc::Less,
-    equal = gfx::ComparisonFunc::Equal,
-    less_equal = gfx::ComparisonFunc::LessEqual,
-    greater = gfx::ComparisonFunc::Greater,
-    not_equal = gfx::ComparisonFunc::NotEqual,
-    greater_equal = gfx::ComparisonFunc::GreaterEqual,
-    always = gfx::ComparisonFunc::Always,
+enum class ComparisonFunc : uint32_t {
+    never = static_cast<uint32_t>(gfx::ComparisonFunc::Never),
+    less = static_cast<uint32_t>(gfx::ComparisonFunc::Less),
+    equal = static_cast<uint32_t>(gfx::ComparisonFunc::Equal),
+    less_equal = static_cast<uint32_t>(gfx::ComparisonFunc::LessEqual),
+    greater = static_cast<uint32_t>(gfx::ComparisonFunc::Greater),
+    not_equal = static_cast<uint32_t>(gfx::ComparisonFunc::NotEqual),
+    greater_equal = static_cast<uint32_t>(gfx::ComparisonFunc::GreaterEqual),
+    always = static_cast<uint32_t>(gfx::ComparisonFunc::Always),
 };
 
 KALI_ENUM_INFO(
@@ -110,9 +110,9 @@ KALI_ENUM_INFO(
 );
 KALI_ENUM_REGISTER(ComparisonFunc);
 
-enum class TextureFilteringMode {
-    point = gfx::TextureFilteringMode::Point,
-    linear = gfx::TextureFilteringMode::Linear,
+enum class TextureFilteringMode : uint32_t {
+    point = static_cast<uint32_t>(gfx::TextureFilteringMode::Point),
+    linear = static_cast<uint32_t>(gfx::TextureFilteringMode::Linear),
 };
 
 KALI_ENUM_INFO(
@@ -124,12 +124,12 @@ KALI_ENUM_INFO(
 );
 KALI_ENUM_REGISTER(TextureFilteringMode);
 
-enum class TextureAddressingMode {
-    wrap = gfx::TextureAddressingMode::Wrap,
-    clamp_to_edge = gfx::TextureAddressingMode::ClampToEdge,
-    clamp_to_border = gfx::TextureAddressingMode::ClampToBorder,
-    mirror_repeat = gfx::TextureAddressingMode::MirrorRepeat,
-    mirror_once = gfx::TextureAddressingMode::MirrorOnce,
+enum class TextureAddressingMode : uint32_t {
+    wrap = static_cast<uint32_t>(gfx::TextureAddressingMode::Wrap),
+    clamp_to_edge = static_cast<uint32_t>(gfx::TextureAddressingMode::ClampToEdge),
+    clamp_to_border = static_cast<uint32_t>(gfx::TextureAddressingMode::ClampToBorder),
+    mirror_repeat = static_cast<uint32_t>(gfx::TextureAddressingMode::MirrorRepeat),
+    mirror_once = static_cast<uint32_t>(gfx::TextureAddressingMode::MirrorOnce),
 };
 
 KALI_ENUM_INFO(
@@ -144,11 +144,11 @@ KALI_ENUM_INFO(
 );
 KALI_ENUM_REGISTER(TextureAddressingMode);
 
-enum class TextureReductionOp {
-    average = gfx::TextureReductionOp::Average,
-    comparison = gfx::TextureReductionOp::Comparison,
-    minimum = gfx::TextureReductionOp::Minimum,
-    maximum = gfx::TextureReductionOp::Maximum,
+enum class TextureReductionOp : uint32_t {
+    average = static_cast<uint32_t>(gfx::TextureReductionOp::Average),
+    comparison = static_cast<uint32_t>(gfx::TextureReductionOp::Comparison),
+    minimum = static_cast<uint32_t>(gfx::TextureReductionOp::Minimum),
+    maximum = static_cast<uint32_t>(gfx::TextureReductionOp::Maximum),
 };
 
 KALI_ENUM_INFO(

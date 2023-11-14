@@ -9,6 +9,7 @@
 #include <slang-gfx.h>
 
 #include <string_view>
+#include <vector>
 #include <map>
 
 namespace kali {
