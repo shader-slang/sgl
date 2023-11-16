@@ -2,6 +2,7 @@
 #include "kali/core/macros.h"
 #include "kali/core/error.h"
 #include "kali/core/platform.h"
+#include "kali/core/format.h"
 
 #include <fmt/color.h>
 
@@ -19,11 +20,11 @@ namespace kali {
 
 static const std::array<std::string_view, 6> s_level_str{
     "",
-    "[DEBUG] ",
-    "[INFO]  ",
-    "[WARN]  ",
-    "[ERROR] ",
-    "[FATAL] ",
+    "DEBUG",
+    "INFO",
+    "WARN",
+    "ERROR",
+    "FATAL",
 };
 
 static const std::array<fmt::terminal_color, 6> s_level_color{
@@ -37,7 +38,7 @@ static const std::array<fmt::terminal_color, 6> s_level_color{
 
 ConsoleLoggerOutput::ConsoleLoggerOutput(bool colored)
 {
-    m_use_color = colored && enable_ansi_control_sequences();
+    m_colored = colored && enable_ansi_control_sequences();
 }
 
 void ConsoleLoggerOutput::write(LogLevel level, const std::string_view module, const std::string_view msg)
@@ -45,27 +46,37 @@ void ConsoleLoggerOutput::write(LogLevel level, const std::string_view module, c
     std::string_view level_str = s_level_str[static_cast<int>(level)];
     fmt::terminal_color color = s_level_color[static_cast<int>(level)];
 
-    ::FILE* stream = level >= LogLevel::error ? stderr : stdout;
+    ::FILE* stream = level >= LogLevel::error ? stdout : stdout;
 
-    if (m_use_color) {
+    if (level == LogLevel::none) {
+        fmt::print(stream, "{}\n", msg);
+        return;
+    }
+
+    if (m_colored) {
         if (module.empty())
-            fmt::print(stream, "{}{}\n", fmt::styled(level_str, fmt::fg(color)), msg);
+            fmt::print(stream, "[{}] {}\n", fmt::styled(level_str, fmt::fg(color)), msg);
         else
             fmt::print(
                 stream,
-                "{}{} {}\n",
+                "[{}] ({}) {}\n",
                 fmt::styled(level_str, fmt::fg(color)),
                 fmt::styled(module, fmt::fg(fmt::terminal_color::bright_black)),
                 msg
             );
     } else {
         if (module.empty())
-            fmt::print(stream, "{}{}\n", level_str, msg);
+            fmt::print(stream, "[{}] {}\n", level_str, msg);
         else
-            fmt::print(stream, "{}{} {}\n", level_str, module, msg);
+            fmt::print(stream, "[{}] ({}) {}\n", level_str, module, msg);
     }
 
     ::fflush(stream);
+}
+
+std::string ConsoleLoggerOutput::to_string() const
+{
+    return fmt::format("ConsoleLoggerOutput(colored={})", m_colored);
 }
 
 bool ConsoleLoggerOutput::enable_ansi_control_sequences()
@@ -89,7 +100,7 @@ bool ConsoleLoggerOutput::enable_ansi_control_sequences()
     return true;
 }
 
-FileLoggerOutput::FileLoggerOutput(const std::filesystem::path& path)
+FileLoggerOutput::FileLoggerOutput(const std::filesystem::path& path) : m_path(path)
 {
 #if KALI_WINDOWS
     ::_wfopen_s(reinterpret_cast<FILE**>(&m_file), path.wstring().c_str(), L"w");
@@ -106,20 +117,35 @@ FileLoggerOutput::~FileLoggerOutput()
 
 void FileLoggerOutput::write(LogLevel level, const std::string_view module, const std::string_view msg)
 {
+    if (level == LogLevel::none) {
+        fmt::print(static_cast<FILE*>(m_file), "{}\n", msg);
+        return;
+    }
+
     if (module.empty())
-        fmt::print(static_cast<FILE*>(m_file), "{}{}\n", s_level_str[int(level)], msg);
+        fmt::print(static_cast<FILE*>(m_file), "[{}] {}\n", s_level_str[int(level)], msg);
     else
-        fmt::print(static_cast<FILE*>(m_file), "{}{} {}\n", s_level_str[int(level)], module, msg);
+        fmt::print(static_cast<FILE*>(m_file), "[{}] ({}) {}\n", s_level_str[int(level)], module, msg);
     ::fflush(static_cast<FILE*>(m_file));
+}
+
+std::string FileLoggerOutput::to_string() const
+{
+    return fmt::format("FileLoggerOutput(path=\"{}\")", m_path);
 }
 
 void DebugConsoleLoggerOutput::write(LogLevel level, const std::string_view module, const std::string_view msg)
 {
 #if KALI_WINDOWS
+    if (level == LogLevel::none) {
+        OutputDebugStringA(fmt::format("{}\n", msg).c_str());
+        return;
+    }
+
     if (module.empty())
-        OutputDebugStringA(fmt::format("{}{}\n", s_level_str[int(level)], msg).c_str());
+        OutputDebugStringA(fmt::format("[{}] {}\n", s_level_str[int(level)], msg).c_str());
     else
-        OutputDebugStringA(fmt::format("{}{} {}\n", s_level_str[int(level)], module, msg).c_str());
+        OutputDebugStringA(fmt::format("[{}] ({}) {}\n", s_level_str[int(level)], module, msg).c_str());
 #else
     KALI_UNUSED(level);
     KALI_UNUSED(module);
@@ -127,13 +153,15 @@ void DebugConsoleLoggerOutput::write(LogLevel level, const std::string_view modu
 #endif
 }
 
-Logger::Logger(LogLevel log_level, const std::string_view module, bool use_default_outputs)
-    : m_level(log_level)
-    , m_module(module)
+std::string DebugConsoleLoggerOutput::to_string() const
 {
-    if (!m_module.empty())
-        m_module = fmt::format("[{}]", m_module);
+    return "DebugConsoleLoggerOutput()";
+}
 
+Logger::Logger(LogLevel log_level, const std::string_view name, bool use_default_outputs)
+    : m_level(log_level)
+    , m_name(name)
+{
     if (use_default_outputs) {
         add_output(make_ref<ConsoleLoggerOutput>());
         if (is_debugger_present())
@@ -187,6 +215,18 @@ void Logger::remove_all_outputs()
     m_outputs.clear();
 }
 
+std::string Logger::name() const
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return m_name;
+}
+
+void Logger::set_name(std::string_view name)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_name = name;
+}
+
 LogLevel Logger::level() const
 {
     std::lock_guard<std::mutex> lock(m_mutex);
@@ -210,7 +250,7 @@ void Logger::log(LogLevel level, const std::string_view msg, LogFrequency freque
         return;
 
     for (const auto& output : m_outputs)
-        output->write(level, m_module, msg);
+        output->write(level, m_name, msg);
 }
 
 static Logger* s_logger;

@@ -11,6 +11,8 @@
 
 namespace kali {
 
+
+/// Log level.
 enum class LogLevel {
     none,
     debug,
@@ -20,8 +22,11 @@ enum class LogLevel {
     fatal,
 };
 
+/// Log frequency.
 enum class LogFrequency {
+    /// Log the message every time.
     always,
+    /// Log the message only once.
     once,
 };
 
@@ -29,6 +34,10 @@ enum class LogFrequency {
 class KALI_API LoggerOutput : public Object {
     KALI_OBJECT(LoggerOutput)
 public:
+    /// Write a log message.
+    /// @param level The log level.
+    /// @param module The module name.
+    /// @param msg The message.
     virtual void write(LogLevel level, const std::string_view module, const std::string_view msg) = 0;
 };
 
@@ -39,12 +48,14 @@ class KALI_API ConsoleLoggerOutput : public LoggerOutput {
 public:
     ConsoleLoggerOutput(bool colored = true);
 
-    virtual void write(LogLevel level, const std::string_view module, const std::string_view msg) override;
+    void write(LogLevel level, const std::string_view module, const std::string_view msg) override;
+
+    std::string to_string() const override;
 
 private:
     static bool enable_ansi_control_sequences();
 
-    bool m_use_color;
+    bool m_colored;
 };
 
 /// Logger output that writes to a file.
@@ -53,16 +64,23 @@ public:
     FileLoggerOutput(const std::filesystem::path& path);
     ~FileLoggerOutput();
 
-    virtual void write(LogLevel level, const std::string_view module, const std::string_view msg) override;
+    const std::filesystem::path& path() const { return m_path; }
+
+    void write(LogLevel level, const std::string_view module, const std::string_view msg) override;
+
+    std::string to_string() const override;
 
 private:
+    std::filesystem::path m_path;
     void* m_file;
 };
 
 /// Logger output that writes to the debug console (Windows only).
 class KALI_API DebugConsoleLoggerOutput : public LoggerOutput {
 public:
-    virtual void write(LogLevel level, const std::string_view module, const std::string_view msg) override;
+    void write(LogLevel level, const std::string_view module, const std::string_view msg) override;
+
+    std::string to_string() const override;
 };
 
 /// Defines a family of logging functions for a given log level.
@@ -96,28 +114,55 @@ public:
 class KALI_API Logger : public Object {
     KALI_OBJECT(Logger)
 public:
-    Logger(LogLevel level = LogLevel::info, const std::string_view module = {}, bool use_default_outputs = true);
+    Logger(LogLevel level = LogLevel::info, const std::string_view name = {}, bool use_default_outputs = true);
 
     static ref<Logger>
-    create(LogLevel level = LogLevel::info, const std::string_view module = {}, bool use_default_outputs = true)
+    create(LogLevel level = LogLevel::info, const std::string_view name = {}, bool use_default_outputs = true)
     {
-        return make_ref<Logger>(level, module, use_default_outputs);
+        return make_ref<Logger>(level, name, use_default_outputs);
     }
 
+    /// Add a console logger output.
+    /// @param colored Whether to use colored output.
+    /// @return The created logger output.
     ref<LoggerOutput> add_console_output(bool colored = true);
+
+    /// Add a file logger output.
+    /// @param path The path to the log file.
+    /// @return The created logger output.
     ref<LoggerOutput> add_file_output(const std::filesystem::path& path);
+
+    /// Add a debug console logger output (Windows only).
+    /// @return The created logger output.
     ref<LoggerOutput> add_debug_console_output();
 
+    /// Use the same outputs as the given logger.
+    /// @param other Logger to copy outputs from.
     void use_same_outputs(const Logger& other);
 
+    /// Add a logger output.
+    /// @param output The logger output to add.
     void add_output(ref<LoggerOutput> output);
+
+    /// Remove a logger output.
+    /// @param output The logger output to remove.
     void remove_output(ref<LoggerOutput> output);
+
+    /// Remove all logger outputs.
     void remove_all_outputs();
+
+    /// The name of the logger.
+    std::string name() const;
+    void set_name(std::string_view name);
 
     /// The log level.
     LogLevel level() const;
     void set_level(LogLevel level);
 
+    /// Log a message.
+    /// @param level The log level.
+    /// @param msg The message.
+    /// @param frequency The log frequency.
     void log(LogLevel level, const std::string_view msg, LogFrequency frequency = LogFrequency::always);
 
     // Define logging functions.
@@ -138,7 +183,7 @@ private:
     bool is_duplicate(const std::string_view msg);
 
     LogLevel m_level{LogLevel::info};
-    std::string m_module;
+    std::string m_name;
 
     std::set<ref<LoggerOutput>> m_outputs;
     std::set<std::string, std::less<>> m_messages;

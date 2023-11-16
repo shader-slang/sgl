@@ -3,6 +3,7 @@
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
 #include <nanobind/operators.h>
+#include <nanobind/trampoline.h>
 #include <nanobind/stl/array.h>
 #include <nanobind/stl/bind_map.h>
 #include <nanobind/stl/filesystem.h>
