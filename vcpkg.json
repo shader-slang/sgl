@@ -24,6 +24,7 @@
         "libpng",
         "openexr",
         "pugixml",
-        "asmjit"
+        "asmjit",
+        "tevclient"
     ]
 }
