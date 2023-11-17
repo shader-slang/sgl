@@ -279,6 +279,10 @@ std::string Bitmap::to_string() const
     );
 }
 
+void Bitmap::static_init() { }
+
+void Bitmap::static_shutdown() { }
+
 void Bitmap::read(Stream* stream, FileFormat format)
 {
     if (format == FileFormat::auto_)
