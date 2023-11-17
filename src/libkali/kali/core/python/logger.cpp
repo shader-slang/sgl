@@ -32,7 +32,7 @@ KALI_PY_EXPORT(core_logger)
 
     nb::class_<LoggerOutput, Object, PyLoggerOutput>(m, "LoggerOutput")
         .def(nb::init<>())
-        .def("write", &LoggerOutput::write, "level"_a, "module"_a, "msg"_a);
+        .def("write", &LoggerOutput::write, "level"_a, "name"_a, "msg"_a);
 
     nb::class_<ConsoleLoggerOutput, LoggerOutput>(m, "ConsoleLoggerOutput").def(nb::init<bool>(), "colored"_a = true);
 
@@ -48,10 +48,10 @@ KALI_PY_EXPORT(core_logger)
     nb::class_<Logger>(m, "Logger")
         .def(
             "__init__",
-            [](Logger* self, LogLevel level, std::string_view module, bool use_default_outputs)
-            { new (self) Logger(level, module, use_default_outputs); },
+            [](Logger* self, LogLevel level, std::string_view name, bool use_default_outputs)
+            { new (self) Logger(level, name, use_default_outputs); },
             "level"_a = LogLevel::info,
-            "module"_a = "",
+            "name"_a = "",
             "use_default_outputs"_a = true
         )
         .def_prop_rw("level", &Logger::level, &Logger::set_level)

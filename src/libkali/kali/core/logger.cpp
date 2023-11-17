@@ -100,7 +100,8 @@ bool ConsoleLoggerOutput::enable_ansi_control_sequences()
     return true;
 }
 
-FileLoggerOutput::FileLoggerOutput(const std::filesystem::path& path) : m_path(path)
+FileLoggerOutput::FileLoggerOutput(const std::filesystem::path& path)
+    : m_path(path)
 {
 #if KALI_WINDOWS
     ::_wfopen_s(reinterpret_cast<FILE**>(&m_file), path.wstring().c_str(), L"w");

@@ -1,8 +1,14 @@
 import pytest
 import os
 import tempfile
-import kali
-from kali import Logger, LoggerOutput, ConsoleLoggerOutput, FileLoggerOutput, LogLevel
+from kali import (
+    Logger,
+    LoggerOutput,
+    ConsoleLoggerOutput,
+    FileLoggerOutput,
+    LogLevel,
+    LogFrequency,
+)
 
 
 class CustomLoggerOutput(LoggerOutput):
@@ -13,28 +19,67 @@ class CustomLoggerOutput(LoggerOutput):
     def clear(self):
         self.messages = []
 
-    def write(self, level, module, msg):
-        self.messages.append((level, module, msg))
+    def write(self, level, name, msg):
+        self.messages.append((level, name, msg))
 
 
 def test_logger():
-    kali.log_info("just an info")
-
-    logger = Logger(level=LogLevel.info, module="test", use_default_outputs=False)
-    # output = ConsoleLoggerOutput(colored=True)
+    logger = Logger(level=LogLevel.debug, name="test", use_default_outputs=False)
     output = CustomLoggerOutput()
-    print(output)
     logger.add_output(output)
-    output.write(LogLevel.info, "test", "a message")
 
-    assert logger.level == LogLevel.info
+    messages = [
+        (LogLevel.none, "plain text"),
+        (LogLevel.debug, "debug message"),
+        (LogLevel.info, "info message"),
+        (LogLevel.warn, "warn message"),
+        (LogLevel.error, "error message"),
+        (LogLevel.fatal, "fatal message"),
+    ]
 
-    pass
+    for level in [
+        LogLevel.debug,
+        LogLevel.info,
+        LogLevel.warn,
+        LogLevel.error,
+        LogLevel.fatal,
+    ]:
+        logger.level = level
+        logger.name = f"test_{level}"
+
+        for msg in messages:
+            output.clear()
+            logger.log(msg[0], msg[1])
+            if msg[0] == LogLevel.none or msg[0] >= level:
+                assert len(output.messages) == 1
+                assert output.messages[0][0] == msg[0]
+                assert output.messages[0][1] == f"test_{level}"
+                assert output.messages[0][2] == msg[1]
+            else:
+                assert len(output.messages) == 0
+
+
+def test_logger_frequency():
+    logger = Logger(level=LogLevel.info, name="test", use_default_outputs=False)
+    output = CustomLoggerOutput()
+    logger.add_output(output)
+
+    logger.log(LogLevel.info, "repeated", LogFrequency.once)
+    assert len(output.messages) == 1
+
+    logger.log(LogLevel.info, "repeated", LogFrequency.once)
+    assert len(output.messages) == 1
+
+    logger.log(LogLevel.info, "repeated 2", LogFrequency.once)
+    assert len(output.messages) == 2
+
+    logger.log(LogLevel.info, "repeated 2", LogFrequency.once)
+    assert len(output.messages) == 2
 
 
 def _test_console_output():
     output = ConsoleLoggerOutput(colored=False)
-    logger = Logger(level=LogLevel.debug, module="test", use_default_outputs=False)
+    logger = Logger(level=LogLevel.debug, name="test", use_default_outputs=False)
     logger.add_output(output)
     logger.log(LogLevel.none, "plain message")
     logger.debug("debug message")
@@ -62,7 +107,7 @@ def test_file_output():
     with tempfile.TemporaryDirectory() as tmpdir:
         path = os.path.join(tmpdir, "test.log")
         output = FileLoggerOutput(path)
-        logger = Logger(level=LogLevel.debug, module="test", use_default_outputs=False)
+        logger = Logger(level=LogLevel.debug, name="test", use_default_outputs=False)
         logger.add_output(output)
         logger.log(LogLevel.none, "plain message")
         logger.debug("debug message")
@@ -72,15 +117,14 @@ def test_file_output():
         logger.fatal("fatal message")
         del output
         del logger
-        with open(path, "r") as f:
-            lines = f.readlines()
-            assert len(lines) == 6
-            assert lines[0].startswith("plain message")
-            assert lines[1].startswith("[DEBUG] (test) debug message")
-            assert lines[2].startswith("[INFO] (test) info message")
-            assert lines[3].startswith("[WARN] (test) warn message")
-            assert lines[4].startswith("[ERROR] (test) error message")
-            assert lines[5].startswith("[FATAL] (test) fatal message")
+        lines = open(path, "r").readlines()
+        assert len(lines) == 6
+        assert lines[0].startswith("plain message")
+        assert lines[1].startswith("[DEBUG] (test) debug message")
+        assert lines[2].startswith("[INFO] (test) info message")
+        assert lines[3].startswith("[WARN] (test) warn message")
+        assert lines[4].startswith("[ERROR] (test) error message")
+        assert lines[5].startswith("[FATAL] (test) fatal message")
 
 
 if __name__ == "__main__":
