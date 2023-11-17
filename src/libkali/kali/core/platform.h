@@ -19,7 +19,6 @@ DECLARE_HANDLE(HWND);
 #endif
 
 namespace kali {
-
 #if KALI_WINDOWS
 using WindowHandle = HWND;
 using SharedLibraryHandle = void*; // HANDLE
@@ -30,12 +29,16 @@ struct WindowHandle {
 };
 using SharedLibraryHandle = void*;
 #endif
+} // namespace kali
+
+namespace kali::platform {
+
 
 /// Initialize the platform layer.
-KALI_API void platform_static_init();
+KALI_API void static_init();
 
 /// Shutdown the platform layer.
-KALI_API void platform_static_shutdown();
+KALI_API void static_shutdown();
 
 /// Inform the platform that the library is loaded from python.
 KALI_API void set_python_active(bool active);
@@ -205,4 +208,4 @@ using ResolvedStackTrace = std::vector<ResolvedStackFrame>;
 [[nodiscard]] KALI_API std::string format_stacktrace(std::span<const StackFrame> trace, size_t max_frames = 0);
 
 
-} // namespace kali
+} // namespace kali::platform

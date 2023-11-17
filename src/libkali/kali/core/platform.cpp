@@ -6,7 +6,7 @@
 
 #include <cstdio>
 
-namespace kali {
+namespace kali::platform {
 
 static bool s_is_python_active = false;
 
@@ -137,4 +137,4 @@ std::string format_stacktrace(std::span<const StackFrame> trace, size_t max_fram
     return format_stacktrace(resolve_stacktrace(trace), max_frames);
 }
 
-} // namespace kali
+} // namespace kali::platform

@@ -49,13 +49,13 @@ bool PluginManager::load_plugin(const std::filesystem::path& path)
     if (!std::filesystem::exists(path))
         KALI_THROW("Failed to load plugin library from {}. File not found.", path);
 
-    SharedLibraryHandle library = load_shared_library(path);
+    SharedLibraryHandle library = platform::load_shared_library(path);
     if (library == nullptr)
         KALI_THROW("Failed to load plugin library from {}. Cannot load shared library.", path);
 
     using RegisterPluginProc = void (*)(PluginRegistry&);
 
-    auto register_plugin_proc = (RegisterPluginProc)get_proc_address(library, "register_plugin");
+    auto register_plugin_proc = (RegisterPluginProc)platform::get_proc_address(library, "register_plugin");
     if (register_plugin_proc == nullptr)
         KALI_THROW("Failed to load plugin library from {}. Symbol 'register_plugin' not found.", path);
 
@@ -98,7 +98,7 @@ bool PluginManager::release_plugin(const std::filesystem::path& path)
         }
     }
 
-    release_shared_library(library);
+    platform::release_shared_library(library);
     m_libraries.erase(library_it);
 
     return true;

@@ -17,11 +17,11 @@
 #include <iostream>
 #include <fstream>
 
-namespace kali {
+namespace kali::platform {
 
-void platform_static_init() { }
+void static_init() { }
 
-void platform_static_shutdown() { }
+void static_shutdown() { }
 
 void set_window_icon(WindowHandle handle, const std::filesystem::path& path)
 {
@@ -306,6 +306,6 @@ ResolvedStackTrace resolve_stacktrace(std::span<const StackFrame> trace)
     return resolved_trace;
 }
 
-} // namespace kali
+} // namespace kali::platform
 
 #endif // KALI_LINUX

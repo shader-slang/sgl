@@ -36,7 +36,7 @@ KALI_PY_DECLARE(math_quaternion);
 NB_MODULE(kali_ext, m)
 {
     kali::static_init();
-    kali::set_python_active(true);
+    kali::platform::set_python_active(true);
 
     kali::Device::enable_agility_sdk();
 

@@ -28,19 +28,19 @@
             KALI_THROW("Windows API call failed: {} (result={})", #a, int(result_));                                   \
     }
 
-namespace kali {
+namespace kali::platform {
 
-static bool s_platform_initialized;
+static bool s_initialized;
 
-void platform_static_init()
+void static_init()
 {
     WINDOWS_CALL(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE));
-    s_platform_initialized = true;
+    s_initialized = true;
 }
 
-void platform_static_shutdown()
+void static_shutdown()
 {
-    s_platform_initialized = false;
+    s_initialized = false;
     CoUninitialize();
 }
 
@@ -137,7 +137,7 @@ template<typename DialogType>
 static std::optional<std::filesystem::path>
 file_dialog_common(std::span<const FileDialogFilter> filters, DWORD options, const CLSID clsid)
 {
-    KALI_CHECK(s_platform_initialized, "Platform not initialized.");
+    KALI_CHECK(s_initialized, "Platform not initialized.");
 
     FilterSpec fs(filters, typeid(DialogType) == typeid(IFileOpenDialog));
 
@@ -528,6 +528,6 @@ ResolvedStackTrace resolve_stacktrace(std::span<const StackFrame> trace)
     return resolved_trace;
 }
 
-} // namespace kali
+} // namespace kali::platform
 
 #endif // KALI_WINDOWS

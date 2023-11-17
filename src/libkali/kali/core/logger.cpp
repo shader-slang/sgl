@@ -81,7 +81,7 @@ std::string ConsoleLoggerOutput::to_string() const
 
 bool ConsoleLoggerOutput::enable_ansi_control_sequences()
 {
-    if (auto value = get_environment_variable("NO_COLOR"); value && !value->empty())
+    if (auto value = platform::get_environment_variable("NO_COLOR"); value && !value->empty())
         return false;
 
 #if KALI_WINDOWS
@@ -165,7 +165,7 @@ Logger::Logger(LogLevel log_level, const std::string_view name, bool use_default
 {
     if (use_default_outputs) {
         add_output(make_ref<ConsoleLoggerOutput>());
-        if (is_debugger_present())
+        if (platform::is_debugger_present())
             add_output(make_ref<DebugConsoleLoggerOutput>());
     }
 }

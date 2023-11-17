@@ -1,7 +1,7 @@
 #include "testing.h"
 #include "kali/core/platform.h"
 
-using namespace kali;
+using namespace kali::platform;
 
 TEST_SUITE_BEGIN("platform");
 

@@ -9,14 +9,14 @@ namespace kali {
 void static_init()
 {
     Logger::static_init();
-    platform_static_init();
+    platform::static_init();
     Bitmap::static_init();
 }
 
 void static_shutdown()
 {
     Bitmap::static_shutdown();
-    platform_static_shutdown();
+    platform::static_shutdown();
     Logger::static_shutdown();
 }
 

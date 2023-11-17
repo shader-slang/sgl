@@ -127,23 +127,30 @@ public:
 
     /// The width of the bitmap in pixels.
     uint32_t width() const { return m_width; }
+
     /// The height of the bitmap in pixels.
     uint32_t height() const { return m_height; }
+
     /// The total number of pixels in the bitmap.
     size_t pixel_count() const { return static_cast<size_t>(m_width) * m_height; }
+
     /// The number of channels in the bitmap.
     uint32_t channel_count() const { return m_channel_count; }
+
     /// Returns true if the bitmap has an alpha channel.
     bool has_alpha() const { return m_pixel_format == PixelFormat::ya || m_pixel_format == PixelFormat::rgba; }
 
     /// The number of bytes per pixel.
     size_t bytes_per_pixel() const;
+
     /// The total size of the bitmap in bytes.
     size_t buffer_size() const { return pixel_count() * bytes_per_pixel(); }
 
+    /// The raw image data.
     void* data() { return m_data.get(); }
     const void* data() const { return m_data.get(); }
 
+    /// The raw image data as uint8_t.
     uint8_t* uint8_data() { return m_data.get(); }
     const uint8_t* uint8_data() const { return m_data.get(); }
 
@@ -160,6 +167,9 @@ public:
     bool operator!=(const Bitmap& bitmap) const { return !operator==(bitmap); }
 
     std::string to_string() const override;
+
+    static void static_init();
+    static void static_shutdown();
 
 private:
     void read(Stream* stream, FileFormat format);
