@@ -214,6 +214,8 @@ ternary(KALI_HAS_ASMJIT ${asmjit_FOUND} ON OFF)
 add_library(stb INTERFACE)
 target_include_directories(stb INTERFACE ${Stb_INCLUDE_DIR})
 find_package(VulkanHeaders CONFIG REQUIRED)
+find_package(tevclient)
+ternary(KALI_HAS_TEVCLIENT ${tevclient_FOUND} ON OFF)
 
 # -----------------------------------------------------------------------------
 # Sources
@@ -230,6 +232,7 @@ message(STATUS "KALI_HAS_JPEG: ${KALI_HAS_JPEG}")
 message(STATUS "KALI_HAS_PNG: ${KALI_HAS_PNG}")
 message(STATUS "KALI_HAS_OPENEXR: ${KALI_HAS_OPENEXR}")
 message(STATUS "KALI_HAS_ASMJIT: ${KALI_HAS_ASMJIT}")
+message(STATUS "KALI_HAS_TEVCLIENT: ${KALI_HAS_TEVCLIENT}")
 
 add_subdirectory(src/libkali)
 add_subdirectory(src/editor)

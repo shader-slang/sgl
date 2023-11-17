@@ -236,6 +236,7 @@ file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/include/kali/core/config.h CONT
 #define KALI_HAS_PNG $<BOOL:${KALI_HAS_PNG}>
 #define KALI_HAS_OPENEXR $<BOOL:${KALI_HAS_OPENEXR}>
 #define KALI_HAS_ASMJIT $<BOOL:${KALI_HAS_ASMJIT}>
+#define KALI_HAS_TEVCLIENT $<BOOL:${KALI_HAS_TEVCLIENT}>
 "
 )
 target_include_directories(kali PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include)
@@ -251,6 +252,7 @@ target_link_libraries(kali
         git_version
         glfw stb tinyexr PNG::PNG JPEG::JPEG OpenEXR::OpenEXR
         asmjit::asmjit
+        tevclient::tevclient
         $<$<BOOL:${KALI_HAS_D3D12}>:d3d12>
         $<$<BOOL:${KALI_HAS_AGILITY_SDK}>:agility-sdk>
         # $<$<BOOL:${KALI_HAS_AFTERMATH}>:aftermath>
