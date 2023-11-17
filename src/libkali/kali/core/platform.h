@@ -50,8 +50,8 @@ KALI_API void set_python_active(bool active);
 /// Set the window icon.
 KALI_API void set_window_icon(WindowHandle handle, const std::filesystem::path& path);
 
-/// Get the requested display scale factor.
-[[nodiscard]] KALI_API float get_display_scale_factor();
+/// The pixel scale factor of the primary display.
+[[nodiscard]] KALI_API float display_scale_factor();
 
 /// Setup a callback function to be called when Ctrl-C is detected.
 /// Use nullptr to remove handler.
@@ -62,16 +62,32 @@ KALI_API void set_keyboard_interrupt_handler(std::function<void()> handler);
 // -------------------------------------------------------------------------------------------------
 
 struct FileDialogFilter {
-    std::string desc; // The description ("Portable Network Graphics")
-    std::string ext;  // The extension, without the `.` ("png")
+    /// Readable name (e.g. "JPEG").
+    std::string name;
+    /// File extension pattern (e.g. "*.jpg" or "*.jpg,*.jpeg").
+    std::string pattern;
+
+    FileDialogFilter() = default;
+    FileDialogFilter(const std::string& name, const std::string& pattern)
+        : name(name)
+        , pattern(pattern)
+    {
+    }
+    FileDialogFilter(const std::pair<std::string, std::string>& pair)
+        : name(pair.first)
+        , pattern(pair.second)
+    {
+    }
 };
 using FileDialogFilterList = std::vector<FileDialogFilter>;
 
 /// Show a file open dialog.
-[[nodiscard]] KALI_API std::optional<std::filesystem::path> open_file_dialog(std::span<const FileDialogFilter> filters);
+[[nodiscard]] KALI_API std::optional<std::filesystem::path>
+open_file_dialog(std::span<const FileDialogFilter> filters = {});
 
 /// Show a file save dialog.
-[[nodiscard]] KALI_API std::optional<std::filesystem::path> save_file_dialog(std::span<const FileDialogFilter> filters);
+[[nodiscard]] KALI_API std::optional<std::filesystem::path>
+save_file_dialog(std::span<const FileDialogFilter> filters = {});
 
 /// Show a folder selection dialog.
 [[nodiscard]] KALI_API std::optional<std::filesystem::path> choose_folder_dialog();
@@ -106,26 +122,26 @@ using FileDialogFilterList = std::vector<FileDialogFilter>;
 // System paths
 // -------------------------------------------------------------------------------------------------
 
-/// Get the full path to the current executable.
-[[nodiscard]] KALI_API const std::filesystem::path& get_executable_path();
+/// The full path to the current executable.
+[[nodiscard]] KALI_API const std::filesystem::path& executable_path();
 
-/// Get the current executable directory.
-[[nodiscard]] KALI_API const std::filesystem::path& get_executable_directory();
+/// The current executable directory.
+[[nodiscard]] KALI_API const std::filesystem::path& executable_directory();
 
-/// Get the current executable name.
-[[nodiscard]] KALI_API const std::string& get_executable_name();
+/// The current executable name.
+[[nodiscard]] KALI_API const std::string& executable_name();
 
-/// Get the application data directory.
-[[nodiscard]] KALI_API const std::filesystem::path& get_app_data_directory();
+/// The application data directory.
+[[nodiscard]] KALI_API const std::filesystem::path& app_data_directory();
 
-/// Get the home directory.
-[[nodiscard]] KALI_API const std::filesystem::path& get_home_directory();
+/// The home directory.
+[[nodiscard]] KALI_API const std::filesystem::path& home_directory();
 
-/// Get the project source directory. Note that this is only valid during development.
-[[nodiscard]] KALI_API const std::filesystem::path& get_project_directory();
+/// The project source directory. Note that this is only valid during development.
+[[nodiscard]] KALI_API const std::filesystem::path& project_directory();
 
-/// Get the runtime directory. This is the path where the kali runtime library (kali.dll or libkali.so) resides.
-[[nodiscard]] KALI_API const std::filesystem::path& get_runtime_directory();
+/// Thehe runtime directory. This is the path where the kali runtime library (kali.dll or libkali.so) resides.
+[[nodiscard]] KALI_API const std::filesystem::path& runtime_directory();
 
 // -------------------------------------------------------------------------------------------------
 // Environment
@@ -138,8 +154,8 @@ using FileDialogFilterList = std::vector<FileDialogFilter>;
 // Memory
 // -------------------------------------------------------------------------------------------------
 
-/// Get the page size of the system.
-[[nodiscard]] KALI_API size_t get_page_size();
+/// The page size of the system.
+[[nodiscard]] KALI_API size_t page_size();
 
 struct MemoryStats {
     /// Current resident/working set size in bytes.
@@ -149,7 +165,7 @@ struct MemoryStats {
 };
 
 /// Get the current memory stats.
-[[nodiscard]] KALI_API MemoryStats get_memory_stats();
+[[nodiscard]] KALI_API MemoryStats memory_stats();
 
 // -------------------------------------------------------------------------------------------------
 // Shared libraries

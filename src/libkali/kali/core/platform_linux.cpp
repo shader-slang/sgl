@@ -123,7 +123,7 @@ bool delete_junction(const std::filesystem::path& link)
 // System paths
 // -------------------------------------------------------------------------------------------------
 
-const std::filesystem::path& get_executable_path()
+const std::filesystem::path& executable_path()
 {
     static std::filesystem::path path(
         []()
@@ -137,13 +137,13 @@ const std::filesystem::path& get_executable_path()
     return path;
 }
 
-const std::filesystem::path& get_app_data_directory()
+const std::filesystem::path& app_data_directory()
 {
     static std::filesystem::path path([]() { return get_home_directory() / ".kali"; }());
     return path;
 }
 
-const std::filesystem::path& get_home_directory()
+const std::filesystem::path& home_directory()
 {
     static std::filesystem::path path(
         []()
@@ -157,7 +157,7 @@ const std::filesystem::path& get_home_directory()
     return path;
 }
 
-const std::filesystem::path& get_runtime_directory()
+const std::filesystem::path& runtime_directory()
 {
     static std::filesystem::path path(
         []()
@@ -185,12 +185,12 @@ std::optional<std::string> get_environment_variable(const char* name)
 // Memory
 // -------------------------------------------------------------------------------------------------
 
-size_t get_page_size()
+size_t page_size()
 {
     return sysconf(_SC_PAGESIZE);
 }
 
-MemoryStats get_memory_stats()
+MemoryStats memory_stats()
 {
     MemoryStats stats = {};
     std::ifstream stat_file("/proc/self/stat");

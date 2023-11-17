@@ -128,4 +128,4 @@ def test_file_output():
 
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-s"])
+    pytest.main([__file__, "-v"])

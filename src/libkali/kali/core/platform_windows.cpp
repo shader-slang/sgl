@@ -101,26 +101,34 @@ void set_keyboard_interrupt_handler(std::function<void()> handler)
 struct FilterSpec {
     FilterSpec(std::span<const FileDialogFilter> filters, bool for_open)
     {
-        size_t size = for_open ? filters.size() + 1 : filters.size();
-        com_dlg.reserve(size);
-        descs.reserve(size);
-        ext.reserve(size);
+        if (filters.empty()) {
+            com_dlg.push_back({.pszName = L"All files", .pszSpec = L"*.*"});
+            return;
+        }
+
+        names.reserve(filters.size() + 1);
+        specs.reserve(filters.size() + 1);
 
         if (for_open)
             com_dlg.push_back({});
 
         std::wstring all;
         for (const auto& f : filters) {
-            descs.push_back(string::to_wstring(f.desc));
-            ext.push_back(L"*." + string::to_wstring(f.ext));
-            com_dlg.push_back({descs.back().c_str(), ext.back().c_str()});
-            all += ext.back() + L";";
+            names.push_back(string::to_wstring(f.name));
+            specs.push_back(string::to_wstring(f.pattern));
+            for (auto& c : specs.back())
+                if (c == L',')
+                    c = L';';
+            com_dlg.push_back({.pszName = names.back().c_str(), .pszSpec = specs.back().c_str()});
+            if (!all.empty())
+                all += L';';
+            all += specs.back();
         }
 
         if (for_open) {
-            descs.push_back(L"Supported Formats");
-            ext.push_back(all);
-            com_dlg[0] = {descs.back().c_str(), ext.back().c_str()};
+            names.push_back(L"Supported files");
+            specs.push_back(all);
+            com_dlg[0] = {names.back().c_str(), specs.back().c_str()};
         }
     }
 
@@ -129,8 +137,8 @@ struct FilterSpec {
 
 private:
     std::vector<COMDLG_FILTERSPEC> com_dlg;
-    std::vector<std::wstring> descs;
-    std::vector<std::wstring> ext;
+    std::vector<std::wstring> names;
+    std::vector<std::wstring> specs;
 };
 
 template<typename DialogType>
@@ -346,7 +354,7 @@ bool delete_junction(const std::filesystem::path& link)
 // System paths
 // -------------------------------------------------------------------------------------------------
 
-const std::filesystem::path& get_executable_path()
+const std::filesystem::path& executable_path()
 {
     static std::filesystem::path path(
         []()
@@ -360,7 +368,7 @@ const std::filesystem::path& get_executable_path()
     return path;
 }
 
-const std::filesystem::path& get_app_data_directory()
+const std::filesystem::path& app_data_directory()
 {
     static std::filesystem::path path(
         []()
@@ -374,7 +382,7 @@ const std::filesystem::path& get_app_data_directory()
     return path;
 }
 
-const std::filesystem::path& get_home_directory()
+const std::filesystem::path& home_directory()
 {
     static std::filesystem::path path(
         []()
@@ -387,7 +395,7 @@ const std::filesystem::path& get_home_directory()
     return path;
 }
 
-const std::filesystem::path& get_runtime_directory()
+const std::filesystem::path& runtime_directory()
 {
     static std::filesystem::path path(
         []()
@@ -395,7 +403,7 @@ const std::filesystem::path& get_runtime_directory()
             HMODULE hm = NULL;
             if (GetModuleHandleExA(
                     GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                    (LPCSTR)&get_runtime_directory,
+                    (LPCSTR)&runtime_directory,
                     &hm
                 )
                 == 0)
@@ -425,14 +433,14 @@ std::optional<std::string> get_environment_variable(const char* name)
 // Memory
 // -------------------------------------------------------------------------------------------------
 
-size_t get_page_size()
+size_t page_size()
 {
     SYSTEM_INFO info;
     GetSystemInfo(&info);
     return info.dwAllocationGranularity;
 }
 
-MemoryStats get_memory_stats()
+MemoryStats memory_stats()
 {
     MemoryStats stats = {};
     PROCESS_MEMORY_COUNTERS pmc;

@@ -398,8 +398,8 @@ void Device::report_live_objects()
 bool Device::enable_agility_sdk()
 {
 #if KALI_HAS_D3D12 && KALI_HAS_AGILITY_SDK
-    std::filesystem::path exe_dir = platform::get_executable_directory();
-    std::filesystem::path sdk_dir = platform::get_runtime_directory() / KALI_AGILITY_SDK_PATH;
+    std::filesystem::path exe_dir = platform::executable_directory();
+    std::filesystem::path sdk_dir = platform::runtime_directory() / KALI_AGILITY_SDK_PATH;
 
     // Agility SDK can only be loaded from a relative path to the executable. Make sure both paths use the same driver
     // letter.

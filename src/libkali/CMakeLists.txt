@@ -299,6 +299,7 @@ nanobind_add_module(kali_ext NB_STATIC LTO
     kali/core/python/input.cpp
     kali/core/python/logger.cpp
     kali/core/python/object.cpp
+    kali/core/python/platform.cpp
     kali/core/python/struct.cpp
     kali/core/python/timer.cpp
     kali/core/python/version.cpp

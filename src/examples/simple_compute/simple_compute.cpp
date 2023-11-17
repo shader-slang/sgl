@@ -17,7 +17,7 @@ int main()
     {
         ref<Device> device = Device::create({.type = DeviceType::automatic, .enable_debug_layers = true});
 
-        auto path = platform::get_project_directory() / "src/examples/simple_compute/compute.cs.slang";
+        auto path = platform::project_directory() / "src/examples/simple_compute/compute.cs.slang";
         ref<ComputeKernel> kernel = device->load_module(path)->create_compute_kernel("main");
 
         const uint32_t N = 1024;

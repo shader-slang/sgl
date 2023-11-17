@@ -20,7 +20,7 @@ void set_python_active(bool active)
     s_is_python_active = active;
 }
 
-float get_display_scale_factor()
+float display_scale_factor()
 {
     float xscale = 1.f;
     float yscale = 1.f;
@@ -85,19 +85,19 @@ std::filesystem::path get_temp_file_path()
     return name;
 }
 
-const std::filesystem::path& get_executable_directory()
+const std::filesystem::path& executable_directory()
 {
-    static std::filesystem::path directory{get_executable_path().parent_path()};
+    static std::filesystem::path directory{executable_path().parent_path()};
     return directory;
 }
 
-const std::string& get_executable_name()
+const std::string& executable_name()
 {
-    static std::string name{get_executable_path().filename().string()};
+    static std::string name{executable_path().filename().string()};
     return name;
 }
 
-const std::filesystem::path& get_project_directory()
+const std::filesystem::path& project_directory()
 {
     static std::filesystem::path path = std::filesystem::path{KALI_PROJECT_DIR}.lexically_normal();
     return path;

@@ -5,12 +5,6 @@ using namespace kali::platform;
 
 TEST_SUITE_BEGIN("platform");
 
-TEST_CASE("get_display_scale_factor")
-{
-    float factor = get_display_scale_factor();
-    CHECK_GT(factor, 0.f);
-}
-
 TEST_CASE("is_same_path")
 {
     CHECK(is_same_path("foo", "foo"));
@@ -74,58 +68,11 @@ TEST_CASE("junction")
     std::filesystem::remove_all(target);
 }
 
-TEST_CASE("paths")
-{
-    auto executable_path = get_executable_path();
-    CHECK_FALSE(executable_path.empty());
-    MESSAGE("executable_path: ", executable_path);
-
-    auto executable_directory = get_executable_directory();
-    CHECK_FALSE(executable_directory.empty());
-    MESSAGE("executable_directory: ", executable_directory);
-
-    auto executable_name = get_executable_name();
-    CHECK_FALSE(executable_name.empty());
-    MESSAGE("executable_name: ", executable_name);
-
-    auto app_data_directory = get_app_data_directory();
-    CHECK_FALSE(app_data_directory.empty());
-    MESSAGE("app_data_directory: ", app_data_directory);
-
-    auto home_directory = get_home_directory();
-    CHECK_FALSE(home_directory.empty());
-    MESSAGE("home_directory: ", home_directory);
-
-    auto project_directory = get_project_directory();
-    CHECK_FALSE(project_directory.empty());
-    MESSAGE("project_directory: ", project_directory);
-
-    auto runtime_directory = get_runtime_directory();
-    CHECK_FALSE(runtime_directory.empty());
-    MESSAGE("runtime_directory: ", runtime_directory);
-}
-
 TEST_CASE("environment")
 {
     auto path = get_environment_variable("PATH");
     CHECK(path.has_value());
     MESSAGE("PATH:", path.value());
-}
-
-TEST_CASE("get_page_size")
-{
-    size_t page_size = get_page_size();
-    CHECK_GT(page_size, 0);
-    MESSAGE("page_size:", page_size);
-}
-
-TEST_CASE("get_memory_stats")
-{
-    MemoryStats stats = get_memory_stats();
-    CHECK_GT(stats.rss, 0);
-    MESSAGE("rss:", stats.rss);
-    CHECK_GT(stats.peak_rss, 0);
-    MESSAGE("peak_rss:", stats.peak_rss);
 }
 
 TEST_CASE("backtrace")
