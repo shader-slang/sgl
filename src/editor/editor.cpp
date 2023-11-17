@@ -2,7 +2,6 @@
 
 #include "kali/kali.h"
 #include "kali/core/window.h"
-#include "kali/core/version.h"
 #include "kali/core/error.h"
 #include "kali/core/logger.h"
 #include "kali/core/platform.h"
@@ -18,7 +17,7 @@ int main()
 
     Logger::get().add_file_output("editor.log");
 
-    log_info("{}", get_version().long_tag);
+    log_info("kali {} {}", KALI_VERSION, git_version());
 
     log_debug("just a test");
     log_debug("{} {} {}", "hello", 42, "world!");

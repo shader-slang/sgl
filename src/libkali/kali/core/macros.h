@@ -114,6 +114,7 @@ namespace kali::detail { template<typename... Args> inline void unused(Args&&...
 #define KALI_UNUSED(...) ::kali::detail::unused(__VA_ARGS__)
 
 #define KALI_STRINGIZE(a) #a
+#define KALI_TO_STRING(a) KALI_STRINGIZE(a)
 #define KALI_CONCAT_STRINGS_(a, b) a##b
 #define KALI_CONCAT_STRINGS(a, b) KALI_CONCAT_STRINGS_(a, b)
 

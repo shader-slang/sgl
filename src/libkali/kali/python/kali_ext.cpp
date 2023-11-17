@@ -11,7 +11,6 @@ KALI_PY_DECLARE(core_object);
 KALI_PY_DECLARE(core_platform);
 KALI_PY_DECLARE(core_struct);
 KALI_PY_DECLARE(core_timer);
-KALI_PY_DECLARE(core_version);
 KALI_PY_DECLARE(core_window);
 
 KALI_PY_DECLARE(device_command);
@@ -41,13 +40,18 @@ NB_MODULE(kali_ext, m)
 
     kali::Device::enable_agility_sdk();
 
+    m.attr("KALI_VERSION_MAJOR") = KALI_VERSION_MAJOR;
+    m.attr("KALI_VERSION_MINOR") = KALI_VERSION_MINOR;
+    m.attr("KALI_VERSION_PATCH") = KALI_VERSION_PATCH;
+    m.attr("KALI_VERSION") = KALI_VERSION;
+    m.attr("git_version") = kali::git_version();
+
     KALI_PY_IMPORT(core_object);
     m.def_submodule("platform", "Platform module");
     KALI_PY_IMPORT(core_platform);
     KALI_PY_IMPORT(core_input);
     KALI_PY_IMPORT(core_logger);
     KALI_PY_IMPORT(core_timer);
-    KALI_PY_IMPORT(core_version);
     KALI_PY_IMPORT(core_window);
     KALI_PY_IMPORT(core_struct);
     KALI_PY_IMPORT(core_bitmap);
