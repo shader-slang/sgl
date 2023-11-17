@@ -1,8 +1,8 @@
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO westlicht/tevclient
-    REF 680ef5af0f137167c519a3707deff86ac82fd21d
-    SHA512 359ec00f125805daf3710750c5879d2d378660be58d1c386fa9690e1cd57fb4699d1db32b7ee00c36d326fc68da1120951e5ac1d1b9310672440a18cf8e6058e
+    REF ee2705577be65dba0c4416bb7a5dc05cbdb137ad
+    SHA512 63a8a6e354048107b8f431106dae100fe843f0c9f3c8b1fe5ec3876bb22ea9e6a44d3a506e7e2b171f51529f4e3a8f09745b40e1f0b5ba265f1f8a39c0807b06
     HEAD_REF master
 )
 
@@ -12,6 +12,8 @@ vcpkg_cmake_configure(
 
 vcpkg_cmake_install()
 vcpkg_copy_pdbs()
+
+vcpkg_cmake_config_fixup(CONFIG_PATH share/cmake/tevclient)
 
 file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/include")
 
