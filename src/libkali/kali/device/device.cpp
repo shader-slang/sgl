@@ -11,6 +11,7 @@
 #include "kali/device/native_handle_traits.h"
 #include "kali/device/agility_sdk.h"
 
+#include "kali/core/config.h"
 #include "kali/core/error.h"
 #include "kali/core/window.h"
 #include "kali/core/string.h"

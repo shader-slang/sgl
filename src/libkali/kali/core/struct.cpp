@@ -2,6 +2,7 @@
 
 #include "struct.h"
 
+#include "kali/core/config.h"
 #include "kali/core/format.h"
 #include "kali/core/maths.h"
 #include "kali/core/string.h"
@@ -664,6 +665,8 @@ struct VMProgram : public Program {
         return program;
     }
 };
+
+#if KALI_HAS_ASMJIT
 
 /// Conversion program running just-in-time compiled X86 code.
 struct X86Program : public Program {
@@ -1400,6 +1403,8 @@ struct ARMProgram : public Program {
     }
 };
 
+#endif // KALI_HAS_ASMJIT
+
 
 class ProgramCache {
 public:
@@ -1426,11 +1431,13 @@ private:
     {
         std::unique_ptr<Program> program;
 
+#if KALI_HAS_ASMJIT
 #if KALI_X86_64
         program = X86Program::compile(src_struct, dst_struct);
 #elif KALI_ARM64
         program = ARMProgram::compile(src_struct, dst_struct);
 #endif
+#endif // KALI_HAS_ASMJIT
         if (!program)
             program = VMProgram::compile(src_struct, dst_struct);
 

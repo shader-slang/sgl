@@ -8,6 +8,7 @@
 #include "kali/device/reflection.h"
 #include "kali/device/pipeline.h"
 
+#include "kali/core/config.h"
 #include "kali/core/error.h"
 #include "kali/core/maths.h"
 #include "kali/core/type_utils.h"

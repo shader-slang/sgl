@@ -5,6 +5,8 @@
 #include "kali/device/helpers.h"
 #include "kali/device/native_handle_traits.h"
 
+#include "kali/core/config.h"
+
 
 namespace kali {
 

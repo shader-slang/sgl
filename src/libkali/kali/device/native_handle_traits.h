@@ -2,6 +2,8 @@
 
 #include "native_handle.h"
 
+#include "kali/core/config.h"
+
 #if KALI_HAS_D3D12
 #include <d3d12.h>
 #endif

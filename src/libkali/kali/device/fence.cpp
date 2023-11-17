@@ -1,11 +1,12 @@
 #include "fence.h"
 
-#include "kali/core/macros.h"
-#include "kali/core/string.h"
-
 #include "kali/device/device.h"
 #include "kali/device/native_handle_traits.h"
 #include "kali/device/helpers.h"
+
+#include "kali/core/config.h"
+#include "kali/core/macros.h"
+#include "kali/core/string.h"
 
 namespace kali {
 

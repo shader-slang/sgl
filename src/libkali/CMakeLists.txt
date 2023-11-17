@@ -216,13 +216,6 @@ target_compile_definitions(kali
         $<$<CXX_COMPILER_ID:Clang>:_MSC_EXTENSIONS> # enable MS extensions
         # Always enable asserts unless KALI_DISABLE_ASSERTS is set.
         KALI_ENABLE_ASSERTS=$<NOT:$<BOOL:${KALI_DISABLE_ASSERTS}>>
-        # Feature flags.
-        KALI_HAS_D3D12=$<BOOL:${KALI_HAS_D3D12}>
-        KALI_HAS_VULKAN=$<BOOL:${KALI_HAS_VULKAN}>
-        # KALI_HAS_CUDA=$<BOOL:${KALI_HAS_CUDA}>
-        KALI_HAS_NVAPI=$<BOOL:${KALI_HAS_NVAPI}>
-        KALI_HAS_AGILITY_SDK=$<BOOL:${KALI_HAS_AGILITY_SDK}>
-        # KALI_HAS_AFTERMATH=$<BOOL:${KALI_HAS_AFTERMATH}>
     PRIVATE
         KALI_DLL
         # $<$<PLATFORM_ID:Windows>:IMGUI_API=__declspec\(dllexport\)>
@@ -231,6 +224,23 @@ target_compile_definitions(kali
         $<$<PLATFORM_ID:Linux>:__USE_LARGEFILE64>
         KALI_PROJECT_DIR="${CMAKE_SOURCE_DIR}"
 )
+
+file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/include/kali/core/config.h CONTENT
+"#pragma once
+
+#define KALI_HAS_D3D12 $<BOOL:${KALI_HAS_D3D12}>
+#define KALI_HAS_VULKAN $<BOOL:${KALI_HAS_VULKAN}>
+
+#define KALI_HAS_NVAPI $<BOOL:${KALI_HAS_NVAPI}>
+#define KALI_HAS_AGILITY_SDK $<BOOL:${KALI_HAS_AGILITY_SDK}>
+
+#define KALI_HAS_JPEG $<BOOL:${KALI_HAS_JPEG}>
+#define KALI_HAS_PNG $<BOOL:${KALI_HAS_PNG}>
+#define KALI_HAS_OPENEXR $<BOOL:${KALI_HAS_OPENEXR}>
+#define KALI_HAS_ASMJIT $<BOOL:${KALI_HAS_ASMJIT}>
+"
+)
+target_include_directories(kali PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include)
 
 target_link_libraries(kali
     PUBLIC
