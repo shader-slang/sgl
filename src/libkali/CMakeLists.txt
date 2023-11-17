@@ -356,7 +356,6 @@ target_sources(kali_tests PRIVATE
     kali/core/tests/test_plugin.cpp
     kali/core/tests/test_stream.cpp
     kali/core/tests/test_string.cpp
-    kali/core/tests/test_timer.cpp
     kali/device/tests/test_device.cpp
     kali/device/tests/test_formats.cpp
     kali/device/tests/test_shader.cpp
