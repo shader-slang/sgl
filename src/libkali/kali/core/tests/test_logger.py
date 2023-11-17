@@ -103,28 +103,27 @@ def test_console_output(capfd):
     assert lines[5].startswith("[FATAL] (test) fatal message")
 
 
-def test_file_output():
-    with tempfile.TemporaryDirectory() as tmpdir:
-        path = os.path.join(tmpdir, "test.log")
-        output = FileLoggerOutput(path)
-        logger = Logger(level=LogLevel.debug, name="test", use_default_outputs=False)
-        logger.add_output(output)
-        logger.log(LogLevel.none, "plain message")
-        logger.debug("debug message")
-        logger.info("info message")
-        logger.warn("warn message")
-        logger.error("error message")
-        logger.fatal("fatal message")
-        del output
-        del logger
-        lines = open(path, "r").readlines()
-        assert len(lines) == 6
-        assert lines[0].startswith("plain message")
-        assert lines[1].startswith("[DEBUG] (test) debug message")
-        assert lines[2].startswith("[INFO] (test) info message")
-        assert lines[3].startswith("[WARN] (test) warn message")
-        assert lines[4].startswith("[ERROR] (test) error message")
-        assert lines[5].startswith("[FATAL] (test) fatal message")
+def test_file_output(tmpdir):
+    path = os.path.join(tmpdir, "test.log")
+    output = FileLoggerOutput(path)
+    logger = Logger(level=LogLevel.debug, name="test", use_default_outputs=False)
+    logger.add_output(output)
+    logger.log(LogLevel.none, "plain message")
+    logger.debug("debug message")
+    logger.info("info message")
+    logger.warn("warn message")
+    logger.error("error message")
+    logger.fatal("fatal message")
+    del output
+    del logger
+    lines = open(path, "r").readlines()
+    assert len(lines) == 6
+    assert lines[0].startswith("plain message")
+    assert lines[1].startswith("[DEBUG] (test) debug message")
+    assert lines[2].startswith("[INFO] (test) info message")
+    assert lines[3].startswith("[WARN] (test) warn message")
+    assert lines[4].startswith("[ERROR] (test) error message")
+    assert lines[5].startswith("[FATAL] (test) fatal message")
 
 
 if __name__ == "__main__":
