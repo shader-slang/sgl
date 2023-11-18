@@ -34,7 +34,7 @@ elseif (VCPKG_TARGET_IS_OSX)
 			FILENAME "slang-${VERSION}-macos-x64.zip"
             SKIP_SHA512
 		)
-		set(SLANG_BIN_PATH "bin/macos-x64/release")
+		set(SLANG_BIN_PATH "bin/macosx-x64/release")
 	elseif (VCPKG_TARGET_ARCHITECTURE MATCHES "arm64")
 		vcpkg_download_distfile(
 			ARCHIVE
@@ -42,7 +42,7 @@ elseif (VCPKG_TARGET_IS_OSX)
 			FILENAME "slang-${VERSION}-macos-aarch64.zip"
             SKIP_SHA512
 		)
-		set(SLANG_BIN_PATH "bin/macos-aarch64/release")
+		set(SLANG_BIN_PATH "bin/macosx-aarch64/release")
 	else()
 		message(FATAL_ERROR "Unsupported platform. Please implement me!")
 	endif()
