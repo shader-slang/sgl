@@ -8,12 +8,6 @@ target_link_libraries(d3d12 INTERFACE dxgi.lib d3d12.lib)
 add_subdirectory(nanobind)
 nanobind_build_library(nanobind SHARED)
 
-# tinyexr
-
-add_library(tinyexr STATIC)
-target_sources(tinyexr PRIVATE tinyexr/miniz.c)
-target_include_directories(tinyexr PUBLIC tinyexr)
-
 set(VCPKG_DIR ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET})
 
 # slang

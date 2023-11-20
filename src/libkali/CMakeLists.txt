@@ -253,7 +253,7 @@ target_link_libraries(kali
         # $<$<BOOL:${KALI_HAS_CUDA}>:CUDA::cudart_static>
     PRIVATE
         git_version
-        glfw stb tinyexr PNG::PNG JPEG::JPEG OpenEXR::OpenEXR
+        glfw stb PNG::PNG JPEG::JPEG OpenEXR::OpenEXR
         asmjit::asmjit
         tevclient::tevclient
         $<$<BOOL:${KALI_HAS_D3D12}>:d3d12>
