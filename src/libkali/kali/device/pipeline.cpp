@@ -47,37 +47,6 @@ ComputePipelineState::ComputePipelineState(ref<Device> device, ComputePipelineSt
 }
 
 // ----------------------------------------------------------------------------
-// ComputePipelineCache
-// ----------------------------------------------------------------------------
-
-ComputePipelineCache::ComputePipelineCache(ref<Device> device)
-    : m_device(std::move(device))
-{
-}
-
-void ComputePipelineCache::clear()
-{
-    m_pipelines.clear();
-}
-
-ref<ComputePipelineState> ComputePipelineCache::get_pipeline_state(ComputePipelineStateDesc desc)
-{
-    auto it = m_pipelines.find(desc);
-    if (it != m_pipelines.end())
-        return it->second;
-
-    ref<ComputePipelineState> pipeline = make_ref<ComputePipelineState>(m_device, std::move(desc));
-    pipeline->break_strong_reference_to_device();
-    m_pipelines.emplace(pipeline->desc(), pipeline);
-    return pipeline;
-}
-
-void ComputePipelineCache::break_strong_reference_to_device()
-{
-    m_device.break_strong_reference();
-}
-
-// ----------------------------------------------------------------------------
 // GraphicsPipelineState
 // ----------------------------------------------------------------------------
 

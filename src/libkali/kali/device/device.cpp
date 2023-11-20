@@ -294,11 +294,6 @@ ref<ComputePipelineState> Device::create_compute_pipeline_state(ComputePipelineS
     return make_ref<ComputePipelineState>(ref<Device>(this), std::move(desc));
 }
 
-ref<ComputePipelineCache> Device::create_compute_pipeline_cache()
-{
-    return make_ref<ComputePipelineCache>(ref<Device>(this));
-}
-
 ref<GraphicsPipelineState> Device::create_graphics_pipeline_state(GraphicsPipelineStateDesc desc)
 {
     return make_ref<GraphicsPipelineState>(ref<Device>(this), std::move(desc));

@@ -240,8 +240,6 @@ public:
 
     ref<ComputePipelineState> create_compute_pipeline_state(ComputePipelineStateDesc desc);
 
-    ref<ComputePipelineCache> create_compute_pipeline_cache();
-
     ref<GraphicsPipelineState> create_graphics_pipeline_state(GraphicsPipelineStateDesc desc);
 
     ref<CommandQueue> create_command_queue(CommandQueueDesc desc);

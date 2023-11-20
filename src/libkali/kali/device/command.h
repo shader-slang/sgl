@@ -307,7 +307,6 @@ private:
     breakable_ref<Device> m_device;
     CommandStreamDesc m_desc;
     ref<CommandQueue> m_command_queue;
-    ref<ComputePipelineCache> m_compute_pipeline_cache;
 
     struct FrameData {
         Slang::ComPtr<gfx::ITransientResourceHeap> transient_resource_heap;

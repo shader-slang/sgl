@@ -48,23 +48,6 @@ private:
     ComputePipelineStateDesc m_desc;
 };
 
-class KALI_API ComputePipelineCache : public Object {
-    KALI_OBJECT(ComputePipelineCache)
-public:
-    ComputePipelineCache(ref<Device> device);
-
-    void clear();
-
-    ref<ComputePipelineState> get_pipeline_state(ComputePipelineStateDesc desc);
-
-    void break_strong_reference_to_device();
-
-private:
-    breakable_ref<Device> m_device;
-    std::map<ComputePipelineStateDesc, ref<ComputePipelineState>> m_pipelines;
-};
-
-
 struct GraphicsPipelineStateDesc {
     ShaderProgram* program;
 

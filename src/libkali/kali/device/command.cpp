@@ -68,9 +68,6 @@ CommandStream::CommandStream(ref<Device> device, CommandStreamDesc desc)
     m_command_queue = m_device->create_command_queue({.type = m_desc.queue_type});
     m_command_queue->break_strong_reference_to_device();
 
-    m_compute_pipeline_cache = m_device->create_compute_pipeline_cache();
-    m_compute_pipeline_cache->break_strong_reference_to_device();
-
     // Create per-frame data.
     m_frame_data.resize(m_desc.frame_count);
     for (auto& frame_data : m_frame_data) {

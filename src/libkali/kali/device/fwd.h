@@ -67,7 +67,6 @@ class ComputeKernel;
 
 struct ComputePipelineStateDesc;
 class ComputePipelineState;
-class ComputePipelineCache;
 struct GraphicsPipelineStateDesc;
 class GraphicsPipelineState;
 class GraphicsPipelineCache;
