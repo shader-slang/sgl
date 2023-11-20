@@ -103,10 +103,14 @@ exr_layouts = [
     # (100, 200, Bitmap.PixelFormat.rgba, Bitmap.ComponentType.float32),
 ]
 
+
 @pytest.mark.parametrize("layout", exr_layouts)
 def test_exr_io(tmp_path, layout):
     extra = layout[4] if len(layout) > 4 else {}
-    write_read_test(tmp_path, "exr", layout[0], layout[1], layout[2], layout[3], **extra)
+    write_read_test(
+        tmp_path, "exr", layout[0], layout[1], layout[2], layout[3], **extra
+    )
+
 
 # @pytest.mark.parametrize("layout", exr_layouts)
 # def test_exr_format(tmp_path, layout):
@@ -136,7 +140,24 @@ bmp_layouts = [
 @pytest.mark.parametrize("layout", bmp_layouts)
 def test_bmp_io(tmp_path, layout):
     extra = layout[4] if len(layout) > 4 else {}
-    write_read_test(tmp_path, "bmp", layout[0], layout[1], layout[2], layout[3], **extra)
+    write_read_test(
+        tmp_path, "bmp", layout[0], layout[1], layout[2], layout[3], **extra
+    )
+
+
+tga_layouts = [
+    (5, 10, Bitmap.PixelFormat.y, Bitmap.ComponentType.uint8),
+    (50, 100, Bitmap.PixelFormat.rgb, Bitmap.ComponentType.uint8),
+    (100, 200, Bitmap.PixelFormat.rgba, Bitmap.ComponentType.uint8),
+]
+
+
+@pytest.mark.parametrize("layout", tga_layouts)
+def test_tga_io(tmp_path, layout):
+    extra = layout[4] if len(layout) > 4 else {}
+    write_read_test(
+        tmp_path, "tga", layout[0], layout[1], layout[2], layout[3], **extra
+    )
 
 
 png_layouts = [
@@ -156,7 +177,9 @@ png_layouts = [
 @pytest.mark.parametrize("layout", png_layouts)
 def test_png_io(tmp_path, layout):
     extra = layout[4] if len(layout) > 4 else {}
-    write_read_test(tmp_path, "png", layout[0], layout[1], layout[2], layout[3], **extra)
+    write_read_test(
+        tmp_path, "png", layout[0], layout[1], layout[2], layout[3], **extra
+    )
 
 
 jpg_layouts = [
@@ -180,7 +203,18 @@ def test_jpg_io(tmp_path, layout):
     )
 
 
+hdr_layouts = [
+    (100, 200, Bitmap.PixelFormat.rgb, Bitmap.ComponentType.float32, {"rtol": 1e-2}),
+]
+
+
+@pytest.mark.parametrize("layout", hdr_layouts)
+def test_hdr_io(tmp_path, layout):
+    extra = layout[4] if len(layout) > 4 else {}
+    write_read_test(
+        tmp_path, "hdr", layout[0], layout[1], layout[2], layout[3], **extra
+    )
 
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-vs", "-k", ""])
+    pytest.main([__file__, "-vs", "-k", "hdr"])

@@ -357,10 +357,6 @@ Bitmap::FileFormat Bitmap::detect_file_format(Stream* stream)
         format = FileFormat::bmp;
     } else if (header[0] == '#' && header[1] == '?') {
         format = FileFormat::hdr;
-        // } else if (header[0] == 'P' && (header[1] == 'F' || header[1] == 'f')) {
-        //     format = FileFormat::PFM;
-        // } else if (header[0] == 'P' && header[1] == '6') {
-        //     format = FileFormat::PPM;
     } else if (header[0] == 0xFF && header[1] == 0xD8) {
         format = FileFormat::jpg;
     } else if (png_sig_cmp(header, 0, 8) == 0) {
@@ -368,6 +364,15 @@ Bitmap::FileFormat Bitmap::detect_file_format(Stream* stream)
     } else if (Imf::isImfMagic(reinterpret_cast<const char*>(header))) {
         format = FileFormat::exr;
     } else {
+        // Check for TGAv1 file
+        char spec[10];
+        stream->read(spec, 10);
+        if ((header[1] == 0 || header[1] == 1)
+            && (header[2] == 1 || header[2] == 2 || header[2] == 3 || header[2] == 9 || header[2] == 10
+                || header[2] == 11)
+            && (spec[8] == 8 || spec[8] == 16 || spec[8] == 24 || spec[8] == 32))
+            format = FileFormat::tga;
+
         // Check for a TGAv2 file
         char footer[18];
         stream->seek(stream->size() - 18);
@@ -1004,6 +1009,16 @@ void Bitmap::read_bmp(Stream* stream)
     m_channel_names = get_channel_names(m_pixel_format);
     m_srgb_gamma = true;
 
+    auto fs = dynamic_cast<FileStream*>(stream);
+    log_debug(
+        "Reading BMP file \"{}\" ({}x{}, {}, {}) ...",
+        fs ? fs->path().string() : "<stream>",
+        m_width,
+        m_height,
+        m_pixel_format,
+        m_component_type
+    );
+
     uint8_t* data = stbi_load_from_callbacks(&reader.callbacks, &reader, &w, &h, &c, c);
     if (!data)
         KALI_THROW("Failed to read BMP file!");
@@ -1030,8 +1045,40 @@ void Bitmap::write_bmp(Stream* stream) const
 
 void Bitmap::read_tga(Stream* stream)
 {
-    KALI_UNUSED(stream);
-    KALI_UNIMPLEMENTED();
+    StreamReader reader(stream);
+    int w, h, c;
+    if (!stbi_info_from_callbacks(&reader.callbacks, &reader, &w, &h, &c))
+        KALI_THROW("Failed to read TGA file!");
+    reader.reset();
+
+    m_width = w;
+    m_height = h;
+    m_pixel_format = c == 1 ? PixelFormat::y : (c == 3 ? PixelFormat::rgb : PixelFormat::rgba);
+    m_component_type = ComponentType::uint8;
+    m_channel_count = c;
+    m_channel_names = get_channel_names(m_pixel_format);
+    m_srgb_gamma = true;
+
+    auto fs = dynamic_cast<FileStream*>(stream);
+    log_debug(
+        "Reading TGA file \"{}\" ({}x{}, {}, {}) ...",
+        fs ? fs->path().string() : "<stream>",
+        m_width,
+        m_height,
+        m_pixel_format,
+        m_component_type
+    );
+
+    uint8_t* data = stbi_load_from_callbacks(&reader.callbacks, &reader, &w, &h, &c, c);
+    if (!data)
+        KALI_THROW("Failed to read TGA file!");
+
+    KALI_ASSERT_EQ(m_width, static_cast<uint32_t>(w));
+    KALI_ASSERT_EQ(m_height, static_cast<uint32_t>(h));
+    KALI_ASSERT_EQ(m_channel_count, static_cast<uint32_t>(c));
+
+    m_data = std::unique_ptr<uint8_t[]>(data);
+    m_owns_data = true;
 }
 
 void Bitmap::write_tga(Stream* stream) const
@@ -1048,14 +1095,55 @@ void Bitmap::write_tga(Stream* stream) const
 
 void Bitmap::read_hdr(Stream* stream)
 {
-    KALI_UNUSED(stream);
-    KALI_UNIMPLEMENTED();
+    StreamReader reader(stream);
+    int w, h, c;
+    if (!stbi_info_from_callbacks(&reader.callbacks, &reader, &w, &h, &c))
+        KALI_THROW("Failed to read HDR file!");
+    reader.reset();
+
+    m_width = w;
+    m_height = h;
+    m_pixel_format = PixelFormat::rgb;
+    m_component_type = ComponentType::float32;
+    m_channel_count = 3;
+    m_channel_names = get_channel_names(m_pixel_format);
+    m_srgb_gamma = false;
+
+    auto fs = dynamic_cast<FileStream*>(stream);
+    log_debug(
+        "Reading HDR file \"{}\" ({}x{}, {}, {}) ...",
+        fs ? fs->path().string() : "<stream>",
+        m_width,
+        m_height,
+        m_pixel_format,
+        m_component_type
+    );
+
+    float* data = stbi_loadf_from_callbacks(&reader.callbacks, &reader, &w, &h, &c, c);
+    if (!data)
+        KALI_THROW("Failed to read HDR file!");
+
+    KALI_ASSERT_EQ(m_width, static_cast<uint32_t>(w));
+    KALI_ASSERT_EQ(m_height, static_cast<uint32_t>(h));
+    KALI_ASSERT_EQ(m_channel_count, static_cast<uint32_t>(c));
+
+    m_data = std::unique_ptr<uint8_t[]>(reinterpret_cast<uint8_t*>(data));
+    m_owns_data = true;
 }
 
 void Bitmap::write_hdr(Stream* stream) const
 {
-    KALI_UNUSED(stream);
-    KALI_UNIMPLEMENTED();
+    check_required_format("HDR", {PixelFormat::rgb}, {ComponentType::float32});
+
+    if (!stbi_write_hdr_to_func(
+            &stbi_write_func,
+            stream,
+            m_width,
+            m_height,
+            m_channel_count,
+            reinterpret_cast<const float*>(data())
+        ))
+        KALI_THROW("Failed to write HDR file!");
 }
 
 // ----------------------------------------------------------------------------
