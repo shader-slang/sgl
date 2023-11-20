@@ -253,13 +253,16 @@ target_link_libraries(kali
         # $<$<BOOL:${KALI_HAS_CUDA}>:CUDA::cudart_static>
     PRIVATE
         git_version
-        glfw stb PNG::PNG JPEG::JPEG OpenEXR::OpenEXR
-        asmjit::asmjit
+        glfw stb
         tevclient::tevclient
         $<$<BOOL:${KALI_HAS_D3D12}>:d3d12>
         $<$<BOOL:${KALI_HAS_AGILITY_SDK}>:agility-sdk>
         # $<$<BOOL:${KALI_HAS_AFTERMATH}>:aftermath>
         $<$<BOOL:${KALI_HAS_NVAPI}>:nvapi>
+        $<$<BOOL:${KALI_HAS_PNG}>:PNG::PNG>
+        $<$<BOOL:${KALI_HAS_JPEG}>:JPEG::JPEG>
+        $<$<BOOL:${KALI_HAS_OPENEXR}>:OpenEXR::OpenEXR>
+        $<$<BOOL:${KALI_HAS_ASMJIT}>:asmjit::asmjit>
         # Windows system libraries.
         $<$<PLATFORM_ID:Windows>:Dbghelp>
         # $<$<PLATFORM_ID:Windows>:shcore.lib>

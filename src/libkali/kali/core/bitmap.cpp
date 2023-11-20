@@ -172,6 +172,8 @@ std::future<ref<Bitmap>> Bitmap::read_async(const std::filesystem::path& path, F
 
 void Bitmap::write(Stream* stream, FileFormat format, int quality) const
 {
+    KALI_UNUSED(quality);
+
     auto fs = dynamic_cast<FileStream*>(stream);
 
     if (format == FileFormat::auto_) {
@@ -205,14 +207,22 @@ void Bitmap::write(Stream* stream, FileFormat format, int quality) const
 
     switch (format) {
     case FileFormat::png:
+#if KALI_HAS_PNG
         if (quality == -1)
             quality = 5;
         write_png(stream, quality);
+#else
+        KALI_THROW("PNG support is not available!");
+#endif
         break;
     case FileFormat::jpg:
+#if KALI_HAS_JPEG
         if (quality == -1)
             quality = 100;
         write_jpg(stream, quality);
+#else
+        KALI_THROW("JPEG support is not available!");
+#endif
         break;
     case FileFormat::bmp:
         write_bmp(stream);
@@ -224,7 +234,11 @@ void Bitmap::write(Stream* stream, FileFormat format, int quality) const
         write_hdr(stream);
         break;
     case FileFormat::exr:
+#if KALI_HAS_OPENEXR
         write_exr(stream, quality);
+#else
+        KALI_THROW("OpenEXR support is not available!");
+#endif
         break;
     default:
         KALI_THROW("Invalid file format!");
@@ -398,10 +412,18 @@ void Bitmap::read(Stream* stream, FileFormat format)
 
     switch (format) {
     case FileFormat::png:
+#if KALI_HAS_PNG
         read_png(stream);
+#else
+        KALI_THROW("PNG support is not available!");
+#endif
         break;
     case FileFormat::jpg:
+#if KALI_HAS_JPEG
         read_jpg(stream);
+#else
+        KALI_THROW("JPEG support is not available!");
+#endif
         break;
     case FileFormat::bmp:
         read_bmp(stream);
@@ -413,7 +435,11 @@ void Bitmap::read(Stream* stream, FileFormat format)
         read_hdr(stream);
         break;
     case FileFormat::exr:
+#if KALI_HAS_OPENEXR
         read_exr(stream);
+#else
+        KALI_THROW("OpenEXR support is not available!");
+#endif
         break;
     default:
         KALI_THROW("Unknown file format!");
@@ -432,12 +458,18 @@ Bitmap::FileFormat Bitmap::detect_file_format(Stream* stream)
         format = FileFormat::bmp;
     } else if (header[0] == '#' && header[1] == '?') {
         format = FileFormat::hdr;
+#if KALI_HAS_JPEG
     } else if (header[0] == 0xFF && header[1] == 0xD8) {
         format = FileFormat::jpg;
+#endif
+#if KALI_HAS_PNG
     } else if (png_sig_cmp(header, 0, 8) == 0) {
         format = FileFormat::png;
+#endif
+#if KALI_HAS_OPENEXR
     } else if (Imf::isImfMagic(reinterpret_cast<const char*>(header))) {
         format = FileFormat::exr;
+#endif
     } else {
         // Check for TGAv1 file
         char spec[10];
@@ -491,6 +523,8 @@ void Bitmap::check_required_format(
 // ----------------------------------------------------------------------------
 // PNG I/O
 // ----------------------------------------------------------------------------
+
+#if KALI_HAS_PNG
 
 static void png_flush_data(png_structp png_ptr)
 {
@@ -784,9 +818,13 @@ void Bitmap::write_png(Stream* stream, int compression) const
     // delete[] text;
 }
 
+#endif // KALI_HAS_PNG
+
 // ----------------------------------------------------------------------------
 // JPEG I/O
 // ----------------------------------------------------------------------------
+
+#if KALI_HAS_JPEG
 
 extern "C" {
 static const size_t jpeg_buffer_size = 0x8000;
@@ -1019,6 +1057,8 @@ void Bitmap::write_jpg(Stream* stream, int quality) const
     jpeg_destroy_compress(&cinfo);
 }
 
+#endif // KALI_HAS_JPEG
+
 // ----------------------------------------------------------------------------
 // BMP I/O
 // ----------------------------------------------------------------------------
@@ -1224,6 +1264,8 @@ void Bitmap::write_hdr(Stream* stream) const
 // ----------------------------------------------------------------------------
 // OpenEXR I/O
 // ----------------------------------------------------------------------------
+
+#if KALI_HAS_OPENEXR
 
 class EXRIStream : public Imf::IStream {
 public:
@@ -1847,5 +1889,7 @@ void Bitmap::write_exr(Stream* stream, int quality) const
     file.setFrameBuffer(framebuffer);
     file.writePixels(static_cast<int>(m_height));
 }
+
+#endif // KALI_HAS_OPENEXR
 
 } // namespace kali
