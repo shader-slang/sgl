@@ -45,10 +45,15 @@ public:
     );
 
     enum class PixelFormat {
+        /// Luminance only.
         y,
+        /// Luminance + alpha.
         ya,
+        /// RGB.
         rgb,
+        /// RGB + alpha.
         rgba,
+        /// Arbitrary multi-channel.
         multi_channel,
     };
 
@@ -79,10 +84,13 @@ public:
 
     Bitmap(const std::filesystem::path& path, FileFormat format = FileFormat::auto_);
 
+    /// Copy constructor.
     Bitmap(const Bitmap& other);
 
+    /// Move constructor.
     Bitmap(Bitmap&& other);
 
+    /// Destructor.
     ~Bitmap();
 
 #if 0
@@ -140,6 +148,13 @@ public:
     /// The names of the channels in the bitmap.
     const std::vector<std::string>& channel_names() const { return m_channel_names; }
 
+    /// True if the bitmap is in sRGB gamma space.
+    bool srgb_gamma() const { return m_srgb_gamma; }
+
+    /// Set the sRGB gamma flag.
+    /// Note that this does not convert the pixel values, it only sets the flag.
+    void set_srgb_gamma(bool srgb_gamma) { m_srgb_gamma = srgb_gamma; }
+
     /// Returns true if the bitmap has an alpha channel.
     bool has_alpha() const { return m_pixel_format == PixelFormat::ya || m_pixel_format == PixelFormat::rgba; }
 
@@ -157,6 +172,9 @@ public:
     uint8_t* uint8_data() { return m_data.get(); }
     const uint8_t* uint8_data() const { return m_data.get(); }
 
+    /// True if bitmap is empty.
+    bool empty() const { return m_width == 0 || m_height == 0; }
+
     /// Clears the bitmap to zeros.
     void clear();
 
@@ -164,10 +182,10 @@ public:
     void vflip();
 
     /// Equality operator.
-    bool operator==(const Bitmap& bitmap) const;
+    bool operator==(const Bitmap& other) const;
 
     /// Inequality operator.
-    bool operator!=(const Bitmap& bitmap) const { return !operator==(bitmap); }
+    bool operator!=(const Bitmap& other) const { return !operator==(other); }
 
     std::string to_string() const override;
 
@@ -180,7 +198,7 @@ private:
     static FileFormat detect_file_format(Stream* stream);
 
     void check_required_format(
-        Bitmap::FileFormat file_format,
+        std::string_view file_format,
         std::vector<Bitmap::PixelFormat> allowed_pixel_formats,
         std::vector<Bitmap::ComponentType> allowed_component_types
     ) const;
@@ -197,12 +215,19 @@ private:
     void read_tga(Stream* stream);
     void write_tga(Stream* stream) const;
 
+    void read_hdr(Stream* stream);
+    void write_hdr(Stream* stream) const;
+
+    void read_exr(Stream* stream);
+    void write_exr(Stream* stream, int quality) const;
+
     PixelFormat m_pixel_format;
     ComponentType m_component_type;
     uint32_t m_width;
     uint32_t m_height;
     uint32_t m_channel_count;
     std::vector<std::string> m_channel_names;
+    bool m_srgb_gamma;
     std::unique_ptr<uint8_t[]> m_data;
     bool m_owns_data;
 };
