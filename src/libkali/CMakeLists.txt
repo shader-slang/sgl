@@ -254,7 +254,6 @@ target_link_libraries(kali
     PRIVATE
         git_version
         glfw stb
-        tevclient::tevclient
         $<$<BOOL:${KALI_HAS_D3D12}>:d3d12>
         $<$<BOOL:${KALI_HAS_AGILITY_SDK}>:agility-sdk>
         # $<$<BOOL:${KALI_HAS_AFTERMATH}>:aftermath>
@@ -263,6 +262,7 @@ target_link_libraries(kali
         $<$<BOOL:${KALI_HAS_JPEG}>:JPEG::JPEG>
         $<$<BOOL:${KALI_HAS_OPENEXR}>:OpenEXR::OpenEXR>
         $<$<BOOL:${KALI_HAS_ASMJIT}>:asmjit::asmjit>
+        $<$<BOOL:${KALI_HAS_TEVCLIENT}>:tevclient::tevclient>
         # Windows system libraries.
         $<$<PLATFORM_ID:Windows>:Dbghelp>
         # $<$<PLATFORM_ID:Windows>:shcore.lib>

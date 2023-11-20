@@ -1,9 +1,12 @@
 #include "tev.h"
 
+#include "kali/core/config.h"
 #include "kali/core/bitmap.h"
 #include "kali/core/format.h"
 
+#if KALI_HAS_TEVCLIENT
 #include <tevclient.h>
+#endif
 
 #include <atomic>
 
@@ -11,6 +14,7 @@ namespace kali::utils {
 
 bool show_in_tev(const Bitmap* bitmap, std::optional<std::string> name, const std::string& host, uint16_t port)
 {
+#if KALI_HAS_TEVCLIENT
     KALI_CHECK(bitmap, "Bitmap cannot be null.");
 
     ref<Bitmap> converted;
@@ -53,6 +57,10 @@ bool show_in_tev(const Bitmap* bitmap, std::optional<std::string> name, const st
     );
 
     return true;
+#else
+    KALI_UNUSED(bitmap, name, host, port);
+    KALI_THROW("tev support is not enabled.");
+#endif
 }
 
 } // namespace kali::utils
