@@ -1,6 +1,7 @@
 #pragma once
 
 #include "kali/device/fwd.h"
+#include "kali/device/device_resource.h"
 #include "kali/device/types.h"
 #include "kali/device/native_handle.h"
 
@@ -14,7 +15,7 @@
 
 namespace kali {
 
-class KALI_API PipelineState : public Object {
+class KALI_API PipelineState : public DeviceResource {
     KALI_OBJECT(PipelineState)
 public:
     PipelineState(ref<Device> device);
@@ -26,10 +27,7 @@ public:
     /// - Vulkan: VkPipeline
     NativeHandle get_native_handle() const;
 
-    void break_strong_reference_to_device();
-
 protected:
-    breakable_ref<Device> m_device;
     Slang::ComPtr<gfx::IPipelineState> m_gfx_pipeline_state;
 };
 

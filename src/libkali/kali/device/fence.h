@@ -1,6 +1,7 @@
 #pragma once
 
 #include "kali/device/fwd.h"
+#include "kali/device/device_resource.h"
 #include "kali/device/native_handle.h"
 #include "kali/device/shared_handle.h"
 
@@ -32,7 +33,7 @@ struct FenceDesc {
 };
 
 /// Fence.
-class KALI_API Fence : public Object {
+class KALI_API Fence : public DeviceResource {
     KALI_OBJECT(Fence)
 public:
     static constexpr uint64_t AUTO = uint64_t(-1);
@@ -89,12 +90,9 @@ public:
     /// - Vulkan: currently not supported
     NativeHandle get_native_handle() const;
 
-    void break_strong_reference_to_device();
-
     std::string to_string() const override;
 
 public:
-    breakable_ref<Device> m_device;
     FenceDesc m_desc;
     Slang::ComPtr<gfx::IFence> m_gfx_fence;
     uint64_t m_signaled_value;

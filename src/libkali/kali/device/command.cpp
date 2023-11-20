@@ -26,7 +26,7 @@ inline gfx::ICommandQueue::QueueType get_gfx_command_queue_type(CommandQueueType
 }
 
 CommandQueue::CommandQueue(ref<Device> device, CommandQueueDesc desc)
-    : m_device(std::move(device))
+    : DeviceResource(std::move(device))
     , m_desc(std::move(desc))
 {
     gfx::ICommandQueue::Desc gfx_desc{
@@ -49,11 +49,6 @@ NativeHandle CommandQueue::get_native_handle() const
         return NativeHandle(reinterpret_cast<VkQueue>(handle.handleValue));
 #endif
     return {};
-}
-
-void CommandQueue::break_strong_reference_to_device()
-{
-    m_device.break_strong_reference();
 }
 
 std::string CommandQueue::to_string() const

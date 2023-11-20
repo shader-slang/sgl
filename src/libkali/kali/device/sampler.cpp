@@ -11,7 +11,7 @@
 namespace kali {
 
 Sampler::Sampler(ref<Device> device, SamplerDesc desc)
-    : m_device(std::move(device))
+    : DeviceResource(std::move(device))
     , m_desc(std::move(desc))
 {
     gfx::ISamplerState::Desc gfx_desc{

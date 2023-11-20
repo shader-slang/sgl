@@ -1,6 +1,7 @@
 #pragma once
 
 #include "kali/device/fwd.h"
+#include "kali/device/device_resource.h"
 #include "kali/device/types.h"
 #include "kali/device/native_handle.h"
 
@@ -63,7 +64,7 @@ struct SamplerDesc {
     }
 };
 
-class KALI_API Sampler : public Object {
+class KALI_API Sampler : public DeviceResource {
     KALI_OBJECT(Sampler)
 public:
     Sampler(ref<Device> device, SamplerDesc desc);
@@ -80,7 +81,6 @@ public:
     std::string to_string() const override;
 
 private:
-    ref<Device> m_device;
     SamplerDesc m_desc;
     Slang::ComPtr<gfx::ISamplerState> m_gfx_sampler_state;
 };

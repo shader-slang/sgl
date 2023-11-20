@@ -13,7 +13,7 @@ KALI_PY_EXPORT(device_command)
         .def_rw("type", &CommandQueueDesc::type)
         .def("__repr__", &CommandQueueDesc::to_string);
 
-    nb::class_<CommandQueue, Object>(m, "CommandQueue").def("desc", &CommandQueue::desc);
+    nb::class_<CommandQueue, DeviceResource>(m, "CommandQueue").def("desc", &CommandQueue::desc);
 
     nb::class_<CommandStream, Object>(m, "CommandStream")
         .def("submit", &CommandStream::submit)

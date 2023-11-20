@@ -15,7 +15,7 @@ namespace kali {
 // ----------------------------------------------------------------------------
 
 PipelineState::PipelineState(ref<Device> device)
-    : m_device(std::move(device))
+    : DeviceResource(std::move(device))
 {
 }
 
@@ -32,11 +32,6 @@ NativeHandle PipelineState::get_native_handle() const
         return NativeHandle(reinterpret_cast<VkPipeline>(handle.handleValue));
 #endif
     return {};
-}
-
-void PipelineState::break_strong_reference_to_device()
-{
-    m_device.break_strong_reference();
 }
 
 // ----------------------------------------------------------------------------

@@ -66,7 +66,7 @@ inline gfx::ResourceState get_gfx_initial_state(ResourceUsage usage)
 // ----------------------------------------------------------------------------
 
 Resource::Resource(ref<Device> device, ResourceType type)
-    : m_device(device)
+    : DeviceResource(std::move(device))
     , m_type(type)
 {
 }

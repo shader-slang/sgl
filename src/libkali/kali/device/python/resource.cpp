@@ -1,7 +1,7 @@
 #include "nanobind.h"
 
-#include "kali/device/device.h"
 #include "kali/device/resource.h"
+#include "kali/device/device.h"
 #include "kali/device/formats.h"
 #include "kali/device/command.h"
 
@@ -179,7 +179,9 @@ KALI_PY_EXPORT(device_resource)
 
     nb::kali_enum<MemoryType>(m, "MemoryType");
 
-    nb::class_<Resource, Object>(m, "Resource").def("get_srv", &Resource::get_srv).def("get_uav", &Resource::get_uav);
+    nb::class_<Resource, DeviceResource>(m, "Resource")
+        .def("get_srv", &Resource::get_srv)
+        .def("get_uav", &Resource::get_uav);
 
     nb::kali_enum<ResourceViewType>(m, "ResourceViewType");
 

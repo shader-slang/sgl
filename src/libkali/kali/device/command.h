@@ -1,6 +1,7 @@
 #pragma once
 
 #include "kali/device/fwd.h"
+#include "kali/device/device_resource.h"
 #include "kali/device/native_handle.h"
 #include "kali/device/resource.h"
 #include "kali/device/fence.h"
@@ -47,7 +48,7 @@ struct CommandQueueDesc {
     }
 };
 
-class KALI_API CommandQueue : public Object {
+class KALI_API CommandQueue : public DeviceResource {
     KALI_OBJECT(CommandQueue)
 public:
     /// Constructor.
@@ -63,12 +64,9 @@ public:
 
     gfx::ICommandQueue* get_gfx_command_queue() const { return m_gfx_command_queue; }
 
-    void break_strong_reference_to_device();
-
     std::string to_string() const override;
 
 private:
-    breakable_ref<Device> m_device;
     CommandQueueDesc m_desc;
     Slang::ComPtr<gfx::ICommandQueue> m_gfx_command_queue;
 };

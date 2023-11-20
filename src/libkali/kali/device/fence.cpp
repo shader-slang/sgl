@@ -11,7 +11,7 @@
 namespace kali {
 
 Fence::Fence(ref<Device> device, FenceDesc desc)
-    : m_device(std::move(device))
+    : DeviceResource(std::move(device))
     , m_desc(std::move(desc))
 {
     KALI_ASSERT(m_device);
@@ -77,11 +77,6 @@ NativeHandle Fence::get_native_handle() const
         // currently not supported
 #endif
     return {};
-}
-
-void Fence::break_strong_reference_to_device()
-{
-    m_device.break_strong_reference();
 }
 
 std::string Fence::to_string() const

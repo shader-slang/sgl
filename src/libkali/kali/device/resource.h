@@ -1,6 +1,7 @@
 #pragma once
 
 #include "kali/device/fwd.h"
+#include "kali/device/device_resource.h"
 #include "kali/device/formats.h"
 #include "kali/device/native_handle.h"
 
@@ -265,12 +266,10 @@ private:
     Slang::ComPtr<gfx::IResourceView> m_gfx_resource_view;
 };
 
-class KALI_API Resource : public Object {
+class KALI_API Resource : public DeviceResource {
     KALI_OBJECT(Resource)
 public:
     virtual ~Resource();
-
-    Device* device() const { return m_device; }
 
     ResourceType type() const { return m_type; };
 
@@ -306,7 +305,6 @@ protected:
 
     void set_global_state(ResourceState global_state) const { KALI_UNUSED(global_state); }
 
-    ref<Device> m_device;
     ResourceType m_type;
 
     mutable std::unordered_map<ResourceViewDesc, ref<ResourceView>> m_views;
