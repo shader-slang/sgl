@@ -8,5 +8,6 @@ class ref;
 
 class Logger;
 class Window;
+class Bitmap;
 
 } // namespace kali

@@ -101,6 +101,9 @@ target_sources(kali PRIVATE
     kali/math/vector_math.h
     kali/math/vector_types.h
     kali/math/vector.h
+
+    kali/utils/tev.cpp
+    kali/utils/tev.h
 )
 
 target_include_directories(kali PUBLIC .)
@@ -320,6 +323,7 @@ nanobind_add_module(kali_ext NB_STATIC LTO
     kali/math/python/quaternion.cpp
     kali/math/python/scalar.cpp
     kali/math/python/vector.cpp
+    kali/utils/python/tev.cpp
 )
 
 target_include_directories(kali_ext PRIVATE kali/python)

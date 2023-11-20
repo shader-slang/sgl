@@ -32,6 +32,8 @@ KALI_PY_DECLARE(math_vector);
 KALI_PY_DECLARE(math_matrix);
 KALI_PY_DECLARE(math_quaternion);
 
+KALI_PY_DECLARE(utils_tev);
+
 
 NB_MODULE(kali_ext, m)
 {
@@ -75,6 +77,9 @@ NB_MODULE(kali_ext, m)
     KALI_PY_IMPORT(device_command);
     KALI_PY_IMPORT(device_kernel);
     KALI_PY_IMPORT(device_device);
+
+    m.def_submodule("utils", "Utility module");
+    KALI_PY_IMPORT(utils_tev);
 
     // Register a cleanup callback function.
     auto atexit = nb::module_::import_("atexit");

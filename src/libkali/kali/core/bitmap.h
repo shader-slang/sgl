@@ -137,6 +137,9 @@ public:
     /// The number of channels in the bitmap.
     uint32_t channel_count() const { return m_channel_count; }
 
+    /// The names of the channels in the bitmap.
+    const std::vector<std::string>& channel_names() const { return m_channel_names; }
+
     /// Returns true if the bitmap has an alpha channel.
     bool has_alpha() const { return m_pixel_format == PixelFormat::ya || m_pixel_format == PixelFormat::rgba; }
 
