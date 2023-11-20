@@ -110,6 +110,23 @@ KALI_PY_EXPORT(core_bitmap)
         .def("clear", &Bitmap::clear)
         .def("vflip", &Bitmap::vflip)
         .def(
+            "convert",
+            [](Bitmap& self,
+               std::optional<Bitmap::PixelFormat> pixel_format,
+               std::optional<Bitmap::ComponentType> component_type,
+               std::optional<bool> srgb_gamma) -> ref<Bitmap>
+            {
+                return self.convert(
+                    pixel_format ? *pixel_format : self.pixel_format(),
+                    component_type ? *component_type : self.component_type(),
+                    srgb_gamma ? *srgb_gamma : self.srgb_gamma()
+                );
+            },
+            "pixel_format"_a = std::optional<Bitmap::PixelFormat>{},
+            "component_type"_a = std::optional<Bitmap::ComponentType>{},
+            "srgb_gamma"_a = std::optional<bool>{}
+        )
+        .def(
             "write",
             nb::overload_cast<const std::filesystem::path&, Bitmap::FileFormat, int>(&Bitmap::write, nb::const_),
             "path"_a,

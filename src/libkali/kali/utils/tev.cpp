@@ -12,7 +12,16 @@ namespace kali::utils {
 bool show_in_tev(const Bitmap* bitmap, std::optional<std::string> name, const std::string& host, uint16_t port)
 {
     KALI_CHECK(bitmap, "Bitmap cannot be null.");
-    KALI_CHECK(bitmap->component_type() == Bitmap::ComponentType::float32, "Bitmap must be float32.");
+
+    ref<Bitmap> converted;
+    if (bitmap->component_type() != Bitmap::ComponentType::float32) {
+        log_warn(
+            "tev only supports 32-bit floating point images. Converting {} data to float.",
+            bitmap->component_type()
+        );
+        converted = bitmap->convert(bitmap->pixel_format(), Bitmap::ComponentType::float32, false);
+        bitmap = converted;
+    }
 
     static std::atomic<uint32_t> image_counter{0};
     if (!name)

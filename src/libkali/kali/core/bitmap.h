@@ -181,6 +181,12 @@ public:
     /// Vertically flip the bitmap.
     void vflip();
 
+    ref<Struct> pixel_struct() const;
+
+    ref<Bitmap> convert(PixelFormat pixel_format, ComponentType component_type, bool srgb_gamma) const;
+
+    void convert(Bitmap* target) const;
+
     /// Equality operator.
     bool operator==(const Bitmap& other) const;
 

@@ -279,6 +279,81 @@ void Bitmap::vflip()
     }
 }
 
+ref<Struct> Bitmap::pixel_struct() const
+{
+    ref<Struct> result = make_ref<Struct>();
+    Struct::Flags flags = Struct::Flags::none;
+    if (m_component_type == ComponentType::uint8 || m_component_type == ComponentType::uint16)
+        flags |= Struct::Flags::normalized;
+    if (m_srgb_gamma)
+        flags |= Struct::Flags::srgb;
+    for (size_t i = 0; i < m_channel_count; ++i)
+        result->append(m_channel_names[i], m_component_type, flags);
+    return result;
+}
+
+ref<Bitmap> Bitmap::convert(PixelFormat pixel_format, ComponentType component_type, bool srgb_gamma) const
+{
+    ref<Bitmap> result = make_ref<Bitmap>(pixel_format, component_type, m_width, m_height);
+    result->set_srgb_gamma(srgb_gamma);
+    convert(result);
+    return result;
+}
+
+void Bitmap::convert(Bitmap* target) const
+{
+    if (width() != target->width() || height() != target->height())
+        KALI_THROW(
+            "Bitmap dimensions do not match (source image is {}x{} vs target image {}x{})!",
+            width(),
+            height(),
+            target->width(),
+            target->height()
+        );
+
+    bool src_is_rgb = m_pixel_format == PixelFormat::rgb || m_pixel_format == PixelFormat::rgba;
+    bool src_is_y = m_pixel_format == PixelFormat::y || m_pixel_format == PixelFormat::ya;
+
+    ref<Struct> src_struct = pixel_struct();
+    ref<Struct> dst_struct = target->pixel_struct();
+
+    for (Struct::Field& field : dst_struct->fields()) {
+        if (src_struct->has_field(field.name)) {
+            continue;
+        }
+        if (field.name == "r") {
+            if (src_is_y) {
+                field.name = "y";
+                continue;
+            }
+        }
+        if (field.name == "g") {
+            if (src_is_y) {
+                field.name = "y";
+                continue;
+            }
+        }
+        if (field.name == "b") {
+            if (src_is_y) {
+                field.name = "y";
+                continue;
+            }
+        }
+        if (field.name == "a") {
+            field.default_value = 1.0;
+            field.flags |= Struct::Flags::default_;
+            continue;
+        }
+        KALI_THROW(
+            "Unable to convert bitmap: cannot determine how to derive field \"{}\" in target image!",
+            field.name
+        );
+    }
+
+    ref<StructConverter> converter = make_ref<StructConverter>(src_struct, dst_struct);
+    converter->convert(data(), target->data(), pixel_count());
+}
+
 bool Bitmap::operator==(const Bitmap& other) const
 {
     return m_pixel_format == other.m_pixel_format && m_component_type == other.m_component_type

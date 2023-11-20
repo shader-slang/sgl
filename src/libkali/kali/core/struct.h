@@ -173,6 +173,9 @@ public:
     /// List of all fields.
     const std::vector<Field>& fields() const { return m_fields; }
 
+    /// List of all fields.
+    std::vector<Field>& fields() { return m_fields; }
+
     /// Access field by name. Throws if field is not found.
     const Field& field(std::string_view name) const;
 

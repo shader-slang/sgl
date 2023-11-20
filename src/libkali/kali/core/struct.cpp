@@ -21,7 +21,7 @@
 #include <mutex>
 #include <utility>
 
-#define KALI_LOG_JIT_ASSEMBLY 1
+#define KALI_LOG_JIT_ASSEMBLY 0
 
 namespace kali {
 
