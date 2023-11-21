@@ -543,7 +543,7 @@ std::vector<Op> generate_code(const Struct& src_struct, const Struct& dst_struct
                         );
 
                     // Linearize source value.
-                    if (is_set(src_field.flags, Struct::Flags::srgb))
+                    if (is_set(src_field.flags, Struct::Flags::srgb_gamma))
                         code.push_back({.type = Op::Type::srgb_to_linear, .reg = src_reg});
                 }
 
@@ -553,7 +553,7 @@ std::vector<Op> generate_code(const Struct& src_struct, const Struct& dst_struct
             const auto dst_range = Struct::type_range(dst_field.type);
 
             // De-linearize destination value.
-            if (is_set(dst_field.flags, Struct::Flags::srgb))
+            if (is_set(dst_field.flags, Struct::Flags::srgb_gamma))
                 code.push_back({.type = Op::Type::linear_to_srgb, .reg = 0});
 
             // De-normalize destination value.
@@ -582,7 +582,7 @@ std::vector<Op> generate_code(const Struct& src_struct, const Struct& dst_struct
             );
 
             // Convert value if types don't match.
-            Struct::Flags flag_mask = Struct::Flags::normalized | Struct::Flags::srgb;
+            Struct::Flags flag_mask = Struct::Flags::normalized | Struct::Flags::srgb_gamma;
             if (src_field.type != dst_field.type || (src_field.flags & flag_mask) != (dst_field.flags & flag_mask)) {
                 const auto src_range = Struct::type_range(src_field.type);
                 const auto dst_range = Struct::type_range(dst_field.type);
@@ -595,11 +595,11 @@ std::vector<Op> generate_code(const Struct& src_struct, const Struct& dst_struct
                     code.push_back({.type = Op::Type::multiply, .reg = 0, .multiply = {1.0 / src_range.second}});
 
                 // Linearize source value.
-                if (is_set(src_field.flags, Struct::Flags::srgb))
+                if (is_set(src_field.flags, Struct::Flags::srgb_gamma))
                     code.push_back({.type = Op::Type::srgb_to_linear, .reg = 0});
 
                 // De-linearize destination value.
-                if (is_set(dst_field.flags, Struct::Flags::srgb))
+                if (is_set(dst_field.flags, Struct::Flags::srgb_gamma))
                     code.push_back({.type = Op::Type::linear_to_srgb, .reg = 0});
 
                 // De-normalize destination value.

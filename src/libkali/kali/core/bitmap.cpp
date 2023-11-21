@@ -315,7 +315,7 @@ ref<Struct> Bitmap::pixel_struct() const
     if (m_component_type == ComponentType::uint8 || m_component_type == ComponentType::uint16)
         flags |= Struct::Flags::normalized;
     if (m_srgb_gamma)
-        flags |= Struct::Flags::srgb;
+        flags |= Struct::Flags::srgb_gamma;
     for (size_t i = 0; i < m_channel_count; ++i)
         result->append(m_channel_names[i], m_component_type, flags);
     return result;

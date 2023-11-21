@@ -248,7 +248,7 @@ def test_roundtrip_normalization_int2int(param):
 def test_gamma_1():
     s = StructConverter(
         Struct().append(
-            "v", Struct.Type.uint8, Struct.Flags.normalized | Struct.Flags.srgb
+            "v", Struct.Type.uint8, Struct.Flags.normalized | Struct.Flags.srgb_gamma
         ),
         Struct().append("v", Struct.Type.float32),
     )
@@ -265,7 +265,7 @@ def test_gamma_2():
     s = StructConverter(
         Struct().append("v", Struct.Type.float32),
         Struct().append(
-            "v", Struct.Type.uint8, Struct.Flags.normalized | Struct.Flags.srgb
+            "v", Struct.Type.uint8, Struct.Flags.normalized | Struct.Flags.srgb_gamma
         ),
     )
 
@@ -300,11 +300,20 @@ def test_blend():
 
 def test_blend_gamma():
     src = Struct()
-    src.append("a", Struct.Type.uint8, Struct.Flags.normalized | Struct.Flags.srgb)
-    src.append("b", Struct.Type.uint8, Struct.Flags.normalized | Struct.Flags.srgb)
+    src.append(
+        "a", Struct.Type.uint8, Struct.Flags.normalized | Struct.Flags.srgb_gamma
+    )
+    src.append(
+        "b", Struct.Type.uint8, Struct.Flags.normalized | Struct.Flags.srgb_gamma
+    )
 
     target = Struct()
-    target.append("v", Struct.Type.uint8, Struct.Flags.normalized | Struct.Flags.srgb, blend=[(1, "a"), (1, "b")])
+    target.append(
+        "v",
+        Struct.Type.uint8,
+        Struct.Flags.normalized | Struct.Flags.srgb_gamma,
+        blend=[(1, "a"), (1, "b")],
+    )
 
     s = StructConverter(src, target)
     ref = int(np.round(to_srgb(from_srgb(100 / 255.0) + from_srgb(200 / 255.0)) * 255))

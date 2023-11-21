@@ -57,7 +57,7 @@ public:
         /// Integer fields represent normalized values in the range [0, 1].
         normalized = 1,
         /// Field encodes an sRGB value.
-        srgb = 2,
+        srgb_gamma = 2,
         /// Use default when field is not present in the source struct during conversion.
         default_ = 4,
     };
@@ -67,7 +67,7 @@ public:
         {
             {Flags::none, "none"},
             {Flags::normalized, "normalized"},
-            {Flags::srgb, "srgb"},
+            {Flags::srgb_gamma, "srgb_gamma"},
             {Flags::default_, "default"},
         }
     );
