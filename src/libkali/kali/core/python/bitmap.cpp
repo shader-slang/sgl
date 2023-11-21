@@ -133,6 +133,7 @@ KALI_PY_EXPORT(core_bitmap)
             "format"_a = Bitmap::FileFormat::auto_,
             "quality"_a = -1
         )
+        .def("write_async", &Bitmap::write_async, "path"_a, "format"_a = Bitmap::FileFormat::auto_, "quality"_a = -1)
         .def(nb::self == nb::self)
         .def(nb::self != nb::self)
         .def_prop_ro(

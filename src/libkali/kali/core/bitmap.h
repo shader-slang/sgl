@@ -123,9 +123,7 @@ public:
     void write(Stream* stream, FileFormat format = FileFormat::auto_, int quality = -1) const;
     void write(const std::filesystem::path& path, FileFormat format = FileFormat::auto_, int quality = -1) const;
 
-    std::future<void> write_async(ref<Stream> stream, FileFormat format = FileFormat::auto_, int quality = -1) const;
-    std::future<void>
-    write_async(const std::filesystem::path& path, FileFormat format = FileFormat::auto_, int quality = -1) const;
+    void write_async(const std::filesystem::path& path, FileFormat format = FileFormat::auto_, int quality = -1) const;
 
     /// The pixel format.
     PixelFormat pixel_format() const { return m_pixel_format; }

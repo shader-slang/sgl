@@ -7,6 +7,7 @@
 #include "kali/core/logger.h"
 #include "kali/core/file_stream.h"
 #include "kali/core/string.h"
+#include "kali/core/thread.h"
 
 #if KALI_HAS_PNG
 #include <png.h>
@@ -251,22 +252,17 @@ void Bitmap::write(const std::filesystem::path& path, FileFormat format, int qua
     write(stream, format, quality);
 }
 
-std::future<void> Bitmap::write_async(ref<Stream> stream, FileFormat format, int quality) const
+void Bitmap::write_async(const std::filesystem::path& path, FileFormat format, int quality) const
 {
-    KALI_UNUSED(stream);
-    KALI_UNUSED(format);
-    KALI_UNUSED(quality);
-    // FileStream* fs = dynamic_cast<FileStream*>(stream.get());
-    // if (fs) {
-    //     fs->path().extension();
-    // }
-    return {};
-}
-
-std::future<void> Bitmap::write_async(const std::filesystem::path& path, FileFormat format, int quality) const
-{
-    auto stream = make_ref<FileStream>(path, FileStream::Mode::write);
-    return write_async(stream, format, quality);
+    // Increment reference count to ensure that the bitmap is not destroyed before written.
+    this->inc_ref();
+    auto future = thread::do_async(
+        [=, this]()
+        {
+            this->write(path, format, quality);
+            this->dec_ref();
+        }
+    );
 }
 
 size_t Bitmap::bytes_per_pixel() const

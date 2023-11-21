@@ -45,6 +45,8 @@ target_sources(kali PRIVATE
     kali/core/string.h
     kali/core/struct.cpp
     kali/core/struct.h
+    kali/core/thread.cpp
+    kali/core/thread.h
     kali/core/timer.cpp
     kali/core/timer.h
     kali/core/traits.h
@@ -308,6 +310,7 @@ nanobind_add_module(kali_ext NB_STATIC LTO
     kali/core/python/object.cpp
     kali/core/python/platform.cpp
     kali/core/python/struct.cpp
+    kali/core/python/thread.cpp
     kali/core/python/timer.cpp
     kali/core/python/window.cpp
     kali/device/python/command.cpp

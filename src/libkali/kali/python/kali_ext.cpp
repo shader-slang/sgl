@@ -1,8 +1,11 @@
 #include "nanobind.h"
 #include "kali/core/platform.h"
+#include "kali/core/thread.h"
 
 #include "kali/kali.h"
 #include "kali/device/device.h"
+
+#include <iostream>
 
 KALI_PY_DECLARE(core_bitmap);
 KALI_PY_DECLARE(core_input);
@@ -10,6 +13,7 @@ KALI_PY_DECLARE(core_logger);
 KALI_PY_DECLARE(core_object);
 KALI_PY_DECLARE(core_platform);
 KALI_PY_DECLARE(core_struct);
+KALI_PY_DECLARE(core_thread);
 KALI_PY_DECLARE(core_timer);
 KALI_PY_DECLARE(core_window);
 
@@ -52,6 +56,8 @@ NB_MODULE(kali_ext, m)
     KALI_PY_IMPORT(core_object);
     m.def_submodule("platform", "Platform module");
     KALI_PY_IMPORT(core_platform);
+    m.def_submodule("thread", "Threading module");
+    KALI_PY_IMPORT(core_thread);
     KALI_PY_IMPORT(core_input);
     KALI_PY_IMPORT(core_logger);
     KALI_PY_IMPORT(core_timer);
@@ -85,5 +91,15 @@ NB_MODULE(kali_ext, m)
 
     // Register a cleanup callback function.
     auto atexit = nb::module_::import_("atexit");
-    atexit.attr("register")(nb::cpp_function([]() { kali::static_shutdown(); }));
+    atexit.attr("register")(nb::cpp_function(
+        [&]()
+        {
+            // The GIL is hold when calling this callback.
+            // We need to release it here in order to not deadlock
+            // when increasing/decreasing the reference count of objects.
+            // This mostly happens because we are waiting for tasks to finish in static_shutdown().
+            nb::gil_scoped_release guard;
+            kali::static_shutdown();
+        }
+    ));
 }

@@ -20,6 +20,7 @@
         "glfw3",
         "stb",
         "vulkan-headers",
+        "bshoshany-thread-pool",
         "libjpeg-turbo",
         "libpng",
         "openexr",

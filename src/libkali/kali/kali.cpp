@@ -4,6 +4,7 @@
 #include "kali/core/platform.h"
 #include "kali/core/bitmap.h"
 #include "kali/core/format.h"
+#include "kali/core/thread.h"
 
 #include "git_version.h"
 
@@ -20,6 +21,7 @@ const char* git_version()
 
 void static_init()
 {
+    thread::static_init();
     Logger::static_init();
     platform::static_init();
     Bitmap::static_init();
@@ -27,9 +29,12 @@ void static_init()
 
 void static_shutdown()
 {
+    thread::wait_for_tasks();
+
     Bitmap::static_shutdown();
     platform::static_shutdown();
     Logger::static_shutdown();
+    thread::static_shutdown();
 }
 
 } // namespace kali
