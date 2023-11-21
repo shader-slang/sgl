@@ -17,4 +17,12 @@ KALI_PY_EXPORT(utils_tev)
         "host"_a = "127.0.0.1",
         "port"_a = 14158
     );
+    utils.def(
+        "show_in_tev_async",
+        &utils::show_in_tev_async,
+        "bitmap"_a,
+        "name"_a = std::optional<std::string>{},
+        "host"_a = "127.0.0.1",
+        "port"_a = 14158
+    );
 }

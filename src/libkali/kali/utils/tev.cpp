@@ -3,6 +3,7 @@
 #include "kali/core/config.h"
 #include "kali/core/bitmap.h"
 #include "kali/core/format.h"
+#include "kali/core/thread.h"
 
 #if KALI_HAS_TEVCLIENT
 #include <tevclient.h>
@@ -14,12 +15,16 @@ namespace kali::utils {
 
 bool show_in_tev(const Bitmap* bitmap, std::optional<std::string> name, const std::string& host, uint16_t port)
 {
+    // Workaround for multi-threaded tevclient usage.
+    // This avoids WSAStartup/WSACleanup being called multiple times from different threads.
+    static tevclient::Client s_client;
+
 #if KALI_HAS_TEVCLIENT
     KALI_CHECK(bitmap, "Bitmap cannot be null.");
 
     ref<Bitmap> converted;
     if (bitmap->component_type() != Bitmap::ComponentType::float32) {
-        log_warn(
+        log_warn_once(
             "tev only supports 32-bit floating point images. Converting {} data to float.",
             bitmap->component_type()
         );
@@ -61,6 +66,11 @@ bool show_in_tev(const Bitmap* bitmap, std::optional<std::string> name, const st
     KALI_UNUSED(bitmap, name, host, port);
     KALI_THROW("tev support is not enabled.");
 #endif
+}
+
+void show_in_tev_async(ref<Bitmap> bitmap, std::optional<std::string> name, const std::string& host, uint16_t port)
+{
+    thread::do_async([=]() { show_in_tev(bitmap, name, host, port); });
 }
 
 } // namespace kali::utils

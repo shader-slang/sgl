@@ -27,4 +27,11 @@ KALI_API bool show_in_tev(
     uint16_t port = 14158
 );
 
+KALI_API void show_in_tev_async(
+    ref<Bitmap> bitmap,
+    std::optional<std::string> name,
+    const std::string& host = "127.0.0.1",
+    uint16_t port = 14158
+);
+
 } // namespace kali::utils
