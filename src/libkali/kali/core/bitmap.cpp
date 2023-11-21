@@ -146,6 +146,25 @@ Bitmap::~Bitmap()
         m_data.release();
 }
 
+std::vector<ref<Bitmap>> Bitmap::read_multiple(const std::vector<std::filesystem::path>& paths, FileFormat format)
+{
+    std::vector<std::future<ref<Bitmap>>> futures;
+    futures.reserve(paths.size());
+    for (const auto& path : paths)
+        futures.push_back(thread::do_async(
+            [](const std::filesystem::path& path, FileFormat format) { return make_ref<Bitmap>(path, format); },
+            path,
+            format
+        ));
+    std::vector<ref<Bitmap>> bitmaps;
+    bitmaps.reserve(paths.size());
+    for (auto& future : futures) {
+        future.wait();
+        bitmaps.push_back(future.get());
+    }
+    return bitmaps;
+}
+
 #if 0
 ref<Bitmap> Bitmap::read(Stream* stream, FileFormat format)
 {
@@ -256,7 +275,7 @@ void Bitmap::write_async(const std::filesystem::path& path, FileFormat format, i
 {
     // Increment reference count to ensure that the bitmap is not destroyed before written.
     this->inc_ref();
-    auto future = thread::do_async(
+    thread::do_async(
         [=, this]()
         {
             this->write(path, format, quality);

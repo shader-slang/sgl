@@ -93,6 +93,10 @@ public:
     /// Destructor.
     ~Bitmap();
 
+    /// Load a list of bitmaps from multiple paths. Uses multi-threading to load bitmaps in parallel.
+    static std::vector<ref<Bitmap>>
+    read_multiple(const std::vector<std::filesystem::path>& paths, FileFormat format = FileFormat::auto_);
+
 #if 0
     /// Read a bitmap from a stream.
     /// @param stream The stream to read from.
