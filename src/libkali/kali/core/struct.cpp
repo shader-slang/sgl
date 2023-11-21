@@ -169,8 +169,12 @@ std::pair<double, double> Struct::type_range(Type type)
         return RANGE(int16_t);
     case Type::int32:
         return RANGE(int32_t);
-    case Type::int64:
-        return RANGE(int64_t);
+    case Type::int64: {
+        auto range = RANGE(int64_t);
+        range.first = std::nextafter(range.first, 0.f);
+        range.second = std::nextafter(range.second, 0.f);
+        return range;
+    }
     case Type::uint8:
         return RANGE(uint8_t);
     case Type::uint16:
