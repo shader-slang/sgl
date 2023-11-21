@@ -56,7 +56,7 @@ public:
         none = 0,
         /// Integer fields represent normalized values in the range [0, 1].
         normalized = 1,
-        /// Field encodes an sRGB value.
+        /// Field encodes an sRGB gamma-corrected value.
         srgb_gamma = 2,
         /// Use default when field is not present in the source struct during conversion.
         default_ = 4,
@@ -144,6 +144,9 @@ public:
         std::string to_string() const;
     };
 
+    using FieldIterator = std::vector<Field>::iterator;
+    using FieldConstIterator = std::vector<Field>::const_iterator;
+
     /// Constructor.
     /// @param pack If true, the struct will be packed.
     /// @param byte_order Byte order of the struct.
@@ -170,11 +173,29 @@ public:
         const Field::BlendList& blend = {}
     );
 
-    /// List of all fields.
-    const std::vector<Field>& fields() const { return m_fields; }
+    /// Field iterator (begin).
+    FieldIterator begin() { return m_fields.begin(); }
 
-    /// List of all fields.
-    std::vector<Field>& fields() { return m_fields; }
+    /// Const field iterator (begin).
+    FieldConstIterator begin() const { return m_fields.cbegin(); }
+
+    /// Field iterator (end).
+    FieldConstIterator end() const { return m_fields.cend(); }
+
+    /// Const field iterator (end).
+    FieldIterator end() { return m_fields.end(); }
+
+    /// The number of fields in the struct.
+    size_t field_count() const { return m_fields.size(); }
+
+    /// Access field by index.
+    Field& operator[](size_t i) { return m_fields[i]; }
+
+    /// Access field by index.
+    const Field& operator[](size_t i) const { return m_fields[i]; }
+
+    /// Access field by name. Throws if field is not found.
+    Field& field(std::string_view name);
 
     /// Access field by name. Throws if field is not found.
     const Field& field(std::string_view name) const;

@@ -346,7 +346,7 @@ void Bitmap::convert(Bitmap* target) const
     ref<Struct> src_struct = pixel_struct();
     ref<Struct> dst_struct = target->pixel_struct();
 
-    for (Struct::Field& field : dst_struct->fields()) {
+    for (Struct::Field& field : *dst_struct) {
         if (src_struct->has_field(field.name)) {
             continue;
         }

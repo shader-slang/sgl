@@ -45,10 +45,20 @@ KALI_PY_EXPORT(core_struct)
             nb::rv_policy::reference
         )
         .def("has_field", &Struct::has_field, "name"_a)
-        .def("field", &Struct::field, "name"_a)
+        .def("field", nb::overload_cast<std::string_view>(&Struct::field), "name"_a, nb::rv_policy::reference)
+        .def(
+            "__getitem__",
+            [](Struct& self, size_t i) -> Struct::Field&
+            {
+                if (i >= self.field_count())
+                    throw nb::index_error();
+                return self[i];
+            },
+            nb::rv_policy::reference_internal
+        )
+        .def("__len__", &Struct::field_count)
         .def(nb::self == nb::self)
         .def(nb::self != nb::self)
-        .def_prop_ro("fields", nb::overload_cast<>(&Struct::fields, nb::const_))
         .def_prop_ro("size", &Struct::size)
         .def_prop_ro("alignment", &Struct::alignment)
         .def_prop_ro("byte_order", &Struct::byte_order)

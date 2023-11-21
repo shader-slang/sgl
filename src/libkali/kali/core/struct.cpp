@@ -59,12 +59,6 @@ Struct::Struct(bool pack, ByteOrder byte_order)
 
 Struct& Struct::append(Field field)
 {
-    KALI_CHECK(!field.name.empty(), "Field name cannot be empty.");
-    KALI_CHECK(field.size == type_size(field.type), "Field size does not match type size.");
-    KALI_CHECK(
-        m_fields.empty() || field.offset >= m_fields.back().offset + m_fields.back().size,
-        "Field offset overlaps with previous field."
-    );
     m_fields.push_back(field);
     return *this;
 }
@@ -80,6 +74,14 @@ Struct::append(std::string_view name, Type type, Flags flags, double default_val
             offset = align_to(size, offset);
     }
     return append({std::string(name), type, flags, size, offset, default_value, blend});
+}
+
+Struct::Field& Struct::field(std::string_view name)
+{
+    for (auto& field : m_fields)
+        if (field.name == name)
+            return field;
+    KALI_THROW("Field \"{}\" not found.", name);
 }
 
 const Struct::Field& Struct::field(std::string_view name) const
@@ -123,7 +125,7 @@ size_t Struct::alignment() const
 size_t hash(const Struct& struct_)
 {
     size_t hash = 0;
-    for (const auto& field : struct_.fields())
+    for (const auto& field : struct_)
         hash = hash_combine(hash, kali::hash(field));
     return hash;
 }
@@ -505,7 +507,7 @@ std::vector<Op> generate_code(const Struct& src_struct, const Struct& dst_struct
     std::vector<Op> code;
     std::map<std::string, uint8_t> src_regs;
 
-    for (const auto& dst_field : dst_struct.fields()) {
+    for (const auto& dst_field : dst_struct) {
 
         if (!dst_field.blend.empty()) {
             // Initialize accumulator.
