@@ -62,26 +62,26 @@ def test_fields_unpacked():
     s.append("float32", Struct.Type.float32)
     assert s.size == 4
     assert s.alignment == 4
-    assert s.fields[0].name == "float32"
-    assert s.fields[0].type == Struct.Type.float32
-    assert s.fields[0].offset == 0
-    assert s.fields[0].size == 4
+    assert s[0].name == "float32"
+    assert s[0].type == Struct.Type.float32
+    assert s[0].offset == 0
+    assert s[0].size == 4
 
     s.append("uint8", Struct.Type.uint8)
     assert s.size == 8
     assert s.alignment == 4
-    assert s.fields[1].name == "uint8"
-    assert s.fields[1].type == Struct.Type.uint8
-    assert s.fields[1].offset == 4
-    assert s.fields[1].size == 1
+    assert s[1].name == "uint8"
+    assert s[1].type == Struct.Type.uint8
+    assert s[1].offset == 4
+    assert s[1].size == 1
 
     s.append("uint16", Struct.Type.uint16)
     assert s.size == 8
     assert s.alignment == 4
-    assert s.fields[2].name == "uint16"
-    assert s.fields[2].type == Struct.Type.uint16
-    assert s.fields[2].offset == 6
-    assert s.fields[2].size == 2
+    assert s[2].name == "uint16"
+    assert s[2].type == Struct.Type.uint16
+    assert s[2].offset == 6
+    assert s[2].size == 2
 
 
 def test_fields_packed():
@@ -92,26 +92,26 @@ def test_fields_packed():
     s.append("float32", Struct.Type.float32)
     assert s.size == 4
     assert s.alignment == 1
-    assert s.fields[0].name == "float32"
-    assert s.fields[0].type == Struct.Type.float32
-    assert s.fields[0].offset == 0
-    assert s.fields[0].size == 4
+    assert s[0].name == "float32"
+    assert s[0].type == Struct.Type.float32
+    assert s[0].offset == 0
+    assert s[0].size == 4
 
     s.append("uint8", Struct.Type.uint8)
     assert s.size == 5
     assert s.alignment == 1
-    assert s.fields[1].name == "uint8"
-    assert s.fields[1].type == Struct.Type.uint8
-    assert s.fields[1].offset == 4
-    assert s.fields[1].size == 1
+    assert s[1].name == "uint8"
+    assert s[1].type == Struct.Type.uint8
+    assert s[1].offset == 4
+    assert s[1].size == 1
 
     s.append("uint16", Struct.Type.uint16)
     assert s.size == 7
     assert s.alignment == 1
-    assert s.fields[2].name == "uint16"
-    assert s.fields[2].type == Struct.Type.uint16
-    assert s.fields[2].offset == 5
-    assert s.fields[2].size == 2
+    assert s[2].name == "uint16"
+    assert s[2].type == Struct.Type.uint16
+    assert s[2].offset == 5
+    assert s[2].size == 2
 
 
 @pytest.mark.parametrize("param", supported_types)
