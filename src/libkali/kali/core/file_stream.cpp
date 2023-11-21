@@ -27,7 +27,8 @@ inline std::string strerror_safe(int errnum)
     strerror_s(buf, sizeof(buf), errnum);
     return buf;
 #else
-    return strerror_r(errnum, buf, sizeof(buf));
+    strerror_r(errnum, buf, sizeof(buf));
+    return buf;
 #endif
 }
 
