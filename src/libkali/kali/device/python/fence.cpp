@@ -9,8 +9,7 @@ KALI_PY_EXPORT(device_fence)
     nb::class_<FenceDesc>(m, "FenceDesc")
         .def(nb::init<>())
         .def_rw("initial_value", &FenceDesc::initial_value)
-        .def_rw("shared", &FenceDesc::shared)
-        .def("__repr__", &FenceDesc::to_string);
+        .def_rw("shared", &FenceDesc::shared);
 
     nb::class_<Fence, DeviceResource>(m, "Fence")
         .def_prop_ro("desc", &Fence::get_desc)

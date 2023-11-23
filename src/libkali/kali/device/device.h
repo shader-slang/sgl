@@ -87,24 +87,6 @@ struct DeviceDesc {
 
     /// Path to the shader cache directory. Leave empty to disable shader cache.
     std::filesystem::path shader_cache_path;
-
-    std::string to_string() const
-    {
-        return fmt::format(
-            "DeviceDesc(\n"
-            "   type={},\n"
-            "   enable_debug_layers={},\n"
-            "   adapter_luid={},\n"
-            "   default_shader_model={},\n"
-            "   shader_cache_path=\"{}\"\n"
-            ")",
-            type,
-            enable_debug_layers,
-            adapter_luid ? fmt::format("{}", *adapter_luid) : "null",
-            default_shader_model,
-            shader_cache_path
-        );
-    }
 };
 
 struct DeviceLimits {

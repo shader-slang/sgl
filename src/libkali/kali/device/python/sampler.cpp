@@ -20,8 +20,7 @@ KALI_PY_EXPORT(device_sampler)
         .def_rw("comparison_func", &SamplerDesc::comparison_func)
         .def_rw("border_color", &SamplerDesc::border_color)
         .def_rw("min_lod", &SamplerDesc::min_lod)
-        .def_rw("max_lod", &SamplerDesc::max_lod)
-        .def("__repr__", &SamplerDesc::to_string);
+        .def_rw("max_lod", &SamplerDesc::max_lod);
 
     nb::class_<Sampler, DeviceResource>(m, "Sampler").def_prop_ro("desc", &Sampler::desc);
 }

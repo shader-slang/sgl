@@ -84,12 +84,14 @@ std::string Fence::to_string() const
     return fmt::format(
         "Fence(\n"
         "   device={},\n"
-        "   desc={},\n"
+        "   initial_value={}\n"
+        "   shared={}\n"
         "   current_value={},\n"
         "   signaled_value={}\n"
         ")",
         m_device,
-        string::indent(m_desc.to_string()),
+        m_desc.initial_value,
+        m_desc.shared,
         current_value(),
         m_signaled_value
     );

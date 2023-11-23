@@ -18,18 +18,6 @@ struct FenceDesc {
     uint64_t initial_value{0};
     /// Create a shared fence.
     bool shared{false};
-
-    std::string to_string() const
-    {
-        return fmt::format(
-            "FenceDesc(\n"
-            "   initial_value={}\n"
-            "   shared={}\n"
-            ")",
-            initial_value,
-            shared
-        );
-    }
 };
 
 /// Fence.

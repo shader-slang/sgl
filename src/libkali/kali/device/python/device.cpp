@@ -27,8 +27,7 @@ KALI_PY_EXPORT(device_device)
         .def_rw("enable_debug_layers", &DeviceDesc::enable_debug_layers)
         .def_rw("adapter_luid", &DeviceDesc::adapter_luid)
         .def_rw("default_shader_model", &DeviceDesc::default_shader_model)
-        .def_rw("shader_cache_path", &DeviceDesc::shader_cache_path)
-        .def("__repr__", &DeviceDesc::to_string);
+        .def_rw("shader_cache_path", &DeviceDesc::shader_cache_path);
 
     nb::class_<DeviceLimits>(m, "DeviceLimits")
         .def_ro("max_texture_dimension_1d", &DeviceLimits::max_texture_dimension_1d)

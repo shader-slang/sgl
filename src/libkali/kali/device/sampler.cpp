@@ -52,10 +52,34 @@ std::string Sampler::to_string() const
     return fmt::format(
         "Sampler(\n"
         "   device={},\n"
-        "   desc={}\n"
+        "   min_filter={},\n"
+        "   mag_filter={},\n"
+        "   mip_filter={},\n"
+        "   reduction_op={},\n"
+        "   address_u={},\n"
+        "   address_v={},\n"
+        "   address_w={},\n"
+        "   mip_lod_bias={},\n"
+        "   max_anisotropy={},\n"
+        "   comparison_func={},\n"
+        "   border_color={},\n"
+        "   min_lod={},\n"
+        "   max_lod={}\n"
         ")",
         m_device,
-        string::indent(m_desc.to_string())
+        m_desc.min_filter,
+        m_desc.mag_filter,
+        m_desc.mip_filter,
+        m_desc.reduction_op,
+        m_desc.address_u,
+        m_desc.address_v,
+        m_desc.address_w,
+        m_desc.mip_lod_bias,
+        m_desc.max_anisotropy,
+        m_desc.comparison_func,
+        m_desc.border_color,
+        m_desc.min_lod,
+        m_desc.max_lod
     );
 }
 
