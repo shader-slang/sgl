@@ -139,7 +139,7 @@ const std::filesystem::path& executable_path()
 
 const std::filesystem::path& app_data_directory()
 {
-    static std::filesystem::path path([]() { return get_home_directory() / ".kali"; }());
+    static std::filesystem::path path([]() { return home_directory() / ".kali"; }());
     return path;
 }
 
@@ -163,7 +163,7 @@ const std::filesystem::path& runtime_directory()
         []()
         {
             Dl_info info;
-            if (dladdr((void*)&get_runtime_directory, &info) == 0)
+            if (dladdr((void*)&runtime_directory, &info) == 0)
                 KALI_THROW("Failed to get the runtime directory. dladdr() failed.");
             return std::filesystem::path(info.dli_fname).parent_path();
         }()
@@ -200,9 +200,9 @@ MemoryStats memory_stats()
         std::istringstream iss(line);
         std::vector<std::string> tokens(std::istream_iterator<std::string>{iss}, std::istream_iterator<std::string>{});
         if (tokens.size() >= 24) {
-            stats.rss = std::stoull(tokens[23]) * get_page_size();
+            stats.rss = std::stoull(tokens[23]) * page_size();
             stats.peak_rss = std::stoull(tokens[22]);
-            // stats.peak_rss = std::stoull(tokens[24]) * get_page_size();
+            // stats.peak_rss = std::stoull(tokens[24]) * page_size();
         }
     }
     return stats;

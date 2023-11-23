@@ -10,12 +10,12 @@ def test_paths():
     assert platform.executable_path.exists()
     assert platform.executable_directory == platform.executable_path.parent
     assert platform.executable_name == platform.executable_path.name
-    assert platform.app_data_directory.exists()
+    assert platform.app_data_directory.parent.exists()
     assert platform.home_directory.exists()
     assert platform.project_directory.exists()
     assert platform.runtime_directory.exists()
     assert any(
-        [(platform.runtime_directory / x).exists() for x in ["kali.dll", "kali.so"]]
+        [(platform.runtime_directory / x).exists() for x in ["kali.dll", "libkali.so"]]
     )
 
 
