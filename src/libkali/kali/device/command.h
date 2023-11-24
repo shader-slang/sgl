@@ -41,7 +41,7 @@ struct CommandQueueDesc {
     {
         return fmt::format(
             "CommandQueueDesc(\n"
-            "    type={}\n"
+            "  type={}\n"
             ")",
             type
         );

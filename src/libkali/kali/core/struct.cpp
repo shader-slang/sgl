@@ -134,11 +134,11 @@ std::string Struct::to_string() const
 {
     return fmt::format(
         "Struct(\n"
-        "    pack={},\n"
-        "    byte_order={},\n"
-        "    fields={},\n"
-        "    size={},\n"
-        "    alignment={}\n"
+        "  pack={},\n"
+        "  byte_order={},\n"
+        "  fields={},\n"
+        "  size={},\n"
+        "  alignment={}\n"
         ")",
         m_pack,
         m_byte_order,
@@ -1496,8 +1496,8 @@ std::string StructConverter::to_string() const
 {
     return fmt::format(
         "StructConverter(\n"
-        "    src={},\n"
-        "    dst={}\n"
+        "  src={},\n"
+        "  dst={}\n"
         ")",
         string::indent(m_src->to_string()),
         string::indent(m_dst->to_string())

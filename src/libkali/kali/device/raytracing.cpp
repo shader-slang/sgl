@@ -31,11 +31,11 @@ std::string AccelerationStructure::to_string() const
 {
     return fmt::format(
         "AccelerationStructure(\n"
-        "    device={}\n"
-        "    kind={}\n"
-        "    buffer={}\n"
-        "    offset={}\n"
-        "    size={}\n"
+        "  device={}\n"
+        "  kind={}\n"
+        "  buffer={}\n"
+        "  offset={}\n"
+        "  size={}\n"
         ")",
         m_device,
         m_desc.kind,

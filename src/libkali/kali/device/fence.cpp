@@ -83,11 +83,11 @@ std::string Fence::to_string() const
 {
     return fmt::format(
         "Fence(\n"
-        "   device={},\n"
-        "   initial_value={}\n"
-        "   shared={}\n"
-        "   current_value={},\n"
-        "   signaled_value={}\n"
+        "  device={},\n"
+        "  initial_value={}\n"
+        "  shared={}\n"
+        "  current_value={},\n"
+        "  signaled_value={}\n"
         ")",
         m_device,
         m_desc.initial_value,

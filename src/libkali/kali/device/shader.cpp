@@ -416,10 +416,10 @@ std::string ShaderProgram::to_string() const
 {
     return fmt::format(
         "ShaderProgram(\n"
-        "    global_scope={}\n"
-        "    entry_points=[\n"
-        "        {}\n"
-        "    ]\n"
+        "  global_scope={}\n"
+        "  entry_points=[\n"
+        "    {}\n"
+        "  ]\n"
         ")",
         m_global_scope->to_string(),
         "" // fmt::join(m_entry_points, ",\n        ")

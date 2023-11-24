@@ -78,7 +78,7 @@ namespace kali::string {
  * @param indentation Indentation string.
  * @return The indented string.
  */
-[[nodiscard]] KALI_API std::string indent(std::string_view str, std::string_view indentation = "    ");
+[[nodiscard]] KALI_API std::string indent(std::string_view str, std::string_view indentation = "  ");
 
 /**
  * Convert a list of objects that have a to_string() method to a string. *
@@ -87,7 +87,7 @@ namespace kali::string {
  * @return The list of objects as a string.
  */
 template<typename T>
-inline std::string list_to_string(std::span<T> list, std::string_view indentation = "    ")
+inline std::string list_to_string(std::span<T> list, std::string_view indentation = "  ")
 {
     if (list.empty())
         return "[]";
@@ -105,7 +105,7 @@ inline std::string list_to_string(std::span<T> list, std::string_view indentatio
 }
 
 template<typename T>
-inline std::string list_to_string(const std::vector<T> list, std::string_view indentation = "    ")
+inline std::string list_to_string(const std::vector<T> list, std::string_view indentation = "  ")
 {
     return list_to_string(std::span{list}, indentation);
 }

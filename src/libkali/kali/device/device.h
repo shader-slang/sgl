@@ -43,10 +43,10 @@ struct AdapterInfo {
     {
         return fmt::format(
             "AdapterInfo(\n"
-            "   name=\"{}\",\n"
-            "   vendor_id=0x{:x},\n"
-            "   device_id=0x{:x},\n"
-            "   luid={}\n"
+            "  name=\"{}\",\n"
+            "  vendor_id=0x{:x},\n"
+            "  device_id=0x{:x},\n"
+            "  luid={}\n"
             ")",
             name,
             vendor_id,

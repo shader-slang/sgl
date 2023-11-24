@@ -392,6 +392,10 @@ public:
     virtual gfx::IResource* get_gfx_resource() const override { return m_gfx_buffer; }
     gfx::IBufferResource* get_gfx_buffer_resource() const { return m_gfx_buffer; }
 
+    MemoryUsage memory_usage() const override;
+
+    std::string to_string() const override;
+
 private:
     BufferDesc m_desc;
     Slang::ComPtr<gfx::IBufferResource> m_gfx_buffer;
@@ -519,6 +523,10 @@ public:
 
     virtual gfx::IResource* get_gfx_resource() const override { return m_gfx_texture; }
     gfx::ITextureResource* get_gfx_texture_resource() const { return m_gfx_texture; }
+
+    MemoryUsage memory_usage() const override;
+
+    std::string to_string() const override;
 
 private:
     TextureDesc m_desc;

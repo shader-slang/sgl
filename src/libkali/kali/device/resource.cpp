@@ -6,6 +6,7 @@
 
 #include "kali/core/config.h"
 #include "kali/core/error.h"
+#include "kali/core/string.h"
 
 #include <bit>
 
@@ -305,6 +306,33 @@ ref<ResourceView> Buffer::get_uav() const
     return get_uav(0);
 }
 
+DeviceResource::MemoryUsage Buffer::memory_usage() const
+{
+    return {.device = m_desc.size};
+}
+
+std::string Buffer::to_string() const
+{
+    return fmt::format(
+        "Buffer(\n"
+        "  device={},\n"
+        "  size={},\n"
+        "  struct_size={},\n"
+        "  format={},\n"
+        "  usage={},\n"
+        "  memory_type={},\n"
+        "  memory_usage={}\n"
+        ")",
+        m_device,
+        m_desc.size,
+        m_desc.struct_size,
+        m_desc.format,
+        m_desc.usage,
+        m_desc.memory_type,
+        string::format_byte_size(memory_usage().device)
+    );
+}
+
 // ----------------------------------------------------------------------------
 // Texture
 // ----------------------------------------------------------------------------
@@ -487,6 +515,45 @@ ref<ResourceView> Texture::get_srv() const
 ref<ResourceView> Texture::get_uav() const
 {
     return get_uav(0);
+}
+
+DeviceResource::MemoryUsage Texture::memory_usage() const
+{
+    gfx::Size size = 0, alignment = 0;
+    SLANG_CALL(m_device->get_gfx_device()->getTextureAllocationInfo(*m_gfx_texture->getDesc(), &size, &alignment));
+    return {.device = size};
+}
+
+std::string Texture::to_string() const
+{
+    return fmt::format(
+        "Texture(\n"
+        "  device={},\n"
+        "  type={},\n"
+        "  width={},\n"
+        "  height={},\n"
+        "  depth={},\n"
+        "  mip_count={},\n"
+        "  array_size={},\n"
+        "  sample_count={},\n"
+        "  format={},\n"
+        "  usage={},\n"
+        "  memory_type={},\n"
+        "  size={}\n"
+        ")",
+        m_device,
+        m_desc.type,
+        m_desc.width,
+        m_desc.height,
+        m_desc.depth,
+        m_desc.mip_count,
+        m_desc.array_size,
+        m_desc.sample_count,
+        m_desc.format,
+        m_desc.usage,
+        m_desc.memory_type,
+        string::format_byte_size(memory_usage().device)
+    );
 }
 
 } // namespace kali

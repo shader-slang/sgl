@@ -57,6 +57,7 @@ target_sources(kali PRIVATE
     kali/device/agility_sdk.h
     kali/device/command.cpp
     kali/device/command.h
+    kali/device/device_resource.cpp
     kali/device/device_resource.h
     kali/device/device.cpp
     kali/device/device.h

@@ -55,7 +55,7 @@ std::string CommandQueue::to_string() const
 {
     return fmt::format(
         "CommandQueue("
-        "    desc={}\n",
+        "  desc={}\n",
         ")",
         string::indent(m_desc.to_string())
     );

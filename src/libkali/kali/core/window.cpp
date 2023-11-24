@@ -436,9 +436,9 @@ std::string Window::to_string() const
 {
     return fmt::format(
         "Window(\n"
-        "    width={},\n"
-        "    height={},\n"
-        "    title=\"{}\"\n"
+        "  width={},\n"
+        "  height={},\n"
+        "  title=\"{}\"\n"
         ")",
         m_width,
         m_height,
