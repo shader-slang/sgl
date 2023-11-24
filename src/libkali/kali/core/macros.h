@@ -107,6 +107,18 @@
 #define KALI_INLINE __attribute__((always_inline))
 #endif
 
+#define KALI_NON_COPYABLE(cls)                                                                                         \
+    cls(const cls&) = delete;                                                                                          \
+    cls& operator=(const cls&) = delete
+
+#define KALI_NON_MOVABLE(cls)                                                                                          \
+    cls(cls&&) = delete;                                                                                               \
+    cls& operator=(cls&&) = delete
+
+#define KALI_NON_COPYABLE_AND_MOVABLE(cls)                                                                             \
+    KALI_NON_COPYABLE(cls);                                                                                            \
+    KALI_NON_MOVABLE(cls)
+
 // clang-format off
 namespace kali::detail { template<typename... Args> inline void unused(Args&&...) {} }
 // clang-format on
