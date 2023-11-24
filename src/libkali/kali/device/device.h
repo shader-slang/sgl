@@ -215,6 +215,8 @@ public:
 
     ref<Fence> create_fence(FenceDesc desc);
 
+    ref<QueryPool> create_query_pool(QueryPoolDesc desc);
+
     ref<SlangSession> create_slang_session(SlangSessionDesc desc);
 
     ref<SlangModule> load_module(const std::filesystem::path& path);

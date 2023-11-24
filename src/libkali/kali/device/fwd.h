@@ -71,6 +71,11 @@ struct GraphicsPipelineStateDesc;
 class GraphicsPipelineState;
 class GraphicsPipelineCache;
 
+// query.h
+
+struct QueryPoolDesc;
+class QueryPool;
+
 // command.h
 
 struct CommandQueueDesc;

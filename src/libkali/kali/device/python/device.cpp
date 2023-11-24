@@ -4,6 +4,7 @@
 #include "kali/device/sampler.h"
 #include "kali/device/fence.h"
 #include "kali/device/resource.h"
+#include "kali/device/query.h"
 #include "kali/device/swapchain.h"
 #include "kali/device/shader.h"
 #include "kali/device/command.h"
@@ -214,6 +215,13 @@ KALI_PY_EXPORT(device_device)
         { return self->create_fence({.initial_value = initial_value, .shared = shared}); },
         "initial_value"_a = 0,
         "shared"_a = false
+    );
+    device.def(
+        "create_query_pool",
+        [](Device* self, QueryType type, uint32_t count)
+        { return self->create_query_pool({.type = type, .count = count}); },
+        "type"_a,
+        "count"_a
     );
     device.def("create_slang_session", [](Device* self) { return self->create_slang_session(SlangSessionDesc{}); });
     device.def("load_module", &Device::load_module, "path"_a);

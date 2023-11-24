@@ -4,6 +4,7 @@
 #include "kali/device/resource.h"
 #include "kali/device/sampler.h"
 #include "kali/device/fence.h"
+#include "kali/device/query.h"
 #include "kali/device/shader.h"
 #include "kali/device/pipeline.h"
 #include "kali/device/command.h"
@@ -270,6 +271,11 @@ ref<Sampler> Device::create_sampler(SamplerDesc desc)
 ref<Fence> Device::create_fence(FenceDesc desc)
 {
     return make_ref<Fence>(ref<Device>(this), std::move(desc));
+}
+
+ref<QueryPool> Device::create_query_pool(QueryPoolDesc desc)
+{
+    return make_ref<QueryPool>(ref<Device>(this), std::move(desc));
 }
 
 ref<SlangSession> Device::create_slang_session(SlangSessionDesc desc)
