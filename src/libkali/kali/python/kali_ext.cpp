@@ -24,6 +24,7 @@ KALI_PY_DECLARE(device_fence);
 KALI_PY_DECLARE(device_formats);
 KALI_PY_DECLARE(device_kernel);
 KALI_PY_DECLARE(device_query);
+KALI_PY_DECLARE(device_raytracing);
 KALI_PY_DECLARE(device_reflection);
 KALI_PY_DECLARE(device_resource);
 KALI_PY_DECLARE(device_sampler);
@@ -79,6 +80,7 @@ NB_MODULE(kali_ext, m)
     KALI_PY_IMPORT(device_sampler);
     KALI_PY_IMPORT(device_fence);
     KALI_PY_IMPORT(device_query);
+    KALI_PY_IMPORT(device_raytracing);
     KALI_PY_IMPORT(device_reflection);
     KALI_PY_IMPORT(device_shader);
     KALI_PY_IMPORT(device_shader_object);

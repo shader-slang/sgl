@@ -278,6 +278,11 @@ ref<QueryPool> Device::create_query_pool(QueryPoolDesc desc)
     return make_ref<QueryPool>(ref<Device>(this), std::move(desc));
 }
 
+ref<AccelerationStructure> Device::create_acceleration_structure(AccelerationStructure::Desc desc)
+{
+    return make_ref<AccelerationStructure>(ref<Device>(this), std::move(desc));
+}
+
 ref<SlangSession> Device::create_slang_session(SlangSessionDesc desc)
 {
     return make_ref<SlangSession>(ref<Device>(this), std::move(desc));

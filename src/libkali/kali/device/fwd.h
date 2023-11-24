@@ -76,6 +76,10 @@ class GraphicsPipelineCache;
 struct QueryPoolDesc;
 class QueryPool;
 
+// raytracing.h
+
+class AccelerationStructure;
+
 // command.h
 
 struct CommandQueueDesc;

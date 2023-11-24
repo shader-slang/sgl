@@ -65,6 +65,28 @@ public:
     }
 };
 
+template<typename T>
+class kali_enum_flags : public kali_enum<T> {
+public:
+    static_assert(
+        std::is_same_v<T, decltype(std::declval<T>() & std::declval<T>())>,
+        "nanobind::kali_enum_flags<> requires an enumeration type with bitwise operators!"
+    );
+
+    using Base = kali_enum<T>;
+
+    template<typename... Extra>
+    NB_INLINE kali_enum_flags(handle scope, const char* name, const Extra&... extra)
+        : Base(scope, name, extra...)
+    {
+        for (const auto& item : ::kali::EnumInfo<T>::items())
+            Base::value(item.second.c_str(), item.first);
+
+        Base::def("__and__", [](T value1, T value2) { return value1 & value2; });
+        Base::def("__or__", [](T value1, T value2) { return value1 | value2; });
+    }
+};
+
 NAMESPACE_END(NB_NAMESPACE)
 
 namespace kali {

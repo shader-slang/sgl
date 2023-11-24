@@ -223,6 +223,22 @@ KALI_PY_EXPORT(device_device)
         "type"_a,
         "count"_a
     );
+    device.def(
+        "create_acceleration_structure",
+        [](Device* self, AccelerationStructure::Kind kind, ref<Buffer> buffer, DeviceOffset offset, DeviceSize size)
+        {
+            return self->create_acceleration_structure({
+                .kind = kind,
+                .buffer = std::move(buffer),
+                .offset = offset,
+                .size = size,
+            });
+        },
+        "kind"_a,
+        "buffer"_a,
+        "offset"_a,
+        "size"_a
+    );
     device.def("create_slang_session", [](Device* self) { return self->create_slang_session(SlangSessionDesc{}); });
     device.def("load_module", &Device::load_module, "path"_a);
     device.def("load_module_from_source", &Device::load_module_from_source, "source"_a);

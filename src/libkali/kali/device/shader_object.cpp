@@ -106,9 +106,9 @@ void TransientShaderObject::set_resource(const ShaderOffset& offset, const ref<R
     case ResourceViewType::unordered_access:
         m_stream->resource_barrier(resource_view->resource(), ResourceState::unordered_access);
         break;
-    case ResourceViewType::acceleration_structure:
-        m_stream->resource_barrier(resource_view->resource(), ResourceState::acceleration_structure);
-        break;
+        // case ResourceViewType::acceleration_structure:
+        //     m_stream->resource_barrier(resource_view->resource(), ResourceState::acceleration_structure);
+        //     break;
     }
 
     ShaderObject::set_resource(offset, resource_view);
@@ -146,9 +146,9 @@ void MutableShaderObject::insert_barriers(CommandStream* stream)
         case ResourceViewType::unordered_access:
             stream->resource_barrier(resource_view->resource(), ResourceState::unordered_access);
             break;
-        case ResourceViewType::acceleration_structure:
-            stream->resource_barrier(resource_view->resource(), ResourceState::acceleration_structure);
-            break;
+            // case ResourceViewType::acceleration_structure:
+            //     stream->resource_barrier(resource_view->resource(), ResourceState::acceleration_structure);
+            //     break;
         }
     }
 }

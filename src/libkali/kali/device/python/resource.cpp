@@ -173,9 +173,7 @@ KALI_PY_EXPORT(device_resource)
     nb::kali_enum<ResourceType>(m, "ResourceType");
     nb::kali_enum<ResourceState>(m, "ResourceState");
 
-    nb::kali_enum<ResourceUsage>(m, "ResourceUsage")
-        .def("__and__", [](ResourceUsage value1, ResourceUsage value2) { return value1 & value2; })
-        .def("__or__", [](ResourceUsage value1, ResourceUsage value2) { return value1 | value2; });
+    nb::kali_enum_flags<ResourceUsage>(m, "ResourceUsage");
 
     nb::kali_enum<MemoryType>(m, "MemoryType");
 

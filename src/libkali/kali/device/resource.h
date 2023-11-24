@@ -155,7 +155,7 @@ enum class ResourceViewType : uint32_t {
     depth_stencil = static_cast<uint32_t>(gfx::IResourceView::Type::DepthStencil),
     shader_resource = static_cast<uint32_t>(gfx::IResourceView::Type::ShaderResource),
     unordered_access = static_cast<uint32_t>(gfx::IResourceView::Type::UnorderedAccess),
-    acceleration_structure = static_cast<uint32_t>(gfx::IResourceView::Type::AccelerationStructure),
+    // acceleration_structure = static_cast<uint32_t>(gfx::IResourceView::Type::AccelerationStructure),
 };
 
 KALI_ENUM_INFO(
@@ -166,7 +166,7 @@ KALI_ENUM_INFO(
         {ResourceViewType::depth_stencil, "depth_stencil"},
         {ResourceViewType::shader_resource, "shader_resource"},
         {ResourceViewType::unordered_access, "unordered_access"},
-        {ResourceViewType::acceleration_structure, "acceleration_structure"},
+        // {ResourceViewType::acceleration_structure, "acceleration_structure"},
     }
 );
 KALI_ENUM_REGISTER(ResourceViewType);

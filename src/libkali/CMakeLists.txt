@@ -73,6 +73,8 @@ target_sources(kali PRIVATE
     kali/device/pipeline.h
     kali/device/query.cpp
     kali/device/query.h
+    kali/device/raytracing.cpp
+    kali/device/raytracing.h
     kali/device/reflection.cpp
     kali/device/reflection.h
     kali/device/resource.cpp
@@ -322,6 +324,7 @@ nanobind_add_module(kali_ext NB_STATIC LTO
     kali/device/python/formats.cpp
     kali/device/python/kernel.cpp
     kali/device/python/query.cpp
+    kali/device/python/raytracing.cpp
     kali/device/python/reflection.cpp
     kali/device/python/resource.cpp
     kali/device/python/sampler.cpp
