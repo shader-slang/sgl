@@ -82,6 +82,9 @@ namespace detail {
             KALI_THROW(__VA_ARGS__);                                                                                   \
     } while (0)
 
+/// Helper for throwing an exception if a pointer is null.
+#define KALI_CHECK_NOT_NULL(arg) KALI_CHECK(arg != nullptr, "'{}' must not be null", #arg)
+
 /// Helper for marking unimplemented functions.
 #define KALI_UNIMPLEMENTED() KALI_THROW("Unimplemented")
 
