@@ -57,7 +57,7 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
         get_shader_model_major_version(m_desc.shader_model),
         get_shader_model_minor_version(m_desc.shader_model)
     );
-    target_desc.profile = m_device->get_global_session()->findProfile(profile_str.c_str());
+    target_desc.profile = m_device->global_session()->findProfile(profile_str.c_str());
     KALI_CHECK(target_desc.profile != SLANG_PROFILE_UNKNOWN, "Unsupported target profile: {}", profile_str);
 
     // Get compiler flags and override with global enabled/disabled flags.
@@ -140,7 +140,7 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
     session_desc.defaultMatrixLayoutMode
         = use_column_major ? SLANG_MATRIX_LAYOUT_COLUMN_MAJOR : SLANG_MATRIX_LAYOUT_ROW_MAJOR;
 
-    SLANG_CALL(m_device->get_global_session()->createSession(session_desc, m_slang_session.writeRef()));
+    SLANG_CALL(m_device->global_session()->createSession(session_desc, m_slang_session.writeRef()));
 }
 
 SlangSession::~SlangSession() { }

@@ -251,7 +251,7 @@ public:
 
 
     gfx::IDevice* gfx_device() const { return m_gfx_device; }
-    slang::IGlobalSession* get_global_session() const { return m_global_session; }
+    slang::IGlobalSession* global_session() const { return m_global_session; }
 
     /// Returns the native API handle:
     /// - D3D12: ID3D12Device* (0)

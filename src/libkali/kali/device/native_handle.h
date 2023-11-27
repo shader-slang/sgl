@@ -52,7 +52,7 @@ public:
         m_value = NativeHandleTrait<T>::pack(native);
     }
 
-    NativeHandleType get_type() const { return m_type; }
+    NativeHandleType type() const { return m_type; }
 
     bool is_valid() const { return m_type != NativeHandleType::unknown; }
 
