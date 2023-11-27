@@ -91,17 +91,19 @@ public:
 
     void clear() noexcept { m_size = 0; }
 
+    void reserve(size_t new_capacity) { grow(new_capacity); }
+
     void push_back(const value_type& value)
     {
         if (m_size == m_capacity)
-            grow();
+            grow(m_capacity * 2);
         m_data[m_size++] = value;
     }
 
     void push_back(value_type&& value)
     {
         if (m_size == m_capacity)
-            grow();
+            grow(m_capacity * 2);
         m_data[m_size++] = std::move(value);
     }
 
@@ -109,16 +111,18 @@ public:
     void emplace_back(Args&&... args)
     {
         if (m_size == m_capacity)
-            grow();
+            grow(m_capacity * 2);
         m_data[m_size++] = value_type(std::forward<Args>(args)...);
     }
 
     void pop_back() { --m_size; }
 
 private:
-    void grow(size_t new_capacity = 0)
+    void grow(size_t new_capacity)
     {
-        m_capacity = new_capacity > m_capacity ? new_capacity : m_capacity * 2;
+        if (new_capacity <= m_capacity)
+            return;
+        m_capacity = new_capacity;
         value_type* new_data = new value_type[m_capacity];
         std::move(m_data, m_data + m_size, new_data);
         if (m_data != m_short_data)

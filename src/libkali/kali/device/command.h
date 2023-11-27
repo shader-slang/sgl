@@ -36,16 +36,6 @@ KALI_ENUM_REGISTER(CommandQueueType);
 
 struct CommandQueueDesc {
     CommandQueueType type;
-
-    std::string to_string() const
-    {
-        return fmt::format(
-            "CommandQueueDesc(\n"
-            "  type={}\n"
-            ")",
-            type
-        );
-    }
 };
 
 class KALI_API CommandQueue : public DeviceResource {

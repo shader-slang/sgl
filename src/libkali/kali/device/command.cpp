@@ -18,19 +18,12 @@
 
 namespace kali {
 
-inline gfx::ICommandQueue::QueueType gfx_command_queue_type(CommandQueueType type)
-{
-    static_assert(uint32_t(CommandQueueType::graphics) == uint32_t(gfx::ICommandQueue::QueueType::Graphics));
-    KALI_ASSERT(uint32_t(type) <= uint32_t(CommandQueueType::graphics));
-    return gfx::ICommandQueue::QueueType(type);
-}
-
 CommandQueue::CommandQueue(ref<Device> device, CommandQueueDesc desc)
     : DeviceResource(std::move(device))
     , m_desc(std::move(desc))
 {
     gfx::ICommandQueue::Desc gfx_desc{
-        .type = gfx_command_queue_type(m_desc.type),
+        .type = static_cast<gfx::ICommandQueue::QueueType>(m_desc.type),
     };
 
     SLANG_CALL(m_device->gfx_device()->createCommandQueue(gfx_desc, m_gfx_command_queue.writeRef()));
@@ -55,9 +48,11 @@ std::string CommandQueue::to_string() const
 {
     return fmt::format(
         "CommandQueue("
-        "  desc={}\n",
+        "  device={}\n",
+        "  type={}\n",
         ")",
-        string::indent(m_desc.to_string())
+        m_device,
+        m_desc.type
     );
 }
 

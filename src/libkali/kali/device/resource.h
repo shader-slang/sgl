@@ -16,8 +16,11 @@
 
 namespace kali {
 
+/// Represents an address in device memory.
 using DeviceAddress = uint64_t;
+/// Represents an offset in device memory (in bytes).
 using DeviceOffset = uint64_t;
+/// Represents a size in device memory (in bytes).
 using DeviceSize = uint64_t;
 
 enum class ResourceType : uint32_t {

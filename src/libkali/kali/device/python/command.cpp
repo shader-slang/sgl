@@ -8,10 +8,7 @@ KALI_PY_EXPORT(device_command)
 
     nb::kali_enum<CommandQueueType>(m, "CommandQueueType");
 
-    nb::class_<CommandQueueDesc>(m, "CommandQueueDesc")
-        .def(nb::init<>())
-        .def_rw("type", &CommandQueueDesc::type)
-        .def("__repr__", &CommandQueueDesc::to_string);
+    nb::class_<CommandQueueDesc>(m, "CommandQueueDesc").def(nb::init<>()).def_rw("type", &CommandQueueDesc::type);
 
     nb::class_<CommandQueue, DeviceResource>(m, "CommandQueue").def("desc", &CommandQueue::desc);
 

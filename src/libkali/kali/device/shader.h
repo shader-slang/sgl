@@ -177,7 +177,7 @@ public:
     SlangSession(ref<Device> device, SlangSessionDesc desc);
     virtual ~SlangSession();
 
-    const ref<Device> device() const { return m_device; }
+    const ref<Device>& device() const { return m_device; }
     const SlangSessionDesc& desc() const { return m_desc; }
 
     ref<SlangModule> load_module(const std::filesystem::path& path);
