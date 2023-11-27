@@ -310,6 +310,11 @@ ref<GraphicsPipelineState> Device::create_graphics_pipeline_state(GraphicsPipeli
     return make_ref<GraphicsPipelineState>(ref<Device>(this), std::move(desc));
 }
 
+ref<RayTracingPipelineState> Device::create_ray_tracing_pipeline_state(RayTracingPipelineStateDesc desc)
+{
+    return make_ref<RayTracingPipelineState>(ref<Device>(this), std::move(desc));
+}
+
 ref<CommandQueue> Device::create_command_queue(CommandQueueDesc desc)
 {
     return make_ref<CommandQueue>(ref<Device>(this), std::move(desc));
