@@ -80,11 +80,20 @@ class QueryPool;
 // raytracing.h
 
 class AccelerationStructure;
+struct ShaderTableDesc;
+class ShaderTable;
 
 // command.h
 
 struct CommandQueueDesc;
 class CommandQueue;
+
+class CommandBuffer;
+class CommandEncoder;
+class ResourceCommandEncoder;
+class ComputeCommandEncoder;
+class RenderCommandEncoder;
+class RayTracingCommandEncoder;
 
 struct CommandStreamDesc;
 class CommandStream;

@@ -20,7 +20,7 @@ bool show_in_tev(const Bitmap* bitmap, std::optional<std::string> name, const st
     static tevclient::Client s_client;
 
 #if KALI_HAS_TEVCLIENT
-    KALI_CHECK(bitmap, "Bitmap cannot be null.");
+    KALI_CHECK_NOT_NULL(bitmap);
 
     ref<Bitmap> converted;
     if (bitmap->component_type() != Bitmap::ComponentType::float32) {

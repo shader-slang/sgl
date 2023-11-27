@@ -199,7 +199,7 @@ ref<Swapchain> Device::create_swapchain(SwapchainDesc desc, ref<Window> window)
     return make_ref<Swapchain>(
         std::move(desc),
         std::move(window),
-        ref<CommandQueue>(m_command_stream->get_command_queue()),
+        ref<CommandQueue>(m_command_stream->command_queue()),
         ref<Device>(this)
     );
 }
@@ -327,7 +327,7 @@ ref<CommandStream> Device::create_command_stream(CommandStreamDesc desc)
 
 void Device::wait()
 {
-    m_command_stream->get_command_queue()->gfx_command_queue()->waitOnHost();
+    m_command_stream->command_queue()->gfx_command_queue()->waitOnHost();
 }
 
 void Device::read_buffer(const Buffer* buffer, size_t offset, size_t size, void* out_data)

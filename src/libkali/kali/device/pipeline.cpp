@@ -6,6 +6,8 @@
 #include "kali/device/native_handle_traits.h"
 
 #include "kali/core/config.h"
+#include "kali/core/short_vector.h"
+#include "kali/core/type_utils.h"
 
 
 namespace kali {
@@ -64,10 +66,21 @@ RayTracingPipelineState::RayTracingPipelineState(ref<Device> device, RayTracingP
     : PipelineState(std::move(device))
     , m_desc(std::move(desc))
 {
+    ShortVector<gfx::HitGroupDesc, 16> gfx_hit_groups;
+    gfx_hit_groups.reserve(m_desc.hit_groups.size());
+    for (const auto& hit_group : m_desc.hit_groups) {
+        gfx_hit_groups.push_back({
+            .hitGroupName = hit_group.hit_group_name.c_str(),
+            .closestHitEntryPoint = hit_group.closest_hit_entry_point.c_str(),
+            .anyHitEntryPoint = hit_group.any_hit_entry_point.c_str(),
+            .intersectionEntryPoint = hit_group.intersection_entry_point.c_str(),
+        });
+    }
+
     gfx::RayTracingPipelineStateDesc gfx_desc{
         .program = m_desc.program->gfx_shader_program(),
-        // .hitGroupCount = m_desc.hit_groups.size(),
-        // .hitGroups = m_desc.hit_groups.data(),
+        .hitGroupCount = narrow_cast<gfx::GfxCount>(gfx_hit_groups.size()),
+        .hitGroups = gfx_hit_groups.data(),
         .maxRecursion = narrow_cast<int>(m_desc.max_recursion),
         .maxRayPayloadSize = m_desc.max_ray_payload_size,
         .maxAttributeSizeInBytes = m_desc.max_attribute_size,
@@ -75,6 +88,5 @@ RayTracingPipelineState::RayTracingPipelineState(ref<Device> device, RayTracingP
     };
     SLANG_CALL(m_device->gfx_device()->createRayTracingPipelineState(gfx_desc, m_gfx_pipeline_state.writeRef()));
 }
-
 
 } // namespace kali

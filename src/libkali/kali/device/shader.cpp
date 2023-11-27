@@ -16,7 +16,7 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
     : m_device(std::move(device))
     , m_desc(std::move(desc))
 {
-    KALI_CHECK(m_device, "device is null");
+    KALI_CHECK_NOT_NULL(m_device);
 
     // If no shader model is selected, use the default shader model.
     if (m_desc.shader_model == ShaderModel::unknown)

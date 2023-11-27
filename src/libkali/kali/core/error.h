@@ -85,6 +85,13 @@ namespace detail {
 /// Helper for throwing an exception if a pointer is null.
 #define KALI_CHECK_NOT_NULL(arg) KALI_CHECK(arg != nullptr, "'{}' must not be null", #arg)
 
+#define KALI_CHECK_LT(arg, value) KALI_CHECK(arg < value, "'{}' must be less than {}", #arg, value)
+#define KALI_CHECK_LE(arg, value) KALI_CHECK(arg <= value, "'{}' must be less than or equal {}", #arg, value)
+#define KALI_CHECK_GT(arg, value) KALI_CHECK(arg > value, "'{}' must be greater than {}", #arg, value)
+#define KALI_CHECK_GE(arg, value) KALI_CHECK(arg >= value, "'{}' must be greater than or equal {}", #arg, value)
+#define KALI_CHECK_BOUNDS(arg, min, max)                                                                               \
+    KALI_CHECK(arg >= min && arg < max, "'{}' must be in range [{}, {}]", #arg, min, max)
+
 /// Helper for marking unimplemented functions.
 #define KALI_UNIMPLEMENTED() KALI_THROW("Unimplemented")
 

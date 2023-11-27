@@ -69,10 +69,16 @@ private:
     GraphicsPipelineStateDesc m_desc;
 };
 
+struct HitGroupDesc {
+    std::string hit_group_name;
+    std::string closest_hit_entry_point;
+    std::string any_hit_entry_point;
+    std::string intersection_entry_point;
+};
+
 struct RayTracingPipelineStateDesc {
     ShaderProgram* program;
-    // GfxCount hitGroupCount = 0;
-    // const HitGroupDesc* hitGroups = nullptr;
+    std::vector<HitGroupDesc> hit_groups;
     uint32_t max_recursion{0};
     uint32_t max_ray_payload_size{0};
     uint32_t max_attribute_size{8};

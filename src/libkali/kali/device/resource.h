@@ -313,7 +313,7 @@ protected:
     mutable std::unordered_map<ResourceViewDesc, ref<ResourceView>> m_views;
 
     friend class ResourceView;
-    friend class CommandStream;
+    friend class CommandStream; // TODO remove?
 };
 
 
@@ -499,6 +499,12 @@ public:
         return (mip_level == 0) || (mip_level < mip_count()) ? std::max(1U, depth() >> mip_level) : 0;
     }
 
+    ResourceState subresource_state(uint32_t subresource) const
+    {
+        KALI_UNUSED(subresource);
+        return global_state();
+    }
+
     /// Get a resource view. Views are cached and reused.
     ref<ResourceView> get_view(ResourceViewDesc desc) const;
 
@@ -532,8 +538,16 @@ public:
     std::string to_string() const override;
 
 private:
+    void set_subresource_state(uint32_t subresource, ResourceState state) const
+    {
+        KALI_UNUSED(subresource);
+        KALI_UNUSED(state);
+    }
+
     TextureDesc m_desc;
     Slang::ComPtr<gfx::ITextureResource> m_gfx_texture;
+
+    friend class CommandStream; // TODO remove?
 };
 
 } // namespace kali

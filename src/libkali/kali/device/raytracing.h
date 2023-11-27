@@ -216,4 +216,28 @@ KALI_ENUM_CLASS_OPERATORS(AccelerationStructure::BuildFlags);
 KALI_ENUM_CLASS_OPERATORS(AccelerationStructure::GeometryFlags);
 KALI_ENUM_CLASS_OPERATORS(AccelerationStructure::InstanceFlags);
 
+struct ShaderTableDesc {
+    // TODO should be a weak_ref
+    ref<ShaderProgram> program;
+    std::vector<std::string> ray_gen_entry_points;
+    std::vector<std::string> miss_entry_points;
+    std::vector<std::string> hit_group_names;
+};
+
+class KALI_API ShaderTable : public DeviceResource {
+    KALI_OBJECT(ShaderTable)
+public:
+    ShaderTable(ref<Device> device, ShaderTableDesc desc);
+
+    const ShaderTableDesc& desc() const { return m_desc; }
+
+    gfx::IShaderTable* gfx_shader_table() const { return m_gfx_shader_table; }
+
+    std::string to_string() const override;
+
+private:
+    ShaderTableDesc m_desc;
+    Slang::ComPtr<gfx::IShaderTable> m_gfx_shader_table;
+};
+
 } // namespace kali

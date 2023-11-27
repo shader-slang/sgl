@@ -52,6 +52,9 @@ public:
 private:
     CommandStream* m_stream;
     std::vector<ref<TransientShaderObject>> m_sub_objects;
+
+    // TODO: fixme
+    friend class CommandStream;
 };
 
 class MutableShaderObject : public ShaderObject {
