@@ -69,7 +69,8 @@ struct ComputePipelineStateDesc;
 class ComputePipelineState;
 struct GraphicsPipelineStateDesc;
 class GraphicsPipelineState;
-class GraphicsPipelineCache;
+struct RayTracingPipelineStateDesc;
+class RayTracingPipelineState;
 
 // query.h
 

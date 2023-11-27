@@ -229,6 +229,8 @@ public:
 
     ref<GraphicsPipelineState> create_graphics_pipeline_state(GraphicsPipelineStateDesc desc);
 
+    ref<RayTracingPipelineState> create_ray_tracing_pipeline_state(RayTracingPipelineStateDesc desc);
+
     ref<CommandQueue> create_command_queue(CommandQueueDesc desc);
 
     ref<CommandStream> create_command_stream(CommandStreamDesc desc);

@@ -56,4 +56,25 @@ GraphicsPipelineState::GraphicsPipelineState(ref<Device> device, GraphicsPipelin
 {
 }
 
+// ----------------------------------------------------------------------------
+// RayTracingPipelineState
+// ----------------------------------------------------------------------------
+
+RayTracingPipelineState::RayTracingPipelineState(ref<Device> device, RayTracingPipelineStateDesc desc)
+    : PipelineState(std::move(device))
+    , m_desc(std::move(desc))
+{
+    gfx::RayTracingPipelineStateDesc gfx_desc{
+        .program = m_desc.program->get_gfx_shader_program(),
+        // .hitGroupCount = m_desc.hit_groups.size(),
+        // .hitGroups = m_desc.hit_groups.data(),
+        .maxRecursion = narrow_cast<int>(m_desc.max_recursion),
+        .maxRayPayloadSize = m_desc.max_ray_payload_size,
+        .maxAttributeSizeInBytes = m_desc.max_attribute_size,
+        .flags = static_cast<gfx::RayTracingPipelineFlags::Enum>(m_desc.flags),
+    };
+    SLANG_CALL(m_device->get_gfx_device()->createRayTracingPipelineState(gfx_desc, m_gfx_pipeline_state.writeRef()));
+}
+
+
 } // namespace kali

@@ -69,5 +69,24 @@ private:
     GraphicsPipelineStateDesc m_desc;
 };
 
+struct RayTracingPipelineStateDesc {
+    ShaderProgram* program;
+    // GfxCount hitGroupCount = 0;
+    // const HitGroupDesc* hitGroups = nullptr;
+    uint32_t max_recursion{0};
+    uint32_t max_ray_payload_size{0};
+    uint32_t max_attribute_size{8};
+    RayTracingPipelineFlags flags{RayTracingPipelineFlags::none};
+};
+
+class RayTracingPipelineState : public PipelineState {
+public:
+    RayTracingPipelineState(ref<Device> device, RayTracingPipelineStateDesc desc);
+
+    const RayTracingPipelineStateDesc& desc() const { return m_desc; }
+
+private:
+    RayTracingPipelineStateDesc m_desc;
+};
 
 } // namespace kali

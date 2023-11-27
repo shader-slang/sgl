@@ -406,4 +406,24 @@ struct BlendDesc {
     bool alpha_to_coverage_enable{false};
 };
 
+
+enum class RayTracingPipelineFlags : uint32_t
+{
+    none = static_cast<uint32_t>(gfx::RayTracingPipelineFlags::None),
+    skip_triangles = static_cast<uint32_t>(gfx::RayTracingPipelineFlags::SkipTriangles),
+    skip_procedurals = static_cast<uint32_t>(gfx::RayTracingPipelineFlags::SkipProcedurals),
+};
+
+KALI_ENUM_CLASS_OPERATORS(RayTracingPipelineFlags);
+KALI_ENUM_INFO(
+    RayTracingPipelineFlags,
+    {
+        {RayTracingPipelineFlags::none, "none"},
+        {RayTracingPipelineFlags::skip_triangles, "skip_triangles"},
+        {RayTracingPipelineFlags::skip_procedurals, "skip_procedurals"},
+    }
+);
+KALI_ENUM_REGISTER(RayTracingPipelineFlags);
+
+
 } // namespace kali
