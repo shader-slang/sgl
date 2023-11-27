@@ -133,12 +133,12 @@ bool CommandStream::buffer_barrier(const Buffer* buffer, ResourceState new_state
 {
     KALI_CHECK_NOT_NULL(buffer);
 
-    ResourceState current_state = buffer->global_state();
+    ResourceState current_state = buffer->state_tracker().global_state();
     if (new_state == current_state)
         return false;
 
     get_resource_command_encoder()->buffer_barrier(buffer, current_state, new_state);
-    buffer->set_global_state(new_state);
+    buffer->state_tracker().set_global_state(new_state);
     return true;
 }
 
@@ -146,12 +146,12 @@ bool CommandStream::texture_barrier(const Texture* texture, ResourceState new_st
 {
     KALI_CHECK_NOT_NULL(texture);
 
-    ResourceState current_state = texture->global_state();
+    ResourceState current_state = texture->state_tracker().global_state();
     if (new_state == current_state)
         return false;
 
     get_resource_command_encoder()->texture_barrier(texture, current_state, new_state);
-    texture->set_global_state(new_state);
+    texture->state_tracker().set_global_state(new_state);
     return true;
 }
 
@@ -167,7 +167,7 @@ bool CommandStream::texture_subresource_barrier(
     KALI_CHECK_LT(mip_level, texture->mip_count());
 
     uint32_t subresource_index = texture->get_subresource_index(mip_level, array_slice);
-    ResourceState current_state = texture->subresource_state(subresource_index);
+    ResourceState current_state = texture->state_tracker().subresource_state(subresource_index);
     if (new_state == current_state)
         return false;
 
@@ -183,7 +183,7 @@ bool CommandStream::texture_subresource_barrier(
         current_state,
         new_state
     );
-    texture->set_subresource_state(subresource_index, new_state);
+    texture->state_tracker().set_subresource_state(subresource_index, new_state);
     return true;
 }
 

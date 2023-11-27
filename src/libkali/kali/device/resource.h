@@ -269,6 +269,50 @@ private:
     Slang::ComPtr<gfx::IResourceView> m_gfx_resource_view;
 };
 
+class ResourceStateTracker {
+public:
+    ResourceStateTracker() = default;
+
+    bool has_global_state() const { return m_has_global_state; }
+
+    ResourceState global_state() const { return m_global_state; }
+
+    void set_global_state(ResourceState state)
+    {
+        m_has_global_state = true;
+        m_global_state = state;
+    }
+
+    ResourceState subresource_state(uint32_t subresource) const
+    {
+        if (m_has_global_state)
+            return m_global_state;
+        KALI_ASSERT(m_subresource_states);
+        if (subresource >= m_subresource_states->size())
+            return ResourceState::undefined;
+        return m_subresource_states->operator[](subresource);
+    }
+
+    void set_subresource_state(uint32_t subresource, ResourceState state)
+    {
+        if (m_has_global_state && (state == m_global_state))
+            return;
+        m_has_global_state = false;
+        if (!m_subresource_states)
+            m_subresource_states = std::make_unique<std::vector<ResourceState>>();
+        if (subresource >= m_subresource_states->size())
+            m_subresource_states->resize(subresource + 1, ResourceState::undefined);
+        m_subresource_states->operator[](subresource) = state;
+    }
+
+private:
+    bool m_has_global_state{true};
+    ResourceState m_global_state{ResourceState::undefined};
+    std::unique_ptr<std::vector<ResourceState>> m_subresource_states;
+
+    friend class CommandStream; // TODO remove?
+};
+
 class KALI_API Resource : public DeviceResource {
     KALI_OBJECT(Resource)
 public:
@@ -278,13 +322,10 @@ public:
 
     Format format() const { return Format::unknown; }
 
-    /// Return true if the whole resource has the same resource state.
-    bool has_global_state() const { return true; }
-
-    ResourceState global_state() const { return ResourceState::undefined; }
-
     const char* debug_name() const;
     void set_debug_name(const char* name);
+
+    ResourceStateTracker& state_tracker() const { return m_state_tracker; }
 
     // virtual ref<ResourceView> get_rtv() const;
     // virtual ref<ResourceView> get_dsv() const;
@@ -306,14 +347,12 @@ protected:
     Resource() = delete;
     Resource(ref<Device> device, ResourceType type);
 
-    void set_global_state(ResourceState global_state) const { KALI_UNUSED(global_state); }
-
     ResourceType m_type;
+    mutable ResourceStateTracker m_state_tracker;
 
     mutable std::unordered_map<ResourceViewDesc, ref<ResourceView>> m_views;
 
     friend class ResourceView;
-    friend class CommandStream; // TODO remove?
 };
 
 
@@ -499,12 +538,6 @@ public:
         return (mip_level == 0) || (mip_level < mip_count()) ? std::max(1U, depth() >> mip_level) : 0;
     }
 
-    ResourceState subresource_state(uint32_t subresource) const
-    {
-        KALI_UNUSED(subresource);
-        return global_state();
-    }
-
     /// Get a resource view. Views are cached and reused.
     ref<ResourceView> get_view(ResourceViewDesc desc) const;
 
@@ -538,16 +571,8 @@ public:
     std::string to_string() const override;
 
 private:
-    void set_subresource_state(uint32_t subresource, ResourceState state) const
-    {
-        KALI_UNUSED(subresource);
-        KALI_UNUSED(state);
-    }
-
     TextureDesc m_desc;
     Slang::ComPtr<gfx::ITextureResource> m_gfx_texture;
-
-    friend class CommandStream; // TODO remove?
 };
 
 } // namespace kali
