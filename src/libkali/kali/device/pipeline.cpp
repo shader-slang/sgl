@@ -42,8 +42,8 @@ ComputePipelineState::ComputePipelineState(ref<Device> device, ComputePipelineSt
     : PipelineState(std::move(device))
     , m_desc(std::move(desc))
 {
-    gfx::ComputePipelineStateDesc gfx_desc{.program = m_desc.program->get_gfx_shader_program()};
-    SLANG_CALL(m_device->get_gfx_device()->createComputePipelineState(gfx_desc, m_gfx_pipeline_state.writeRef()));
+    gfx::ComputePipelineStateDesc gfx_desc{.program = m_desc.program->gfx_shader_program()};
+    SLANG_CALL(m_device->gfx_device()->createComputePipelineState(gfx_desc, m_gfx_pipeline_state.writeRef()));
 }
 
 // ----------------------------------------------------------------------------
@@ -65,7 +65,7 @@ RayTracingPipelineState::RayTracingPipelineState(ref<Device> device, RayTracingP
     , m_desc(std::move(desc))
 {
     gfx::RayTracingPipelineStateDesc gfx_desc{
-        .program = m_desc.program->get_gfx_shader_program(),
+        .program = m_desc.program->gfx_shader_program(),
         // .hitGroupCount = m_desc.hit_groups.size(),
         // .hitGroups = m_desc.hit_groups.data(),
         .maxRecursion = narrow_cast<int>(m_desc.max_recursion),
@@ -73,7 +73,7 @@ RayTracingPipelineState::RayTracingPipelineState(ref<Device> device, RayTracingP
         .maxAttributeSizeInBytes = m_desc.max_attribute_size,
         .flags = static_cast<gfx::RayTracingPipelineFlags::Enum>(m_desc.flags),
     };
-    SLANG_CALL(m_device->get_gfx_device()->createRayTracingPipelineState(gfx_desc, m_gfx_pipeline_state.writeRef()));
+    SLANG_CALL(m_device->gfx_device()->createRayTracingPipelineState(gfx_desc, m_gfx_pipeline_state.writeRef()));
 }
 
 

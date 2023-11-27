@@ -62,7 +62,7 @@ public:
     /// - Vulkan: VkQueue (Vulkan)
     NativeHandle get_native_handle() const;
 
-    gfx::ICommandQueue* get_gfx_command_queue() const { return m_gfx_command_queue; }
+    gfx::ICommandQueue* gfx_command_queue() const { return m_gfx_command_queue; }
 
     std::string to_string() const override;
 

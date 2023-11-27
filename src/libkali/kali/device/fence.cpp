@@ -21,7 +21,7 @@ Fence::Fence(ref<Device> device, FenceDesc desc)
         .isShared = m_desc.shared,
     };
 
-    SLANG_CALL(m_device->get_gfx_device()->createFence(gfx_desc, m_gfx_fence.writeRef()));
+    SLANG_CALL(m_device->gfx_device()->createFence(gfx_desc, m_gfx_fence.writeRef()));
 
     m_signaled_value = m_desc.initial_value;
 }
@@ -40,7 +40,7 @@ void Fence::wait(uint64_t value, uint64_t timeout_ns)
     if (cur_value < wait_value) {
         gfx::IFence* fences[] = {m_gfx_fence};
         uint64_t wait_values[] = {wait_value};
-        SLANG_CALL(m_device->get_gfx_device()->waitForFences(1, fences, wait_values, true, timeout_ns));
+        SLANG_CALL(m_device->gfx_device()->waitForFences(1, fences, wait_values, true, timeout_ns));
     }
 }
 

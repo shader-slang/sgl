@@ -67,7 +67,7 @@ public:
      */
     uint64_t update_signaled_value(uint64_t value = AUTO);
 
-    gfx::IFence* get_gfx_fence() const { return m_gfx_fence; }
+    gfx::IFence* gfx_fence() const { return m_gfx_fence; }
 
     /// Get the shared fence handle.
     /// Throws if the fence was not created with the @c FenceDesc::shared flag.

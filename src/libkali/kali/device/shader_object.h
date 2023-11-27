@@ -31,7 +31,7 @@ public:
     virtual void set_sampler(const ShaderOffset& offset, const ref<Sampler>& sampler);
     virtual void set_data(const ShaderOffset& offset, void const* data, size_t size);
 
-    gfx::IShaderObject* get_gfx_shader_object() const { return m_shader_object; }
+    gfx::IShaderObject* gfx_shader_object() const { return m_shader_object; }
 
 protected:
     gfx::IShaderObject* m_shader_object;

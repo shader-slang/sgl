@@ -37,7 +37,7 @@ public:
 
     const SamplerDesc& desc() const { return m_desc; }
 
-    gfx::ISamplerState* get_gfx_sampler_state() const { return m_gfx_sampler_state; }
+    gfx::ISamplerState* gfx_sampler_state() const { return m_gfx_sampler_state; }
 
     /// Returns the native API handle:
     /// - D3D12: D3D12_CPU_DESCRIPTOR_HANDLE

@@ -20,7 +20,7 @@ class KALI_API PipelineState : public DeviceResource {
 public:
     PipelineState(ref<Device> device);
 
-    gfx::IPipelineState* get_gfx_pipeline_state() const { return m_gfx_pipeline_state; }
+    gfx::IPipelineState* gfx_pipeline_state() const { return m_gfx_pipeline_state; }
 
     /// Returns the native API handle:
     /// - D3D12: ID3D12PipelineState*

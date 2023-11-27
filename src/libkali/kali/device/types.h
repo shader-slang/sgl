@@ -407,8 +407,7 @@ struct BlendDesc {
 };
 
 
-enum class RayTracingPipelineFlags : uint32_t
-{
+enum class RayTracingPipelineFlags : uint32_t {
     none = static_cast<uint32_t>(gfx::RayTracingPipelineFlags::None),
     skip_triangles = static_cast<uint32_t>(gfx::RayTracingPipelineFlags::SkipTriangles),
     skip_procedurals = static_cast<uint32_t>(gfx::RayTracingPipelineFlags::SkipProcedurals),

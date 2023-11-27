@@ -71,7 +71,7 @@ static DebugLogger& get_debug_logger()
     return debug_logger;
 }
 
-inline gfx::DeviceType get_gfx_device_type(DeviceType device_type)
+inline gfx::DeviceType gfx_device_type(DeviceType device_type)
 {
     switch (device_type) {
     case DeviceType::automatic:
@@ -109,7 +109,7 @@ Device::Device(const DeviceDesc& desc)
     }
 
     gfx::IDevice::Desc gfx_desc{
-        .deviceType = get_gfx_device_type(m_desc.type),
+        .deviceType = gfx_device_type(m_desc.type),
         .slang{
             .slangGlobalSession = m_global_session,
         },
@@ -327,7 +327,7 @@ ref<CommandStream> Device::create_command_stream(CommandStreamDesc desc)
 
 void Device::wait()
 {
-    m_command_stream->get_command_queue()->get_gfx_command_queue()->waitOnHost();
+    m_command_stream->get_command_queue()->gfx_command_queue()->waitOnHost();
 }
 
 void Device::read_buffer(const Buffer* buffer, size_t offset, size_t size, void* out_data)
@@ -337,7 +337,7 @@ void Device::read_buffer(const Buffer* buffer, size_t offset, size_t size, void*
     Slang::ComPtr<ISlangBlob> blob;
     if (offset + size > buffer->size())
         KALI_THROW("Buffer read out of bounds");
-    SLANG_CALL(m_gfx_device->readBufferResource(buffer->get_gfx_buffer_resource(), offset, size, blob.writeRef()));
+    SLANG_CALL(m_gfx_device->readBufferResource(buffer->gfx_buffer_resource(), offset, size, blob.writeRef()));
     std::memcpy(out_data, blob->getBufferPointer(), size);
 }
 
@@ -385,7 +385,7 @@ std::vector<AdapterInfo> Device::enumerate_adapters(DeviceType type)
         return luid;
     };
 
-    gfx::AdapterList gfx_adapters = gfx::gfxGetAdapters(get_gfx_device_type(type));
+    gfx::AdapterList gfx_adapters = gfx::gfxGetAdapters(gfx_device_type(type));
 
     std::vector<AdapterInfo> adapters(gfx_adapters.getCount());
     for (size_t i = 0; i < adapters.size(); ++i) {

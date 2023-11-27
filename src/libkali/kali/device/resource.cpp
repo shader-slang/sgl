@@ -12,7 +12,7 @@
 
 namespace kali {
 
-inline gfx::ResourceStateSet get_gfx_allowed_states(ResourceUsage usage)
+inline gfx::ResourceStateSet gfx_allowed_states(ResourceUsage usage)
 {
     gfx::ResourceStateSet states(gfx::ResourceState::CopyDestination, gfx::ResourceState::CopySource);
 
@@ -54,7 +54,7 @@ inline gfx::ResourceStateSet get_gfx_allowed_states(ResourceUsage usage)
     return states;
 }
 
-inline gfx::ResourceState get_gfx_initial_state(ResourceUsage usage)
+inline gfx::ResourceState gfx_initial_state(ResourceUsage usage)
 {
     if (is_set(usage, ResourceUsage::acceleration_structure)) {
         return gfx::ResourceState::AccelerationStructure;
@@ -76,18 +76,18 @@ Resource::~Resource() { }
 
 const char* Resource::debug_name() const
 {
-    return get_gfx_resource()->getDebugName();
+    return gfx_resource()->getDebugName();
 }
 
 void Resource::set_debug_name(const char* name)
 {
-    get_gfx_resource()->setDebugName(name);
+    gfx_resource()->setDebugName(name);
 }
 
 NativeHandle Resource::get_native_handle() const
 {
     gfx::InteropHandle handle = {};
-    SLANG_CALL(get_gfx_resource()->getNativeResourceHandle(&handle));
+    SLANG_CALL(gfx_resource()->getNativeResourceHandle(&handle));
 #if KALI_HAS_D3D12
     if (m_device->type() == DeviceType::d3d12)
         return NativeHandle(reinterpret_cast<ID3D12Resource*>(handle.handleValue));
@@ -125,9 +125,8 @@ ResourceView::ResourceView(const ResourceViewDesc& desc, const Buffer* buffer)
         .bufferElementSize = m_desc.buffer_element_size,
     };
     // TODO handle uav counter
-    SLANG_CALL(
-        buffer->m_device->get_gfx_device()
-            ->createBufferView(buffer->get_gfx_buffer_resource(), nullptr, gfx_desc, m_gfx_resource_view.writeRef())
+    SLANG_CALL(buffer->m_device->gfx_device()
+                   ->createBufferView(buffer->gfx_buffer_resource(), nullptr, gfx_desc, m_gfx_resource_view.writeRef())
     );
 }
 
@@ -153,8 +152,8 @@ ResourceView::ResourceView(const ResourceViewDesc& desc, const Texture* texture)
             .layerCount = static_cast<gfx::GfxIndex>(m_desc.subresource_range.layer_count),
         },
     };
-    SLANG_CALL(texture->m_device->get_gfx_device()
-                   ->createTextureView(texture->get_gfx_texture_resource(), gfx_desc, m_gfx_resource_view.writeRef()));
+    SLANG_CALL(texture->m_device->gfx_device()
+                   ->createTextureView(texture->gfx_texture_resource(), gfx_desc, m_gfx_resource_view.writeRef()));
 }
 
 NativeHandle ResourceView::get_native_handle() const
@@ -199,7 +198,7 @@ Buffer::Buffer(ref<Device> device, BufferDesc desc, const void* init_data)
     gfx::IBufferResource::Desc gfx_desc{};
     gfx_desc.type = gfx::IResource::Type::Buffer;
     gfx_desc.defaultState = static_cast<gfx::ResourceState>(m_desc.initial_state);
-    gfx_desc.allowedStates = get_gfx_allowed_states(m_desc.usage);
+    gfx_desc.allowedStates = gfx_allowed_states(m_desc.usage);
     gfx_desc.memoryType = static_cast<gfx::MemoryType>(m_desc.memory_type);
     // TODO(@skallweit): add support for existing handles
     // gfx_desc.existingHandle =
@@ -208,7 +207,7 @@ Buffer::Buffer(ref<Device> device, BufferDesc desc, const void* init_data)
     gfx_desc.elementSize = static_cast<gfx::Size>(m_desc.struct_size);
     gfx_desc.format = static_cast<gfx::Format>(m_desc.format);
 
-    SLANG_CALL(m_device->get_gfx_device()->createBufferResource(gfx_desc, init_data, m_gfx_buffer.writeRef()));
+    SLANG_CALL(m_device->gfx_device()->createBufferResource(gfx_desc, init_data, m_gfx_buffer.writeRef()));
 }
 
 size_t Buffer::element_size() const
@@ -385,7 +384,7 @@ Texture::Texture(ref<Device> device, TextureDesc desc, const void* init_data)
     gfx::ITextureResource::Desc gfx_desc{};
     gfx_desc.type = static_cast<gfx::IResource::Type>(m_desc.type);
     gfx_desc.defaultState = static_cast<gfx::ResourceState>(m_desc.initial_state);
-    gfx_desc.allowedStates = get_gfx_allowed_states(m_desc.usage);
+    gfx_desc.allowedStates = gfx_allowed_states(m_desc.usage);
     gfx_desc.memoryType = static_cast<gfx::MemoryType>(m_desc.memory_type);
     // TODO(@skallweit): add support for existing handles
     // gfx_desc.existingHandle =
@@ -403,7 +402,7 @@ Texture::Texture(ref<Device> device, TextureDesc desc, const void* init_data)
     KALI_UNUSED(init_data);
     gfx::ITextureResource::SubresourceData* gfx_init_data{nullptr};
 
-    SLANG_CALL(m_device->get_gfx_device()->createTextureResource(gfx_desc, gfx_init_data, m_gfx_texture.writeRef()));
+    SLANG_CALL(m_device->gfx_device()->createTextureResource(gfx_desc, gfx_init_data, m_gfx_texture.writeRef()));
 }
 
 Texture::Texture(ref<Device> device, TextureDesc desc, gfx::ITextureResource* resource)
@@ -520,7 +519,7 @@ ref<ResourceView> Texture::get_uav() const
 DeviceResource::MemoryUsage Texture::memory_usage() const
 {
     gfx::Size size = 0, alignment = 0;
-    SLANG_CALL(m_device->get_gfx_device()->getTextureAllocationInfo(*m_gfx_texture->getDesc(), &size, &alignment));
+    SLANG_CALL(m_device->gfx_device()->getTextureAllocationInfo(*m_gfx_texture->getDesc(), &size, &alignment));
     return {.device = size};
 }
 

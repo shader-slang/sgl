@@ -21,7 +21,7 @@ Swapchain::Swapchain(SwapchainDesc desc, WindowHandle window_handle, ref<Command
         .width = static_cast<gfx::GfxCount>(m_desc.width),
         .height = static_cast<gfx::GfxCount>(m_desc.height),
         .imageCount = static_cast<gfx::GfxCount>(m_desc.image_count),
-        .queue = m_queue->get_gfx_command_queue(),
+        .queue = m_queue->gfx_command_queue(),
         .enableVSync = m_desc.enable_vsync,
     };
 
@@ -31,7 +31,7 @@ Swapchain::Swapchain(SwapchainDesc desc, WindowHandle window_handle, ref<Command
     gfx::WindowHandle gfx_window_handle = gfx::WindowHandle::FromXWindow(window_handle.xdisplay, window_handle.xwindow);
 #endif
 
-    SLANG_CALL(m_device->get_gfx_device()->createSwapchain(gfx_desc, gfx_window_handle, m_gfx_swapchain.writeRef()));
+    SLANG_CALL(m_device->gfx_device()->createSwapchain(gfx_desc, gfx_window_handle, m_gfx_swapchain.writeRef()));
 
     get_images();
 }

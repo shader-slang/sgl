@@ -8,7 +8,7 @@
 
 namespace kali {
 
-inline gfx::ShaderOffset get_gfx_shader_offset(const ShaderOffset& offset)
+inline gfx::ShaderOffset gfx_shader_offset(const ShaderOffset& offset)
 {
     return {
         .uniformOffset = offset.uniform_offset,
@@ -38,22 +38,22 @@ uint32_t ShaderObject::get_entry_point_count() const
 
 void ShaderObject::set_object(const ShaderOffset& offset, const ref<ShaderObject>& object)
 {
-    SLANG_CALL(m_shader_object->setObject(get_gfx_shader_offset(offset), object->get_gfx_shader_object()));
+    SLANG_CALL(m_shader_object->setObject(gfx_shader_offset(offset), object->gfx_shader_object()));
 }
 
 void ShaderObject::set_resource(const ShaderOffset& offset, const ref<ResourceView>& resource_view)
 {
-    SLANG_CALL(m_shader_object->setResource(get_gfx_shader_offset(offset), resource_view->get_gfx_resource_view()));
+    SLANG_CALL(m_shader_object->setResource(gfx_shader_offset(offset), resource_view->gfx_resource_view()));
 }
 
 void ShaderObject::set_sampler(const ShaderOffset& offset, const ref<Sampler>& sampler)
 {
-    SLANG_CALL(m_shader_object->setSampler(get_gfx_shader_offset(offset), sampler->get_gfx_sampler_state()));
+    SLANG_CALL(m_shader_object->setSampler(gfx_shader_offset(offset), sampler->gfx_sampler_state()));
 }
 
 void ShaderObject::set_data(const ShaderOffset& offset, void const* data, size_t size)
 {
-    SLANG_CALL(m_shader_object->setData(get_gfx_shader_offset(offset), data, size));
+    SLANG_CALL(m_shader_object->setData(gfx_shader_offset(offset), data, size));
 }
 
 //
@@ -75,7 +75,7 @@ ref<ShaderObject> TransientShaderObject::get_entry_point(uint32_t index)
 
 ref<ShaderObject> TransientShaderObject::get_object(const ShaderOffset& offset)
 {
-    auto object = make_ref<TransientShaderObject>(m_shader_object->getObject(get_gfx_shader_offset(offset)), m_stream);
+    auto object = make_ref<TransientShaderObject>(m_shader_object->getObject(gfx_shader_offset(offset)), m_stream);
     m_sub_objects.push_back(object);
     return object;
 }

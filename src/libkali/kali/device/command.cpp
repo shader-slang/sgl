@@ -18,7 +18,7 @@
 
 namespace kali {
 
-inline gfx::ICommandQueue::QueueType get_gfx_command_queue_type(CommandQueueType type)
+inline gfx::ICommandQueue::QueueType gfx_command_queue_type(CommandQueueType type)
 {
     static_assert(uint32_t(CommandQueueType::graphics) == uint32_t(gfx::ICommandQueue::QueueType::Graphics));
     KALI_ASSERT(uint32_t(type) <= uint32_t(CommandQueueType::graphics));
@@ -30,10 +30,10 @@ CommandQueue::CommandQueue(ref<Device> device, CommandQueueDesc desc)
     , m_desc(std::move(desc))
 {
     gfx::ICommandQueue::Desc gfx_desc{
-        .type = get_gfx_command_queue_type(m_desc.type),
+        .type = gfx_command_queue_type(m_desc.type),
     };
 
-    SLANG_CALL(m_device->get_gfx_device()->createCommandQueue(gfx_desc, m_gfx_command_queue.writeRef()));
+    SLANG_CALL(m_device->gfx_device()->createCommandQueue(gfx_desc, m_gfx_command_queue.writeRef()));
 }
 
 NativeHandle CommandQueue::get_native_handle() const
@@ -71,7 +71,7 @@ CommandStream::CommandStream(ref<Device> device, CommandStreamDesc desc)
     // Create per-frame data.
     m_frame_data.resize(m_desc.frame_count);
     for (auto& frame_data : m_frame_data) {
-        m_device->get_gfx_device()->createTransientResourceHeap(
+        m_device->gfx_device()->createTransientResourceHeap(
             gfx::ITransientResourceHeap::Desc{
                 .flags = gfx::ITransientResourceHeap::Flags::AllowResizing,
                 .constantBufferSize = 1024 * 1024 * 4,
@@ -94,7 +94,7 @@ void CommandStream::submit()
             m_encoder = nullptr;
         }
         m_command_buffer->close();
-        m_command_queue->get_gfx_command_queue()->executeCommandBuffer(m_command_buffer);
+        m_command_queue->gfx_command_queue()->executeCommandBuffer(m_command_buffer);
         m_command_buffer = nullptr;
     }
 }
@@ -107,7 +107,7 @@ uint64_t CommandStream::signal(Fence* fence, uint64_t value)
 {
     KALI_CHECK(fence, "'fence' must not be null");
     uint64_t signal_value = fence->update_signaled_value(value);
-    m_command_queue->get_gfx_command_queue()->executeCommandBuffers(0, nullptr, fence->get_gfx_fence(), signal_value);
+    m_command_queue->gfx_command_queue()->executeCommandBuffers(0, nullptr, fence->gfx_fence(), signal_value);
     return signal_value;
 }
 
@@ -115,9 +115,9 @@ void CommandStream::wait(Fence* fence, uint64_t value)
 {
     KALI_CHECK(fence, "'fence' must not be null");
     uint64_t wait_value = value == Fence::AUTO ? fence->signaled_value() : value;
-    gfx::IFence* fences[] = {fence->get_gfx_fence()};
+    gfx::IFence* fences[] = {fence->gfx_fence()};
     uint64_t wait_values[] = {wait_value};
-    SLANG_CALL(m_command_queue->get_gfx_command_queue()->waitForFenceValuesOnDevice(1, fences, wait_values));
+    SLANG_CALL(m_command_queue->gfx_command_queue()->waitForFenceValuesOnDevice(1, fences, wait_values));
 }
 
 // ----------------------------------------------------------------------------
@@ -132,7 +132,7 @@ bool CommandStream::buffer_barrier(const Buffer* buffer, ResourceState new_state
     ResourceState current_state = buffer->global_state();
     if (current_state != new_state) {
         auto encoder = get_resource_command_encoder();
-        gfx::IBufferResource* gfx_buffer_resource = buffer->get_gfx_buffer_resource();
+        gfx::IBufferResource* gfx_buffer_resource = buffer->gfx_buffer_resource();
         encoder->bufferBarrier(
             1,
             &gfx_buffer_resource,
@@ -155,7 +155,7 @@ bool CommandStream::texture_barrier(const Texture* texture, ResourceState new_st
     ResourceState current_state = texture->global_state();
     if (current_state != new_state) {
         auto encoder = get_resource_command_encoder();
-        gfx::ITextureResource* gfx_texture_resource = texture->get_gfx_texture_resource();
+        gfx::ITextureResource* gfx_texture_resource = texture->gfx_texture_resource();
         encoder->textureBarrier(
             1,
             &gfx_texture_resource,
@@ -185,10 +185,10 @@ void CommandStream::uav_barrier(const Resource* resource)
 
     auto encoder = get_resource_command_encoder();
     if (resource->type() == ResourceType::buffer) {
-        gfx::IBufferResource* buffer = static_cast<gfx::IBufferResource*>(resource->get_gfx_resource());
+        gfx::IBufferResource* buffer = static_cast<gfx::IBufferResource*>(resource->gfx_resource());
         encoder->bufferBarrier(1, &buffer, gfx::ResourceState::UnorderedAccess, gfx::ResourceState::UnorderedAccess);
     } else {
-        gfx::ITextureResource* texture = static_cast<gfx::ITextureResource*>(resource->get_gfx_resource());
+        gfx::ITextureResource* texture = static_cast<gfx::ITextureResource*>(resource->gfx_resource());
         encoder->textureBarrier(1, &texture, gfx::ResourceState::UnorderedAccess, gfx::ResourceState::UnorderedAccess);
     }
     mark_pending();
@@ -216,9 +216,9 @@ void CommandStream::copy_resource(const Resource* dst, const Resource* src)
         KALI_ASSERT(src_buffer->get_size() <= dst_buffer->get_size());
 
         encoder->copyBuffer(
-            dst_buffer->get_gfx_buffer_resource(),
+            dst_buffer->gfx_buffer_resource(),
             dst_buffer->get_gpu_address_offset(),
-            src_buffer->get_gfx_buffer_resource(),
+            src_buffer->gfx_buffer_resource(),
             src_buffer->get_gpu_address_offset(),
             src_buffer->get_size()
         );
@@ -228,11 +228,11 @@ void CommandStream::copy_resource(const Resource* dst, const Resource* src)
         gfx::SubresourceRange sr_range = {};
 
         encoder->copyTexture(
-            dst_texture->get_gfx_texture_resource(),
+            dst_texture->gfx_texture_resource(),
             gfx::ResourceState::CopyDestination,
             sr_range,
             gfx::ITextureResource::Offset3D(0, 0, 0),
-            src_texture->get_gfx_texture_resource(),
+            src_texture->gfx_texture_resource(),
             gfx::ResourceState::CopySource,
             sr_range,
             gfx::ITextureResource::Offset3D(0, 0, 0),
@@ -262,7 +262,7 @@ void CommandStream::copy_buffer_region(
     buffer_barrier(src, ResourceState::copy_source);
 
     auto encoder = get_resource_command_encoder();
-    encoder->copyBuffer(dst->get_gfx_buffer_resource(), dst_offset, src->get_gfx_buffer_resource(), src_offset, size);
+    encoder->copyBuffer(dst->gfx_buffer_resource(), dst_offset, src->gfx_buffer_resource(), src_offset, size);
     mark_pending();
 }
 
@@ -325,7 +325,7 @@ void CommandStream::upload_buffer_data(const Buffer* buffer, size_t offset, size
     buffer_barrier(buffer, ResourceState::copy_destination);
 
     auto encoder = get_resource_command_encoder();
-    encoder->uploadBufferData(buffer->get_gfx_buffer_resource(), offset, size, const_cast<void*>(data));
+    encoder->uploadBufferData(buffer->gfx_buffer_resource(), offset, size, const_cast<void*>(data));
     mark_pending();
 }
 
@@ -393,7 +393,7 @@ void CommandStream::upload_texture_subresource_data(
         sr_data.strideY = narrow_cast<int64_t>(gfx_size.width) / format_info.blockWidth * format_info.blockSizeInBytes;
         sr_data.strideZ = sr_data.strideY * (gfx_size.height / format_info.blockHeight);
         data_ptr += sr_data.strideZ * gfx_size.depth;
-        encoder->uploadTextureData(texture->get_gfx_texture_resource(), sr_range, gfx_offset, gfx_size, &sr_data, 1);
+        encoder->uploadTextureData(texture->gfx_texture_resource(), sr_range, gfx_offset, gfx_size, &sr_data, 1);
     }
 
     mark_pending();
@@ -405,7 +405,7 @@ void CommandStream::upload_texture_subresource_data(
 
 ref<ShaderObject> CommandStream::bind_compute_pipeline(const ComputePipelineState* pipeline)
 {
-    gfx::IShaderObject* shader_object = get_compute_command_encoder()->bindPipeline(pipeline->get_gfx_pipeline_state());
+    gfx::IShaderObject* shader_object = get_compute_command_encoder()->bindPipeline(pipeline->gfx_pipeline_state());
     return make_ref<TransientShaderObject>(shader_object, this);
 }
 
@@ -425,7 +425,7 @@ void CommandStream::dispatch_compute(uint3 thread_group_count)
 
 void CommandStream::dispatch_compute_indirect(Buffer* cmd_buffer, DeviceOffset offset)
 {
-    SLANG_CALL(get_compute_command_encoder()->dispatchComputeIndirect(cmd_buffer->get_gfx_buffer_resource(), offset));
+    SLANG_CALL(get_compute_command_encoder()->dispatchComputeIndirect(cmd_buffer->gfx_buffer_resource(), offset));
 }
 
 // ----------------------------------------------------------------------------

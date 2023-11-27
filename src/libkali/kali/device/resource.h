@@ -253,7 +253,7 @@ public:
 
     const Resource* resource() const { return m_resource; }
 
-    gfx::IResourceView* get_gfx_resource_view() const { return m_gfx_resource_view; }
+    gfx::IResourceView* gfx_resource_view() const { return m_gfx_resource_view; }
 
     /// Returns the native API handle:
     /// - D3D12: D3D12_CPU_DESCRIPTOR_HANDLE
@@ -292,7 +292,7 @@ public:
     /// Get a unordered access view for the entire resource.
     virtual ref<ResourceView> get_uav() const = 0;
 
-    virtual gfx::IResource* get_gfx_resource() const = 0;
+    virtual gfx::IResource* gfx_resource() const = 0;
 
     /// Returns the native API handle:
     /// - D3D12: ID3D12Resource*
@@ -389,8 +389,8 @@ public:
     /// Get a unordered access view for the entire buffer.
     virtual ref<ResourceView> get_uav() const override;
 
-    virtual gfx::IResource* get_gfx_resource() const override { return m_gfx_buffer; }
-    gfx::IBufferResource* get_gfx_buffer_resource() const { return m_gfx_buffer; }
+    virtual gfx::IResource* gfx_resource() const override { return m_gfx_buffer; }
+    gfx::IBufferResource* gfx_buffer_resource() const { return m_gfx_buffer; }
 
     MemoryUsage memory_usage() const override;
 
@@ -521,8 +521,8 @@ public:
     /// Get a unordered access view for the entire texture.
     virtual ref<ResourceView> get_uav() const override;
 
-    virtual gfx::IResource* get_gfx_resource() const override { return m_gfx_texture; }
-    gfx::ITextureResource* get_gfx_texture_resource() const { return m_gfx_texture; }
+    virtual gfx::IResource* gfx_resource() const override { return m_gfx_texture; }
+    gfx::ITextureResource* gfx_texture_resource() const { return m_gfx_texture; }
 
     MemoryUsage memory_usage() const override;
 

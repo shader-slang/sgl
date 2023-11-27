@@ -29,7 +29,7 @@ Sampler::Sampler(ref<Device> device, SamplerDesc desc)
         .minLOD = m_desc.min_lod,
         .maxLOD = m_desc.max_lod,
     };
-    SLANG_CALL(m_device->get_gfx_device()->createSamplerState(gfx_desc, m_gfx_sampler_state.writeRef()));
+    SLANG_CALL(m_device->gfx_device()->createSamplerState(gfx_desc, m_gfx_sampler_state.writeRef()));
 }
 
 NativeHandle Sampler::get_native_handle() const

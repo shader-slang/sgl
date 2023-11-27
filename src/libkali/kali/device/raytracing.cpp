@@ -13,13 +13,11 @@ AccelerationStructure::AccelerationStructure(ref<Device> device, Desc desc)
 {
     gfx::IAccelerationStructure::CreateDesc gfx_desc{
         .kind = static_cast<gfx::IAccelerationStructure::Kind>(m_desc.kind),
-        .buffer = m_desc.buffer->get_gfx_buffer_resource(),
+        .buffer = m_desc.buffer->gfx_buffer_resource(),
         .offset = m_desc.offset,
         .size = m_desc.size,
     };
-    SLANG_CALL(
-        m_device->get_gfx_device()->createAccelerationStructure(gfx_desc, m_gfx_acceleration_structure.writeRef())
-    );
+    SLANG_CALL(m_device->gfx_device()->createAccelerationStructure(gfx_desc, m_gfx_acceleration_structure.writeRef()));
 }
 
 DeviceAddress AccelerationStructure::device_address() const

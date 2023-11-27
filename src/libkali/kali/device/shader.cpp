@@ -391,7 +391,7 @@ ShaderProgram::ShaderProgram(
     };
 
     Slang::ComPtr<ISlangBlob> diagnostics;
-    if (m_device->get_gfx_device()->createProgram(gfx_desc, m_gfx_shader_program.writeRef(), diagnostics.writeRef())
+    if (m_device->gfx_device()->createProgram(gfx_desc, m_gfx_shader_program.writeRef(), diagnostics.writeRef())
         != SLANG_OK) {
         KALI_THROW(
             "Failed to create shader program:\n{}",

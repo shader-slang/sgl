@@ -250,7 +250,7 @@ public:
     }
 
 
-    gfx::IDevice* get_gfx_device() const { return m_gfx_device; }
+    gfx::IDevice* gfx_device() const { return m_gfx_device; }
     slang::IGlobalSession* get_global_session() const { return m_global_session; }
 
     /// Returns the native API handle:

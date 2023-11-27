@@ -16,7 +16,7 @@ QueryPool::QueryPool(ref<Device> device, QueryPoolDesc desc)
         .type = static_cast<gfx::QueryType>(m_desc.type),
         .count = narrow_cast<gfx::GfxCount>(m_desc.count),
     };
-    SLANG_CALL(m_device->get_gfx_device()->createQueryPool(gfx_desc, m_gfx_query_pool.writeRef()));
+    SLANG_CALL(m_device->gfx_device()->createQueryPool(gfx_desc, m_gfx_query_pool.writeRef()));
 }
 
 void QueryPool::reset()
