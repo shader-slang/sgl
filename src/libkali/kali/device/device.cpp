@@ -5,6 +5,7 @@
 #include "kali/device/sampler.h"
 #include "kali/device/fence.h"
 #include "kali/device/query.h"
+#include "kali/device/input_layout.h"
 #include "kali/device/shader.h"
 #include "kali/device/pipeline.h"
 #include "kali/device/command.h"
@@ -276,6 +277,11 @@ ref<Fence> Device::create_fence(FenceDesc desc)
 ref<QueryPool> Device::create_query_pool(QueryPoolDesc desc)
 {
     return make_ref<QueryPool>(ref<Device>(this), std::move(desc));
+}
+
+ref<InputLayout> Device::create_input_layout(InputLayoutDesc desc)
+{
+    return make_ref<InputLayout>(ref<Device>(this), std::move(desc));
 }
 
 ref<AccelerationStructure> Device::create_acceleration_structure(AccelerationStructure::Desc desc)

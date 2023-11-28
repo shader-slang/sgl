@@ -51,7 +51,7 @@ private:
 struct GraphicsPipelineStateDesc {
     ShaderProgram* program;
 
-    // ref<InputLayout> input_layout;
+    ref<InputLayout> input_layout;
     // ref<FramebufferLayout> framebuffer_layout;
     PrimitiveType primitive_type{PrimitiveType::triangle};
     DepthStencilDesc depth_stencil;

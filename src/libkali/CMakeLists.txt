@@ -66,6 +66,8 @@ target_sources(kali PRIVATE
     kali/device/fence.h
     kali/device/formats.cpp
     kali/device/formats.h
+    kali/device/input_layout.cpp
+    kali/device/input_layout.h
     kali/device/fwd.h
     kali/device/helpers.h
     kali/device/kernel.cpp

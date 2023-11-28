@@ -218,6 +218,8 @@ public:
 
     ref<QueryPool> create_query_pool(QueryPoolDesc desc);
 
+    ref<InputLayout> create_input_layout(InputLayoutDesc desc);
+
     ref<AccelerationStructure> create_acceleration_structure(AccelerationStructure::Desc desc);
 
     ref<SlangSession> create_slang_session(SlangSessionDesc desc);

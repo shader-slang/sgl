@@ -103,4 +103,9 @@ class CommandStream;
 class ShaderCursor;
 class ShaderObject;
 
+// input_layout.h
+
+struct InputLayoutDesc;
+class InputLayout;
+
 } // namespace kali
