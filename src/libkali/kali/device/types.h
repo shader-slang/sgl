@@ -162,11 +162,11 @@ KALI_ENUM_INFO(
 );
 KALI_ENUM_REGISTER(TextureReductionOp);
 
-enum class PrimitiveType {
-    point,
-    line,
-    triangle,
-    patch,
+enum class PrimitiveType : uint8_t {
+    point = static_cast<uint8_t>(gfx::PrimitiveType::Point),
+    line = static_cast<uint8_t>(gfx::PrimitiveType::Line),
+    triangle = static_cast<uint8_t>(gfx::PrimitiveType::Triangle),
+    patch = static_cast<uint8_t>(gfx::PrimitiveType::Patch),
 };
 
 KALI_ENUM_INFO(
@@ -181,14 +181,14 @@ KALI_ENUM_INFO(
 KALI_ENUM_REGISTER(PrimitiveType);
 
 enum class StencilOp : uint8_t {
-    keep,
-    zero,
-    replace,
-    increment_saturate,
-    decrement_saturate,
-    invert,
-    increment_wrap,
-    decrement_wrap,
+    keep = static_cast<uint8_t>(gfx::StencilOp::Keep),
+    zero = static_cast<uint8_t>(gfx::StencilOp::Keep),
+    replace = static_cast<uint8_t>(gfx::StencilOp::Keep),
+    increment_saturate = static_cast<uint8_t>(gfx::StencilOp::Keep),
+    decrement_saturate = static_cast<uint8_t>(gfx::StencilOp::Keep),
+    invert = static_cast<uint8_t>(gfx::StencilOp::Keep),
+    increment_wrap = static_cast<uint8_t>(gfx::StencilOp::Keep),
+    decrement_wrap = static_cast<uint8_t>(gfx::StencilOp::Keep),
 };
 
 KALI_ENUM_INFO(
@@ -207,8 +207,8 @@ KALI_ENUM_INFO(
 KALI_ENUM_REGISTER(StencilOp);
 
 enum class FillMode : uint8_t {
-    solid,
-    wireframe,
+    solid = static_cast<uint8_t>(gfx::FillMode::Solid),
+    wireframe = static_cast<uint8_t>(gfx::FillMode::Wireframe),
 };
 
 KALI_ENUM_INFO(
@@ -221,9 +221,9 @@ KALI_ENUM_INFO(
 KALI_ENUM_REGISTER(FillMode);
 
 enum class CullMode : uint8_t {
-    none,
-    front,
-    back,
+    none = static_cast<uint8_t>(gfx::CullMode::None),
+    front = static_cast<uint8_t>(gfx::CullMode::Front),
+    back = static_cast<uint8_t>(gfx::CullMode::Back),
 };
 
 KALI_ENUM_INFO(
@@ -237,8 +237,8 @@ KALI_ENUM_INFO(
 KALI_ENUM_REGISTER(CullMode);
 
 enum class FrontFaceMode : uint8_t {
-    counter_clockwise,
-    clockwise,
+    counter_clockwise = static_cast<uint8_t>(gfx::FrontFaceMode::CounterClockwise),
+    clockwise = static_cast<uint8_t>(gfx::FrontFaceMode::Clockwise),
 };
 
 KALI_ENUM_INFO(
@@ -251,10 +251,10 @@ KALI_ENUM_INFO(
 KALI_ENUM_REGISTER(FrontFaceMode);
 
 struct DepthStencilOpDesc {
-    StencilOp stencilFailOp{StencilOp::keep};
-    StencilOp stencilDepthFailOp{StencilOp::keep};
-    StencilOp stencilPassOp{StencilOp::keep};
-    ComparisonFunc stencilFunc{ComparisonFunc::always};
+    StencilOp stencil_fail_op{StencilOp::keep};
+    StencilOp stencil_depth_fail_op{StencilOp::keep};
+    StencilOp stencil_pass_op{StencilOp::keep};
+    ComparisonFunc stencil_func{ComparisonFunc::always};
 };
 
 struct DepthStencilDesc {
@@ -272,22 +272,22 @@ struct DepthStencilDesc {
 };
 
 struct RasterizerDesc {
-    FillMode fillMode{FillMode::solid};
-    CullMode cullMode{CullMode::none};
-    FrontFaceMode frontFace{FrontFaceMode::counter_clockwise};
-    int32_t depthBias{0};
-    float depthBiasClamp{0.0f};
-    float slopeScaledDepthBias{0.0f};
-    bool depthClipEnable{true};
-    bool scissorEnable{false};
-    bool multisampleEnable{false};
-    bool antialiasedLineEnable{false};
-    bool enableConservativeRasterization{false};
-    uint32_t forcedSampleCount{0};
+    FillMode fill_mode{FillMode::solid};
+    CullMode cull_mode{CullMode::none};
+    FrontFaceMode front_face{FrontFaceMode::counter_clockwise};
+    int32_t depth_bias{0};
+    float depth_bias_clamp{0.0f};
+    float slope_scaled_depth_bias{0.0f};
+    bool depth_clip_enable{true};
+    bool scissor_enable{false};
+    bool multisample_enable{false};
+    bool antialiased_line_enable{false};
+    bool enable_conservative_rasterization{false};
+    uint32_t forced_sample_count{0};
 };
 
-enum class LogicOp {
-    no_op,
+enum class LogicOp : uint8_t {
+    no_op = static_cast<uint8_t>(gfx::LogicOp::NoOp),
 };
 
 KALI_ENUM_INFO(
@@ -298,12 +298,12 @@ KALI_ENUM_INFO(
 );
 KALI_ENUM_REGISTER(LogicOp);
 
-enum class BlendOp {
-    add,
-    subtract,
-    reverse_subtract,
-    min,
-    max,
+enum class BlendOp : uint8_t {
+    add = static_cast<uint8_t>(gfx::BlendOp::Add),
+    subtract = static_cast<uint8_t>(gfx::BlendOp::Subtract),
+    reverse_subtract = static_cast<uint8_t>(gfx::BlendOp::ReverseSubtract),
+    min = static_cast<uint8_t>(gfx::BlendOp::Min),
+    max = static_cast<uint8_t>(gfx::BlendOp::Max),
 };
 
 KALI_ENUM_INFO(
@@ -318,24 +318,24 @@ KALI_ENUM_INFO(
 );
 KALI_ENUM_REGISTER(BlendOp);
 
-enum class BlendFactor {
-    zero,
-    one,
-    src_color,
-    inv_src_color,
-    src_alpha,
-    inv_src_alpha,
-    dest_alpha,
-    inv_dest_alpha,
-    dest_color,
-    inv_dest_color,
-    src_alpha_saturate,
-    blend_color,
-    inv_blend_color,
-    secondary_src_color,
-    inv_secondary_src_color,
-    secondary_src_alpha,
-    inv_secondary_src_alpha,
+enum class BlendFactor : uint8_t {
+    zero = static_cast<uint8_t>(gfx::BlendFactor::Zero),
+    one = static_cast<uint8_t>(gfx::BlendFactor::One),
+    src_color = static_cast<uint8_t>(gfx::BlendFactor::SrcColor),
+    inv_src_color = static_cast<uint8_t>(gfx::BlendFactor::InvSrcColor),
+    src_alpha = static_cast<uint8_t>(gfx::BlendFactor::SrcAlpha),
+    inv_src_alpha = static_cast<uint8_t>(gfx::BlendFactor::InvSrcAlpha),
+    dest_alpha = static_cast<uint8_t>(gfx::BlendFactor::DestAlpha),
+    inv_dest_alpha = static_cast<uint8_t>(gfx::BlendFactor::InvDestAlpha),
+    dest_color = static_cast<uint8_t>(gfx::BlendFactor::DestColor),
+    inv_dest_color = static_cast<uint8_t>(gfx::BlendFactor::InvDestColor),
+    src_alpha_saturate = static_cast<uint8_t>(gfx::BlendFactor::SrcAlphaSaturate),
+    blend_color = static_cast<uint8_t>(gfx::BlendFactor::BlendColor),
+    inv_blend_color = static_cast<uint8_t>(gfx::BlendFactor::InvBlendColor),
+    secondary_src_color = static_cast<uint8_t>(gfx::BlendFactor::SecondarySrcColor),
+    inv_secondary_src_color = static_cast<uint8_t>(gfx::BlendFactor::InvSecondarySrcColor),
+    secondary_src_alpha = static_cast<uint8_t>(gfx::BlendFactor::SecondarySrcAlpha),
+    inv_secondary_src_alpha = static_cast<uint8_t>(gfx::BlendFactor::InvSecondarySrcAlpha),
 };
 
 KALI_ENUM_INFO(
@@ -362,13 +362,13 @@ KALI_ENUM_INFO(
 );
 KALI_ENUM_REGISTER(BlendFactor);
 
-enum class RenderTargetWriteMask {
-    enable_none = 0,
-    enable_red = 0x01,
-    enable_green = 0x02,
-    enable_blue = 0x04,
-    enable_alpha = 0x08,
-    enable_all = 0x0f,
+enum class RenderTargetWriteMask : uint8_t {
+    enable_none = static_cast<uint8_t>(gfx::RenderTargetWriteMask::EnableNone),
+    enable_red = static_cast<uint8_t>(gfx::RenderTargetWriteMask::EnableRed),
+    enable_green = static_cast<uint8_t>(gfx::RenderTargetWriteMask::EnableGreen),
+    enable_blue = static_cast<uint8_t>(gfx::RenderTargetWriteMask::EnableBlue),
+    enable_alpha = static_cast<uint8_t>(gfx::RenderTargetWriteMask::EnableAlpha),
+    enable_all = static_cast<uint8_t>(gfx::RenderTargetWriteMask::EnableAll),
 };
 
 KALI_ENUM_CLASS_OPERATORS(RenderTargetWriteMask);
@@ -407,10 +407,10 @@ struct BlendDesc {
 };
 
 
-enum class RayTracingPipelineFlags : uint32_t {
-    none = static_cast<uint32_t>(gfx::RayTracingPipelineFlags::None),
-    skip_triangles = static_cast<uint32_t>(gfx::RayTracingPipelineFlags::SkipTriangles),
-    skip_procedurals = static_cast<uint32_t>(gfx::RayTracingPipelineFlags::SkipProcedurals),
+enum class RayTracingPipelineFlags : uint8_t {
+    none = static_cast<uint8_t>(gfx::RayTracingPipelineFlags::None),
+    skip_triangles = static_cast<uint8_t>(gfx::RayTracingPipelineFlags::SkipTriangles),
+    skip_procedurals = static_cast<uint8_t>(gfx::RayTracingPipelineFlags::SkipProcedurals),
 };
 
 KALI_ENUM_CLASS_OPERATORS(RayTracingPipelineFlags);
