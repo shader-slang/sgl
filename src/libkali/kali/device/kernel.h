@@ -32,7 +32,7 @@ public:
 
     ComputePipelineState* pipeline_state() const;
 
-    void dispatch(uint3 thread_count, BindVarsCallback bind_vars, ComputeCommandEncoder* encoder);
+    void dispatch(uint3 thread_count, BindVarsCallback bind_vars, ComputePassEncoder& compute_pass);
 
     void dispatch(uint3 thread_count, BindVarsCallback bind_vars, CommandStream* stream = nullptr);
 
@@ -49,7 +49,7 @@ public:
 
     RayTracingPipelineState* pipeline_state() const;
 
-    void dispatch(uint3 thread_count, BindVarsCallback bind_vars, RayTracingCommandEncoder* encoder);
+    void dispatch(uint3 thread_count, BindVarsCallback bind_vars, RayTracingPassEncoder* pass_encoder);
 
     void dispatch(uint3 thread_count, BindVarsCallback bind_vars, CommandStream* stream = nullptr);
 

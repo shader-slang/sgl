@@ -60,30 +60,33 @@ void ShaderObject::set_data(const ShaderOffset& offset, void const* data, size_t
 // TransientShaderObject
 //
 
-TransientShaderObject::TransientShaderObject(gfx::IShaderObject* shader_object, CommandStream* stream)
+TransientShaderObject::TransientShaderObject(gfx::IShaderObject* shader_object, CommandStream* command_stream)
     : ShaderObject(shader_object)
-    , m_stream(stream)
+    , m_command_stream(command_stream)
 {
 }
 
 ref<ShaderObject> TransientShaderObject::get_entry_point(uint32_t index)
 {
-    auto object = make_ref<TransientShaderObject>(m_shader_object->getEntryPoint(index), m_stream);
+    auto object = make_ref<TransientShaderObject>(m_shader_object->getEntryPoint(index), m_command_stream);
     m_sub_objects.push_back(object);
     return object;
 }
 
 ref<ShaderObject> TransientShaderObject::get_object(const ShaderOffset& offset)
 {
-    auto object = make_ref<TransientShaderObject>(m_shader_object->getObject(gfx_shader_offset(offset)), m_stream);
+    auto object
+        = make_ref<TransientShaderObject>(m_shader_object->getObject(gfx_shader_offset(offset)), m_command_stream);
     m_sub_objects.push_back(object);
     return object;
 }
 
 void TransientShaderObject::set_object(const ShaderOffset& offset, const ref<ShaderObject>& object)
 {
-    if (ref<MutableShaderObject> mutable_object = dynamic_ref_cast<MutableShaderObject>(object)) {
-        mutable_object->insert_barriers(m_stream);
+    if (m_command_stream) {
+        if (ref<MutableShaderObject> mutable_object = dynamic_ref_cast<MutableShaderObject>(object)) {
+            mutable_object->set_resource_states(m_command_stream);
+        }
     }
 
     ShaderObject::set_object(offset, object);
@@ -91,24 +94,26 @@ void TransientShaderObject::set_object(const ShaderOffset& offset, const ref<Sha
 
 void TransientShaderObject::set_resource(const ShaderOffset& offset, const ref<ResourceView>& resource_view)
 {
-    switch (resource_view->type()) {
-    case ResourceViewType::unknown:
-        break;
-    case ResourceViewType::render_target:
-        m_stream->resource_barrier(resource_view->resource(), ResourceState::render_target);
-        break;
-    case ResourceViewType::depth_stencil:
-        m_stream->resource_barrier(resource_view->resource(), ResourceState::render_target);
-        break;
-    case ResourceViewType::shader_resource:
-        m_stream->resource_barrier(resource_view->resource(), ResourceState::shader_resource);
-        break;
-    case ResourceViewType::unordered_access:
-        m_stream->resource_barrier(resource_view->resource(), ResourceState::unordered_access);
-        break;
-        // case ResourceViewType::acceleration_structure:
-        //     m_stream->resource_barrier(resource_view->resource(), ResourceState::acceleration_structure);
-        //     break;
+    if (m_command_stream) {
+        switch (resource_view->type()) {
+        case ResourceViewType::unknown:
+            break;
+        case ResourceViewType::render_target:
+            m_command_stream->resource_barrier(resource_view->resource(), ResourceState::render_target);
+            break;
+        case ResourceViewType::depth_stencil:
+            m_command_stream->resource_barrier(resource_view->resource(), ResourceState::render_target);
+            break;
+        case ResourceViewType::shader_resource:
+            m_command_stream->resource_barrier(resource_view->resource(), ResourceState::shader_resource);
+            break;
+        case ResourceViewType::unordered_access:
+            m_command_stream->resource_barrier(resource_view->resource(), ResourceState::unordered_access);
+            break;
+            // case ResourceViewType::acceleration_structure:
+            //     m_command_stream->resource_barrier(resource_view->resource(),
+            //     ResourceState::acceleration_structure); break;
+        }
     }
 
     ShaderObject::set_resource(offset, resource_view);
@@ -128,27 +133,27 @@ void MutableShaderObject::set_resource(const ShaderOffset& offset, const ref<Res
         m_resource_views.erase(offset);
 }
 
-void MutableShaderObject::insert_barriers(CommandStream* stream)
+void MutableShaderObject::set_resource_states(CommandStream* command_stream)
 {
     for (auto& [offset, resource_view] : m_resource_views) {
         switch (resource_view->type()) {
         case ResourceViewType::unknown:
             break;
         case ResourceViewType::render_target:
-            stream->resource_barrier(resource_view->resource(), ResourceState::render_target);
+            command_stream->resource_barrier(resource_view->resource(), ResourceState::render_target);
             break;
         case ResourceViewType::depth_stencil:
-            stream->resource_barrier(resource_view->resource(), ResourceState::render_target);
+            command_stream->resource_barrier(resource_view->resource(), ResourceState::render_target);
             break;
         case ResourceViewType::shader_resource:
-            stream->resource_barrier(resource_view->resource(), ResourceState::shader_resource);
+            command_stream->resource_barrier(resource_view->resource(), ResourceState::shader_resource);
             break;
         case ResourceViewType::unordered_access:
-            stream->resource_barrier(resource_view->resource(), ResourceState::unordered_access);
+            command_stream->resource_barrier(resource_view->resource(), ResourceState::unordered_access);
             break;
             // case ResourceViewType::acceleration_structure:
-            //     stream->resource_barrier(resource_view->resource(), ResourceState::acceleration_structure);
-            //     break;
+            //     command_stream->resource_barrier(resource_view->resource(),
+            //     ResourceState::acceleration_structure); break;
         }
     }
 }

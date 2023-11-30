@@ -3,6 +3,8 @@
 #include "kali/device/device.h"
 #include "kali/device/shader.h"
 #include "kali/device/command.h"
+#include "kali/device/shader_cursor.h"
+#include "kali/device/shader_object.h"
 #include "kali/device/kernel.h"
 #include "kali/device/agility_sdk.h"
 
@@ -44,8 +46,17 @@ int main()
         ref<Buffer> buffer_c
             = device->create_structured_buffer<uint32_t>(N, ResourceUsage::unordered_access, MemoryType::device_local);
 
-        auto stream = device->command_stream();
-
+#if 1
+        {
+            auto compute_pass = device->command_stream()->begin_compute_pass();
+            auto shader_object = compute_pass.bind_pipeline(kernel->pipeline_state());
+            auto processor = ShaderCursor(shader_object)["processor"];
+            processor["a"] = buffer_a;
+            processor["b"] = buffer_b;
+            processor["c"] = buffer_c;
+            compute_pass.dispatch_thread_groups(uint3{N / 16, 1, 1});
+        }
+#else
         kernel->dispatch(
             uint3{N, 1, 1},
             [&](ShaderCursor cursor)
@@ -56,8 +67,8 @@ int main()
                 processor["c"] = buffer_c;
             }
         );
+#endif
 
-        stream->submit();
         device->wait();
 
         std::vector<uint32_t> data_c = device->read_buffer<uint32_t>(buffer_c, 0, N);

@@ -37,11 +37,9 @@ ComputePipelineState* ComputeKernel::pipeline_state() const
     return m_pipeline_state;
 }
 
-void ComputeKernel::dispatch(uint3 thread_count, BindVarsCallback bind_vars, ComputeCommandEncoder* encoder)
+void ComputeKernel::dispatch(uint3 thread_count, BindVarsCallback bind_vars, ComputePassEncoder& compute_pass)
 {
-    KALI_CHECK_NOT_NULL(encoder);
-
-    ref<ShaderObject> shader_object = encoder->bind_pipeline(pipeline_state());
+    ref<ShaderObject> shader_object = compute_pass.bind_pipeline(pipeline_state());
     if (bind_vars)
         bind_vars(ShaderCursor(shader_object));
 
@@ -49,23 +47,16 @@ void ComputeKernel::dispatch(uint3 thread_count, BindVarsCallback bind_vars, Com
         div_round_up(thread_count.x, m_thread_group_size.x),
         div_round_up(thread_count.y, m_thread_group_size.y),
         div_round_up(thread_count.z, m_thread_group_size.z)};
-    encoder->dispatch_compute(thread_group_count);
+    compute_pass.dispatch_thread_groups(thread_group_count);
 }
 
 void ComputeKernel::dispatch(uint3 thread_count, BindVarsCallback bind_vars, CommandStream* stream)
 {
     if (stream == nullptr)
-        stream = m_program->device()->command_stream();
+        stream = m_device->command_stream();
 
-    ref<ShaderObject> shader_object = stream->bind_compute_pipeline(pipeline_state());
-    if (bind_vars)
-        bind_vars(ShaderCursor(shader_object));
-
-    uint3 thread_group_count{
-        div_round_up(thread_count.x, m_thread_group_size.x),
-        div_round_up(thread_count.y, m_thread_group_size.y),
-        div_round_up(thread_count.z, m_thread_group_size.z)};
-    stream->dispatch_compute(thread_group_count);
+    auto compute_pass = stream->begin_compute_pass();
+    dispatch(thread_count, bind_vars, compute_pass);
 }
 
 // ----------------------------------------------------------------------------

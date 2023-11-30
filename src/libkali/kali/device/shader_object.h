@@ -5,6 +5,7 @@
 
 #include "kali/device/fwd.h"
 #include "kali/device/shader_offset.h"
+#include "kali/device/resource.h"
 
 #include <slang-gfx.h>
 
@@ -14,7 +15,7 @@
 
 namespace kali {
 
-class ShaderObject : public Object {
+class KALI_API ShaderObject : public Object {
     KALI_OBJECT(ShaderObject)
 public:
     ShaderObject(gfx::IShaderObject* shader_object);
@@ -37,10 +38,10 @@ protected:
     gfx::IShaderObject* m_shader_object;
 };
 
-class TransientShaderObject : public ShaderObject {
+class KALI_API TransientShaderObject : public ShaderObject {
     KALI_OBJECT(TransientShaderObject)
 public:
-    TransientShaderObject(gfx::IShaderObject* shader_object, CommandStream* stream);
+    TransientShaderObject(gfx::IShaderObject* shader_object, CommandStream* command_stream);
 
     virtual ref<ShaderObject> get_entry_point(uint32_t index) override;
 
@@ -50,21 +51,18 @@ public:
     virtual void set_resource(const ShaderOffset& offset, const ref<ResourceView>& resource_view) override;
 
 private:
-    CommandStream* m_stream;
+    CommandStream* m_command_stream;
     std::vector<ref<TransientShaderObject>> m_sub_objects;
-
-    // TODO: fixme
-    friend class CommandStream;
 };
 
-class MutableShaderObject : public ShaderObject {
+class KALI_API MutableShaderObject : public ShaderObject {
     KALI_OBJECT(MutableShaderObject)
 public:
     MutableShaderObject(gfx::IShaderObject* shader_object);
 
     virtual void set_resource(const ShaderOffset& offset, const ref<ResourceView>& resource_view) override;
 
-    void insert_barriers(CommandStream* stream);
+    void set_resource_states(CommandStream* command_stream);
 
 private:
     std::map<ShaderOffset, ref<ResourceView>> m_resource_views;

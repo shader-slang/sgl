@@ -30,7 +30,7 @@ class DebugLogger : public gfx::IDebugCallback {
 public:
     DebugLogger()
     {
-        m_logger = Logger::create(LogLevel::debug, "DEVICE", false);
+        m_logger = Logger::create(LogLevel::debug, "gfx", false);
         m_logger->use_same_outputs(Logger::get());
     }
 
@@ -182,7 +182,28 @@ Device::Device(const DeviceDesc& desc)
         m_default_shader_model = m_supported_shader_model;
     }
 
-    m_command_stream = create_command_stream({.queue_type = CommandQueueType::graphics});
+    // Create per-frame data.
+    // TODO hardcoded frame count, maybe add to device desc?
+    m_frame_data.resize(3);
+    for (auto& frame_data : m_frame_data) {
+        m_gfx_device->createTransientResourceHeap(
+            gfx::ITransientResourceHeap::Desc{
+                .flags = gfx::ITransientResourceHeap::Flags::AllowResizing,
+                .constantBufferSize = 1024 * 1024 * 4,
+                .samplerDescriptorCount = 1024,
+                .uavDescriptorCount = 1024,
+                .srvDescriptorCount = 1024,
+                .constantBufferDescriptorCount = 1024,
+                .accelerationStructureDescriptorCount = 1024,
+            },
+            frame_data.transient_resource_heap.writeRef()
+        );
+    }
+
+    m_default_queue = create_command_queue({.type = CommandQueueType::graphics});
+    m_default_queue->break_strong_reference_to_device();
+
+    m_command_stream = create_command_stream();
     m_command_stream->break_strong_reference_to_device();
 
     dec_ref(false);
@@ -190,19 +211,14 @@ Device::Device(const DeviceDesc& desc)
 
 Device::~Device()
 {
-    m_command_stream.reset();
+    m_default_queue.reset();
 
     m_gfx_device.setNull();
 }
 
 ref<Swapchain> Device::create_swapchain(SwapchainDesc desc, ref<Window> window)
 {
-    return make_ref<Swapchain>(
-        std::move(desc),
-        std::move(window),
-        ref<CommandQueue>(m_command_stream->command_queue()),
-        ref<Device>(this)
-    );
+    return make_ref<Swapchain>(std::move(desc), std::move(window), m_default_queue, ref<Device>(this));
 }
 
 ref<Buffer> Device::create_buffer(BufferDesc desc, const void* init_data)
@@ -326,14 +342,22 @@ ref<CommandQueue> Device::create_command_queue(CommandQueueDesc desc)
     return make_ref<CommandQueue>(ref<Device>(this), std::move(desc));
 }
 
-ref<CommandStream> Device::create_command_stream(CommandStreamDesc desc)
+ref<CommandBuffer> Device::create_command_buffer()
 {
-    return make_ref<CommandStream>(ref<Device>(this), std::move(desc));
+    // TODO increment frame
+    return make_ref<CommandBuffer>(ref<Device>(this), m_frame_data[0].transient_resource_heap->createCommandBuffer());
+}
+
+ref<CommandStream> Device::create_command_stream()
+{
+    return make_ref<CommandStream>(ref<Device>(this), m_default_queue);
 }
 
 void Device::wait()
 {
-    m_command_stream->command_queue()->gfx_command_queue()->waitOnHost();
+    m_command_stream->submit();
+    // TODO maybe we should keep track of all queues and wait for all of them?
+    m_default_queue->wait();
 }
 
 void Device::read_buffer(const Buffer* buffer, size_t offset, size_t size, void* out_data)

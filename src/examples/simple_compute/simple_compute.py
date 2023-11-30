@@ -2,7 +2,7 @@ import kali
 import numpy as np
 from pathlib import Path
 
-device = kali.Device()
+device = kali.Device(enable_debug_layers=True)
 
 path = Path(__file__).parent / "compute.cs.slang"
 kernel = device.load_module(path).create_compute_kernel("main")
@@ -29,14 +29,25 @@ buffer_c = device.create_buffer(
     usage=kali.ResourceUsage.unordered_access,
 )
 
-kernel.dispatch(
-    thread_count=[N, 1, 1],
-    vars={
-        "processor": {"a": buffer_a, "b": buffer_b, "c": buffer_c}
-    },
-)
+if True:
+    # Method 1: Use compute pass on command stream
+    with device.command_stream.begin_compute_pass() as compute_pass:
+        shader_object = compute_pass.bind_pipeline(kernel.pipeline_state)
+        processor = kali.ShaderCursor(shader_object)["processor"]
+        processor["a"] = buffer_a
+        processor["b"] = buffer_b
+        processor["c"] = buffer_c
+        compute_pass.dispatch_thread_groups([N // 16, 1, 1])
+else:
+    # Method 2: Use compute kernel dispatch
+    kernel.dispatch(
+        thread_count=[N, 1, 1],
+        vars={
+            "processor": {"a": buffer_a, "b": buffer_b, "c": buffer_c}
+        },
+    )
 
-device.command_stream.submit()
+device.wait()
 
 result = buffer_c.to_numpy().view(np.uint32)
 print(result)

@@ -87,21 +87,18 @@ class ShaderTable;
 
 struct CommandQueueDesc;
 class CommandQueue;
-
 class CommandBuffer;
-class CommandEncoder;
-class ResourceCommandEncoder;
-class ComputeCommandEncoder;
-class RenderCommandEncoder;
-class RayTracingCommandEncoder;
-
-struct CommandStreamDesc;
 class CommandStream;
+class ComputePassEncoder;
+class RenderPassEncoder;
+class RayTracingPassEncoder;
 
 // shader_cursor.h
 
 class ShaderCursor;
 class ShaderObject;
+class TransientShaderObject;
+class MutableShaderObject;
 
 // input_layout.h
 

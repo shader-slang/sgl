@@ -1,6 +1,7 @@
 #include "nanobind.h"
 
 #include "kali/device/shader_cursor.h"
+#include "kali/device/shader_object.h"
 #include "kali/device/resource.h"
 #include "kali/device/sampler.h"
 
@@ -13,6 +14,7 @@ KALI_PY_EXPORT(device_shader_cursor)
 
     nb::class_<ShaderCursor> shader_cursor(m, "ShaderCursor");
 
+    shader_cursor.def(nb::init<ShaderObject*>(), "shader_object"_a);
     shader_cursor.def("is_valid", &ShaderCursor::is_valid);
 
     shader_cursor.def("__getitem__", [](ShaderCursor& self, std::string_view name) { return self[name]; });

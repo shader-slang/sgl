@@ -309,8 +309,6 @@ private:
     bool m_has_global_state{true};
     ResourceState m_global_state{ResourceState::undefined};
     std::unique_ptr<std::vector<ResourceState>> m_subresource_states;
-
-    friend class CommandStream; // TODO remove?
 };
 
 class KALI_API Resource : public DeviceResource {

@@ -223,6 +223,7 @@ KALI_PY_EXPORT(device_device)
         "type"_a,
         "count"_a
     );
+    device.def("create_command_stream", &Device::create_command_stream);
     device.def(
         "create_acceleration_structure",
         [](Device* self, AccelerationStructure::Kind kind, ref<Buffer> buffer, DeviceOffset offset, DeviceSize size)
@@ -250,7 +251,8 @@ KALI_PY_EXPORT(device_device)
         "type"_a = CommandQueueType::graphics
     );
 
-    device.def_prop_ro("command_stream", &Device::command_stream, nb::rv_policy::reference_internal);
+    device.def_prop_ro("default_queue", &Device::default_queue);
+    device.def_prop_ro("command_stream", &Device::command_stream);
     device.def("wait", &Device::wait);
 
     device.def_static("enumerate_adapters", &Device::enumerate_adapters, "type"_a = DeviceType::automatic);

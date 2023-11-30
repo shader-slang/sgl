@@ -235,9 +235,13 @@ public:
 
     ref<CommandQueue> create_command_queue(CommandQueueDesc desc);
 
-    ref<CommandStream> create_command_stream(CommandStreamDesc desc);
+    ref<CommandBuffer> create_command_buffer();
 
-    CommandStream* command_stream() const { return m_command_stream; }
+    ref<CommandStream> create_command_stream();
+
+    CommandQueue* default_queue() const { return m_default_queue; }
+
+    CommandStream* command_stream() { return m_command_stream; }
 
     void wait();
 
@@ -294,7 +298,15 @@ private:
     Slang::ComPtr<gfx::IDevice> m_gfx_device;
     Slang::ComPtr<slang::IGlobalSession> m_global_session;
 
+    ref<CommandQueue> m_default_queue;
     ref<CommandStream> m_command_stream;
+
+    struct FrameData {
+        Slang::ComPtr<gfx::ITransientResourceHeap> transient_resource_heap;
+    };
+
+    std::vector<FrameData> m_frame_data;
+    uint32_t m_current_frame_index{0};
 };
 
 } // namespace kali
