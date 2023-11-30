@@ -99,6 +99,7 @@ public:
 
     ref<TransientShaderObject> bind_pipeline(const ComputePipelineState* pipeline);
     void bind_pipeline(const ComputePipelineState* pipeline, const ShaderObject* shader_object);
+    void dispatch(uint3 thread_count);
     void dispatch_thread_groups(uint3 thread_group_count);
     void dispatch_thread_groups_indirect(const Buffer* cmd_buffer, DeviceOffset offset);
 
@@ -116,6 +117,7 @@ private:
 
     CommandStream* m_command_stream;
     gfx::IComputeCommandEncoder* m_gfx_compute_command_encoder;
+    const ComputePipelineState* m_bound_pipeline{nullptr};
 
     friend class CommandStream;
 };

@@ -9,6 +9,8 @@
 #include "kali/core/short_vector.h"
 #include "kali/core/type_utils.h"
 
+#include "kali/math/vector.h"
+
 
 namespace kali {
 
@@ -44,8 +46,23 @@ ComputePipelineState::ComputePipelineState(ref<Device> device, ComputePipelineSt
     : PipelineState(std::move(device))
     , m_desc(std::move(desc))
 {
+    KALI_CHECK_NOT_NULL(m_desc.program);
+
     gfx::ComputePipelineStateDesc gfx_desc{.program = m_desc.program->gfx_shader_program()};
     SLANG_CALL(m_device->gfx_device()->createComputePipelineState(gfx_desc, m_gfx_pipeline_state.writeRef()));
+    m_thread_group_size = desc.program->entry_point_layout(0)->compute_thread_group_size();
+}
+
+std::string ComputePipelineState::to_string() const
+{
+    return fmt::format(
+        "ComputePipelineState(\n"
+        "  device={},\n"
+        "  thread_group_size={}\n"
+        ")",
+        m_device,
+        m_thread_group_size
+    );
 }
 
 // ----------------------------------------------------------------------------

@@ -9,6 +9,8 @@
 #include "kali/core/enum.h"
 #include "kali/core/object.h"
 
+#include "kali/math/vector_types.h"
+
 #include <slang-gfx.h>
 
 #include <map>
@@ -44,8 +46,13 @@ public:
 
     const ComputePipelineStateDesc& desc() const { return m_desc; }
 
+    uint3 thread_group_size() const { return m_thread_group_size; }
+
+    std::string to_string() const override;
+
 private:
     ComputePipelineStateDesc m_desc;
+    uint3 m_thread_group_size;
 };
 
 struct GraphicsPipelineStateDesc {

@@ -96,6 +96,7 @@ KALI_PY_EXPORT(device_command)
             "pipeline"_a,
             "shader_object"_a
         )
+        .def("dispatch", &ComputePassEncoder::dispatch, "thread_count"_a)
         .def("dispatch_thread_groups", &ComputePassEncoder::dispatch_thread_groups, "thread_group_count"_a);
 
     // nb::class_<CommandStream, Object>(m, "CommandStream")

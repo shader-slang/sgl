@@ -7,5 +7,7 @@ KALI_PY_EXPORT(device_pipeline)
     using namespace kali;
 
     nb::class_<PipelineState, DeviceResource>(m, "PipelineState");
-    nb::class_<ComputePipelineState, PipelineState>(m, "ComputePipelineState");
+
+    nb::class_<ComputePipelineState, PipelineState>(m, "ComputePipelineState")
+        .def_prop_ro("thread_group_size", &ComputePipelineState::thread_group_size);
 }

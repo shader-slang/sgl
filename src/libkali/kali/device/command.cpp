@@ -9,6 +9,7 @@
 #include "kali/device/shader_object.h"
 
 #include "kali/core/short_vector.h"
+#include "kali/core/maths.h"
 
 namespace kali {
 
@@ -137,6 +138,7 @@ ref<TransientShaderObject> ComputePassEncoder::bind_pipeline(const ComputePipeli
 {
     KALI_CHECK_NOT_NULL(pipeline);
 
+    m_bound_pipeline = pipeline;
     gfx::IShaderObject* gfx_shader_object;
     SLANG_CALL(m_gfx_compute_command_encoder->bindPipeline(pipeline->gfx_pipeline_state(), &gfx_shader_object));
     return make_ref<TransientShaderObject>(gfx_shader_object, m_command_stream);
@@ -147,8 +149,21 @@ void ComputePassEncoder::bind_pipeline(const ComputePipelineState* pipeline, con
     KALI_CHECK_NOT_NULL(pipeline);
     KALI_CHECK_NOT_NULL(shader_object);
 
+    m_bound_pipeline = pipeline;
     SLANG_CALL(m_gfx_compute_command_encoder
                    ->bindPipelineWithRootObject(pipeline->gfx_pipeline_state(), shader_object->gfx_shader_object()));
+}
+
+void ComputePassEncoder::dispatch(uint3 thread_count)
+{
+    KALI_CHECK(m_bound_pipeline, "No pipeline bound");
+
+    uint3 thread_group_size = m_bound_pipeline->thread_group_size();
+    uint3 thread_group_count{
+        div_round_up(thread_count.x, thread_group_size.x),
+        div_round_up(thread_count.y, thread_group_size.y),
+        div_round_up(thread_count.z, thread_group_size.z)};
+    dispatch_thread_groups(thread_group_count);
 }
 
 void ComputePassEncoder::dispatch_thread_groups(uint3 thread_group_count)

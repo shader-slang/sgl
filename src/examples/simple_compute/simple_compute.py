@@ -37,7 +37,7 @@ if True:
         processor["a"] = buffer_a
         processor["b"] = buffer_b
         processor["c"] = buffer_c
-        compute_pass.dispatch_thread_groups([N // 16, 1, 1])
+        compute_pass.dispatch([N, 1, 1])
 else:
     # Method 2: Use compute kernel dispatch
     kernel.dispatch(
