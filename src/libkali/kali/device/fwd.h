@@ -105,4 +105,9 @@ class MutableShaderObject;
 struct InputLayoutDesc;
 class InputLayout;
 
+// memory_heap.h
+
+struct MemoryHeapDesc;
+class MemoryHeap;
+
 } // namespace kali

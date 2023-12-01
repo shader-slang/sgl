@@ -239,9 +239,14 @@ public:
 
     ref<CommandStream> create_command_stream();
 
+    ref<MemoryHeap> create_memory_heap(MemoryHeapDesc desc);
+
     CommandQueue* default_queue() const { return m_default_queue; }
 
     CommandStream* command_stream() { return m_command_stream; }
+
+    MemoryHeap* upload_heap() const { return m_upload_heap; }
+    MemoryHeap* read_back_heap() const { return m_read_back_heap; }
 
     void wait();
 
@@ -301,12 +306,16 @@ private:
     ref<CommandQueue> m_default_queue;
     ref<CommandStream> m_command_stream;
 
+    ref<MemoryHeap> m_upload_heap;
+    ref<MemoryHeap> m_read_back_heap;
+
     struct FrameData {
         Slang::ComPtr<gfx::ITransientResourceHeap> transient_resource_heap;
     };
 
     std::vector<FrameData> m_frame_data;
     uint32_t m_current_frame_index{0};
+    ref<Fence> m_frame_fence;
 };
 
 } // namespace kali

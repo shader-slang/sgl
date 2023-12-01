@@ -66,12 +66,14 @@ target_sources(kali PRIVATE
     kali/device/fence.h
     kali/device/formats.cpp
     kali/device/formats.h
-    kali/device/input_layout.cpp
-    kali/device/input_layout.h
     kali/device/fwd.h
     kali/device/helpers.h
+    kali/device/input_layout.cpp
+    kali/device/input_layout.h
     kali/device/kernel.cpp
     kali/device/kernel.h
+    kali/device/memory_heap.cpp
+    kali/device/memory_heap.h
     kali/device/native_formats.h
     kali/device/pipeline.cpp
     kali/device/pipeline.h
@@ -327,6 +329,7 @@ nanobind_add_module(kali_ext NB_STATIC LTO
     kali/device/python/fence.cpp
     kali/device/python/formats.cpp
     kali/device/python/kernel.cpp
+    kali/device/python/memory_heap.cpp
     kali/device/python/pipeline.cpp
     kali/device/python/query.cpp
     kali/device/python/raytracing.cpp

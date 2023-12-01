@@ -23,6 +23,7 @@ KALI_PY_DECLARE(device_device);
 KALI_PY_DECLARE(device_fence);
 KALI_PY_DECLARE(device_formats);
 KALI_PY_DECLARE(device_kernel);
+KALI_PY_DECLARE(device_memory_heap);
 KALI_PY_DECLARE(device_pipeline);
 KALI_PY_DECLARE(device_query);
 KALI_PY_DECLARE(device_raytracing);
@@ -90,6 +91,7 @@ NB_MODULE(kali_ext, m)
     KALI_PY_IMPORT(device_swapchain);
     KALI_PY_IMPORT(device_command);
     KALI_PY_IMPORT(device_kernel);
+    KALI_PY_IMPORT(device_memory_heap);
     KALI_PY_IMPORT(device_device);
 
     m.def_submodule("utils", "Utility module");

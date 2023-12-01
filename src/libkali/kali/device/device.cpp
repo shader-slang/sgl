@@ -8,6 +8,7 @@
 #include "kali/device/input_layout.h"
 #include "kali/device/shader.h"
 #include "kali/device/pipeline.h"
+#include "kali/device/memory_heap.h"
 #include "kali/device/command.h"
 #include "kali/device/helpers.h"
 #include "kali/device/native_handle_traits.h"
@@ -200,18 +201,42 @@ Device::Device(const DeviceDesc& desc)
         );
     }
 
+    m_frame_fence = create_fence({.shared = true});
+    m_frame_fence->break_strong_reference_to_device();
+
     m_default_queue = create_command_queue({.type = CommandQueueType::graphics});
     m_default_queue->break_strong_reference_to_device();
 
     m_command_stream = create_command_stream();
     m_command_stream->break_strong_reference_to_device();
 
+    m_upload_heap = create_memory_heap(
+        {.memory_type = MemoryType::upload,
+         .usage = ResourceUsage::none,
+         .page_size = 1024 * 1024 * 4,
+         .debug_name = "default_upload_heap"}
+    );
+    m_upload_heap->break_strong_reference_to_device();
+
+    m_read_back_heap = create_memory_heap(
+        {.memory_type = MemoryType::read_back,
+         .usage = ResourceUsage::none,
+         .page_size = 1024 * 1024 * 4,
+         .debug_name = "default_read_back_heap"}
+    );
+    m_read_back_heap->break_strong_reference_to_device();
+
     dec_ref(false);
 }
 
 Device::~Device()
 {
+    m_read_back_heap.reset();
+    m_upload_heap.reset();
+
+    m_command_stream.reset();
     m_default_queue.reset();
+    m_frame_fence.reset();
 
     m_gfx_device.setNull();
 }
@@ -351,6 +376,11 @@ ref<CommandBuffer> Device::create_command_buffer()
 ref<CommandStream> Device::create_command_stream()
 {
     return make_ref<CommandStream>(ref<Device>(this), m_default_queue);
+}
+
+ref<MemoryHeap> Device::create_memory_heap(MemoryHeapDesc desc)
+{
+    return make_ref<MemoryHeap>(ref<Device>(this), m_frame_fence, std::move(desc));
 }
 
 void Device::wait()

@@ -5,6 +5,7 @@
 #include "kali/device/fence.h"
 #include "kali/device/resource.h"
 #include "kali/device/query.h"
+#include "kali/device/memory_heap.h"
 #include "kali/device/swapchain.h"
 #include "kali/device/shader.h"
 #include "kali/device/command.h"
@@ -250,9 +251,35 @@ KALI_PY_EXPORT(device_device)
         [](Device* self, CommandQueueType type) { return self->create_command_queue({.type = type}); },
         "type"_a = CommandQueueType::graphics
     );
+    device.def("create_memory_heap", &Device::create_memory_heap, "desc"_a);
+    device.def(
+        "create_memory_heap",
+        [](Device* self,
+           MemoryType memory_type,
+           ResourceUsage usage,
+           DeviceSize page_size,
+           bool retain_large_pages,
+           std::string debug_name)
+        {
+            return self->create_memory_heap({
+                .memory_type = memory_type,
+                .usage = usage,
+                .page_size = page_size,
+                .retain_large_pages = retain_large_pages,
+                .debug_name = std::move(debug_name),
+            });
+        },
+        "memory_type"_a,
+        "usage"_a,
+        "page_size"_a = 4 * 1024 * 1024,
+        "retain_large_pages"_a = false,
+        "debug_name"_a = ""
+    );
 
     device.def_prop_ro("default_queue", &Device::default_queue);
     device.def_prop_ro("command_stream", &Device::command_stream);
+    device.def_prop_ro("upload_heap", &Device::upload_heap);
+    device.def_prop_ro("read_back_heap", &Device::read_back_heap);
     device.def("wait", &Device::wait);
 
     device.def_static("enumerate_adapters", &Device::enumerate_adapters, "type"_a = DeviceType::automatic);
