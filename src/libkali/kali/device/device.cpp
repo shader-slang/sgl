@@ -393,11 +393,36 @@ void Device::wait()
 void Device::read_buffer(const Buffer* buffer, size_t offset, size_t size, void* out_data)
 {
     m_command_stream->buffer_barrier(buffer, ResourceState::copy_source);
+    m_command_stream->submit();
 
     Slang::ComPtr<ISlangBlob> blob;
     if (offset + size > buffer->size())
         KALI_THROW("Buffer read out of bounds");
     SLANG_CALL(m_gfx_device->readBufferResource(buffer->gfx_buffer_resource(), offset, size, blob.writeRef()));
+    std::memcpy(out_data, blob->getBufferPointer(), size);
+}
+
+void Device::read_texture(
+    const Texture* texture,
+    size_t size,
+    void* out_data,
+    size_t* out_row_pitch,
+    size_t* out_pixel_size
+)
+{
+    m_command_stream->texture_barrier(texture, ResourceState::copy_source);
+    m_command_stream->submit();
+
+    Slang::ComPtr<ISlangBlob> blob;
+    SLANG_CALL(m_gfx_device->readTextureResource(
+        texture->gfx_texture_resource(),
+        gfx::ResourceState::CopySource,
+        blob.writeRef(),
+        out_row_pitch,
+        out_pixel_size
+    ));
+    if (size > blob->getBufferSize())
+        KALI_THROW("Texture read out of bounds");
     std::memcpy(out_data, blob->getBufferPointer(), size);
 }
 

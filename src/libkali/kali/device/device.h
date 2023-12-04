@@ -260,6 +260,7 @@ public:
         return data;
     }
 
+    void read_texture(const Texture* texture, size_t size, void* out_data, size_t *out_row_pitch, size_t* out_pixel_size);
 
     gfx::IDevice* gfx_device() const { return m_gfx_device; }
     slang::IGlobalSession* global_session() const { return m_global_session; }
