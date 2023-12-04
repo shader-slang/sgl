@@ -18,7 +18,7 @@ inline std::optional<nb::dlpack::dtype> resource_format_to_dtype(Format format)
     // Formats with different bits per channel are not supported.
     uint32_t channel_bit_count = info.channel_bit_count[0];
     for (uint32_t i = 1; i < info.channel_count; ++i)
-        if (channel_bit_count == info.channel_bit_count[i])
+        if (channel_bit_count != info.channel_bit_count[i])
             return {};
 
     // Only formats with 8, 16, 32, or 64 bits per channel are supported.
@@ -78,76 +78,44 @@ inline void buffer_from_numpy(Buffer* self, nb::ndarray<nb::numpy> data)
  */
 inline nb::ndarray<nb::numpy> texture_to_numpy(Texture* self, uint32_t mip_level, uint32_t array_slice)
 {
-    KALI_CHECK(
-        mip_level < self->mip_count(),
-        "'mip_level' ({}) is out of bounds. Only {} level(s) available.",
-        mip_level,
-        self->mip_count()
-    );
-    KALI_CHECK(
-        array_slice < self->array_size(),
-        "'array_slice' ({}) is out of bounds. Only {} slice(s) available.",
-        array_slice,
-        self->array_size()
-    );
+    KALI_CHECK_LT(mip_level, self->mip_count());
+    KALI_CHECK_LT(array_slice, self->array_size());
 
     // Get image dimensions.
-    uint32_t width = self->get_mip_width(mip_level);
-    uint32_t height = self->get_mip_height(mip_level);
-    uint32_t depth = self->get_mip_depth(mip_level);
+    uint3 dimensions = self->get_mip_dimensions(mip_level);
 
     uint32_t subresource = self->get_subresource_index(array_slice, mip_level);
-    // Texture::SubresourceLayout layout = self.getSubresourceLayout(subresource);
+    SubresourceLayout layout = self->get_subresource_layout(subresource);
 
-    // size_t subresourceSize = layout.getTotalByteSize();
-    // void* cpuData = new uint8_t[subresourceSize];
-    // self.getSubresourceBlob(subresource, cpuData, subresourceSize);
+    size_t size = layout.total_size_aligned();
+    void* data = new uint8_t[size];
+    size_t row_pitch, pixel_size;
+    self->device()->read_texture(self, size, data, &row_pitch, &pixel_size);
 
-    // pybind11::capsule owner(cpuData, [](void* p) noexcept { delete[] reinterpret_cast<uint8_t*>(p); });
+    nb::capsule owner(data, [](void* p) noexcept { delete[] reinterpret_cast<uint8_t*>(p); });
 
-    // if (auto dtype = resourceFormatToDtype(self.getFormat())) {
-    //     uint32_t channelCount = getFormatChannelCount(self.getFormat());
-    //     std::vector<pybind11::size_t> shape;
-    //     if (depth > 1)
-    //         shape.push_back(depth);
-    //     if (height > 1)
-    //         shape.push_back(height);
-    //     shape.push_back(width);
-    //     if (channelCount > 1)
-    //         shape.push_back(channelCount);
-    //     return pybind11::ndarray<
-    //         pybind11::numpy>(cpuData, shape.size(), shape.data(), owner, nullptr, *dtype,
-    //         pybind11::device::cpu::value);
-    // } else {
-    //     pybind11::size_t shape[1] = {subresourceSize};
-    //     return pybind11::ndarray<pybind11::numpy>(
-    //         cpuData,
-    //         1,
-    //         shape,
-    //         owner,
-    //         nullptr,
-    //         pybind11::dtype<uint8_t>(),
-    //         pybind11::device::cpu::value
-    //     );
-    // }
-    return {};
+    if (auto dtype = resource_format_to_dtype(self->format())) {
+        uint32_t channel_count = get_format_info(self->format()).channel_count;
+        std::vector<size_t> shape;
+        if (dimensions.z > 1)
+            shape.push_back(dimensions.z);
+        if (dimensions.y > 1)
+            shape.push_back(dimensions.y);
+        shape.push_back(dimensions.x);
+        if (channel_count > 1)
+            shape.push_back(channel_count);
+        return nb::ndarray<nb::numpy>(data, shape.size(), shape.data(), owner, nullptr, *dtype, nb::device::cpu::value);
+    } else {
+        size_t shape[1] = {size};
+        return nb::ndarray<nb::numpy>(data, 1, shape, owner, nullptr, nb::dtype<uint8_t>(), nb::device::cpu::value);
+    }
 }
 
 inline void texture_from_numpy(Texture* self, nb::ndarray<nb::numpy> data, uint32_t mip_level, uint32_t array_slice)
 {
     KALI_CHECK(is_ndarray_contiguous(data), "numpy array is not contiguous");
-    KALI_CHECK(
-        mip_level < self->mip_count(),
-        "'mip_level' ({}) is out of bounds. Only {} level(s) available.",
-        mip_level,
-        self->mip_count()
-    );
-    KALI_CHECK(
-        array_slice < self->array_size(),
-        "'array_slice' ({}) is out of bounds. Only {} slice(s) available.",
-        array_slice,
-        self->array_size()
-    );
+    KALI_CHECK_LT(mip_level, self->mip_count());
+    KALI_CHECK_LT(array_slice, self->array_size());
 
     // uint32_t subresource = self.getSubresourceIndex(array_slice, mip_level);
     // Texture::SubresourceLayout layout = self.getSubresourceLayout(subresource);
@@ -234,6 +202,14 @@ KALI_PY_EXPORT(device_resource)
         .def_rw("memory_type", &TextureDesc::memory_type)
         .def_rw("debug_name", &TextureDesc::debug_name);
 
+    nb::class_<SubresourceLayout>(m, "SubresourceLayout")
+        .def_ro("row_size", &SubresourceLayout::row_size)
+        .def_ro("row_size_aligned", &SubresourceLayout::row_size_aligned)
+        .def_ro("row_count", &SubresourceLayout::row_count)
+        .def_ro("depth", &SubresourceLayout::depth)
+        .def_prop_ro("total_size", &SubresourceLayout::total_size)
+        .def_prop_ro("total_size_aligned", &SubresourceLayout::total_size_aligned);
+
     nb::class_<Texture, Resource>(m, "Texture")
         .def_prop_ro("desc", &Texture::desc)
         .def_prop_ro("type", &Texture::type)
@@ -250,6 +226,8 @@ KALI_PY_EXPORT(device_resource)
         .def("get_mip_width", &Texture::get_mip_width, "mip_level"_a = 0)
         .def("get_mip_height", &Texture::get_mip_height, "mip_level"_a = 0)
         .def("get_mip_depth", &Texture::get_mip_depth, "mip_level"_a = 0)
+        .def("get_mip_dimensions", &Texture::get_mip_dimensions, "mip_level"_a = 0)
+        .def("get_subresource_layout", &Texture::get_subresource_layout, "subresource"_a)
         .def(
             "get_srv",
             nb::overload_cast<uint32_t, uint32_t, uint32_t, uint32_t>(&Texture::get_srv, nb::const_),
