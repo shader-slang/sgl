@@ -10,7 +10,32 @@ namespace kali {
 
 inline void bind_python_var(ShaderCursor cursor, nb::handle var)
 {
-    if (nb::isinstance<ResourceView>(var)) {
+#define HANDLE_VECTOR_TYPE(type)                                                                                       \
+    if (nb::isinstance<type>(var)) {                                                                                   \
+        cursor = nb::cast<type>(var);                                                                                  \
+        return;                                                                                                        \
+    }
+
+    HANDLE_VECTOR_TYPE(uint2);
+    HANDLE_VECTOR_TYPE(uint3);
+    HANDLE_VECTOR_TYPE(uint4);
+    HANDLE_VECTOR_TYPE(bool2);
+    HANDLE_VECTOR_TYPE(bool3);
+    HANDLE_VECTOR_TYPE(bool4);
+    HANDLE_VECTOR_TYPE(int2);
+    HANDLE_VECTOR_TYPE(int3);
+    HANDLE_VECTOR_TYPE(int4);
+    HANDLE_VECTOR_TYPE(float2);
+    HANDLE_VECTOR_TYPE(float3);
+    HANDLE_VECTOR_TYPE(float4);
+
+#undef HANDLE_VECTOR_TYPE
+
+    if (nb::isinstance<nb::int_>(var)) {
+        cursor = nb::cast<int>(var);
+    } else if (nb::isinstance<nb::float_>(var)) {
+        cursor = nb::cast<float>(var);
+    } else if (nb::isinstance<ResourceView>(var)) {
         cursor = ref<ResourceView>(nb::cast<ResourceView*>(var));
     } else if (nb::isinstance<Buffer>(var)) {
         cursor = ref<Buffer>(nb::cast<Buffer*>(var));
