@@ -82,6 +82,9 @@ KALI_PY_EXPORT(device_device)
     );
     device.def_prop_ro("desc", &Device::desc);
     device.def_prop_ro("info", &Device::info);
+    device.def_prop_ro("supported_shader_model", &Device::supported_shader_model);
+    device.def_prop_ro("default_shader_model", &Device::default_shader_model);
+    device.def_prop_ro("features", &Device::features);
     device.def(
         "create_buffer",
         [](Device* self, const BufferDesc& desc) { return self->create_buffer(desc); },
