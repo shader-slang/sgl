@@ -7,6 +7,7 @@
 #include "kali/core/config.h"
 #include "kali/core/error.h"
 #include "kali/core/string.h"
+#include "kali/core/maths.h"
 
 #include <bit>
 
@@ -412,6 +413,27 @@ Texture::Texture(ref<Device> device, TextureDesc desc, gfx::ITextureResource* re
     process_texture_desc(m_desc);
 
     m_gfx_texture = resource;
+}
+
+SubresourceLayout Texture::get_subresource_layout(uint32_t subresource) const
+{
+    KALI_CHECK_LT(subresource, subresource_count());
+
+    gfx::FormatInfo gfx_format_info;
+    SLANG_CALL(gfx::gfxGetFormatInfo(gfx_texture_resource()->getDesc()->format, &gfx_format_info));
+    size_t alignment;
+    SLANG_CALL(m_device->gfx_device()->getTextureRowAlignment(&alignment));
+
+    uint32_t mip_level = get_subresource_mip_level(subresource);
+    uint3 mip_dimensions = get_mip_dimensions(mip_level);
+
+    SubresourceLayout layout;
+    layout.row_size
+        = div_round_up(mip_dimensions.x, uint32_t(gfx_format_info.blockWidth)) * gfx_format_info.blockSizeInBytes;
+    layout.row_size_aligned = align_to(alignment, layout.row_size);
+    layout.row_count = div_round_up(mip_dimensions.y, uint32_t(gfx_format_info.blockHeight));
+    layout.depth = mip_dimensions.z;
+    return layout;
 }
 
 ref<ResourceView> Texture::get_view(ResourceViewDesc desc) const

@@ -492,6 +492,23 @@ struct TextureDesc {
     std::string debug_name;
 };
 
+struct SubresourceLayout {
+    /// Size of a single row in bytes (unaligned).
+    size_t row_size;
+    /// Size of a single row in bytes (aligned to device texture alignment).
+    size_t row_size_aligned;
+    /// Number of rows.
+    size_t row_count;
+    /// Number of depth slices.
+    size_t depth;
+
+    /// Get the total size of the subresource in bytes (unaligned).
+    size_t total_size() const { return row_size * row_count * depth; }
+
+    /// Get the total size of the subresource in bytes (aligned to device texture alignment).
+    size_t total_size_aligned() const { return row_size_aligned * row_count * depth; }
+};
+
 class KALI_API Texture : public Resource {
     KALI_OBJECT(Texture)
 public:
@@ -535,6 +552,13 @@ public:
     {
         return (mip_level == 0) || (mip_level < mip_count()) ? std::max(1U, depth() >> mip_level) : 0;
     }
+
+    uint3 get_mip_dimensions(uint32_t mip_level = 0) const
+    {
+        return uint3(get_mip_width(mip_level), get_mip_height(mip_level), get_mip_depth(mip_level));
+    }
+
+    SubresourceLayout get_subresource_layout(uint32_t subresource) const;
 
     /// Get a resource view. Views are cached and reused.
     ref<ResourceView> get_view(ResourceViewDesc desc) const;
