@@ -15,7 +15,8 @@ KALI_PY_EXPORT(utils_tev)
         "bitmap"_a,
         "name"_a = std::optional<std::string>{},
         "host"_a = "127.0.0.1",
-        "port"_a = 14158
+        "port"_a = 14158,
+        "max_retries"_a = 3
     );
     utils.def(
         "show_in_tev_async",
@@ -23,6 +24,7 @@ KALI_PY_EXPORT(utils_tev)
         "bitmap"_a,
         "name"_a = std::optional<std::string>{},
         "host"_a = "127.0.0.1",
-        "port"_a = 14158
+        "port"_a = 14158,
+        "max_retries"_a = 3
     );
 }

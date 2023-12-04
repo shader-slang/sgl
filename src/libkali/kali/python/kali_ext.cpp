@@ -100,13 +100,16 @@ NB_MODULE(kali_ext, m)
     // Register a cleanup callback function.
     auto atexit = nb::module_::import_("atexit");
     atexit.attr("register")(nb::cpp_function(
-        [&]()
+        []()
         {
-            // The GIL is hold when calling this callback.
-            // We need to release it here in order to not deadlock
-            // when increasing/decreasing the reference count of objects.
-            // This mostly happens because we are waiting for tasks to finish in static_shutdown().
-            nb::gil_scoped_release guard;
+            {
+                // While waiting for tasks to finish, we block the main thread
+                // while holding the GIL. This makes it impossible for other
+                // threads to get hold of the GIL to acquire/release reference
+                // counted objects.
+                nb::gil_scoped_release guard;
+                kali::thread::wait_for_tasks();
+            }
             kali::static_shutdown();
         }
     ));
