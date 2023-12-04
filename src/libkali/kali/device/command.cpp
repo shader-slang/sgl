@@ -669,7 +669,10 @@ void CommandStream::resolve_subresource(
     uint32_t dst_array_slice = dst->get_subresource_array_slice(dst_subresource);
     uint32_t src_mip_level = src->get_subresource_mip_level(src_subresource);
     uint32_t src_array_slice = src->get_subresource_array_slice(src_subresource);
-    KALI_CHECK(all(dst->get_mip_dimensions(dst_mip_level) == src->get_mip_dimensions(src_mip_level)), "Source and destination textures must have the same dimensions.");
+    KALI_CHECK(
+        all(dst->get_mip_dimensions(dst_mip_level) == src->get_mip_dimensions(src_mip_level)),
+        "Source and destination textures must have the same dimensions."
+    );
 
     // TODO it would be better to just use barriers on the subresources.
     texture_barrier(dst, ResourceState::resolve_destination);
