@@ -110,10 +110,9 @@ private:
     {
     }
 
-    ComputePassEncoder& operator=(ComputePassEncoder&& other) noexcept = delete;
-
     ComputePassEncoder(const ComputePassEncoder&) = delete;
     ComputePassEncoder& operator=(const ComputePassEncoder&) = delete;
+    ComputePassEncoder& operator=(ComputePassEncoder&& other) noexcept = delete;
 
     CommandStream* m_command_stream;
     gfx::IComputeCommandEncoder* m_gfx_compute_command_encoder;
@@ -252,6 +251,75 @@ public:
     // ------------------------------------------------------------------------
 
     /**
+     * @brief Copy an entire resource.
+     *
+     * @param dst Destination resource.
+     * @param src Source resource.
+     */
+    void copy_resource(Resource* dst, const Resource* src);
+
+    /**
+     * @brief Copy a buffer region.
+     *
+     * @param dst Destination buffer.
+     * @param dst_offset Destination offset in bytes.
+     * @param src Source buffer.
+     * @param src_offset Source offset in bytes.
+     * @param size Size in bytes.
+     */
+    void copy_buffer_region(
+        Buffer* dst,
+        DeviceOffset dst_offset,
+        const Buffer* src,
+        DeviceOffset src_offset,
+        DeviceSize size
+    );
+
+    /**
+     * @brief Copy a texture region.
+     *
+     * @param dst Destination texture.
+     * @param dst_subresource Destination subresource index.
+     * @param src Source texture.
+     * @param src_subresource Source subresource index.
+     * @param dst_offset Destination offset in texels.
+     * @param src_offset Source offset in texels.
+     * @param extent Size in texels (-1 for maximum possible size).
+     */
+    void copy_texture_region(
+        Texture* dst,
+        uint32_t dst_subresource,
+        const Texture* src,
+        uint32_t src_subresource,
+        uint3 dst_offset = uint3(0),
+        uint3 src_offset = uint3(0),
+        uint3 extent = uint3(-1)
+    );
+
+    /**
+     * @brief Copy a texture to a buffer.
+     *
+     * @param dst Destination buffer.
+     * @param dst_offset Destination offset in bytes.
+     * @param dst_size Destination size in bytes.
+     * @param dst_row_stride Destination row stride in bytes.
+     * @param src Source texture.
+     * @param src_subresource Source subresource index.
+     * @param src_offset Source offset in texels.
+     * @param extent Extent in texels (-1 for maximum possible extent).
+     */
+    void copy_texture_to_buffer(
+        Buffer* dst,
+        DeviceOffset dst_offset,
+        DeviceSize dst_size,
+        DeviceSize dst_row_stride,
+        const Texture* src,
+        uint32_t src_subresource,
+        uint3 src_offset = uint3(0),
+        uint3 extent = uint3(-1)
+    );
+
+    /**
      * @brief Copy data from one buffer to another.
      *
      * @param dst Destination buffer.
@@ -263,6 +331,30 @@ public:
     void copy_buffer(Buffer* dst, DeviceOffset dst_offset, const Buffer* src, DeviceOffset src_offset, DeviceSize size);
 
     void upload_buffer_data(Buffer* buffer, size_t offset, size_t size, const void* data);
+
+
+    /**
+     * \brief Resolve a multi-sampled texture.
+     *
+     * Both \c dst and \c src must have the same dimensions, array-size, mip-count and format.
+     * If any of these properties don't match, use \c resolve_subresource.
+     *
+     * \param dst Destination texture.
+     * \param src Source texture.
+     */
+    void resolve_texture(Texture* dst, const Texture* src);
+
+    /**
+     * \brief Resolve a multi-sampled texture sub-resource.
+     *
+     * Both \c dst and \c src sub-resources must have the same dimensions and format.
+     *
+     * \param dst Destination texture.
+     * \param dst_subresource Destination sub-resource index.
+     * \param src Source texture.
+     * \param src_subresource Source sub-resource index.
+     */
+    void resolve_subresource(Texture* dst, uint32_t dst_subresource, const Texture* src, uint32_t src_subresource);
 
     /**
      * @brief Begin a new compute pass.

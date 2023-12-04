@@ -10,8 +10,23 @@
 
 #include "kali/core/short_vector.h"
 #include "kali/core/maths.h"
+#include "kali/core/type_utils.h"
+
+#include "kali/math/vector.h"
 
 namespace kali {
+
+namespace detail {
+    gfx::SubresourceRange gfx_subresource_range(const Texture* texture, uint32_t subresource_index)
+    {
+        return gfx::SubresourceRange{
+            .mipLevel = narrow_cast<gfx::GfxIndex>(texture->get_subresource_mip_level(subresource_index)),
+            .mipLevelCount = 1,
+            .baseArrayLayer = narrow_cast<gfx::GfxIndex>(texture->get_subresource_array_slice(subresource_index)),
+            .layerCount = 1,
+        };
+    }
+} // namespace detail
 
 // ----------------------------------------------------------------------------
 // CommandQueue
@@ -447,6 +462,145 @@ void CommandStream::texture_subresource_barrier(
     );
 }
 
+void CommandStream::copy_resource(Resource* dst, const Resource* src)
+{
+    KALI_CHECK_NOT_NULL(dst);
+    KALI_CHECK_NOT_NULL(src);
+    KALI_CHECK(dst->type() == src->type(), "Resources must be of the same type");
+
+    resource_barrier(dst, ResourceState::copy_destination);
+    resource_barrier(src, ResourceState::copy_source);
+
+    if (dst->type() == ResourceType::buffer) {
+        const Buffer* dst_buffer = static_cast<const Buffer*>(dst);
+        const Buffer* src_buffer = static_cast<const Buffer*>(src);
+
+        KALI_CHECK(src_buffer->size() <= dst_buffer->size(), "Source buffer is larger than destination buffer");
+
+        get_gfx_resource_command_encoder()->copyBuffer(
+            dst_buffer->gfx_buffer_resource(),
+            0,
+            src_buffer->gfx_buffer_resource(),
+            0,
+            src_buffer->size()
+        );
+    } else {
+        const Texture* dst_texture = static_cast<const Texture*>(dst);
+        const Texture* src_texture = static_cast<const Texture*>(src);
+        gfx::SubresourceRange sr_range = {};
+
+        get_gfx_resource_command_encoder()->copyTexture(
+            dst_texture->gfx_texture_resource(),
+            gfx::ResourceState::CopyDestination,
+            sr_range,
+            gfx::ITextureResource::Offset3D(0, 0, 0),
+            src_texture->gfx_texture_resource(),
+            gfx::ResourceState::CopySource,
+            sr_range,
+            gfx::ITextureResource::Offset3D(0, 0, 0),
+            gfx::ITextureResource::Extents{0, 0, 0}
+        );
+    }
+}
+
+void CommandStream::copy_buffer_region(
+    Buffer* dst,
+    DeviceOffset dst_offset,
+    const Buffer* src,
+    DeviceOffset src_offset,
+    DeviceSize size
+)
+{
+    KALI_CHECK_NOT_NULL(dst);
+    KALI_CHECK_NOT_NULL(src);
+    KALI_CHECK_LE(dst_offset + size, dst->size());
+    KALI_CHECK_LE(src_offset + size, src->size());
+
+    buffer_barrier(dst, ResourceState::copy_destination);
+    buffer_barrier(src, ResourceState::copy_source);
+
+    get_gfx_resource_command_encoder()
+        ->copyBuffer(dst->gfx_buffer_resource(), dst_offset, src->gfx_buffer_resource(), src_offset, size);
+}
+
+void CommandStream::copy_texture_region(
+    Texture* dst,
+    uint32_t dst_subresource,
+    const Texture* src,
+    uint32_t src_subresource,
+    uint3 dst_offset,
+    uint3 src_offset,
+    uint3 extent
+)
+{
+    KALI_CHECK_NOT_NULL(dst);
+    KALI_CHECK_NOT_NULL(src);
+    KALI_CHECK_LT(dst_subresource, dst->subresource_count());
+    KALI_CHECK_LT(src_subresource, src->subresource_count());
+
+    texture_barrier(dst, ResourceState::copy_destination);
+    texture_barrier(src, ResourceState::copy_source);
+
+    gfx::SubresourceRange dst_sr = detail::gfx_subresource_range(dst, dst_subresource);
+    gfx::SubresourceRange src_sr = detail::gfx_subresource_range(src, src_subresource);
+
+    if (all(extent == uint3(-1)))
+        extent = src->get_mip_dimensions(src_sr.mipLevel) - src_offset;
+
+    gfx::ITextureResource::Extents gfx_extent
+        = {narrow_cast<gfx::GfxCount>(extent.x),
+           narrow_cast<gfx::GfxCount>(extent.y),
+           narrow_cast<gfx::GfxCount>(extent.z)};
+
+    get_gfx_resource_command_encoder()->copyTexture(
+        dst->gfx_texture_resource(),
+        gfx::ResourceState::CopyDestination,
+        dst_sr,
+        gfx::ITextureResource::Offset3D(dst_offset.x, dst_offset.y, dst_offset.z),
+        src->gfx_texture_resource(),
+        gfx::ResourceState::CopySource,
+        src_sr,
+        gfx::ITextureResource::Offset3D(src_offset.x, src_offset.y, src_offset.z),
+        gfx_extent
+    );
+}
+
+void CommandStream::copy_texture_to_buffer(
+    Buffer* dst,
+    DeviceOffset dst_offset,
+    DeviceSize dst_size,
+    DeviceSize dst_row_stride,
+    const Texture* src,
+    uint32_t src_subresource,
+    uint3 src_offset,
+    uint3 extent
+)
+{
+    KALI_CHECK_NOT_NULL(dst);
+    KALI_CHECK(dst_offset + dst_size <= dst->size(), "Destination buffer is too small");
+    KALI_CHECK_NOT_NULL(src);
+    KALI_CHECK_LT(src_subresource, src->subresource_count());
+
+    texture_barrier(src, ResourceState::copy_source);
+    buffer_barrier(dst, ResourceState::copy_destination);
+
+    gfx::SubresourceRange src_sr = detail::gfx_subresource_range(src, src_subresource);
+    get_gfx_resource_command_encoder()->copyTextureToBuffer(
+        dst->gfx_buffer_resource(),
+        dst_offset,
+        dst_size,
+        dst_row_stride,
+        src->gfx_texture_resource(),
+        gfx::ResourceState::CopySource,
+        src_sr,
+        gfx::ITextureResource::Offset3D(src_offset.x, src_offset.y, src_offset.z),
+        gfx::ITextureResource::Extents{
+            narrow_cast<gfx::GfxCount>(extent.x),
+            narrow_cast<gfx::GfxCount>(extent.y),
+            narrow_cast<gfx::GfxCount>(extent.z)}
+    );
+}
+
 void CommandStream::upload_buffer_data(Buffer* buffer, size_t offset, size_t size, const void* data)
 {
     KALI_ASSERT(buffer);
@@ -455,6 +609,93 @@ void CommandStream::upload_buffer_data(Buffer* buffer, size_t offset, size_t siz
 
     get_gfx_resource_command_encoder()
         ->uploadBufferData(buffer->gfx_buffer_resource(), offset, size, const_cast<void*>(data));
+}
+
+void CommandStream::resolve_texture(Texture* dst, const Texture* src)
+{
+    KALI_CHECK_NOT_NULL(dst);
+    KALI_CHECK_NOT_NULL(src);
+    KALI_CHECK(dst->desc().sample_count == 1, "Destination texture must not be multi-sampled.");
+    KALI_CHECK(src->desc().sample_count > 1, "Source texture must be multi-sampled.");
+    KALI_CHECK(dst->desc().format == src->desc().format, "Source and destination textures must have the same format.");
+    KALI_CHECK(
+        dst->desc().width == src->desc().width && dst->desc().height == src->desc().height,
+        "Source and destination textures must have the same dimensions."
+    );
+    KALI_CHECK(
+        dst->desc().array_size == src->desc().array_size,
+        "Source and destination textures must have the same array size."
+    );
+    KALI_CHECK(
+        dst->desc().mip_count == src->desc().mip_count,
+        "Source and destination textures must have the same mip count."
+    );
+
+    texture_barrier(dst, ResourceState::resolve_destination);
+    texture_barrier(src, ResourceState::resolve_source);
+
+    gfx::SubresourceRange dst_sr = {};
+    dst_sr.layerCount = dst->array_size();
+    dst_sr.mipLevelCount = dst->mip_count();
+    gfx::SubresourceRange src_sr = {};
+    src_sr.layerCount = src->array_size();
+    src_sr.mipLevelCount = src->mip_count();
+
+    get_gfx_resource_command_encoder()->resolveResource(
+        src->gfx_texture_resource(),
+        gfx::ResourceState::ResolveSource,
+        src_sr,
+        dst->gfx_texture_resource(),
+        gfx::ResourceState::ResolveDestination,
+        dst_sr
+    );
+}
+
+void CommandStream::resolve_subresource(
+    Texture* dst,
+    uint32_t dst_subresource,
+    const Texture* src,
+    uint32_t src_subresource
+)
+{
+    KALI_CHECK_NOT_NULL(dst);
+    KALI_CHECK_NOT_NULL(src);
+    KALI_CHECK_LT(dst_subresource, dst->subresource_count());
+    KALI_CHECK_LT(src_subresource, src->subresource_count());
+    KALI_CHECK(dst->desc().sample_count == 1, "Destination texture must not be multi-sampled.");
+    KALI_CHECK(src->desc().sample_count > 1, "Source texture must be multi-sampled.");
+    KALI_CHECK(dst->desc().format == src->desc().format, "Source and destination textures must have the same format.");
+    uint32_t dst_mip_level = dst->get_subresource_mip_level(dst_subresource);
+    uint32_t dst_array_slice = dst->get_subresource_array_slice(dst_subresource);
+    uint32_t src_mip_level = src->get_subresource_mip_level(src_subresource);
+    uint32_t src_array_slice = src->get_subresource_array_slice(src_subresource);
+    KALI_CHECK(all(dst->get_mip_dimensions(dst_mip_level) == src->get_mip_dimensions(src_mip_level)), "Source and destination textures must have the same dimensions.");
+
+    // TODO it would be better to just use barriers on the subresources.
+    texture_barrier(dst, ResourceState::resolve_destination);
+    texture_barrier(src, ResourceState::resolve_source);
+
+    gfx::SubresourceRange dst_sr = {
+        .mipLevel = narrow_cast<gfx::GfxIndex>(dst_mip_level),
+        .mipLevelCount = 1,
+        .baseArrayLayer = narrow_cast<gfx::GfxIndex>(dst_array_slice),
+        .layerCount = 1,
+    };
+    gfx::SubresourceRange src_sr = {
+        .mipLevel = narrow_cast<gfx::GfxIndex>(src_mip_level),
+        .mipLevelCount = 1,
+        .baseArrayLayer = narrow_cast<gfx::GfxIndex>(src_array_slice),
+        .layerCount = 1,
+    };
+
+    get_gfx_resource_command_encoder()->resolveResource(
+        src->gfx_texture_resource(),
+        gfx::ResourceState::ResolveSource,
+        src_sr,
+        dst->gfx_texture_resource(),
+        gfx::ResourceState::ResolveDestination,
+        dst_sr
+    );
 }
 
 ComputePassEncoder CommandStream::begin_compute_pass()
