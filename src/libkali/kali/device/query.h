@@ -46,7 +46,12 @@ public:
     void reset();
 
     void get_result(uint32_t index, uint32_t count, std::span<uint64_t> result);
+    std::vector<uint64_t> get_result(uint32_t index, uint32_t count);
     uint64_t get_result(uint32_t index);
+
+    void get_timestamp_result(uint32_t index, uint32_t count, std::span<double> result);
+    std::vector<double> get_timestamp_result(uint32_t index, uint32_t count);
+    double get_timestamp_result(uint32_t index);
 
     gfx::IQueryPool* gfx_query_pool() const { return m_gfx_query_pool; }
 

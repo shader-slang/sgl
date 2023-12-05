@@ -4,6 +4,7 @@
 #include "kali/device/device.h"
 #include "kali/device/fence.h"
 #include "kali/device/resource.h"
+#include "kali/device/query.h"
 #include "kali/device/pipeline.h"
 #include "kali/device/raytracing.h"
 #include "kali/device/shader_object.h"
@@ -287,6 +288,33 @@ uint64_t CommandStream::signal(Fence* fence, uint64_t value)
 void CommandStream::wait(const Fence* fence, uint64_t value)
 {
     return m_command_queue->wait(fence, value);
+}
+
+void CommandStream::write_timestamp(QueryPool* query_pool, uint32_t index)
+{
+    KALI_CHECK_NOT_NULL(query_pool);
+    KALI_CHECK_LE(index, query_pool->desc().count);
+
+    get_gfx_resource_command_encoder()->writeTimestamp(query_pool->gfx_query_pool(), index);
+}
+
+void CommandStream::resolve_query(
+    QueryPool* query_pool,
+    uint32_t index,
+    uint32_t count,
+    Buffer* buffer,
+    DeviceOffset offset
+)
+{
+    KALI_CHECK_NOT_NULL(query_pool);
+    KALI_CHECK_NOT_NULL(buffer);
+    KALI_CHECK_LE(index + count, query_pool->desc().count);
+    KALI_CHECK_LE(offset + count * sizeof(uint64_t), buffer->size());
+
+    buffer_barrier(buffer, ResourceState::resolve_destination);
+
+    get_gfx_resource_command_encoder()
+        ->resolveQuery(query_pool->gfx_query_pool(), index, count, buffer->gfx_buffer_resource(), offset);
 }
 
 bool CommandStream::buffer_barrier(const Buffer* buffer, ResourceState new_state)
@@ -669,7 +697,10 @@ void CommandStream::resolve_subresource(
     uint32_t dst_array_slice = dst->get_subresource_array_slice(dst_subresource);
     uint32_t src_mip_level = src->get_subresource_mip_level(src_subresource);
     uint32_t src_array_slice = src->get_subresource_array_slice(src_subresource);
-    KALI_CHECK(all(dst->get_mip_dimensions(dst_mip_level) == src->get_mip_dimensions(src_mip_level)), "Source and destination textures must have the same dimensions.");
+    KALI_CHECK(
+        all(dst->get_mip_dimensions(dst_mip_level) == src->get_mip_dimensions(src_mip_level)),
+        "Source and destination textures must have the same dimensions."
+    );
 
     // TODO it would be better to just use barriers on the subresources.
     texture_barrier(dst, ResourceState::resolve_destination);

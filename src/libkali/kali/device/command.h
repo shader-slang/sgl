@@ -191,6 +191,29 @@ public:
     void wait(const Fence* fence, uint64_t value = Fence::AUTO);
 
     // ------------------------------------------------------------------------
+    // Queries
+    // ------------------------------------------------------------------------
+
+    /**
+     * \brief Write a timestamp.
+     *
+     * \param query_pool Query pool.
+     * \param index Index of the query.
+     */
+    void write_timestamp(QueryPool* query_pool, uint32_t index);
+
+    /**
+     * \brief Resolve a list of queries and write the results to a buffer.
+     *
+     * \param query_pool Query pool.
+     * \param index Index of the first query.
+     * \param count Number of queries to resolve.
+     * \param buffer Destination buffer.
+     * \param offset Offset into the destination buffer.
+     */
+    void resolve_query(QueryPool* query_pool, uint32_t index, uint32_t count, Buffer* buffer, DeviceOffset offset);
+
+    // ------------------------------------------------------------------------
     // Barriers
     // ------------------------------------------------------------------------
 

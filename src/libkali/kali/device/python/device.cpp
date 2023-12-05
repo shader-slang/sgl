@@ -53,6 +53,7 @@ KALI_PY_EXPORT(device_device)
         .def_ro("type", &DeviceInfo::type)
         .def_ro("api_name", &DeviceInfo::api_name)
         .def_ro("adapter_name", &DeviceInfo::adapter_name)
+        .def_ro("timestamp_frequency", &DeviceInfo::timestamp_frequency)
         .def_ro("limits", &DeviceInfo::limits);
 
     nb::class_<Device, Object> device(m, "Device");

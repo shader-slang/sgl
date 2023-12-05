@@ -136,6 +136,9 @@ struct DeviceInfo {
     std::string api_name;
     /// The name of the graphics adapter.
     std::string adapter_name;
+    /// The frequency of the timestamp counter.
+    /// To resolve a timestamp to seconds, divide by this value.
+    uint64_t timestamp_frequency;
     /// Limits of the device.
     DeviceLimits limits;
 };

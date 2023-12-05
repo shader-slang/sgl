@@ -1,6 +1,7 @@
 #include "nanobind.h"
 
 #include "kali/device/command.h"
+#include "kali/device/query.h"
 #include "kali/device/pipeline.h"
 #include "kali/device/shader_object.h"
 
@@ -28,6 +29,15 @@ KALI_PY_EXPORT(device_command)
 
     nb::class_<CommandStream, DeviceResource>(m, "CommandStream")
         .def("submit", &CommandStream::submit)
+        .def("signal", &CommandStream::signal, "fence"_a, "value"_a = Fence::AUTO)
+        .def(
+            "wait",
+            nb::overload_cast<const Fence*, uint64_t>(&CommandStream::wait),
+            "fence"_a,
+            "value"_a = Fence::AUTO
+        )
+        .def("write_timestamp", &CommandStream::write_timestamp, "query_pool"_a, "index"_a)
+        .def("resolve_query", &CommandStream::resolve_query, "query_pool"_a, "index"_a, "count"_a, "buffer"_a, "offset"_a)
         .def(
             "buffer_barrier",
             nb::overload_cast<const Buffer*, ResourceState>(&CommandStream::buffer_barrier),
