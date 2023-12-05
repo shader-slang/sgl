@@ -631,12 +631,42 @@ void CommandStream::copy_texture_to_buffer(
 
 void CommandStream::upload_buffer_data(Buffer* buffer, size_t offset, size_t size, const void* data)
 {
-    KALI_ASSERT(buffer);
-    KALI_ASSERT_LE(offset + size, buffer->size());
-    KALI_ASSERT(data);
+    KALI_CHECK_NOT_NULL(buffer);
+    KALI_CHECK(offset + size <= buffer->size(), "Buffer upload is out of bounds");
+    KALI_CHECK_NOT_NULL(data);
 
     get_gfx_resource_command_encoder()
         ->uploadBufferData(buffer->gfx_buffer_resource(), offset, size, const_cast<void*>(data));
+}
+
+void CommandStream::upload_texture_data(Texture* texture, uint32_t subresource, const void* data)
+{
+    KALI_CHECK_NOT_NULL(texture);
+    KALI_CHECK_LT(subresource, texture->subresource_count());
+    KALI_CHECK_NOT_NULL(data);
+
+    uint3 dimensions = texture->get_mip_dimensions(texture->get_subresource_mip_level(subresource));
+    SubresourceLayout layout = texture->get_subresource_layout(subresource);
+
+    gfx::ITextureResource::SubresourceData gfx_subresource_data = {
+        .data = const_cast<void*>(data),
+        .strideY = layout.row_size_aligned,
+        .strideZ = layout.row_size_aligned * layout.row_count,
+    };
+
+    gfx::SubresourceRange sr = detail::gfx_subresource_range(texture, subresource);
+    get_gfx_resource_command_encoder()->uploadTextureData(
+        texture->gfx_texture_resource(),
+        sr,
+        gfx::ITextureResource::Offset3D(0, 0, 0),
+        gfx::ITextureResource::Extents{
+            narrow_cast<gfx::GfxCount>(dimensions.x),
+            narrow_cast<gfx::GfxCount>(dimensions.y),
+            narrow_cast<gfx::GfxCount>(dimensions.z),
+        },
+        &gfx_subresource_data,
+        1
+    );
 }
 
 void CommandStream::resolve_texture(Texture* dst, const Texture* src)

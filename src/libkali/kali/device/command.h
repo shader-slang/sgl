@@ -355,6 +355,7 @@ public:
 
     void upload_buffer_data(Buffer* buffer, size_t offset, size_t size, const void* data);
 
+    void upload_texture_data(Texture* texture, uint32_t subresource, const void* data);
 
     /**
      * \brief Resolve a multi-sampled texture.

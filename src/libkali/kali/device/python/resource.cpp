@@ -117,19 +117,14 @@ inline void texture_from_numpy(Texture* self, nb::ndarray<nb::numpy> data, uint3
     KALI_CHECK_LT(mip_level, self->mip_count());
     KALI_CHECK_LT(array_slice, self->array_size());
 
-    // uint32_t subresource = self.getSubresourceIndex(array_slice, mip_level);
-    // Texture::SubresourceLayout layout = self.getSubresourceLayout(subresource);
+    uint32_t subresource = self->get_subresource_index(array_slice, mip_level);
+    SubresourceLayout layout = self->get_subresource_layout(subresource);
 
-    // size_t subresourceSize = layout.getTotalByteSize();
-    // size_t dataSize = getNdarrayByteSize(data);
-    // FALCOR_CHECK(
-    //     dataSize == subresourceSize,
-    //     "numpy array is doesn't match the subresource size ({} != {})",
-    //     dataSize,
-    //     subresourceSize
-    // );
+    size_t subresource_size = layout.total_size_aligned();
+    size_t data_size = data.nbytes();
+    KALI_CHECK(data_size == subresource_size, "numpy array is doesn't match the subresource size ({} != {})", data_size, subresource_size);
 
-    // self.setSubresourceBlob(subresource, data.data(), dataSize);
+    self->device()->command_stream()->upload_texture_data(self, subresource, data.data());
 }
 
 } // namespace kali
