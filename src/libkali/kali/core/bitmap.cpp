@@ -978,6 +978,8 @@ void Bitmap::read_jpg(Stream* stream)
         KALI_THROW("Unsupported number of components!");
     }
 
+    m_channel_names = get_channel_names(m_pixel_format);
+
     auto fs = dynamic_cast<FileStream*>(stream);
     log_debug(
         "Reading JPEG file \"{}\" ({}x{}, {}, {}) ...",
