@@ -37,7 +37,15 @@ KALI_PY_EXPORT(device_command)
             "value"_a = Fence::AUTO
         )
         .def("write_timestamp", &CommandStream::write_timestamp, "query_pool"_a, "index"_a)
-        .def("resolve_query", &CommandStream::resolve_query, "query_pool"_a, "index"_a, "count"_a, "buffer"_a, "offset"_a)
+        .def(
+            "resolve_query",
+            &CommandStream::resolve_query,
+            "query_pool"_a,
+            "index"_a,
+            "count"_a,
+            "buffer"_a,
+            "offset"_a
+        )
         .def(
             "buffer_barrier",
             nb::overload_cast<const Buffer*, ResourceState>(&CommandStream::buffer_barrier),
