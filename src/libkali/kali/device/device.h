@@ -4,6 +4,7 @@
 #include "kali/device/types.h"
 #include "kali/device/native_handle.h"
 #include "kali/device/resource.h"
+#include "kali/device/shader.h"
 #include "kali/device/raytracing.h"
 
 #include "kali/core/macros.h"
@@ -227,8 +228,8 @@ public:
 
     ref<SlangSession> create_slang_session(SlangSessionDesc desc);
 
-    ref<SlangModule> load_module(const std::filesystem::path& path);
-    ref<SlangModule> load_module_from_source(const std::string& source);
+    ref<SlangModule> load_module(const std::filesystem::path& path, const DefineList& defines = DefineList{});
+    ref<SlangModule> load_module_from_source(const std::string& source, const DefineList& defines = DefineList{});
 
     ref<ComputePipelineState> create_compute_pipeline_state(ComputePipelineStateDesc desc);
 
@@ -263,7 +264,8 @@ public:
         return data;
     }
 
-    void read_texture(const Texture* texture, size_t size, void* out_data, size_t *out_row_pitch, size_t* out_pixel_size);
+    void
+    read_texture(const Texture* texture, size_t size, void* out_data, size_t* out_row_pitch, size_t* out_pixel_size);
 
     gfx::IDevice* gfx_device() const { return m_gfx_device; }
     slang::IGlobalSession* global_session() const { return m_global_session; }

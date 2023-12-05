@@ -243,8 +243,8 @@ KALI_PY_EXPORT(device_device)
         "size"_a
     );
     device.def("create_slang_session", [](Device* self) { return self->create_slang_session(SlangSessionDesc{}); });
-    device.def("load_module", &Device::load_module, "path"_a);
-    device.def("load_module_from_source", &Device::load_module_from_source, "source"_a);
+    device.def("load_module", &Device::load_module, "path"_a, "defines"_a = DefineList());
+    device.def("load_module_from_source", &Device::load_module_from_source, "source"_a, "defines"_a = DefineList());
 
     device.def("create_command_queue", &Device::create_command_queue, "desc"_a);
     device.def(

@@ -47,6 +47,17 @@ struct TypeConformance {
 
 class TypeConformanceList : public std::map<TypeConformance, uint32_t> {
 public:
+    TypeConformanceList() = default;
+    TypeConformanceList(std::initializer_list<std::pair<const TypeConformance, uint32_t>> init)
+        : std::map<TypeConformance, uint32_t>(init)
+    {
+    }
+    TypeConformanceList(const TypeConformanceList& other) = default;
+    TypeConformanceList(TypeConformanceList&& other) = default;
+
+    TypeConformanceList& operator=(const TypeConformanceList& other) = default;
+    TypeConformanceList& operator=(TypeConformanceList&& other) = default;
+
     /**
      * Adds a type conformance. If the type conformance exists, it will be replaced.
      * @param[in] type_name The name of the implementation type.
@@ -92,16 +103,21 @@ public:
             remove(p.first.type_name, p.first.interface_name);
         return *this;
     }
-
-    TypeConformanceList() = default;
-    TypeConformanceList(std::initializer_list<std::pair<const TypeConformance, uint32_t>> init)
-        : std::map<TypeConformance, uint32_t>(init)
-    {
-    }
 };
 
 class DefineList : public std::map<std::string, std::string, std::less<>> {
 public:
+    DefineList() = default;
+    DefineList(std::initializer_list<std::pair<const std::string, std::string>> il)
+        : std::map<std::string, std::string, std::less<>>(il)
+    {
+    }
+    DefineList(const DefineList& other) = default;
+    DefineList(DefineList&& other) = default;
+
+    DefineList& operator=(const DefineList& other) = default;
+    DefineList& operator=(DefineList&& other) = default;
+
     /**
      * Adds a macro definition. If the macro already exists, it will be replaced.
      * @param[in] name The name of macro.
@@ -148,12 +164,6 @@ public:
     }
 
     bool has(std::string_view name) const { return find(name) != end(); }
-
-    DefineList() = default;
-    DefineList(std::initializer_list<std::pair<const std::string, std::string>> il)
-        : std::map<std::string, std::string, std::less<>>(il)
-    {
-    }
 };
 class SlangCompileError : public std::runtime_error {
 public:
@@ -180,11 +190,12 @@ public:
     const ref<Device>& device() const { return m_device; }
     const SlangSessionDesc& desc() const { return m_desc; }
 
-    ref<SlangModule> load_module(const std::filesystem::path& path);
+    ref<SlangModule> load_module(const std::filesystem::path& path, const DefineList& defines = DefineList{});
     ref<SlangModule> load_module_from_source(
         const std::string& source,
         const std::filesystem::path& path = {},
-        const std::string& name = {}
+        const std::string& name = {},
+        const DefineList& defines = DefineList{}
     );
 
     std::filesystem::path resolve_path(const std::filesystem::path& path);
@@ -205,6 +216,7 @@ struct SlangModuleDesc {
     Type type;
     std::filesystem::path path;
     std::string source;
+    DefineList defines;
 };
 
 class KALI_API SlangModule : public Object {
