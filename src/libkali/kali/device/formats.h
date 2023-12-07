@@ -201,6 +201,16 @@ struct FormatInfo {
         bits += (is_set(flags, TextureChannelFlags::a)) ? channel_bit_count[3] : 0;
         return bits;
     }
+
+    bool has_equal_channel_bits() const
+    {
+        uint32_t bits = channel_bit_count[0];
+        for (uint32_t i = 1; i < channel_count; ++i)
+            if (channel_bit_count[i] != bits)
+                return false;
+        return true;
+    }
+
 };
 
 KALI_API const FormatInfo& get_format_info(Format format);
