@@ -15,7 +15,7 @@ parser.add_argument("-t", "--tev", action="store_true", help="Show images in tev
 parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose logging.")
 # fmt: on
 args = parser.parse_args()
-# args = parser.parse_args(["monalisa.jpg", "-o", "monalisa_bc7.jpg", "-t", "-v"])
+# args = parser.parse_args(["monalisa.jpg", "-o", "monalisa_bc7.jpg", "-t", "-b", "-v"])
 
 # Load input image
 try:
@@ -24,8 +24,6 @@ try:
         component_type=kali.Bitmap.ComponentType.float32,
         srgb_gamma=False,
     )
-    if args.tev:
-        kali.utils.show_in_tev_async(image, name="tinybc-input")
     w, h = image.width, image.height
     input = np.asarray(image).clip(0, 1)
 except Exception as e:
@@ -46,6 +44,10 @@ input_tex = device.create_texture(
 )
 input_tex.from_numpy(input)
 
+# Show input texture in tev
+if args.tev:
+    kali.utils.show_in_tev_async(input_tex, name="tinybc-input")
+
 # Create decoded texture
 decoded_tex = device.create_texture(
     type=kali.TextureType.texture_2d,
@@ -64,6 +66,8 @@ encoder = device.load_module(
         "CONFIG_OPT_STEPS": str(args.opt_steps),
     },
 ).create_compute_kernel("main")
+
+t = kali.Timer()
 
 # When running in benchmark mode amortize overheads over many runs to measure more accurate GPU times
 num_iters = 1000 if args.benchmark else 1
@@ -88,6 +92,9 @@ for i in range(num_iters):
 
 # Wait for GPU to finish and get timestamps
 device.wait()
+
+total_cpu_time_sec = t.elapsed_s()
+
 times = np.asarray(queries.get_timestamp_result(0, num_iters * 2))
 comp_time_sec = np.mean(times[1::2] - times[0::2])
 
@@ -99,6 +106,7 @@ if args.benchmark:
     print(f"- Number of optimization steps: {args.opt_steps}")
     print(f"- Compression time: {1e3 * comp_time_sec:.4g} ms")
     print(f"- Compression throughput: {giga_texels_per_sec:.4g} GTexels/s")
+    print(f"- Total CPU time: {total_cpu_time_sec:.4g} s")
 
 # Calculate and print PSNR
 decoded = decoded_tex.to_numpy()
@@ -106,12 +114,13 @@ mse = np.mean((input - decoded) ** 2)
 psnr = 20 * np.log10(1.0 / np.sqrt(mse))
 print(f"PSNR: {psnr:.4g}")
 
+# Show decoded texture in tev
+if args.tev:
+    kali.utils.show_in_tev_async(decoded_tex, name="tinybc-decoded")
+
 # Output decoded texture
 if args.output_path:
-    image = kali.Bitmap(decoded)
-    if args.tev:
-        kali.utils.show_in_tev_async(image, name="tinybc-decoded")
-    image.convert(
+    decoded_tex.to_bitmap().convert(
         pixel_format=kali.Bitmap.PixelFormat.rgb,
         component_type=kali.Bitmap.ComponentType.uint8,
         srgb_gamma=True,
