@@ -8,6 +8,7 @@
 #include "kali/core/error.h"
 #include "kali/core/string.h"
 #include "kali/core/maths.h"
+#include "kali/core/bitmap.h"
 
 #include <bit>
 
@@ -543,6 +544,106 @@ DeviceResource::MemoryUsage Texture::memory_usage() const
     gfx::Size size = 0, alignment = 0;
     SLANG_CALL(m_device->gfx_device()->getTextureAllocationInfo(*m_gfx_texture->getDesc(), &size, &alignment));
     return {.device = size};
+}
+
+ref<Bitmap> Texture::to_bitmap(uint32_t mip_level, uint32_t array_slice) const
+{
+    KALI_CHECK_LT(mip_level, mip_count());
+    KALI_CHECK_LT(array_slice, array_size());
+
+    const FormatInfo& info = get_format_info(m_desc.format);
+    if (info.is_compressed)
+        KALI_THROW("Cannot convert compressed texture to bitmap.");
+    if (info.is_depth_stencil())
+        KALI_THROW("Cannot convert depth/stencil texture to bitmap.");
+    if (info.is_typeless_format())
+        KALI_THROW("Cannot convert typeless texture to bitmap.");
+    if (!info.has_equal_channel_bits())
+        KALI_THROW("Cannot convert texture with unequal channel bits to bitmap.");
+    uint32_t channel_bit_count = info.channel_bit_count[0];
+    if (channel_bit_count != 8 && channel_bit_count != 16 && channel_bit_count != 32 && channel_bit_count != 64)
+        KALI_THROW("Cannot convert texture with non-8/16/32/64 bit channels to bitmap.");
+
+    static const std::map<uint32_t, Bitmap::PixelFormat> pixel_format_map = {
+        {1, Bitmap::PixelFormat::r},
+        {2, Bitmap::PixelFormat::rg},
+        {3, Bitmap::PixelFormat::rgb},
+        {4, Bitmap::PixelFormat::rgba},
+    };
+
+    static const std::map<FormatType, std::map<uint32_t, Bitmap::ComponentType>> component_type_map = {
+        {FormatType::float_,
+         {
+             {16, Bitmap::ComponentType::float16},
+             {32, Bitmap::ComponentType::float32},
+             {64, Bitmap::ComponentType::float64},
+         }},
+        {FormatType::unorm,
+         {
+             {8, Bitmap::ComponentType::uint8},
+             {16, Bitmap::ComponentType::uint16},
+             {32, Bitmap::ComponentType::uint32},
+             {64, Bitmap::ComponentType::uint64},
+         }},
+        {FormatType::unorm_srgb,
+         {
+             {8, Bitmap::ComponentType::uint8},
+             {16, Bitmap::ComponentType::uint16},
+             {32, Bitmap::ComponentType::uint32},
+             {64, Bitmap::ComponentType::uint64},
+         }},
+        {FormatType::snorm,
+         {
+             {8, Bitmap::ComponentType::int8},
+             {16, Bitmap::ComponentType::int16},
+             {32, Bitmap::ComponentType::int32},
+             {64, Bitmap::ComponentType::int64},
+         }},
+        {FormatType::uint,
+         {
+             {8, Bitmap::ComponentType::uint8},
+             {16, Bitmap::ComponentType::uint16},
+             {32, Bitmap::ComponentType::uint32},
+             {64, Bitmap::ComponentType::uint64},
+         }},
+        {FormatType::sint,
+         {
+             {8, Bitmap::ComponentType::int8},
+             {16, Bitmap::ComponentType::int16},
+             {32, Bitmap::ComponentType::int32},
+             {64, Bitmap::ComponentType::int64},
+         }},
+    };
+
+    auto it = pixel_format_map.find(info.channel_count);
+    if (it == pixel_format_map.end())
+        KALI_THROW("Unsupported channel count.");
+    Bitmap::PixelFormat pixel_format = it->second;
+
+    auto it1 = component_type_map.find(info.type);
+    if (it1 == component_type_map.end())
+        KALI_THROW("Unsupported format type.");
+    auto it2 = it1->second.find(channel_bit_count);
+    if (it2 == it1->second.end())
+        KALI_THROW("Unsupported channel bits.");
+    Bitmap::ComponentType component_type = it2->second;
+
+    uint32_t subresource = get_subresource_index(mip_level, array_slice);
+    SubresourceLayout layout = get_subresource_layout(subresource);
+
+    uint32_t width = get_mip_width(mip_level);
+    uint32_t height = get_mip_height(mip_level);
+
+    ref<Bitmap> bitmap = ref<Bitmap>(new Bitmap(pixel_format, component_type, width, height));
+
+    size_t size = layout.total_size_aligned();
+    KALI_ASSERT(size == bitmap->buffer_size());
+    size_t row_pitch, pixel_size;
+    m_device->read_texture(this, bitmap->buffer_size(), bitmap->data(), &row_pitch, &pixel_size);
+    KALI_ASSERT(pixel_size == bitmap->bytes_per_pixel());
+    KALI_ASSERT(row_pitch == bitmap->width() * bitmap->bytes_per_pixel());
+
+    return bitmap;
 }
 
 std::string Texture::to_string() const

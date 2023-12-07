@@ -5,6 +5,7 @@
 #include "kali/device/formats.h"
 #include "kali/device/native_handle.h"
 
+#include "kali/core/fwd.h"
 #include "kali/core/macros.h"
 #include "kali/core/enum.h"
 #include "kali/core/object.h"
@@ -589,6 +590,8 @@ public:
     gfx::ITextureResource* gfx_texture_resource() const { return m_gfx_texture; }
 
     MemoryUsage memory_usage() const override;
+
+    ref<Bitmap> to_bitmap(uint32_t mip_level = 0, uint32_t array_slice = 0) const;
 
     std::string to_string() const override;
 

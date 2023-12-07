@@ -827,6 +827,7 @@ void CommandStream::end_current_encoder()
 {
     if (m_active_encoder != EncoderType::none) {
         m_gfx_command_encoder->endEncoding();
+        m_gfx_command_encoder = nullptr;
         m_active_encoder = EncoderType::none;
     }
 }

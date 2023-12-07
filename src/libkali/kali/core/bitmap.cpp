@@ -56,6 +56,10 @@ inline std::vector<std::string> get_channel_names(Bitmap::PixelFormat pixel_form
         return {"Y"};
     case Bitmap::PixelFormat::ya:
         return {"Y", "A"};
+    case Bitmap::PixelFormat::r:
+        return {"R"};
+    case Bitmap::PixelFormat::rg:
+        return {"R", "G"};
     case Bitmap::PixelFormat::rgb:
         return {"R", "G", "B"};
     case Bitmap::PixelFormat::rgba:
