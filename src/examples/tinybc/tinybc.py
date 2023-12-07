@@ -17,12 +17,6 @@ parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose
 args = parser.parse_args()
 # args = parser.parse_args(["monalisa.jpg", "-o", "monalisa_bc7.jpg", "-t", "-v"])
 
-logger = kali.Logger(
-    name="tinybc",
-    level=kali.LogLevel.debug if args.verbose else kali.LogLevel.info,
-)
-logger.debug("load image")
-
 # Load input image
 try:
     image = kali.Bitmap(args.input_path).convert(
@@ -38,11 +32,8 @@ except Exception as e:
     print(f"Failed to load input image from {args.input_path}:\n{e}")
     sys.exit(1)
 
-logger.debug("create device")
-
+# Create device
 device = kali.Device(enable_debug_layers=args.verbose)
-
-logger.debug("create textures")
 
 # Create input texture
 input_tex = device.create_texture(
@@ -65,8 +56,7 @@ decoded_tex = device.create_texture(
     usage=kali.ResourceUsage.unordered_access,
 )
 
-logger.debug("load module")
-
+# Load shader module
 encoder = device.load_module(
     Path(__file__).parent / "tinybc.slang",
     defines={
@@ -74,8 +64,6 @@ encoder = device.load_module(
         "CONFIG_OPT_STEPS": str(args.opt_steps),
     },
 ).create_compute_kernel("main")
-
-logger.debug("run")
 
 # When running in benchmark mode amortize overheads over many runs to measure more accurate GPU times
 num_iters = 1000 if args.benchmark else 1
@@ -98,21 +86,19 @@ for i in range(num_iters):
     )
     device.command_stream.write_timestamp(queries, i * 2 + 1)
 
+# Wait for GPU to finish and get timestamps
 device.wait()
 times = np.asarray(queries.get_timestamp_result(0, num_iters * 2))
 comp_time_sec = np.mean(times[1::2] - times[0::2])
 
 # Calculate and print performance metrics
 if args.benchmark:
-    device.wait()
     textures_per_sec = 1 / comp_time_sec
     giga_texels_per_sec = w * h * textures_per_sec / 1e9
     print(f"Benchmark:")
     print(f"- Number of optimization steps: {args.opt_steps}")
     print(f"- Compression time: {1e3 * comp_time_sec:.4g} ms")
     print(f"- Compression throughput: {giga_texels_per_sec:.4g} GTexels/s")
-
-logger.debug("done")
 
 # Calculate and print PSNR
 decoded = decoded_tex.to_numpy()
@@ -122,7 +108,6 @@ print(f"PSNR: {psnr:.4g}")
 
 # Output decoded texture
 if args.output_path:
-    logger.debug("write image")
     image = kali.Bitmap(decoded)
     if args.tev:
         kali.utils.show_in_tev_async(image, name="tinybc-decoded")
