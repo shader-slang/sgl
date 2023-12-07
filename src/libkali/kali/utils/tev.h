@@ -3,6 +3,8 @@
 #include "kali/core/macros.h"
 #include "kali/core/fwd.h"
 
+#include "kali/device/fwd.h"
+
 #include <string>
 #include <optional>
 #include <cstdint>
@@ -29,8 +31,24 @@ KALI_API bool show_in_tev(
     uint32_t max_retries = 3
 );
 
+KALI_API bool show_in_tev(
+    const Texture* texture,
+    std::optional<std::string> name,
+    const std::string& host = "127.0.0.1",
+    uint16_t port = 14158,
+    uint32_t max_retries = 3
+);
+
 KALI_API void show_in_tev_async(
-    ref<Bitmap> bitmap,
+    const Bitmap* bitmap,
+    std::optional<std::string> name,
+    const std::string& host = "127.0.0.1",
+    uint16_t port = 14158,
+    uint32_t max_retries = 3
+);
+
+KALI_API void show_in_tev_async(
+    const Texture* texture,
     std::optional<std::string> name,
     const std::string& host = "127.0.0.1",
     uint16_t port = 14158,

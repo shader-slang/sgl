@@ -5,6 +5,8 @@
 #include "kali/core/format.h"
 #include "kali/core/thread.h"
 
+#include "kali/device/resource.h"
+
 #if KALI_HAS_TEVCLIENT
 #include <tevclient.h>
 #endif
@@ -162,27 +164,56 @@ bool show_in_tev(
 #endif
 }
 
-void show_in_tev_async(
-    ref<Bitmap> bitmap,
+bool show_in_tev(
+    const Texture* texture,
     std::optional<std::string> name,
     const std::string& host,
     uint16_t port,
     uint32_t max_retries
 )
 {
-    const Bitmap* bitmap_ptr = bitmap;
-    bitmap_ptr->inc_ref();
+    KALI_CHECK_NOT_NULL(texture);
+
+    ref<Bitmap> bitmap = texture->to_bitmap();
+    return show_in_tev(bitmap, name, host, port, max_retries);
+}
+
+void show_in_tev_async(
+    const Bitmap* bitmap,
+    std::optional<std::string> name,
+    const std::string& host,
+    uint16_t port,
+    uint32_t max_retries
+)
+{
+    KALI_CHECK_NOT_NULL(bitmap);
+
+    bitmap->inc_ref();
 
     thread::do_async(
         [=]()
         {
             static std::counting_semaphore semaphore{8};
             semaphore.acquire();
-            show_in_tev(bitmap_ptr, name, host, port, max_retries);
+            show_in_tev(bitmap, name, host, port, max_retries);
             semaphore.release();
-            bitmap_ptr->dec_ref();
+            bitmap->dec_ref();
         }
     );
+}
+
+void show_in_tev_async(
+    const Texture* texture,
+    std::optional<std::string> name,
+    const std::string& host,
+    uint16_t port,
+    uint32_t max_retries
+)
+{
+    KALI_CHECK_NOT_NULL(texture);
+
+    ref<Bitmap> bitmap = texture->to_bitmap();
+    return show_in_tev_async(bitmap, name, host, port, max_retries);
 }
 
 } // namespace kali::utils
