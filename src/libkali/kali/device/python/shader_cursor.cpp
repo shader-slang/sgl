@@ -56,24 +56,31 @@ KALI_PY_EXPORT(device_shader_cursor)
 
 #undef def_setter
 
-#if 0
     // We need to handle integers and floats specially.
     // Python only has an `int` and `float` type that can have different bit-width.
-    // We use reflection data to convert the python types to the correct types before assigning.
+    // We use reflection data to convert the Python types to the correct types before assigning.
 
-    auto set_int = [](ShaderCursor& self, std::string_view name, pybind11::int_ value)
+    auto set_int = [](ShaderCursor& self, std::string_view name, nb::int_ value)
     {
-        const ReflectionBasicType* basicType = self[name].getType()->unwrapArray()->asBasicType();
-        FALCOR_CHECK(basicType, "Error trying to set a variable that is not a basic type.");
-        switch (basicType->getType()) {
-        case ReflectionBasicType::Type::Int:
-            self[name] = value.cast<int32_t>();
+        const TypeReflection* type = self[name].type();
+        KALI_CHECK(type->kind() == TypeReflection::Kind::scalar, "Field '{}' is not a scalar type.", name);
+        switch (type->scalar_type()) {
+        case TypeReflection::ScalarType::int16:
+        case TypeReflection::ScalarType::int32:
+            self[name] = nb::cast<int32_t>(value);
             break;
-        case ReflectionBasicType::Type::Uint:
-            self[name] = value.cast<uint32_t>();
+        case TypeReflection::ScalarType::int64:
+            self[name] = nb::cast<int64_t>(value);
+            break;
+        case TypeReflection::ScalarType::uint16:
+        case TypeReflection::ScalarType::uint32:
+            self[name] = nb::cast<uint32_t>(value);
+            break;
+        case TypeReflection::ScalarType::uint64:
+            self[name] = nb::cast<uint64_t>(value);
             break;
         default:
-            FALCOR_THROW("Error trying to set a variable that is not an integer type.");
+            KALI_THROW("Field '{}' is not an integer type.");
             break;
         }
     };
@@ -81,21 +88,24 @@ KALI_PY_EXPORT(device_shader_cursor)
     shader_cursor.def("__setitem__", set_int);
     shader_cursor.def("__setattr__", set_int);
 
-    auto set_float = [](ShaderCursor& self, std::string_view name, pybind11::float_ value)
+    auto set_float = [](ShaderCursor& self, std::string_view name, nb::float_ value)
     {
-        const ReflectionBasicType* basicType = self[name].getType()->unwrapArray()->asBasicType();
-        FALCOR_CHECK(basicType, "Error trying to set a variable that is not a basic type.");
-        switch (basicType->getType()) {
-        case ReflectionBasicType::Type::Float:
-            self[name] = value.cast<float>();
+        const TypeReflection* type = self[name].type();
+        KALI_CHECK(type->kind() == TypeReflection::Kind::scalar, "Field '{}' is not a scalar type.", name);
+        switch (type->scalar_type()) {
+        case TypeReflection::ScalarType::float16:
+        case TypeReflection::ScalarType::float32:
+            self[name] = nb::cast<float>(value);
+            break;
+        case TypeReflection::ScalarType::float64:
+            self[name] = nb::cast<double>(value);
             break;
         default:
-            FALCOR_THROW("Error trying to set a variable that is not an float type.");
+            KALI_THROW("Field '{}' is not a floating point type.");
             break;
         }
     };
 
     shader_cursor.def("__setitem__", set_float);
     shader_cursor.def("__setattr__", set_float);
-#endif
 }

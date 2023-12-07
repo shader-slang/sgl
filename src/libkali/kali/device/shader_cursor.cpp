@@ -365,6 +365,19 @@ KALI_API void ShaderCursor::set(const ref<Sampler>& value) const
         set_matrix(&value, sizeof(value), TypeReflection::ScalarType::scalar_type, type::rows, type::cols);            \
     }
 
+SET_SCALAR(int, int32);
+SET_VECTOR(int2, int32);
+SET_VECTOR(int3, int32);
+SET_VECTOR(int4, int32);
+
+SET_SCALAR(uint, uint32);
+SET_VECTOR(uint2, uint32);
+SET_VECTOR(uint3, uint32);
+SET_VECTOR(uint4, uint32);
+
+SET_SCALAR(int64_t, int64);
+SET_SCALAR(uint64_t, uint64);
+
 SET_SCALAR(float16_t, float16);
 SET_VECTOR(float16_t2, float16);
 SET_VECTOR(float16_t3, float16);
@@ -375,20 +388,12 @@ SET_VECTOR(float2, float32);
 SET_VECTOR(float3, float32);
 SET_VECTOR(float4, float32);
 
-SET_SCALAR(uint, uint32);
-SET_VECTOR(uint2, uint32);
-SET_VECTOR(uint3, uint32);
-SET_VECTOR(uint4, uint32);
-
-SET_SCALAR(int, int32);
-SET_VECTOR(int2, int32);
-SET_VECTOR(int3, int32);
-SET_VECTOR(int4, int32);
-
 SET_MATRIX(float1x4, float32);
 SET_MATRIX(float2x4, float32);
 SET_MATRIX(float3x4, float32);
 SET_MATRIX(float4x4, float32);
+
+SET_SCALAR(double, float64);
 
 #undef SET_SCALAR
 #undef SET_VECTOR

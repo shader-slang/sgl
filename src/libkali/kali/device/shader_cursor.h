@@ -16,6 +16,9 @@ public:
 
     ShaderCursor(ShaderObject* shader_object);
 
+    const TypeLayoutReflection* type_layout() const { return m_type_layout; }
+    const TypeReflection* type() const { return m_type_layout->type(); }
+
     bool is_valid() const { return m_offset.is_valid(); }
 
     ShaderCursor dereference() const;
