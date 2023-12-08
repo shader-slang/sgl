@@ -87,13 +87,13 @@ uniform Test u_struct_array[4];
 Buffer<uint> u_buffer;
 
 
-RWBuffer<uint> results;
+RWStructuredBuffer<uint> results;
 
 struct Writer {
-    RWBuffer<uint> buffer;
+    RWStructuredBuffer<uint> buffer;
     uint offset;
 
-    __init(RWBuffer<uint> buffer)
+    __init(RWStructuredBuffer<uint> buffer)
     {
         this.buffer = buffer;
         this.offset = 0;

@@ -1,7 +1,8 @@
 import pytest
 import kali
 
-pytest.skip("tev required for running these tests")
+pytest.skip("tev required for running these tests", allow_module_level=True)
+
 
 def create_bitmap(
     width=500, height=500, component_type=kali.Bitmap.ComponentType.float32

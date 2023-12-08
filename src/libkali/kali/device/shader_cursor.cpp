@@ -226,57 +226,125 @@ ShaderCursor ShaderCursor::find_entry_point(uint32_t index) const
 // Resource binding
 //
 
+inline bool is_resource_type(const TypeReflection* type)
+{
+    switch (type->kind()) {
+    case TypeReflection::Kind::constant_buffer:
+    case TypeReflection::Kind::resource:
+    case TypeReflection::Kind::sampler_state:
+    case TypeReflection::Kind::texture_buffer:
+    case TypeReflection::Kind::shader_storage_buffer:
+    case TypeReflection::Kind::parameter_block:
+        return true;
+    default:
+        return false;
+    }
+}
+
+inline bool is_buffer_resource_type(const TypeReflection* type)
+{
+    switch (type->kind()) {
+    case TypeReflection::Kind::constant_buffer:
+    case TypeReflection::Kind::resource:
+        switch (type->resource_shape() & TypeReflection::ResourceShape::base_shape_mask) {
+        case TypeReflection::ResourceShape::texture_buffer:
+        case TypeReflection::ResourceShape::structured_buffer:
+        case TypeReflection::ResourceShape::byte_address_buffer:
+            return true;
+        default:
+            return false;
+        }
+        break;
+    case TypeReflection::Kind::texture_buffer:
+    case TypeReflection::Kind::shader_storage_buffer:
+    case TypeReflection::Kind::parameter_block:
+        return true;
+    default:
+        return false;
+    }
+}
+
+inline bool is_texture_resource_type(const TypeReflection* type)
+{
+    switch (type->kind()) {
+    case TypeReflection::Kind::resource:
+        switch (type->resource_shape() & TypeReflection::ResourceShape::base_shape_mask) {
+        case TypeReflection::ResourceShape::texture_1d:
+        case TypeReflection::ResourceShape::texture_2d:
+        case TypeReflection::ResourceShape::texture_3d:
+        case TypeReflection::ResourceShape::texture_cube:
+            return true;
+        default:
+            return false;
+        }
+        break;
+    default:
+        return false;
+    }
+}
+
+inline bool is_shader_resource_type(const TypeReflection* type)
+{
+    return type->resource_access() == TypeReflection::ResourceAccess::read;
+}
+
+inline bool is_unordered_access_type(const TypeReflection* type)
+{
+    return type->resource_access() == TypeReflection::ResourceAccess::read_write;
+}
+
 void ShaderCursor::set_resource(const ref<ResourceView>& resource_view) const
 {
-    switch (m_type_layout->parameter_category()) {
-    case TypeReflection::ParameterCategory::shader_resource:
+    const TypeReflection* type = m_type_layout->unwrap_array()->type();
+
+    KALI_CHECK(is_resource_type(type), "'{}' cannot bind a resource", m_type_layout->name());
+
+    if (is_shader_resource_type(type)) {
         KALI_CHECK(
             resource_view->type() == ResourceViewType::shader_resource,
             "'{}' expects a shader resource view",
             m_type_layout->name()
         );
-        break;
-    case TypeReflection::ParameterCategory::unordered_access:
+    } else if (is_unordered_access_type(type)) {
         KALI_CHECK(
             resource_view->type() == ResourceViewType::unordered_access,
             "'{}' expects an unordered access view",
             m_type_layout->name()
         );
-        break;
-    default:
-        KALI_THROW("'{}' expects unhandled resource view", m_type_layout->name());
-        break;
+    } else {
+        KALI_THROW("'{}' expects a valid resource view", m_type_layout->name());
     }
+
     m_shader_object->set_resource(m_offset, resource_view);
 }
 
 void ShaderCursor::set_buffer(const ref<Buffer>& buffer) const
 {
-    switch (m_type_layout->parameter_category()) {
-    case TypeReflection::ParameterCategory::shader_resource:
+    const TypeReflection* type = m_type_layout->unwrap_array()->type();
+
+    KALI_CHECK(is_buffer_resource_type(type), "'{}' cannot bind a buffer", m_type_layout->name());
+
+    if (is_shader_resource_type(type)) {
         set_resource(buffer->get_srv());
-        break;
-    case TypeReflection::ParameterCategory::unordered_access:
+    } else if (is_unordered_access_type(type)) {
         set_resource(buffer->get_uav());
-        break;
-    default:
-        KALI_THROW("'{}' cannot bind a buffer", m_type_layout->name());
-        break;
+    } else {
+        KALI_THROW("'{}' expects a valid buffer", m_type_layout->name());
     }
 }
 
 void ShaderCursor::set_texture(const ref<Texture>& texture) const
 {
-    switch (m_type_layout->parameter_category()) {
-    case TypeReflection::ParameterCategory::shader_resource:
+    const TypeReflection* type = m_type_layout->unwrap_array()->type();
+
+    KALI_CHECK(is_texture_resource_type(type), "'{}' cannot bind a texture", m_type_layout->name());
+
+    if (is_shader_resource_type(type)) {
         set_resource(texture->get_srv());
-        break;
-    case TypeReflection::ParameterCategory::unordered_access:
+    } else if (is_unordered_access_type(type)) {
         set_resource(texture->get_uav());
-        break;
-    default:
-        KALI_THROW("'{}' cannot bind a texture", m_type_layout->name());
-        break;
+    } else {
+        KALI_THROW("'{}' expects a valid texture", m_type_layout->name());
     }
 }
 

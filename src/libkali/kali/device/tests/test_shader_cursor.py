@@ -1,11 +1,14 @@
 import pytest
-import helpers
+import sys
 import kali
 import struct
 from dataclasses import dataclass
 from pathlib import Path
 
-DEVICE_TYPES = [kali.DeviceType.d3d12]  # , kali.DeviceType.vulkan]
+sys.path.append(str(Path(__file__).parent))
+import helpers
+
+DEVICE_TYPES = [kali.DeviceType.d3d12, kali.DeviceType.vulkan]
 
 INT_MIN = -2147483648
 INT_MAX = 2147483647
@@ -42,10 +45,20 @@ TYPE_INFOS = {
     "float2x2": TypeInfo(
         size=16, struct="ffff", converter=lambda values: kali.float2x2(values)
     ),
-    "float3x3": TypeInfo(size=36, struct="fffffffff"),
-    "float2x4": TypeInfo(size=32, struct="ffffffff"),
-    "float3x4": TypeInfo(size=48, struct="ffffffffffff"),
-    "float4x4": TypeInfo(size=64, struct="ffffffffffffffff"),
+    "float3x3": TypeInfo(
+        size=36, struct="fffffffff", converter=lambda values: kali.float3x3(values)
+    ),
+    "float2x4": TypeInfo(
+        size=32, struct="ffffffff", converter=lambda values: kali.float2x4(values)
+    ),
+    "float3x4": TypeInfo(
+        size=48, struct="ffffffffffff", converter=lambda values: kali.float3x4(values)
+    ),
+    "float4x4": TypeInfo(
+        size=64,
+        struct="ffffffffffffffff",
+        converter=lambda values: kali.float4x4(values),
+    ),
 }
 
 
@@ -184,7 +197,9 @@ def test_shader_cursor(device_type):
     ).create_compute_kernel("main")
 
     result_buffer = device.create_buffer(
-        size=4096, usage=kali.ResourceUsage.unordered_access
+        size=4096,
+        struct_size=4,
+        usage=kali.ResourceUsage.unordered_access,
     )
 
     names = []
@@ -210,7 +225,7 @@ def test_shader_cursor(device_type):
         value = var.value
         if type_info.converter:
             value = type_info.converter(value)
-        print(f"Setting {name}={value}")
+        # print(f"Setting {name}={value}")
         cursor[name_or_index] = value
         if type(var.value) == list:
             references.append(struct.pack(type_info.struct, *var.value).hex())
@@ -252,6 +267,11 @@ def test_shader_cursor(device_type):
     named_results = list(zip(names, results))
 
     for named_result, named_reference in zip(named_results, named_references):
+        # Vulkan's packing rule for certain matrix types are not the same as D3D12's
+        if device_type == kali.DeviceType.vulkan and (
+            named_result[0] == "u_float2x2" or named_result[0] == "u_float3x3"
+        ):
+            continue
         assert named_result == named_reference
 
 
