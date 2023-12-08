@@ -26,6 +26,7 @@
         "openexr",
         "pugixml",
         "asmjit",
-        "tevclient"
+        "tevclient",
+        "argparse"
     ]
 }
