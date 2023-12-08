@@ -2,6 +2,7 @@
 
 #include "kali/device/types.h"
 
+#include "kali/core/macros.h"
 #include "kali/core/enum.h"
 #include "kali/core/error.h"
 #include "kali/core/type_utils.h"
@@ -331,7 +332,7 @@ public:
 
     ResourceShape resource_shape() const { return static_cast<ResourceShape>(base()->getResourceShape()); }
 
-    ResourceAccess resource_access() { return static_cast<ResourceAccess>(base()->getResourceAccess()); }
+    ResourceAccess resource_access() const { return static_cast<ResourceAccess>(base()->getResourceAccess()); }
 
 #if 0
     unsigned int getUserAttributeCount() { return spReflectionType_GetUserAttributeCount((SlangReflectionType*)this); }
@@ -352,6 +353,8 @@ private:
     /// The underlying slang API is not const-correct.
     slang::TypeReflection* base() const { return (slang::TypeReflection*)(this); }
 };
+
+KALI_ENUM_CLASS_OPERATORS(TypeReflection::ResourceShape);
 
 KALI_ENUM_REGISTER(TypeReflection::Kind);
 KALI_ENUM_REGISTER(TypeReflection::ScalarType);
