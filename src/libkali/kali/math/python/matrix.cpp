@@ -56,7 +56,6 @@ inline void bind_matrix(nb::module_& m)
 {
     bind_matrix_type<float2x2>(m, "float2x2");
     bind_matrix_type<float3x3>(m, "float3x3");
-    bind_matrix_type<float1x4>(m, "float1x4");
     bind_matrix_type<float2x4>(m, "float2x4");
     bind_matrix_type<float3x4>(m, "float3x4");
     bind_matrix_type<float4x4>(m, "float4x4");
@@ -82,7 +81,6 @@ KALI_PY_EXPORT(math_matrix)
 
     m.attr("float2x2") = math.attr("float2x2");
     m.attr("float3x3") = math.attr("float3x3");
-    m.attr("float1x4") = math.attr("float1x4");
     m.attr("float2x4") = math.attr("float2x4");
     m.attr("float3x4") = math.attr("float3x4");
     m.attr("float4x4") = math.attr("float4x4");

@@ -313,7 +313,17 @@ void ShaderCursor::set_matrix(const void* data, size_t size, TypeReflection::Sca
     const
 {
     KALI_UNUSED(scalar_type, rows, cols);
-    m_shader_object->set_data(m_offset, data, size);
+    if (rows > 1) {
+        // each row is aligned to 16 bytes
+        size_t row_size = size / rows;
+        ShaderOffset offset = m_offset;
+        for (int row = 0; row < rows; ++row) {
+            m_shader_object->set_data(offset, reinterpret_cast<const uint8_t*>(data) + row * row_size, row_size);
+            offset.uniform_offset += 16;
+        }
+    } else {
+        m_shader_object->set_data(m_offset, data, size);
+    }
 }
 
 //
@@ -388,7 +398,8 @@ SET_VECTOR(float2, float32);
 SET_VECTOR(float3, float32);
 SET_VECTOR(float4, float32);
 
-SET_MATRIX(float1x4, float32);
+SET_MATRIX(float2x2, float32);
+SET_MATRIX(float3x3, float32);
 SET_MATRIX(float2x4, float32);
 SET_MATRIX(float3x4, float32);
 SET_MATRIX(float4x4, float32);
