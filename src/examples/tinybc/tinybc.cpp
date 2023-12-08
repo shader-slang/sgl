@@ -127,7 +127,7 @@ int main(int argc, const char* argv[])
 
     double total_cpu_time_sec = t.elapsed_s();
 
-    std::vector<double> times = queries->get_timestamp_result(0, num_iters * 2);
+    std::vector<double> times = queries->get_timestamp_results(0, num_iters * 2);
     double comp_time_sec = 0.0;
     for (uint32_t i = 0; i < num_iters; ++i)
         comp_time_sec += (times[i * 2 + 1] - times[i * 2]);

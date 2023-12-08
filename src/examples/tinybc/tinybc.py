@@ -95,7 +95,7 @@ device.wait()
 
 total_cpu_time_sec = t.elapsed_s()
 
-times = np.asarray(queries.get_timestamp_result(0, num_iters * 2))
+times = np.asarray(queries.get_timestamp_results(0, num_iters * 2))
 comp_time_sec = np.mean(times[1::2] - times[0::2])
 
 # Calculate and print performance metrics
