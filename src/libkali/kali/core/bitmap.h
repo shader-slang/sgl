@@ -181,9 +181,15 @@ public:
     const uint8_t* uint8_data() const { return m_data.get(); }
 
     template<typename T>
-    T* data_as() { return reinterpret_cast<T*>(m_data.get()); }
+    T* data_as()
+    {
+        return reinterpret_cast<T*>(m_data.get());
+    }
     template<typename T>
-    const T* data_as() const { return reinterpret_cast<const T*>(m_data.get()); }
+    const T* data_as() const
+    {
+        return reinterpret_cast<const T*>(m_data.get());
+    }
 
     /// True if bitmap is empty.
     bool empty() const { return m_width == 0 || m_height == 0; }

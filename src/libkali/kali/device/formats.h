@@ -210,7 +210,6 @@ struct FormatInfo {
                 return false;
         return true;
     }
-
 };
 
 KALI_API const FormatInfo& get_format_info(Format format);
