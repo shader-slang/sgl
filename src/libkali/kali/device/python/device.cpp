@@ -210,21 +210,29 @@ KALI_PY_EXPORT(device_device)
            uint32_t quality,
            ResourceUsage usage,
            MemoryType memory_type,
-           std::string debug_name)
+           std::string debug_name,
+           std::optional<nb::ndarray<nb::numpy>> init_data)
         {
+            if (init_data) {
+                KALI_CHECK(is_ndarray_contiguous(*init_data), "Initial data is not contiguous.");
+            }
             return self->create_texture(
-                {.type = type,
-                 .format = format,
-                 .width = width,
-                 .height = height,
-                 .depth = depth,
-                 .array_size = array_size,
-                 .mip_count = mip_count,
-                 .sample_count = sample_count,
-                 .quality = quality,
-                 .usage = usage,
-                 .memory_type = memory_type,
-                 .debug_name = std::move(debug_name)}
+                {
+                    .type = type,
+                    .format = format,
+                    .width = width,
+                    .height = height,
+                    .depth = depth,
+                    .array_size = array_size,
+                    .mip_count = mip_count,
+                    .sample_count = sample_count,
+                    .quality = quality,
+                    .usage = usage,
+                    .memory_type = memory_type,
+                    .debug_name = std::move(debug_name),
+                },
+                init_data ? init_data->data() : nullptr,
+                init_data ? init_data->nbytes() : 0
             );
         },
         "type"_a = TextureType::unknown,
@@ -238,7 +246,8 @@ KALI_PY_EXPORT(device_device)
         "quality"_a = 0,
         "usage"_a = ResourceUsage::none,
         "memory_type"_a = MemoryType::device_local,
-        "debug_name"_a = ""
+        "debug_name"_a = "",
+        "init_data"_a = std::optional<nb::ndarray<nb::numpy>>{}
     );
     device.def("create_sampler", &Device::create_sampler, "desc"_a);
     device.def(
