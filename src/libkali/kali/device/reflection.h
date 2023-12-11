@@ -1036,6 +1036,8 @@ public:
     bool has_field(std::string_view name) const { return find_field(name).is_valid(); }
     bool has_element(uint32_t index) const { return find_element(index).is_valid(); }
 
+    std::string to_string() const;
+
 private:
     const ShaderProgram* m_shader_program{nullptr};
     const EntryPointLayout* m_entry_point_layout{nullptr};

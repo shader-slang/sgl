@@ -20,6 +20,11 @@ ShaderCursor::ShaderCursor(ShaderObject* shader_object)
     KALI_ASSERT(m_offset.is_valid());
 }
 
+std::string ShaderCursor::to_string() const
+{
+    return "ShaderCursor()";
+}
+
 ShaderCursor ShaderCursor::dereference() const
 {
     KALI_CHECK(is_valid(), "Invalid cursor");

@@ -75,5 +75,6 @@ KALI_PY_EXPORT(device_reflection)
         .def_prop_ro("type", &ReflectionCursor::type)
         .def("__getitem__", [](ReflectionCursor& self, std::string_view name) { return self[name]; })
         .def("__getitem__", [](ReflectionCursor& self, int index) { return self[index]; })
-        .def("__getattr__", [](ReflectionCursor& self, std::string_view name) { return self[name]; });
+        .def("__getattr__", [](ReflectionCursor& self, std::string_view name) { return self[name]; })
+        .def("__repr__", &ReflectionCursor::to_string);
 }

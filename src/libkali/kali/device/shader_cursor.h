@@ -21,6 +21,8 @@ public:
 
     bool is_valid() const { return m_offset.is_valid(); }
 
+    std::string to_string() const;
+
     ShaderCursor dereference() const;
 
     //

@@ -216,4 +216,15 @@ ReflectionCursor ReflectionCursor::find_element(uint32_t index) const
     return {};
 }
 
+std::string ReflectionCursor::to_string() const
+{
+    if (m_shader_program)
+        return fmt::format("ReflectionCursor(program={})", string::indent(m_shader_program->to_string()));
+    if (m_entry_point_layout)
+        return fmt::format("ReflectionCursor(entry_point={})", string::indent(m_entry_point_layout->to_string()));
+    if (m_type_layout)
+        return fmt::format("ReflectionCursor(type={})", string::indent(m_type_layout->to_string()));
+    return "ReflectionCursor(null)";
+}
+
 } // namespace kali
