@@ -5,6 +5,7 @@
 #include "kali/device/resource.h"
 #include "kali/device/sampler.h"
 #include "kali/device/pipeline.h"
+#include "kali/device/shader.h"
 
 namespace kali {
 
@@ -61,10 +62,12 @@ KALI_PY_EXPORT(device_kernel)
 {
     using namespace kali;
 
-    nb::class_<Kernel, Object>(m, "Kernel");
+    nb::class_<Kernel, Object>(m, "Kernel") //
+        .def_prop_ro("program", &Kernel::program)
+        .def_prop_ro("reflection", &Kernel::reflection);
 
     nb::class_<ComputeKernel, Kernel>(m, "ComputeKernel")
-        .def_prop_ro("pipeline_state", &ComputeKernel::pipeline_state)
+        .def_prop_ro("pipeline", &ComputeKernel::pipeline)
         .def(
             "dispatch",
             [](ComputeKernel* self, uint3 thread_count, nb::dict vars, CommandStream* stream, nb::kwargs kwargs)

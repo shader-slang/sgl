@@ -19,6 +19,8 @@ class Swapchain;
 class Resource;
 
 struct BufferDesc;
+struct StructuredBufferDesc;
+struct TypedBufferDesc;
 class Buffer;
 
 struct TextureDesc;
@@ -42,6 +44,7 @@ class Fence;
 struct SlangSessionDesc;
 class SlangSession;
 
+class DefineList;
 class SlangModule;
 class SlangComponentType;
 class SlangGlobalScope;
@@ -65,12 +68,13 @@ class ComputeKernel;
 
 // pipeline.h
 
-struct ComputePipelineStateDesc;
-class ComputePipelineState;
-struct GraphicsPipelineStateDesc;
-class GraphicsPipelineState;
-struct RayTracingPipelineStateDesc;
-class RayTracingPipelineState;
+class Pipeline;
+struct ComputePipelineDesc;
+class ComputePipeline;
+struct GraphicsPipelineDesc;
+class GraphicsPipeline;
+struct RayTracingPipelineDesc;
+class RayTracingPipeline;
 
 // query.h
 

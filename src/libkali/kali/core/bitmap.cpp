@@ -53,13 +53,17 @@ inline std::vector<std::string> get_channel_names(Bitmap::PixelFormat pixel_form
 {
     switch (pixel_format) {
     case Bitmap::PixelFormat::y:
-        return {"y"};
+        return {"Y"};
     case Bitmap::PixelFormat::ya:
-        return {"y", "a"};
+        return {"Y", "A"};
+    case Bitmap::PixelFormat::r:
+        return {"R"};
+    case Bitmap::PixelFormat::rg:
+        return {"R", "G"};
     case Bitmap::PixelFormat::rgb:
-        return {"r", "g", "b"};
+        return {"R", "G", "B"};
     case Bitmap::PixelFormat::rgba:
-        return {"r", "g", "b", "a"};
+        return {"R", "G", "B", "A"};
     case Bitmap::PixelFormat::multi_channel:
         return {};
     }
@@ -350,25 +354,25 @@ void Bitmap::convert(Bitmap* target) const
         if (src_struct->has_field(field.name)) {
             continue;
         }
-        if (field.name == "r") {
+        if (field.name == "R") {
             if (src_is_y) {
-                field.name = "y";
+                field.name = "Y";
                 continue;
             }
         }
-        if (field.name == "g") {
+        if (field.name == "G") {
             if (src_is_y) {
-                field.name = "y";
+                field.name = "Y";
                 continue;
             }
         }
-        if (field.name == "b") {
+        if (field.name == "B") {
             if (src_is_y) {
-                field.name = "y";
+                field.name = "Y";
                 continue;
             }
         }
-        if (field.name == "a") {
+        if (field.name == "A") {
             field.default_value = 1.0;
             field.flags |= Struct::Flags::default_;
             continue;
@@ -977,6 +981,8 @@ void Bitmap::read_jpg(Stream* stream)
     default:
         KALI_THROW("Unsupported number of components!");
     }
+
+    m_channel_names = get_channel_names(m_pixel_format);
 
     auto fs = dynamic_cast<FileStream*>(stream);
     log_debug(

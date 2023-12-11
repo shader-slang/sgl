@@ -97,8 +97,8 @@ public:
 
     void end();
 
-    ref<TransientShaderObject> bind_pipeline(const ComputePipelineState* pipeline);
-    void bind_pipeline(const ComputePipelineState* pipeline, const ShaderObject* shader_object);
+    ref<TransientShaderObject> bind_pipeline(const ComputePipeline* pipeline);
+    void bind_pipeline(const ComputePipeline* pipeline, const ShaderObject* shader_object);
     void dispatch(uint3 thread_count);
     void dispatch_thread_groups(uint3 thread_group_count);
     void dispatch_thread_groups_indirect(const Buffer* cmd_buffer, DeviceOffset offset);
@@ -116,49 +116,187 @@ private:
 
     CommandStream* m_command_stream;
     gfx::IComputeCommandEncoder* m_gfx_compute_command_encoder;
-    const ComputePipelineState* m_bound_pipeline{nullptr};
+    const ComputePipeline* m_bound_pipeline{nullptr};
 
     friend class CommandStream;
 };
 
-#if 0
-class KALI_API RenderPassEncoder : public PassEncoder {
+class KALI_API RenderPassEncoder {
 public:
-    ref<TransientShaderObject> bind_pipeline(const GraphicsPipelineState* pipeline);
-    void bind_pipeline(const GraphicsPipelineState* pipeline, const ShaderObject* shader_object);
-
-private:
-    RenderPassEncoder(CommandStream* command_stream)
-        : PassEncoder(command_stream)
+    RenderPassEncoder(RenderPassEncoder&& other) noexcept
+        : m_command_stream(std::exchange(other.m_command_stream, nullptr))
+        , m_gfx_render_command_encoder(std::exchange(other.m_gfx_render_command_encoder, nullptr))
     {
     }
 
-    void begin();
+    ~RenderPassEncoder();
 
+    void end();
+
+    ref<TransientShaderObject> bind_pipeline(const GraphicsPipeline* pipeline);
+    void bind_pipeline(const GraphicsPipeline* pipeline, const ShaderObject* shader_object);
+
+    struct Viewport {
+        float2 origin{0.f, 0.f};
+        float2 extent{0.f, 0.f};
+        float2 zrange{0.f, 1.f};
+    }; // TODO
+    static_assert(
+        (sizeof(Viewport) == sizeof(gfx::Viewport))
+            && (offsetof(Viewport, origin.x) == offsetof(gfx::Viewport, originX))
+            && (offsetof(Viewport, origin.y) == offsetof(gfx::Viewport, originY))
+            && (offsetof(Viewport, extent.x) == offsetof(gfx::Viewport, extentX))
+            && (offsetof(Viewport, extent.y) == offsetof(gfx::Viewport, extentY))
+            && (offsetof(Viewport, zrange.x) == offsetof(gfx::Viewport, minZ))
+            && (offsetof(Viewport, zrange.y) == offsetof(gfx::Viewport, maxZ)),
+        "Viewport struct mismatch"
+    );
+
+    void set_viewports(std::span<Viewport> viewports);
+    struct ScissorRect {
+        int2 min{0, 0};
+        int2 max{0, 0};
+    }; // TODO
+    static_assert(
+        (sizeof(ScissorRect) == sizeof(gfx::ScissorRect))
+            && (offsetof(ScissorRect, min.x) == offsetof(gfx::ScissorRect, minX))
+            && (offsetof(ScissorRect, min.y) == offsetof(gfx::ScissorRect, minY))
+            && (offsetof(ScissorRect, max.x) == offsetof(gfx::ScissorRect, maxX))
+            && (offsetof(ScissorRect, max.y) == offsetof(gfx::ScissorRect, maxY)),
+        "ScissorRect struct mismatch"
+    );
+    void set_scissor_rects(std::span<ScissorRect> scissor_rects);
+
+    void set_viewport_and_scissor_rect(const Viewport& viewport);
+
+    // void set_primitive_topology(PrimitiveTopology topology);
+
+    void set_stencil_reference(uint32_t reference_value);
+
+    // void set_sample_positions(
+    //     gfx_count samples_per_pixel, gfx_count pixel_count, const sample_position* sample_positions) = 0;
+
+
+    struct Slot {
+        const Buffer* buffer;
+        DeviceOffset offset;
+    };
+    void set_vertex_buffers(uint32_t start_slot, std::span<Slot> slots);
+    void set_vertex_buffer(uint32_t slot, const Buffer* buffer, DeviceOffset offset = 0);
+    void set_index_buffer(const Buffer* buffer, Format index_format, DeviceOffset offset = 0);
+
+    void draw(uint32_t vertex_count, uint32_t start_vertex = 0);
+
+    void draw_indexed(uint32_t index_count, uint32_t start_index = 0, uint32_t base_vertex = 0);
+
+    void draw_instanced(
+        uint32_t vertex_count,
+        uint32_t instance_count,
+        uint32_t start_vertex = 0,
+        uint32_t start_instance = 0
+    );
+
+    void draw_indexed_instanced(
+        uint32_t index_count,
+        uint32_t instance_count,
+        uint32_t start_index = 0,
+        uint32_t base_vertex = 0,
+        uint32_t start_instance = 0
+    );
+
+    void draw_indirect(
+        uint32_t max_draw_count,
+        const Buffer* arg_buffer,
+        DeviceOffset arg_offset,
+        const Buffer* count_buffer = nullptr,
+        DeviceOffset count_offset = 0
+    );
+
+    void draw_indexed_indirect(
+        uint32_t max_draw_count,
+        const Buffer* arg_buffer,
+        DeviceOffset arg_offset,
+        const Buffer* count_buffer = nullptr,
+        DeviceOffset count_offset = 0
+    );
+
+    void draw_mesh_tasks(uint32_t x, uint32_t y, uint32_t z);
+
+private:
+    RenderPassEncoder(CommandStream* command_stream, gfx::IRenderCommandEncoder* gfx_render_command_encoder)
+        : m_command_stream(command_stream)
+        , m_gfx_render_command_encoder(gfx_render_command_encoder)
+    {
+    }
+
+    RenderPassEncoder(const RenderPassEncoder&) = delete;
+    RenderPassEncoder& operator=(const RenderPassEncoder&) = delete;
+    RenderPassEncoder& operator=(RenderPassEncoder&& other) noexcept = delete;
+
+    CommandStream* m_command_stream;
     gfx::IRenderCommandEncoder* m_gfx_render_command_encoder;
+    const GraphicsPipeline* m_bound_pipeline{nullptr};
 
     friend class CommandStream;
 };
 
-class KALI_API RayTracingPassEncoder : public PassEncoder {
+class KALI_API RayTracingPassEncoder {
 public:
-    ref<TransientShaderObject> bind_pipeline(const RayTracingPipelineState* pipeline);
-    void bind_pipeline(const RayTracingPipelineState* pipeline, const ShaderObject* shader_object);
+    RayTracingPassEncoder(RayTracingPassEncoder&& other) noexcept
+        : m_command_stream(std::exchange(other.m_command_stream, nullptr))
+        , m_gfx_ray_tracing_command_encoder(std::exchange(other.m_gfx_ray_tracing_command_encoder, nullptr))
+    {
+    }
+
+    ~RayTracingPassEncoder();
+
+    void end();
+
+    ref<TransientShaderObject> bind_pipeline(const RayTracingPipeline* pipeline);
+    void bind_pipeline(const RayTracingPipeline* pipeline, const ShaderObject* shader_object);
     void dispatch_rays(uint32_t ray_gen_shader_index, const ShaderTable* shader_table, uint3 dimensions);
 
+    // void build_acceleration_structure(
+    //     const AccelerationStructure::BuildDesc& desc,
+    //     GfxCount propertyQueryCount,
+    //     AccelerationStructureQueryDesc* queryDescs) = 0;
+
+    // void copy_acceleration_structure(
+    //     AccelerationStructure* dst,
+    //     AccelerationStructure* src,
+    //     AccelerationStructure::CopyMode mode
+    // );
+
+    // virtual SLANG_NO_THROW void SLANG_MCALL queryAccelerationStructureProperties(
+    //     GfxCount accelerationStructureCount,
+    //     IAccelerationStructure* const* accelerationStructures,
+    //     GfxCount queryCount,
+    //     AccelerationStructureQueryDesc* queryDescs) = 0;
+
+    void serialize_acceleration_structure(DeviceAddress dst, const AccelerationStructure* src);
+    void deserialize_acceleration_structure(AccelerationStructure* dst, DeviceAddress src);
+
 private:
-    RayTracingPassEncoder(CommandStream* command_stream)
-        : PassEncoder(command_stream)
+    RayTracingPassEncoder(
+        CommandStream* command_stream,
+        gfx::IRayTracingCommandEncoder* gfx_ray_tracing_command_encoder
+    )
+        : m_command_stream(command_stream)
+        , m_gfx_ray_tracing_command_encoder(gfx_ray_tracing_command_encoder)
     {
     }
 
-    void begin();
+    RayTracingPassEncoder(const RayTracingPassEncoder&) = delete;
+    RayTracingPassEncoder& operator=(const RayTracingPassEncoder&) = delete;
+    RayTracingPassEncoder& operator=(RayTracingPassEncoder&& other) noexcept = delete;
 
+    CommandStream* m_command_stream;
     gfx::IRayTracingCommandEncoder* m_gfx_ray_tracing_command_encoder;
+    const RayTracingPipeline* m_bound_pipeline{nullptr};
 
     friend class CommandStream;
 };
-#endif
+
 class KALI_API CommandStream : public DeviceResource {
     KALI_OBJECT(CommandStream)
 public:
@@ -189,6 +327,29 @@ public:
      * @param value The value to wait for. If @c Fence::AUTO, wait for the last signaled value.
      */
     void wait(const Fence* fence, uint64_t value = Fence::AUTO);
+
+    // ------------------------------------------------------------------------
+    // Queries
+    // ------------------------------------------------------------------------
+
+    /**
+     * \brief Write a timestamp.
+     *
+     * \param query_pool Query pool.
+     * \param index Index of the query.
+     */
+    void write_timestamp(QueryPool* query_pool, uint32_t index);
+
+    /**
+     * \brief Resolve a list of queries and write the results to a buffer.
+     *
+     * \param query_pool Query pool.
+     * \param index Index of the first query.
+     * \param count Number of queries to resolve.
+     * \param buffer Destination buffer.
+     * \param offset Offset into the destination buffer.
+     */
+    void resolve_query(QueryPool* query_pool, uint32_t index, uint32_t count, Buffer* buffer, DeviceOffset offset);
 
     // ------------------------------------------------------------------------
     // Barriers
@@ -332,6 +493,7 @@ public:
 
     void upload_buffer_data(Buffer* buffer, size_t offset, size_t size, const void* data);
 
+    void upload_texture_data(Texture* texture, uint32_t subresource, const void* data);
 
     /**
      * \brief Resolve a multi-sampled texture.
@@ -364,7 +526,15 @@ public:
      */
     ComputePassEncoder begin_compute_pass();
     // RenderPassEncoder begin_render_pass(RenderPassLayout*, FrameBuffer*);
-    // RayTracingPassEncoder begin_ray_tracing_pass();
+
+    /**
+     * @brief Begin a new ray-tracing pass.
+     *
+     * The returned \c RayTracingPassEncoder is used to bind raytracing pipelines and issue dispatches.
+     * It also serves for building and managing acceleration structures.
+     * The ray-tracing pass is ended when the \c RayTracingPassEncoder is destroyed.
+     */
+    RayTracingPassEncoder begin_ray_tracing_pass();
 
     // ------------------------------------------------------------------------
     // Debug events
@@ -405,6 +575,8 @@ private:
     Slang::ComPtr<gfx::ICommandEncoder> m_gfx_command_encoder;
 
     friend class ComputePassEncoder;
+    friend class RenderPassEncoder;
+    friend class RayTracingPassEncoder;
 };
 
 } // namespace kali

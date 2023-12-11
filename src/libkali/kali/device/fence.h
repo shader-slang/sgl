@@ -31,7 +31,7 @@ public:
     /// Do not use directly, instead use @c Device::create_fence.
     Fence(ref<Device> device, FenceDesc desc);
 
-    const FenceDesc& get_desc() const { return m_desc; }
+    const FenceDesc& desc() const { return m_desc; }
 
     /**
      * Signal the fence.

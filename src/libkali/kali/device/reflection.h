@@ -2,6 +2,7 @@
 
 #include "kali/device/types.h"
 
+#include "kali/core/macros.h"
 #include "kali/core/enum.h"
 #include "kali/core/error.h"
 #include "kali/core/type_utils.h"
@@ -331,7 +332,7 @@ public:
 
     ResourceShape resource_shape() const { return static_cast<ResourceShape>(base()->getResourceShape()); }
 
-    ResourceAccess resource_access() { return static_cast<ResourceAccess>(base()->getResourceAccess()); }
+    ResourceAccess resource_access() const { return static_cast<ResourceAccess>(base()->getResourceAccess()); }
 
 #if 0
     unsigned int getUserAttributeCount() { return spReflectionType_GetUserAttributeCount((SlangReflectionType*)this); }
@@ -352,6 +353,8 @@ private:
     /// The underlying slang API is not const-correct.
     slang::TypeReflection* base() const { return (slang::TypeReflection*)(this); }
 };
+
+KALI_ENUM_CLASS_OPERATORS(TypeReflection::ResourceShape);
 
 KALI_ENUM_REGISTER(TypeReflection::Kind);
 KALI_ENUM_REGISTER(TypeReflection::ScalarType);
@@ -902,6 +905,12 @@ public:
         return detail::from_slang(base()->findEntryPointByName(name));
     }
 
+    const EntryPointLayout* get_entry_point_by_name(std::string_view name) const
+    {
+        std::string name_str(name);
+        return get_entry_point_by_name(name_str.c_str());
+    }
+
     const EntryPointLayout* find_entry_point_by_name(const char* name) const
     {
         if (auto entry_point = base()->findEntryPointByName(name)) {
@@ -999,6 +1008,43 @@ private:
     /// Cast to non-const base pointer.
     /// The underlying slang API is not const-correct.
     slang::ProgramLayout* base() const { return (slang::ProgramLayout*)(this); }
+};
+
+class ShaderProgram;
+
+class KALI_API ReflectionCursor {
+public:
+    ReflectionCursor() = default;
+
+    ReflectionCursor(const ShaderProgram* shader_program);
+    ReflectionCursor(const EntryPointLayout* entry_point_layout);
+    ReflectionCursor(const TypeLayoutReflection* type_layout);
+
+    const TypeLayoutReflection* type_layout() const { return m_type_layout; }
+    const TypeReflection* type() const { return m_type_layout->type(); }
+
+    bool is_valid() const { return m_valid; }
+
+    // operator bool() const { return is_valid(); }
+
+    operator const TypeLayoutReflection*() const { return type_layout(); }
+
+    ReflectionCursor operator[](std::string_view name) const;
+    ReflectionCursor operator[](uint32_t index) const;
+
+    ReflectionCursor find_field(std::string_view name) const;
+    ReflectionCursor find_element(uint32_t index) const;
+
+    bool has_field(std::string_view name) const { return find_field(name).is_valid(); }
+    bool has_element(uint32_t index) const { return find_element(index).is_valid(); }
+
+    std::string to_string() const;
+
+private:
+    const ShaderProgram* m_shader_program{nullptr};
+    const EntryPointLayout* m_entry_point_layout{nullptr};
+    const TypeLayoutReflection* m_type_layout{nullptr};
+    bool m_valid{false};
 };
 
 } // namespace kali

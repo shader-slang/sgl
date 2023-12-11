@@ -17,8 +17,7 @@ KALI_PY_EXPORT(device_shader)
         .def_rw("type_name", &TypeConformance::type_name)
         .def_rw("interface_name", &TypeConformance::interface_name);
 
-    nb::bind_map<std::map<TypeConformance, uint32_t>>(m, "TypeConformanceListBase");
-    nb::class_<TypeConformanceList, std::map<TypeConformance, uint32_t>>(m, "TypeConformanceList")
+    nb::bind_map<TypeConformanceList>(m, "TypeConformanceList")
         .def(
             "add",
             nb::overload_cast<std::string, std::string, uint32_t>(&TypeConformanceList::add),
@@ -35,8 +34,7 @@ KALI_PY_EXPORT(device_shader)
         .def("add", nb::overload_cast<const TypeConformanceList&>(&TypeConformanceList::add), "other"_a)
         .def("remove", nb::overload_cast<const TypeConformanceList&>(&TypeConformanceList::remove), "other"_a);
 
-    nb::bind_map<std::map<std::string, std::string, std::less<>>>(m, "DefineListBase");
-    nb::class_<DefineList, std::map<std::string, std::string, std::less<>>>(m, "DefineList")
+    nb::bind_map<DefineList>(m, "DefineList")
         .def("add", nb::overload_cast<std::string_view, std::string_view>(&DefineList::add), "name"_a, "value"_a = "")
         .def("remove", nb::overload_cast<std::string_view>(&DefineList::remove), "name"_a)
         .def("add", nb::overload_cast<const DefineList&>(&DefineList::add), "other"_a)
@@ -55,13 +53,14 @@ KALI_PY_EXPORT(device_shader)
 
     nb::class_<SlangSession, Object>(m, "SlangSession")
         .def_prop_ro("desc", &SlangSession::desc)
-        .def("load_module", &SlangSession::load_module, "path"_a)
+        .def("load_module", &SlangSession::load_module, "path"_a, "defines"_a = DefineList{})
         .def(
             "load_module_from_source",
             &SlangSession::load_module_from_source,
             "source"_a,
             "path"_a = std::filesystem::path{},
-            "name"_a = ""
+            "name"_a = "",
+            "defines"_a = DefineList{}
         );
 
     nb::class_<SlangModule, Object>(m, "SlangModule")
@@ -95,5 +94,6 @@ KALI_PY_EXPORT(device_shader)
     nb::class_<ShaderProgram, Object>(m, "ShaderProgram")
         .def_prop_ro("program_layout", &ShaderProgram::program_layout, nb::rv_policy::reference_internal)
         // .def_prop_ro("entry_point_layouts", &ShaderProgram::entry_point_layouts)
-        .def("entry_point_layout", &ShaderProgram::entry_point_layout, "index"_a, nb::rv_policy::reference_internal);
+        .def("entry_point_layout", &ShaderProgram::entry_point_layout, "index"_a, nb::rv_policy::reference_internal)
+        .def_prop_ro("reflection", &ShaderProgram::reflection);
 }

@@ -16,8 +16,13 @@ KALI_PY_EXPORT(device_shader_cursor)
 
     shader_cursor.def(nb::init<ShaderObject*>(), "shader_object"_a);
     shader_cursor.def("is_valid", &ShaderCursor::is_valid);
+    shader_cursor.def("find_field", &ShaderCursor::find_field, "name"_a);
+    shader_cursor.def("find_element", &ShaderCursor::find_element, "index"_a);
+    shader_cursor.def("has_field", &ShaderCursor::has_field, "name"_a);
+    shader_cursor.def("has_element", &ShaderCursor::has_element, "index"_a);
 
     shader_cursor.def("__getitem__", [](ShaderCursor& self, std::string_view name) { return self[name]; });
+    shader_cursor.def("__getitem__", [](ShaderCursor& self, int index) { return self[index]; });
     shader_cursor.def("__getattr__", [](ShaderCursor& self, std::string_view name) { return self[name]; });
 
 #define def_setter(type)                                                                                               \
@@ -49,53 +54,109 @@ KALI_PY_EXPORT(device_shader_cursor)
     def_setter(float3);
     def_setter(float4);
 
-    def_setter(float1x4);
+    def_setter(float2x2);
+    def_setter(float3x3);
     def_setter(float2x4);
     def_setter(float3x4);
     def_setter(float4x4);
 
 #undef def_setter
 
-#if 0
     // We need to handle integers and floats specially.
     // Python only has an `int` and `float` type that can have different bit-width.
-    // We use reflection data to convert the python types to the correct types before assigning.
+    // We use reflection data to convert the Python types to the correct types before assigning.
 
-    auto set_int = [](ShaderCursor& self, std::string_view name, pybind11::int_ value)
+    auto set_int_field = [](ShaderCursor& self, std::string_view name, nb::int_ value)
     {
-        const ReflectionBasicType* basicType = self[name].getType()->unwrapArray()->asBasicType();
-        FALCOR_CHECK(basicType, "Error trying to set a variable that is not a basic type.");
-        switch (basicType->getType()) {
-        case ReflectionBasicType::Type::Int:
-            self[name] = value.cast<int32_t>();
+        const TypeReflection* type = self[name].type();
+        KALI_CHECK(type->kind() == TypeReflection::Kind::scalar, "Field '{}' is not a scalar type.", name);
+        switch (type->scalar_type()) {
+        case TypeReflection::ScalarType::int16:
+        case TypeReflection::ScalarType::int32:
+            self[name] = nb::cast<int32_t>(value);
             break;
-        case ReflectionBasicType::Type::Uint:
-            self[name] = value.cast<uint32_t>();
+        case TypeReflection::ScalarType::int64:
+            self[name] = nb::cast<int64_t>(value);
+            break;
+        case TypeReflection::ScalarType::uint16:
+        case TypeReflection::ScalarType::uint32:
+            self[name] = nb::cast<uint32_t>(value);
+            break;
+        case TypeReflection::ScalarType::uint64:
+            self[name] = nb::cast<uint64_t>(value);
             break;
         default:
-            FALCOR_THROW("Error trying to set a variable that is not an integer type.");
+            KALI_THROW("Field '{}' is not an integer type.");
             break;
         }
     };
 
-    shader_cursor.def("__setitem__", set_int);
-    shader_cursor.def("__setattr__", set_int);
-
-    auto set_float = [](ShaderCursor& self, std::string_view name, pybind11::float_ value)
+    auto set_int_element = [](ShaderCursor& self, int index, nb::int_ value)
     {
-        const ReflectionBasicType* basicType = self[name].getType()->unwrapArray()->asBasicType();
-        FALCOR_CHECK(basicType, "Error trying to set a variable that is not a basic type.");
-        switch (basicType->getType()) {
-        case ReflectionBasicType::Type::Float:
-            self[name] = value.cast<float>();
+        const TypeReflection* type = self[index].type();
+        KALI_CHECK(type->kind() == TypeReflection::Kind::scalar, "Element {} is not a scalar type.", index);
+        switch (type->scalar_type()) {
+        case TypeReflection::ScalarType::int16:
+        case TypeReflection::ScalarType::int32:
+            self[index] = nb::cast<int32_t>(value);
+            break;
+        case TypeReflection::ScalarType::int64:
+            self[index] = nb::cast<int64_t>(value);
+            break;
+        case TypeReflection::ScalarType::uint16:
+        case TypeReflection::ScalarType::uint32:
+            self[index] = nb::cast<uint32_t>(value);
+            break;
+        case TypeReflection::ScalarType::uint64:
+            self[index] = nb::cast<uint64_t>(value);
             break;
         default:
-            FALCOR_THROW("Error trying to set a variable that is not an float type.");
+            KALI_THROW("Element {} is not an integer type.");
             break;
         }
     };
 
-    shader_cursor.def("__setitem__", set_float);
-    shader_cursor.def("__setattr__", set_float);
-#endif
+    shader_cursor.def("__setitem__", set_int_field);
+    shader_cursor.def("__setitem__", set_int_element);
+    shader_cursor.def("__setattr__", set_int_field);
+
+    auto set_float_field = [](ShaderCursor& self, std::string_view name, nb::float_ value)
+    {
+        const TypeReflection* type = self[name].type();
+        KALI_CHECK(type->kind() == TypeReflection::Kind::scalar, "Field '{}' is not a scalar type.", name);
+        switch (type->scalar_type()) {
+        case TypeReflection::ScalarType::float16:
+        case TypeReflection::ScalarType::float32:
+            self[name] = nb::cast<float>(value);
+            break;
+        case TypeReflection::ScalarType::float64:
+            self[name] = nb::cast<double>(value);
+            break;
+        default:
+            KALI_THROW("Field '{}' is not a floating point type.");
+            break;
+        }
+    };
+
+    auto set_float_element = [](ShaderCursor& self, int index, nb::float_ value)
+    {
+        const TypeReflection* type = self[index].type();
+        KALI_CHECK(type->kind() == TypeReflection::Kind::scalar, "Element {} is not a scalar type.", index);
+        switch (type->scalar_type()) {
+        case TypeReflection::ScalarType::float16:
+        case TypeReflection::ScalarType::float32:
+            self[index] = nb::cast<float>(value);
+            break;
+        case TypeReflection::ScalarType::float64:
+            self[index] = nb::cast<double>(value);
+            break;
+        default:
+            KALI_THROW("Element {} is not a floating point type.");
+            break;
+        }
+    };
+
+    shader_cursor.def("__setitem__", set_float_field);
+    shader_cursor.def("__setitem__", set_float_element);
+    shader_cursor.def("__setattr__", set_float_field);
 }

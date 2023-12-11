@@ -12,7 +12,7 @@ KALI_PY_EXPORT(device_fence)
         .def_rw("shared", &FenceDesc::shared);
 
     nb::class_<Fence, DeviceResource>(m, "Fence")
-        .def_prop_ro("desc", &Fence::get_desc)
+        .def_prop_ro("desc", &Fence::desc)
         .def("signal", &Fence::signal, "value"_a = Fence::AUTO)
         .def("wait", &Fence::wait, "value"_a = Fence::AUTO, "timeout_ns"_a = Fence::TIMEOUT_INFINITE)
         .def_prop_ro("current_value", &Fence::current_value)

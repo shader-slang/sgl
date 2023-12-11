@@ -145,24 +145,25 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
 
 SlangSession::~SlangSession() { }
 
-ref<SlangModule> SlangSession::load_module(const std::filesystem::path& path)
+ref<SlangModule> SlangSession::load_module(const std::filesystem::path& path, const DefineList& defines)
 {
     return make_ref<SlangModule>(
         ref<SlangSession>(this),
-        SlangModuleDesc{.type = SlangModuleDesc::Type::file, .path = path}
+        SlangModuleDesc{.type = SlangModuleDesc::Type::file, .path = path, .defines = defines}
     );
 }
 
 ref<SlangModule> SlangSession::load_module_from_source(
     const std::string& source,
     const std::filesystem::path& path,
-    const std::string& name
+    const std::string& name,
+    const DefineList& defines
 )
 {
     KALI_UNUSED(name);
     return make_ref<SlangModule>(
         ref<SlangSession>(this),
-        SlangModuleDesc{.type = SlangModuleDesc::Type::source, .path = path, .source = source}
+        SlangModuleDesc{.type = SlangModuleDesc::Type::source, .path = path, .source = source, .defines = defines}
     );
 }
 
@@ -186,6 +187,10 @@ SlangModule::SlangModule(ref<SlangSession> session, SlangModuleDesc desc)
 {
     // Create compile request.
     SLANG_CALL(m_session->get_slang_session()->createCompileRequest(m_compile_request.writeRef()));
+
+    // Add preprocessor macros.
+    for (const auto& d : m_desc.defines)
+        m_compile_request->addPreprocessorDefine(d.first.c_str(), d.second.c_str());
 
     // Disable warnings.
     // for (int warning : m_disabled_warnings)
@@ -270,7 +275,7 @@ ref<SlangEntryPoint> SlangModule::entry_point(std::string_view name)
         if (entry_point->name() == name)
             return entry_point;
     }
-    return {};
+    KALI_THROW("Entry point '{}' not found", name);
 }
 
 std::vector<ref<SlangEntryPoint>> SlangModule::entry_points()
@@ -405,11 +410,11 @@ ShaderProgram::ShaderProgram(
 
 std::vector<const EntryPointLayout*> ShaderProgram::entry_point_layouts() const
 {
-    return {};
-    // std::vector<const EntryPointLayout> layouts;
-    // for (size_t i = 0; i < m_entry_points.size(); ++i)
-    //     layouts.push_back(m_entry_points[i]->layout());
-    // return layouts;
+    // TODO maybe remove this method
+    std::vector<const EntryPointLayout*> layouts;
+    for (size_t i = 0; i < m_entry_points.size(); ++i)
+        layouts.push_back(m_entry_points[i]->layout());
+    return layouts;
 }
 
 std::string ShaderProgram::to_string() const

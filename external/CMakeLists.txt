@@ -22,12 +22,17 @@ if(KALI_WINDOWS)
         IMPORTED_IMPLIB ${SLANG_LIB_DIR}/slang.lib
         IMPORTED_LOCATION ${SLANG_BIN_DIR}/slang.dll
     )
+    kali_copy_binary(${SLANG_BIN_DIR}/slang-glslang.dll .)
+    kali_copy_binary(${SLANG_BIN_DIR}/slang-llvm.dll .)
+    kali_copy_binary(${SLANG_BIN_DIR}/slang-rt.dll .)
 elseif(KALI_LINUX)
     add_library(slang::slang SHARED IMPORTED GLOBAL)
     set_target_properties(slang::slang PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES ${SLANG_INCLUDE_DIR}
         IMPORTED_LOCATION ${SLANG_BIN_DIR}/libslang.so
     )
+    kali_copy_binary(${SLANG_BIN_DIR}/libslang-glslang.so .)
+    kali_copy_binary(${SLANG_BIN_DIR}/libslang-llvm.so .)
 endif()
 
 # slang-gfx
@@ -39,9 +44,6 @@ if(KALI_WINDOWS)
         IMPORTED_IMPLIB ${SLANG_LIB_DIR}/gfx.lib
         IMPORTED_LOCATION ${SLANG_BIN_DIR}/gfx.dll
     )
-    # kali_copy_binary(${SLANG_BIN_DIR}/bin/windows-x64/${KALI_SLANG_CONFIG}/slang-glslang.dll .)
-    # kali_copy_binary(${SLANG_BIN_DIR}/bin/windows-x64/${KALI_SLANG_CONFIG}/slang-llvm.dll .)
-    # kali_copy_binary(${SLANG_BIN_DIR}/bin/windows-x64/${KALI_SLANG_CONFIG}/slang-rt.dll .)
 elseif(KALI_LINUX)
     add_library(slang::gfx SHARED IMPORTED GLOBAL)
     set_target_properties(slang::gfx PROPERTIES

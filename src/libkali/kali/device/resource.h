@@ -5,6 +5,7 @@
 #include "kali/device/formats.h"
 #include "kali/device/native_handle.h"
 
+#include "kali/core/fwd.h"
 #include "kali/core/macros.h"
 #include "kali/core/enum.h"
 #include "kali/core/object.h"
@@ -369,10 +370,45 @@ struct BufferDesc {
     std::string debug_name;
 };
 
+struct StructuredBufferDesc {
+    /// Number of elements in the buffer.
+    size_t element_count;
+
+    /// Size of the struct in bytes.
+    /// Note: Either \c struct_size or \c struct_type can be set, but not both.
+    size_t struct_size;
+
+    /// Type of the struct.
+    /// Note: Either \c struct_size or \c struct_type can be set, but not both.
+    const TypeLayoutReflection* struct_type;
+
+    ResourceState initial_state{ResourceState::undefined};
+    ResourceUsage usage{ResourceUsage::none};
+    MemoryType memory_type{MemoryType::device_local};
+
+    std::string debug_name;
+};
+
+struct TypedBufferDesc {
+    /// Number of elements in the buffer.
+    size_t element_count;
+
+    /// The format of the buffer.
+    Format format;
+
+    ResourceState initial_state{ResourceState::undefined};
+    ResourceUsage usage{ResourceUsage::none};
+    MemoryType memory_type{MemoryType::device_local};
+
+    std::string debug_name;
+};
+
 class KALI_API Buffer : public Resource {
     KALI_OBJECT(Buffer)
 public:
-    Buffer(ref<Device> device, BufferDesc desc, const void* init_data);
+    Buffer(ref<Device> device, BufferDesc desc, const void* init_data, size_t init_data_size);
+    Buffer(ref<Device> device, StructuredBufferDesc desc, const void* init_data, size_t init_data_size);
+    Buffer(ref<Device> device, TypedBufferDesc desc, const void* init_data, size_t init_data_size);
 
     const BufferDesc& desc() const { return m_desc; }
 
@@ -512,7 +548,7 @@ struct SubresourceLayout {
 class KALI_API Texture : public Resource {
     KALI_OBJECT(Texture)
 public:
-    Texture(ref<Device> device, TextureDesc desc, const void* init_data);
+    Texture(ref<Device> device, TextureDesc desc, const void* init_data, size_t init_data_size);
     Texture(ref<Device> device, TextureDesc desc, gfx::ITextureResource* resource);
 
     const TextureDesc& desc() const { return m_desc; }
@@ -589,6 +625,8 @@ public:
     gfx::ITextureResource* gfx_texture_resource() const { return m_gfx_texture; }
 
     MemoryUsage memory_usage() const override;
+
+    ref<Bitmap> to_bitmap(uint32_t mip_level = 0, uint32_t array_slice = 0) const;
 
     std::string to_string() const override;
 

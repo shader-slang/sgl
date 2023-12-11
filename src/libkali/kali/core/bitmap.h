@@ -49,6 +49,10 @@ public:
         y,
         /// Luminance + alpha.
         ya,
+        /// Red.
+        r,
+        /// Red + green.
+        rg,
         /// RGB.
         rgb,
         /// RGB + alpha.
@@ -62,6 +66,8 @@ public:
         {
             {PixelFormat::y, "y"},
             {PixelFormat::ya, "ya"},
+            {PixelFormat::r, "r"},
+            {PixelFormat::rg, "rg"},
             {PixelFormat::rgb, "rgb"},
             {PixelFormat::rgba, "rgba"},
             {PixelFormat::multi_channel, "multi_channel"},
@@ -173,6 +179,17 @@ public:
     /// The raw image data as uint8_t.
     uint8_t* uint8_data() { return m_data.get(); }
     const uint8_t* uint8_data() const { return m_data.get(); }
+
+    template<typename T>
+    T* data_as()
+    {
+        return reinterpret_cast<T*>(m_data.get());
+    }
+    template<typename T>
+    const T* data_as() const
+    {
+        return reinterpret_cast<const T*>(m_data.get());
+    }
 
     /// True if bitmap is empty.
     bool empty() const { return m_width == 0 || m_height == 0; }

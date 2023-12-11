@@ -124,6 +124,7 @@ Device::Device(const DeviceDesc& desc)
     m_info.type = m_desc.type;
     m_info.api_name = gfx_device_info.apiName;
     m_info.adapter_name = gfx_device_info.adapterName;
+    m_info.timestamp_frequency = gfx_device_info.timestampFrequency;
     m_info.limits.max_texture_dimension_1d = gfx_device_info.limits.maxTextureDimension1D;
     m_info.limits.max_texture_dimension_2d = gfx_device_info.limits.maxTextureDimension2D;
     m_info.limits.max_texture_dimension_3d = gfx_device_info.limits.maxTextureDimension3D;
@@ -253,58 +254,24 @@ ref<Swapchain> Device::create_swapchain(SwapchainDesc desc, ref<Window> window)
     return make_ref<Swapchain>(std::move(desc), std::move(window), m_default_queue, ref<Device>(this));
 }
 
-ref<Buffer> Device::create_buffer(BufferDesc desc, const void* init_data)
+ref<Buffer> Device::create_buffer(BufferDesc desc, const void* init_data, size_t init_data_size)
 {
-    return make_ref<Buffer>(ref<Device>(this), std::move(desc), init_data);
+    return make_ref<Buffer>(ref<Device>(this), std::move(desc), init_data, init_data_size);
 }
 
-ref<Buffer> Device::create_raw_buffer(size_t size, ResourceUsage usage, MemoryType memory_type, const void* init_data)
+ref<Buffer> Device::create_structured_buffer(StructuredBufferDesc desc, const void* init_data, size_t init_data_size)
 {
-    BufferDesc desc{
-        .size = size,
-        .usage = usage,
-        .memory_type = memory_type,
-    };
-    return create_buffer(desc, init_data);
+    return make_ref<Buffer>(ref<Device>(this), std::move(desc), init_data, init_data_size);
 }
 
-ref<Buffer> Device::create_typed_buffer(
-    Format format,
-    size_t element_count,
-    ResourceUsage usage,
-    MemoryType memory_type,
-    const void* init_data
-)
+ref<Buffer> Device::create_typed_buffer(TypedBufferDesc desc, const void* init_data, size_t init_data_size)
 {
-    BufferDesc desc{
-        .size = element_count * 1,
-        .format = format,
-        .usage = usage,
-        .memory_type = memory_type,
-    };
-    return create_buffer(desc, init_data);
+    return make_ref<Buffer>(ref<Device>(this), std::move(desc), init_data, init_data_size);
 }
 
-ref<Buffer> Device::create_structured_buffer(
-    size_t struct_size,
-    size_t element_count,
-    ResourceUsage usage,
-    MemoryType memory_type,
-    const void* init_data
-)
+ref<Texture> Device::create_texture(TextureDesc desc, const void* init_data, size_t init_data_size)
 {
-    BufferDesc desc{
-        .size = element_count * struct_size,
-        .struct_size = struct_size,
-        .usage = usage,
-        .memory_type = memory_type,
-    };
-    return create_buffer(desc, init_data);
-}
-
-ref<Texture> Device::create_texture(TextureDesc desc, const void* init_data)
-{
-    return make_ref<Texture>(ref<Device>(this), std::move(desc), init_data);
+    return make_ref<Texture>(ref<Device>(this), std::move(desc), init_data, init_data_size);
 }
 
 ref<Texture> Device::create_texture_from_resource(TextureDesc desc, gfx::ITextureResource* resource)
@@ -342,31 +309,31 @@ ref<SlangSession> Device::create_slang_session(SlangSessionDesc desc)
     return make_ref<SlangSession>(ref<Device>(this), std::move(desc));
 }
 
-ref<SlangModule> Device::load_module(const std::filesystem::path& path)
+ref<SlangModule> Device::load_module(const std::filesystem::path& path, const DefineList& defines)
 {
     ref<SlangSession> session = create_slang_session({});
-    return session->load_module(path);
+    return session->load_module(path, defines);
 }
 
-ref<SlangModule> Device::load_module_from_source(const std::string& source)
+ref<SlangModule> Device::load_module_from_source(const std::string& source, const DefineList& defines)
 {
     ref<SlangSession> session = create_slang_session({});
-    return session->load_module_from_source(source);
+    return session->load_module_from_source(source, {}, {}, defines);
 }
 
-ref<ComputePipelineState> Device::create_compute_pipeline_state(ComputePipelineStateDesc desc)
+ref<ComputePipeline> Device::create_compute_pipeline(ComputePipelineDesc desc)
 {
-    return make_ref<ComputePipelineState>(ref<Device>(this), std::move(desc));
+    return make_ref<ComputePipeline>(ref<Device>(this), std::move(desc));
 }
 
-ref<GraphicsPipelineState> Device::create_graphics_pipeline_state(GraphicsPipelineStateDesc desc)
+ref<GraphicsPipeline> Device::create_graphics_pipeline(GraphicsPipelineDesc desc)
 {
-    return make_ref<GraphicsPipelineState>(ref<Device>(this), std::move(desc));
+    return make_ref<GraphicsPipeline>(ref<Device>(this), std::move(desc));
 }
 
-ref<RayTracingPipelineState> Device::create_ray_tracing_pipeline_state(RayTracingPipelineStateDesc desc)
+ref<RayTracingPipeline> Device::create_ray_tracing_pipeline(RayTracingPipelineDesc desc)
 {
-    return make_ref<RayTracingPipelineState>(ref<Device>(this), std::move(desc));
+    return make_ref<RayTracingPipeline>(ref<Device>(this), std::move(desc));
 }
 
 ref<CommandQueue> Device::create_command_queue(CommandQueueDesc desc)

@@ -180,7 +180,6 @@ using float2x2 = matrix<float, 2, 2>;
 
 using float3x3 = matrix<float, 3, 3>;
 
-using float1x4 = matrix<float, 1, 4>;
 using float2x4 = matrix<float, 2, 4>;
 using float3x4 = matrix<float, 3, 4>;
 using float4x4 = matrix<float, 4, 4>;
@@ -193,7 +192,6 @@ using float2x2 = math::float2x2;
 
 using float3x3 = math::float3x3;
 
-using float1x4 = math::float1x4;
 using float2x4 = math::float2x4;
 using float3x4 = math::float3x4;
 using float4x4 = math::float4x4;

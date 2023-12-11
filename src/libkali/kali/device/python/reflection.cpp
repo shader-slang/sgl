@@ -1,6 +1,7 @@
 #include "nanobind.h"
 
 #include "kali/device/reflection.h"
+#include "kali/device/shader.h"
 
 NB_MAKE_OPAQUE(std::vector<kali::ref<kali::VariableReflection>>)
 
@@ -62,4 +63,18 @@ KALI_PY_EXPORT(device_reflection)
         .def_prop_ro("entry_points", &ProgramLayout::entry_points)
         .def_prop_ro("hashed_strings", &ProgramLayout::hashed_strings)
         .def("__repr__", &ProgramLayout::to_string);
+
+    nb::class_<ReflectionCursor>(m, "ReflectionCursor")
+        .def(nb::init<const ShaderProgram*>(), "shader_program"_a)
+        .def("is_valid", &ReflectionCursor::is_valid)
+        .def("find_field", &ReflectionCursor::find_field, "name"_a)
+        .def("find_element", &ReflectionCursor::find_element, "index"_a)
+        .def("has_field", &ReflectionCursor::has_field, "name"_a)
+        .def("has_element", &ReflectionCursor::has_element, "index"_a)
+        .def_prop_ro("type_layout", &ReflectionCursor::type_layout)
+        .def_prop_ro("type", &ReflectionCursor::type)
+        .def("__getitem__", [](ReflectionCursor& self, std::string_view name) { return self[name]; })
+        .def("__getitem__", [](ReflectionCursor& self, int index) { return self[index]; })
+        .def("__getattr__", [](ReflectionCursor& self, std::string_view name) { return self[name]; })
+        .def("__repr__", &ReflectionCursor::to_string);
 }

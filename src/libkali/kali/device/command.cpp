@@ -4,6 +4,7 @@
 #include "kali/device/device.h"
 #include "kali/device/fence.h"
 #include "kali/device/resource.h"
+#include "kali/device/query.h"
 #include "kali/device/pipeline.h"
 #include "kali/device/raytracing.h"
 #include "kali/device/shader_object.h"
@@ -120,18 +121,6 @@ std::string CommandBuffer::to_string() const
     );
 }
 
-#if 0
-// ----------------------------------------------------------------------------
-// PassEncoder
-// ----------------------------------------------------------------------------
-
-PassEncoder::~PassEncoder()
-{
-    if (m_command_stream)
-        m_command_stream->end_pass();
-}
-#endif
-
 // ----------------------------------------------------------------------------
 // ComputePassEncoder
 // ----------------------------------------------------------------------------
@@ -149,7 +138,7 @@ void ComputePassEncoder::end()
     }
 }
 
-ref<TransientShaderObject> ComputePassEncoder::bind_pipeline(const ComputePipelineState* pipeline)
+ref<TransientShaderObject> ComputePassEncoder::bind_pipeline(const ComputePipeline* pipeline)
 {
     KALI_CHECK_NOT_NULL(pipeline);
 
@@ -159,7 +148,7 @@ ref<TransientShaderObject> ComputePassEncoder::bind_pipeline(const ComputePipeli
     return make_ref<TransientShaderObject>(gfx_shader_object, m_command_stream);
 }
 
-void ComputePassEncoder::bind_pipeline(const ComputePipelineState* pipeline, const ShaderObject* shader_object)
+void ComputePassEncoder::bind_pipeline(const ComputePipeline* pipeline, const ShaderObject* shader_object)
 {
     KALI_CHECK_NOT_NULL(pipeline);
     KALI_CHECK_NOT_NULL(shader_object);
@@ -183,6 +172,8 @@ void ComputePassEncoder::dispatch(uint3 thread_count)
 
 void ComputePassEncoder::dispatch_thread_groups(uint3 thread_group_count)
 {
+    KALI_CHECK(m_bound_pipeline, "No pipeline bound");
+
     SLANG_CALL(
         m_gfx_compute_command_encoder->dispatchCompute(thread_group_count.x, thread_group_count.y, thread_group_count.z)
     );
@@ -191,52 +182,145 @@ void ComputePassEncoder::dispatch_thread_groups(uint3 thread_group_count)
 void ComputePassEncoder::dispatch_thread_groups_indirect(const Buffer* cmd_buffer, DeviceOffset offset)
 {
     KALI_CHECK_NOT_NULL(cmd_buffer);
+    KALI_CHECK(m_bound_pipeline, "No pipeline bound");
 
     SLANG_CALL(m_gfx_compute_command_encoder->dispatchComputeIndirect(cmd_buffer->gfx_buffer_resource(), offset));
 }
 
-#if 0
 // ----------------------------------------------------------------------------
 // RenderPassEncoder
 // ----------------------------------------------------------------------------
 
-ref<TransientShaderObject> RenderPassEncoder::bind_pipeline(const GraphicsPipelineState* pipeline)
+RenderPassEncoder::~RenderPassEncoder()
+{
+    end();
+}
+
+void RenderPassEncoder::end()
+{
+    if (m_command_stream) {
+        m_command_stream->end_pass();
+        m_command_stream = nullptr;
+    }
+}
+
+ref<TransientShaderObject> RenderPassEncoder::bind_pipeline(const GraphicsPipeline* pipeline)
 {
     KALI_CHECK_NOT_NULL(pipeline);
 
+    m_bound_pipeline = pipeline;
     gfx::IShaderObject* gfx_shader_object;
     SLANG_CALL(m_gfx_render_command_encoder->bindPipeline(pipeline->gfx_pipeline_state(), &gfx_shader_object));
     return make_ref<TransientShaderObject>(gfx_shader_object, m_command_stream);
 }
 
-void RenderPassEncoder::bind_pipeline(const GraphicsPipelineState* pipeline, const ShaderObject* shader_object)
+void RenderPassEncoder::bind_pipeline(const GraphicsPipeline* pipeline, const ShaderObject* shader_object)
 {
     KALI_CHECK_NOT_NULL(pipeline);
     KALI_CHECK_NOT_NULL(shader_object);
 
+    m_bound_pipeline = pipeline;
     SLANG_CALL(m_gfx_render_command_encoder
                    ->bindPipelineWithRootObject(pipeline->gfx_pipeline_state(), shader_object->gfx_shader_object()));
+}
+
+void RenderPassEncoder::set_viewports(std::span<Viewport> viewports)
+{
+    m_gfx_render_command_encoder->setViewports(
+        narrow_cast<gfx::GfxCount>(viewports.size()),
+        reinterpret_cast<const gfx::Viewport*>(viewports.data())
+    );
+}
+
+void RenderPassEncoder::set_scissor_rects(std::span<ScissorRect> scissor_rects)
+{
+    m_gfx_render_command_encoder->setScissorRects(
+        narrow_cast<gfx::GfxCount>(scissor_rects.size()),
+        reinterpret_cast<const gfx::ScissorRect*>(scissor_rects.data())
+    );
+}
+
+void RenderPassEncoder::set_viewport_and_scissor_rect(const Viewport& viewport)
+{
+    m_gfx_render_command_encoder->setViewportAndScissor(reinterpret_cast<const gfx::Viewport&>(viewport));
+}
+
+// void set_primitive_topology(PrimitiveTopology topology);
+
+void RenderPassEncoder::set_stencil_reference(uint32_t reference_value)
+{
+    m_gfx_render_command_encoder->setStencilReference(reference_value);
+}
+
+void RenderPassEncoder::set_vertex_buffers(uint32_t start_slot, std::span<Slot> slots)
+{
+    ShortVector<gfx::IBufferResource*, 16> gfx_buffers(slots.size(), nullptr);
+    ShortVector<gfx::Offset, 16> gfx_offsets(slots.size(), 0);
+    for (size_t i = 0; i < slots.size(); i++) {
+        gfx_buffers[i] = slots[i].buffer->gfx_buffer_resource();
+        gfx_offsets[i] = slots[i].offset;
+    }
+    m_gfx_render_command_encoder->setVertexBuffers(
+        start_slot,
+        narrow_cast<gfx::GfxCount>(slots.size()),
+        gfx_buffers.data(),
+        gfx_offsets.data()
+    );
+}
+
+void RenderPassEncoder::set_vertex_buffer(uint32_t slot, const Buffer* buffer, DeviceOffset offset)
+{
+    gfx::IBufferResource* gfx_buffer = buffer->gfx_buffer_resource();
+    m_gfx_render_command_encoder->setVertexBuffer(slot, gfx_buffer, offset);
+}
+
+void RenderPassEncoder::set_index_buffer(const Buffer* buffer, Format index_format, DeviceOffset offset)
+{
+    m_gfx_render_command_encoder
+        ->setIndexBuffer(buffer->gfx_buffer_resource(), static_cast<gfx::Format>(index_format), offset);
+}
+
+void RenderPassEncoder::draw(uint32_t vertex_count, uint32_t start_vertex)
+{
+    KALI_CHECK(m_bound_pipeline, "No pipeline bound");
+
+    SLANG_CALL(m_gfx_render_command_encoder->draw(vertex_count, start_vertex));
 }
 
 // ----------------------------------------------------------------------------
 // RayTracingPassEncoder
 // ----------------------------------------------------------------------------
 
-ref<TransientShaderObject> RayTracingPassEncoder::bind_pipeline(const RayTracingPipelineState* pipeline)
+RayTracingPassEncoder::~RayTracingPassEncoder()
+{
+    end();
+}
+
+void RayTracingPassEncoder::end()
+{
+    if (m_command_stream) {
+        m_command_stream->end_pass();
+        m_command_stream = nullptr;
+    }
+}
+
+ref<TransientShaderObject> RayTracingPassEncoder::bind_pipeline(const RayTracingPipeline* pipeline)
 {
     KALI_CHECK_NOT_NULL(pipeline);
 
+    m_bound_pipeline = pipeline;
     gfx::IShaderObject* gfx_shader_object;
     // TODO gfx bindPipeline should return Result (fix in slang/gfx)
     m_gfx_ray_tracing_command_encoder->bindPipeline(pipeline->gfx_pipeline_state(), &gfx_shader_object);
     return make_ref<TransientShaderObject>(gfx_shader_object, m_command_stream);
 }
 
-void RayTracingPassEncoder::bind_pipeline(const RayTracingPipelineState* pipeline, const ShaderObject* shader_object)
+void RayTracingPassEncoder::bind_pipeline(const RayTracingPipeline* pipeline, const ShaderObject* shader_object)
 {
     KALI_CHECK_NOT_NULL(pipeline);
     KALI_CHECK_NOT_NULL(shader_object);
 
+    m_bound_pipeline = pipeline;
     SLANG_CALL(m_gfx_ray_tracing_command_encoder
                    ->bindPipelineWithRootObject(pipeline->gfx_pipeline_state(), shader_object->gfx_shader_object()));
 }
@@ -248,6 +332,7 @@ void RayTracingPassEncoder::dispatch_rays(
 )
 {
     KALI_CHECK_NOT_NULL(shader_table);
+    KALI_CHECK(m_bound_pipeline, "No pipeline bound");
 
     SLANG_CALL(m_gfx_ray_tracing_command_encoder->dispatchRays(
         narrow_cast<gfx::GfxIndex>(ray_gen_shader_index),
@@ -257,7 +342,16 @@ void RayTracingPassEncoder::dispatch_rays(
         narrow_cast<gfx::GfxCount>(dimensions.z)
     ));
 }
-#endif
+
+void RayTracingPassEncoder::serialize_acceleration_structure(DeviceAddress dst, const AccelerationStructure* src)
+{
+    m_gfx_ray_tracing_command_encoder->serializeAccelerationStructure(dst, src->gfx_acceleration_structure());
+}
+
+void RayTracingPassEncoder::deserialize_acceleration_structure(AccelerationStructure* dst, DeviceAddress src)
+{
+    m_gfx_ray_tracing_command_encoder->deserializeAccelerationStructure(dst->gfx_acceleration_structure(), src);
+}
 
 // ----------------------------------------------------------------------------
 // CommandStream
@@ -287,6 +381,33 @@ uint64_t CommandStream::signal(Fence* fence, uint64_t value)
 void CommandStream::wait(const Fence* fence, uint64_t value)
 {
     return m_command_queue->wait(fence, value);
+}
+
+void CommandStream::write_timestamp(QueryPool* query_pool, uint32_t index)
+{
+    KALI_CHECK_NOT_NULL(query_pool);
+    KALI_CHECK_LE(index, query_pool->desc().count);
+
+    get_gfx_resource_command_encoder()->writeTimestamp(query_pool->gfx_query_pool(), index);
+}
+
+void CommandStream::resolve_query(
+    QueryPool* query_pool,
+    uint32_t index,
+    uint32_t count,
+    Buffer* buffer,
+    DeviceOffset offset
+)
+{
+    KALI_CHECK_NOT_NULL(query_pool);
+    KALI_CHECK_NOT_NULL(buffer);
+    KALI_CHECK_LE(index + count, query_pool->desc().count);
+    KALI_CHECK_LE(offset + count * sizeof(uint64_t), buffer->size());
+
+    buffer_barrier(buffer, ResourceState::resolve_destination);
+
+    get_gfx_resource_command_encoder()
+        ->resolveQuery(query_pool->gfx_query_pool(), index, count, buffer->gfx_buffer_resource(), offset);
 }
 
 bool CommandStream::buffer_barrier(const Buffer* buffer, ResourceState new_state)
@@ -603,12 +724,42 @@ void CommandStream::copy_texture_to_buffer(
 
 void CommandStream::upload_buffer_data(Buffer* buffer, size_t offset, size_t size, const void* data)
 {
-    KALI_ASSERT(buffer);
-    KALI_ASSERT_LE(offset + size, buffer->size());
-    KALI_ASSERT(data);
+    KALI_CHECK_NOT_NULL(buffer);
+    KALI_CHECK(offset + size <= buffer->size(), "Buffer upload is out of bounds");
+    KALI_CHECK_NOT_NULL(data);
 
     get_gfx_resource_command_encoder()
         ->uploadBufferData(buffer->gfx_buffer_resource(), offset, size, const_cast<void*>(data));
+}
+
+void CommandStream::upload_texture_data(Texture* texture, uint32_t subresource, const void* data)
+{
+    KALI_CHECK_NOT_NULL(texture);
+    KALI_CHECK_LT(subresource, texture->subresource_count());
+    KALI_CHECK_NOT_NULL(data);
+
+    uint3 dimensions = texture->get_mip_dimensions(texture->get_subresource_mip_level(subresource));
+    SubresourceLayout layout = texture->get_subresource_layout(subresource);
+
+    gfx::ITextureResource::SubresourceData gfx_subresource_data = {
+        .data = const_cast<void*>(data),
+        .strideY = layout.row_size_aligned,
+        .strideZ = layout.row_size_aligned * layout.row_count,
+    };
+
+    gfx::SubresourceRange sr = detail::gfx_subresource_range(texture, subresource);
+    get_gfx_resource_command_encoder()->uploadTextureData(
+        texture->gfx_texture_resource(),
+        sr,
+        gfx::ITextureResource::Offset3D(0, 0, 0),
+        gfx::ITextureResource::Extents{
+            narrow_cast<gfx::GfxCount>(dimensions.x),
+            narrow_cast<gfx::GfxCount>(dimensions.y),
+            narrow_cast<gfx::GfxCount>(dimensions.z),
+        },
+        &gfx_subresource_data,
+        1
+    );
 }
 
 void CommandStream::resolve_texture(Texture* dst, const Texture* src)
@@ -717,6 +868,22 @@ ComputePassEncoder CommandStream::begin_compute_pass()
     return ComputePassEncoder(this, (static_cast<gfx::IComputeCommandEncoder*>(m_gfx_command_encoder.get())));
 }
 
+RayTracingPassEncoder CommandStream::begin_ray_tracing_pass()
+{
+    KALI_CHECK(!m_pass_open, "CommandStream already has an active pass encoder");
+
+    create_command_buffer();
+
+    if (m_active_encoder != EncoderType::raytracing) {
+        end_current_encoder();
+        m_gfx_command_encoder = m_command_buffer->gfx_command_buffer()->encodeRayTracingCommands();
+        m_active_encoder = EncoderType::raytracing;
+    }
+
+    m_pass_open = true;
+    return RayTracingPassEncoder(this, (static_cast<gfx::IRayTracingCommandEncoder*>(m_gfx_command_encoder.get())));
+}
+
 void CommandStream::begin_debug_event(const char* name, float3 color)
 {
     get_gfx_resource_command_encoder()->beginDebugEvent(name, &color.x);
@@ -769,9 +936,9 @@ void CommandStream::end_current_encoder()
 {
     if (m_active_encoder != EncoderType::none) {
         m_gfx_command_encoder->endEncoding();
+        m_gfx_command_encoder = nullptr;
         m_active_encoder = EncoderType::none;
     }
 }
-
 
 } // namespace kali

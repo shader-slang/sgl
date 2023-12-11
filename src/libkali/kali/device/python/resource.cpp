@@ -5,6 +5,8 @@
 #include "kali/device/formats.h"
 #include "kali/device/command.h"
 
+#include "kali/core/bitmap.h"
+
 namespace kali {
 
 inline std::optional<nb::dlpack::dtype> resource_format_to_dtype(Format format)
@@ -16,12 +18,11 @@ inline std::optional<nb::dlpack::dtype> resource_format_to_dtype(Format format)
         return {};
 
     // Formats with different bits per channel are not supported.
-    uint32_t channel_bit_count = info.channel_bit_count[0];
-    for (uint32_t i = 1; i < info.channel_count; ++i)
-        if (channel_bit_count != info.channel_bit_count[i])
-            return {};
+    if (!info.has_equal_channel_bits())
+        return {};
 
     // Only formats with 8, 16, 32, or 64 bits per channel are supported.
+    uint32_t channel_bit_count = info.channel_bit_count[0];
     if (channel_bit_count != 8 && channel_bit_count != 16 && channel_bit_count != 32 && channel_bit_count != 64)
         return {};
 
@@ -117,19 +118,19 @@ inline void texture_from_numpy(Texture* self, nb::ndarray<nb::numpy> data, uint3
     KALI_CHECK_LT(mip_level, self->mip_count());
     KALI_CHECK_LT(array_slice, self->array_size());
 
-    // uint32_t subresource = self.getSubresourceIndex(array_slice, mip_level);
-    // Texture::SubresourceLayout layout = self.getSubresourceLayout(subresource);
+    uint32_t subresource = self->get_subresource_index(array_slice, mip_level);
+    SubresourceLayout layout = self->get_subresource_layout(subresource);
 
-    // size_t subresourceSize = layout.getTotalByteSize();
-    // size_t dataSize = getNdarrayByteSize(data);
-    // FALCOR_CHECK(
-    //     dataSize == subresourceSize,
-    //     "numpy array is doesn't match the subresource size ({} != {})",
-    //     dataSize,
-    //     subresourceSize
-    // );
+    size_t subresource_size = layout.total_size_aligned();
+    size_t data_size = data.nbytes();
+    KALI_CHECK(
+        data_size == subresource_size,
+        "numpy array is doesn't match the subresource size ({} != {})",
+        data_size,
+        subresource_size
+    );
 
-    // self.setSubresourceBlob(subresource, data.data(), dataSize);
+    self->device()->command_stream()->upload_texture_data(self, subresource, data.data());
 }
 
 } // namespace kali
@@ -257,6 +258,7 @@ KALI_PY_EXPORT(device_resource)
             "base_array_layer"_a = 0,
             "layer_count"_a = SubresourceRange::ALL
         )
+        .def("to_bitmap", &Texture::to_bitmap, "mip_level"_a = 0, "array_slice"_a = 0)
         .def("to_numpy", &texture_to_numpy, "mip_level"_a = 0, "array_slice"_a = 0)
         .def("from_numpy", &texture_from_numpy, "data"_a, "mip_level"_a = 0, "array_slice"_a = 0);
 }

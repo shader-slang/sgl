@@ -4,6 +4,7 @@
 #include "kali/device/types.h"
 #include "kali/device/native_handle.h"
 #include "kali/device/resource.h"
+#include "kali/device/shader.h"
 #include "kali/device/raytracing.h"
 
 #include "kali/core/macros.h"
@@ -136,6 +137,9 @@ struct DeviceInfo {
     std::string api_name;
     /// The name of the graphics adapter.
     std::string adapter_name;
+    /// The frequency of the timestamp counter.
+    /// To resolve a timestamp to seconds, divide by this value.
+    uint64_t timestamp_frequency;
     /// Limits of the device.
     DeviceLimits limits;
 };
@@ -161,56 +165,14 @@ public:
 
     ref<Swapchain> create_swapchain(SwapchainDesc desc, ref<Window> window);
 
-    ref<Buffer> create_buffer(BufferDesc desc, const void* init_data = nullptr);
+    ref<Buffer> create_buffer(BufferDesc desc, const void* init_data = nullptr, size_t init_data_size = 0);
 
-    ref<Buffer> create_raw_buffer(
-        size_t size,
-        ResourceUsage usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access,
-        MemoryType memory_type = MemoryType::device_local,
-        const void* init_data = nullptr
-    );
+    ref<Buffer>
+    create_structured_buffer(StructuredBufferDesc desc, const void* init_data = nullptr, size_t init_data_size = 0);
 
-    ref<Buffer> create_typed_buffer(
-        Format format,
-        size_t element_count,
-        ResourceUsage usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access,
-        MemoryType memory_type = MemoryType::device_local,
-        const void* init_data = nullptr
-    );
+    ref<Buffer> create_typed_buffer(TypedBufferDesc desc, const void* init_data = nullptr, size_t init_data_size = 0);
 
-    template<typename T>
-    ref<Buffer> create_typed_buffer(
-        size_t element_count,
-        ResourceUsage usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access,
-        MemoryType memory_type = MemoryType::device_local,
-        const void* init_data = nullptr
-    )
-    {
-        constexpr Format format = host_type_to_format<T>();
-        static_assert(format != Format::unknown, "Unsupported type");
-        return create_typed_buffer(format, element_count, usage, memory_type, init_data);
-    }
-
-    ref<Buffer> create_structured_buffer(
-        size_t struct_size,
-        size_t element_count,
-        ResourceUsage usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access,
-        MemoryType memory_type = MemoryType::device_local,
-        const void* init_data = nullptr
-    );
-
-    template<typename T>
-    ref<Buffer> create_structured_buffer(
-        size_t element_count,
-        ResourceUsage usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access,
-        MemoryType memory_type = MemoryType::device_local,
-        const T* init_data = nullptr
-    )
-    {
-        return create_structured_buffer(sizeof(T), element_count, usage, memory_type, init_data);
-    }
-
-    ref<Texture> create_texture(TextureDesc desc, const void* init_data = nullptr);
+    ref<Texture> create_texture(TextureDesc desc, const void* init_data = nullptr, size_t init_data_size = 0);
 
     ref<Texture> create_texture_from_resource(TextureDesc desc, gfx::ITextureResource* resource);
 
@@ -226,14 +188,14 @@ public:
 
     ref<SlangSession> create_slang_session(SlangSessionDesc desc);
 
-    ref<SlangModule> load_module(const std::filesystem::path& path);
-    ref<SlangModule> load_module_from_source(const std::string& source);
+    ref<SlangModule> load_module(const std::filesystem::path& path, const DefineList& defines = DefineList{});
+    ref<SlangModule> load_module_from_source(const std::string& source, const DefineList& defines = DefineList{});
 
-    ref<ComputePipelineState> create_compute_pipeline_state(ComputePipelineStateDesc desc);
+    ref<ComputePipeline> create_compute_pipeline(ComputePipelineDesc desc);
 
-    ref<GraphicsPipelineState> create_graphics_pipeline_state(GraphicsPipelineStateDesc desc);
+    ref<GraphicsPipeline> create_graphics_pipeline(GraphicsPipelineDesc desc);
 
-    ref<RayTracingPipelineState> create_ray_tracing_pipeline_state(RayTracingPipelineStateDesc desc);
+    ref<RayTracingPipeline> create_ray_tracing_pipeline(RayTracingPipelineDesc desc);
 
     ref<CommandQueue> create_command_queue(CommandQueueDesc desc);
 

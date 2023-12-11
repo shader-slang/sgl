@@ -7,3 +7,6 @@
 [submodule "tools/nanobind-stubgen"]
 	path = tools/nanobind-stubgen
 	url = https://github.com/westlicht/nanobind-stubgen.git
+[submodule "data"]
+	path = data
+	url = https://github.com/westlicht/kali-data.git
