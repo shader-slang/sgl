@@ -94,5 +94,6 @@ KALI_PY_EXPORT(device_shader)
     nb::class_<ShaderProgram, Object>(m, "ShaderProgram")
         .def_prop_ro("program_layout", &ShaderProgram::program_layout, nb::rv_policy::reference_internal)
         // .def_prop_ro("entry_point_layouts", &ShaderProgram::entry_point_layouts)
-        .def("entry_point_layout", &ShaderProgram::entry_point_layout, "index"_a, nb::rv_policy::reference_internal);
+        .def("entry_point_layout", &ShaderProgram::entry_point_layout, "index"_a, nb::rv_policy::reference_internal)
+        .def_prop_ro("reflection", &ShaderProgram::reflection);
 }

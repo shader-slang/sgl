@@ -905,6 +905,12 @@ public:
         return detail::from_slang(base()->findEntryPointByName(name));
     }
 
+    const EntryPointLayout* get_entry_point_by_name(std::string_view name) const
+    {
+        std::string name_str(name);
+        return get_entry_point_by_name(name_str.c_str());
+    }
+
     const EntryPointLayout* find_entry_point_by_name(const char* name) const
     {
         if (auto entry_point = base()->findEntryPointByName(name)) {
@@ -1002,6 +1008,39 @@ private:
     /// Cast to non-const base pointer.
     /// The underlying slang API is not const-correct.
     slang::ProgramLayout* base() const { return (slang::ProgramLayout*)(this); }
+};
+
+class ShaderProgram;
+
+class KALI_API ReflectionCursor {
+public:
+    ReflectionCursor() = default;
+
+    ReflectionCursor(const ShaderProgram* shader_program);
+    ReflectionCursor(const EntryPointLayout* entry_point_layout);
+    ReflectionCursor(const TypeLayoutReflection* type_layout);
+
+    const TypeLayoutReflection* type_layout() const { return m_type_layout; }
+    const TypeReflection* type() const { return m_type_layout->type(); }
+
+    bool is_valid() const { return m_valid; }
+
+    // operator bool() const { return is_valid(); }
+
+    ReflectionCursor operator[](std::string_view name) const;
+    ReflectionCursor operator[](uint32_t index) const;
+
+    ReflectionCursor find_field(std::string_view name) const;
+    ReflectionCursor find_element(uint32_t index) const;
+
+    bool has_field(std::string_view name) const { return find_field(name).is_valid(); }
+    bool has_element(uint32_t index) const { return find_element(index).is_valid(); }
+
+private:
+    const ShaderProgram* m_shader_program{nullptr};
+    const EntryPointLayout* m_entry_point_layout{nullptr};
+    const TypeLayoutReflection* m_type_layout{nullptr};
+    bool m_valid{false};
 };
 
 } // namespace kali

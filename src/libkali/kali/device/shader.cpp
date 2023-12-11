@@ -410,11 +410,11 @@ ShaderProgram::ShaderProgram(
 
 std::vector<const EntryPointLayout*> ShaderProgram::entry_point_layouts() const
 {
-    return {};
-    // std::vector<const EntryPointLayout> layouts;
-    // for (size_t i = 0; i < m_entry_points.size(); ++i)
-    //     layouts.push_back(m_entry_points[i]->layout());
-    // return layouts;
+    // TODO maybe remove this method
+    std::vector<const EntryPointLayout*> layouts;
+    for (size_t i = 0; i < m_entry_points.size(); ++i)
+        layouts.push_back(m_entry_points[i]->layout());
+    return layouts;
 }
 
 std::string ShaderProgram::to_string() const

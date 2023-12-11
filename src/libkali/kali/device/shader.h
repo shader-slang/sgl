@@ -306,6 +306,8 @@ public:
     std::vector<const EntryPointLayout*> entry_point_layouts() const;
     const EntryPointLayout* entry_point_layout(uint32_t index) const { return m_entry_points[index]->layout(); }
 
+    ReflectionCursor reflection() const { return ReflectionCursor(this); }
+
     gfx::IShaderProgram* gfx_shader_program() const { return m_gfx_shader_program; }
 
     virtual std::string to_string() const override;

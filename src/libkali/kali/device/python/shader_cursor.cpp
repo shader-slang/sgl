@@ -16,6 +16,10 @@ KALI_PY_EXPORT(device_shader_cursor)
 
     shader_cursor.def(nb::init<ShaderObject*>(), "shader_object"_a);
     shader_cursor.def("is_valid", &ShaderCursor::is_valid);
+    shader_cursor.def("find_field", &ShaderCursor::find_field, "name"_a);
+    shader_cursor.def("find_element", &ShaderCursor::find_element, "index"_a);
+    shader_cursor.def("has_field", &ShaderCursor::has_field, "name"_a);
+    shader_cursor.def("has_element", &ShaderCursor::has_element, "index"_a);
 
     shader_cursor.def("__getitem__", [](ShaderCursor& self, std::string_view name) { return self[name]; });
     shader_cursor.def("__getitem__", [](ShaderCursor& self, int index) { return self[index]; });
