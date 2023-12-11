@@ -158,6 +158,42 @@ KALI_PY_EXPORT(device_device)
         "debug_name"_a = "",
         "init_data"_a = std::optional<nb::ndarray<nb::numpy>>{}
     );
+    // Convenience overload that takes a reflection cursor instead of a type layout.
+    device.def(
+        "create_structured_buffer",
+        [](Device* self,
+           size_t element_count,
+           size_t struct_size,
+           const ReflectionCursor& struct_type,
+           ResourceUsage usage,
+           MemoryType memory_type,
+           std::string debug_name,
+           std::optional<nb::ndarray<nb::numpy>> init_data)
+        {
+            if (init_data) {
+                KALI_CHECK(is_ndarray_contiguous(*init_data), "Initial data is not contiguous.");
+            }
+            return self->create_structured_buffer(
+                {
+                    .element_count = element_count,
+                    .struct_size = struct_size,
+                    .struct_type = struct_type.type_layout(),
+                    .usage = usage,
+                    .memory_type = memory_type,
+                    .debug_name = std::move(debug_name),
+                },
+                init_data ? init_data->data() : nullptr,
+                init_data ? init_data->nbytes() : 0
+            );
+        },
+        "element_count"_a,
+        "struct_size"_a = 0,
+        "struct_type"_a = nullptr,
+        "usage"_a = ResourceUsage::none,
+        "memory_type"_a = MemoryType::device_local,
+        "debug_name"_a = "",
+        "init_data"_a = std::optional<nb::ndarray<nb::numpy>>{}
+    );
     device.def(
         "create_typed_buffer",
         [](Device* self,

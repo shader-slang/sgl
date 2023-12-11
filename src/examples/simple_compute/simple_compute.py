@@ -11,21 +11,21 @@ N = 1024
 
 buffer_a = device.create_structured_buffer(
     element_count=N,
-    struct_type=kernel.reflection.buffer_a.type_layout,
+    struct_type=kernel.reflection.buffer_a,
     usage=kali.ResourceUsage.shader_resource,
     init_data=np.linspace(0, N - 1, N, dtype=np.uint32),
 )
 
 buffer_b = device.create_structured_buffer(
     element_count=N,
-    struct_type=kernel.reflection.buffer_b.type_layout,
+    struct_type=kernel.reflection.buffer_b,
     usage=kali.ResourceUsage.shader_resource,
     init_data=np.linspace(N, 1, N, dtype=np.uint32)
 )
 
 buffer_c = device.create_structured_buffer(
     element_count=N,
-    struct_type=kernel.reflection.buffer_c.type_layout,
+    struct_type=kernel.reflection.buffer_c,
     usage=kali.ResourceUsage.unordered_access,
 )
 
