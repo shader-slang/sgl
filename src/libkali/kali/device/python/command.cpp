@@ -104,12 +104,12 @@ KALI_PY_EXPORT(device_command)
         )
         .def(
             "bind_pipeline",
-            nb::overload_cast<const ComputePipelineState*>(&ComputePassEncoder::bind_pipeline),
+            nb::overload_cast<const ComputePipeline*>(&ComputePassEncoder::bind_pipeline),
             "pipeline"_a
         )
         .def(
             "bind_pipeline",
-            nb::overload_cast<const ComputePipelineState*, const ShaderObject*>(&ComputePassEncoder::bind_pipeline),
+            nb::overload_cast<const ComputePipeline*, const ShaderObject*>(&ComputePassEncoder::bind_pipeline),
             "pipeline"_a,
             "shader_object"_a
         )
@@ -127,13 +127,12 @@ KALI_PY_EXPORT(device_command)
         )
         .def(
             "bind_pipeline",
-            nb::overload_cast<const RayTracingPipelineState*>(&RayTracingPassEncoder::bind_pipeline),
+            nb::overload_cast<const RayTracingPipeline*>(&RayTracingPassEncoder::bind_pipeline),
             "pipeline"_a
         )
         .def(
             "bind_pipeline",
-            nb::overload_cast<const RayTracingPipelineState*, const ShaderObject*>(&RayTracingPassEncoder::bind_pipeline
-            ),
+            nb::overload_cast<const RayTracingPipeline*, const ShaderObject*>(&RayTracingPassEncoder::bind_pipeline),
             "pipeline"_a,
             "shader_object"_a
         );

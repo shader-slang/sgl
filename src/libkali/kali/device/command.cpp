@@ -138,7 +138,7 @@ void ComputePassEncoder::end()
     }
 }
 
-ref<TransientShaderObject> ComputePassEncoder::bind_pipeline(const ComputePipelineState* pipeline)
+ref<TransientShaderObject> ComputePassEncoder::bind_pipeline(const ComputePipeline* pipeline)
 {
     KALI_CHECK_NOT_NULL(pipeline);
 
@@ -148,7 +148,7 @@ ref<TransientShaderObject> ComputePassEncoder::bind_pipeline(const ComputePipeli
     return make_ref<TransientShaderObject>(gfx_shader_object, m_command_stream);
 }
 
-void ComputePassEncoder::bind_pipeline(const ComputePipelineState* pipeline, const ShaderObject* shader_object)
+void ComputePassEncoder::bind_pipeline(const ComputePipeline* pipeline, const ShaderObject* shader_object)
 {
     KALI_CHECK_NOT_NULL(pipeline);
     KALI_CHECK_NOT_NULL(shader_object);
@@ -204,7 +204,7 @@ void RenderPassEncoder::end()
     }
 }
 
-ref<TransientShaderObject> RenderPassEncoder::bind_pipeline(const GraphicsPipelineState* pipeline)
+ref<TransientShaderObject> RenderPassEncoder::bind_pipeline(const GraphicsPipeline* pipeline)
 {
     KALI_CHECK_NOT_NULL(pipeline);
 
@@ -214,7 +214,7 @@ ref<TransientShaderObject> RenderPassEncoder::bind_pipeline(const GraphicsPipeli
     return make_ref<TransientShaderObject>(gfx_shader_object, m_command_stream);
 }
 
-void RenderPassEncoder::bind_pipeline(const GraphicsPipelineState* pipeline, const ShaderObject* shader_object)
+void RenderPassEncoder::bind_pipeline(const GraphicsPipeline* pipeline, const ShaderObject* shader_object)
 {
     KALI_CHECK_NOT_NULL(pipeline);
     KALI_CHECK_NOT_NULL(shader_object);
@@ -304,7 +304,7 @@ void RayTracingPassEncoder::end()
     }
 }
 
-ref<TransientShaderObject> RayTracingPassEncoder::bind_pipeline(const RayTracingPipelineState* pipeline)
+ref<TransientShaderObject> RayTracingPassEncoder::bind_pipeline(const RayTracingPipeline* pipeline)
 {
     KALI_CHECK_NOT_NULL(pipeline);
 
@@ -315,7 +315,7 @@ ref<TransientShaderObject> RayTracingPassEncoder::bind_pipeline(const RayTracing
     return make_ref<TransientShaderObject>(gfx_shader_object, m_command_stream);
 }
 
-void RayTracingPassEncoder::bind_pipeline(const RayTracingPipelineState* pipeline, const ShaderObject* shader_object)
+void RayTracingPassEncoder::bind_pipeline(const RayTracingPipeline* pipeline, const ShaderObject* shader_object)
 {
     KALI_CHECK_NOT_NULL(pipeline);
     KALI_CHECK_NOT_NULL(shader_object);

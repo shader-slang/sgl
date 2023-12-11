@@ -33,7 +33,7 @@ public:
     ComputeKernel(Device* device, ref<ShaderProgram> program);
     virtual ~ComputeKernel() = default;
 
-    ComputePipelineState* pipeline_state() const;
+    ComputePipeline* pipeline() const;
 
     void dispatch(uint3 thread_count, BindVarsCallback bind_vars, ComputePassEncoder& compute_pass);
 
@@ -41,7 +41,7 @@ public:
 
 private:
     uint3 m_thread_group_size;
-    mutable ref<ComputePipelineState> m_pipeline_state;
+    mutable ref<ComputePipeline> m_pipeline;
 };
 
 class KALI_API RayTracingKernel : public Kernel {
@@ -50,14 +50,14 @@ public:
     RayTracingKernel(Device* device, ref<ShaderProgram> program);
     virtual ~RayTracingKernel() = default;
 
-    RayTracingPipelineState* pipeline_state() const;
+    RayTracingPipeline* pipeline() const;
 
     void dispatch(uint3 thread_count, BindVarsCallback bind_vars, RayTracingPassEncoder* pass_encoder);
 
     void dispatch(uint3 thread_count, BindVarsCallback bind_vars, CommandStream* stream = nullptr);
 
 private:
-    mutable ref<RayTracingPipelineState> m_pipeline_state;
+    mutable ref<RayTracingPipeline> m_pipeline;
 };
 
 } // namespace kali

@@ -15,15 +15,15 @@
 namespace kali {
 
 // ----------------------------------------------------------------------------
-// PipelineState
+// Pipeline
 // ----------------------------------------------------------------------------
 
-PipelineState::PipelineState(ref<Device> device)
+Pipeline::Pipeline(ref<Device> device)
     : DeviceResource(std::move(device))
 {
 }
 
-NativeHandle PipelineState::get_native_handle() const
+NativeHandle Pipeline::get_native_handle() const
 {
     gfx::InteropHandle handle = {};
     SLANG_CALL(m_gfx_pipeline_state->getNativeHandle(&handle));
@@ -39,11 +39,11 @@ NativeHandle PipelineState::get_native_handle() const
 }
 
 // ----------------------------------------------------------------------------
-// ComputePipelineState
+// ComputePipeline
 // ----------------------------------------------------------------------------
 
-ComputePipelineState::ComputePipelineState(ref<Device> device, ComputePipelineStateDesc desc)
-    : PipelineState(std::move(device))
+ComputePipeline::ComputePipeline(ref<Device> device, ComputePipelineDesc desc)
+    : Pipeline(std::move(device))
     , m_desc(std::move(desc))
 {
     KALI_CHECK_NOT_NULL(m_desc.program);
@@ -53,10 +53,10 @@ ComputePipelineState::ComputePipelineState(ref<Device> device, ComputePipelineSt
     m_thread_group_size = desc.program->entry_point_layout(0)->compute_thread_group_size();
 }
 
-std::string ComputePipelineState::to_string() const
+std::string ComputePipeline::to_string() const
 {
     return fmt::format(
-        "ComputePipelineState(\n"
+        "ComputePipeline(\n"
         "  device={},\n"
         "  thread_group_size={}\n"
         ")",
@@ -66,21 +66,21 @@ std::string ComputePipelineState::to_string() const
 }
 
 // ----------------------------------------------------------------------------
-// GraphicsPipelineState
+// GraphicsPipeline
 // ----------------------------------------------------------------------------
 
-GraphicsPipelineState::GraphicsPipelineState(ref<Device> device, GraphicsPipelineStateDesc desc)
-    : PipelineState(std::move(device))
+GraphicsPipeline::GraphicsPipeline(ref<Device> device, GraphicsPipelineDesc desc)
+    : Pipeline(std::move(device))
     , m_desc(std::move(desc))
 {
 }
 
 // ----------------------------------------------------------------------------
-// RayTracingPipelineState
+// RayTracingPipeline
 // ----------------------------------------------------------------------------
 
-RayTracingPipelineState::RayTracingPipelineState(ref<Device> device, RayTracingPipelineStateDesc desc)
-    : PipelineState(std::move(device))
+RayTracingPipeline::RayTracingPipeline(ref<Device> device, RayTracingPipelineDesc desc)
+    : Pipeline(std::move(device))
     , m_desc(std::move(desc))
 {
     ShortVector<gfx::HitGroupDesc, 16> gfx_hit_groups;

@@ -231,11 +231,11 @@ public:
     ref<SlangModule> load_module(const std::filesystem::path& path, const DefineList& defines = DefineList{});
     ref<SlangModule> load_module_from_source(const std::string& source, const DefineList& defines = DefineList{});
 
-    ref<ComputePipelineState> create_compute_pipeline_state(ComputePipelineStateDesc desc);
+    ref<ComputePipeline> create_compute_pipeline(ComputePipelineDesc desc);
 
-    ref<GraphicsPipelineState> create_graphics_pipeline_state(GraphicsPipelineStateDesc desc);
+    ref<GraphicsPipeline> create_graphics_pipeline(GraphicsPipelineDesc desc);
 
-    ref<RayTracingPipelineState> create_ray_tracing_pipeline_state(RayTracingPipelineStateDesc desc);
+    ref<RayTracingPipeline> create_ray_tracing_pipeline(RayTracingPipelineDesc desc);
 
     ref<CommandQueue> create_command_queue(CommandQueueDesc desc);
 

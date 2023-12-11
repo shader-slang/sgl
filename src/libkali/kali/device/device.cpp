@@ -348,19 +348,19 @@ ref<SlangModule> Device::load_module_from_source(const std::string& source, cons
     return session->load_module_from_source(source, {}, {}, defines);
 }
 
-ref<ComputePipelineState> Device::create_compute_pipeline_state(ComputePipelineStateDesc desc)
+ref<ComputePipeline> Device::create_compute_pipeline(ComputePipelineDesc desc)
 {
-    return make_ref<ComputePipelineState>(ref<Device>(this), std::move(desc));
+    return make_ref<ComputePipeline>(ref<Device>(this), std::move(desc));
 }
 
-ref<GraphicsPipelineState> Device::create_graphics_pipeline_state(GraphicsPipelineStateDesc desc)
+ref<GraphicsPipeline> Device::create_graphics_pipeline(GraphicsPipelineDesc desc)
 {
-    return make_ref<GraphicsPipelineState>(ref<Device>(this), std::move(desc));
+    return make_ref<GraphicsPipeline>(ref<Device>(this), std::move(desc));
 }
 
-ref<RayTracingPipelineState> Device::create_ray_tracing_pipeline_state(RayTracingPipelineStateDesc desc)
+ref<RayTracingPipeline> Device::create_ray_tracing_pipeline(RayTracingPipelineDesc desc)
 {
-    return make_ref<RayTracingPipelineState>(ref<Device>(this), std::move(desc));
+    return make_ref<RayTracingPipeline>(ref<Device>(this), std::move(desc));
 }
 
 ref<CommandQueue> Device::create_command_queue(CommandQueueDesc desc)

@@ -97,8 +97,8 @@ public:
 
     void end();
 
-    ref<TransientShaderObject> bind_pipeline(const ComputePipelineState* pipeline);
-    void bind_pipeline(const ComputePipelineState* pipeline, const ShaderObject* shader_object);
+    ref<TransientShaderObject> bind_pipeline(const ComputePipeline* pipeline);
+    void bind_pipeline(const ComputePipeline* pipeline, const ShaderObject* shader_object);
     void dispatch(uint3 thread_count);
     void dispatch_thread_groups(uint3 thread_group_count);
     void dispatch_thread_groups_indirect(const Buffer* cmd_buffer, DeviceOffset offset);
@@ -116,7 +116,7 @@ private:
 
     CommandStream* m_command_stream;
     gfx::IComputeCommandEncoder* m_gfx_compute_command_encoder;
-    const ComputePipelineState* m_bound_pipeline{nullptr};
+    const ComputePipeline* m_bound_pipeline{nullptr};
 
     friend class CommandStream;
 };
@@ -133,8 +133,8 @@ public:
 
     void end();
 
-    ref<TransientShaderObject> bind_pipeline(const GraphicsPipelineState* pipeline);
-    void bind_pipeline(const GraphicsPipelineState* pipeline, const ShaderObject* shader_object);
+    ref<TransientShaderObject> bind_pipeline(const GraphicsPipeline* pipeline);
+    void bind_pipeline(const GraphicsPipeline* pipeline, const ShaderObject* shader_object);
 
     struct Viewport {
         float2 origin{0.f, 0.f};
@@ -235,7 +235,7 @@ private:
 
     CommandStream* m_command_stream;
     gfx::IRenderCommandEncoder* m_gfx_render_command_encoder;
-    const GraphicsPipelineState* m_bound_pipeline{nullptr};
+    const GraphicsPipeline* m_bound_pipeline{nullptr};
 
     friend class CommandStream;
 };
@@ -252,8 +252,8 @@ public:
 
     void end();
 
-    ref<TransientShaderObject> bind_pipeline(const RayTracingPipelineState* pipeline);
-    void bind_pipeline(const RayTracingPipelineState* pipeline, const ShaderObject* shader_object);
+    ref<TransientShaderObject> bind_pipeline(const RayTracingPipeline* pipeline);
+    void bind_pipeline(const RayTracingPipeline* pipeline, const ShaderObject* shader_object);
     void dispatch_rays(uint32_t ray_gen_shader_index, const ShaderTable* shader_table, uint3 dimensions);
 
     // void build_acceleration_structure(
@@ -292,7 +292,7 @@ private:
 
     CommandStream* m_command_stream;
     gfx::IRayTracingCommandEncoder* m_gfx_ray_tracing_command_encoder;
-    const RayTracingPipelineState* m_bound_pipeline{nullptr};
+    const RayTracingPipeline* m_bound_pipeline{nullptr};
 
     friend class CommandStream;
 };

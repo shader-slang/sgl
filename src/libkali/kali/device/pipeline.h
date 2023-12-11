@@ -17,10 +17,10 @@
 
 namespace kali {
 
-class KALI_API PipelineState : public DeviceResource {
-    KALI_OBJECT(PipelineState)
+class KALI_API Pipeline : public DeviceResource {
+    KALI_OBJECT(Pipeline)
 public:
-    PipelineState(ref<Device> device);
+    Pipeline(ref<Device> device);
 
     gfx::IPipelineState* gfx_pipeline_state() const { return m_gfx_pipeline_state; }
 
@@ -33,29 +33,29 @@ protected:
     Slang::ComPtr<gfx::IPipelineState> m_gfx_pipeline_state;
 };
 
-struct ComputePipelineStateDesc {
+struct ComputePipelineDesc {
     // TODO we should introduce a weak_ref and use that here
     // This would allow the cache to check if the program is still available
     const ShaderProgram* program;
-    auto operator<=>(const ComputePipelineStateDesc&) const = default;
+    auto operator<=>(const ComputePipelineDesc&) const = default;
 };
 
-class KALI_API ComputePipelineState : public PipelineState {
+class KALI_API ComputePipeline : public Pipeline {
 public:
-    ComputePipelineState(ref<Device> device, ComputePipelineStateDesc desc);
+    ComputePipeline(ref<Device> device, ComputePipelineDesc desc);
 
-    const ComputePipelineStateDesc& desc() const { return m_desc; }
+    const ComputePipelineDesc& desc() const { return m_desc; }
 
     uint3 thread_group_size() const { return m_thread_group_size; }
 
     std::string to_string() const override;
 
 private:
-    ComputePipelineStateDesc m_desc;
+    ComputePipelineDesc m_desc;
     uint3 m_thread_group_size;
 };
 
-struct GraphicsPipelineStateDesc {
+struct GraphicsPipelineDesc {
     ShaderProgram* program;
 
     ref<InputLayout> input_layout;
@@ -66,14 +66,14 @@ struct GraphicsPipelineStateDesc {
     BlendDesc blend;
 };
 
-class KALI_API GraphicsPipelineState : public PipelineState {
+class KALI_API GraphicsPipeline : public Pipeline {
 public:
-    GraphicsPipelineState(ref<Device> device, GraphicsPipelineStateDesc desc);
+    GraphicsPipeline(ref<Device> device, GraphicsPipelineDesc desc);
 
-    const GraphicsPipelineStateDesc& desc() const { return m_desc; }
+    const GraphicsPipelineDesc& desc() const { return m_desc; }
 
 private:
-    GraphicsPipelineStateDesc m_desc;
+    GraphicsPipelineDesc m_desc;
 };
 
 struct HitGroupDesc {
@@ -83,7 +83,7 @@ struct HitGroupDesc {
     std::string intersection_entry_point;
 };
 
-struct RayTracingPipelineStateDesc {
+struct RayTracingPipelineDesc {
     ShaderProgram* program;
     std::vector<HitGroupDesc> hit_groups;
     uint32_t max_recursion{0};
@@ -92,14 +92,14 @@ struct RayTracingPipelineStateDesc {
     RayTracingPipelineFlags flags{RayTracingPipelineFlags::none};
 };
 
-class RayTracingPipelineState : public PipelineState {
+class RayTracingPipeline : public Pipeline {
 public:
-    RayTracingPipelineState(ref<Device> device, RayTracingPipelineStateDesc desc);
+    RayTracingPipeline(ref<Device> device, RayTracingPipelineDesc desc);
 
-    const RayTracingPipelineStateDesc& desc() const { return m_desc; }
+    const RayTracingPipelineDesc& desc() const { return m_desc; }
 
 private:
-    RayTracingPipelineStateDesc m_desc;
+    RayTracingPipelineDesc m_desc;
 };
 
 } // namespace kali

@@ -67,7 +67,7 @@ KALI_PY_EXPORT(device_kernel)
         .def_prop_ro("reflection", &Kernel::reflection);
 
     nb::class_<ComputeKernel, Kernel>(m, "ComputeKernel")
-        .def_prop_ro("pipeline_state", &ComputeKernel::pipeline_state)
+        .def_prop_ro("pipeline", &ComputeKernel::pipeline)
         .def(
             "dispatch",
             [](ComputeKernel* self, uint3 thread_count, nb::dict vars, CommandStream* stream, nb::kwargs kwargs)

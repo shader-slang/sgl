@@ -49,7 +49,7 @@ int main()
 #if 1
         {
             auto compute_pass = device->command_stream()->begin_compute_pass();
-            auto shader_object = compute_pass.bind_pipeline(kernel->pipeline_state());
+            auto shader_object = compute_pass.bind_pipeline(kernel->pipeline());
             auto processor = ShaderCursor(shader_object)["processor"];
             processor["a"] = buffer_a;
             processor["b"] = buffer_b;

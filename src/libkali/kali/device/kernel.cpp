@@ -30,16 +30,16 @@ ComputeKernel::ComputeKernel(Device* device, ref<ShaderProgram> program)
     m_thread_group_size = m_program->entry_point_layout(0)->compute_thread_group_size();
 }
 
-ComputePipelineState* ComputeKernel::pipeline_state() const
+ComputePipeline* ComputeKernel::pipeline() const
 {
-    if (!m_pipeline_state)
-        m_pipeline_state = m_device->create_compute_pipeline_state({.program = m_program});
-    return m_pipeline_state;
+    if (!m_pipeline)
+        m_pipeline = m_device->create_compute_pipeline({.program = m_program});
+    return m_pipeline;
 }
 
 void ComputeKernel::dispatch(uint3 thread_count, BindVarsCallback bind_vars, ComputePassEncoder& compute_pass)
 {
-    ref<ShaderObject> shader_object = compute_pass.bind_pipeline(pipeline_state());
+    ref<ShaderObject> shader_object = compute_pass.bind_pipeline(pipeline());
     if (bind_vars)
         bind_vars(ShaderCursor(shader_object));
 
@@ -68,11 +68,11 @@ RayTracingKernel::RayTracingKernel(Device* device, ref<ShaderProgram> program)
 {
 }
 
-RayTracingPipelineState* RayTracingKernel::pipeline_state() const
+RayTracingPipeline* RayTracingKernel::pipeline() const
 {
-    if (!m_pipeline_state)
-        m_pipeline_state = m_device->create_ray_tracing_pipeline_state({.program = m_program});
-    return m_pipeline_state;
+    if (!m_pipeline)
+        m_pipeline = m_device->create_ray_tracing_pipeline({.program = m_program});
+    return m_pipeline;
 }
 
 // void RayTracingKernel::dispatch(uint3 thread_count, BindVarsCallback bind_vars, RayTracingCommandEncoder* encoder)
