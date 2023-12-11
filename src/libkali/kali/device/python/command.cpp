@@ -102,7 +102,6 @@ KALI_PY_EXPORT(device_command)
             "exc_value"_a = nb::none(),
             "traceback"_a = nb::none()
         )
-
         .def(
             "bind_pipeline",
             nb::overload_cast<const ComputePipelineState*>(&ComputePassEncoder::bind_pipeline),
@@ -117,16 +116,32 @@ KALI_PY_EXPORT(device_command)
         .def("dispatch", &ComputePassEncoder::dispatch, "thread_count"_a)
         .def("dispatch_thread_groups", &ComputePassEncoder::dispatch_thread_groups, "thread_group_count"_a);
 
-    // nb::class_<CommandStream, Object>(m, "CommandStream")
-    //     .def("submit", &CommandStream::submit)
-    //     .def("signal", &CommandStream::signal, "fence"_a, "value"_a = Fence::AUTO)
-    //     .def("wait", &CommandStream::wait, "fence"_a, "value"_a = Fence::AUTO)
-    //     .def("buffer_barrier", &CommandStream::buffer_barrier, "buffer"_a, "new_state"_a)
-    //     .def("texture_barrier", &CommandStream::texture_barrier, "texture"_a, "new_state"_a)
-    //     .def("uav_barrier", &CommandStream::uav_barrier, "resource"_a);
-    // .def("copy_resource", &CommandStream::copy_resource, "dst"_a, "src"_a)
-    // .def("copy_subresource", &CommandStream::copy_subresource, "dst"_a, "dst_sub_index"_a, "src"_a,
-    // "src_sub_index"_a) .def("copy_buffer_region", &CommandStream::copy_buffer_region, "dst"_a, "dst_offset"_a,
-    // "src"_a, "src_offset"_a, "size"_a) .def("copy_texture_region", &CommandStream::copy_texture_region, "dst"_a,
-    // "dst_sub_index"_a, "dst_offset"_a, "src"_a, "src_sub_index"_a, "src_offset"_a, "size"_a)
+    nb::class_<RayTracingPassEncoder>(m, "RayTracingPassEncoder")
+        .def("__enter__", [](RayTracingPassEncoder* self) { return self; })
+        .def(
+            "__exit__",
+            [](RayTracingPassEncoder* self, nb::object, nb::object, nb::object) { self->end(); },
+            "exc_type"_a = nb::none(),
+            "exc_value"_a = nb::none(),
+            "traceback"_a = nb::none()
+        )
+        .def(
+            "bind_pipeline",
+            nb::overload_cast<const RayTracingPipelineState*>(&RayTracingPassEncoder::bind_pipeline),
+            "pipeline"_a
+        )
+        .def(
+            "bind_pipeline",
+            nb::overload_cast<const RayTracingPipelineState*, const ShaderObject*>(&RayTracingPassEncoder::bind_pipeline
+            ),
+            "pipeline"_a,
+            "shader_object"_a
+        );
+    // .def(
+    //     "dispatch_rays",
+    //     &RayTracingPassEncoder::dispatch_rays,
+    //     "ray_gen_shader_index"_a,
+    //     "shader_table"_a,
+    //     "dimensions"_a
+    // );
 }
