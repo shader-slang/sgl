@@ -251,7 +251,7 @@ def test_shader_cursor(device_type):
                     write_var(cursor, i, var, name_prefix)
 
     with device.command_stream.begin_compute_pass() as compute_pass:
-        shader_object = compute_pass.bind_pipeline(kernel.pipeline_state)
+        shader_object = compute_pass.bind_pipeline(kernel.pipeline)
         cursor = kali.ShaderCursor(shader_object)
         cursor["results"] = result_buffer
         write_vars(cursor, TEST_VARS)
