@@ -1027,6 +1027,8 @@ public:
 
     // operator bool() const { return is_valid(); }
 
+    operator const TypeLayoutReflection*() const { return type_layout(); }
+
     ReflectionCursor operator[](std::string_view name) const;
     ReflectionCursor operator[](uint32_t index) const;
 

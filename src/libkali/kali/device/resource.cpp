@@ -189,13 +189,22 @@ NativeHandle ResourceView::get_native_handle() const
 // Buffer
 // ----------------------------------------------------------------------------
 
-Buffer::Buffer(ref<Device> device, BufferDesc desc, const void* init_data)
+Buffer::Buffer(ref<Device> device, BufferDesc desc, const void* init_data, size_t init_data_size)
     : Resource(std::move(device), ResourceType::buffer)
     , m_desc(std::move(desc))
 {
+    // TODO check init_data size
+    KALI_UNUSED(init_data_size);
     KALI_ASSERT(m_desc.size > 0);
     KALI_ASSERT(m_desc.struct_size == 0 || m_desc.format == Format::unknown);
     KALI_ASSERT(m_desc.struct_size == 0 || m_desc.size % m_desc.struct_size == 0);
+
+    KALI_CHECK(
+        (init_data == nullptr && init_data_size == 0) || init_data_size == m_desc.size,
+        "Invalid init data size (got {} bytes, expected {} bytes)",
+        init_data_size,
+        m_desc.size
+    );
 
     gfx::IBufferResource::Desc gfx_desc{};
     gfx_desc.type = gfx::IResource::Type::Buffer;
@@ -210,6 +219,53 @@ Buffer::Buffer(ref<Device> device, BufferDesc desc, const void* init_data)
     gfx_desc.format = static_cast<gfx::Format>(m_desc.format);
 
     SLANG_CALL(m_device->gfx_device()->createBufferResource(gfx_desc, init_data, m_gfx_buffer.writeRef()));
+}
+
+inline BufferDesc to_buffer_desc(StructuredBufferDesc desc)
+{
+    KALI_CHECK(desc.element_count > 0, "Invalid element count.");
+    KALI_CHECK(desc.struct_size > 0 || desc.struct_type, "Either 'struct_size' or 'struct_type' must be set.");
+
+    size_t struct_size = desc.struct_size;
+    if (desc.struct_type) {
+        const TypeLayoutReflection* type = desc.struct_type->unwrap_array()->element_type_layout();
+        if (type)
+            struct_size = type->size();
+    }
+
+    return {
+        .size = desc.element_count * struct_size,
+        .struct_size = struct_size,
+        .initial_state = desc.initial_state,
+        .usage = desc.usage,
+        .memory_type = desc.memory_type,
+        .debug_name = desc.debug_name,
+    };
+}
+
+Buffer::Buffer(ref<Device> device, StructuredBufferDesc desc, const void* init_data, size_t init_data_size)
+    : Buffer(std::move(device), to_buffer_desc(std::move(desc)), init_data, init_data_size)
+{
+}
+
+inline BufferDesc to_buffer_desc(TypedBufferDesc desc)
+{
+    KALI_CHECK(desc.element_count > 0, "Invalid element count.");
+    KALI_CHECK(desc.format != Format::unknown, "Invalid format.");
+
+    return {
+        .size = desc.element_count * get_format_info(desc.format).bytes_per_block,
+        .format = desc.format,
+        .initial_state = desc.initial_state,
+        .usage = desc.usage,
+        .memory_type = desc.memory_type,
+        .debug_name = desc.debug_name,
+    };
+}
+
+Buffer::Buffer(ref<Device> device, TypedBufferDesc desc, const void* init_data, size_t init_data_size)
+    : Buffer(std::move(device), to_buffer_desc(std::move(desc)), init_data, init_data_size)
+{
 }
 
 size_t Buffer::element_size() const
@@ -377,7 +433,7 @@ inline void process_texture_desc(TextureDesc& desc)
     KALI_CHECK(desc.sample_count >= 1, "Invalid sample count.");
 }
 
-Texture::Texture(ref<Device> device, TextureDesc desc, const void* init_data)
+Texture::Texture(ref<Device> device, TextureDesc desc, const void* init_data, size_t init_data_size)
     : Resource(std::move(device), ResourceType(desc.type))
     , m_desc(std::move(desc))
 {
@@ -401,7 +457,7 @@ Texture::Texture(ref<Device> device, TextureDesc desc, const void* init_data)
     gfx_desc.sampleDesc.quality = m_desc.quality;
 
     // TODO(@skallweit): add support for init data
-    KALI_UNUSED(init_data);
+    KALI_UNUSED(init_data, init_data_size);
     gfx::ITextureResource::SubresourceData* gfx_init_data{nullptr};
 
     SLANG_CALL(m_device->gfx_device()->createTextureResource(gfx_desc, gfx_init_data, m_gfx_texture.writeRef()));

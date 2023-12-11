@@ -19,6 +19,8 @@ class Swapchain;
 class Resource;
 
 struct BufferDesc;
+struct StructuredBufferDesc;
+struct TypedBufferDesc;
 class Buffer;
 
 struct TextureDesc;

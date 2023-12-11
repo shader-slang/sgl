@@ -163,56 +163,14 @@ public:
 
     ref<Swapchain> create_swapchain(SwapchainDesc desc, ref<Window> window);
 
-    ref<Buffer> create_buffer(BufferDesc desc, const void* init_data = nullptr);
+    ref<Buffer> create_buffer(BufferDesc desc, const void* init_data = nullptr, size_t init_data_size = 0);
 
-    ref<Buffer> create_raw_buffer(
-        size_t size,
-        ResourceUsage usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access,
-        MemoryType memory_type = MemoryType::device_local,
-        const void* init_data = nullptr
-    );
+    ref<Buffer>
+    create_structured_buffer(StructuredBufferDesc desc, const void* init_data = nullptr, size_t init_data_size = 0);
 
-    ref<Buffer> create_typed_buffer(
-        Format format,
-        size_t element_count,
-        ResourceUsage usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access,
-        MemoryType memory_type = MemoryType::device_local,
-        const void* init_data = nullptr
-    );
+    ref<Buffer> create_typed_buffer(TypedBufferDesc desc, const void* init_data = nullptr, size_t init_data_size = 0);
 
-    template<typename T>
-    ref<Buffer> create_typed_buffer(
-        size_t element_count,
-        ResourceUsage usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access,
-        MemoryType memory_type = MemoryType::device_local,
-        const void* init_data = nullptr
-    )
-    {
-        constexpr Format format = host_type_to_format<T>();
-        static_assert(format != Format::unknown, "Unsupported type");
-        return create_typed_buffer(format, element_count, usage, memory_type, init_data);
-    }
-
-    ref<Buffer> create_structured_buffer(
-        size_t struct_size,
-        size_t element_count,
-        ResourceUsage usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access,
-        MemoryType memory_type = MemoryType::device_local,
-        const void* init_data = nullptr
-    );
-
-    template<typename T>
-    ref<Buffer> create_structured_buffer(
-        size_t element_count,
-        ResourceUsage usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access,
-        MemoryType memory_type = MemoryType::device_local,
-        const T* init_data = nullptr
-    )
-    {
-        return create_structured_buffer(sizeof(T), element_count, usage, memory_type, init_data);
-    }
-
-    ref<Texture> create_texture(TextureDesc desc, const void* init_data = nullptr);
+    ref<Texture> create_texture(TextureDesc desc, const void* init_data = nullptr, size_t init_data_size = 0);
 
     ref<Texture> create_texture_from_resource(TextureDesc desc, gfx::ITextureResource* resource);
 

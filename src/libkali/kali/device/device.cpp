@@ -247,58 +247,24 @@ ref<Swapchain> Device::create_swapchain(SwapchainDesc desc, ref<Window> window)
     return make_ref<Swapchain>(std::move(desc), std::move(window), m_default_queue, ref<Device>(this));
 }
 
-ref<Buffer> Device::create_buffer(BufferDesc desc, const void* init_data)
+ref<Buffer> Device::create_buffer(BufferDesc desc, const void* init_data, size_t init_data_size)
 {
-    return make_ref<Buffer>(ref<Device>(this), std::move(desc), init_data);
+    return make_ref<Buffer>(ref<Device>(this), std::move(desc), init_data, init_data_size);
 }
 
-ref<Buffer> Device::create_raw_buffer(size_t size, ResourceUsage usage, MemoryType memory_type, const void* init_data)
+ref<Buffer> Device::create_structured_buffer(StructuredBufferDesc desc, const void* init_data, size_t init_data_size)
 {
-    BufferDesc desc{
-        .size = size,
-        .usage = usage,
-        .memory_type = memory_type,
-    };
-    return create_buffer(desc, init_data);
+    return make_ref<Buffer>(ref<Device>(this), std::move(desc), init_data, init_data_size);
 }
 
-ref<Buffer> Device::create_typed_buffer(
-    Format format,
-    size_t element_count,
-    ResourceUsage usage,
-    MemoryType memory_type,
-    const void* init_data
-)
+ref<Buffer> Device::create_typed_buffer(TypedBufferDesc desc, const void* init_data, size_t init_data_size)
 {
-    BufferDesc desc{
-        .size = element_count * 1,
-        .format = format,
-        .usage = usage,
-        .memory_type = memory_type,
-    };
-    return create_buffer(desc, init_data);
+    return make_ref<Buffer>(ref<Device>(this), std::move(desc), init_data, init_data_size);
 }
 
-ref<Buffer> Device::create_structured_buffer(
-    size_t struct_size,
-    size_t element_count,
-    ResourceUsage usage,
-    MemoryType memory_type,
-    const void* init_data
-)
+ref<Texture> Device::create_texture(TextureDesc desc, const void* init_data, size_t init_data_size)
 {
-    BufferDesc desc{
-        .size = element_count * struct_size,
-        .struct_size = struct_size,
-        .usage = usage,
-        .memory_type = memory_type,
-    };
-    return create_buffer(desc, init_data);
-}
-
-ref<Texture> Device::create_texture(TextureDesc desc, const void* init_data)
-{
-    return make_ref<Texture>(ref<Device>(this), std::move(desc), init_data);
+    return make_ref<Texture>(ref<Device>(this), std::move(desc), init_data, init_data_size);
 }
 
 ref<Texture> Device::create_texture_from_resource(TextureDesc desc, gfx::ITextureResource* resource)
