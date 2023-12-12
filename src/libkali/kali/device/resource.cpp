@@ -210,6 +210,12 @@ Buffer::Buffer(ref<Device> device, BufferDesc desc, const void* init_data, size_
         m_desc.size
     );
 
+    // Override initial state if not specified.
+    if (m_desc.initial_state == ResourceState::undefined) {
+        if (is_set(m_desc.usage, ResourceUsage::acceleration_structure))
+            m_desc.initial_state = ResourceState::acceleration_structure;
+    }
+
     gfx::IBufferResource::Desc gfx_desc{};
     gfx_desc.type = gfx::IResource::Type::Buffer;
     gfx_desc.defaultState = static_cast<gfx::ResourceState>(m_desc.initial_state);

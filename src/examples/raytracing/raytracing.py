@@ -33,7 +33,7 @@ blas_geometry_desc.triangles.transform3x4 = transform_buffer.device_address
 blas_geometry_desc.triangles.index_format = kali.Format.r32_uint
 blas_geometry_desc.triangles.vertex_format = kali.Format.rgb32_float
 blas_geometry_desc.triangles.index_count = indices.size
-blas_geometry_desc.triangles.vertex_count = vertices.size
+blas_geometry_desc.triangles.vertex_count = vertices.size // 3
 blas_geometry_desc.triangles.index_data = index_buffer.device_address
 blas_geometry_desc.triangles.vertex_data = vertex_buffer.device_address
 blas_geometry_desc.triangles.vertex_stride = vertices.itemsize * 3
@@ -72,6 +72,7 @@ with command_stream.begin_ray_tracing_pass() as ray_tracing_pass:
         scratch_data=blas_scratch_buffer.device_address,
     )
 command_stream.submit()
+device.wait()
 
 instance_desc = kali.RayTracingInstanceDesc()
 instance_desc.transform = kali.float3x4.identity()
@@ -90,7 +91,7 @@ instance_buffer = device.create_buffer(
 tlas_build_inputs = kali.AccelerationStructureBuildInputs()
 tlas_build_inputs.kind = kali.AccelerationStructureKind.top_level
 tlas_build_inputs.flags = kali.AccelerationStructureBuildFlags.none
-tlas_build_inputs.desc_count = 2
+tlas_build_inputs.desc_count = 1
 tlas_build_inputs.instance_descs = instance_buffer.device_address
 
 tlas_prebuild_info = device.get_acceleration_structure_prebuild_info(tlas_build_inputs)
@@ -120,6 +121,7 @@ with command_stream.begin_ray_tracing_pass() as ray_tracing_pass:
         scratch_data=tlas_scratch_buffer.device_address,
     )
 command_stream.submit()
+device.wait()
 
 render_texture = device.create_texture(
     type=kali.TextureType.texture_2d,
