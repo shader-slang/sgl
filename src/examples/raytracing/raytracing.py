@@ -72,7 +72,6 @@ with command_stream.begin_ray_tracing_pass() as ray_tracing_pass:
         scratch_data=blas_scratch_buffer.device_address,
     )
 command_stream.submit()
-device.wait()
 
 instance_desc = kali.RayTracingInstanceDesc()
 instance_desc.transform = kali.float3x4.identity()
@@ -121,7 +120,6 @@ with command_stream.begin_ray_tracing_pass() as ray_tracing_pass:
         scratch_data=tlas_scratch_buffer.device_address,
     )
 command_stream.submit()
-device.wait()
 
 render_texture = device.create_texture(
     type=kali.TextureType.texture_2d,

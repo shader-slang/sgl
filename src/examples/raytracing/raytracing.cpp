@@ -105,7 +105,6 @@ int main()
             });
         }
         command_stream->submit();
-        device->wait();
 
         RayTracingInstanceDesc instance_desc{
             .transform = identity_transform,
@@ -165,7 +164,6 @@ int main()
             });
         }
         command_stream->submit();
-        device->wait();
 
         ref<Texture> render_texture = device->create_texture({
             .type = TextureType::texture_2d,
