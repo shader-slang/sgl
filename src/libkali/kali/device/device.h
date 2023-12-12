@@ -5,7 +5,6 @@
 #include "kali/device/native_handle.h"
 #include "kali/device/resource.h"
 #include "kali/device/shader.h"
-#include "kali/device/raytracing.h"
 
 #include "kali/core/macros.h"
 #include "kali/core/enum.h"
@@ -184,7 +183,10 @@ public:
 
     ref<InputLayout> create_input_layout(InputLayoutDesc desc);
 
-    ref<AccelerationStructure> create_acceleration_structure(AccelerationStructure::Desc desc);
+    AccelerationStructurePrebuildInfo
+    get_acceleration_structure_prebuild_info(const AccelerationStructureBuildInputs& build_inputs);
+
+    ref<AccelerationStructure> create_acceleration_structure(AccelerationStructureDesc desc);
 
     ref<SlangSession> create_slang_session(SlangSessionDesc desc);
 

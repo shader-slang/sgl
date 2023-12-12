@@ -9,7 +9,7 @@
 
 namespace kali {
 
-AccelerationStructure::AccelerationStructure(ref<Device> device, Desc desc)
+AccelerationStructure::AccelerationStructure(ref<Device> device, AccelerationStructureDesc desc)
     : DeviceResource(std::move(device))
     , m_desc(std::move(desc))
 {

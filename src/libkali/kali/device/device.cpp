@@ -8,6 +8,7 @@
 #include "kali/device/input_layout.h"
 #include "kali/device/shader.h"
 #include "kali/device/pipeline.h"
+#include "kali/device/raytracing.h"
 #include "kali/device/memory_heap.h"
 #include "kali/device/command.h"
 #include "kali/device/helpers.h"
@@ -299,7 +300,21 @@ ref<InputLayout> Device::create_input_layout(InputLayoutDesc desc)
     return make_ref<InputLayout>(ref<Device>(this), std::move(desc));
 }
 
-ref<AccelerationStructure> Device::create_acceleration_structure(AccelerationStructure::Desc desc)
+AccelerationStructurePrebuildInfo
+Device::get_acceleration_structure_prebuild_info(const AccelerationStructureBuildInputs& build_inputs)
+{
+    const gfx::IAccelerationStructure::BuildInputs& gfx_build_inputs
+        = reinterpret_cast<const gfx::IAccelerationStructure::BuildInputs&>(build_inputs);
+    gfx::IAccelerationStructure::PrebuildInfo gfx_prebuild_info;
+    SLANG_CALL(m_gfx_device->getAccelerationStructurePrebuildInfo(gfx_build_inputs, &gfx_prebuild_info));
+    return AccelerationStructurePrebuildInfo{
+        .result_data_max_size = gfx_prebuild_info.resultDataMaxSize,
+        .scratch_data_size = gfx_prebuild_info.scratchDataSize,
+        .update_scratch_data_size = gfx_prebuild_info.updateScratchDataSize,
+    };
+}
+
+ref<AccelerationStructure> Device::create_acceleration_structure(AccelerationStructureDesc desc)
 {
     return make_ref<AccelerationStructure>(ref<Device>(this), std::move(desc));
 }

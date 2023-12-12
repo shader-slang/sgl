@@ -4,6 +4,7 @@
 #include "kali/device/sampler.h"
 #include "kali/device/fence.h"
 #include "kali/device/resource.h"
+#include "kali/device/raytracing.h"
 #include "kali/device/query.h"
 #include "kali/device/memory_heap.h"
 #include "kali/device/swapchain.h"
@@ -353,8 +354,13 @@ KALI_PY_EXPORT(device_device)
     );
     device.def("create_command_stream", &Device::create_command_stream);
     device.def(
+        "get_acceleration_structure_prebuild_info",
+        &Device::get_acceleration_structure_prebuild_info,
+        "build_inputs"_a
+    );
+    device.def(
         "create_acceleration_structure",
-        [](Device* self, AccelerationStructure::Kind kind, ref<Buffer> buffer, DeviceOffset offset, DeviceSize size)
+        [](Device* self, AccelerationStructureKind kind, ref<Buffer> buffer, DeviceOffset offset, DeviceSize size)
         {
             return self->create_acceleration_structure({
                 .kind = kind,
@@ -365,8 +371,8 @@ KALI_PY_EXPORT(device_device)
         },
         "kind"_a,
         "buffer"_a,
-        "offset"_a,
-        "size"_a
+        "offset"_a = 0,
+        "size"_a = 0
     );
     device.def("create_slang_session", [](Device* self) { return self->create_slang_session(SlangSessionDesc{}); });
     device.def("load_module", &Device::load_module, "path"_a, "defines"_a = DefineList());

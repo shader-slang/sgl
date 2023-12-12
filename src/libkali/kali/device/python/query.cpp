@@ -6,8 +6,6 @@ KALI_PY_EXPORT(device_query)
 {
     using namespace kali;
 
-    nb::kali_enum<QueryType>(m, "QueryType");
-
     nb::class_<QueryPoolDesc>(m, "QueryPoolDesc")
         .def(nb::init<>())
         .def_rw("type", &QueryPoolDesc::type)

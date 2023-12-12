@@ -1,11 +1,23 @@
 #pragma once
 
+#include "kali/device/formats.h"
+
 #include "kali/core/macros.h"
 #include "kali/core/enum.h"
+
+#include "kali/math/vector_types.h"
+#include "kali/math/matrix_types.h"
 
 #include <slang-gfx.h>
 
 namespace kali {
+
+/// Represents an address in device memory.
+using DeviceAddress = uint64_t;
+/// Represents an offset in device memory (in bytes).
+using DeviceOffset = uint64_t;
+/// Represents a size in device memory (in bytes).
+using DeviceSize = uint64_t;
 
 enum class ShaderModel : uint32_t {
     unknown = 0,
@@ -110,6 +122,10 @@ KALI_ENUM_INFO(
 );
 KALI_ENUM_REGISTER(ComparisonFunc);
 
+// ----------------------------------------------------------------------------
+// Sampler
+// ----------------------------------------------------------------------------
+
 enum class TextureFilteringMode : uint32_t {
     point = static_cast<uint32_t>(gfx::TextureFilteringMode::Point),
     linear = static_cast<uint32_t>(gfx::TextureFilteringMode::Linear),
@@ -161,6 +177,10 @@ KALI_ENUM_INFO(
     }
 );
 KALI_ENUM_REGISTER(TextureReductionOp);
+
+// ----------------------------------------------------------------------------
+// Graphics
+// ----------------------------------------------------------------------------
 
 enum class PrimitiveType : uint8_t {
     point = static_cast<uint8_t>(gfx::PrimitiveType::Point),
@@ -268,7 +288,7 @@ struct DepthStencilDesc {
     DepthStencilOpDesc front_face;
     DepthStencilOpDesc back_face;
 
-    uint32_t stencilRef = 0;
+    uint32_t stencil_ref = 0;
 };
 
 struct RasterizerDesc {
@@ -406,6 +426,32 @@ struct BlendDesc {
     bool alpha_to_coverage_enable{false};
 };
 
+// ----------------------------------------------------------------------------
+// Queries
+// ----------------------------------------------------------------------------
+
+enum class QueryType : uint32_t {
+    timestamp = static_cast<uint32_t>(gfx::QueryType::Timestamp),
+    acceleration_structure_compacted_size = static_cast<uint32_t>(gfx::QueryType::AccelerationStructureCompactedSize),
+    acceleration_structure_serialized_size = static_cast<uint32_t>(gfx::QueryType::AccelerationStructureSerializedSize),
+    acceleration_structure_current_size = static_cast<uint32_t>(gfx::QueryType::AccelerationStructureCurrentSize),
+};
+
+KALI_ENUM_INFO(
+    QueryType,
+    {
+        {QueryType::timestamp, "timestamp"},
+        {QueryType::acceleration_structure_compacted_size, "acceleration_structure_compacted_size"},
+        {QueryType::acceleration_structure_serialized_size, "acceleration_structure_serialized_size"},
+        {QueryType::acceleration_structure_current_size, "acceleration_structure_current_size"},
+    }
+);
+KALI_ENUM_REGISTER(QueryType);
+
+// ----------------------------------------------------------------------------
+// RayTracing
+// ----------------------------------------------------------------------------
+
 
 enum class RayTracingPipelineFlags : uint8_t {
     none = static_cast<uint8_t>(gfx::RayTracingPipelineFlags::None),
@@ -423,6 +469,220 @@ KALI_ENUM_INFO(
     }
 );
 KALI_ENUM_REGISTER(RayTracingPipelineFlags);
+
+enum class RayTracingGeometryType : uint32_t {
+    triangles = static_cast<uint32_t>(gfx::IAccelerationStructure::GeometryType::Triangles),
+    procedural_primitives = static_cast<uint32_t>(gfx::IAccelerationStructure::GeometryType::ProcedurePrimitives),
+};
+
+KALI_ENUM_INFO(
+    RayTracingGeometryType,
+    {
+        {RayTracingGeometryType::triangles, "triangles"},
+        {RayTracingGeometryType::procedural_primitives, "procedural_primitives"},
+    }
+);
+KALI_ENUM_REGISTER(RayTracingGeometryType);
+
+enum class RayTracingGeometryFlags : uint32_t {
+    none = static_cast<uint32_t>(gfx::IAccelerationStructure::GeometryFlags::None),
+    opaque = static_cast<uint32_t>(gfx::IAccelerationStructure::GeometryFlags::Opaque),
+    no_duplicate_any_hit_invocation
+    = static_cast<uint32_t>(gfx::IAccelerationStructure::GeometryFlags::NoDuplicateAnyHitInvocation),
+};
+KALI_ENUM_CLASS_OPERATORS(RayTracingGeometryFlags);
+
+KALI_ENUM_INFO(
+    RayTracingGeometryFlags,
+    {
+        {RayTracingGeometryFlags::none, "none"},
+        {RayTracingGeometryFlags::opaque, "opaque"},
+        {RayTracingGeometryFlags::no_duplicate_any_hit_invocation, "no_duplicate_any_hit_invocation"},
+    }
+);
+KALI_ENUM_REGISTER(RayTracingGeometryFlags);
+
+struct RayTracingTrianglesDesc {
+    DeviceAddress transform3x4;
+    Format index_format;
+    Format vertex_format;
+    uint32_t index_count;
+    uint32_t vertex_count;
+    DeviceAddress index_data;
+    DeviceAddress vertex_data;
+    DeviceSize vertex_stride;
+};
+// clang-format off
+static_assert(sizeof(RayTracingTrianglesDesc) == sizeof(gfx::IAccelerationStructure::TriangleDesc));
+static_assert(offsetof(RayTracingTrianglesDesc, transform3x4) == offsetof(gfx::IAccelerationStructure::TriangleDesc, transform3x4));
+static_assert(offsetof(RayTracingTrianglesDesc, index_format) == offsetof(gfx::IAccelerationStructure::TriangleDesc, indexFormat));
+static_assert(offsetof(RayTracingTrianglesDesc, vertex_format) == offsetof(gfx::IAccelerationStructure::TriangleDesc, vertexFormat));
+static_assert(offsetof(RayTracingTrianglesDesc, index_count) == offsetof(gfx::IAccelerationStructure::TriangleDesc, indexCount));
+static_assert(offsetof(RayTracingTrianglesDesc, vertex_count) == offsetof(gfx::IAccelerationStructure::TriangleDesc, vertexCount));
+static_assert(offsetof(RayTracingTrianglesDesc, index_data) == offsetof(gfx::IAccelerationStructure::TriangleDesc, indexData));
+static_assert(offsetof(RayTracingTrianglesDesc, vertex_data) == offsetof(gfx::IAccelerationStructure::TriangleDesc, vertexData));
+static_assert(offsetof(RayTracingTrianglesDesc, vertex_stride) == offsetof(gfx::IAccelerationStructure::TriangleDesc, vertexStride));
+// clang-format on
+
+struct RayTracingAABB {
+    float3 min;
+    float3 max;
+};
+static_assert(sizeof(RayTracingAABB) == 24);
+static_assert(offsetof(RayTracingAABB, min) == offsetof(gfx::IAccelerationStructure::ProceduralAABB, minX));
+static_assert(offsetof(RayTracingAABB, max) == offsetof(gfx::IAccelerationStructure::ProceduralAABB, maxX));
+
+struct RayTracingAABBsDesc {
+    /// Number of AABBs.
+    uint32_t count;
+
+    /// Pointer to an array of `RayTracingAABB` values in device memory.
+    DeviceAddress data;
+
+    /// Stride in bytes of the AABB values array.
+    DeviceSize stride;
+};
+// clang-format off
+static_assert(sizeof(RayTracingAABBsDesc) == sizeof(gfx::IAccelerationStructure::ProceduralAABBDesc));
+static_assert(offsetof(RayTracingAABBsDesc, count) == offsetof(gfx::IAccelerationStructure::ProceduralAABBDesc, count));
+static_assert(offsetof(RayTracingAABBsDesc, data) == offsetof(gfx::IAccelerationStructure::ProceduralAABBDesc, data));
+static_assert(offsetof(RayTracingAABBsDesc, stride) == offsetof(gfx::IAccelerationStructure::ProceduralAABBDesc, stride));
+// clang-format on
+
+struct RayTracingGeometryDesc {
+    RayTracingGeometryType type;
+    RayTracingGeometryFlags flags;
+    union {
+        RayTracingTrianglesDesc triangles;
+        RayTracingAABBsDesc aabbs;
+    } content;
+};
+// clang-format off
+static_assert(sizeof(RayTracingGeometryDesc) == sizeof(gfx::IAccelerationStructure::GeometryDesc));
+static_assert(offsetof(RayTracingGeometryDesc, type) == offsetof(gfx::IAccelerationStructure::GeometryDesc, type));
+static_assert(offsetof(RayTracingGeometryDesc, flags) == offsetof(gfx::IAccelerationStructure::GeometryDesc, flags));
+static_assert(offsetof(RayTracingGeometryDesc, content) == offsetof(gfx::IAccelerationStructure::GeometryDesc, content));
+// clang-format on
+
+enum class RayTracingInstanceFlags : uint32_t {
+    none = static_cast<uint32_t>(gfx::IAccelerationStructure::GeometryInstanceFlags::None),
+    triangle_facing_cull_disable
+    = static_cast<uint32_t>(gfx::IAccelerationStructure::GeometryInstanceFlags::TriangleFacingCullDisable),
+    triangle_front_counter_clockwise
+    = static_cast<uint32_t>(gfx::IAccelerationStructure::GeometryInstanceFlags::TriangleFrontCounterClockwise),
+    force_opaque = static_cast<uint32_t>(gfx::IAccelerationStructure::GeometryInstanceFlags::ForceOpaque),
+    no_opaque = static_cast<uint32_t>(gfx::IAccelerationStructure::GeometryInstanceFlags::NoOpaque),
+};
+KALI_ENUM_CLASS_OPERATORS(RayTracingInstanceFlags);
+
+KALI_ENUM_INFO(
+    RayTracingInstanceFlags,
+    {
+        {RayTracingInstanceFlags::none, "none"},
+        {RayTracingInstanceFlags::triangle_facing_cull_disable, "triangle_facing_cull_disable"},
+        {RayTracingInstanceFlags::triangle_front_counter_clockwise, "triangle_front_counter_clockwise"},
+        {RayTracingInstanceFlags::force_opaque, "force_opaque"},
+        {RayTracingInstanceFlags::no_opaque, "no_opaque"},
+    }
+);
+KALI_ENUM_REGISTER(RayTracingInstanceFlags);
+
+struct RayTracingInstanceDesc {
+    float3x4 transform;
+    uint32_t instance_id : 24;
+    uint32_t instance_mask : 8;
+    uint32_t instance_contribution_to_hit_group_index : 24;
+    uint32_t flags_ : 8; // Combination of RayTracingInstanceFlags values.
+    DeviceAddress acceleration_structure;
+
+    RayTracingInstanceFlags flags() const { return static_cast<RayTracingInstanceFlags>(flags_); }
+    void set_flags(RayTracingInstanceFlags flags) { flags_ = static_cast<uint32_t>(flags); }
+};
+static_assert(sizeof(RayTracingInstanceDesc) == 64);
+
+enum class AccelerationStructureCopyMode : uint32_t {
+    clone = static_cast<uint32_t>(gfx::AccelerationStructureCopyMode::Clone),
+    compact = static_cast<uint32_t>(gfx::AccelerationStructureCopyMode::Compact),
+};
+
+KALI_ENUM_INFO(
+    AccelerationStructureCopyMode,
+    {
+        {AccelerationStructureCopyMode::clone, "clone"},
+        {AccelerationStructureCopyMode::compact, "compact"},
+    }
+);
+KALI_ENUM_REGISTER(AccelerationStructureCopyMode);
+
+enum class AccelerationStructureKind : uint32_t {
+    top_level = static_cast<uint32_t>(gfx::IAccelerationStructure::Kind::TopLevel),
+    bottom_level = static_cast<uint32_t>(gfx::IAccelerationStructure::Kind::BottomLevel),
+};
+
+KALI_ENUM_INFO(
+    AccelerationStructureKind,
+    {
+        {AccelerationStructureKind::top_level, "top_level"},
+        {AccelerationStructureKind::bottom_level, "bottom_level"},
+    }
+);
+KALI_ENUM_REGISTER(AccelerationStructureKind);
+
+enum class AccelerationStructureBuildFlags : uint32_t {
+    none = static_cast<uint32_t>(gfx::IAccelerationStructure::BuildFlags::None),
+    allow_update = static_cast<uint32_t>(gfx::IAccelerationStructure::BuildFlags::AllowUpdate),
+    allow_compaction = static_cast<uint32_t>(gfx::IAccelerationStructure::BuildFlags::AllowCompaction),
+    prefer_fast_trace = static_cast<uint32_t>(gfx::IAccelerationStructure::BuildFlags::PreferFastTrace),
+    prefer_fast_build = static_cast<uint32_t>(gfx::IAccelerationStructure::BuildFlags::PreferFastBuild),
+    minimize_memory = static_cast<uint32_t>(gfx::IAccelerationStructure::BuildFlags::MinimizeMemory),
+    perform_update = static_cast<uint32_t>(gfx::IAccelerationStructure::BuildFlags::PerformUpdate),
+};
+KALI_ENUM_CLASS_OPERATORS(AccelerationStructureBuildFlags);
+
+KALI_ENUM_INFO(
+    AccelerationStructureBuildFlags,
+    {
+        {AccelerationStructureBuildFlags::none, "none"},
+        {AccelerationStructureBuildFlags::allow_update, "allow_update"},
+        {AccelerationStructureBuildFlags::allow_compaction, "allow_compaction"},
+        {AccelerationStructureBuildFlags::prefer_fast_trace, "prefer_fast_trace"},
+        {AccelerationStructureBuildFlags::prefer_fast_build, "prefer_fast_build"},
+        {AccelerationStructureBuildFlags::minimize_memory, "minimize_memory"},
+        {AccelerationStructureBuildFlags::perform_update, "perform_update"},
+    }
+);
+KALI_ENUM_REGISTER(AccelerationStructureBuildFlags);
+
+
+struct AccelerationStructurePrebuildInfo {
+    DeviceSize result_data_max_size;
+    DeviceSize scratch_data_size;
+    DeviceSize update_scratch_data_size;
+};
+
+struct AccelerationStructureBuildInputs {
+    AccelerationStructureKind kind;
+
+    AccelerationStructureBuildFlags flags;
+
+    uint32_t desc_count;
+
+    /// Array of `RayTracingInstanceDesc` values in device memory.
+    /// Used when `kind` is `top_level`.
+    DeviceAddress instance_descs;
+
+    /// Array of `RayTracingGeometryDesc` values.
+    /// Used when `kind` is `bottom_level`.
+    const RayTracingGeometryDesc* geometry_descs;
+};
+// clang-format off
+static_assert(sizeof(AccelerationStructureBuildInputs) == sizeof(gfx::IAccelerationStructure::BuildInputs));
+static_assert(offsetof(AccelerationStructureBuildInputs, kind) == offsetof(gfx::IAccelerationStructure::BuildInputs, kind));
+static_assert(offsetof(AccelerationStructureBuildInputs, flags) == offsetof(gfx::IAccelerationStructure::BuildInputs, flags));
+static_assert(offsetof(AccelerationStructureBuildInputs, desc_count) == offsetof(gfx::IAccelerationStructure::BuildInputs, descCount));
+static_assert(offsetof(AccelerationStructureBuildInputs, instance_descs) == offsetof(gfx::IAccelerationStructure::BuildInputs, instanceDescs));
+static_assert(offsetof(AccelerationStructureBuildInputs, geometry_descs) == offsetof(gfx::IAccelerationStructure::BuildInputs, geometryDescs));
+// clang-format on
 
 
 } // namespace kali

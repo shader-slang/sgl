@@ -2,6 +2,12 @@
 
 #include "kali/device/types.h"
 
+namespace kali {
+struct PyAccelerationStructureBuildInputs : AccelerationStructureBuildInputs {
+    std::vector<RayTracingGeometryDesc> geometry_descs_data;
+};
+} // namespace kali
+
 KALI_PY_EXPORT(device_types)
 {
     using namespace kali;
@@ -10,7 +16,159 @@ KALI_PY_EXPORT(device_types)
     nb::kali_enum<ShaderStage>(m, "ShaderStage");
 
     nb::kali_enum<ComparisonFunc>(m, "ComparisonFunc");
+
+    // ------------------------------------------------------------------------
+    // Sampler
+    // ------------------------------------------------------------------------
+
     nb::kali_enum<TextureFilteringMode>(m, "TextureFilteringMode");
     nb::kali_enum<TextureAddressingMode>(m, "TextureAddressingMode");
     nb::kali_enum<TextureReductionOp>(m, "TextureReductionOp");
+
+    // ------------------------------------------------------------------------
+    // Graphics
+    // ------------------------------------------------------------------------
+
+    // ------------------------------------------------------------------------
+    // Queries
+    // ------------------------------------------------------------------------
+
+    nb::kali_enum<QueryType>(m, "QueryType");
+
+    // ------------------------------------------------------------------------
+    // Raytracing
+    // ------------------------------------------------------------------------
+
+    nb::kali_enum<RayTracingGeometryType>(m, "RayTracingGeometryType");
+    nb::kali_enum_flags<RayTracingGeometryFlags>(m, "RayTracingGeometryFlags");
+    nb::kali_enum_flags<RayTracingInstanceFlags>(m, "RayTracingInstanceFlags");
+
+    nb::class_<RayTracingTrianglesDesc>(m, "RayTracingTrianglesDesc")
+        .def(nb::init<>())
+        .def_rw("transform3x4", &RayTracingTrianglesDesc::transform3x4)
+        .def_rw("index_format", &RayTracingTrianglesDesc::index_format)
+        .def_rw("vertex_format", &RayTracingTrianglesDesc::vertex_format)
+        .def_rw("index_count", &RayTracingTrianglesDesc::index_count)
+        .def_rw("vertex_count", &RayTracingTrianglesDesc::vertex_count)
+        .def_rw("index_data", &RayTracingTrianglesDesc::index_data)
+        .def_rw("vertex_data", &RayTracingTrianglesDesc::vertex_data)
+        .def_rw("vertex_stride", &RayTracingTrianglesDesc::vertex_stride);
+
+    nb::class_<RayTracingAABB>(m, "RayTracingAABB")
+        .def(nb::init<>())
+        .def_rw("min", &RayTracingAABB::min)
+        .def_rw("max", &RayTracingAABB::max);
+
+    nb::class_<RayTracingAABBsDesc>(m, "RayTracingAABBsDesc")
+        .def(nb::init<>())
+        .def_rw("count", &RayTracingAABBsDesc::count)
+        .def_rw("data", &RayTracingAABBsDesc::data)
+        .def_rw("stride", &RayTracingAABBsDesc::stride);
+
+    nb::class_<RayTracingGeometryDesc>(m, "RayTracingGeometryDesc")
+        .def(nb::init<>())
+        .def_rw("type", &RayTracingGeometryDesc::type)
+        .def_rw("flags", &RayTracingGeometryDesc::flags)
+        .def_prop_rw(
+            "triangles",
+            [](RayTracingGeometryDesc& self) -> RayTracingTrianglesDesc&
+            {
+                KALI_CHECK(self.type == RayTracingGeometryType::triangles, "geometry type is not triangles");
+                return self.content.triangles;
+            },
+            [](RayTracingGeometryDesc& self, const RayTracingTrianglesDesc& value)
+            {
+                self.type = RayTracingGeometryType::triangles;
+                self.content.triangles = value;
+            },
+            nb::rv_policy::reference_internal
+        )
+        .def_prop_rw(
+            "aabbs",
+            [](RayTracingGeometryDesc& self) -> RayTracingAABBsDesc&
+            {
+                KALI_CHECK(
+                    self.type == RayTracingGeometryType::procedural_primitives,
+                    "geometry type is not proecedural_primitives"
+                );
+                return self.content.aabbs;
+            },
+            [](RayTracingGeometryDesc& self, const RayTracingAABBsDesc& value)
+            {
+                self.type = RayTracingGeometryType::procedural_primitives;
+                self.content.aabbs = value;
+            }
+        );
+
+    nb::class_<RayTracingInstanceDesc>(m, "RayTracingInstanceDesc")
+        .def(nb::init<>())
+        .def_rw("transform", &RayTracingInstanceDesc::transform)
+        .def_prop_rw(
+            "instance_id",
+            [](RayTracingInstanceDesc& self) { return self.instance_id; },
+            [](RayTracingInstanceDesc& self, uint32_t value) { self.instance_id = value; }
+        )
+        .def_prop_rw(
+            "instance_mask",
+            [](RayTracingInstanceDesc& self) { return self.instance_mask; },
+            [](RayTracingInstanceDesc& self, uint32_t value) { self.instance_mask = value; }
+        )
+        .def_prop_rw(
+            "instance_contribution_to_hit_group_index",
+            [](RayTracingInstanceDesc& self) { return self.instance_contribution_to_hit_group_index; },
+            [](RayTracingInstanceDesc& self, uint32_t value) { self.instance_contribution_to_hit_group_index = value; }
+        )
+        .def_prop_rw("flags", &RayTracingInstanceDesc::flags, &RayTracingInstanceDesc::set_flags)
+        .def_rw("acceleration_structure", &RayTracingInstanceDesc::acceleration_structure)
+        .def(
+            "to_numpy",
+            [](RayTracingInstanceDesc& self)
+            {
+                size_t shape[1] = {64};
+                return nb::ndarray<nb::numpy, const uint8_t, nb::shape<64>>(&self, 1, shape);
+            }
+        );
+
+    nb::kali_enum<AccelerationStructureKind>(m, "AccelerationStructureKind");
+    nb::kali_enum_flags<AccelerationStructureBuildFlags>(m, "AccelerationStructureBuildFlags");
+    nb::kali_enum<AccelerationStructureCopyMode>(m, "AccelerationStructureCopyMode");
+
+    nb::class_<AccelerationStructureBuildInputs>(m, "AccelerationStructureBuildInputsBase");
+
+    nb::class_<PyAccelerationStructureBuildInputs, AccelerationStructureBuildInputs>(
+        m,
+        "AccelerationStructureBuildInputs"
+    )
+        .def(nb::init<>())
+        .def_rw("kind", &PyAccelerationStructureBuildInputs::kind)
+        .def_rw("flags", &PyAccelerationStructureBuildInputs::flags)
+        .def_rw("desc_count", &PyAccelerationStructureBuildInputs::desc_count)
+        .def_prop_rw(
+            "instance_descs",
+            [](PyAccelerationStructureBuildInputs& self)
+            {
+                KALI_CHECK(self.kind == AccelerationStructureKind::top_level, "kind is not top_level");
+                return self.instance_descs;
+            },
+            [](PyAccelerationStructureBuildInputs& self, DeviceAddress instance_descs)
+            {
+                self.kind = AccelerationStructureKind::top_level;
+                self.instance_descs = instance_descs;
+            }
+        )
+        .def_prop_rw(
+            "geometry_descs",
+            [](PyAccelerationStructureBuildInputs& self)
+            {
+                KALI_CHECK(self.kind == AccelerationStructureKind::bottom_level, "kind is not bottom_level");
+                return self.geometry_descs_data;
+            },
+            [](PyAccelerationStructureBuildInputs& self, std::vector<RayTracingGeometryDesc> geometry_descs)
+            {
+                self.kind = AccelerationStructureKind::bottom_level;
+                self.geometry_descs_data = geometry_descs;
+                self.geometry_descs = self.geometry_descs_data.data();
+                self.desc_count = narrow_cast<uint32_t>(geometry_descs.size());
+            }
+        );
 }

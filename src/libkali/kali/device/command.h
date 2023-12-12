@@ -1,9 +1,11 @@
 #pragma once
 
 #include "kali/device/fwd.h"
+#include "kali/device/types.h"
 #include "kali/device/fence.h"
 #include "kali/device/resource.h"
 #include "kali/device/shader_object.h"
+#include "kali/device/raytracing.h"
 
 #include "kali/core/object.h"
 #include "kali/math/vector_types.h"
@@ -256,22 +258,21 @@ public:
     void bind_pipeline(const RayTracingPipeline* pipeline, const ShaderObject* shader_object);
     void dispatch_rays(uint32_t ray_gen_shader_index, const ShaderTable* shader_table, uint3 dimensions);
 
-    // void build_acceleration_structure(
-    //     const AccelerationStructure::BuildDesc& desc,
-    //     GfxCount propertyQueryCount,
-    //     AccelerationStructureQueryDesc* queryDescs) = 0;
+    void build_acceleration_structure(
+        const AccelerationStructureBuildDesc& desc,
+        std::span<AccelerationStructureQueryDesc> queries = std::span<AccelerationStructureQueryDesc>()
+    );
 
-    // void copy_acceleration_structure(
-    //     AccelerationStructure* dst,
-    //     AccelerationStructure* src,
-    //     AccelerationStructure::CopyMode mode
-    // );
+    void copy_acceleration_structure(
+        AccelerationStructure* dst,
+        const AccelerationStructure* src,
+        AccelerationStructureCopyMode mode
+    );
 
-    // virtual SLANG_NO_THROW void SLANG_MCALL queryAccelerationStructureProperties(
-    //     GfxCount accelerationStructureCount,
-    //     IAccelerationStructure* const* accelerationStructures,
-    //     GfxCount queryCount,
-    //     AccelerationStructureQueryDesc* queryDescs) = 0;
+    void query_acceleration_structure_properties(
+        std::span<const AccelerationStructure*> acceleration_structures,
+        std::span<AccelerationStructureQueryDesc> queries
+    );
 
     void serialize_acceleration_structure(DeviceAddress dst, const AccelerationStructure* src);
     void deserialize_acceleration_structure(AccelerationStructure* dst, DeviceAddress src);

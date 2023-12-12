@@ -1,6 +1,7 @@
 #pragma once
 
 #include "kali/device/fwd.h"
+#include "kali/device/types.h"
 #include "kali/device/device_resource.h"
 #include "kali/device/formats.h"
 #include "kali/device/native_handle.h"
@@ -16,13 +17,6 @@
 #include <limits>
 
 namespace kali {
-
-/// Represents an address in device memory.
-using DeviceAddress = uint64_t;
-/// Represents an offset in device memory (in bytes).
-using DeviceOffset = uint64_t;
-/// Represents a size in device memory (in bytes).
-using DeviceSize = uint64_t;
 
 enum class ResourceType : uint32_t {
     unknown = static_cast<uint32_t>(gfx::IResource::Type::Unknown),
