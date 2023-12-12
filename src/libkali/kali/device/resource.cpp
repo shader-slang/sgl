@@ -80,16 +80,6 @@ Resource::~Resource()
         view->invalidate();
 }
 
-const char* Resource::debug_name() const
-{
-    return gfx_resource()->getDebugName();
-}
-
-void Resource::set_debug_name(const char* name)
-{
-    gfx_resource()->setDebugName(name);
-}
-
 NativeHandle Resource::get_native_handle() const
 {
     gfx::InteropHandle handle = {};
@@ -249,6 +239,9 @@ Buffer::Buffer(ref<Device> device, BufferDesc desc, const void* init_data, size_
     gfx_desc.format = static_cast<gfx::Format>(m_desc.format);
 
     SLANG_CALL(m_device->gfx_device()->createBufferResource(gfx_desc, init_data, m_gfx_buffer.writeRef()));
+
+    if (!m_desc.debug_name.empty())
+        m_gfx_buffer->setDebugName(m_desc.debug_name.c_str());
 }
 
 inline BufferDesc to_buffer_desc(StructuredBufferDesc desc)
@@ -494,6 +487,9 @@ Texture::Texture(ref<Device> device, TextureDesc desc, const void* init_data, si
     gfx::ITextureResource::SubresourceData* gfx_init_data{nullptr};
 
     SLANG_CALL(m_device->gfx_device()->createTextureResource(gfx_desc, gfx_init_data, m_gfx_texture.writeRef()));
+
+    if (!m_desc.debug_name.empty())
+        m_gfx_texture->setDebugName(m_desc.debug_name.c_str());
 }
 
 Texture::Texture(ref<Device> device, TextureDesc desc, gfx::ITextureResource* resource)

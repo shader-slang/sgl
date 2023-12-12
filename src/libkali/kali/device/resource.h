@@ -319,9 +319,6 @@ public:
 
     Format format() const { return Format::unknown; }
 
-    const char* debug_name() const;
-    void set_debug_name(const char* name);
-
     ResourceStateTracker& state_tracker() const { return m_state_tracker; }
 
     // virtual ref<ResourceView> get_rtv() const;
