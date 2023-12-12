@@ -19,11 +19,10 @@ index_buffer = device.create_buffer(
     init_data=indices,
 )
 
-identity_transform = np.eye(4, dtype=np.float32)
 transform_buffer = device.create_buffer(
     usage=kali.ResourceUsage.shader_resource,
     debug_name="transform_buffer",
-    init_data=identity_transform,
+    init_data=kali.float3x4.identity().to_numpy(),
 )
 
 blas_geometry_desc = kali.RayTracingGeometryDesc()
