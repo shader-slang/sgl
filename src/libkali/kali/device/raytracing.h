@@ -40,6 +40,7 @@ class KALI_API AccelerationStructure : public DeviceResource {
     KALI_OBJECT(AccelerationStructure)
 public:
     AccelerationStructure(ref<Device> device, AccelerationStructureDesc desc);
+    ~AccelerationStructure();
 
     const AccelerationStructureDesc& desc() const { return m_desc; }
 
@@ -68,6 +69,7 @@ class KALI_API ShaderTable : public DeviceResource {
     KALI_OBJECT(ShaderTable)
 public:
     ShaderTable(ref<Device> device, ShaderTableDesc desc);
+    ~ShaderTable();
 
     const ShaderTableDesc& desc() const { return m_desc; }
 

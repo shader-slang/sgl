@@ -18,6 +18,7 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include <queue>
 
 namespace kali {
 
@@ -229,6 +230,15 @@ public:
     void
     read_texture(const Texture* texture, size_t size, void* out_data, size_t* out_row_pitch, size_t* out_pixel_size);
 
+    void deferred_release(ISlangUnknown* object);
+
+    /**
+     * @brief Execute deferred releases.
+     *
+     * This function should be called regularly to execute deferred releases.
+     */
+    void execute_deferred_releases();
+
     gfx::IDevice* gfx_device() const { return m_gfx_device; }
     slang::IGlobalSession* global_session() const { return m_global_session; }
 
@@ -286,6 +296,13 @@ private:
     std::vector<FrameData> m_frame_data;
     uint32_t m_current_frame_index{0};
     ref<Fence> m_frame_fence;
+
+    struct DeferredRelease {
+        uint64_t fence_value;
+        Slang::ComPtr<ISlangUnknown> object;
+    };
+
+    std::queue<DeferredRelease> m_deferred_release_queue;
 };
 
 } // namespace kali

@@ -245,6 +245,10 @@ public:
     ResourceView(const ResourceViewDesc& desc, const Buffer* buffer);
     ResourceView(const ResourceViewDesc& desc, const Texture* texture);
 
+    ~ResourceView();
+
+    void invalidate();
+
     const ResourceViewDesc& desc() const { return m_desc; }
 
     ResourceViewType type() const { return m_desc.type; }
@@ -404,6 +408,8 @@ public:
     Buffer(ref<Device> device, StructuredBufferDesc desc, const void* init_data, size_t init_data_size);
     Buffer(ref<Device> device, TypedBufferDesc desc, const void* init_data, size_t init_data_size);
 
+    ~Buffer();
+
     const BufferDesc& desc() const { return m_desc; }
 
     size_t size() const { return m_desc.size; }
@@ -544,6 +550,8 @@ class KALI_API Texture : public Resource {
 public:
     Texture(ref<Device> device, TextureDesc desc, const void* init_data, size_t init_data_size);
     Texture(ref<Device> device, TextureDesc desc, gfx::ITextureResource* resource);
+
+    ~Texture();
 
     const TextureDesc& desc() const { return m_desc; }
 

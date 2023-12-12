@@ -240,12 +240,16 @@ Device::Device(const DeviceDesc& desc)
 
 Device::~Device()
 {
+    wait();
+
     m_read_back_heap.reset();
     m_upload_heap.reset();
 
     m_command_stream.reset();
     m_default_queue.reset();
     m_frame_fence.reset();
+
+    m_deferred_release_queue = {};
 
     m_gfx_device.setNull();
 }
@@ -413,6 +417,24 @@ void Device::read_texture(
     if (size > blob->getBufferSize())
         KALI_THROW("Texture read out of bounds");
     std::memcpy(out_data, blob->getBufferPointer(), size);
+}
+
+void Device::deferred_release(ISlangUnknown* object)
+{
+    m_deferred_release_queue.push({
+        .fence_value = m_frame_fence ? m_frame_fence->signaled_value() : 0,
+        .object = Slang::ComPtr<ISlangUnknown>(object),
+    });
+}
+
+void Device::execute_deferred_releases()
+{
+    m_upload_heap->execute_deferred_releases();
+    m_read_back_heap->execute_deferred_releases();
+
+    uint64_t current_value = m_frame_fence->current_value();
+    while (m_deferred_release_queue.size() && m_deferred_release_queue.front().fence_value < current_value)
+        m_deferred_release_queue.pop();
 }
 
 NativeHandle Device::get_native_handle(uint32_t index) const

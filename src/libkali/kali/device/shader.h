@@ -185,7 +185,7 @@ class KALI_API SlangSession : public Object {
     KALI_OBJECT(SlangSession)
 public:
     SlangSession(ref<Device> device, SlangSessionDesc desc);
-    virtual ~SlangSession();
+    ~SlangSession();
 
     const ref<Device>& device() const { return m_device; }
     const SlangSessionDesc& desc() const { return m_desc; }
@@ -223,7 +223,7 @@ class KALI_API SlangModule : public Object {
     KALI_OBJECT(SlangModule)
 public:
     SlangModule(ref<SlangSession> session, SlangModuleDesc desc);
-    virtual ~SlangModule();
+    ~SlangModule();
 
     const SlangModuleDesc& desc() const { return m_desc; }
 
@@ -264,7 +264,7 @@ class KALI_API SlangGlobalScope : public SlangComponentType {
     KALI_OBJECT(SlangGlobalScope)
 public:
     SlangGlobalScope(ref<SlangModule> module, Slang::ComPtr<slang::IComponentType> component_type);
-    virtual ~SlangGlobalScope() = default;
+    ~SlangGlobalScope() = default;
 
     const ProgramLayout* layout() const;
 
@@ -275,7 +275,7 @@ class KALI_API SlangEntryPoint : public SlangComponentType {
     KALI_OBJECT(SlangEntryPoint)
 public:
     SlangEntryPoint(ref<SlangModule> module, Slang::ComPtr<slang::IComponentType> component_type);
-    virtual ~SlangEntryPoint() = default;
+    ~SlangEntryPoint() = default;
 
     const std::string& name() const { return m_name; }
     ShaderStage stage() const { return m_stage; }
@@ -298,7 +298,7 @@ public:
         ref<SlangGlobalScope> global_scope,
         std::vector<ref<SlangEntryPoint>> entry_points
     );
-    virtual ~ShaderProgram() = default;
+    ~ShaderProgram() = default;
 
     const ref<Device>& device() const { return m_device; }
 

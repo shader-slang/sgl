@@ -22,6 +22,8 @@ class KALI_API Pipeline : public DeviceResource {
 public:
     Pipeline(ref<Device> device);
 
+    virtual ~Pipeline();
+
     gfx::IPipelineState* gfx_pipeline_state() const { return m_gfx_pipeline_state; }
 
     /// Returns the native API handle:

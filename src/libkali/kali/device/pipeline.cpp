@@ -23,6 +23,11 @@ Pipeline::Pipeline(ref<Device> device)
 {
 }
 
+Pipeline::~Pipeline()
+{
+    m_device->deferred_release(m_gfx_pipeline_state);
+}
+
 NativeHandle Pipeline::get_native_handle() const
 {
     gfx::InteropHandle handle = {};

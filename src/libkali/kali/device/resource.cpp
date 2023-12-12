@@ -74,7 +74,11 @@ Resource::Resource(ref<Device> device, ResourceType type)
 {
 }
 
-Resource::~Resource() { }
+Resource::~Resource()
+{
+    for (auto& [desc, view] : m_views)
+        view->invalidate();
+}
 
 const char* Resource::debug_name() const
 {
@@ -158,6 +162,20 @@ ResourceView::ResourceView(const ResourceViewDesc& desc, const Texture* texture)
                    ->createTextureView(texture->gfx_texture_resource(), gfx_desc, m_gfx_resource_view.writeRef()));
 }
 
+ResourceView::~ResourceView()
+{
+    if (m_resource)
+        m_resource->device()->deferred_release(m_gfx_resource_view);
+}
+
+void ResourceView::invalidate()
+{
+    if (m_resource) {
+        m_resource->device()->deferred_release(m_gfx_resource_view);
+        m_resource = nullptr;
+    }
+}
+
 NativeHandle ResourceView::get_native_handle() const
 {
     if (!m_resource)
@@ -212,8 +230,10 @@ Buffer::Buffer(ref<Device> device, BufferDesc desc, const void* init_data, size_
 
     // Override initial state if not specified.
     if (m_desc.initial_state == ResourceState::undefined) {
-        if (is_set(m_desc.usage, ResourceUsage::acceleration_structure))
+        if (is_set(m_desc.usage, ResourceUsage::acceleration_structure)) {
             m_desc.initial_state = ResourceState::acceleration_structure;
+            m_desc.usage |= ResourceUsage::unordered_access | ResourceUsage::shader_resource;
+        }
     }
 
     gfx::IBufferResource::Desc gfx_desc{};
@@ -274,6 +294,11 @@ inline BufferDesc to_buffer_desc(TypedBufferDesc desc)
 Buffer::Buffer(ref<Device> device, TypedBufferDesc desc, const void* init_data, size_t init_data_size)
     : Buffer(std::move(device), to_buffer_desc(std::move(desc)), init_data, init_data_size)
 {
+}
+
+Buffer::~Buffer()
+{
+    m_device->deferred_release(m_gfx_buffer);
 }
 
 size_t Buffer::element_size() const
@@ -478,6 +503,11 @@ Texture::Texture(ref<Device> device, TextureDesc desc, gfx::ITextureResource* re
     process_texture_desc(m_desc);
 
     m_gfx_texture = resource;
+}
+
+Texture::~Texture()
+{
+    m_device->deferred_release(m_gfx_texture);
 }
 
 SubresourceLayout Texture::get_subresource_layout(uint32_t subresource) const

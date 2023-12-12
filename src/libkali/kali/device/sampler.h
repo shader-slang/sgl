@@ -34,6 +34,7 @@ class KALI_API Sampler : public DeviceResource {
     KALI_OBJECT(Sampler)
 public:
     Sampler(ref<Device> device, SamplerDesc desc);
+    ~Sampler();
 
     const SamplerDesc& desc() const { return m_desc; }
 

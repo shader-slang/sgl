@@ -32,6 +32,11 @@ Sampler::Sampler(ref<Device> device, SamplerDesc desc)
     SLANG_CALL(m_device->gfx_device()->createSamplerState(gfx_desc, m_gfx_sampler_state.writeRef()));
 }
 
+Sampler::~Sampler()
+{
+    m_device->deferred_release(m_gfx_sampler_state);
+}
+
 NativeHandle Sampler::get_native_handle() const
 {
     gfx::InteropHandle handle = {};
