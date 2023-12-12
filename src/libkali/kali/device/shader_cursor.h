@@ -48,6 +48,7 @@ public:
     void set_buffer(const ref<Buffer>& buffer) const;
     void set_texture(const ref<Texture>& texture) const;
     void set_sampler(const ref<Sampler>& sampler) const;
+    void set_acceleration_structure(const ref<AccelerationStructure>& acceleration_structure) const;
 
     void set_data(const void* data, size_t size) const;
 
