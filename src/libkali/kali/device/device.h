@@ -161,6 +161,8 @@ public:
     ShaderModel supported_shader_model() const { return m_supported_shader_model; }
     ShaderModel default_shader_model() const { return m_default_shader_model; }
 
+    const std::vector<std::string>& features() const { return m_features; }
+
     ref<Swapchain> create_swapchain(SwapchainDesc desc, ref<Window> window);
 
     ref<Buffer> create_buffer(BufferDesc desc, const void* init_data = nullptr, size_t init_data_size = 0);
@@ -266,6 +268,8 @@ private:
     ShaderModel m_default_shader_model{ShaderModel::unknown};
     Slang::ComPtr<gfx::IDevice> m_gfx_device;
     Slang::ComPtr<slang::IGlobalSession> m_global_session;
+
+    std::vector<std::string> m_features;
 
     ref<CommandQueue> m_default_queue;
     ref<CommandStream> m_command_stream;

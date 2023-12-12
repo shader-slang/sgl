@@ -184,6 +184,13 @@ Device::Device(const DeviceDesc& desc)
         m_default_shader_model = m_supported_shader_model;
     }
 
+    // Get features.
+    const char* features[256];
+    gfx::GfxCount feature_count = 0;
+    SLANG_CALL(m_gfx_device->getFeatures(features, std::size(features), &feature_count));
+    for (gfx::GfxCount i = 0; i < feature_count; ++i)
+        m_features.push_back(features[i]);
+
     // Create per-frame data.
     // TODO hardcoded frame count, maybe add to device desc?
     m_frame_data.resize(3);
