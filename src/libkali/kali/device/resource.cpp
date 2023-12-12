@@ -193,6 +193,10 @@ Buffer::Buffer(ref<Device> device, BufferDesc desc, const void* init_data, size_
     : Resource(std::move(device), ResourceType::buffer)
     , m_desc(std::move(desc))
 {
+    // Derive buffer size from init data.
+    if (m_desc.size == 0 && init_data && init_data_size > 0)
+        m_desc.size = init_data_size;
+
     // TODO check init_data size
     KALI_UNUSED(init_data_size);
     KALI_ASSERT(m_desc.size > 0);
@@ -223,7 +227,6 @@ Buffer::Buffer(ref<Device> device, BufferDesc desc, const void* init_data, size_
 
 inline BufferDesc to_buffer_desc(StructuredBufferDesc desc)
 {
-    KALI_CHECK(desc.element_count > 0, "Invalid element count.");
     KALI_CHECK(desc.struct_size > 0 || desc.struct_type, "Either 'struct_size' or 'struct_type' must be set.");
 
     size_t struct_size = desc.struct_size;
@@ -250,7 +253,6 @@ Buffer::Buffer(ref<Device> device, StructuredBufferDesc desc, const void* init_d
 
 inline BufferDesc to_buffer_desc(TypedBufferDesc desc)
 {
-    KALI_CHECK(desc.element_count > 0, "Invalid element count.");
     KALI_CHECK(desc.format != Format::unknown, "Invalid format.");
 
     return {

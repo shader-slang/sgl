@@ -372,15 +372,15 @@ struct BufferDesc {
 
 struct StructuredBufferDesc {
     /// Number of elements in the buffer.
-    size_t element_count;
+    size_t element_count{0};
 
     /// Size of the struct in bytes.
     /// Note: Either \c struct_size or \c struct_type can be set, but not both.
-    size_t struct_size;
+    size_t struct_size{0};
 
     /// Type of the struct.
     /// Note: Either \c struct_size or \c struct_type can be set, but not both.
-    const TypeLayoutReflection* struct_type;
+    const TypeLayoutReflection* struct_type{nullptr};
 
     ResourceState initial_state{ResourceState::undefined};
     ResourceUsage usage{ResourceUsage::none};

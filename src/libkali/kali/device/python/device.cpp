@@ -118,7 +118,7 @@ KALI_PY_EXPORT(device_device)
                 init_data ? init_data->nbytes() : 0
             );
         },
-        "size"_a,
+        "size"_a = 0,
         "struct_size"_a = 0,
         "format"_a = Format::unknown,
         "usage"_a = ResourceUsage::none,
@@ -153,7 +153,7 @@ KALI_PY_EXPORT(device_device)
                 init_data ? init_data->nbytes() : 0
             );
         },
-        "element_count"_a,
+        "element_count"_a = 0,
         "struct_size"_a = 0,
         "struct_type"_a = nullptr,
         "usage"_a = ResourceUsage::none,
@@ -189,7 +189,7 @@ KALI_PY_EXPORT(device_device)
                 init_data ? init_data->nbytes() : 0
             );
         },
-        "element_count"_a,
+        "element_count"_a = 0,
         "struct_size"_a = 0,
         "struct_type"_a = nullptr,
         "usage"_a = ResourceUsage::none,
@@ -222,7 +222,7 @@ KALI_PY_EXPORT(device_device)
                 init_data ? init_data->nbytes() : 0
             );
         },
-        "element_count"_a,
+        "element_count"_a = 0,
         "format"_a = Format::unknown,
         "usage"_a = ResourceUsage::none,
         "memory_type"_a = MemoryType::device_local,
