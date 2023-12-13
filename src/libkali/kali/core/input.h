@@ -4,6 +4,8 @@
 #include "kali/core/enum.h"
 #include "kali/math/vector_types.h"
 
+#include <string>
+
 namespace kali {
 
 enum class MouseButton : uint32_t {
@@ -13,6 +15,17 @@ enum class MouseButton : uint32_t {
     unknown,
 };
 
+KALI_ENUM_INFO(
+    MouseButton,
+    {
+        {MouseButton::left, "left"},
+        {MouseButton::middle, "middle"},
+        {MouseButton::right, "right"},
+        {MouseButton::unknown, "unknown"},
+    }
+);
+KALI_ENUM_REGISTER(MouseButton);
+
 enum class KeyModifierFlags : uint32_t {
     none = 0,
     shift = 1,
@@ -21,11 +34,32 @@ enum class KeyModifierFlags : uint32_t {
 };
 KALI_ENUM_CLASS_OPERATORS(KeyModifierFlags);
 
+KALI_ENUM_INFO(
+    KeyModifierFlags,
+    {
+        {KeyModifierFlags::none, "none"},
+        {KeyModifierFlags::shift, "shift"},
+        {KeyModifierFlags::ctrl, "ctrl"},
+        {KeyModifierFlags::alt, "alt"},
+    }
+);
+KALI_ENUM_REGISTER(KeyModifierFlags);
+
 enum class KeyModifier : uint32_t {
     shift = (uint32_t)KeyModifierFlags::shift,
     ctrl = (uint32_t)KeyModifierFlags::ctrl,
     alt = (uint32_t)KeyModifierFlags::alt
 };
+
+KALI_ENUM_INFO(
+    KeyModifier,
+    {
+        {KeyModifier::shift, "shift"},
+        {KeyModifier::ctrl, "ctrl"},
+        {KeyModifier::alt, "alt"},
+    }
+);
+KALI_ENUM_REGISTER(KeyModifier);
 
 enum class KeyCode : uint32_t {
     // Key codes 0..255 are reserved for ASCII codes.
@@ -146,12 +180,22 @@ enum class KeyboardEventType {
     input        ///< Character input.
 };
 
-struct KeyboardEvent {
+KALI_ENUM_INFO(
+    KeyboardEventType,
+    {
+        {KeyboardEventType::key_press, "key_press"},
+        {KeyboardEventType::key_release, "key_release"},
+        {KeyboardEventType::key_repeat, "key_repeat"},
+        {KeyboardEventType::input, "input"},
+    }
+);
+KALI_ENUM_REGISTER(KeyboardEventType);
 
+struct KALI_API KeyboardEvent {
     KeyboardEventType type;        ///< The event type.
     KeyCode key{KeyCode::unknown}; ///< The last key that was pressed/released.
-    KeyModifierFlags mods{0};      ///< Keyboard modifier flags.
     uint32_t codepoint{0};         ///< UTF-32 codepoint from GLFW for events.
+    KeyModifierFlags mods{0};      ///< Keyboard modifier flags.
 
     bool is_key_press() const { return type == KeyboardEventType::key_press; }
     bool is_key_release() const { return type == KeyboardEventType::key_release; }
@@ -159,6 +203,8 @@ struct KeyboardEvent {
     bool is_input() const { return type == KeyboardEventType::input; }
 
     bool has_modifier(KeyModifier mod) const { return is_set(mods, (KeyModifierFlags)mod); }
+
+    std::string to_string() const;
 };
 
 enum class MouseEventType {
@@ -168,7 +214,18 @@ enum class MouseEventType {
     scroll       ///< Mouse wheel was scrolled.
 };
 
-struct MouseEvent {
+KALI_ENUM_INFO(
+    MouseEventType,
+    {
+        {MouseEventType::button_down, "button_down"},
+        {MouseEventType::button_up, "button_up"},
+        {MouseEventType::move, "move"},
+        {MouseEventType::scroll, "scroll"},
+    }
+);
+KALI_ENUM_REGISTER(MouseEventType);
+
+struct KALI_API MouseEvent {
     MouseEventType type;
     float2 pos{0.f, 0.f};
     float2 scroll{0.f, 0.f};
@@ -181,6 +238,8 @@ struct MouseEvent {
     bool is_scroll() const { return type == MouseEventType::scroll; }
 
     bool has_modifier(KeyModifier mod) const { return is_set(mods, (KeyModifierFlags)mod); }
+
+    std::string to_string() const;
 };
 
 enum class GamepadEventType {
@@ -189,6 +248,17 @@ enum class GamepadEventType {
     connect,
     disconnect,
 };
+
+KALI_ENUM_INFO(
+    GamepadEventType,
+    {
+        {GamepadEventType::button_down, "button_down"},
+        {GamepadEventType::button_up, "button_up"},
+        {GamepadEventType::connect, "connect"},
+        {GamepadEventType::disconnect, "disconnect"},
+    }
+);
+KALI_ENUM_REGISTER(GamepadEventType);
 
 enum class GamepadButton : uint32_t {
     a,
@@ -208,12 +278,36 @@ enum class GamepadButton : uint32_t {
     left,
 };
 
-struct GamepadEvent {
+KALI_ENUM_INFO(
+    GamepadButton,
+    {
+        {GamepadButton::a, "a"},
+        {GamepadButton::b, "b"},
+        {GamepadButton::x, "x"},
+        {GamepadButton::y, "y"},
+        {GamepadButton::left_bumper, "left_bumper"},
+        {GamepadButton::right_bumper, "right_bumper"},
+        {GamepadButton::back, "back"},
+        {GamepadButton::start, "start"},
+        {GamepadButton::guide, "guide"},
+        {GamepadButton::left_thumb, "left_thumb"},
+        {GamepadButton::right_thumb, "right_thumb"},
+        {GamepadButton::up, "up"},
+        {GamepadButton::right, "right"},
+        {GamepadButton::down, "down"},
+        {GamepadButton::left, "left"},
+    }
+);
+KALI_ENUM_REGISTER(GamepadButton);
+
+struct KALI_API GamepadEvent {
     GamepadEventType type;
     GamepadButton button;
+
+    std::string to_string() const;
 };
 
-struct GamepadState {
+struct KALI_API GamepadState {
     float left_x;
     float left_y;
     float right_x;
@@ -224,6 +318,8 @@ struct GamepadState {
     uint32_t buttons;
 
     bool is_button_down(GamepadButton button) const { return buttons & (1 << uint32_t(button)); }
+
+    std::string to_string() const;
 };
 
 } // namespace kali

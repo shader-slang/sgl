@@ -20,6 +20,7 @@ target_sources(kali PRIVATE
     kali/core/format.h
     kali/core/fwd.h
     kali/core/hash.h
+    kali/core/input.cpp
     kali/core/input.h
     kali/core/logger.cpp
     kali/core/logger.h

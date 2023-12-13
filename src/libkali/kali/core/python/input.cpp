@@ -6,22 +6,9 @@ KALI_PY_EXPORT(core_input)
 {
     using namespace kali;
 
-    nb::enum_<MouseButton>(m, "MouseButton")
-        .value("left", MouseButton::left)
-        .value("middle", MouseButton::middle)
-        .value("right", MouseButton::right)
-        .value("unknown", MouseButton::unknown);
-
-    nb::enum_<KeyModifierFlags>(m, "KeyModifierFlags")
-        .value("none", KeyModifierFlags::none)
-        .value("shift", KeyModifierFlags::shift)
-        .value("ctrl", KeyModifierFlags::ctrl)
-        .value("alt", KeyModifierFlags::alt);
-
-    nb::enum_<KeyModifier>(m, "KeyModifier")
-        .value("shift", KeyModifier::shift)
-        .value("ctrl", KeyModifier::ctrl)
-        .value("alt", KeyModifier::alt);
+    nb::kali_enum<MouseButton>(m, "MouseButton");
+    nb::kali_enum<KeyModifierFlags>(m, "KeyModifierFlags");
+    nb::kali_enum<KeyModifier>(m, "KeyModifier");
 
     nb::enum_<KeyCode>(m, "KeyCode")
         .value("space", KeyCode::space)
@@ -131,11 +118,7 @@ KALI_PY_EXPORT(core_input)
         .value("menu", KeyCode::menu)
         .value("unknown", KeyCode::unknown);
 
-    nb::enum_<KeyboardEventType>(m, "KeyboardEventType")
-        .value("key_press", KeyboardEventType::key_press)
-        .value("key_release", KeyboardEventType::key_release)
-        .value("key_repeat", KeyboardEventType::key_repeat)
-        .value("input", KeyboardEventType::input);
+    nb::kali_enum<KeyboardEventType>(m, "KeyboardEventType");
 
     nb::class_<KeyboardEvent>(m, "KeyboardEvent")
         .def_ro("type", &KeyboardEvent::type)
@@ -146,13 +129,10 @@ KALI_PY_EXPORT(core_input)
         .def("is_key_release", &KeyboardEvent::is_key_release)
         .def("is_key_repeat", &KeyboardEvent::is_key_repeat)
         .def("is_input", &KeyboardEvent::is_input)
-        .def("has_modifier", &KeyboardEvent::has_modifier);
+        .def("has_modifier", &KeyboardEvent::has_modifier)
+        .def("__repr__", &KeyboardEvent::to_string);
 
-    nb::enum_<MouseEventType>(m, "MouseEventType")
-        .value("button_down", MouseEventType::button_down)
-        .value("button_up", MouseEventType::button_up)
-        .value("move", MouseEventType::move)
-        .value("scroll", MouseEventType::scroll);
+    nb::kali_enum<MouseEventType>(m, "MouseEventType");
 
     nb::class_<MouseEvent>(m, "MouseEvent")
         .def_ro("type", &MouseEvent::type)
@@ -164,34 +144,16 @@ KALI_PY_EXPORT(core_input)
         .def("is_button_up", &MouseEvent::is_button_up)
         .def("is_move", &MouseEvent::is_move)
         .def("is_scroll", &MouseEvent::is_scroll)
-        .def("has_modifier", &MouseEvent::has_modifier);
+        .def("has_modifier", &MouseEvent::has_modifier)
+        .def("__repr__", &MouseEvent::to_string);
 
-    nb::enum_<GamepadEventType>(m, "GamepadEventType")
-        .value("button_down", GamepadEventType::button_down)
-        .value("button_up", GamepadEventType::button_up)
-        .value("connect", GamepadEventType::connect)
-        .value("disconnect", GamepadEventType::disconnect);
-
-    nb::enum_<GamepadButton>(m, "GamepadButton")
-        .value("a", GamepadButton::a)
-        .value("b", GamepadButton::b)
-        .value("x", GamepadButton::x)
-        .value("y", GamepadButton::y)
-        .value("left_bumper", GamepadButton::left_bumper)
-        .value("right_bumper", GamepadButton::right_bumper)
-        .value("back", GamepadButton::back)
-        .value("start", GamepadButton::start)
-        .value("guide", GamepadButton::guide)
-        .value("left_thumb", GamepadButton::left_thumb)
-        .value("right_thumb", GamepadButton::right_thumb)
-        .value("up", GamepadButton::up)
-        .value("right", GamepadButton::right)
-        .value("down", GamepadButton::down)
-        .value("left", GamepadButton::left);
+    nb::kali_enum<GamepadEventType>(m, "GamepadEventType");
+    nb::kali_enum<GamepadButton>(m, "GamepadButton");
 
     nb::class_<GamepadEvent>(m, "GamepadEvent")
         .def_ro("type", &GamepadEvent::type)
-        .def_ro("button", &GamepadEvent::button);
+        .def_ro("button", &GamepadEvent::button)
+        .def("__repr__", &GamepadEvent::to_string);
 
     nb::class_<GamepadState>(m, "GamepadState")
         .def_ro("left_x", &GamepadState::left_x)
@@ -201,5 +163,6 @@ KALI_PY_EXPORT(core_input)
         .def_ro("left_trigger", &GamepadState::left_trigger)
         .def_ro("right_trigger", &GamepadState::right_trigger)
         .def_ro("buttons", &GamepadState::buttons)
-        .def("is_button_down", &GamepadState::is_button_down);
+        .def("is_button_down", &GamepadState::is_button_down)
+        .def("__repr__", &GamepadState::to_string);
 }
