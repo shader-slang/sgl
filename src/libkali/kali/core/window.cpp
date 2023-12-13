@@ -259,8 +259,8 @@ struct EventHandlers {
 
         KeyboardEvent event{
             .type = KeyboardEventType::input,
-            .mods = window->m_mods,
             .codepoint = codepoint,
+            .mods = window->m_mods,
         };
 
         window->handle_keyboard_event(event);
@@ -359,6 +359,8 @@ Window::Window(WindowDesc desc)
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     }
 
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
     m_window = glfwCreateWindow(m_width, m_height, m_title.c_str(), NULL, NULL);
     if (!m_window)
         KALI_THROW("Failed to create GLFW window");
@@ -412,12 +414,26 @@ void Window::set_icon(const std::filesystem::path& path)
     KALI_UNIMPLEMENTED();
 }
 
+void Window::close()
+{
+    m_should_close = true;
+}
+
+bool Window::should_close() const
+{
+    return m_should_close || glfwWindowShouldClose(m_window);
+}
+
+void Window::process_events()
+{
+    glfwPollEvents();
+    poll_gamepad_input();
+}
+
 void Window::main_loop()
 {
-    while (!glfwWindowShouldClose(m_window)) {
-        glfwPollEvents();
-        poll_gamepad_input();
-        glfwSwapBuffers(m_window);
+    while (!should_close()) {
+        process_events();
     }
 }
 

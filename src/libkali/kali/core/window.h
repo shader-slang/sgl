@@ -52,6 +52,11 @@ public:
 
     void set_icon(const std::filesystem::path& path);
 
+    void close();
+    bool should_close() const;
+
+    void process_events();
+
     void main_loop();
 
     // clipboard
@@ -110,6 +115,8 @@ private:
     uint32_t m_height;
     std::string m_title;
     GLFWwindow* m_window;
+
+    bool m_should_close{false};
 
     float2 m_mouse_pos{0.f, 0.f};
     KeyModifierFlags m_mods;
