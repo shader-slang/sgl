@@ -11,6 +11,8 @@
 #include "kali/device/shader.h"
 #include "kali/device/command.h"
 
+#include "kali/core/window.h"
+
 KALI_PY_EXPORT(device_device)
 {
     using namespace kali;
@@ -87,6 +89,39 @@ KALI_PY_EXPORT(device_device)
     device.def_prop_ro("supported_shader_model", &Device::supported_shader_model);
     device.def_prop_ro("default_shader_model", &Device::default_shader_model);
     device.def_prop_ro("features", &Device::features);
+    device.def(
+        "create_swapchain",
+        [](Device* self, const SwapchainDesc& desc, ref<Window> window)
+        { return self->create_swapchain(desc, window); },
+        "desc"_a,
+        "window"_a
+    );
+    device.def(
+        "create_swapchain",
+        [](Device* self,
+           Format format,
+           uint32_t width,
+           uint32_t height,
+           uint32_t image_count,
+           bool enable_vsync,
+           ref<Window> window)
+        {
+            return self->create_swapchain(
+                {.format = format,
+                 .width = width,
+                 .height = height,
+                 .image_count = image_count,
+                 .enable_vsync = enable_vsync},
+                window
+            );
+        },
+        "format"_a = Format::unknown,
+        "width"_a = 0,
+        "height"_a = 0,
+        "image_count"_a = 3,
+        "enable_vsync"_a = false,
+        "window"_a
+    );
     device.def(
         "create_buffer",
         [](Device* self, const BufferDesc& desc) { return self->create_buffer(desc); },
