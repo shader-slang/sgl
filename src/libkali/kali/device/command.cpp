@@ -798,6 +798,8 @@ void CommandStream::upload_buffer_data(Buffer* buffer, size_t offset, size_t siz
     KALI_CHECK(offset + size <= buffer->size(), "Buffer upload is out of bounds");
     KALI_CHECK_NOT_NULL(data);
 
+    buffer_barrier(buffer, ResourceState::copy_destination);
+
     get_gfx_resource_command_encoder()
         ->uploadBufferData(buffer->gfx_buffer_resource(), offset, size, const_cast<void*>(data));
 }
@@ -807,6 +809,8 @@ void CommandStream::upload_texture_data(Texture* texture, uint32_t subresource, 
     KALI_CHECK_NOT_NULL(texture);
     KALI_CHECK_LT(subresource, texture->subresource_count());
     KALI_CHECK_NOT_NULL(data);
+
+    texture_barrier(texture, ResourceState::copy_destination);
 
     uint3 dimensions = texture->get_mip_dimensions(texture->get_subresource_mip_level(subresource));
     SubresourceLayout layout = texture->get_subresource_layout(subresource);
