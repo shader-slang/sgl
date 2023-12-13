@@ -92,6 +92,7 @@ KALI_PY_EXPORT(device_command)
             "old_state"_a,
             "new_state"_a
         )
+        .def("copy_resource", &CommandStream::copy_resource, "dst"_a, "src"_a)
         .def("begin_compute_pass", &CommandStream::begin_compute_pass, nb::rv_policy::reference_internal)
         .def("begin_ray_tracing_pass", &CommandStream::begin_ray_tracing_pass, nb::rv_policy::reference_internal);
 
