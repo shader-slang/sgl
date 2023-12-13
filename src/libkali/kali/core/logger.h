@@ -34,6 +34,8 @@ enum class LogFrequency {
 class KALI_API LoggerOutput : public Object {
     KALI_OBJECT(LoggerOutput)
 public:
+    virtual ~LoggerOutput() = default;
+
     /// Write a log message.
     /// @param level The log level.
     /// @param module The module name.

@@ -30,6 +30,8 @@ public:
 
     virtual void set_resource(const ShaderOffset& offset, const ref<ResourceView>& resource_view);
     virtual void set_sampler(const ShaderOffset& offset, const ref<Sampler>& sampler);
+    virtual void
+    set_acceleration_structure(const ShaderOffset& offset, const ref<AccelerationStructure>& acceleration_structure);
     virtual void set_data(const ShaderOffset& offset, void const* data, size_t size);
 
     gfx::IShaderObject* gfx_shader_object() const { return m_shader_object; }

@@ -5,7 +5,6 @@
 #include "kali/device/native_handle.h"
 #include "kali/device/resource.h"
 #include "kali/device/shader.h"
-#include "kali/device/raytracing.h"
 
 #include "kali/core/macros.h"
 #include "kali/core/enum.h"
@@ -19,6 +18,7 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include <queue>
 
 namespace kali {
 
@@ -184,7 +184,10 @@ public:
 
     ref<InputLayout> create_input_layout(InputLayoutDesc desc);
 
-    ref<AccelerationStructure> create_acceleration_structure(AccelerationStructure::Desc desc);
+    AccelerationStructurePrebuildInfo
+    get_acceleration_structure_prebuild_info(const AccelerationStructureBuildInputs& build_inputs);
+
+    ref<AccelerationStructure> create_acceleration_structure(AccelerationStructureDesc desc);
 
     ref<SlangSession> create_slang_session(SlangSessionDesc desc);
 
@@ -226,6 +229,15 @@ public:
 
     void
     read_texture(const Texture* texture, size_t size, void* out_data, size_t* out_row_pitch, size_t* out_pixel_size);
+
+    void deferred_release(ISlangUnknown* object);
+
+    /**
+     * @brief Execute deferred releases.
+     *
+     * This function should be called regularly to execute deferred releases.
+     */
+    void execute_deferred_releases();
 
     gfx::IDevice* gfx_device() const { return m_gfx_device; }
     slang::IGlobalSession* global_session() const { return m_global_session; }
@@ -284,6 +296,13 @@ private:
     std::vector<FrameData> m_frame_data;
     uint32_t m_current_frame_index{0};
     ref<Fence> m_frame_fence;
+
+    struct DeferredRelease {
+        uint64_t fence_value;
+        Slang::ComPtr<ISlangUnknown> object;
+    };
+
+    std::queue<DeferredRelease> m_deferred_release_queue;
 };
 
 } // namespace kali

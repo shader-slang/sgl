@@ -4,6 +4,7 @@
 #include "kali/device/query.h"
 #include "kali/device/pipeline.h"
 #include "kali/device/shader_object.h"
+#include "kali/device/raytracing.h"
 
 KALI_PY_EXPORT(device_command)
 {
@@ -91,7 +92,8 @@ KALI_PY_EXPORT(device_command)
             "old_state"_a,
             "new_state"_a
         )
-        .def("begin_compute_pass", &CommandStream::begin_compute_pass, nb::rv_policy::reference_internal);
+        .def("begin_compute_pass", &CommandStream::begin_compute_pass, nb::rv_policy::reference_internal)
+        .def("begin_ray_tracing_pass", &CommandStream::begin_ray_tracing_pass, nb::rv_policy::reference_internal);
 
     nb::class_<ComputePassEncoder>(m, "ComputePassEncoder")
         .def("__enter__", [](ComputePassEncoder* self) { return self; })
@@ -135,12 +137,35 @@ KALI_PY_EXPORT(device_command)
             nb::overload_cast<const RayTracingPipeline*, const ShaderObject*>(&RayTracingPassEncoder::bind_pipeline),
             "pipeline"_a,
             "shader_object"_a
+        )
+        // .def(
+        //     "dispatch_rays",
+        //     &RayTracingPassEncoder::dispatch_rays,
+        //     "ray_gen_shader_index"_a,
+        //     "shader_table"_a,
+        //     "dimensions"_a
+        // );
+        .def(
+            "build_acceleration_structure",
+            [](RayTracingPassEncoder* self,
+               const AccelerationStructureBuildInputs& inputs,
+               AccelerationStructure* src,
+               AccelerationStructure* dst,
+               DeviceAddress scratch_data) {
+                self->build_acceleration_structure(
+                    {.inputs = inputs, .src = src, .dst = dst, .scratch_data = scratch_data}
+                );
+            },
+            "inputs"_a,
+            "src"_a = nullptr,
+            "dst"_a,
+            "scratch_data"_a
+        )
+        .def(
+            "copy_acceleration_structure",
+            &RayTracingPassEncoder::copy_acceleration_structure,
+            "src"_a,
+            "dst"_a,
+            "mode"_a
         );
-    // .def(
-    //     "dispatch_rays",
-    //     &RayTracingPassEncoder::dispatch_rays,
-    //     "ray_gen_shader_index"_a,
-    //     "shader_table"_a,
-    //     "dimensions"_a
-    // );
 }

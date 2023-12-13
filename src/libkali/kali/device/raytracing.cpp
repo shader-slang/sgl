@@ -9,7 +9,7 @@
 
 namespace kali {
 
-AccelerationStructure::AccelerationStructure(ref<Device> device, Desc desc)
+AccelerationStructure::AccelerationStructure(ref<Device> device, AccelerationStructureDesc desc)
     : DeviceResource(std::move(device))
     , m_desc(std::move(desc))
 {
@@ -20,6 +20,11 @@ AccelerationStructure::AccelerationStructure(ref<Device> device, Desc desc)
         .size = m_desc.size,
     };
     SLANG_CALL(m_device->gfx_device()->createAccelerationStructure(gfx_desc, m_gfx_acceleration_structure.writeRef()));
+}
+
+AccelerationStructure::~AccelerationStructure()
+{
+    m_device->deferred_release(m_gfx_acceleration_structure);
 }
 
 DeviceAddress AccelerationStructure::device_address() const
@@ -78,6 +83,11 @@ ShaderTable::ShaderTable(ref<Device> device, ShaderTableDesc desc)
     };
 
     SLANG_CALL(device->gfx_device()->createShaderTable(gfx_desc, m_gfx_shader_table.writeRef()));
+}
+
+ShaderTable::~ShaderTable()
+{
+    m_device->deferred_release(m_gfx_shader_table);
 }
 
 std::string ShaderTable::to_string() const

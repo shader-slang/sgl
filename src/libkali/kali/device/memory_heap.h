@@ -84,7 +84,7 @@ public:
     };
 
     MemoryHeap(ref<Device> device, ref<Fence> fence, MemoryHeapDesc desc);
-    virtual ~MemoryHeap();
+    ~MemoryHeap();
 
     /// Description of the heap.
     const MemoryHeapDesc& desc() const { return m_desc; }

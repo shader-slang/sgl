@@ -51,6 +51,16 @@ void ShaderObject::set_sampler(const ShaderOffset& offset, const ref<Sampler>& s
     SLANG_CALL(m_shader_object->setSampler(gfx_shader_offset(offset), sampler->gfx_sampler_state()));
 }
 
+void ShaderObject::set_acceleration_structure(
+    const ShaderOffset& offset,
+    const ref<AccelerationStructure>& acceleration_structure
+)
+{
+    SLANG_CALL(
+        m_shader_object->setResource(gfx_shader_offset(offset), acceleration_structure->gfx_acceleration_structure())
+    );
+}
+
 void ShaderObject::set_data(const ShaderOffset& offset, void const* data, size_t size)
 {
     SLANG_CALL(m_shader_object->setData(gfx_shader_offset(offset), data, size));
@@ -110,9 +120,6 @@ void TransientShaderObject::set_resource(const ShaderOffset& offset, const ref<R
         case ResourceViewType::unordered_access:
             m_command_stream->resource_barrier(resource_view->resource(), ResourceState::unordered_access);
             break;
-            // case ResourceViewType::acceleration_structure:
-            //     m_command_stream->resource_barrier(resource_view->resource(),
-            //     ResourceState::acceleration_structure); break;
         }
     }
 
@@ -151,9 +158,6 @@ void MutableShaderObject::set_resource_states(CommandStream* command_stream)
         case ResourceViewType::unordered_access:
             command_stream->resource_barrier(resource_view->resource(), ResourceState::unordered_access);
             break;
-            // case ResourceViewType::acceleration_structure:
-            //     command_stream->resource_barrier(resource_view->resource(),
-            //     ResourceState::acceleration_structure); break;
         }
     }
 }

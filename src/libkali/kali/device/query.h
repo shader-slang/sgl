@@ -1,6 +1,7 @@
 #pragma once
 
 #include "kali/device/fwd.h"
+#include "kali/device/types.h"
 #include "kali/device/device_resource.h"
 
 #include "kali/core/macros.h"
@@ -12,24 +13,6 @@
 #include <span>
 
 namespace kali {
-
-enum class QueryType : uint32_t {
-    timestamp = static_cast<uint32_t>(gfx::QueryType::Timestamp),
-    acceleration_structure_compacted_size = static_cast<uint32_t>(gfx::QueryType::AccelerationStructureCompactedSize),
-    acceleration_structure_serialized_size = static_cast<uint32_t>(gfx::QueryType::AccelerationStructureSerializedSize),
-    acceleration_structure_current_size = static_cast<uint32_t>(gfx::QueryType::AccelerationStructureCurrentSize),
-};
-
-KALI_ENUM_INFO(
-    QueryType,
-    {
-        {QueryType::timestamp, "timestamp"},
-        {QueryType::acceleration_structure_compacted_size, "acceleration_structure_compacted_size"},
-        {QueryType::acceleration_structure_serialized_size, "acceleration_structure_serialized_size"},
-        {QueryType::acceleration_structure_current_size, "acceleration_structure_current_size"},
-    }
-);
-KALI_ENUM_REGISTER(QueryType);
 
 struct QueryPoolDesc {
     QueryType type;

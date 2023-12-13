@@ -1,6 +1,7 @@
 #pragma once
 
 #include "kali/device/fwd.h"
+#include "kali/device/types.h"
 #include "kali/device/device_resource.h"
 #include "kali/device/formats.h"
 #include "kali/device/native_handle.h"
@@ -16,13 +17,6 @@
 #include <limits>
 
 namespace kali {
-
-/// Represents an address in device memory.
-using DeviceAddress = uint64_t;
-/// Represents an offset in device memory (in bytes).
-using DeviceOffset = uint64_t;
-/// Represents a size in device memory (in bytes).
-using DeviceSize = uint64_t;
 
 enum class ResourceType : uint32_t {
     unknown = static_cast<uint32_t>(gfx::IResource::Type::Unknown),
@@ -251,6 +245,10 @@ public:
     ResourceView(const ResourceViewDesc& desc, const Buffer* buffer);
     ResourceView(const ResourceViewDesc& desc, const Texture* texture);
 
+    ~ResourceView();
+
+    void invalidate();
+
     const ResourceViewDesc& desc() const { return m_desc; }
 
     ResourceViewType type() const { return m_desc.type; }
@@ -321,9 +319,6 @@ public:
 
     Format format() const { return Format::unknown; }
 
-    const char* debug_name() const;
-    void set_debug_name(const char* name);
-
     ResourceStateTracker& state_tracker() const { return m_state_tracker; }
 
     // virtual ref<ResourceView> get_rtv() const;
@@ -372,15 +367,15 @@ struct BufferDesc {
 
 struct StructuredBufferDesc {
     /// Number of elements in the buffer.
-    size_t element_count;
+    size_t element_count{0};
 
     /// Size of the struct in bytes.
     /// Note: Either \c struct_size or \c struct_type can be set, but not both.
-    size_t struct_size;
+    size_t struct_size{0};
 
     /// Type of the struct.
     /// Note: Either \c struct_size or \c struct_type can be set, but not both.
-    const TypeLayoutReflection* struct_type;
+    const TypeLayoutReflection* struct_type{nullptr};
 
     ResourceState initial_state{ResourceState::undefined};
     ResourceUsage usage{ResourceUsage::none};
@@ -409,6 +404,8 @@ public:
     Buffer(ref<Device> device, BufferDesc desc, const void* init_data, size_t init_data_size);
     Buffer(ref<Device> device, StructuredBufferDesc desc, const void* init_data, size_t init_data_size);
     Buffer(ref<Device> device, TypedBufferDesc desc, const void* init_data, size_t init_data_size);
+
+    ~Buffer();
 
     const BufferDesc& desc() const { return m_desc; }
 
@@ -550,6 +547,8 @@ class KALI_API Texture : public Resource {
 public:
     Texture(ref<Device> device, TextureDesc desc, const void* init_data, size_t init_data_size);
     Texture(ref<Device> device, TextureDesc desc, gfx::ITextureResource* resource);
+
+    ~Texture();
 
     const TextureDesc& desc() const { return m_desc; }
 

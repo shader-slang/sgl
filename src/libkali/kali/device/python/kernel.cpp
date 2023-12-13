@@ -44,6 +44,8 @@ inline void bind_python_var(ShaderCursor cursor, nb::handle var)
         cursor = ref<Texture>(nb::cast<Texture*>(var));
     } else if (nb::isinstance<Sampler>(var)) {
         cursor = ref<Sampler>(nb::cast<Sampler*>(var));
+    } else if (nb::isinstance<AccelerationStructure>(var)) {
+        cursor = ref<AccelerationStructure>(nb::cast<AccelerationStructure*>(var));
     } else if (nb::isinstance<nb::list>(var)) {
         uint32_t index = 0;
         for (const auto& value : nb::cast<nb::list>(var))

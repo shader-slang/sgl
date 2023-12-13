@@ -83,6 +83,7 @@ class QueryPool;
 
 // raytracing.h
 
+struct AccelerationStructureDesc;
 class AccelerationStructure;
 struct ShaderTableDesc;
 class ShaderTable;

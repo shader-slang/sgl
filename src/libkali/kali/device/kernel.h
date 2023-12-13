@@ -31,7 +31,7 @@ class KALI_API ComputeKernel : public Kernel {
     KALI_OBJECT(ComputeKernel)
 public:
     ComputeKernel(Device* device, ref<ShaderProgram> program);
-    virtual ~ComputeKernel() = default;
+    ~ComputeKernel() = default;
 
     ComputePipeline* pipeline() const;
 
@@ -48,7 +48,7 @@ class KALI_API RayTracingKernel : public Kernel {
     KALI_OBJECT(RayTracingKernel)
 public:
     RayTracingKernel(Device* device, ref<ShaderProgram> program);
-    virtual ~RayTracingKernel() = default;
+    ~RayTracingKernel() = default;
 
     RayTracingPipeline* pipeline() const;
 

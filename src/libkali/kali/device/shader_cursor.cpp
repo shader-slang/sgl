@@ -298,6 +298,12 @@ inline bool is_unordered_access_type(const TypeReflection* type)
     return type->resource_access() == TypeReflection::ResourceAccess::read_write;
 }
 
+inline bool is_acceleration_structure_resource_type(const TypeReflection* type)
+{
+    return type->kind() == TypeReflection::Kind::resource
+        && type->resource_shape() == TypeReflection::ResourceShape::acceleration_structure;
+}
+
 void ShaderCursor::set_resource(const ref<ResourceView>& resource_view) const
 {
     const TypeReflection* type = m_type_layout->unwrap_array()->type();
@@ -358,6 +364,19 @@ void ShaderCursor::set_sampler(const ref<Sampler>& sampler) const
     if (m_type_layout->parameter_category() != TypeReflection::ParameterCategory::sampler_state)
         KALI_THROW("'{}' cannot bind a sampler", m_type_layout->name());
     m_shader_object->set_sampler(m_offset, sampler);
+}
+
+void ShaderCursor::set_acceleration_structure(const ref<AccelerationStructure>& acceleration_structure) const
+{
+    const TypeReflection* type = m_type_layout->type();
+
+    KALI_CHECK(
+        is_acceleration_structure_resource_type(type),
+        "'{}' cannot bind an acceleration structure",
+        m_type_layout->name()
+    );
+
+    m_shader_object->set_acceleration_structure(m_offset, acceleration_structure);
 }
 
 void ShaderCursor::set_data(const void* data, size_t size) const
@@ -425,6 +444,12 @@ template<>
 KALI_API void ShaderCursor::set(const ref<Sampler>& value) const
 {
     set_sampler(value);
+}
+
+template<>
+KALI_API void ShaderCursor::set(const ref<AccelerationStructure>& value) const
+{
+    set_acceleration_structure(value);
 }
 
 #define SET_SCALAR(type, scalar_type)                                                                                  \

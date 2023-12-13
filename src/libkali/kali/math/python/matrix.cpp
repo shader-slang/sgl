@@ -44,6 +44,15 @@ void bind_matrix_type(nb::module_& m, const char* name)
     mat.def(nb::self == nb::self);
     mat.def(nb::self != nb::self);
 
+    mat.def(
+        "to_numpy",
+        [](const T& self)
+        {
+            size_t shape[2] = {rows, cols};
+            return nb::ndarray<nb::numpy, const value_type, nb::shape<rows, cols>>(&self, 2, shape);
+        }
+    );
+
     m.def("transpose", [](const T& m) { return transpose(m); });
 
     if constexpr (rows == cols) {

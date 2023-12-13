@@ -10,4 +10,6 @@ KALI_PY_EXPORT(device_pipeline)
 
     nb::class_<ComputePipeline, Pipeline>(m, "ComputePipeline")
         .def_prop_ro("thread_group_size", &ComputePipeline::thread_group_size);
+
+    nb::class_<RayTracingPipeline, Pipeline>(m, "RayTracingPipeline");
 }

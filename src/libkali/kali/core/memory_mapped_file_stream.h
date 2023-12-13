@@ -16,7 +16,7 @@ public:
         size_t mapped_size = MemoryMappedFile::WHOLE_FILE,
         MemoryMappedFile::AccessHint access_hint = MemoryMappedFile::AccessHint::normal
     );
-    virtual ~MemoryMappedFileStream();
+    ~MemoryMappedFileStream();
 
     const std::filesystem::path& path() const { return m_path; }
 

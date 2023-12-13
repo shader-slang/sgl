@@ -74,16 +74,10 @@ Resource::Resource(ref<Device> device, ResourceType type)
 {
 }
 
-Resource::~Resource() { }
-
-const char* Resource::debug_name() const
+Resource::~Resource()
 {
-    return gfx_resource()->getDebugName();
-}
-
-void Resource::set_debug_name(const char* name)
-{
-    gfx_resource()->setDebugName(name);
+    for (auto& [desc, view] : m_views)
+        view->invalidate();
 }
 
 NativeHandle Resource::get_native_handle() const
@@ -158,6 +152,20 @@ ResourceView::ResourceView(const ResourceViewDesc& desc, const Texture* texture)
                    ->createTextureView(texture->gfx_texture_resource(), gfx_desc, m_gfx_resource_view.writeRef()));
 }
 
+ResourceView::~ResourceView()
+{
+    if (m_resource)
+        m_resource->device()->deferred_release(m_gfx_resource_view);
+}
+
+void ResourceView::invalidate()
+{
+    if (m_resource) {
+        m_resource->device()->deferred_release(m_gfx_resource_view);
+        m_resource = nullptr;
+    }
+}
+
 NativeHandle ResourceView::get_native_handle() const
 {
     if (!m_resource)
@@ -193,6 +201,10 @@ Buffer::Buffer(ref<Device> device, BufferDesc desc, const void* init_data, size_
     : Resource(std::move(device), ResourceType::buffer)
     , m_desc(std::move(desc))
 {
+    // Derive buffer size from init data.
+    if (m_desc.size == 0 && init_data && init_data_size > 0)
+        m_desc.size = init_data_size;
+
     // TODO check init_data size
     KALI_UNUSED(init_data_size);
     KALI_ASSERT(m_desc.size > 0);
@@ -205,6 +217,14 @@ Buffer::Buffer(ref<Device> device, BufferDesc desc, const void* init_data, size_
         init_data_size,
         m_desc.size
     );
+
+    // Override initial state if not specified.
+    if (m_desc.initial_state == ResourceState::undefined) {
+        if (is_set(m_desc.usage, ResourceUsage::acceleration_structure)) {
+            m_desc.initial_state = ResourceState::acceleration_structure;
+            m_desc.usage |= ResourceUsage::unordered_access | ResourceUsage::shader_resource;
+        }
+    }
 
     gfx::IBufferResource::Desc gfx_desc{};
     gfx_desc.type = gfx::IResource::Type::Buffer;
@@ -219,11 +239,13 @@ Buffer::Buffer(ref<Device> device, BufferDesc desc, const void* init_data, size_
     gfx_desc.format = static_cast<gfx::Format>(m_desc.format);
 
     SLANG_CALL(m_device->gfx_device()->createBufferResource(gfx_desc, init_data, m_gfx_buffer.writeRef()));
+
+    if (!m_desc.debug_name.empty())
+        m_gfx_buffer->setDebugName(m_desc.debug_name.c_str());
 }
 
 inline BufferDesc to_buffer_desc(StructuredBufferDesc desc)
 {
-    KALI_CHECK(desc.element_count > 0, "Invalid element count.");
     KALI_CHECK(desc.struct_size > 0 || desc.struct_type, "Either 'struct_size' or 'struct_type' must be set.");
 
     size_t struct_size = desc.struct_size;
@@ -250,7 +272,6 @@ Buffer::Buffer(ref<Device> device, StructuredBufferDesc desc, const void* init_d
 
 inline BufferDesc to_buffer_desc(TypedBufferDesc desc)
 {
-    KALI_CHECK(desc.element_count > 0, "Invalid element count.");
     KALI_CHECK(desc.format != Format::unknown, "Invalid format.");
 
     return {
@@ -266,6 +287,11 @@ inline BufferDesc to_buffer_desc(TypedBufferDesc desc)
 Buffer::Buffer(ref<Device> device, TypedBufferDesc desc, const void* init_data, size_t init_data_size)
     : Buffer(std::move(device), to_buffer_desc(std::move(desc)), init_data, init_data_size)
 {
+}
+
+Buffer::~Buffer()
+{
+    m_device->deferred_release(m_gfx_buffer);
 }
 
 size_t Buffer::element_size() const
@@ -461,6 +487,9 @@ Texture::Texture(ref<Device> device, TextureDesc desc, const void* init_data, si
     gfx::ITextureResource::SubresourceData* gfx_init_data{nullptr};
 
     SLANG_CALL(m_device->gfx_device()->createTextureResource(gfx_desc, gfx_init_data, m_gfx_texture.writeRef()));
+
+    if (!m_desc.debug_name.empty())
+        m_gfx_texture->setDebugName(m_desc.debug_name.c_str());
 }
 
 Texture::Texture(ref<Device> device, TextureDesc desc, gfx::ITextureResource* resource)
@@ -470,6 +499,11 @@ Texture::Texture(ref<Device> device, TextureDesc desc, gfx::ITextureResource* re
     process_texture_desc(m_desc);
 
     m_gfx_texture = resource;
+}
+
+Texture::~Texture()
+{
+    m_device->deferred_release(m_gfx_texture);
 }
 
 SubresourceLayout Texture::get_subresource_layout(uint32_t subresource) const

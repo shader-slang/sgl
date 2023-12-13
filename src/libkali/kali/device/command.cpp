@@ -343,6 +343,76 @@ void RayTracingPassEncoder::dispatch_rays(
     ));
 }
 
+void RayTracingPassEncoder::build_acceleration_structure(
+    const AccelerationStructureBuildDesc& desc,
+    std::span<AccelerationStructureQueryDesc> queries
+)
+{
+    gfx::IAccelerationStructure::BuildDesc gfx_build_desc{
+        .inputs = reinterpret_cast<const gfx::IAccelerationStructure::BuildInputs&>(desc.inputs),
+        .source = desc.src ? desc.src->gfx_acceleration_structure() : nullptr,
+        .dest = desc.dst ? desc.dst->gfx_acceleration_structure() : nullptr,
+        .scratchData = desc.scratch_data,
+    };
+
+    ShortVector<gfx::AccelerationStructureQueryDesc, 16> gfx_query_descs(queries.size(), {});
+    for (size_t i = 0; i < queries.size(); i++) {
+        gfx_query_descs[i] = {
+            .queryType = static_cast<gfx::QueryType>(queries[i].query_type),
+            .queryPool = queries[i].query_pool->gfx_query_pool(),
+            .firstQueryIndex = narrow_cast<gfx::GfxIndex>(queries[i].first_query_index),
+        };
+    }
+
+    m_gfx_ray_tracing_command_encoder->buildAccelerationStructure(
+        gfx_build_desc,
+        narrow_cast<gfx::GfxCount>(gfx_query_descs.size()),
+        gfx_query_descs.data()
+    );
+}
+
+void RayTracingPassEncoder::copy_acceleration_structure(
+    AccelerationStructure* dst,
+    const AccelerationStructure* src,
+    AccelerationStructureCopyMode mode
+)
+{
+    KALI_CHECK_NOT_NULL(dst);
+    KALI_CHECK_NOT_NULL(src);
+
+    m_gfx_ray_tracing_command_encoder->copyAccelerationStructure(
+        dst->gfx_acceleration_structure(),
+        src->gfx_acceleration_structure(),
+        static_cast<gfx::AccelerationStructureCopyMode>(mode)
+    );
+}
+
+void RayTracingPassEncoder::query_acceleration_structure_properties(
+    std::span<const AccelerationStructure*> acceleration_structures,
+    std::span<AccelerationStructureQueryDesc> queries
+)
+{
+    ShortVector<gfx::IAccelerationStructure*, 16> gfx_acceleration_structures(acceleration_structures.size(), nullptr);
+    for (size_t i = 0; i < acceleration_structures.size(); i++)
+        gfx_acceleration_structures[i] = acceleration_structures[i]->gfx_acceleration_structure();
+
+    ShortVector<gfx::AccelerationStructureQueryDesc, 16> gfx_queries(queries.size(), {});
+    for (size_t i = 0; i < queries.size(); i++) {
+        gfx_queries[i] = {
+            .queryType = static_cast<gfx::QueryType>(queries[i].query_type),
+            .queryPool = queries[i].query_pool->gfx_query_pool(),
+            .firstQueryIndex = narrow_cast<gfx::GfxIndex>(queries[i].first_query_index),
+        };
+    }
+
+    m_gfx_ray_tracing_command_encoder->queryAccelerationStructureProperties(
+        narrow_cast<gfx::GfxCount>(gfx_acceleration_structures.size()),
+        gfx_acceleration_structures.data(),
+        narrow_cast<gfx::GfxCount>(gfx_queries.size()),
+        gfx_queries.data()
+    );
+}
+
 void RayTracingPassEncoder::serialize_acceleration_structure(DeviceAddress dst, const AccelerationStructure* src)
 {
     m_gfx_ray_tracing_command_encoder->serializeAccelerationStructure(dst, src->gfx_acceleration_structure());
