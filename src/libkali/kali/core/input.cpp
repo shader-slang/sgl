@@ -8,13 +8,7 @@ namespace kali {
 
 std::string KeyboardEvent::to_string() const
 {
-    return fmt::format(
-        "KeyboardEvent(type={}, key={}, codepoint={:08x}, mods={})",
-        type,
-        uint32_t(key),
-        codepoint,
-        mods
-    );
+    return fmt::format("KeyboardEvent(type={}, key={}, codepoint={:08x}, mods={})", type, key, codepoint, mods);
 }
 
 std::string MouseEvent::to_string() const
