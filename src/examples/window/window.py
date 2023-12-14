@@ -3,7 +3,7 @@ import numpy as np
 from pathlib import Path
 
 
-window = kali.Window(width=1280, height=720, title="kali test", resizable=True)
+window = kali.Window(width=1280, height=720, title="Window Example", resizable=True)
 
 device = kali.Device(enable_debug_layers=True)
 
@@ -21,12 +21,8 @@ kernel = device.load_module(Path(__file__).parent / "draw.slang").create_compute
     "main"
 )
 
-
-# window.on_keyboard_event = lambda event: print(event)
-# window.on_gamepad_event = lambda event: print(event)
-# window.on_gamepad_state = lambda state: print(state)
-
 mouse_pos = kali.float2()
+mouse_down = False
 
 
 def on_keyboard_event(event: kali.KeyboardEvent):
@@ -39,9 +35,16 @@ window.on_keyboard_event = on_keyboard_event
 
 
 def on_mouse_event(event: kali.MouseEvent):
+    global mouse_pos
+    global mouse_down
     if event.type == kali.MouseEventType.move:
-        global mouse_pos
         mouse_pos = event.pos
+    elif event.type == kali.MouseEventType.button_down:
+        if event.button == kali.MouseButton.left:
+            mouse_down = True
+    elif event.type == kali.MouseEventType.button_up:
+        if event.button == kali.MouseButton.left:
+            mouse_down = False
 
 
 window.on_mouse_event = on_mouse_event
@@ -58,6 +61,8 @@ window.on_resize = on_resize
 frame = 0
 
 while not window.should_close():
+    window.process_events()
+
     index = swapchain.acquire_next_image()
     if index < 0:
         continue
@@ -81,14 +86,19 @@ while not window.should_close():
 
     kernel.dispatch(
         thread_count=[output_texture.width, output_texture.height, 1],
-        vars={"g_output": output_texture, "g_frame": frame, "g_mouse_pos": mouse_pos},
+        vars={
+            "g_output": output_texture,
+            "g_frame": frame,
+            "g_mouse_pos": mouse_pos,
+            "g_mouse_down": mouse_down,
+        },
     )
     device.command_stream.copy_resource(dst=image, src=output_texture)
     device.command_stream.texture_barrier(image, kali.ResourceState.present)
     device.command_stream.submit()
     del image
 
-    window.process_events()
     swapchain.present()
+    device.wait()
 
     frame += 1
