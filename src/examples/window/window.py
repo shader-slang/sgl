@@ -45,7 +45,7 @@ window.on_resize = resize
 
 frame = 0
 
-while not window.should_close:
+while not window.should_close():
     index = swapchain.acquire_next_image()
     image = swapchain.get_image(index)
     kernel.dispatch([output.width, output.height, 1], vars={"g_output": output, "g_frame": frame})

@@ -35,7 +35,7 @@ KALI_PY_EXPORT(core_window)
     window.def("resize", &Window::resize, "width"_a, "height"_a);
     window.def_prop_rw("title", &Window::title, &Window::set_title);
     window.def("close", &Window::close);
-    window.def_prop_ro("should_close", &Window::should_close);
+    window.def("should_close", &Window::should_close);
     window.def("process_events", &Window::process_events);
     window.def("main_loop", &Window::main_loop);
     window.def("set_clipboard", &Window::set_clipboard, "text"_a);
