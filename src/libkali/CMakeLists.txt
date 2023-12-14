@@ -349,6 +349,13 @@ nanobind_add_module(kali_ext NB_STATIC LTO
     kali/utils/python/tev.cpp
 )
 
+if(KALI_ENABLE_PCH)
+    target_precompile_headers(kali_ext
+        PRIVATE
+            kali/python/kali_ext_pch.h
+    )
+endif()
+
 target_include_directories(kali_ext PRIVATE kali/python)
 
 target_link_libraries(kali_ext PRIVATE kali)
