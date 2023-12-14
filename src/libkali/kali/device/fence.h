@@ -2,8 +2,8 @@
 
 #include "kali/device/fwd.h"
 #include "kali/device/device_resource.h"
-#include "kali/device/native_handle.h"
 #include "kali/device/shared_handle.h"
+#include "kali/device/native_handle.h"
 
 #include "kali/core/macros.h"
 #include "kali/core/object.h"

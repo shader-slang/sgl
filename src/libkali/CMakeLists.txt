@@ -59,6 +59,9 @@ target_sources(kali PRIVATE
     kali/device/agility_sdk.h
     kali/device/command.cpp
     kali/device/command.h
+    kali/device/cuda_runtime_wrapper.h
+    kali/device/cuda_utils.cpp
+    kali/device/cuda_utils.h
     kali/device/device_resource.cpp
     kali/device/device_resource.h
     kali/device/device.cpp
@@ -245,6 +248,7 @@ file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/include/kali/core/config.h CONT
 
 #define KALI_HAS_D3D12 $<BOOL:${KALI_HAS_D3D12}>
 #define KALI_HAS_VULKAN $<BOOL:${KALI_HAS_VULKAN}>
+#define KALI_HAS_CUDA $<BOOL:${KALI_HAS_CUDA}>
 
 #define KALI_HAS_NVAPI $<BOOL:${KALI_HAS_NVAPI}>
 #define KALI_HAS_AGILITY_SDK $<BOOL:${KALI_HAS_AGILITY_SDK}>
@@ -263,8 +267,8 @@ target_link_libraries(kali
         fmt::fmt
         slang::slang slang::gfx
         Vulkan::Headers
-        # $<$<BOOL:${KALI_HAS_CUDA}>:CUDA::cuda_driver>
-        # $<$<BOOL:${KALI_HAS_CUDA}>:CUDA::cudart_static>
+        $<$<BOOL:${KALI_HAS_CUDA}>:CUDA::cuda_driver>
+        $<$<BOOL:${KALI_HAS_CUDA}>:CUDA::cudart_static>
     PRIVATE
         git_version
         glfw stb

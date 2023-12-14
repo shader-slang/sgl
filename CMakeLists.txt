@@ -59,6 +59,13 @@ message(STATUS "Platform: ${KALI_PLATFORM}")
 find_package(Python 3.8 COMPONENTS Interpreter Development.Module REQUIRED)
 
 # -----------------------------------------------------------------------------
+# Python
+# -----------------------------------------------------------------------------
+
+find_package(CUDAToolkit)
+ternary(KALI_HAS_CUDA ${CUDAToolkit_FOUND} ON OFF)
+
+# -----------------------------------------------------------------------------
 # Global setup
 # -----------------------------------------------------------------------------
 
@@ -224,6 +231,7 @@ ternary(KALI_HAS_TEVCLIENT ${tevclient_FOUND} ON OFF)
 add_subdirectory(external)
 
 message(STATUS "Feature flags:")
+message(STATUS "KALI_HAS_CUDA: ${KALI_HAS_CUDA}")
 message(STATUS "KALI_HAS_D3D12: ${KALI_HAS_D3D12}")
 message(STATUS "KALI_HAS_VULKAN: ${KALI_HAS_VULKAN}")
 message(STATUS "KALI_HAS_NVAPI: ${KALI_HAS_NVAPI}")

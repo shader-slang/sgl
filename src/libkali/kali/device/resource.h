@@ -4,6 +4,7 @@
 #include "kali/device/types.h"
 #include "kali/device/device_resource.h"
 #include "kali/device/formats.h"
+#include "kali/device/shared_handle.h"
 #include "kali/device/native_handle.h"
 
 #include "kali/core/fwd.h"
@@ -331,6 +332,9 @@ public:
     virtual ref<ResourceView> get_uav() const = 0;
 
     virtual gfx::IResource* gfx_resource() const = 0;
+
+    /// Get the shared resource handle.
+    SharedResourceHandle get_shared_handle() const;
 
     /// Returns the native API handle:
     /// - D3D12: ID3D12Resource*

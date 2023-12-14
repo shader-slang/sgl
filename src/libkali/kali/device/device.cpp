@@ -125,6 +125,7 @@ Device::Device(const DeviceDesc& desc)
     m_info.type = m_desc.type;
     m_info.api_name = gfx_device_info.apiName;
     m_info.adapter_name = gfx_device_info.adapterName;
+    m_info.adapter_luid = m_desc.adapter_luid ? *m_desc.adapter_luid : AdapterLUID();
     m_info.timestamp_frequency = gfx_device_info.timestampFrequency;
     m_info.limits.max_texture_dimension_1d = gfx_device_info.limits.maxTextureDimension1D;
     m_info.limits.max_texture_dimension_2d = gfx_device_info.limits.maxTextureDimension2D;
