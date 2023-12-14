@@ -16,7 +16,7 @@ KALI_PY_EXPORT(core_window)
         "__init__",
         [](Window* window, uint32_t width, uint32_t height, std::string title, WindowMode mode, bool resizable)
         {
-            new (window) Window(WindowDesc{
+            new (window) Window({
                 .width = width,
                 .height = height,
                 .title = title,
@@ -46,5 +46,5 @@ KALI_PY_EXPORT(core_window)
     window.def_prop_rw("on_mouse_event", &Window::on_mouse_event, &Window::set_on_mouse_event);
     window.def_prop_rw("on_gamepad_event", &Window::on_gamepad_event, &Window::set_on_gamepad_event);
     window.def_prop_rw("on_gamepad_state", &Window::on_gamepad_state, &Window::set_on_gamepad_state);
-    // window.def_prop_rw("on_drop_files", &Window::on_drop_files, &Window::set_on_drop_files);
+    window.def_prop_rw("on_drop_files", &Window::on_drop_files, &Window::set_on_drop_files);
 }

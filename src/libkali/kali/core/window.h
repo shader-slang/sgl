@@ -119,7 +119,7 @@ private:
     bool m_should_close{false};
 
     float2 m_mouse_pos{0.f, 0.f};
-    KeyModifierFlags m_mods;
+    KeyModifierFlags m_mods{KeyModifierFlags::none};
 
     static constexpr int INVALID_GAMEPAD_ID = -1;
     int m_gamepad_id{INVALID_GAMEPAD_ID};
