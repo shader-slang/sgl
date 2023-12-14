@@ -115,6 +115,7 @@ macro(kali_add_example target)
     add_executable(${target})
     target_link_libraries(${target} PRIVATE kali)
     set_target_properties(${target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${KALI_RUNTIME_OUTPUT_DIRECTORY})
+    set_target_properties(${target} PROPERTIES FOLDER "examples")
 endmacro()
 
 # -----------------------------------------------------------------------------

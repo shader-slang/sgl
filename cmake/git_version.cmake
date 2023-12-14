@@ -92,7 +92,7 @@ function(git_version_setup)
         -P ${CURRENT_LIST_DIR}/git_version.cmake
         BYPRODUCTS ${POST_CONFIGURE_FILE} ${STATE_FILE}
     )
-    set_target_properties(git_version_run_check PROPERTIES FOLDER "Misc")
+    set_target_properties(git_version_run_check PROPERTIES FOLDER "misc")
 
     add_library(git_version INTERFACE)
     target_include_directories(git_version INTERFACE ${CMAKE_BINARY_DIR}/git_version)
