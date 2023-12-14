@@ -12,18 +12,10 @@ swapchain = device.create_swapchain(
     width=window.width,
     height=window.height,
     window=window,
-    enable_vsync=False
+    enable_vsync=False,
 )
 
-output = device.create_texture(
-    type=kali.TextureType.texture_2d,
-    format=kali.Format.rgba8_unorm,
-    width=swapchain.desc.width,
-    height=swapchain.desc.height,
-    mip_count=1,
-    usage=kali.ResourceUsage.shader_resource | kali.ResourceUsage.unordered_access,
-    debug_name="output",
-)
+output_texture = None
 
 kernel = device.load_module(Path(__file__).parent / "draw.slang").create_compute_kernel(
     "main"
@@ -34,29 +26,69 @@ kernel = device.load_module(Path(__file__).parent / "draw.slang").create_compute
 # window.on_gamepad_event = lambda event: print(event)
 # window.on_gamepad_state = lambda state: print(state)
 
+mouse_pos = kali.float2()
 
-def resize(width, height):
-    # swapchain.present()
-    # device.wait()
-    # swapchain.resize(width, height)
-    pass
 
-window.on_resize = resize
+def on_keyboard_event(event: kali.KeyboardEvent):
+    if event.type == kali.KeyboardEventType.key_press:
+        if event.key == kali.KeyCode.escape:
+            window.close()
+
+
+window.on_keyboard_event = on_keyboard_event
+
+
+def on_mouse_event(event: kali.MouseEvent):
+    if event.type == kali.MouseEventType.move:
+        global mouse_pos
+        mouse_pos = event.pos
+
+
+window.on_mouse_event = on_mouse_event
+
+
+def on_resize(width, height):
+    device.wait()
+    swapchain.resize(width, height)
+
+
+window.on_resize = on_resize
+
 
 frame = 0
 
 while not window.should_close():
     index = swapchain.acquire_next_image()
-    image = swapchain.get_image(index)
-    kernel.dispatch([output.width, output.height, 1], vars={"g_output": output, "g_frame": frame})
-    device.command_stream.copy_resource(dst=image, src=output)
+    if index < 0:
+        continue
 
+    image = swapchain.get_image(index)
+    if (
+        output_texture == None
+        or output_texture.width != image.width
+        or output_texture.height != image.height
+    ):
+        output_texture = device.create_texture(
+            type=kali.TextureType.texture_2d,
+            format=kali.Format.rgba8_unorm,
+            width=image.width,
+            height=image.height,
+            mip_count=1,
+            usage=kali.ResourceUsage.shader_resource
+            | kali.ResourceUsage.unordered_access,
+            debug_name="output_texture",
+        )
+
+    kernel.dispatch(
+        thread_count=[output_texture.width, output_texture.height, 1],
+        vars={"g_output": output_texture, "g_frame": frame, "g_mouse_pos": mouse_pos},
+    )
+    device.command_stream.copy_resource(dst=image, src=output_texture)
     device.command_stream.texture_barrier(image, kali.ResourceState.present)
     device.command_stream.submit()
+    del image
+
     window.process_events()
     swapchain.present()
 
     frame += 1
-
-
-# window.on_keyboard_event = None
