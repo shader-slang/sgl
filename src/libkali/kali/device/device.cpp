@@ -279,9 +279,10 @@ ref<Texture> Device::create_texture(TextureDesc desc, const void* init_data, siz
     return make_ref<Texture>(ref<Device>(this), std::move(desc), init_data, init_data_size);
 }
 
-ref<Texture> Device::create_texture_from_resource(TextureDesc desc, gfx::ITextureResource* resource)
+ref<Texture>
+Device::create_texture_from_resource(TextureDesc desc, gfx::ITextureResource* resource, bool deferred_release)
 {
-    return make_ref<Texture>(ref<Device>(this), std::move(desc), resource);
+    return make_ref<Texture>(ref<Device>(this), std::move(desc), resource, deferred_release);
 }
 
 ref<Sampler> Device::create_sampler(SamplerDesc desc)

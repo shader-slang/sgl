@@ -174,7 +174,7 @@ public:
 
     ref<Texture> create_texture(TextureDesc desc, const void* init_data = nullptr, size_t init_data_size = 0);
 
-    ref<Texture> create_texture_from_resource(TextureDesc desc, gfx::ITextureResource* resource);
+    ref<Texture> create_texture_from_resource(TextureDesc desc, gfx::ITextureResource* resource, bool deferred_release);
 
     ref<Sampler> create_sampler(SamplerDesc desc);
 

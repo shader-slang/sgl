@@ -492,9 +492,10 @@ Texture::Texture(ref<Device> device, TextureDesc desc, const void* init_data, si
         m_gfx_texture->setDebugName(m_desc.debug_name.c_str());
 }
 
-Texture::Texture(ref<Device> device, TextureDesc desc, gfx::ITextureResource* resource)
+Texture::Texture(ref<Device> device, TextureDesc desc, gfx::ITextureResource* resource, bool deferred_release)
     : Resource(std::move(device), ResourceType(desc.type))
     , m_desc(std::move(desc))
+    , m_deferred_release(deferred_release)
 {
     process_texture_desc(m_desc);
 
@@ -503,7 +504,8 @@ Texture::Texture(ref<Device> device, TextureDesc desc, gfx::ITextureResource* re
 
 Texture::~Texture()
 {
-    m_device->deferred_release(m_gfx_texture);
+    if (m_deferred_release)
+        m_device->deferred_release(m_gfx_texture);
 }
 
 SubresourceLayout Texture::get_subresource_layout(uint32_t subresource) const

@@ -65,6 +65,7 @@ uint32_t Swapchain::acquire_next_image()
 
 void Swapchain::resize(uint32_t width, uint32_t height)
 {
+    m_images.clear();
     m_desc.width = width;
     m_desc.height = height;
     SLANG_CALL(m_gfx_swapchain->resize(width, height));
@@ -100,7 +101,8 @@ void Swapchain::get_images()
                 .mip_count = 1,
                 .usage = ResourceUsage::render_target,
             },
-            resource
+            resource,
+            false
         ));
     }
     KALI_ASSERT(m_images.size() == m_desc.image_count);

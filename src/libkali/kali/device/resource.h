@@ -546,7 +546,7 @@ class KALI_API Texture : public Resource {
     KALI_OBJECT(Texture)
 public:
     Texture(ref<Device> device, TextureDesc desc, const void* init_data, size_t init_data_size);
-    Texture(ref<Device> device, TextureDesc desc, gfx::ITextureResource* resource);
+    Texture(ref<Device> device, TextureDesc desc, gfx::ITextureResource* resource, bool deferred_release);
 
     ~Texture();
 
@@ -632,6 +632,7 @@ public:
 private:
     TextureDesc m_desc;
     Slang::ComPtr<gfx::ITextureResource> m_gfx_texture;
+    bool m_deferred_release{true};
 };
 
 } // namespace kali
