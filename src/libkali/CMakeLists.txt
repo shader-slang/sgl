@@ -35,6 +35,7 @@ target_sources(kali PRIVATE
     kali/core/object.cpp
     kali/core/object.h
     kali/core/platform_linux.cpp
+    kali/core/platform_macos.cpp
     kali/core/platform_windows.cpp
     kali/core/platform.cpp
     kali/core/platform.h

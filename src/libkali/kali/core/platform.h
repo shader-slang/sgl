@@ -28,6 +28,11 @@ struct WindowHandle {
     uint32_t xwindow;
 };
 using SharedLibraryHandle = void*;
+#elif KALI_MACOS
+struct WindowHandle {
+    void* nsview;
+};
+using SharedLibraryHandle = void*;
 #endif
 } // namespace kali
 
