@@ -11,9 +11,10 @@
 #include "kali/math/float16.h"
 #include "kali/math/colorspace.h"
 
+#include "kali/stl/bit.h" // Replace with <bit> when available on all platforms.
+
 #include <asmjit/asmjit.h>
 
-#include <bit>
 #include <limits>
 #include <unordered_map>
 #include <map>
@@ -199,19 +200,6 @@ std::pair<double, double> Struct::type_range(Type type)
 }
 
 namespace detail {
-    template<typename To, typename From>
-    To bit_cast(From x)
-    {
-#ifdef __cpp_lib_bit_cast
-        return std::bit_cast<To>(x);
-#else
-        static_assert(sizeof(To) == sizeof(From));
-        To to;
-        std::memcpy(&to, &x, sizeof(To));
-        return to;
-#endif
-    }
-
     uint16_t byteswap(uint16_t v)
     {
 #if KALI_MSVC
@@ -246,23 +234,23 @@ namespace detail {
     }
     int16_t byteswap(int16_t v)
     {
-        return bit_cast<int16_t>(byteswap(bit_cast<uint16_t>(v)));
+        return stdx::bit_cast<int16_t>(byteswap(stdx::bit_cast<uint16_t>(v)));
     }
     int32_t byteswap(int32_t v)
     {
-        return bit_cast<int32_t>(byteswap(bit_cast<uint32_t>(v)));
+        return stdx::bit_cast<int32_t>(byteswap(stdx::bit_cast<uint32_t>(v)));
     }
     int64_t byteswap(int64_t v)
     {
-        return bit_cast<int64_t>(byteswap(bit_cast<uint64_t>(v)));
+        return stdx::bit_cast<int64_t>(byteswap(stdx::bit_cast<uint64_t>(v)));
     }
     float byteswap(float v)
     {
-        return bit_cast<float>(byteswap(bit_cast<uint32_t>(v)));
+        return stdx::bit_cast<float>(byteswap(stdx::bit_cast<uint32_t>(v)));
     }
     double byteswap(double v)
     {
-        return bit_cast<double>(byteswap(bit_cast<uint64_t>(v)));
+        return stdx::bit_cast<double>(byteswap(stdx::bit_cast<uint64_t>(v)));
     }
 } // namespace detail
 

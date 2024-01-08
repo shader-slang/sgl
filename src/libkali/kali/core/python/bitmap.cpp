@@ -2,7 +2,7 @@
 
 #include "kali/core/bitmap.h"
 
-#include <bit>
+#include "kali/stl/bit.h" // Replace with <bit> when available on all platforms.
 
 KALI_PY_EXPORT(core_bitmap)
 {
@@ -151,7 +151,7 @@ KALI_PY_EXPORT(core_bitmap)
                     result["shape"] = nb::make_tuple(self.height(), self.width(), self.channel_count());
 
                 std::string format(3, '\0');
-                format[0] = std::endian::native == std::endian::little ? '<' : '>';
+                format[0] = stdx::endian::native == stdx::endian::little ? '<' : '>';
                 format[1] = Struct::is_float(self.component_type())
                     ? 'f'
                     : (Struct::is_unsigned(self.component_type()) ? 'u' : 'i');

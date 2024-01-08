@@ -12,7 +12,7 @@
 #include <vulkan/vulkan.h>
 #endif
 
-#include <bit>
+#include "kali/stl/bit.h" // Replace with <bit> when available on all platforms.
 
 namespace kali {
 
@@ -25,11 +25,11 @@ struct NativeHandleTrait { };
         static const NativeHandleType type = TYPE;                                                                     \
         static uint64_t pack(T native)                                                                                 \
         {                                                                                                              \
-            return std::bit_cast<uint64_t>(native);                                                                    \
+            return stdx::bit_cast<uint64_t>(native);                                                                   \
         }                                                                                                              \
         static T unpack(uint64_t value)                                                                                \
         {                                                                                                              \
-            return std::bit_cast<T>(value);                                                                            \
+            return stdx::bit_cast<T>(value);                                                                           \
         }                                                                                                              \
     };
 

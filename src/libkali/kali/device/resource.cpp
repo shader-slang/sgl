@@ -10,7 +10,7 @@
 #include "kali/core/maths.h"
 #include "kali/core/bitmap.h"
 
-#include <bit>
+#include "kali/stl/bit.h" // Replace with <bit> when available on all platforms.
 
 namespace kali {
 
@@ -460,7 +460,7 @@ inline void process_texture_desc(TextureDesc& desc)
     }
 
     if (desc.mip_count == 0) {
-        desc.mip_count = std::bit_width(std::max({desc.width, desc.height, desc.depth}));
+        desc.mip_count = stdx::bit_width(std::max({desc.width, desc.height, desc.depth}));
     }
     KALI_CHECK(desc.array_size >= 1, "Invalid array size.");
     KALI_CHECK(desc.sample_count >= 1, "Invalid sample count.");
