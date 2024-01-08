@@ -119,6 +119,8 @@ target_sources(kali PRIVATE
     kali/math/vector_types.h
     kali/math/vector.h
 
+    kali/stl/bit.h
+
     kali/utils/tev.cpp
     kali/utils/tev.h
 )

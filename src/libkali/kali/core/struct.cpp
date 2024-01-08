@@ -151,7 +151,7 @@ std::string Struct::to_string() const
 
 Struct::ByteOrder Struct::host_byte_order()
 {
-    if constexpr (std::endian::native == std::endian::little)
+    if constexpr (stdx::endian::native == stdx::endian::little)
         return ByteOrder::little_endian;
     else
         return ByteOrder::big_endian;
@@ -198,62 +198,6 @@ std::pair<double, double> Struct::type_range(Type type)
     }
     KALI_THROW("Invalid type.");
 }
-
-namespace detail {
-    uint16_t byteswap(uint16_t v)
-    {
-#if KALI_MSVC
-        return _byteswap_ushort(v);
-#elif KALI_CLANG || KALI_GCC
-        return __builtin_bswap16(v);
-#else
-        return (v >> 8) | (v << 8);
-#endif
-    }
-    uint32_t byteswap(uint32_t v)
-    {
-#if KALI_MSVC
-        return _byteswap_ulong(v);
-#elif KALI_CLANG || KALI_GCC
-        return __builtin_bswap32(v);
-#else
-        return (v >> 24) | ((v >> 8) & 0x0000FF00) | ((v << 8) & 0x00FF0000) | (v << 24);
-#endif
-    }
-    uint64_t byteswap(uint64_t v)
-    {
-#if KALI_MSVC
-        return _byteswap_uint64(v);
-#elif KALI_CLANG || KALI_GCC
-        return __builtin_bswap64(v);
-#else
-        return (v >> 56) | ((v >> 40) & 0x000000000000FF00) | ((v >> 24) & 0x0000000000FF0000)
-            | ((v >> 8) & 0x00000000FF000000) | ((v << 8) & 0x000000FF00000000) | ((v << 24) & 0x0000FF0000000000)
-            | ((v << 40) & 0x00FF000000000000) | (v << 56);
-#endif
-    }
-    int16_t byteswap(int16_t v)
-    {
-        return stdx::bit_cast<int16_t>(byteswap(stdx::bit_cast<uint16_t>(v)));
-    }
-    int32_t byteswap(int32_t v)
-    {
-        return stdx::bit_cast<int32_t>(byteswap(stdx::bit_cast<uint32_t>(v)));
-    }
-    int64_t byteswap(int64_t v)
-    {
-        return stdx::bit_cast<int64_t>(byteswap(stdx::bit_cast<uint64_t>(v)));
-    }
-    float byteswap(float v)
-    {
-        return stdx::bit_cast<float>(byteswap(stdx::bit_cast<uint32_t>(v)));
-    }
-    double byteswap(double v)
-    {
-        return stdx::bit_cast<double>(byteswap(stdx::bit_cast<uint64_t>(v)));
-    }
-} // namespace detail
-
 
 /// Op codes for conversion programs.
 struct Op {
@@ -407,7 +351,7 @@ struct VM {
     {                                                                                                                  \
         ctype v = *reinterpret_cast<const ctype*>(base + offset);                                                      \
         if (swap) [[unlikely]]                                                                                         \
-            v = detail::byteswap(v);                                                                                   \
+            v = stdx::byteswap(v);                                                                                     \
         dst = v;                                                                                                       \
         break;                                                                                                         \
     }
@@ -434,14 +378,24 @@ struct VM {
         case Struct::Type::float16: {
             uint16_t v = *reinterpret_cast<const uint16_t*>(base + offset);
             if (swap) [[unlikely]]
-                v = detail::byteswap(v);
+                v = stdx::byteswap(v);
             value.s = math::float16_to_float32(v);
             break;
         }
-        case Struct::Type::float32:
-            CASE(float, value.s)
-        case Struct::Type::float64:
-            CASE(double, value.d)
+        case Struct::Type::float32: {
+            uint32_t v = *reinterpret_cast<const uint32_t*>(base + offset);
+            if (swap) [[unlikely]]
+                v = stdx::byteswap(v);
+            value.s = stdx::bit_cast<float>(v);
+            break;
+        }
+        case Struct::Type::float64: {
+            uint64_t v = *reinterpret_cast<const uint64_t*>(base + offset);
+            if (swap) [[unlikely]]
+                v = stdx::byteswap(v);
+            value.d = stdx::bit_cast<double>(v);
+            break;
+        }
         }
 
 #undef CASE
@@ -456,7 +410,7 @@ struct VM {
     {                                                                                                                  \
         ctype v = static_cast<ctype>(src);                                                                             \
         if (swap) [[unlikely]]                                                                                         \
-            v = detail::byteswap(v);                                                                                   \
+            v = stdx::byteswap(v);                                                                                     \
         *reinterpret_cast<ctype*>(base + offset) = v;                                                                  \
         break;                                                                                                         \
     }
@@ -483,14 +437,24 @@ struct VM {
         case Struct::Type::float16: {
             uint16_t v = math::float32_to_float16(value.s);
             if (swap) [[unlikely]]
-                v = detail::byteswap(v);
+                v = stdx::byteswap(v);
             *reinterpret_cast<uint16_t*>(base + offset) = v;
             break;
         }
-        case Struct::Type::float32:
-            CASE(float, value.s)
-        case Struct::Type::float64:
-            CASE(double, value.d)
+        case Struct::Type::float32: {
+            uint32_t v = stdx::bit_cast<uint32_t>(value.s);
+            if (swap) [[unlikely]]
+                v = stdx::byteswap(v);
+            *reinterpret_cast<uint32_t*>(base + offset) = v;
+            break;
+        }
+        case Struct::Type::float64: {
+            uint64_t v = stdx::bit_cast<uint64_t>(value.d);
+            if (swap) [[unlikely]]
+                v = stdx::byteswap(v);
+            *reinterpret_cast<uint64_t*>(base + offset) = v;
+            break;
+        }
         }
 
 #undef CASE

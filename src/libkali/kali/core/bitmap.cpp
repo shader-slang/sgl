@@ -1,6 +1,7 @@
 // TODO: MITSUBA license
 
 #include "bitmap.h"
+
 #include "kali/core/config.h"
 #include "kali/core/macros.h"
 #include "kali/core/error.h"
@@ -8,6 +9,8 @@
 #include "kali/core/file_stream.h"
 #include "kali/core/string.h"
 #include "kali/core/thread.h"
+
+#include "kali/stl/bit.h"
 
 #if KALI_HAS_PNG
 #include <png.h>
@@ -622,7 +625,7 @@ void Bitmap::read_png(Stream* stream)
         png_set_tRNS_to_alpha(png_ptr);
 
     // Swap the byte order on little endian machines.
-    if constexpr (std::endian::native == std::endian::little) {
+    if constexpr (stdx::endian::native == stdx::endian::little) {
         if (bit_depth == 16)
             png_set_swap(png_ptr);
     }
@@ -818,7 +821,7 @@ void Bitmap::write_png(Stream* stream, int compression) const
     png_write_info(png_ptr, info_ptr);
 
     // Swap the byte order on little endian machines.
-    if constexpr (std::endian::native == std::endian::little) {
+    if constexpr (stdx::endian::native == stdx::endian::little) {
         if (bit_depth == 16)
             png_set_swap(png_ptr);
     }

@@ -305,4 +305,72 @@ using bit::popcount;
 
 using bit::endian;
 #endif
+
+// C++23 introduces byteswap() in <bit>:
+
+template<typename T>
+inline /*constexpr*/ T byteswap(T n) noexcept;
+
+template<>
+inline /*constexpr*/ uint8_t byteswap(uint8_t n) noexcept
+{
+    return n;
+}
+
+template<>
+inline /*constexpr*/ uint16_t byteswap(uint16_t n) noexcept
+{
+#if KALI_MSVC
+    return _byteswap_ushort(n);
+#elif KALI_CLANG || KALI_GCC
+    return __builtin_bswap16(n);
+#else
+    return (n >> 8) | (n << 8);
+#endif
+}
+
+template<>
+inline /*constexpr*/ uint32_t byteswap(uint32_t n) noexcept
+{
+#if KALI_MSVC
+    return _byteswap_ulong(n);
+#elif KALI_CLANG || KALI_GCC
+    return __builtin_bswap32(n);
+#else
+    return (n >> 24) | ((n >> 8) & 0x0000FF00) | ((n << 8) & 0x00FF0000) | (n << 24);
+#endif
+}
+
+template<>
+inline /*constexpr*/ uint64_t byteswap(uint64_t n) noexcept
+{
+#if KALI_MSVC
+    return _byteswap_uint64(n);
+#elif KALI_CLANG || KALI_GCC
+    return __builtin_bswap64(n);
+#else
+    return (n >> 56) | ((n >> 40) & 0x000000000000FF00) | ((n >> 24) & 0x0000000000FF0000)
+        | ((n >> 8) & 0x00000000FF000000) | ((n << 8) & 0x000000FF00000000) | ((n << 24) & 0x0000FF0000000000)
+        | ((n << 40) & 0x00FF000000000000) | (n << 56);
+#endif
+}
+
+template<>
+inline /*constexpr*/ int16_t byteswap(int16_t n) noexcept
+{
+    return bit_cast<int16_t>(byteswap(bit_cast<uint16_t>(n)));
+}
+
+template<>
+inline /*constexpr*/ int32_t byteswap(int32_t n) noexcept
+{
+    return bit_cast<int32_t>(byteswap(bit_cast<uint32_t>(n)));
+}
+
+template<>
+inline /*constexpr*/ int64_t byteswap(int64_t n) noexcept
+{
+    return bit_cast<int64_t>(byteswap(bit_cast<uint64_t>(n)));
+}
+
 } // namespace stdx
