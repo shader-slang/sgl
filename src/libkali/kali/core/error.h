@@ -7,16 +7,6 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <source_location>
-
-#if __GLIBCXX__
-#if !__has_builtin(__builtin_source_location)
-#include <experimental/source_location>
-namespace std {
-using source_location = std::experimental::source_location;
-}
-#endif
-#endif
 
 /**
  * @file error.h
@@ -33,6 +23,26 @@ using source_location = std::experimental::source_location;
  * - KALI_ASSERT_OP(a, b, op)
  *
  */
+
+/// Source location information.
+/// This is similar to std::source_location which unfortunately is still not
+/// well supported on all major C++ library implementations.
+struct SourceLocation {
+    const char* file_name{nullptr};
+    const char* function_name{nullptr};
+    uint32_t line{0};
+    uint32_t column{0};
+
+    [[nodiscard]] static consteval SourceLocation current(
+        const char* file_name = __builtin_FILE(),
+        const char* function_name = __builtin_FUNCTION(),
+        uint32_t line = __builtin_LINE(),
+        uint32_t column = __builtin_COLUMN()
+    )
+    {
+        return SourceLocation{file_name, function_name, line, column};
+    }
+};
 
 // -------------------------------------------------------------------------------------------------
 // Exceptions
@@ -52,17 +62,16 @@ void KALI_API set_exception_diagnostics(ExceptionDiagnosticFlags flags);
 
 
 /// Throw an exception.
-[[noreturn]] KALI_API void throw_exception(const std::source_location& loc, std::string_view msg);
+[[noreturn]] KALI_API void throw_exception(const SourceLocation& loc, std::string_view msg);
 
 namespace detail {
-    [[noreturn]] inline void throw_exception(const std::source_location& loc, std::string_view msg)
+    [[noreturn]] inline void throw_exception(const SourceLocation& loc, std::string_view msg)
     {
         ::kali::throw_exception(loc, msg);
     }
 
     template<typename... Args>
-    [[noreturn]] inline void
-    throw_exception(const std::source_location& loc, fmt::format_string<Args...> fmt, Args&&... args)
+    [[noreturn]] inline void throw_exception(const SourceLocation& loc, fmt::format_string<Args...> fmt, Args&&... args)
     {
         ::kali::throw_exception(loc, fmt::format(fmt, std::forward<Args>(args)...));
     }
@@ -72,7 +81,7 @@ namespace detail {
 
 /// Helper for throwing exceptions.
 /// Logs the exception and a stack trace before throwing.
-#define KALI_THROW(...) ::kali::detail::throw_exception(std::source_location::current(), __VA_ARGS__)
+#define KALI_THROW(...) ::kali::detail::throw_exception(SourceLocation::current(), __VA_ARGS__)
 
 /// Helper for checking conditions and throwing exceptions.
 /// Logs the exception and a stack trace before throwing.
@@ -105,7 +114,7 @@ namespace detail {
 namespace kali {
 
 /// Report a failed assertion.
-[[noreturn]] KALI_API void report_assertion(const std::source_location& loc, std::string_view cond);
+[[noreturn]] KALI_API void report_assertion(const SourceLocation& loc, std::string_view cond);
 
 } // namespace kali
 
@@ -113,13 +122,13 @@ namespace kali {
 
 #define KALI_ASSERT(cond)                                                                                              \
     if (!(cond)) {                                                                                                     \
-        ::kali::report_assertion(std::source_location::current(), #cond);                                              \
+        ::kali::report_assertion(SourceLocation::current(), #cond);                                                    \
     }
 
 #define KALI_ASSERT_OP(a, b, op)                                                                                       \
     if (!((a)op(b))) {                                                                                                 \
         ::kali::report_assertion(                                                                                      \
-            std::source_location::current(),                                                                           \
+            SourceLocation::current(),                                                                                 \
             fmt::format("{} {} {} ({} {} {})", #a, #op, #b, a, #op, b)                                                 \
         );                                                                                                             \
     }
