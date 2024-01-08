@@ -2,6 +2,58 @@
 
 #include "kali/core/window.h"
 
+// GC traversal and clear functions for the window callbacks.
+// This is used to clean up cyclic references which can easily occur with callbacks.
+// See https://nanobind.readthedocs.io/en/latest/typeslots.html#reference-cycles-involving-functions
+
+int window_tp_traverse(PyObject* self, visitproc visit, void* arg)
+{
+    kali::Window* window = nb::inst_ptr<kali::Window>(self);
+
+#define VISIT(callback)                                                                                                \
+    {                                                                                                                  \
+        nb::object obj = nb::find(window->callback());                                                                 \
+        ::printf("callback = %p\n", obj.ptr());                                                                        \
+        Py_VISIT(obj.ptr());                                                                                           \
+    }
+
+    VISIT(on_resize);
+    VISIT(on_keyboard_event);
+    VISIT(on_mouse_event);
+    VISIT(on_gamepad_event);
+    VISIT(on_gamepad_state);
+    VISIT(on_drop_files);
+
+#undef VISIT
+
+    return 0;
+}
+
+int window_tp_clear(PyObject* self)
+{
+    kali::Window* window = nb::inst_ptr<kali::Window>(self);
+
+#define CLEAR(callback) window->set_##callback(nullptr);
+
+    CLEAR(on_resize);
+    CLEAR(on_keyboard_event);
+    CLEAR(on_mouse_event);
+    CLEAR(on_gamepad_event);
+    CLEAR(on_gamepad_state);
+    CLEAR(on_drop_files);
+
+#undef CLEAR
+
+    return 0;
+}
+
+// Slot data structure referencing the above two functions.
+PyType_Slot window_slots[] = {
+    {Py_tp_traverse, (void*)window_tp_traverse},
+    {Py_tp_clear, (void*)window_tp_clear},
+    {0, nullptr},
+};
+
 KALI_PY_EXPORT(core_window)
 {
     using namespace kali;
@@ -11,7 +63,7 @@ KALI_PY_EXPORT(core_window)
         .value("minimized", WindowMode::minimized)
         .value("fullscreen", WindowMode::fullscreen);
 
-    nb::class_<Window, Object> window(m, "Window");
+    nb::class_<Window, Object> window(m, "Window", nb::type_slots(window_slots));
     window.def(
         "__init__",
         [](Window* window, uint32_t width, uint32_t height, std::string title, WindowMode mode, bool resizable)
@@ -41,10 +93,11 @@ KALI_PY_EXPORT(core_window)
     window.def("set_clipboard", &Window::set_clipboard, "text"_a);
     window.def("get_clipboard", &Window::get_clipboard);
 
-    window.def_prop_rw("on_resize", &Window::on_resize, &Window::set_on_resize);
-    window.def_prop_rw("on_keyboard_event", &Window::on_keyboard_event, &Window::set_on_keyboard_event);
-    window.def_prop_rw("on_mouse_event", &Window::on_mouse_event, &Window::set_on_mouse_event);
-    window.def_prop_rw("on_gamepad_event", &Window::on_gamepad_event, &Window::set_on_gamepad_event);
-    window.def_prop_rw("on_gamepad_state", &Window::on_gamepad_state, &Window::set_on_gamepad_state);
-    window.def_prop_rw("on_drop_files", &Window::on_drop_files, &Window::set_on_drop_files);
+    window.def_prop_rw("on_resize", &Window::on_resize, &Window::set_on_resize, nb::arg().none());
+    window
+        .def_prop_rw("on_keyboard_event", &Window::on_keyboard_event, &Window::set_on_keyboard_event, nb::arg().none());
+    window.def_prop_rw("on_mouse_event", &Window::on_mouse_event, &Window::set_on_mouse_event, nb::arg().none());
+    window.def_prop_rw("on_gamepad_event", &Window::on_gamepad_event, &Window::set_on_gamepad_event, nb::arg().none());
+    window.def_prop_rw("on_gamepad_state", &Window::on_gamepad_state, &Window::set_on_gamepad_state, nb::arg().none());
+    window.def_prop_rw("on_drop_files", &Window::on_drop_files, &Window::set_on_drop_files, nb::arg().none());
 }
