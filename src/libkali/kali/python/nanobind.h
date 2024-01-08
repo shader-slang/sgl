@@ -173,6 +173,7 @@ inline std::optional<Struct::Type> dtype_to_struct_type(nb::dlpack::dtype dtype)
         case 64:
             return Struct::Type::uint64;
         }
+        break;
     case uint8_t(nb::dlpack::dtype_code::Float):
         switch (dtype.bits) {
         case 16:
@@ -182,6 +183,7 @@ inline std::optional<Struct::Type> dtype_to_struct_type(nb::dlpack::dtype dtype)
         case 64:
             return Struct::Type::float64;
         }
+        break;
     }
     return {};
 }

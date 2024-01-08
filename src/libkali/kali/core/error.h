@@ -37,7 +37,11 @@ struct SourceLocation {
         const char* file_name = __builtin_FILE(),
         const char* function_name = __builtin_FUNCTION(),
         uint32_t line = __builtin_LINE(),
+#if !KALI_GCC
         uint32_t column = __builtin_COLUMN()
+#else
+        uint32_t column = 0
+#endif
     )
     {
         return SourceLocation{file_name, function_name, line, column};

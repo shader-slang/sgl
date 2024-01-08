@@ -11,14 +11,14 @@ namespace kali {
  * @tparam T Element type
  * @tparam N Size of the short vector
  */
-template<typename T, size_t N>
+template<typename T, std::size_t N>
 class ShortVector {
 public:
     static_assert(N > 0, "ShortVector must have a size greater than zero.");
 
     using value_type = T;
-    using size_type = size_t;
-    using difference_type = ptrdiff_t;
+    using size_type = std::size_t;
+    using difference_type = std::ptrdiff_t;
     using reference = value_type&;
     using const_reference = const value_type&;
     using iterator = value_type*;
@@ -91,7 +91,7 @@ public:
 
     void clear() noexcept { m_size = 0; }
 
-    void reserve(size_t new_capacity) { grow(new_capacity); }
+    void reserve(size_type new_capacity) { grow(new_capacity); }
 
     void push_back(const value_type& value)
     {
@@ -118,7 +118,7 @@ public:
     void pop_back() { --m_size; }
 
 private:
-    void grow(size_t new_capacity)
+    void grow(size_type new_capacity)
     {
         if (new_capacity <= m_capacity)
             return;
