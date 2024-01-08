@@ -17,6 +17,8 @@ void run_gpu_test(void (*func)(GpuTestContext&))
     std::vector<DeviceType> device_types{DeviceType::d3d12, DeviceType::vulkan, DeviceType::cpu};
 #elif KALI_LINUX
     std::vector<DeviceType> device_types{DeviceType::vulkan, DeviceType::cpu};
+#elif KALI_MACOS
+    std::vector<DeviceType> device_types{DeviceType::vulkan, DeviceType::cpu};
 #endif
 
     bool use_cached_device = true;

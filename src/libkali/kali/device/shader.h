@@ -42,7 +42,14 @@ KALI_ENUM_REGISTER(ShaderCompilerFlags);
 struct TypeConformance {
     std::string type_name;
     std::string interface_name;
+#ifdef KALI_MACOS
+    // macOS clang stdc++ doesn't support C++20 <=> operator for standard containers yet.
+    bool operator<(const TypeConformance& other) const {
+        return std::tie(type_name, interface_name) < std::tie(other.type_name, other.interface_name);
+    }
+#else
     auto operator<=>(const TypeConformance&) const = default;
+#endif
 };
 
 class TypeConformanceList : public std::map<TypeConformance, uint32_t> {

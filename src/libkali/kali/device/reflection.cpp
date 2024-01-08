@@ -196,15 +196,12 @@ ReflectionCursor ReflectionCursor::find_field(std::string_view name) const
                 return ReflectionCursor(m_entry_point_layout->get_parameter_by_index(i)->type_layout());
         }
     } else if (m_type_layout) {
-        switch (m_type_layout->kind()) {
-        case TypeReflection::Kind::struct_: {
+        if (m_type_layout->kind() == TypeReflection::Kind::struct_) {
             int32_t field_index = m_type_layout->find_field_index_by_name(name.data(), name.data() + name.size());
-            if (field_index < 0)
-                break;
-
-            const VariableLayoutReflection* field_layout = m_type_layout->get_field_by_index(field_index);
-            return ReflectionCursor(field_layout->type_layout());
-        }
+            if (field_index >= 0) {
+                const VariableLayoutReflection* field_layout = m_type_layout->get_field_by_index(field_index);
+                return ReflectionCursor(field_layout->type_layout());
+            }
         }
     }
     return {};

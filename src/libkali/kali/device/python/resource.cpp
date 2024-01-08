@@ -33,9 +33,9 @@ inline std::optional<nb::dlpack::dtype> resource_format_to_dtype(Format format)
         return nb::dlpack::dtype{(uint8_t)nb::dlpack::dtype_code::UInt, (uint8_t)channel_bit_count, 1};
     case FormatType::sint:
         return nb::dlpack::dtype{(uint8_t)nb::dlpack::dtype_code::Int, (uint8_t)channel_bit_count, 1};
+    default:
+        return {};
     }
-
-    return {};
 }
 
 inline nb::ndarray<nb::numpy> buffer_to_numpy(Buffer* self)

@@ -273,6 +273,14 @@ class cmake(Package):
                 "url": f"https://github.com/Kitware/CMake/releases/download/v{self.version}/cmake-{self.version}-linux-aarch64.tar.gz",
                 "strip": True,
             },
+            "macos-x64": {
+                "url": f"https://github.com/Kitware/CMake/releases/download/v{self.version}/cmake-{self.version}-macos-universal.tar.gz",
+                "strip": True,
+            },
+            "macos-arm64": {
+                "url": f"https://github.com/Kitware/CMake/releases/download/v{self.version}/cmake-{self.version}-macos-universal.tar.gz",
+                "strip": True,
+            },
         }
 
 
@@ -288,6 +296,14 @@ class ninja(Package):
             "linux-x64": {
                 "url": f"https://github.com/ninja-build/ninja/releases/download/v{self.version}/ninja-linux.zip",
                 "sha512": "6403dac9196baffcff614fa73ea530752997c8db6bbfbaa0446b4b09d7327e2aa6e8615d1283c961d3bf0df497e85ba86604149f1505ee75f89d600245a45dde",
+            },
+            "macos-x64": {
+                "url": f"https://github.com/ninja-build/ninja/releases/download/v{self.version}/ninja-mac.zip",
+                "sha512": "dad33b0918c60bbf5107951a936175b1610b4894a408f4ba4b47a2f5b328fc982a52a2aed6a0cb75028ee4765af5083bea66611c37516826eb0c851366bb4427",
+            },
+            "macos-arm64": {
+                "url": f"https://github.com/ninja-build/ninja/releases/download/v{self.version}/ninja-mac.zip",
+                "sha512": "dad33b0918c60bbf5107951a936175b1610b4894a408f4ba4b47a2f5b328fc982a52a2aed6a0cb75028ee4765af5083bea66611c37516826eb0c851366bb4427",
             },
         }
 
@@ -305,6 +321,18 @@ class clang_format(Package):
             "linux-x64": {
                 "url": f"https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-f4f85437/clang-format-{self.version}_linux-amd64",
                 "sha512": "b83942b5eda44dcf094e6ae13425ad12a2fa97b106c35eb25863ab11c7bf50854b9660870f645151b65c873011c7feef62f2405dc13d27d0c869b3f3b5dc2cef",
+                "rename": "clang-format",
+                "chmod": "+x",
+            },
+            "macos-x64": {
+                "url": f"https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-f4f85437/clang-format-{self.version}_macosx-amd64",
+                "sha512": "2ba0bf4287d33205352174c4dd431960b802fc0a8f43c90263b47411fc02ea013c0afbd350f5b91b17fa7defc3d567910eb4e80b71d0dda47a1d4de0005bac80",
+                "rename": "clang-format",
+                "chmod": "+x",
+            },
+            "macos-arm64": {
+                "url": f"https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-f4f85437/clang-format-{self.version}_macosx-amd64",
+                "sha512": "2ba0bf4287d33205352174c4dd431960b802fc0a8f43c90263b47411fc02ea013c0afbd350f5b91b17fa7defc3d567910eb4e80b71d0dda47a1d4de0005bac80",
                 "rename": "clang-format",
                 "chmod": "+x",
             },

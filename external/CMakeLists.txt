@@ -33,6 +33,12 @@ elseif(KALI_LINUX)
     )
     kali_copy_binary(${SLANG_BIN_DIR}/libslang-glslang.so .)
     kali_copy_binary(${SLANG_BIN_DIR}/libslang-llvm.so .)
+elseif(KALI_MACOS)
+    add_library(slang::slang SHARED IMPORTED GLOBAL)
+    set_target_properties(slang::slang PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES ${SLANG_INCLUDE_DIR}
+        IMPORTED_LOCATION ${SLANG_BIN_DIR}/libslang.dylib
+    )
 endif()
 
 # slang-gfx
@@ -49,6 +55,13 @@ elseif(KALI_LINUX)
     set_target_properties(slang::gfx PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES ${SLANG_INCLUDE_DIR}
         IMPORTED_LOCATION ${SLANG_BIN_DIR}/libgfx.so
+    )
+elseif(KALI_MACOS)
+    add_library(slang::gfx SHARED IMPORTED GLOBAL)
+    set_target_properties(slang::gfx PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES ${SLANG_INCLUDE_DIR}
+        IMPORTED_LOCATION ${SLANG_BIN_DIR}/libgfx.dylib
+        IMPORTED_LOCATION ${SLANG_BIN_DIR}/libslang.dylib
     )
 endif()
 

@@ -444,6 +444,9 @@ inline void process_texture_desc(TextureDesc& desc)
         }
     } else {
         switch (desc.type) {
+        case TextureType::unknown:
+            KALI_THROW("Invalid texture type.");
+            break;
         case TextureType::texture_1d:
             KALI_CHECK(desc.width > 0 && desc.height == 0 && desc.depth == 0, "Invalid dimensions for 1D texture.");
             break;

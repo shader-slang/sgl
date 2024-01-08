@@ -78,6 +78,7 @@ std::filesystem::path get_temp_file_path()
     std::lock_guard<std::mutex> guard(mutex);
     KALI_DIAGNOSTIC_PUSH
     KALI_DISABLE_MSVC_WARNING(4996)
+    KALI_DISABLE_CLANG_WARNING("-Wdeprecated-declarations")
     char* name = std::tmpnam(nullptr);
     KALI_DIAGNOSTIC_POP
     if (name == nullptr)

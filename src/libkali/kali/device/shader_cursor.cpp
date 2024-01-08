@@ -141,6 +141,9 @@ ShaderCursor ShaderCursor::find_field(std::string_view name) const
         ShaderCursor d = dereference();
         return d.find_field(name);
     }
+
+    default:
+        break;
     }
 
 #if 0
@@ -212,6 +215,9 @@ ShaderCursor ShaderCursor::find_element(uint32_t index) const
         field_cursor.m_offset.binding_array_index = m_offset.binding_array_index;
         return field_cursor;
     } break;
+
+    default:
+        break;
     }
 
     return {};
