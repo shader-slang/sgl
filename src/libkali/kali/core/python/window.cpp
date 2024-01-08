@@ -13,7 +13,6 @@ int window_tp_traverse(PyObject* self, visitproc visit, void* arg)
 #define VISIT(callback)                                                                                                \
     {                                                                                                                  \
         nb::object obj = nb::find(window->callback());                                                                 \
-        ::printf("callback = %p\n", obj.ptr());                                                                        \
         Py_VISIT(obj.ptr());                                                                                           \
     }
 
