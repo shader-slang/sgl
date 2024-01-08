@@ -36,10 +36,9 @@ Swapchain::Swapchain(SwapchainDesc desc, WindowHandle window_handle, ref<Command
     get_images();
 }
 
-Swapchain::Swapchain(SwapchainDesc desc, ref<Window> window, ref<CommandQueue> queue, ref<Device> device)
+Swapchain::Swapchain(SwapchainDesc desc, Window* window, ref<CommandQueue> queue, ref<Device> device)
     : Swapchain(std::move(desc), window->window_handle(), std::move(queue), std::move(device))
 {
-    m_window = window;
 }
 
 Swapchain::~Swapchain() { }

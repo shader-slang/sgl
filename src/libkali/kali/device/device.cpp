@@ -255,9 +255,9 @@ Device::~Device()
     m_gfx_device.setNull();
 }
 
-ref<Swapchain> Device::create_swapchain(SwapchainDesc desc, ref<Window> window)
+ref<Swapchain> Device::create_swapchain(SwapchainDesc desc, Window* window)
 {
-    return make_ref<Swapchain>(std::move(desc), std::move(window), m_default_queue, ref<Device>(this));
+    return make_ref<Swapchain>(std::move(desc), window, m_default_queue, ref<Device>(this));
 }
 
 ref<Buffer> Device::create_buffer(BufferDesc desc, const void* init_data, size_t init_data_size)

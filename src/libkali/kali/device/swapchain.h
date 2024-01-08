@@ -25,7 +25,7 @@ class KALI_API Swapchain : public Object {
     KALI_OBJECT(Swapchain)
 public:
     Swapchain(SwapchainDesc desc, WindowHandle window_handle, ref<CommandQueue> queue, ref<Device> device);
-    Swapchain(SwapchainDesc desc, ref<Window> window, ref<CommandQueue> queue, ref<Device> device);
+    Swapchain(SwapchainDesc desc, Window* window, ref<CommandQueue> queue, ref<Device> device);
     ~Swapchain();
 
     /// Returns the swapchain description.
@@ -56,7 +56,6 @@ private:
     void get_images();
 
     SwapchainDesc m_desc;
-    ref<Window> m_window;
     ref<CommandQueue> m_queue;
     ref<Device> m_device;
     Slang::ComPtr<gfx::ISwapchain> m_gfx_swapchain;

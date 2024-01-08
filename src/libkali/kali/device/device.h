@@ -165,7 +165,7 @@ public:
 
     const std::vector<std::string>& features() const { return m_features; }
 
-    ref<Swapchain> create_swapchain(SwapchainDesc desc, ref<Window> window);
+    ref<Swapchain> create_swapchain(SwapchainDesc desc, Window* window);
 
     ref<Buffer> create_buffer(BufferDesc desc, const void* init_data = nullptr, size_t init_data_size = 0);
 
