@@ -71,7 +71,7 @@ public:
     using MouseEventCallback = std::function<void(const MouseEvent& /* event */)>;
     using GamepadEventCallback = std::function<void(const GamepadEvent& /* event */)>;
     using GamepadStateCallback = std::function<void(const GamepadState& /* state */)>;
-    using DropFilesCallback = std::function<void(const std::span<const char*> /* files */)>;
+    using DropFilesCallback = std::function<void(std::span<const char*> /* files */)>;
 
     const ResizeCallback& on_resize() const { return m_on_resize; }
     void set_on_resize(ResizeCallback on_resize) { m_on_resize = std::move(on_resize); }
@@ -109,7 +109,7 @@ private:
     void handle_keyboard_event(const KeyboardEvent& event);
     void handle_mouse_event(const MouseEvent& event);
     void handle_gamepad_event(const GamepadEvent& event);
-    void handle_drop_files(const std::span<const char*> files);
+    void handle_drop_files(std::span<const char*> files);
 
     uint32_t m_width;
     uint32_t m_height;

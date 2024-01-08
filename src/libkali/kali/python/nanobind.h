@@ -20,12 +20,15 @@
 #include "kali/core/type_utils.h"
 #include "kali/core/struct.h"
 
+#include <span>
+
 namespace nb = nanobind;
 using namespace nb::literals;
 
 NAMESPACE_BEGIN(NB_NAMESPACE)
 NAMESPACE_BEGIN(detail)
 
+/// Type caster for kali::ref<T>
 template<typename T>
 struct type_caster<kali::ref<T>> {
     using Caster = make_caster<T>;
@@ -45,6 +48,41 @@ struct type_caster<kali::ref<T>> {
     static handle from_cpp(const kali::ref<T>& value, rv_policy policy, cleanup_list* cleanup) noexcept
     {
         return Caster::from_cpp(value.get(), policy, cleanup);
+    }
+};
+
+/// Type caster for std::span<T>
+template<typename T>
+struct type_caster<std::span<T>> {
+    using Caster = make_caster<T>;
+    NB_TYPE_CASTER(std::span<T>, const_name(NB_TYPING_LIST "[") + make_caster<T>::Name + const_name("]"))
+
+    bool from_python(handle src, uint8_t flags, cleanup_list* cleanup) noexcept
+    {
+        KALI_UNUSED(src, flags, cleanup);
+        return false;
+    }
+
+    static handle from_cpp(const std::span<T>& src, rv_policy policy, cleanup_list* cleanup) noexcept
+    {
+        object ret = steal(PyList_New(src.size()));
+
+        if (ret.is_valid()) {
+            Py_ssize_t index = 0;
+
+            for (auto& value : src) {
+                handle h = Caster::from_cpp(forward_like<T>(value), policy, cleanup);
+
+                if (!h.is_valid()) {
+                    ret.reset();
+                    break;
+                }
+
+                NB_LIST_SET_ITEM(ret.ptr(), index++, h.ptr());
+            }
+        }
+
+        return ret.release();
     }
 };
 

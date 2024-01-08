@@ -575,7 +575,7 @@ void Window::handle_gamepad_event(const GamepadEvent& event)
         m_on_gamepad_event(event);
 }
 
-void Window::handle_drop_files(const std::span<const char*> files)
+void Window::handle_drop_files(std::span<const char*> files)
 {
     if (m_on_drop_files)
         m_on_drop_files(files);

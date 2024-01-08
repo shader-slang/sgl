@@ -53,7 +53,7 @@ int main()
     );
 
     window->set_on_drop_files(
-        [](const std::span<const char*> files)
+        [](std::span<const char*> files)
         {
             for (const char* file : files) {
                 log_info("dropped file: {}", file);
