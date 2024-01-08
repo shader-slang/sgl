@@ -267,7 +267,7 @@ namespace cuda_utils {
         command_stream->wait(m_fence, signal_value);
     }
 
-    void ExternalSemaphore::wait_for_device(CommandStream* command_stream, cudaStream_t cuda_stream , uint64_t value)
+    void ExternalSemaphore::wait_for_device(CommandStream* command_stream, cudaStream_t cuda_stream, uint64_t value)
     {
         uint64_t signal_value = command_stream->signal(m_fence, value);
         wait(signal_value, cuda_stream);
