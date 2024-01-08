@@ -39,8 +39,7 @@ public:
 
     const CommandQueueDesc& desc() const { return m_desc; }
 
-    void
-    submit(const CommandBuffer* command_buffer, Fence* fence_to_signal = nullptr, uint64_t fence_value = Fence::AUTO);
+    void submit(const CommandBuffer* command_buffer);
 
     void wait();
 
@@ -306,15 +305,8 @@ public:
 
     /**
      * Submit all recorded commands to the command queue.
-     * @return True if any commands were submitted.
      */
-    bool submit();
-
-    /**
-     * Submit all recorded commands to the command queue.
-     * Wait on the host until they are all executed.
-     */
-    void submit_and_wait();
+    void submit();
 
     // ------------------------------------------------------------------------
     // Fences
@@ -569,7 +561,6 @@ private:
 
     ref<CommandQueue> m_command_queue;
     ref<CommandBuffer> m_command_buffer;
-    ref<Fence> m_fence;
 
     bool m_pass_open{false};
 
