@@ -91,7 +91,7 @@ NAMESPACE_END(detail)
 template<typename T>
 class kali_enum : public enum_<T> {
 public:
-    static_assert(::kali::has_enum_info_v<T>, "nanobind::kali_enum<> requires an enumeration type with infos!");
+    static_assert(::kali::has_enum_info<T>, "nanobind::kali_enum<> requires an enumeration type with infos!");
 
     using Base = enum_<T>;
 

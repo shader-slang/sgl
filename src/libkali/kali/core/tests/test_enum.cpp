@@ -54,12 +54,9 @@ struct TestStruct {
 
 KALI_ENUM_REGISTER(TestStruct::TestEnum);
 
-static_assert(has_enum_info<void>::value == false);
-static_assert(has_enum_info_v<void> == false);
-static_assert(has_enum_info<::TestEnum>::value == true);
-static_assert(has_enum_info_v<::TestEnum> == true);
-static_assert(has_enum_info<TestStruct::TestEnum>::value == true);
-static_assert(has_enum_info_v<TestStruct::TestEnum> == true);
+static_assert(has_enum_info<void> == false);
+static_assert(has_enum_info<::TestEnum> == true);
+static_assert(has_enum_info<TestStruct::TestEnum> == true);
 
 TEST_CASE("enum_has_value")
 {

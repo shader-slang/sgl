@@ -9,6 +9,7 @@
 #include <type_traits>
 #include <algorithm>
 #include <vector>
+#include <concepts>
 
 namespace kali {
 
@@ -16,20 +17,21 @@ namespace kali {
 template<typename T>
 using EnumInfo = decltype(find_enum_info_adl(std::declval<T>()));
 
-template<typename, typename = void>
-struct has_enum_info : std::false_type { };
-
 template<typename T>
-struct has_enum_info<T, std::void_t<decltype(EnumInfo<T>::items)>> : std::true_type { };
-
-template<typename T>
-inline constexpr bool has_enum_info_v = has_enum_info<T>::value;
+concept has_enum_info = requires(T v) {
+    {
+        EnumInfo<T>::name()
+    } -> std::same_as<const std::string&>;
+    {
+        EnumInfo<T>::items()
+    } -> std::same_as<std::span<std::pair<T, std::string>>>;
+};
 
 /**
  * Convert an enum value to a string.
  * Throws if the enum value is not found in the registered enum information.
  */
-template<typename T, std::enable_if_t<has_enum_info_v<T>, bool> = true>
+template<has_enum_info T>
 inline const std::string& enum_to_string(T value)
 {
     const auto& items = EnumInfo<T>::items();
@@ -43,7 +45,7 @@ inline const std::string& enum_to_string(T value)
  * Convert a string to an enum value.
  * Throws if the string is not found in the registered enum information.
  */
-template<typename T, std::enable_if_t<has_enum_info_v<T>, bool> = true>
+template<has_enum_info T>
 inline T string_to_enum(std::string_view name)
 {
     const auto& items = EnumInfo<T>::items();
@@ -56,7 +58,7 @@ inline T string_to_enum(std::string_view name)
 /**
  * Check if an enum has a value with the given name.
  */
-template<typename T, std::enable_if_t<has_enum_info_v<T>, bool> = true>
+template<has_enum_info T>
 inline bool enum_has_value(std::string_view name)
 {
     const auto& items = EnumInfo<T>::items();
@@ -68,7 +70,7 @@ inline bool enum_has_value(std::string_view name)
  * Convert an flags enum value to a list of strings.
  * Throws if any of the flags are not found in the registered enum information.
  */
-template<typename T, std::enable_if_t<has_enum_info_v<T>, bool> = true>
+template<has_enum_info T>
 inline std::vector<std::string> flags_to_string_list(T flags)
 {
     std::vector<std::string> list;
@@ -88,7 +90,7 @@ inline std::vector<std::string> flags_to_string_list(T flags)
  * Convert a list of strings to a flags enum value.
  * Throws if any of the strings are not found in the registered enum information.
  */
-template<typename T, std::enable_if_t<has_enum_info_v<T>, bool> = true>
+template<has_enum_info T>
 inline T string_list_to_flags(const std::vector<std::string>& list)
 {
     T flags = T(0);
@@ -103,7 +105,7 @@ namespace detail {
     /// First, we check for a single value and return "name::value" if it succeeds.
     /// Otherwise, we check for flags and return "name::(value1 | value2 | ...)".
     /// Any bits that are not found in the enum information are formatted as hex.
-    template<typename T, std::enable_if_t<has_enum_info_v<T>, bool> = true>
+    template<has_enum_info T>
     inline std::string format_enum(T value)
     {
         const auto& items = EnumInfo<T>::items();
@@ -187,8 +189,8 @@ namespace detail {
     }
 
 /// Enum formatter.
-template<typename T>
-struct fmt::formatter<T, std::enable_if_t<kali::has_enum_info_v<T>, char>> : formatter<std::string> {
+template<kali::has_enum_info T>
+struct fmt::formatter<T> : formatter<std::string> {
     template<typename FormatContext>
     auto format(const T& e, FormatContext& ctx) const
     {

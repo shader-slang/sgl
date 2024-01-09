@@ -256,6 +256,12 @@ inline constexpr Format host_type_to_format()
 // Manually define the struct that KALI_ENUM_INFO(Format) would generate so we
 // can use the existing table of resource formats.
 struct Format_info {
+    static const std::string& name()
+    {
+        static const std::string name = "Format";
+        return name;
+    }
+
     static std::span<std::pair<Format, std::string>> items()
     {
         auto create_items = []()
