@@ -369,6 +369,10 @@ public:
         return detail::from_slang(type_layout_reflection);
     }
 
+    /// Cast to non-const base pointer.
+    /// The underlying slang API is not const-correct.
+    slang::TypeLayoutReflection* base() const { return (slang::TypeLayoutReflection*)(this); }
+
     const TypeReflection* type() const { return detail::from_slang(base()->getType()); }
 
     TypeReflection::Kind kind() const { return static_cast<TypeReflection::Kind>(base()->getKind()); }
@@ -668,11 +672,6 @@ public:
 #endif
 
     std::string to_string() const;
-
-private:
-    /// Cast to non-const base pointer.
-    /// The underlying slang API is not const-correct.
-    slang::TypeLayoutReflection* base() const { return (slang::TypeLayoutReflection*)(this); }
 };
 
 class KALI_API VariableReflection : private slang::VariableReflection {
@@ -681,6 +680,10 @@ public:
     {
         return detail::from_slang(variable_reflection);
     }
+
+    /// Cast to non-const base pointer.
+    /// The underlying slang API is not const-correct.
+    slang::VariableReflection* base() const { return (slang::VariableReflection*)(this); }
 
     const char* name() const { return base()->getName(); }
 
@@ -706,15 +709,14 @@ public:
             spReflectionVariable_FindUserAttributeByName((SlangReflectionVariable*)this, session, name);
     }
 #endif
-
-private:
-    /// Cast to non-const base pointer.
-    /// The underlying slang API is not const-correct.
-    slang::VariableReflection* base() const { return (slang::VariableReflection*)(this); }
 };
 
 class KALI_API VariableLayoutReflection : private slang::VariableLayoutReflection {
 public:
+    /// Cast to non-const base pointer.
+    /// The underlying slang API is not const-correct.
+    slang::VariableLayoutReflection* base() const { return (slang::VariableLayoutReflection*)(this); }
+
     const VariableReflection* variable() const { return detail::from_slang(base()->getVariable()); }
 
     const char* name() const { return base()->getName(); }
@@ -771,11 +773,6 @@ public:
 #endif
 
     std::string to_string() const;
-
-private:
-    /// Cast to non-const base pointer.
-    /// The underlying slang API is not const-correct.
-    slang::VariableLayoutReflection* base() const { return (slang::VariableLayoutReflection*)(this); }
 };
 
 class KALI_API EntryPointLayout : private slang::EntryPointLayout {
@@ -784,6 +781,10 @@ public:
     {
         return detail::from_slang(entry_point_reflection);
     }
+
+    /// Cast to non-const base pointer.
+    /// The underlying slang API is not const-correct.
+    slang::EntryPointLayout* base() const { return (slang::EntryPointLayout*)(this); }
 
     const char* name() const { return base()->getName(); }
 
@@ -837,11 +838,6 @@ public:
 #endif
 
     std::string to_string() const;
-
-private:
-    /// Cast to non-const base pointer.
-    /// The underlying slang API is not const-correct.
-    slang::EntryPointLayout* base() const { return (slang::EntryPointLayout*)(this); }
 };
 
 class KALI_API ProgramLayout : private slang::ProgramLayout {
@@ -850,6 +846,10 @@ public:
     {
         return detail::from_slang(program_layout);
     }
+
+    /// Cast to non-const base pointer.
+    /// The underlying slang API is not const-correct.
+    slang::ProgramLayout* base() const { return (slang::ProgramLayout*)(this); }
 
     const TypeLayoutReflection* globals_type_layout() const
     {
@@ -1003,11 +1003,6 @@ public:
     }
 
     std::string to_string() const;
-
-private:
-    /// Cast to non-const base pointer.
-    /// The underlying slang API is not const-correct.
-    slang::ProgramLayout* base() const { return (slang::ProgramLayout*)(this); }
 };
 
 class ShaderProgram;
