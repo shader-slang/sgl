@@ -738,12 +738,24 @@ ref<Bitmap> Texture::to_bitmap(uint32_t mip_level, uint32_t array_slice) const
 
     ref<Bitmap> bitmap = ref<Bitmap>(new Bitmap(pixel_format, component_type, width, height));
 
-    size_t size = layout.total_size_aligned();
-    KALI_ASSERT(size == bitmap->buffer_size());
     size_t row_pitch, pixel_size;
-    m_device->read_texture(this, bitmap->buffer_size(), bitmap->data(), &row_pitch, &pixel_size);
-    KALI_ASSERT(pixel_size == bitmap->bytes_per_pixel());
-    KALI_ASSERT(row_pitch == bitmap->width() * bitmap->bytes_per_pixel());
+    if (bitmap->buffer_size() == layout.total_size_aligned()) {
+        // Fast path: read directly into bitmap buffer
+        m_device->read_texture(this, bitmap->buffer_size(), bitmap->data(), &row_pitch, &pixel_size);
+        KALI_ASSERT(row_pitch == layout.row_size_aligned);
+        KALI_ASSERT(pixel_size == bitmap->bytes_per_pixel());
+    } else {
+        // Slow path: read into temporary buffer and copy row by row
+        std::unique_ptr<uint8_t[]> data(new uint8_t[layout.total_size_aligned()]);
+        m_device->read_texture(this, layout.total_size_aligned(), data.get(), &row_pitch, &pixel_size);
+        KALI_ASSERT(row_pitch == layout.row_size_aligned);
+        KALI_ASSERT(pixel_size == bitmap->bytes_per_pixel());
+        size_t row_size = layout.row_size;
+        size_t row_size_aligned = layout.row_size_aligned;
+        size_t row_count = layout.row_count;
+        for (size_t i = 0; i < row_count; ++i)
+            std::memcpy(bitmap->uint8_data() + i * row_size, data.get() + i * row_size_aligned, row_size);
+    }
 
     return bitmap;
 }
