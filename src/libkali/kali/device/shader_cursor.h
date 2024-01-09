@@ -44,6 +44,8 @@ public:
     // Resource binding
     //
 
+    void set_object(const ref<MutableShaderObject>& object) const;
+
     void set_resource(const ref<ResourceView>& resource_view) const;
     void set_buffer(const ref<Buffer>& buffer) const;
     void set_texture(const ref<Texture>& texture) const;

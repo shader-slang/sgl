@@ -237,6 +237,11 @@ ShaderCursor ShaderCursor::find_entry_point(uint32_t index) const
 // Resource binding
 //
 
+inline bool is_parameter_block(const TypeReflection* type)
+{
+    return type->kind() == TypeReflection::Kind::parameter_block;
+}
+
 inline bool is_resource_type(const TypeReflection* type)
 {
     switch (type->kind()) {
@@ -292,6 +297,11 @@ inline bool is_texture_resource_type(const TypeReflection* type)
     default:
         return false;
     }
+}
+
+inline bool is_sampler_type(const TypeReflection* type)
+{
+    return type->kind() == TypeReflection::Kind::sampler_state;
 }
 
 inline bool is_shader_resource_type(const TypeReflection* type)
@@ -367,8 +377,10 @@ void ShaderCursor::set_texture(const ref<Texture>& texture) const
 
 void ShaderCursor::set_sampler(const ref<Sampler>& sampler) const
 {
-    if (m_type_layout->parameter_category() != TypeReflection::ParameterCategory::sampler_state)
-        KALI_THROW("'{}' cannot bind a sampler", m_type_layout->name());
+    const TypeReflection* type = m_type_layout->unwrap_array()->type();
+
+    KALI_CHECK(is_sampler_type(type), "'{}' cannot bind a sampler", m_type_layout->name());
+
     m_shader_object->set_sampler(m_offset, sampler);
 }
 
@@ -390,6 +402,15 @@ void ShaderCursor::set_data(const void* data, size_t size) const
     if (m_type_layout->parameter_category() != TypeReflection::ParameterCategory::uniform)
         KALI_THROW("'{}' cannot bind data", m_type_layout->name());
     m_shader_object->set_data(m_offset, data, size);
+}
+
+void ShaderCursor::set_object(const ref<MutableShaderObject>& object) const
+{
+    const TypeReflection* type = m_type_layout->type();
+
+    KALI_CHECK(is_parameter_block(type), "'{}' cannot bind an object", m_type_layout->name());
+
+    m_shader_object->set_object(m_offset, object);
 }
 
 void ShaderCursor::set_scalar(const void* data, size_t size, TypeReflection::ScalarType scalar_type) const
@@ -427,6 +448,12 @@ void ShaderCursor::set_matrix(const void* data, size_t size, TypeReflection::Sca
 //
 // Setter specializations
 //
+
+template<>
+KALI_API void ShaderCursor::set(const ref<MutableShaderObject>& value) const
+{
+    set_object(value);
+}
 
 template<>
 KALI_API void ShaderCursor::set(const ref<Buffer>& value) const
