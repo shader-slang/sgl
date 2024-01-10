@@ -1,7 +1,7 @@
 {
   "name": "dxc",
   "version": "1.7.2308",
-  "description": "DX Compiler",
+  "description": "DirectX Shader Compiler",
   "homepage": "https://github.com/microsoft/DirectXShaderCompiler",
   "supports": "windows and x64",
   "dependencies": []
