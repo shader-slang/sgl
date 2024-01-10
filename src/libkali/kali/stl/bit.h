@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <cstring> // std::memcpy()
 #include <climits> // CHAR_BIT
 #include <limits>  // std::numeric_limits<>
