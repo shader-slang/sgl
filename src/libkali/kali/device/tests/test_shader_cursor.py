@@ -16,6 +16,8 @@ UINT_MIN = 0
 UINT_MAX = 4294967295
 FLOAT_MIN = -3.402823466e38
 FLOAT_MAX = 3.402823466e38
+FLOAT16_MIN = -65504.0
+FLOAT16_MAX = 65504.0
 
 
 @dataclass
@@ -58,6 +60,22 @@ TYPE_INFOS = {
         size=64,
         struct="ffffffffffffffff",
         converter=lambda values: kali.float4x4(values),
+    ),
+    "float16_t": TypeInfo(size=4, struct="exx"),
+    "float16_t2": TypeInfo(
+        size=8,
+        struct="exxexx",
+        converter=lambda values: kali.float16_t2(values),
+    ),
+    "float16_t3": TypeInfo(
+        size=12,
+        struct="exxexxexx",
+        converter=lambda values: kali.float16_t3(values),
+    ),
+    "float16_t4": TypeInfo(
+        size=16,
+        struct="exxexxexxexx",
+        converter=lambda values: kali.float16_t4(values),
     ),
 }
 
@@ -134,6 +152,22 @@ TEST_VARS = {
     "u_float2x4": Var(type="float2x4", value=[0, 1, 2, 3, 4, 5, 6, 7]),
     "u_float3x4": Var(type="float3x4", value=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]),
     "u_float4x4": Var(type="float4x4", value=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]),
+    # float16_t
+    "u_float16_t": Var(type="float16_t", value=1.2345),
+    "u_float16_t_min": Var(type="float16_t", value=FLOAT16_MIN),
+    "u_float16_t_max": Var(type="float16_t", value=FLOAT16_MAX),
+    # float16_t2
+    "u_float16_t2": Var(type="float16_t2", value=[1.2345, -1.2345]),
+    "u_float16_t2_min": Var(type="float16_t2", value=[FLOAT16_MIN, FLOAT16_MIN]),
+    "u_float16_t2_max": Var(type="float16_t2", value=[FLOAT16_MAX, FLOAT16_MAX]),
+    # float16_t3
+    "u_float16_t3": Var(type="float16_t3", value=[1.2345, -1.2345, 12.345]),
+    "u_float16_t3_min": Var(type="float16_t3", value=[FLOAT16_MIN, FLOAT16_MIN, FLOAT16_MIN]),
+    "u_float16_t3_max": Var(type="float16_t3", value=[FLOAT16_MAX, FLOAT16_MAX, FLOAT16_MAX]),
+    # float16_t4
+    "u_float16_t4": Var(type="float16_t4", value=[1.2345, -1.2345, 12.345, -12.345]),
+    "u_float16_t4_min": Var(type="float16_t4", value=[FLOAT16_MIN, FLOAT16_MIN, FLOAT16_MIN, FLOAT16_MIN]),
+    "u_float16_t4_max": Var(type="float16_t4", value=[FLOAT16_MAX, FLOAT16_MAX, FLOAT16_MAX, FLOAT16_MAX]),
     # u_struct
     "u_struct": {
         "f_bool": Var(type="bool", value=True),

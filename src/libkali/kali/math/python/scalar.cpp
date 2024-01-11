@@ -12,6 +12,8 @@ namespace kali::math {
 inline void bind_float16(nb::module_& m)
 {
     nb::class_<float16_t> float16(m, "float16_t");
+    float16.def(nb::init<float>(), "value"_a);
+    float16.def(nb::init_implicit<float>(), "value"_a);
 }
 
 inline void bind_scalar(nb::module_& m)
@@ -165,4 +167,6 @@ KALI_PY_EXPORT(math_scalar)
 
     kali::math::bind_float16(math);
     kali::math::bind_scalar(math);
+
+    m.attr("float16_t") = math.attr("float16_t");
 }

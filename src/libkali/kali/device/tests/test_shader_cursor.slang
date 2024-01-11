@@ -80,6 +80,22 @@ uniform float2x4 u_float2x4;
 uniform float3x4 u_float3x4;
 uniform float4x4 u_float4x4;
 
+uniform float16_t u_float16_t;
+uniform float16_t u_float16_t_min;
+uniform float16_t u_float16_t_max;
+
+uniform float16_t2 u_float16_t2;
+uniform float16_t2 u_float16_t2_min;
+uniform float16_t2 u_float16_t2_max;
+
+uniform float16_t3 u_float16_t3;
+uniform float16_t3 u_float16_t3_min;
+uniform float16_t3 u_float16_t3_max;
+
+uniform float16_t4 u_float16_t4;
+uniform float16_t4 u_float16_t4_min;
+uniform float16_t4 u_float16_t4_max;
+
 uniform Test u_struct;
 uniform int u_int_array[4];
 uniform Test u_struct_array[4];
@@ -158,6 +174,14 @@ extension float : IWritable
     }
 }
 
+extension float16_t : IWritable
+{
+    void write(inout Writer writer)
+    {
+        writer.buffer[writer.offset++] = f32tof16(this);
+    }
+}
+
 
 [shader("compute")]
 [numthreads(1, 1, 1)]
@@ -228,6 +252,22 @@ void main(uint3 tid: SV_DispatchThreadID)
     writer.write(u_float2x4);
     writer.write(u_float3x4);
     writer.write(u_float4x4);
+
+    writer.write(u_float16_t);
+    writer.write(u_float16_t_min);
+    writer.write(u_float16_t_max);
+
+    writer.write(u_float16_t2);
+    writer.write(u_float16_t2_min);
+    writer.write(u_float16_t2_max);
+
+    writer.write(u_float16_t3);
+    writer.write(u_float16_t3_min);
+    writer.write(u_float16_t3_max);
+
+    writer.write(u_float16_t4);
+    writer.write(u_float16_t4_min);
+    writer.write(u_float16_t4_max);
 
     writer.write(u_struct.f_bool);
     writer.write(u_struct.f_bool2);

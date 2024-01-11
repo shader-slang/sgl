@@ -60,6 +60,10 @@ KALI_PY_EXPORT(device_shader_cursor)
     def_setter(float3x4);
     def_setter(float4x4);
 
+    def_setter(float16_t2);
+    def_setter(float16_t3);
+    def_setter(float16_t4);
+
 #undef def_setter
 
     // We need to handle integers and floats specially.
@@ -126,6 +130,8 @@ KALI_PY_EXPORT(device_shader_cursor)
         KALI_CHECK(type->kind() == TypeReflection::Kind::scalar, "Field '{}' is not a scalar type.", name);
         switch (type->scalar_type()) {
         case TypeReflection::ScalarType::float16:
+            self[name] = float16_t(nb::cast<float>(value));
+            break;
         case TypeReflection::ScalarType::float32:
             self[name] = nb::cast<float>(value);
             break;
@@ -144,6 +150,8 @@ KALI_PY_EXPORT(device_shader_cursor)
         KALI_CHECK(type->kind() == TypeReflection::Kind::scalar, "Element {} is not a scalar type.", index);
         switch (type->scalar_type()) {
         case TypeReflection::ScalarType::float16:
+            self[index] = float16_t(nb::cast<float>(value));
+            break;
         case TypeReflection::ScalarType::float32:
             self[index] = nb::cast<float>(value);
             break;
