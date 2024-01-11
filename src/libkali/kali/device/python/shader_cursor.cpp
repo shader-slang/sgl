@@ -4,6 +4,7 @@
 #include "kali/device/shader_object.h"
 #include "kali/device/resource.h"
 #include "kali/device/sampler.h"
+#include "kali/device/raytracing.h"
 
 #include "kali/math/vector_types.h"
 #include "kali/math/matrix_types.h"
@@ -16,10 +17,27 @@ KALI_PY_EXPORT(device_shader_cursor)
 
     shader_cursor.def(nb::init<ShaderObject*>(), "shader_object"_a);
     shader_cursor.def("is_valid", &ShaderCursor::is_valid);
+    shader_cursor.def("dereference", &ShaderCursor::dereference);
     shader_cursor.def("find_field", &ShaderCursor::find_field, "name"_a);
     shader_cursor.def("find_element", &ShaderCursor::find_element, "index"_a);
+    shader_cursor.def("find_entry_point", &ShaderCursor::find_entry_point, "index"_a);
     shader_cursor.def("has_field", &ShaderCursor::has_field, "name"_a);
     shader_cursor.def("has_element", &ShaderCursor::has_element, "index"_a);
+    shader_cursor.def("set_object", &ShaderCursor::set_object, "object"_a);
+    shader_cursor.def("set_resource", &ShaderCursor::set_resource, "resource_view"_a);
+    shader_cursor.def("set_buffer", &ShaderCursor::set_buffer, "buffer"_a);
+    shader_cursor.def("set_texture", &ShaderCursor::set_texture, "texture"_a);
+    shader_cursor.def("set_sampler", &ShaderCursor::set_sampler, "sampler"_a);
+    shader_cursor
+        .def("set_acceleration_structure", &ShaderCursor::set_acceleration_structure, "acceleration_structure"_a);
+    shader_cursor.def(
+        "set_data",
+        [](ShaderCursor& self, nb::ndarray<nb::device::cpu> data)
+        {
+            KALI_CHECK(is_ndarray_contiguous(data), "data is not contiguous");
+            self.set_data(data.data(), data.nbytes());
+        }
+    );
 
     shader_cursor.def("__getitem__", [](ShaderCursor& self, std::string_view name) { return self[name]; });
     shader_cursor.def("__getitem__", [](ShaderCursor& self, int index) { return self[index]; });
