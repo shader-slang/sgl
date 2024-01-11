@@ -29,6 +29,9 @@ def on_keyboard_event(event: kali.KeyboardEvent):
     if event.type == kali.KeyboardEventType.key_press:
         if event.key == kali.KeyCode.escape:
             window.close()
+        elif event.key == kali.KeyCode.f1:
+            if output_texture:
+                kali.utils.show_in_tev_async(output_texture)
 
 
 window.on_keyboard_event = on_keyboard_event
@@ -56,7 +59,6 @@ def on_resize(width, height):
 
 
 window.on_resize = on_resize
-
 
 frame = 0
 
@@ -99,6 +101,5 @@ while not window.should_close():
     del image
 
     swapchain.present()
-    device.wait()
 
     frame += 1

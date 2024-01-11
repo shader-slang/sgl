@@ -13,7 +13,7 @@ void main(uint3 tid: SV_DispatchThreadID)
     if (any(pixel >= dims))
         return;
 
-    float3 color = float3(0);
+    float3 color = float3(smoothstep(500, 0, distance(pixel, g_mouse_pos)) * 0.5);
 
     uint col = g_frame % dims.x;
     if (abs(tid.x - col) < 3)
