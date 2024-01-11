@@ -44,7 +44,8 @@ struct TypeConformance {
     std::string interface_name;
 #ifdef KALI_MACOS
     // macOS clang stdc++ doesn't support C++20 <=> operator for standard containers yet.
-    bool operator<(const TypeConformance& other) const {
+    bool operator<(const TypeConformance& other) const
+    {
         return std::tie(type_name, interface_name) < std::tie(other.type_name, other.interface_name);
     }
 #else
