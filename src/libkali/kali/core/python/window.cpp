@@ -79,7 +79,7 @@ KALI_PY_EXPORT(core_window)
         "height"_a = 1024,
         "title"_a = "kali",
         "mode"_a = WindowMode::normal,
-        "resizable"_a = false
+        "resizable"_a = true
     );
     window.def_prop_ro("width", &Window::width);
     window.def_prop_ro("height", &Window::height);
