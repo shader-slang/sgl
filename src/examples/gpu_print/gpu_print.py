@@ -4,8 +4,7 @@ import os
 import numpy as np
 import struct
 
-os.chdir(os.path.dirname(__file__))
-device = kali.Device(type=kali.DeviceType.d3d12, enable_debug_layers=True)
+device = kali.Device()
 
 
 class PrintOutput:
@@ -46,10 +45,10 @@ class PrintOutput:
         # print(strings)
 
         data_len = self.counter_buffer.to_numpy().view(dtype=np.uint32)[0] * 4
-        print(data_len)
+        # print(data_len)
         data = self.output_buffer.to_numpy().tobytes()
 
-        def format_msg(fmt, args):
+        def format_msg(fmt: str, args):
             msg = fmt
             for arg in args:
                 msg = msg.replace("{}", str(arg), 1)
@@ -87,16 +86,16 @@ class PrintOutput:
             return format_msg(strings[msg_hash], args)
 
         pos = 0
-        prints = []
+        messages = []
         while pos < data_len:
             msg_len = struct.unpack("I", data[pos : pos + 4])[0] * 4
             if msg_len == 0 or pos + msg_len > data_len:
                 break
-            prints.append(decode_msg(data[pos : pos + msg_len]))
+            messages.append(decode_msg(data[pos : pos + msg_len]))
             pos += msg_len
 
-        for p in prints:
-            print(p)
+        for m in messages:
+            print(m)
 
 
 print_output = PrintOutput(device)

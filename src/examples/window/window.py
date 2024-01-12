@@ -32,6 +32,15 @@ def on_keyboard_event(event: kali.KeyboardEvent):
         elif event.key == kali.KeyCode.f1:
             if output_texture:
                 kali.utils.show_in_tev_async(output_texture)
+        elif event.key == kali.KeyCode.f2:
+            if output_texture:
+                bitmap = output_texture.to_bitmap()
+                print(bitmap)
+                bitmap.convert(
+                    kali.Bitmap.PixelFormat.rgb,
+                    kali.Bitmap.ComponentType.uint8,
+                    srgb_gamma=True,
+                ).write_async("screenshot.png")
 
 
 window.on_keyboard_event = on_keyboard_event
