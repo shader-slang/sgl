@@ -263,7 +263,7 @@ public:
     /// - Vulkan: VkImageView for texture views, VkBufferView for typed buffer views, VkBuffer for untyped buffer views
     NativeHandle get_native_handle() const;
 
-    std::string to_string() const;
+    std::string to_string() const override;
 
 private:
     ResourceViewDesc m_desc;

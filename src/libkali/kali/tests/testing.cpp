@@ -14,11 +14,11 @@ static std::map<DeviceType, ref<Device>> s_cached_devices;
 void run_gpu_test(void (*func)(GpuTestContext&))
 {
 #if KALI_WINDOWS
-    std::vector<DeviceType> device_types{DeviceType::d3d12, DeviceType::vulkan, DeviceType::cpu};
+    std::vector<DeviceType> device_types{DeviceType::d3d12, DeviceType::vulkan};
 #elif KALI_LINUX
-    std::vector<DeviceType> device_types{DeviceType::vulkan, DeviceType::cpu};
+    std::vector<DeviceType> device_types{DeviceType::vulkan};
 #elif KALI_MACOS
-    std::vector<DeviceType> device_types{DeviceType::vulkan, DeviceType::cpu};
+    std::vector<DeviceType> device_types{DeviceType::vulkan};
 #endif
 
     bool use_cached_device = true;

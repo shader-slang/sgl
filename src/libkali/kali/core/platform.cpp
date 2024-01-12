@@ -36,7 +36,7 @@ float display_scale_factor()
 
 bool is_same_path(const std::filesystem::path& lhs, const std::filesystem::path& rhs)
 {
-    return std::filesystem::weakly_canonical(lhs) == std::filesystem::weakly_canonical(rhs);
+    return lhs.lexically_normal() == rhs.lexically_normal();
 }
 
 bool has_extension(const std::filesystem::path& path, std::string_view ext)
