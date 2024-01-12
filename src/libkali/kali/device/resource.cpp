@@ -200,6 +200,27 @@ NativeHandle ResourceView::get_native_handle() const
     return {};
 }
 
+std::string ResourceView::to_string() const
+{
+    return fmt::format(
+        "ResourceView(\n"
+        "  type={},\n"
+        "  format={},\n"
+        "  buffer_range=(first_element={}, element_count={}),\n"
+        "  buffer_element_size={},\n"
+        // "  subresource_range={},\n"
+        "  resource={},\n"
+        ")",
+        m_desc.type,
+        m_desc.format,
+        m_desc.buffer_range.first_element,
+        m_desc.buffer_range.element_count,
+        m_desc.buffer_element_size,
+        // m_desc.subresource_range,
+        string::indent(m_resource ? m_resource->to_string() : "null")
+    );
+}
+
 // ----------------------------------------------------------------------------
 // Buffer
 // ----------------------------------------------------------------------------
@@ -308,7 +329,7 @@ size_t Buffer::element_size() const
     else if (is_typed())
         return get_format_info(m_desc.format).bytes_per_block;
     else
-        return 4;
+        return 1;
 }
 
 size_t Buffer::element_count() const

@@ -170,6 +170,8 @@ KALI_PY_EXPORT(device_resource)
         .def_prop_ro("size", &Buffer::size)
         .def_prop_ro("struct_size", &Buffer::struct_size)
         .def_prop_ro("format", &Buffer::format)
+        .def_prop_ro("element_size", &Buffer::element_size)
+        .def_prop_ro("element_count", &Buffer::element_count)
         .def_prop_ro("device_address", &Buffer::device_address)
         .def(
             "get_srv",
