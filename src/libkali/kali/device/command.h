@@ -412,6 +412,22 @@ public:
     // Resources
     // ------------------------------------------------------------------------
 
+    void clear_resource_view(ResourceView* resource_view, float4 clear_value);
+
+    void clear_resource_view(ResourceView* resource_view, uint4 clear_value);
+
+    void clear_resource_view(
+        ResourceView* resource_view,
+        float depth_value,
+        uint32_t stencil_value,
+        bool clear_depth,
+        bool clear_stencil
+    );
+
+    void clear_texture(Texture* texture, float4 clear_value);
+
+    void clear_texture(Texture* texture, uint4 clear_value);
+
     /**
      * @brief Copy an entire resource.
      *

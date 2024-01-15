@@ -92,6 +92,39 @@ KALI_PY_EXPORT(device_command)
             "old_state"_a,
             "new_state"_a
         )
+        .def(
+            "clear_resource_view",
+            nb::overload_cast<ResourceView*, float4>(&CommandStream::clear_resource_view),
+            "resource_view"_a,
+            "clear_value"_a
+        )
+        .def(
+            "clear_resource_view",
+            nb::overload_cast<ResourceView*, uint4>(&CommandStream::clear_resource_view),
+            "resource_view"_a,
+            "clear_value"_a
+        )
+        .def(
+            "clear_resource_view",
+            nb::overload_cast<ResourceView*, float, uint32_t, bool, bool>(&CommandStream::clear_resource_view),
+            "resource_view"_a,
+            "depth_value"_a,
+            "stencil_value"_a,
+            "clear_depth"_a,
+            "clear_stencil"_a
+        )
+        .def(
+            "clear_texture",
+            nb::overload_cast<Texture*, float4>(&CommandStream::clear_texture),
+            "texture"_a,
+            "clear_value"_a
+        )
+        .def(
+            "clear_texture",
+            nb::overload_cast<Texture*, uint4>(&CommandStream::clear_texture),
+            "texture"_a,
+            "clear_value"_a
+        )
         .def("copy_resource", &CommandStream::copy_resource, "dst"_a, "src"_a)
         .def("begin_compute_pass", &CommandStream::begin_compute_pass, nb::rv_policy::reference_internal)
         .def("begin_ray_tracing_pass", &CommandStream::begin_ray_tracing_pass, nb::rv_policy::reference_internal);

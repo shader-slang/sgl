@@ -653,6 +653,132 @@ void CommandStream::texture_subresource_barrier(
     );
 }
 
+void CommandStream::clear_resource_view(ResourceView* resource_view, float4 clear_value)
+{
+    KALI_CHECK_NOT_NULL(resource_view);
+
+    switch (resource_view->type()) {
+    case ResourceViewType::render_target:
+        resource_barrier(resource_view->resource(), ResourceState::render_target);
+        break;
+    case ResourceViewType::shader_resource:
+        resource_barrier(resource_view->resource(), ResourceState::shader_resource);
+        break;
+    case ResourceViewType::unordered_access:
+        resource_barrier(resource_view->resource(), ResourceState::unordered_access);
+        break;
+    default:
+        KALI_THROW("Invalid resource view type");
+    }
+
+    gfx::ClearValue gfx_clear_value = {};
+    gfx_clear_value.color.floatValues[0] = clear_value[0];
+    gfx_clear_value.color.floatValues[1] = clear_value[1];
+    gfx_clear_value.color.floatValues[2] = clear_value[2];
+    gfx_clear_value.color.floatValues[3] = clear_value[3];
+    get_gfx_resource_command_encoder()->clearResourceView(
+        resource_view->gfx_resource_view(),
+        &gfx_clear_value,
+        gfx::ClearResourceViewFlags::FloatClearValues
+    );
+}
+
+void CommandStream::clear_resource_view(ResourceView* resource_view, uint4 clear_value)
+{
+    KALI_CHECK_NOT_NULL(resource_view);
+
+    switch (resource_view->type()) {
+    case ResourceViewType::render_target:
+        resource_barrier(resource_view->resource(), ResourceState::render_target);
+        break;
+    case ResourceViewType::shader_resource:
+        resource_barrier(resource_view->resource(), ResourceState::shader_resource);
+        break;
+    case ResourceViewType::unordered_access:
+        resource_barrier(resource_view->resource(), ResourceState::unordered_access);
+        break;
+    default:
+        KALI_THROW("Invalid resource view type");
+    }
+
+    gfx::ClearValue gfx_clear_value = {};
+    gfx_clear_value.color.uintValues[0] = clear_value[0];
+    gfx_clear_value.color.uintValues[1] = clear_value[1];
+    gfx_clear_value.color.uintValues[2] = clear_value[2];
+    gfx_clear_value.color.uintValues[3] = clear_value[3];
+    get_gfx_resource_command_encoder()
+        ->clearResourceView(resource_view->gfx_resource_view(), &gfx_clear_value, gfx::ClearResourceViewFlags::None);
+}
+
+void CommandStream::clear_resource_view(
+    ResourceView* resource_view,
+    float depth_value,
+    uint32_t stencil_value,
+    bool clear_depth,
+    bool clear_stencil
+)
+{
+    KALI_CHECK_NOT_NULL(resource_view);
+
+    switch (resource_view->type()) {
+    case ResourceViewType::depth_stencil:
+        resource_barrier(resource_view->resource(), ResourceState::depth_write);
+        break;
+    default:
+        KALI_THROW("Invalid resource view type");
+    }
+
+    gfx::ClearValue gfx_clear_value = {};
+    gfx_clear_value.depthStencil.depth = depth_value;
+    gfx_clear_value.depthStencil.stencil = stencil_value;
+    uint32_t gfx_flags = gfx::ClearResourceViewFlags::None;
+    if (clear_depth)
+        gfx_flags |= gfx::ClearResourceViewFlags::ClearDepth;
+    if (clear_stencil)
+        gfx_flags |= gfx::ClearResourceViewFlags::ClearStencil;
+    get_gfx_resource_command_encoder()->clearResourceView(
+        resource_view->gfx_resource_view(),
+        &gfx_clear_value,
+        gfx::ClearResourceViewFlags::Enum(gfx_flags)
+    );
+}
+
+void CommandStream::clear_texture(Texture* texture, float4 clear_value)
+{
+    KALI_CHECK_NOT_NULL(texture);
+    FormatType format_type = get_format_info(texture->format()).type;
+    KALI_CHECK(
+        format_type != FormatType::sint && format_type != FormatType::uint && format_type != FormatType::typeless,
+        "Texture format must be floating point compatible"
+    );
+
+    if (is_set(texture->desc().usage, ResourceUsage::unordered_access)) {
+        clear_resource_view(texture->get_uav(0), clear_value);
+    } else if (is_set(texture->desc().usage, ResourceUsage::render_target)) {
+        clear_resource_view(texture->get_rtv(0), clear_value);
+    } else {
+        KALI_THROW("Texture must be either unordered access or render target");
+    }
+}
+
+void CommandStream::clear_texture(Texture* texture, uint4 clear_value)
+{
+    KALI_CHECK_NOT_NULL(texture);
+    FormatType format_type = get_format_info(texture->format()).type;
+    KALI_CHECK(
+        format_type == FormatType::sint || format_type == FormatType::uint || format_type == FormatType::typeless,
+        "Texture format must be integer compatible"
+    );
+
+    if (is_set(texture->desc().usage, ResourceUsage::unordered_access)) {
+        clear_resource_view(texture->get_uav(0), clear_value);
+    } else if (is_set(texture->desc().usage, ResourceUsage::render_target)) {
+        clear_resource_view(texture->get_rtv(0), clear_value);
+    } else {
+        KALI_THROW("Texture must be either unordered access or render target");
+    }
+}
+
 void CommandStream::copy_resource(Resource* dst, const Resource* src)
 {
     KALI_CHECK_NOT_NULL(dst);
