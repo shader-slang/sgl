@@ -196,10 +196,15 @@ ReflectionCursor ReflectionCursor::find_field(std::string_view name) const
                 return ReflectionCursor(m_entry_point_layout->get_parameter_by_index(i)->type_layout());
         }
     } else if (m_type_layout) {
-        if (m_type_layout->kind() == TypeReflection::Kind::struct_) {
-            int32_t field_index = m_type_layout->find_field_index_by_name(name.data(), name.data() + name.size());
+        // If type is a constant buffer or parameter block, try to find field in element type.
+        const TypeLayoutReflection* type_layout = m_type_layout;
+        if (type_layout->kind() == TypeReflection::Kind::constant_buffer
+            || type_layout->kind() == TypeReflection::Kind::parameter_block)
+            type_layout = m_type_layout->element_type_layout();
+        if (type_layout->kind() == TypeReflection::Kind::struct_) {
+            int32_t field_index = type_layout->find_field_index_by_name(name.data(), name.data() + name.size());
             if (field_index >= 0) {
-                const VariableLayoutReflection* field_layout = m_type_layout->get_field_by_index(field_index);
+                const VariableLayoutReflection* field_layout = type_layout->get_field_by_index(field_index);
                 return ReflectionCursor(field_layout->type_layout());
             }
         }
