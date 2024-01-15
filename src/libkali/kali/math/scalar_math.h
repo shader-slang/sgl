@@ -28,31 +28,31 @@ template<typename T>
 // Basic functions
 // ----------------------------------------------------------------------------
 
-template<typename T, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T>
 [[nodiscard]] constexpr T min(T x, T y) noexcept
 {
     return x < y ? x : y;
 }
 
-template<typename T, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T>
 [[nodiscard]] constexpr T max(T x, T y) noexcept
 {
     return x > y ? x : y;
 }
 
-template<typename T, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T>
 [[nodiscard]] constexpr T clamp(T x, T min_, T max_) noexcept
 {
     return max(min_, min(max_, x));
 }
 
-template<typename T, std::enable_if_t<is_signed_v<T>, bool> = false>
+template<signed_number T>
 [[nodiscard]] constexpr T abs(T x) noexcept
 {
     return std::abs(x);
 }
 
-template<typename T, std::enable_if_t<is_signed_v<T>, bool> = false>
+template<signed_number T>
 [[nodiscard]] constexpr T sign(T x) noexcept
 {
     return x < T(0) ? T(-1) : (x > T(0) ? T(1) : T(0));
@@ -220,7 +220,7 @@ template<> [[nodiscard]] inline double step(double x, double y) noexcept { retur
 
 // clang-format on
 
-template<typename T, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T>
 [[nodiscard]] T smoothstep(T min_, T max_, T x) noexcept
 {
     x = saturate((x - min_) / (max_ - min_));

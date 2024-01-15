@@ -500,7 +500,7 @@ template<typename T, int N>
 }
 
 /// Creates a right-handed perspective projection matrix. Depth is mapped to [0, 1].
-template<typename T>
+template<floating_point T>
 [[nodiscard]] inline matrix<T, 4, 4> perspective(T fovy, T aspect, T z_near, T z_far)
 {
     KALI_ASSERT(abs(aspect - std::numeric_limits<T>::epsilon()) > T(0));
@@ -517,7 +517,7 @@ template<typename T>
 }
 
 /// Creates a right-handed orthographic projection matrix. Depth is mapped to [0, 1].
-template<typename T>
+template<floating_point T>
 [[nodiscard]] inline matrix<T, 4, 4> ortho(T left, T right, T bottom, T top, T z_near, T z_far)
 {
     matrix<T, 4, 4> m = matrix<T, 4, 4>::identity();
@@ -531,21 +531,21 @@ template<typename T>
 }
 
 /// Creates a translation matrix.
-template<typename T>
+template<floating_point T>
 [[nodiscard]] inline matrix<T, 4, 4> matrix_from_translation(const vector<T, 3>& v)
 {
     return translate(matrix<T, 4, 4>::identity(), v);
 }
 
 /// Creates a rotation matrix from an angle and an axis.
-template<typename T>
+template<floating_point T>
 [[nodiscard]] inline matrix<T, 4, 4> matrix_from_rotation(T angle, const vector<T, 3>& axis)
 {
     return rotate(matrix<T, 4, 4>::identity(), angle, axis);
 }
 
 /// Creates a rotation matrix around the X-axis.
-template<typename T>
+template<floating_point T>
 [[nodiscard]] inline matrix<T, 4, 4> matrix_from_rotation_x(T angle)
 {
     T c = cos(angle);
@@ -562,7 +562,7 @@ template<typename T>
 }
 
 /// Creates a rotation matrix around the Y-axis.
-template<typename T>
+template<floating_point T>
 [[nodiscard]] inline matrix<T, 4, 4> matrix_from_rotation_y(T angle)
 {
     T c = cos(angle);
@@ -579,7 +579,7 @@ template<typename T>
 }
 
 /// Creates a rotation matrix around the Z-axis.
-template<typename T>
+template<floating_point T>
 [[nodiscard]] inline matrix<T, 4, 4> matrix_from_rotation_z(T angle)
 {
     T c = cos(angle);
@@ -596,7 +596,7 @@ template<typename T>
 }
 
 /// Creates a rotation matrix (X * Y * Z).
-template<typename T>
+template<floating_point T>
 [[nodiscard]] inline matrix<T, 4, 4> matrix_from_rotation_xyz(T angle_x, T angle_y, T angle_z)
 {
     T c1 = cos(-angle_x);
@@ -631,7 +631,7 @@ template<typename T>
 }
 
 /// Creates a scaling matrix.
-template<typename T>
+template<floating_point T>
 [[nodiscard]] inline matrix<T, 4, 4> matrix_from_scaling(const vector<T, 3>& v)
 {
     return scale(matrix<T, 4, 4>::identity(), v);
@@ -646,7 +646,7 @@ template<typename T>
  * @param up Up vector
  * @param handedness Coordinate system handedness.
  */
-template<typename T>
+template<floating_point T>
 [[nodiscard]] inline matrix<T, 4, 4> matrix_from_look_at(
     const vector<T, 3>& eye,
     const vector<T, 3>& center,
@@ -675,7 +675,7 @@ template<typename T>
     return result;
 }
 
-template<typename T>
+template<floating_point T>
 [[nodiscard]] inline matrix<T, 3, 3> matrix_from_quat(const quat<T>& q)
 {
     matrix<T, 3, 3> m;

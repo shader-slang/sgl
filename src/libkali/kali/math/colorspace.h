@@ -5,7 +5,7 @@
 
 namespace kali::math {
 
-template<typename T, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T>
 [[nodiscard]] inline T linear_to_srgb(T x)
 {
     if (x <= T(0.0031308)) {
@@ -15,7 +15,7 @@ template<typename T, std::enable_if_t<is_floating_point_v<T>, bool> = false>
     }
 }
 
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] inline vector<T, N> linear_to_srgb(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -28,7 +28,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
         return vector<T, 4>(linear_to_srgb(x.x), linear_to_srgb(x.y), linear_to_srgb(x.z), linear_to_srgb(x.w));
 }
 
-template<typename T, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T>
 [[nodiscard]] inline T srgb_to_linear(T x)
 {
     if (x <= T(0.04045)) {
@@ -38,7 +38,7 @@ template<typename T, std::enable_if_t<is_floating_point_v<T>, bool> = false>
     }
 }
 
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] inline vector<T, N> srgb_to_linear(const vector<T, N>& x)
 {
     if constexpr (N == 1)

@@ -53,7 +53,7 @@ void bind_vector_type(nb::module_& m, const char* name)
 
     // Operators
 
-    if constexpr (is_arithmetic_v<value_type> && !is_bool_v<value_type>) {
+    if constexpr (arithmetic<value_type> && !boolean<value_type>) {
         vec.def(+nb::self);
         vec.def(-nb::self);
 
@@ -86,7 +86,7 @@ void bind_vector_type(nb::module_& m, const char* name)
         vec.def(nb::self /= value_type());
     }
 
-    if constexpr (is_integral_v<value_type> && !is_bool_v<value_type>) {
+    if constexpr (integral<value_type> && !boolean<value_type>) {
         vec.def(nb::self % nb::self);
         vec.def(nb::self % value_type());
         vec.def(value_type() % nb::self);
@@ -130,7 +130,7 @@ void bind_vector_type(nb::module_& m, const char* name)
         vec.def(nb::self ^= value_type());
     }
 
-    if constexpr (is_bool_v<value_type>) {
+    if constexpr (boolean<value_type>) {
         // vec.def(nb::self || nb::self);
         // vec.def(nb::self || value_type());
         // vec.def(value_type() || nb::self);
@@ -146,7 +146,7 @@ void bind_vector_type(nb::module_& m, const char* name)
     vec.def(nb::self != value_type());
     vec.def(value_type() != nb::self);
 
-    if constexpr (is_arithmetic_v<value_type> && !is_bool_v<value_type>) {
+    if constexpr (arithmetic<value_type> && !boolean<value_type>) {
         vec.def(nb::self < nb::self);
         vec.def(nb::self < value_type());
         vec.def(value_type() < nb::self);
@@ -167,7 +167,7 @@ void bind_vector_type(nb::module_& m, const char* name)
 
         // Reductions
 
-        if constexpr (is_bool_v<value_type>) {
+        if constexpr (boolean<value_type>) {
             m.def("any", [](const T& v) { return any(v); });
             m.def("all", [](const T& v) { return all(v); });
             m.def("none", [](const T& v) { return none(v); });
@@ -175,20 +175,20 @@ void bind_vector_type(nb::module_& m, const char* name)
 
         // Basic functions
 
-        if constexpr (is_arithmetic_v<value_type>) {
+        if constexpr (arithmetic<value_type>) {
             m.def("min", [](const T& x, const T& y) { return min(x, y); });
             m.def("max", [](const T& x, const T& y) { return max(x, y); });
             m.def("clamp", [](const T& x, const T& min_, const T& max_) { return clamp(x, min_, max_); });
         }
 
-        if constexpr (is_signed_v<value_type>) {
+        if constexpr (signed_number<value_type>) {
             m.def("abs", [](const T& x) { return abs(x); });
             m.def("sign", [](const T& x) { return sign(x); });
         }
 
         // Floating point checks
 
-        if constexpr (is_floating_point_v<value_type>) {
+        if constexpr (floating_point<value_type>) {
             m.def("isfinite", [](const T& x) { return isfinite(x); });
             m.def("isinf", [](const T& x) { return isinf(x); });
             m.def("isnan", [](const T& x) { return isnan(x); });
@@ -196,7 +196,7 @@ void bind_vector_type(nb::module_& m, const char* name)
 
         // Rounding
 
-        if constexpr (is_floating_point_v<value_type>) {
+        if constexpr (floating_point<value_type>) {
             m.def("floor", [](const T& x) { return floor(x); });
             m.def("ceil", [](const T& x) { return ceil(x); });
             m.def("trunc", [](const T& x) { return trunc(x); });
@@ -205,7 +205,7 @@ void bind_vector_type(nb::module_& m, const char* name)
 
         // Exponential
 
-        if constexpr (is_floating_point_v<value_type>) {
+        if constexpr (floating_point<value_type>) {
             m.def("pow", [](const T& x, const T& y) { return pow(x, y); });
             m.def("sqrt", [](const T& x) { return sqrt(x); });
             m.def("rsqrt", [](const T& x) { return rsqrt(x); });
@@ -218,7 +218,7 @@ void bind_vector_type(nb::module_& m, const char* name)
 
         // Trigonometry
 
-        if constexpr (is_floating_point_v<value_type>) {
+        if constexpr (floating_point<value_type>) {
             m.def("radians", [](const T& x) { return radians(x); });
             m.def("degrees", [](const T& x) { return degrees(x); });
             m.def("sin", [](const T& x) { return sin(x); });
@@ -235,7 +235,7 @@ void bind_vector_type(nb::module_& m, const char* name)
 
         // Misc
 
-        if constexpr (is_floating_point_v<value_type>) {
+        if constexpr (floating_point<value_type>) {
             m.def("fmod", [](const T& x, const T& y) { return fmod(x, y); });
             m.def("frac", [](const T& x) { return frac(x); });
             m.def("lerp", [](const T& x, const T& y, const T& s) { return lerp(x, y, s); });
@@ -246,13 +246,13 @@ void bind_vector_type(nb::module_& m, const char* name)
             m.def("step", [](const T& x, const T& y) { return step(x, y); });
         }
 
-        if constexpr (is_arithmetic_v<value_type> && !is_bool_v<value_type>) {
+        if constexpr (arithmetic<value_type> && !boolean<value_type>) {
             m.def("dot", [](const T& x, const T& y) { return dot(x, y); });
             if constexpr (dimension == 3)
                 m.def("cross", [](const T& x, const T& y) { return cross(x, y); });
         }
 
-        if constexpr (is_floating_point_v<value_type>) {
+        if constexpr (floating_point<value_type>) {
             m.def("length", [](const T& x) { return length(x); });
             m.def("normalize", [](const T& x) { return normalize(x); });
             m.def("reflect", [](const T& i, const T& n) { return reflect(i, n); });

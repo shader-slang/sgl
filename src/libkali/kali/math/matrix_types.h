@@ -46,7 +46,7 @@ public:
     {
     }
 
-    template<typename U, std::enable_if_t<is_arithmetic_v<U>, bool> = false>
+    template<arithmetic U>
     explicit matrix(std::initializer_list<U> a)
     {
         T* f = &m_rows[0][0];

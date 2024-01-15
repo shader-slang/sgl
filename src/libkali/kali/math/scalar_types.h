@@ -4,6 +4,7 @@
 #include "kali/core/macros.h"
 #include "kali/core/format.h"
 
+#include <concepts>
 #include <string>
 #include <cstdint>
 
@@ -26,27 +27,21 @@ template<> [[nodiscard]] inline std::string to_string(double v) { return std::to
 template<> [[nodiscard]] inline std::string to_string(float16_t v) { return std::to_string(float(v)); }
 // clang-format on
 
-// clang-format off
-template<typename T> struct is_bool : ::std::is_same<T, bool> {};
-template<typename T> struct is_int : ::std::is_same<T, int32_t> {};
-template<typename T> struct is_uint : ::std::is_same<T, uint32_t> {};
-template<typename T> struct is_float : ::std::is_same<T, float> {};
-template<typename T> struct is_double : ::std::is_same<T, double> {};
-template<typename T> struct is_float16_t : ::std::is_same<T, float16_t> {};
+template<typename T>
+concept boolean = std::same_as<T, bool>;
 
-template<typename T> constexpr bool is_bool_v = is_bool<T>::value;
-template<typename T> constexpr bool is_int_v = is_int<T>::value;
-template<typename T> constexpr bool is_uint_v = is_uint<T>::value;
-template<typename T> constexpr bool is_float_v = is_float<T>::value;
-template<typename T> constexpr bool is_double_v = is_double<T>::value;
-template<typename T> constexpr bool is_float16_t_v = is_float16_t<T>::value;
+using std::integral;
+using std::signed_integral;
 
-template<typename T> constexpr bool is_arithmetic_v = std::is_arithmetic_v<T> || is_float16_t_v<T>;
-template<typename T> constexpr bool is_floating_point_v = is_float_v<T> || is_double_v<T> || is_float16_t_v<T>;
-using std::is_integral_v;
-using std::is_signed_v;
-using std::is_unsigned_v;
-// clang-format on
+template<typename T>
+concept floating_point = std::same_as<T, float> || std::same_as<T, double> || std::same_as<T, float16_t>;
+
+template<typename T>
+concept arithmetic = integral<T> || floating_point<T>;
+
+template<typename T>
+concept signed_number = std::signed_integral<T> || floating_point<T>;
+
 
 template<typename T>
 struct ScalarTraits { };

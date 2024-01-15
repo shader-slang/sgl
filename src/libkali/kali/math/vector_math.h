@@ -34,7 +34,7 @@ namespace kali::math {
 // ----------------------------------------------------------------------------
 
 /// Unary plus operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 [[nodiscard]] constexpr auto operator+(const vector<T, N> v) noexcept
 {
     return v;
@@ -45,7 +45,7 @@ KALI_DIAGNOSTIC_PUSH
 KALI_DISABLE_MSVC_WARNING(4146)
 
 /// Unary minus operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 [[nodiscard]] constexpr auto operator-(const vector<T, N> v) noexcept
 {
     if constexpr (N == 1)
@@ -75,7 +75,7 @@ template<typename T, int N>
 }
 
 /// Unary not operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 [[nodiscard]] constexpr auto operator~(const vector<T, N> v) noexcept
 {
     if constexpr (N == 1)
@@ -94,9 +94,9 @@ template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
 
 // clang-format off
 /* <<<PYMACRO
-def print_binary_operator(op, enable_if):
+def print_binary_operator(op, concept):
     print(f"""/// Binary {op} operator
-template<typename T, int N, std::enable_if_t<{enable_if}, bool> = false>
+template<{concept} T, int N>
 [[nodiscard]] constexpr vector<T, N> operator{op}(const vector<T, N>& lhs, const vector<T, N>& rhs)
 {{
     if constexpr (N == 1)
@@ -110,33 +110,33 @@ template<typename T, int N, std::enable_if_t<{enable_if}, bool> = false>
 }}
 
 /// Binary {op} operator
-template<typename T, int N, std::enable_if_t<{enable_if}, bool> = false>
+template<{concept} T, int N>
 [[nodiscard]] constexpr vector<T, N> operator{op}(const vector<T, N>& lhs, T rhs)
 {{
     return lhs {op} vector<T, N>(rhs);
 }}
 
 /// Binary {op} operator
-template<typename T, int N, std::enable_if_t<{enable_if}, bool> = false>
+template<{concept} T, int N>
 [[nodiscard]] constexpr vector<T, N> operator{op}(T lhs, const vector<T, N>& rhs)
 {{
     return vector<T, N>(lhs) {op} rhs;
 }}
 """)
 
-print_binary_operator("+", "is_arithmetic_v<T>")
-print_binary_operator("-", "is_arithmetic_v<T>")
-print_binary_operator("*", "is_arithmetic_v<T>")
-print_binary_operator("/", "is_arithmetic_v<T>")
-print_binary_operator("%", "is_integral_v<T>")
-print_binary_operator("<<", "is_integral_v<T>")
-print_binary_operator(">>", "is_integral_v<T>")
-print_binary_operator("|", "is_integral_v<T>")
-print_binary_operator("&", "is_integral_v<T>")
-print_binary_operator("^", "is_integral_v<T>")
+print_binary_operator("+", "arithmetic")
+print_binary_operator("-", "arithmetic")
+print_binary_operator("*", "arithmetic")
+print_binary_operator("/", "arithmetic")
+print_binary_operator("%", "integral")
+print_binary_operator("<<", "integral")
+print_binary_operator(">>", "integral")
+print_binary_operator("|", "integral")
+print_binary_operator("&", "integral")
+print_binary_operator("^", "integral")
 >>> */
 /// Binary + operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 [[nodiscard]] constexpr vector<T, N> operator+(const vector<T, N>& lhs, const vector<T, N>& rhs)
 {
     if constexpr (N == 1)
@@ -150,21 +150,21 @@ template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
 }
 
 /// Binary + operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 [[nodiscard]] constexpr vector<T, N> operator+(const vector<T, N>& lhs, T rhs)
 {
     return lhs + vector<T, N>(rhs);
 }
 
 /// Binary + operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 [[nodiscard]] constexpr vector<T, N> operator+(T lhs, const vector<T, N>& rhs)
 {
     return vector<T, N>(lhs) + rhs;
 }
 
 /// Binary - operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 [[nodiscard]] constexpr vector<T, N> operator-(const vector<T, N>& lhs, const vector<T, N>& rhs)
 {
     if constexpr (N == 1)
@@ -178,21 +178,21 @@ template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
 }
 
 /// Binary - operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 [[nodiscard]] constexpr vector<T, N> operator-(const vector<T, N>& lhs, T rhs)
 {
     return lhs - vector<T, N>(rhs);
 }
 
 /// Binary - operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 [[nodiscard]] constexpr vector<T, N> operator-(T lhs, const vector<T, N>& rhs)
 {
     return vector<T, N>(lhs) - rhs;
 }
 
 /// Binary * operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 [[nodiscard]] constexpr vector<T, N> operator*(const vector<T, N>& lhs, const vector<T, N>& rhs)
 {
     if constexpr (N == 1)
@@ -206,21 +206,21 @@ template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
 }
 
 /// Binary * operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 [[nodiscard]] constexpr vector<T, N> operator*(const vector<T, N>& lhs, T rhs)
 {
     return lhs * vector<T, N>(rhs);
 }
 
 /// Binary * operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 [[nodiscard]] constexpr vector<T, N> operator*(T lhs, const vector<T, N>& rhs)
 {
     return vector<T, N>(lhs) * rhs;
 }
 
 /// Binary / operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 [[nodiscard]] constexpr vector<T, N> operator/(const vector<T, N>& lhs, const vector<T, N>& rhs)
 {
     if constexpr (N == 1)
@@ -234,21 +234,21 @@ template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
 }
 
 /// Binary / operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 [[nodiscard]] constexpr vector<T, N> operator/(const vector<T, N>& lhs, T rhs)
 {
     return lhs / vector<T, N>(rhs);
 }
 
 /// Binary / operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 [[nodiscard]] constexpr vector<T, N> operator/(T lhs, const vector<T, N>& rhs)
 {
     return vector<T, N>(lhs) / rhs;
 }
 
 /// Binary % operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 [[nodiscard]] constexpr vector<T, N> operator%(const vector<T, N>& lhs, const vector<T, N>& rhs)
 {
     if constexpr (N == 1)
@@ -262,21 +262,21 @@ template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
 }
 
 /// Binary % operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 [[nodiscard]] constexpr vector<T, N> operator%(const vector<T, N>& lhs, T rhs)
 {
     return lhs % vector<T, N>(rhs);
 }
 
 /// Binary % operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 [[nodiscard]] constexpr vector<T, N> operator%(T lhs, const vector<T, N>& rhs)
 {
     return vector<T, N>(lhs) % rhs;
 }
 
 /// Binary << operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 [[nodiscard]] constexpr vector<T, N> operator<<(const vector<T, N>& lhs, const vector<T, N>& rhs)
 {
     if constexpr (N == 1)
@@ -290,21 +290,21 @@ template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
 }
 
 /// Binary << operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 [[nodiscard]] constexpr vector<T, N> operator<<(const vector<T, N>& lhs, T rhs)
 {
     return lhs << vector<T, N>(rhs);
 }
 
 /// Binary << operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 [[nodiscard]] constexpr vector<T, N> operator<<(T lhs, const vector<T, N>& rhs)
 {
     return vector<T, N>(lhs) << rhs;
 }
 
 /// Binary >> operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 [[nodiscard]] constexpr vector<T, N> operator>>(const vector<T, N>& lhs, const vector<T, N>& rhs)
 {
     if constexpr (N == 1)
@@ -318,21 +318,21 @@ template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
 }
 
 /// Binary >> operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 [[nodiscard]] constexpr vector<T, N> operator>>(const vector<T, N>& lhs, T rhs)
 {
     return lhs >> vector<T, N>(rhs);
 }
 
 /// Binary >> operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 [[nodiscard]] constexpr vector<T, N> operator>>(T lhs, const vector<T, N>& rhs)
 {
     return vector<T, N>(lhs) >> rhs;
 }
 
 /// Binary | operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 [[nodiscard]] constexpr vector<T, N> operator|(const vector<T, N>& lhs, const vector<T, N>& rhs)
 {
     if constexpr (N == 1)
@@ -346,21 +346,21 @@ template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
 }
 
 /// Binary | operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 [[nodiscard]] constexpr vector<T, N> operator|(const vector<T, N>& lhs, T rhs)
 {
     return lhs | vector<T, N>(rhs);
 }
 
 /// Binary | operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 [[nodiscard]] constexpr vector<T, N> operator|(T lhs, const vector<T, N>& rhs)
 {
     return vector<T, N>(lhs) | rhs;
 }
 
 /// Binary & operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 [[nodiscard]] constexpr vector<T, N> operator&(const vector<T, N>& lhs, const vector<T, N>& rhs)
 {
     if constexpr (N == 1)
@@ -374,21 +374,21 @@ template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
 }
 
 /// Binary & operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 [[nodiscard]] constexpr vector<T, N> operator&(const vector<T, N>& lhs, T rhs)
 {
     return lhs & vector<T, N>(rhs);
 }
 
 /// Binary & operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 [[nodiscard]] constexpr vector<T, N> operator&(T lhs, const vector<T, N>& rhs)
 {
     return vector<T, N>(lhs) & rhs;
 }
 
 /// Binary ^ operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 [[nodiscard]] constexpr vector<T, N> operator^(const vector<T, N>& lhs, const vector<T, N>& rhs)
 {
     if constexpr (N == 1)
@@ -402,14 +402,14 @@ template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
 }
 
 /// Binary ^ operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 [[nodiscard]] constexpr vector<T, N> operator^(const vector<T, N>& lhs, T rhs)
 {
     return lhs ^ vector<T, N>(rhs);
 }
 
 /// Binary ^ operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 [[nodiscard]] constexpr vector<T, N> operator^(T lhs, const vector<T, N>& rhs)
 {
     return vector<T, N>(lhs) ^ rhs;
@@ -424,9 +424,9 @@ template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
 
 // clang-format off
 /* <<<PYMACRO
-def print_binary_operator(op, enable_if):
+def print_binary_operator(op, concept):
     print(f"""/// Binary {op} operator
-template<typename T, int N, std::enable_if_t<{enable_if}, bool> = false>
+template<{concept} T, int N>
 [[nodiscard]] constexpr auto operator{op}(const vector<T, N>& lhs, const vector<T, N>& rhs)
 {{
     if constexpr (N == 1)
@@ -440,31 +440,31 @@ template<typename T, int N, std::enable_if_t<{enable_if}, bool> = false>
 }}
 
 /// Binary {op} operator
-template<typename T, int N, std::enable_if_t<{enable_if}, bool> = false>
+template<{concept} T, int N>
 [[nodiscard]] constexpr auto operator{op}(const vector<T, N>& lhs, T rhs)
 {{
     return lhs {op} vector<T, N>(rhs);
 }}
 
 /// Binary {op} operator
-template<typename T, int N, std::enable_if_t<{enable_if}, bool> = false>
+template<{concept} T, int N>
 [[nodiscard]] constexpr auto operator{op}(T lhs, const vector<T, N>& rhs)
 {{
     return vector<T, N>(lhs) {op} rhs;
 }}
 """)
 
-print_binary_operator("||", "is_bool_v<T>")
-print_binary_operator("&&", "is_bool_v<T>")
-print_binary_operator("==", "true")
-print_binary_operator("!=", "true")
-print_binary_operator("<", "is_arithmetic_v<T>")
-print_binary_operator(">", "is_arithmetic_v<T>")
-print_binary_operator("<=", "is_arithmetic_v<T>")
-print_binary_operator(">=", "is_arithmetic_v<T>")
+print_binary_operator("||", "boolean")
+print_binary_operator("&&", "boolean")
+print_binary_operator("==", "typename")
+print_binary_operator("!=", "typename")
+print_binary_operator("<", "arithmetic")
+print_binary_operator(">", "arithmetic")
+print_binary_operator("<=", "arithmetic")
+print_binary_operator(">=", "arithmetic")
 >>> */
 /// Binary || operator
-template<typename T, int N, std::enable_if_t<is_bool_v<T>, bool> = false>
+template<boolean T, int N>
 [[nodiscard]] constexpr auto operator||(const vector<T, N>& lhs, const vector<T, N>& rhs)
 {
     if constexpr (N == 1)
@@ -478,21 +478,21 @@ template<typename T, int N, std::enable_if_t<is_bool_v<T>, bool> = false>
 }
 
 /// Binary || operator
-template<typename T, int N, std::enable_if_t<is_bool_v<T>, bool> = false>
+template<boolean T, int N>
 [[nodiscard]] constexpr auto operator||(const vector<T, N>& lhs, T rhs)
 {
     return lhs || vector<T, N>(rhs);
 }
 
 /// Binary || operator
-template<typename T, int N, std::enable_if_t<is_bool_v<T>, bool> = false>
+template<boolean T, int N>
 [[nodiscard]] constexpr auto operator||(T lhs, const vector<T, N>& rhs)
 {
     return vector<T, N>(lhs) || rhs;
 }
 
 /// Binary && operator
-template<typename T, int N, std::enable_if_t<is_bool_v<T>, bool> = false>
+template<boolean T, int N>
 [[nodiscard]] constexpr auto operator&&(const vector<T, N>& lhs, const vector<T, N>& rhs)
 {
     if constexpr (N == 1)
@@ -506,21 +506,21 @@ template<typename T, int N, std::enable_if_t<is_bool_v<T>, bool> = false>
 }
 
 /// Binary && operator
-template<typename T, int N, std::enable_if_t<is_bool_v<T>, bool> = false>
+template<boolean T, int N>
 [[nodiscard]] constexpr auto operator&&(const vector<T, N>& lhs, T rhs)
 {
     return lhs && vector<T, N>(rhs);
 }
 
 /// Binary && operator
-template<typename T, int N, std::enable_if_t<is_bool_v<T>, bool> = false>
+template<boolean T, int N>
 [[nodiscard]] constexpr auto operator&&(T lhs, const vector<T, N>& rhs)
 {
     return vector<T, N>(lhs) && rhs;
 }
 
 /// Binary == operator
-template<typename T, int N, std::enable_if_t<true, bool> = false>
+template<typename T, int N>
 [[nodiscard]] constexpr auto operator==(const vector<T, N>& lhs, const vector<T, N>& rhs)
 {
     if constexpr (N == 1)
@@ -534,21 +534,21 @@ template<typename T, int N, std::enable_if_t<true, bool> = false>
 }
 
 /// Binary == operator
-template<typename T, int N, std::enable_if_t<true, bool> = false>
+template<typename T, int N>
 [[nodiscard]] constexpr auto operator==(const vector<T, N>& lhs, T rhs)
 {
     return lhs == vector<T, N>(rhs);
 }
 
 /// Binary == operator
-template<typename T, int N, std::enable_if_t<true, bool> = false>
+template<typename T, int N>
 [[nodiscard]] constexpr auto operator==(T lhs, const vector<T, N>& rhs)
 {
     return vector<T, N>(lhs) == rhs;
 }
 
 /// Binary != operator
-template<typename T, int N, std::enable_if_t<true, bool> = false>
+template<typename T, int N>
 [[nodiscard]] constexpr auto operator!=(const vector<T, N>& lhs, const vector<T, N>& rhs)
 {
     if constexpr (N == 1)
@@ -562,21 +562,21 @@ template<typename T, int N, std::enable_if_t<true, bool> = false>
 }
 
 /// Binary != operator
-template<typename T, int N, std::enable_if_t<true, bool> = false>
+template<typename T, int N>
 [[nodiscard]] constexpr auto operator!=(const vector<T, N>& lhs, T rhs)
 {
     return lhs != vector<T, N>(rhs);
 }
 
 /// Binary != operator
-template<typename T, int N, std::enable_if_t<true, bool> = false>
+template<typename T, int N>
 [[nodiscard]] constexpr auto operator!=(T lhs, const vector<T, N>& rhs)
 {
     return vector<T, N>(lhs) != rhs;
 }
 
 /// Binary < operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 [[nodiscard]] constexpr auto operator<(const vector<T, N>& lhs, const vector<T, N>& rhs)
 {
     if constexpr (N == 1)
@@ -590,21 +590,21 @@ template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
 }
 
 /// Binary < operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 [[nodiscard]] constexpr auto operator<(const vector<T, N>& lhs, T rhs)
 {
     return lhs < vector<T, N>(rhs);
 }
 
 /// Binary < operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 [[nodiscard]] constexpr auto operator<(T lhs, const vector<T, N>& rhs)
 {
     return vector<T, N>(lhs) < rhs;
 }
 
 /// Binary > operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 [[nodiscard]] constexpr auto operator>(const vector<T, N>& lhs, const vector<T, N>& rhs)
 {
     if constexpr (N == 1)
@@ -618,21 +618,21 @@ template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
 }
 
 /// Binary > operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 [[nodiscard]] constexpr auto operator>(const vector<T, N>& lhs, T rhs)
 {
     return lhs > vector<T, N>(rhs);
 }
 
 /// Binary > operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 [[nodiscard]] constexpr auto operator>(T lhs, const vector<T, N>& rhs)
 {
     return vector<T, N>(lhs) > rhs;
 }
 
 /// Binary <= operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 [[nodiscard]] constexpr auto operator<=(const vector<T, N>& lhs, const vector<T, N>& rhs)
 {
     if constexpr (N == 1)
@@ -646,21 +646,21 @@ template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
 }
 
 /// Binary <= operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 [[nodiscard]] constexpr auto operator<=(const vector<T, N>& lhs, T rhs)
 {
     return lhs <= vector<T, N>(rhs);
 }
 
 /// Binary <= operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 [[nodiscard]] constexpr auto operator<=(T lhs, const vector<T, N>& rhs)
 {
     return vector<T, N>(lhs) <= rhs;
 }
 
 /// Binary >= operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 [[nodiscard]] constexpr auto operator>=(const vector<T, N>& lhs, const vector<T, N>& rhs)
 {
     if constexpr (N == 1)
@@ -674,14 +674,14 @@ template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
 }
 
 /// Binary >= operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 [[nodiscard]] constexpr auto operator>=(const vector<T, N>& lhs, T rhs)
 {
     return lhs >= vector<T, N>(rhs);
 }
 
 /// Binary >= operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 [[nodiscard]] constexpr auto operator>=(T lhs, const vector<T, N>& rhs)
 {
     return vector<T, N>(lhs) >= rhs;
@@ -696,9 +696,9 @@ template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
 
 // clang-format off
 /* <<<PYMACRO
-def print_assignment_operator(op, enable_if):
+def print_assignment_operator(op, concept):
     print(f"""/// {op} assignment operator
-template<typename T, int N, std::enable_if_t<{enable_if}, bool> = false>
+template<{concept} T, int N>
 constexpr vector<T, N> operator{op}(vector<T, N>& lhs, const vector<T, N>& rhs)
 {{
     lhs.x {op} rhs.x;
@@ -712,26 +712,26 @@ constexpr vector<T, N> operator{op}(vector<T, N>& lhs, const vector<T, N>& rhs)
 }}
 
 /// {op} assignment operator
-template<typename T, int N, std::enable_if_t<{enable_if}, bool> = false>
+template<{concept} T, int N>
 constexpr vector<T, N> operator{op}(vector<T, N>& lhs, T rhs)
 {{
     return (lhs {op} vector<T, N>(rhs));
 }}
 """)
 
-print_assignment_operator("+=", "is_arithmetic_v<T>")
-print_assignment_operator("-=", "is_arithmetic_v<T>")
-print_assignment_operator("*=", "is_arithmetic_v<T>")
-print_assignment_operator("/=", "is_arithmetic_v<T>")
-print_assignment_operator("%=", "is_integral_v<T>")
-print_assignment_operator("<<=", "is_integral_v<T>")
-print_assignment_operator(">>=", "is_integral_v<T>")
-print_assignment_operator("|=", "is_integral_v<T>")
-print_assignment_operator("&=", "is_integral_v<T>")
-print_assignment_operator("^=", "is_integral_v<T>")
+print_assignment_operator("+=", "arithmetic")
+print_assignment_operator("-=", "arithmetic")
+print_assignment_operator("*=", "arithmetic")
+print_assignment_operator("/=", "arithmetic")
+print_assignment_operator("%=", "integral")
+print_assignment_operator("<<=", "integral")
+print_assignment_operator(">>=", "integral")
+print_assignment_operator("|=", "integral")
+print_assignment_operator("&=", "integral")
+print_assignment_operator("^=", "integral")
 >>> */
 /// += assignment operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 constexpr vector<T, N> operator+=(vector<T, N>& lhs, const vector<T, N>& rhs)
 {
     lhs.x += rhs.x;
@@ -745,14 +745,14 @@ constexpr vector<T, N> operator+=(vector<T, N>& lhs, const vector<T, N>& rhs)
 }
 
 /// += assignment operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 constexpr vector<T, N> operator+=(vector<T, N>& lhs, T rhs)
 {
     return (lhs += vector<T, N>(rhs));
 }
 
 /// -= assignment operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 constexpr vector<T, N> operator-=(vector<T, N>& lhs, const vector<T, N>& rhs)
 {
     lhs.x -= rhs.x;
@@ -766,14 +766,14 @@ constexpr vector<T, N> operator-=(vector<T, N>& lhs, const vector<T, N>& rhs)
 }
 
 /// -= assignment operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 constexpr vector<T, N> operator-=(vector<T, N>& lhs, T rhs)
 {
     return (lhs -= vector<T, N>(rhs));
 }
 
 /// *= assignment operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 constexpr vector<T, N> operator*=(vector<T, N>& lhs, const vector<T, N>& rhs)
 {
     lhs.x *= rhs.x;
@@ -787,14 +787,14 @@ constexpr vector<T, N> operator*=(vector<T, N>& lhs, const vector<T, N>& rhs)
 }
 
 /// *= assignment operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 constexpr vector<T, N> operator*=(vector<T, N>& lhs, T rhs)
 {
     return (lhs *= vector<T, N>(rhs));
 }
 
 /// /= assignment operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 constexpr vector<T, N> operator/=(vector<T, N>& lhs, const vector<T, N>& rhs)
 {
     lhs.x /= rhs.x;
@@ -808,14 +808,14 @@ constexpr vector<T, N> operator/=(vector<T, N>& lhs, const vector<T, N>& rhs)
 }
 
 /// /= assignment operator
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 constexpr vector<T, N> operator/=(vector<T, N>& lhs, T rhs)
 {
     return (lhs /= vector<T, N>(rhs));
 }
 
 /// %= assignment operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 constexpr vector<T, N> operator%=(vector<T, N>& lhs, const vector<T, N>& rhs)
 {
     lhs.x %= rhs.x;
@@ -829,14 +829,14 @@ constexpr vector<T, N> operator%=(vector<T, N>& lhs, const vector<T, N>& rhs)
 }
 
 /// %= assignment operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 constexpr vector<T, N> operator%=(vector<T, N>& lhs, T rhs)
 {
     return (lhs %= vector<T, N>(rhs));
 }
 
 /// <<= assignment operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 constexpr vector<T, N> operator<<=(vector<T, N>& lhs, const vector<T, N>& rhs)
 {
     lhs.x <<= rhs.x;
@@ -850,14 +850,14 @@ constexpr vector<T, N> operator<<=(vector<T, N>& lhs, const vector<T, N>& rhs)
 }
 
 /// <<= assignment operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 constexpr vector<T, N> operator<<=(vector<T, N>& lhs, T rhs)
 {
     return (lhs <<= vector<T, N>(rhs));
 }
 
 /// >>= assignment operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 constexpr vector<T, N> operator>>=(vector<T, N>& lhs, const vector<T, N>& rhs)
 {
     lhs.x >>= rhs.x;
@@ -871,14 +871,14 @@ constexpr vector<T, N> operator>>=(vector<T, N>& lhs, const vector<T, N>& rhs)
 }
 
 /// >>= assignment operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 constexpr vector<T, N> operator>>=(vector<T, N>& lhs, T rhs)
 {
     return (lhs >>= vector<T, N>(rhs));
 }
 
 /// |= assignment operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 constexpr vector<T, N> operator|=(vector<T, N>& lhs, const vector<T, N>& rhs)
 {
     lhs.x |= rhs.x;
@@ -892,14 +892,14 @@ constexpr vector<T, N> operator|=(vector<T, N>& lhs, const vector<T, N>& rhs)
 }
 
 /// |= assignment operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 constexpr vector<T, N> operator|=(vector<T, N>& lhs, T rhs)
 {
     return (lhs |= vector<T, N>(rhs));
 }
 
 /// &= assignment operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 constexpr vector<T, N> operator&=(vector<T, N>& lhs, const vector<T, N>& rhs)
 {
     lhs.x &= rhs.x;
@@ -913,14 +913,14 @@ constexpr vector<T, N> operator&=(vector<T, N>& lhs, const vector<T, N>& rhs)
 }
 
 /// &= assignment operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 constexpr vector<T, N> operator&=(vector<T, N>& lhs, T rhs)
 {
     return (lhs &= vector<T, N>(rhs));
 }
 
 /// ^= assignment operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 constexpr vector<T, N> operator^=(vector<T, N>& lhs, const vector<T, N>& rhs)
 {
     lhs.x ^= rhs.x;
@@ -934,7 +934,7 @@ constexpr vector<T, N> operator^=(vector<T, N>& lhs, const vector<T, N>& rhs)
 }
 
 /// ^= assignment operator
-template<typename T, int N, std::enable_if_t<is_integral_v<T>, bool> = false>
+template<integral T, int N>
 constexpr vector<T, N> operator^=(vector<T, N>& lhs, T rhs)
 {
     return (lhs ^= vector<T, N>(rhs));
@@ -954,9 +954,9 @@ def print_section(name):
 // {name}
 // ----------------------------------------------------------------------------
 """)
-def print_unary_func(func, enable_if, arg="x", return_type="T"):
+def print_unary_func(func, concept, arg="x", return_type="T"):
     print(f"""/// {func}
-template<typename T, int N, std::enable_if_t<{enable_if}, bool> = false>
+template<{concept} T, int N>
 [[nodiscard]] constexpr vector<{return_type}, N> {func}(const vector<T, N>& {arg})
 {{
     if constexpr (N == 1)
@@ -969,9 +969,9 @@ template<typename T, int N, std::enable_if_t<{enable_if}, bool> = false>
         return vector<{return_type}, N>{{{func}({arg}.x), {func}({arg}.y), {func}({arg}.z), {func}({arg}.w)}};
 }}
 """)
-def print_binary_func(func, enable_if, arg0="x", arg1="y", return_type="T"):
+def print_binary_func(func, concept, arg0="x", arg1="y", return_type="T"):
     print(f"""/// {func}
-template<typename T, int N, std::enable_if_t<{enable_if}, bool> = false>
+template<{concept} T, int N>
 [[nodiscard]] constexpr vector<{return_type}, N> {func}(const vector<T, N>& {arg0}, const vector<T, N>& {arg1})
 {{
     if constexpr (N == 1)
@@ -984,9 +984,9 @@ template<typename T, int N, std::enable_if_t<{enable_if}, bool> = false>
         return vector<{return_type}, N>{{{func}({arg0}.x, {arg1}.x), {func}({arg0}.y, {arg1}.y), {func}({arg0}.z, {arg1}.z), {func}({arg0}.w, {arg1}.w)}};
 }}
 """)
-def print_ternary_func(func, enable_if, arg0="x", arg1="y", arg2="z", return_type="T"):
+def print_ternary_func(func, concept, arg0="x", arg1="y", arg2="z", return_type="T"):
     print(f"""/// {func}
-template<typename T, int N, std::enable_if_t<{enable_if}, bool> = false>
+template<{concept} T, int N>
 [[nodiscard]] constexpr vector<{return_type}, N> {func}(const vector<T, N>& {arg0}, const vector<T, N>& {arg1}, const vector<T, N>& {arg2})
 {{
     if constexpr (N == 1)
@@ -1000,57 +1000,57 @@ template<typename T, int N, std::enable_if_t<{enable_if}, bool> = false>
 }}
 """)
 print_section("Basic functions")
-print_binary_func("min", "is_arithmetic_v<T>")
-print_binary_func("max", "is_arithmetic_v<T>")
-print_ternary_func("clamp", "is_arithmetic_v<T>", "x", "min_", "max_")
-print_unary_func("abs", "is_signed_v<T>")
-print_unary_func("sign", "is_signed_v<T>")
+print_binary_func("min", "arithmetic")
+print_binary_func("max", "arithmetic")
+print_ternary_func("clamp", "arithmetic", "x", "min_", "max_")
+print_unary_func("abs", "signed_number")
+print_unary_func("sign", "signed_number")
 print_section("Floating point checks")
-print_unary_func("isfinite", "is_floating_point_v<T>", "x", "bool")
-print_unary_func("isinf", "is_floating_point_v<T>", "x", "bool")
-print_unary_func("isnan", "is_floating_point_v<T>", "x", "bool")
+print_unary_func("isfinite", "floating_point", "x", "bool")
+print_unary_func("isinf", "floating_point", "x", "bool")
+print_unary_func("isnan", "floating_point", "x", "bool")
 print_section("Rounding")
-print_unary_func("floor", "is_floating_point_v<T>")
-print_unary_func("ceil", "is_floating_point_v<T>")
-print_unary_func("trunc", "is_floating_point_v<T>")
-print_unary_func("round", "is_floating_point_v<T>")
+print_unary_func("floor", "floating_point")
+print_unary_func("ceil", "floating_point")
+print_unary_func("trunc", "floating_point")
+print_unary_func("round", "floating_point")
 print_section("Exponential")
-print_binary_func("pow", "is_floating_point_v<T>", "x", "y")
-print_unary_func("sqrt", "is_floating_point_v<T>")
-print_unary_func("rsqrt", "is_floating_point_v<T>")
-print_unary_func("exp", "is_floating_point_v<T>")
-print_unary_func("exp2", "is_floating_point_v<T>")
-print_unary_func("log", "is_floating_point_v<T>")
-print_unary_func("log2", "is_floating_point_v<T>")
-print_unary_func("log10", "is_floating_point_v<T>")
+print_binary_func("pow", "floating_point", "x", "y")
+print_unary_func("sqrt", "floating_point")
+print_unary_func("rsqrt", "floating_point")
+print_unary_func("exp", "floating_point")
+print_unary_func("exp2", "floating_point")
+print_unary_func("log", "floating_point")
+print_unary_func("log2", "floating_point")
+print_unary_func("log10", "floating_point")
 print_section("Trigonometry")
-print_unary_func("radians", "is_floating_point_v<T>")
-print_unary_func("degrees", "is_floating_point_v<T>")
-print_unary_func("sin", "is_floating_point_v<T>")
-print_unary_func("cos", "is_floating_point_v<T>")
-print_unary_func("tan", "is_floating_point_v<T>")
-print_unary_func("asin", "is_floating_point_v<T>")
-print_unary_func("acos", "is_floating_point_v<T>")
-print_unary_func("atan", "is_floating_point_v<T>")
-print_binary_func("atan2", "is_floating_point_v<T>", "y", "x")
-print_unary_func("sinh", "is_floating_point_v<T>")
-print_unary_func("cosh", "is_floating_point_v<T>")
-print_unary_func("tanh", "is_floating_point_v<T>")
+print_unary_func("radians", "floating_point")
+print_unary_func("degrees", "floating_point")
+print_unary_func("sin", "floating_point")
+print_unary_func("cos", "floating_point")
+print_unary_func("tan", "floating_point")
+print_unary_func("asin", "floating_point")
+print_unary_func("acos", "floating_point")
+print_unary_func("atan", "floating_point")
+print_binary_func("atan2", "floating_point", "y", "x")
+print_unary_func("sinh", "floating_point")
+print_unary_func("cosh", "floating_point")
+print_unary_func("tanh", "floating_point")
 print_section("Misc")
-print_binary_func("fmod", "is_floating_point_v<T>", "x", "y")
-print_unary_func("frac", "is_floating_point_v<T>")
-print_ternary_func("lerp", "is_floating_point_v<T>", "x", "y", "s")
-print_unary_func("rcp", "is_floating_point_v<T>")
-print_unary_func("saturate", "is_floating_point_v<T>")
-print_ternary_func("smoothstep", "is_floating_point_v<T>", "min_", "max_", "x")
-print_binary_func("step", "is_floating_point_v<T>", "x", "y")
+print_binary_func("fmod", "floating_point", "x", "y")
+print_unary_func("frac", "floating_point")
+print_ternary_func("lerp", "floating_point", "x", "y", "s")
+print_unary_func("rcp", "floating_point")
+print_unary_func("saturate", "floating_point")
+print_ternary_func("smoothstep", "floating_point", "min_", "max_", "x")
+print_binary_func("step", "floating_point", "x", "y")
 >>> */
 // ----------------------------------------------------------------------------
 // Basic functions
 // ----------------------------------------------------------------------------
 
 /// min
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 [[nodiscard]] constexpr vector<T, N> min(const vector<T, N>& x, const vector<T, N>& y)
 {
     if constexpr (N == 1)
@@ -1064,7 +1064,7 @@ template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
 }
 
 /// max
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 [[nodiscard]] constexpr vector<T, N> max(const vector<T, N>& x, const vector<T, N>& y)
 {
     if constexpr (N == 1)
@@ -1078,7 +1078,7 @@ template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
 }
 
 /// clamp
-template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
+template<arithmetic T, int N>
 [[nodiscard]] constexpr vector<T, N> clamp(const vector<T, N>& x, const vector<T, N>& min_, const vector<T, N>& max_)
 {
     if constexpr (N == 1)
@@ -1092,7 +1092,7 @@ template<typename T, int N, std::enable_if_t<is_arithmetic_v<T>, bool> = false>
 }
 
 /// abs
-template<typename T, int N, std::enable_if_t<is_signed_v<T>, bool> = false>
+template<signed_number T, int N>
 [[nodiscard]] constexpr vector<T, N> abs(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1106,7 +1106,7 @@ template<typename T, int N, std::enable_if_t<is_signed_v<T>, bool> = false>
 }
 
 /// sign
-template<typename T, int N, std::enable_if_t<is_signed_v<T>, bool> = false>
+template<signed_number T, int N>
 [[nodiscard]] constexpr vector<T, N> sign(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1124,7 +1124,7 @@ template<typename T, int N, std::enable_if_t<is_signed_v<T>, bool> = false>
 // ----------------------------------------------------------------------------
 
 /// isfinite
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<bool, N> isfinite(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1138,7 +1138,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 }
 
 /// isinf
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<bool, N> isinf(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1152,7 +1152,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 }
 
 /// isnan
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<bool, N> isnan(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1170,7 +1170,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 // ----------------------------------------------------------------------------
 
 /// floor
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> floor(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1184,7 +1184,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 }
 
 /// ceil
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> ceil(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1198,7 +1198,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 }
 
 /// trunc
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> trunc(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1212,7 +1212,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 }
 
 /// round
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> round(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1230,7 +1230,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 // ----------------------------------------------------------------------------
 
 /// pow
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> pow(const vector<T, N>& x, const vector<T, N>& y)
 {
     if constexpr (N == 1)
@@ -1244,7 +1244,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 }
 
 /// sqrt
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> sqrt(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1258,7 +1258,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 }
 
 /// rsqrt
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> rsqrt(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1272,7 +1272,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 }
 
 /// exp
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> exp(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1286,7 +1286,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 }
 
 /// exp2
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> exp2(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1300,7 +1300,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 }
 
 /// log
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> log(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1314,7 +1314,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 }
 
 /// log2
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> log2(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1328,7 +1328,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 }
 
 /// log10
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> log10(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1346,7 +1346,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 // ----------------------------------------------------------------------------
 
 /// radians
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> radians(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1360,7 +1360,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 }
 
 /// degrees
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> degrees(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1374,7 +1374,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 }
 
 /// sin
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> sin(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1388,7 +1388,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 }
 
 /// cos
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> cos(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1402,7 +1402,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 }
 
 /// tan
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> tan(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1416,7 +1416,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 }
 
 /// asin
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> asin(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1430,7 +1430,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 }
 
 /// acos
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> acos(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1444,7 +1444,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 }
 
 /// atan
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> atan(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1458,7 +1458,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 }
 
 /// atan2
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> atan2(const vector<T, N>& y, const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1472,7 +1472,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 }
 
 /// sinh
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> sinh(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1486,7 +1486,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 }
 
 /// cosh
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> cosh(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1500,7 +1500,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 }
 
 /// tanh
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> tanh(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1518,7 +1518,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 // ----------------------------------------------------------------------------
 
 /// fmod
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> fmod(const vector<T, N>& x, const vector<T, N>& y)
 {
     if constexpr (N == 1)
@@ -1532,7 +1532,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 }
 
 /// frac
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> frac(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1546,7 +1546,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 }
 
 /// lerp
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> lerp(const vector<T, N>& x, const vector<T, N>& y, const vector<T, N>& s)
 {
     if constexpr (N == 1)
@@ -1560,7 +1560,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 }
 
 /// rcp
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> rcp(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1574,7 +1574,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 }
 
 /// saturate
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> saturate(const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1588,7 +1588,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 }
 
 /// smoothstep
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> smoothstep(const vector<T, N>& min_, const vector<T, N>& max_, const vector<T, N>& x)
 {
     if constexpr (N == 1)
@@ -1602,7 +1602,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 }
 
 /// step
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> step(const vector<T, N>& x, const vector<T, N>& y)
 {
     if constexpr (N == 1)
@@ -1653,7 +1653,7 @@ template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = fal
 }
 
 // TODO(@skallweit) should we have implicit scalar -> vector conversion?
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> lerp(const vector<T, N>& a, const vector<T, N>& b, const T& s)
 {
     if constexpr (N == 1)
@@ -1688,21 +1688,21 @@ template<typename T>
 }
 
 /// length
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr T length(const vector<T, N>& v)
 {
     return sqrt(dot(v, v));
 }
 
 /// normalize
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> normalize(const vector<T, N>& v)
 {
     return v * rsqrt(dot(v, v));
 }
 
 /// reflect
-template<typename T, int N, std::enable_if_t<is_floating_point_v<T>, bool> = false>
+template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> reflect(const vector<T, N>& v, const vector<T, N>& n)
 {
     return v - T(2) * dot(v, n) * n;
