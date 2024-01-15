@@ -77,7 +77,7 @@ template<typename T>
     return mul(m, v);
 }
 
-/// Transform a vectir by a 4x4 matrix. The vector is treated as a column vector with a 0 in the 4th component.
+/// Transform a vector by a 4x4 matrix. The vector is treated as a column vector with a 0 in the 4th component.
 template<typename T>
 [[nodiscard]] vector<T, 3> transform_vector(const matrix<T, 4, 4>& m, const vector<T, 3>& v)
 {

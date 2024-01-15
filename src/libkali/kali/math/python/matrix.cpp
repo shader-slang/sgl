@@ -17,6 +17,7 @@ void bind_matrix_type(nb::module_& m, const char* name)
     auto constexpr cols = T::cols;
     using value_type = typename T::value_type;
     using row_type = typename T::row_type;
+    using col_type = typename T::col_type;
 
     mat.def(nb::init<>());
 
@@ -59,6 +60,25 @@ void bind_matrix_type(nb::module_& m, const char* name)
         m.def("determinant", [](const T& m) { return determinant(m); });
         m.def("inverse", [](const T& m) { return inverse(m); });
     }
+
+    m.def(
+        "mul",
+        [](const matrix<value_type, rows, cols>& a, const matrix<value_type, cols, rows>& b) { return mul(a, b); },
+        "a"_a,
+        "b"_a
+    );
+    m.def(
+        "mul",
+        [](const T& a, const row_type& b) { return mul(a, b); },
+        "a"_a,
+        "b"_a
+    );
+    m.def(
+        "mul",
+        [](const col_type& a, const T& b) { return mul(a, b); },
+        "a"_a,
+        "b"_a
+    );
 }
 
 inline void bind_matrix(nb::module_& m)
@@ -68,6 +88,30 @@ inline void bind_matrix(nb::module_& m)
     bind_matrix_type<float2x4>(m, "float2x4");
     bind_matrix_type<float3x4>(m, "float3x4");
     bind_matrix_type<float4x4>(m, "float4x4");
+
+    m.def("transform_point", [](const float4x4& m, const float3& v) { return transform_point(m, v); });
+    m.def("transform_vector", [](const float3x3& m, const float3& v) { return transform_vector(m, v); });
+    m.def("transform_vector", [](const float4x4& m, const float3& v) { return transform_vector(m, v); });
+
+    m.def(
+        "translate",
+        [](const float4x4& m, const float3& v) { return translate(m, v); },
+        "m"_a,
+        "v"_a
+    );
+    m.def(
+        "rotate",
+        [](const float4x4& m, float angle, const float3& axis) { return rotate(m, angle, axis); },
+        "m"_a,
+        "angle"_a,
+        "axis"_a
+    );
+    m.def(
+        "scale",
+        [](const float4x4& m, const float3& v) { return scale(m, v); },
+        "m"_a,
+        "v"_a
+    );
 
     m.def(
         "perspective",
