@@ -30,6 +30,7 @@ template<> [[nodiscard]] inline std::string to_string(float16_t v) { return std:
 template<typename T>
 concept boolean = std::same_as<T, bool>;
 
+// Note: integral also includes bool
 using std::integral;
 using std::signed_integral;
 
