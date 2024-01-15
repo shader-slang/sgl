@@ -2,7 +2,6 @@ import kali
 import numpy as np
 from pathlib import Path
 
-
 window = kali.Window(width=1280, height=720, title="Window Example", resizable=True)
 
 device = kali.Device(enable_debug_layers=True)
@@ -35,7 +34,6 @@ def on_keyboard_event(event: kali.KeyboardEvent):
         elif event.key == kali.KeyCode.f2:
             if output_texture:
                 bitmap = output_texture.to_bitmap()
-                print(bitmap)
                 bitmap.convert(
                     kali.Bitmap.PixelFormat.rgb,
                     kali.Bitmap.ComponentType.uint8,
@@ -112,3 +110,7 @@ while not window.should_close():
     swapchain.present()
 
     frame += 1
+
+    device.end_frame()
+
+    print(kali.platform.memory_stats().peak_rss / (1024 * 1024))
