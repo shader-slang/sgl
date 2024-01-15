@@ -1,0 +1,12 @@
+- add support for loading EXR files
+- describe `Bitmap` pixel format with a `Struct`
+- add support for XYZ images
+- add mitsuba license where needed
+- check performance for loading images through memory mapped streams
+- implement `StructConverter` JIT for arm64
+- check why `is_same_path` is not working on linux
+- implement `weak_ref`
+- add support for texture init data
+- add more type checking to `ShaderCursor`
+- add `quat` python bindings
+- check vector bindings .. if we compare two python lists of different float3 it always returns true
