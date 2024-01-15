@@ -2,8 +2,8 @@ import printing;
 
 [shader("compute")]
 [numthreads(1, 1, 1)]
-void main(uint3 tid : SV_DispatchThreadID) {
-
+void main(uint3 tid: SV_DispatchThreadID)
+{
     uint u = 123;
     int i = -123;
     float f = 1.23;

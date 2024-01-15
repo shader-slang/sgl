@@ -47,6 +47,7 @@ interface IPrintable {
     uint get_printable_data(uint index);
 };
 
+// clang-format off
 extension bool : IPrintable {
     [ForceInline]
     static PrintableType printable_element_type() { return PrintableType::bool_; }
@@ -141,6 +142,7 @@ extension matrix<T, R, C, L> : IPrintable {
         return this[row][col].get_printable_data(index % T::printable_data_count());
     }
 };
+// clang-format on
 
 [ForceInline]
 void print(IPrintOutput output, String fmt)
@@ -185,7 +187,8 @@ void print(IPrintOutput output, String fmt, IPrintable arg0, IPrintable arg1, IP
 [ForceInline]
 void print(IPrintOutput output, String fmt, IPrintable arg0, IPrintable arg1, IPrintable arg2, IPrintable arg3)
 {
-    uint total_data_count = arg0.printable_data_count() + arg1.printable_data_count() + arg2.printable_data_count() + arg3.printable_data_count();
+    uint total_data_count = arg0.printable_data_count() + arg1.printable_data_count() + arg2.printable_data_count()
+        + arg3.printable_data_count();
     uint offset;
     if (!output.write_msg(fmt, 4, total_data_count, offset))
         return;
@@ -207,10 +210,7 @@ struct PrintOutput : IPrintOutput {
     uint output_buffer_capacity;
 
 
-    static void set_current_tid(uint3 tid)
-    {
-        current_tid = tid;
-    }
+    static void set_current_tid(uint3 tid) { current_tid = tid; }
 
     [ForceInline]
     bool write_msg(String fmt, uint arg_count, uint total_data_count, out uint offset)
@@ -233,7 +233,8 @@ struct PrintOutput : IPrintOutput {
     [ForceInline]
     void write_arg(inout uint offset, IPrintable arg)
     {
-        output_buffer[offset++] = (uint(arg.printable_element_type()) << 24) | (arg.printable_element_count() << 16) | (1 + arg.printable_data_count());
+        output_buffer[offset++] = (uint(arg.printable_element_type()) << 24) | (arg.printable_element_count() << 16)
+            | (1 + arg.printable_data_count());
         for (uint i = 0; i < arg.printable_data_count(); ++i)
             output_buffer[offset++] = arg.get_printable_data(i);
     }
