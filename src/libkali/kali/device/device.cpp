@@ -7,6 +7,7 @@
 #include "kali/device/query.h"
 #include "kali/device/input_layout.h"
 #include "kali/device/shader.h"
+#include "kali/device/shader_object.h"
 #include "kali/device/pipeline.h"
 #include "kali/device/raytracing.h"
 #include "kali/device/memory_heap.h"
@@ -340,6 +341,22 @@ ref<SlangModule> Device::load_module_from_source(const std::string& source, cons
 {
     ref<SlangSession> session = create_slang_session({});
     return session->load_module_from_source(source, {}, {}, defines);
+}
+
+ref<MutableShaderObject> Device::create_mutable_shader_object(const ShaderProgram* shader_program)
+{
+    return make_ref<MutableShaderObject>(ref<Device>(this), shader_program);
+}
+
+ref<MutableShaderObject> Device::create_mutable_shader_object(const TypeLayoutReflection* type_layout)
+{
+    return make_ref<MutableShaderObject>(ref<Device>(this), type_layout);
+}
+
+ref<MutableShaderObject> Device::create_mutable_shader_object(ReflectionCursor cursor)
+{
+    KALI_CHECK(cursor.is_valid(), "Invalid reflection cursor");
+    return create_mutable_shader_object(cursor.type_layout());
 }
 
 ref<ComputePipeline> Device::create_compute_pipeline(ComputePipelineDesc desc)

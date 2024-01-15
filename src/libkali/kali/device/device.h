@@ -196,6 +196,12 @@ public:
     ref<SlangModule> load_module(const std::filesystem::path& path, const DefineList& defines = DefineList{});
     ref<SlangModule> load_module_from_source(const std::string& source, const DefineList& defines = DefineList{});
 
+    ref<MutableShaderObject> create_mutable_shader_object(const ShaderProgram* shader_program);
+
+    ref<MutableShaderObject> create_mutable_shader_object(const TypeLayoutReflection* type_layout);
+
+    ref<MutableShaderObject> create_mutable_shader_object(ReflectionCursor cursor);
+
     ref<ComputePipeline> create_compute_pipeline(ComputePipelineDesc desc);
 
     ref<GraphicsPipeline> create_graphics_pipeline(GraphicsPipelineDesc desc);

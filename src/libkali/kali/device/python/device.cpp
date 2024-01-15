@@ -413,6 +413,22 @@ KALI_PY_EXPORT(device_device)
     device.def("load_module", &Device::load_module, "path"_a, "defines"_a = DefineList());
     device.def("load_module_from_source", &Device::load_module_from_source, "source"_a, "defines"_a = DefineList());
 
+    device.def(
+        "create_mutable_shader_object",
+        nb::overload_cast<const ShaderProgram*>(&Device::create_mutable_shader_object),
+        "shader_program"_a
+    );
+    device.def(
+        "create_mutable_shader_object",
+        nb::overload_cast<const TypeLayoutReflection*>(&Device::create_mutable_shader_object),
+        "type_layout"_a
+    );
+    device.def(
+        "create_mutable_shader_object",
+        nb::overload_cast<ReflectionCursor>(&Device::create_mutable_shader_object),
+        "cursor"_a
+    );
+
     device.def("create_command_queue", &Device::create_command_queue, "desc"_a);
     device.def(
         "create_command_queue",

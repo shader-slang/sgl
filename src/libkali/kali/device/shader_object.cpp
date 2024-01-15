@@ -5,6 +5,8 @@
 #include "kali/device/sampler.h"
 #include "kali/device/helpers.h"
 #include "kali/device/command.h"
+#include "kali/device/shader.h"
+#include "kali/device/device.h"
 
 namespace kali {
 
@@ -129,6 +131,43 @@ void TransientShaderObject::set_resource(const ShaderOffset& offset, const ref<R
 //
 // MutableShaderObject
 //
+
+MutableShaderObject::MutableShaderObject(gfx::IShaderObject* shader_object)
+    : ShaderObject(shader_object)
+{
+}
+
+MutableShaderObject::MutableShaderObject(ref<Device> device, const ShaderProgram* shader_program)
+    : ShaderObject(nullptr)
+    , m_device(std::move(device))
+{
+    m_device->gfx_device()->createMutableRootShaderObject(shader_program->gfx_shader_program(), &m_shader_object);
+}
+
+MutableShaderObject::MutableShaderObject(ref<Device> device, const TypeLayoutReflection* type_layout)
+    : ShaderObject(nullptr)
+    , m_device(std::move(device))
+{
+    m_device->gfx_device()->createMutableShaderObjectFromTypeLayout(type_layout->base(), &m_shader_object);
+}
+
+MutableShaderObject::~MutableShaderObject()
+{
+    m_shader_object->release();
+}
+
+ref<ShaderObject> MutableShaderObject::get_entry_point(uint32_t index)
+{
+    KALI_UNUSED(index);
+    return nullptr;
+}
+
+ref<ShaderObject> MutableShaderObject::get_object(const ShaderOffset& offset)
+{
+    auto object = make_ref<MutableShaderObject>(m_shader_object->getObject(gfx_shader_offset(offset)));
+    m_sub_objects.push_back(object);
+    return object;
+}
 
 void MutableShaderObject::set_resource(const ShaderOffset& offset, const ref<ResourceView>& resource_view)
 {

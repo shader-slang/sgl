@@ -61,13 +61,22 @@ class KALI_API MutableShaderObject : public ShaderObject {
     KALI_OBJECT(MutableShaderObject)
 public:
     MutableShaderObject(gfx::IShaderObject* shader_object);
+    MutableShaderObject(ref<Device> device, const ShaderProgram* shader_program);
+    MutableShaderObject(ref<Device> device, const TypeLayoutReflection* type_layout);
+    ~MutableShaderObject();
+
+    virtual ref<ShaderObject> get_entry_point(uint32_t index) override;
+
+    virtual ref<ShaderObject> get_object(const ShaderOffset& offset) override;
 
     virtual void set_resource(const ShaderOffset& offset, const ref<ResourceView>& resource_view) override;
 
     void set_resource_states(CommandStream* command_stream);
 
 private:
+    ref<Device> m_device;
     std::map<ShaderOffset, ref<ResourceView>> m_resource_views;
+    std::vector<ref<MutableShaderObject>> m_sub_objects;
 };
 
 } // namespace kali
