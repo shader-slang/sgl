@@ -34,9 +34,8 @@ int main()
         ref<Buffer> buffer_a = device->create_structured_buffer(
             {
                 .element_count = N,
-                .struct_type = kernel->reflection()["buffer_a"],
+                .struct_type = kernel->reflection()["processor"]["a"],
                 .usage = ResourceUsage::shader_resource,
-                .debug_name = "buffer_a",
             },
             data_a.data(),
             data_a.size() * sizeof(uint32_t)
@@ -45,9 +44,8 @@ int main()
         ref<Buffer> buffer_b = device->create_structured_buffer(
             {
                 .element_count = N,
-                .struct_type = kernel->reflection()["buffer_b"],
+                .struct_type = kernel->reflection()["processor"]["b"],
                 .usage = ResourceUsage::shader_resource,
-                .debug_name = "buffer_b",
             },
             data_b.data(),
             data_b.size() * sizeof(uint32_t)
@@ -55,13 +53,12 @@ int main()
 
         ref<Buffer> buffer_c = device->create_structured_buffer({
             .element_count = N,
-            .struct_type = kernel->reflection()["buffer_c"],
+            .struct_type = kernel->reflection()["processor"]["c"],
             .usage = ResourceUsage::unordered_access,
-            .debug_name = "buffer_c",
         });
 
-#if 1
-        {
+        if (true) {
+            // Method 1: Use compute pass on command stream
             auto compute_pass = device->command_stream()->begin_compute_pass();
             auto shader_object = compute_pass.bind_pipeline(kernel->pipeline());
             auto processor = ShaderCursor(shader_object)["processor"];
@@ -69,25 +66,43 @@ int main()
             processor["b"] = buffer_b;
             processor["c"] = buffer_c;
             compute_pass.dispatch_thread_groups(uint3{N / 16, 1, 1});
+
+            std::vector<uint32_t> data_c = device->read_buffer<uint32_t>(buffer_c, 0, N);
+            log_info("{}", data_c);
         }
-#else
-        kernel->dispatch(
-            uint3{N, 1, 1},
-            [&](ShaderCursor cursor)
+
+        if (true) {
+            // Method 2: Use compute kernel dispatch
+            kernel->dispatch(
+                uint3{N, 1, 1},
+                [&](ShaderCursor cursor)
+                {
+                    auto processor = cursor["processor"];
+                    processor["a"] = buffer_a;
+                    processor["b"] = buffer_b;
+                    processor["c"] = buffer_c;
+                }
+            );
+
+            std::vector<uint32_t> data_c = device->read_buffer<uint32_t>(buffer_c, 0, N);
+            log_info("{}", data_c);
+        }
+
+        if (true) {
+            // Method 3: Use mutable shader object
+            ref<MutableShaderObject> processor_object
+                = device->create_mutable_shader_object(kernel->reflection()["processor"]);
             {
-                auto processor = cursor["processor"];
+                auto processor = ShaderCursor(processor_object);
                 processor["a"] = buffer_a;
                 processor["b"] = buffer_b;
                 processor["c"] = buffer_c;
             }
-        );
-#endif
 
-        device->wait();
+            kernel->dispatch(uint3{N, 1, 1}, [&](ShaderCursor cursor) { cursor["processor"] = processor_object; });
 
-        std::vector<uint32_t> data_c = device->read_buffer<uint32_t>(buffer_c, 0, N);
-        for (size_t i = 0; i < 16; ++i) {
-            log_info("data_c[{}] = {}", i, data_c[i]);
+            std::vector<uint32_t> data_c = device->read_buffer<uint32_t>(buffer_c, 0, N);
+            log_info("{}", data_c);
         }
     }
 
