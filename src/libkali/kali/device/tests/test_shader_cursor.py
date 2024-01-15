@@ -8,8 +8,6 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent))
 import helpers
 
-DEVICE_TYPES = [kali.DeviceType.d3d12, kali.DeviceType.vulkan]
-
 INT_MIN = -2147483648
 INT_MAX = 2147483647
 UINT_MIN = 0
@@ -222,7 +220,7 @@ TEST_VARS = {
 }
 
 
-@pytest.mark.parametrize("device_type", DEVICE_TYPES)
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_shader_cursor(device_type):
     device = helpers.get_device(type=device_type)
 
