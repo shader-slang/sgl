@@ -14,6 +14,7 @@ ELEMENT_COUNT = 1024
 def test_cast_float16(device_type):
     device = helpers.get_device(device_type)
 
+    np.random.seed(123)
     data = np.random.rand(ELEMENT_COUNT, 2).astype(np.float16)
 
     ctx = helpers.dispatch_compute(
@@ -22,9 +23,7 @@ def test_cast_float16(device_type):
         entry_point="main",
         thread_count=[ELEMENT_COUNT, 1, 1],
         buffers={
-            "data": {
-                "init_data": data,
-            },
+            "data": {"init_data": data},
             "result": {"element_count": ELEMENT_COUNT},
         },
     )
