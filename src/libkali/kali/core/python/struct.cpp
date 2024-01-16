@@ -1,5 +1,3 @@
-// TODO: MITSUBA license
-
 #include "nanobind.h"
 
 #include "kali/core/struct.h"

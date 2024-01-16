@@ -1,7 +1,6 @@
 - add support for loading EXR files
 - describe `Bitmap` pixel format with a `Struct`
 - add support for XYZ images
-- add mitsuba license where needed
 - check performance for loading images through memory mapped streams
 - implement `StructConverter` JIT for arm64
 - implement `weak_ref`
