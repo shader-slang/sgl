@@ -39,6 +39,7 @@ elseif(KALI_MACOS)
         INTERFACE_INCLUDE_DIRECTORIES ${SLANG_INCLUDE_DIR}
         IMPORTED_LOCATION ${SLANG_BIN_DIR}/libslang.dylib
     )
+    kali_copy_binary(${SLANG_BIN_DIR}/libslang.dylib .)
 endif()
 
 # slang-gfx

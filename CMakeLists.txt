@@ -11,6 +11,19 @@ project(kali)
 set(CTEST_OUTPUT_ON_FAILURE TRUE)
 enable_testing()
 
+include(GNUInstallDirs)
+
+
+if (APPLE)
+  set(KALI_ORIGIN "@loader_path")
+elseif(UNIX)
+  set(KALI_ORIGIN "$ORIGIN")
+endif()
+
+# TODO we should probably set install RPATH on individual targets instead
+set(CMAKE_INSTALL_RPATH "${KALI_ORIGIN};${KALI_ORIGIN}/../lib")
+
+
 # -----------------------------------------------------------------------------
 # Configuration
 # -----------------------------------------------------------------------------
@@ -199,6 +212,7 @@ function(kali_copy_binary src dst_dir)
     set(dst ${KALI_OUTPUT_DIRECTORY}/${dst_dir})
     set_property(GLOBAL APPEND PROPERTY KALI_BINARY_FILES_SRC ${src})
     set_property(GLOBAL APPEND PROPERTY KALI_BINARY_FILES_DST ${dst})
+    install(FILES ${src} DESTINATION ${CMAKE_INSTALL_LIBDIR}/${dst_dir})
 endfunction()
 
 function(kali_copy_library target)
@@ -265,8 +279,29 @@ if(KALI_WINDOWS)
     file(GENERATE OUTPUT ${KALI_OUTPUT_DIRECTORY}/setpath.ps1 INPUT ${CMAKE_SOURCE_DIR}/resources/setpath.ps1.in)
 endif()
 
-if(KALI_LINUX)
+if(KALI_LINUX OR KALI_MACOS)
     file(GENERATE OUTPUT ${KALI_OUTPUT_DIRECTORY}/setpath.sh INPUT ${CMAKE_SOURCE_DIR}/resources/setpath.sh.in)
 endif()
 
 file(GENERATE OUTPUT ${KALI_OUTPUT_DIRECTORY}/python/kali/__init__.py INPUT ${CMAKE_SOURCE_DIR}/resources/__init__.py)
+
+# -----------------------------------------------------------------------------
+# install
+# -----------------------------------------------------------------------------
+
+install(
+    TARGETS kali
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+install(
+    DIRECTORY src/libkali/kali
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING PATTERN "*.h"
+)
+
+# Install python extension
+install(TARGETS kali_ext LIBRARY DESTINATION kali)
+install(FILES ${KALI_OUTPUT_DIRECTORY}/python/kali/__init__.py DESTINATION kali)
+install(DIRECTORY ${KALI_OUTPUT_DIRECTORY}/python/kali/kali_ext DESTINATION kali/kali_ext)

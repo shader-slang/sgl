@@ -381,7 +381,7 @@ if(KALI_WINDOWS)
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tools/nanobind-stubgen
         )
 endif()
-if(KALI_LINUX)
+if(KALI_LINUX OR KALI_MACOS)
     add_custom_command(
         TARGET kali_ext POST_BUILD
         WORKING_DIRECTORY ${KALI_OUTPUT_DIRECTORY}
