@@ -36,10 +36,14 @@ std::string TypeLayoutReflection::to_string() const
             "TypeLayoutReflection(\n"
             "  name={},\n"
             "  kind={},\n"
+            "  size={},\n"
+            "  stride={},\n"
             "  fields={}\n"
             ")",
             c_str_to_string(name()),
             kind(),
+            size(),
+            stride(),
             string::indent(string::list_to_string(fields()))
         );
         break;

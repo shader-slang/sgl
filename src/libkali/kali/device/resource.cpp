@@ -280,7 +280,7 @@ inline BufferDesc to_buffer_desc(StructuredBufferDesc desc)
     if (desc.struct_type) {
         const TypeLayoutReflection* type = desc.struct_type->unwrap_array()->element_type_layout();
         if (type)
-            struct_size = type->size();
+            struct_size = type->stride();
     }
 
     return {
