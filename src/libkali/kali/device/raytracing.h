@@ -63,6 +63,7 @@ struct ShaderTableDesc {
     std::vector<std::string> ray_gen_entry_points;
     std::vector<std::string> miss_entry_points;
     std::vector<std::string> hit_group_names;
+    std::vector<std::string> callable_entry_points;
 };
 
 class KALI_API ShaderTable : public DeviceResource {

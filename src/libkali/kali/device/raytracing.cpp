@@ -69,6 +69,11 @@ ShaderTable::ShaderTable(ref<Device> device, ShaderTableDesc desc)
     for (const auto& name : m_desc.hit_group_names)
         gfx_hit_group_names.push_back(name.c_str());
 
+    ShortVector<const char*, 16> gfx_callable_names;
+    gfx_callable_names.reserve(m_desc.callable_entry_points.size());
+    for (const auto& name : m_desc.callable_entry_points)
+        gfx_callable_names.push_back(name.c_str());
+
     gfx::IShaderTable::Desc gfx_desc{
         .rayGenShaderCount = narrow_cast<gfx::GfxCount>(gfx_ray_gen_entry_points.size()),
         .rayGenShaderEntryPointNames = gfx_ray_gen_entry_points.data(),
@@ -79,6 +84,9 @@ ShaderTable::ShaderTable(ref<Device> device, ShaderTableDesc desc)
         .hitGroupCount = narrow_cast<gfx::GfxCount>(gfx_hit_group_names.size()),
         .hitGroupNames = gfx_hit_group_names.data(),
         .hitGroupRecordOverwrites = nullptr,
+        // .callableShaderCount = narrow_cast<gfx::GfxCount>(gfx_callable_names.size()),
+        // .callableShaderEntryPointNames = gfx_callable_names.data(),
+        // .callableShaderRecordOverwrites = nullptr,
         .program = m_desc.program->gfx_shader_program(),
     };
 
@@ -99,12 +107,14 @@ std::string ShaderTable::to_string() const
         "  ray_gen_entry_points=[{}],\n"
         "  miss_entry_points=[{}],\n"
         "  hit_group_names=[{}]\n"
+        "  callable_entry_points=[{}]\n"
         ")",
         m_device,
         m_desc.program,
         m_desc.ray_gen_entry_points,
         m_desc.miss_entry_points,
-        m_desc.hit_group_names
+        m_desc.hit_group_names,
+        m_desc.callable_entry_points
     );
 }
 
