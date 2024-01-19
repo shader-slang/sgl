@@ -14,7 +14,6 @@ KALI_PY_EXPORT(device_pipeline)
         .def_rw("program", &ComputePipelineDesc::program);
 
     nb::class_<ComputePipeline, Pipeline>(m, "ComputePipeline")
-        .def_prop_ro("desc", &ComputePipeline::desc)
         .def_prop_ro("thread_group_size", &ComputePipeline::thread_group_size);
 
     nb::class_<HitGroupDesc>(m, "HitGroupDesc")

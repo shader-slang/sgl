@@ -49,11 +49,10 @@ NativeHandle Pipeline::get_native_handle() const
 
 ComputePipeline::ComputePipeline(ref<Device> device, ComputePipelineDesc desc)
     : Pipeline(std::move(device))
-    , m_desc(std::move(desc))
 {
-    KALI_CHECK_NOT_NULL(m_desc.program);
+    KALI_CHECK_NOT_NULL(desc.program);
 
-    gfx::ComputePipelineStateDesc gfx_desc{.program = m_desc.program->gfx_shader_program()};
+    gfx::ComputePipelineStateDesc gfx_desc{.program = desc.program->gfx_shader_program()};
     SLANG_CALL(m_device->gfx_device()->createComputePipelineState(gfx_desc, m_gfx_pipeline_state.writeRef()));
     m_thread_group_size = desc.program->entry_point_layout(0)->compute_thread_group_size();
 }
@@ -76,8 +75,8 @@ std::string ComputePipeline::to_string() const
 
 GraphicsPipeline::GraphicsPipeline(ref<Device> device, GraphicsPipelineDesc desc)
     : Pipeline(std::move(device))
-    , m_desc(std::move(desc))
 {
+    KALI_CHECK_NOT_NULL(desc.program);
 }
 
 // ----------------------------------------------------------------------------
@@ -86,11 +85,12 @@ GraphicsPipeline::GraphicsPipeline(ref<Device> device, GraphicsPipelineDesc desc
 
 RayTracingPipeline::RayTracingPipeline(ref<Device> device, RayTracingPipelineDesc desc)
     : Pipeline(std::move(device))
-    , m_desc(std::move(desc))
 {
+    KALI_CHECK_NOT_NULL(desc.program);
+
     ShortVector<gfx::HitGroupDesc, 16> gfx_hit_groups;
-    gfx_hit_groups.reserve(m_desc.hit_groups.size());
-    for (const auto& hit_group : m_desc.hit_groups) {
+    gfx_hit_groups.reserve(desc.hit_groups.size());
+    for (const auto& hit_group : desc.hit_groups) {
         gfx_hit_groups.push_back({
             .hitGroupName = hit_group.hit_group_name.c_str(),
             .closestHitEntryPoint = hit_group.closest_hit_entry_point.c_str(),
@@ -100,13 +100,13 @@ RayTracingPipeline::RayTracingPipeline(ref<Device> device, RayTracingPipelineDes
     }
 
     gfx::RayTracingPipelineStateDesc gfx_desc{
-        .program = m_desc.program->gfx_shader_program(),
+        .program = desc.program->gfx_shader_program(),
         .hitGroupCount = narrow_cast<gfx::GfxCount>(gfx_hit_groups.size()),
         .hitGroups = gfx_hit_groups.data(),
-        .maxRecursion = narrow_cast<int>(m_desc.max_recursion),
-        .maxRayPayloadSize = m_desc.max_ray_payload_size,
-        .maxAttributeSizeInBytes = m_desc.max_attribute_size,
-        .flags = static_cast<gfx::RayTracingPipelineFlags::Enum>(m_desc.flags),
+        .maxRecursion = narrow_cast<int>(desc.max_recursion),
+        .maxRayPayloadSize = desc.max_ray_payload_size,
+        .maxAttributeSizeInBytes = desc.max_attribute_size,
+        .flags = static_cast<gfx::RayTracingPipelineFlags::Enum>(desc.flags),
     };
     SLANG_CALL(m_device->gfx_device()->createRayTracingPipelineState(gfx_desc, m_gfx_pipeline_state.writeRef()));
 }

@@ -36,29 +36,23 @@ protected:
 };
 
 struct ComputePipelineDesc {
-    // TODO we should introduce a weak_ref and use that here
-    // This would allow the cache to check if the program is still available
     const ShaderProgram* program;
-    auto operator<=>(const ComputePipelineDesc&) const = default;
 };
 
 class KALI_API ComputePipeline : public Pipeline {
 public:
     ComputePipeline(ref<Device> device, ComputePipelineDesc desc);
 
-    const ComputePipelineDesc& desc() const { return m_desc; }
-
     uint3 thread_group_size() const { return m_thread_group_size; }
 
     std::string to_string() const override;
 
 private:
-    ComputePipelineDesc m_desc;
     uint3 m_thread_group_size;
 };
 
 struct GraphicsPipelineDesc {
-    ShaderProgram* program;
+    const ShaderProgram* program;
 
     ref<InputLayout> input_layout;
     // ref<FramebufferLayout> framebuffer_layout;
@@ -72,10 +66,7 @@ class KALI_API GraphicsPipeline : public Pipeline {
 public:
     GraphicsPipeline(ref<Device> device, GraphicsPipelineDesc desc);
 
-    const GraphicsPipelineDesc& desc() const { return m_desc; }
-
 private:
-    GraphicsPipelineDesc m_desc;
 };
 
 struct HitGroupDesc {
@@ -98,10 +89,7 @@ class RayTracingPipeline : public Pipeline {
 public:
     RayTracingPipeline(ref<Device> device, RayTracingPipelineDesc desc);
 
-    const RayTracingPipelineDesc& desc() const { return m_desc; }
-
 private:
-    RayTracingPipelineDesc m_desc;
 };
 
 } // namespace kali
