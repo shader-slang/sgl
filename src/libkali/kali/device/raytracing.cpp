@@ -90,7 +90,7 @@ ShaderTable::ShaderTable(ref<Device> device, ShaderTableDesc desc)
         .program = m_desc.program->gfx_shader_program(),
     };
 
-    SLANG_CALL(device->gfx_device()->createShaderTable(gfx_desc, m_gfx_shader_table.writeRef()));
+    SLANG_CALL(m_device->gfx_device()->createShaderTable(gfx_desc, m_gfx_shader_table.writeRef()));
 }
 
 ShaderTable::~ShaderTable()

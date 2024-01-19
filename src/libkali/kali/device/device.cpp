@@ -326,6 +326,11 @@ ref<AccelerationStructure> Device::create_acceleration_structure(AccelerationStr
     return make_ref<AccelerationStructure>(ref<Device>(this), std::move(desc));
 }
 
+ref<ShaderTable> Device::create_shader_table(ShaderTableDesc desc)
+{
+    return make_ref<ShaderTable>(ref<Device>(this), std::move(desc));
+}
+
 ref<SlangSession> Device::create_slang_session(SlangSessionDesc desc)
 {
     return make_ref<SlangSession>(ref<Device>(this), std::move(desc));

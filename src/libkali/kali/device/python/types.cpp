@@ -97,6 +97,7 @@ KALI_PY_EXPORT(device_types)
     // Raytracing
     // ------------------------------------------------------------------------
 
+    nb::kali_enum_flags<RayTracingPipelineFlags>(m, "RayTracingPipelineFlags");
     nb::kali_enum<RayTracingGeometryType>(m, "RayTracingGeometryType");
     nb::kali_enum_flags<RayTracingGeometryFlags>(m, "RayTracingGeometryFlags");
     nb::kali_enum_flags<RayTracingInstanceFlags>(m, "RayTracingInstanceFlags");

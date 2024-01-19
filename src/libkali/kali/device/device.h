@@ -191,6 +191,8 @@ public:
 
     ref<AccelerationStructure> create_acceleration_structure(AccelerationStructureDesc desc);
 
+    ref<ShaderTable> create_shader_table(ShaderTableDesc desc);
+
     ref<SlangSession> create_slang_session(SlangSessionDesc desc);
 
     ref<SlangModule> load_module(
