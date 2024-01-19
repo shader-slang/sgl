@@ -441,6 +441,41 @@ KALI_PY_EXPORT(device_device)
         "cursor"_a
     );
 
+    device.def("create_compute_pipeline", &Device::create_compute_pipeline, "desc"_a);
+    device.def(
+        "create_compute_pipeline",
+        [](Device* self, const ShaderProgram* program) { return self->create_compute_pipeline({.program = program}); },
+        "program"_a
+    );
+
+    device.def("create_ray_tracing_pipeline", &Device::create_ray_tracing_pipeline, "desc"_a);
+    device.def(
+        "create_ray_tracing_pipeline",
+        [](Device* self,
+           const ShaderProgram* program,
+           std::vector<HitGroupDesc> hit_groups,
+           uint32_t max_recursion,
+           uint32_t max_ray_payload_size,
+           uint32_t max_attribute_size,
+           RayTracingPipelineFlags flags)
+        {
+            return self->create_ray_tracing_pipeline({
+                .program = program,
+                .hit_groups = std::move(hit_groups),
+                .max_recursion = max_recursion,
+                .max_ray_payload_size = max_ray_payload_size,
+                .max_attribute_size = max_attribute_size,
+                .flags = flags,
+            });
+        },
+        "program"_a,
+        "hit_groups"_a,
+        "max_recursion"_a = 0,
+        "max_ray_payload_size"_a = 0,
+        "max_attribute_size"_a = 8,
+        "flags"_a = RayTracingPipelineFlags::none
+    );
+
     device.def("create_command_queue", &Device::create_command_queue, "desc"_a);
     device.def(
         "create_command_queue",

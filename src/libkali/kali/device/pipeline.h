@@ -86,7 +86,7 @@ struct HitGroupDesc {
 };
 
 struct RayTracingPipelineDesc {
-    ShaderProgram* program;
+    const ShaderProgram* program;
     std::vector<HitGroupDesc> hit_groups;
     uint32_t max_recursion{0};
     uint32_t max_ray_payload_size{0};
