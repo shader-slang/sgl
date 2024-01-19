@@ -14,31 +14,6 @@
 
 namespace kali {
 
-enum class ShaderCompilerFlags {
-    none = 0x0,
-    treat_warnings_as_errors = 0x1,
-    dump_intermediates = 0x2,
-    floating_point_mode_fast = 0x4,
-    floating_point_mode_precise = 0x8,
-    generate_debug_info = 0x10,
-    matrix_layout_column_major = 0x20,
-};
-KALI_ENUM_CLASS_OPERATORS(ShaderCompilerFlags)
-
-KALI_ENUM_INFO(
-    ShaderCompilerFlags,
-    {
-        {ShaderCompilerFlags::none, "none"},
-        {ShaderCompilerFlags::treat_warnings_as_errors, "treat_warnings_as_errors"},
-        {ShaderCompilerFlags::dump_intermediates, "dump_intermediates"},
-        {ShaderCompilerFlags::floating_point_mode_fast, "floating_point_mode_fast"},
-        {ShaderCompilerFlags::floating_point_mode_precise, "floating_point_mode_precise"},
-        {ShaderCompilerFlags::generate_debug_info, "generate_debug_info"},
-        {ShaderCompilerFlags::matrix_layout_column_major, "matrix_layout_column_major"},
-    }
-);
-KALI_ENUM_REGISTER(ShaderCompilerFlags);
-
 struct TypeConformance {
     std::string type_name;
     std::string interface_name;
@@ -181,12 +156,41 @@ public:
     }
 };
 
-struct SlangSessionDesc {
+enum class SlangCompilerFlags {
+    none = 0x0,
+    treat_warnings_as_errors = 0x1,
+    dump_intermediates = 0x2,
+    floating_point_mode_fast = 0x4,
+    floating_point_mode_precise = 0x8,
+    generate_debug_info = 0x10,
+    matrix_layout_column_major = 0x20,
+};
+KALI_ENUM_CLASS_OPERATORS(SlangCompilerFlags)
+
+KALI_ENUM_INFO(
+    SlangCompilerFlags,
+    {
+        {SlangCompilerFlags::none, "none"},
+        {SlangCompilerFlags::treat_warnings_as_errors, "treat_warnings_as_errors"},
+        {SlangCompilerFlags::dump_intermediates, "dump_intermediates"},
+        {SlangCompilerFlags::floating_point_mode_fast, "floating_point_mode_fast"},
+        {SlangCompilerFlags::floating_point_mode_precise, "floating_point_mode_precise"},
+        {SlangCompilerFlags::generate_debug_info, "generate_debug_info"},
+        {SlangCompilerFlags::matrix_layout_column_major, "matrix_layout_column_major"},
+    }
+);
+KALI_ENUM_REGISTER(SlangCompilerFlags);
+
+struct SlangCompilerOptions {
     ShaderModel shader_model{ShaderModel::unknown};
-    ShaderCompilerFlags compiler_flags{ShaderCompilerFlags::none};
+    SlangCompilerFlags compiler_flags{SlangCompilerFlags::none};
     std::vector<std::string> compiler_args;
     std::vector<std::filesystem::path> search_paths;
     DefineList defines;
+};
+
+struct SlangSessionDesc {
+    SlangCompilerOptions compiler_options;
 };
 
 class KALI_API SlangSession : public Object {

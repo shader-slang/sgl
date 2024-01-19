@@ -410,8 +410,20 @@ KALI_PY_EXPORT(device_device)
         "size"_a = 0
     );
     device.def("create_slang_session", [](Device* self) { return self->create_slang_session(SlangSessionDesc{}); });
-    device.def("load_module", &Device::load_module, "path"_a, "defines"_a = DefineList());
-    device.def("load_module_from_source", &Device::load_module_from_source, "source"_a, "defines"_a = DefineList());
+    device.def(
+        "load_module",
+        &Device::load_module,
+        "path"_a,
+        "defines"_a = DefineList(),
+        "compiler_options"_a = SlangCompilerOptions()
+    );
+    device.def(
+        "load_module_from_source",
+        &Device::load_module_from_source,
+        "source"_a,
+        "defines"_a = DefineList(),
+        "compiler_options"_a = SlangCompilerOptions()
+    );
 
     device.def(
         "create_mutable_shader_object",

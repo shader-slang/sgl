@@ -193,8 +193,16 @@ public:
 
     ref<SlangSession> create_slang_session(SlangSessionDesc desc);
 
-    ref<SlangModule> load_module(const std::filesystem::path& path, const DefineList& defines = DefineList{});
-    ref<SlangModule> load_module_from_source(const std::string& source, const DefineList& defines = DefineList{});
+    ref<SlangModule> load_module(
+        const std::filesystem::path& path,
+        const DefineList& defines = DefineList{},
+        const SlangCompilerOptions& compiler_options = SlangCompilerOptions{}
+    );
+    ref<SlangModule> load_module_from_source(
+        const std::string& source,
+        const DefineList& defines = DefineList{},
+        const SlangCompilerOptions& compiler_options = SlangCompilerOptions{}
+    );
 
     ref<MutableShaderObject> create_mutable_shader_object(const ShaderProgram* shader_program);
 

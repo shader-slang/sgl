@@ -11,8 +11,6 @@ KALI_PY_EXPORT(device_shader)
 {
     using namespace kali;
 
-    nb::kali_enum<ShaderCompilerFlags>(m, "ShaderCompilerFlags");
-
     nb::class_<TypeConformance>(m, "TypeConformance")
         .def_rw("type_name", &TypeConformance::type_name)
         .def_rw("interface_name", &TypeConformance::interface_name);
@@ -40,12 +38,17 @@ KALI_PY_EXPORT(device_shader)
         .def("add", nb::overload_cast<const DefineList&>(&DefineList::add), "other"_a)
         .def("remove", nb::overload_cast<const DefineList&>(&DefineList::remove), "other"_a);
 
-    nb::class_<SlangSessionDesc>(m, "SlangSessionDesc")
-        .def_rw("shader_model", &SlangSessionDesc::shader_model)
-        .def_rw("compiler_flags", &SlangSessionDesc::compiler_flags)
-        .def_rw("compiler_args", &SlangSessionDesc::compiler_args)
-        .def_rw("search_paths", &SlangSessionDesc::search_paths)
-        .def_rw("defines", &SlangSessionDesc::defines);
+    nb::kali_enum_flags<SlangCompilerFlags>(m, "SlangCompilerFlags");
+
+    nb::class_<SlangCompilerOptions>(m, "SlangCompilerOptions")
+        .def(nb::init<>())
+        .def_rw("shader_model", &SlangCompilerOptions::shader_model)
+        .def_rw("compiler_flags", &SlangCompilerOptions::compiler_flags)
+        .def_rw("compiler_args", &SlangCompilerOptions::compiler_args)
+        .def_rw("search_paths", &SlangCompilerOptions::search_paths)
+        .def_rw("defines", &SlangCompilerOptions::defines);
+
+    nb::class_<SlangSessionDesc>(m, "SlangSessionDesc").def_rw("compiler_options", &SlangSessionDesc::compiler_options);
 
     // Disambiguate from the types in slang.h
     using kali::SlangSession;

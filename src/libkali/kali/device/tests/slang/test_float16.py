@@ -11,7 +11,7 @@ ELEMENT_COUNT = 1024
 
 
 @pytest.mark.parametrize("view", ["uav", "srv"])
-@pytest.mark.parametrize("shader_model", helpers.ALL_SHADER_MODELS)
+@pytest.mark.parametrize("shader_model", helpers.all_shader_models_from(kali.ShaderModel.sm_6_2))
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_float16(device_type, shader_model, view):
     device = helpers.get_device(device_type)

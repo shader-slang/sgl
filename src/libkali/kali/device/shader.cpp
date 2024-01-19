@@ -18,16 +18,18 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
 {
     KALI_CHECK_NOT_NULL(m_device);
 
+    SlangCompilerOptions& options = m_desc.compiler_options;
+
     // If no shader model is selected, use the default shader model.
-    if (m_desc.shader_model == ShaderModel::unknown)
-        m_desc.shader_model = m_device->default_shader_model();
+    if (options.shader_model == ShaderModel::unknown)
+        options.shader_model = m_device->default_shader_model();
 
     // Check that requested shader model is supported.
     ShaderModel supported_shader_model = m_device->supported_shader_model();
     KALI_CHECK(
-        m_desc.shader_model <= supported_shader_model,
+        options.shader_model <= supported_shader_model,
         "Shader model {} is not supported (max shader model is {})",
-        m_desc.shader_model,
+        options.shader_model,
         supported_shader_model
     );
 
@@ -38,7 +40,7 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
     // Setup search paths.
     // Slang will search for files in the order they are specified.
     // Use module local search paths first, followed by global search paths.
-    const auto& search_paths = m_desc.search_paths;
+    const auto& search_paths = options.search_paths;
     std::vector<std::string> search_path_strings(search_paths.size());
     std::vector<const char*> search_paths_cstrings(search_paths.size());
     for (size_t i = 0; i < search_paths.size(); ++i) {
@@ -54,21 +56,21 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
     target_desc.format = SLANG_TARGET_UNKNOWN;
     std::string profile_str = fmt::format(
         "sm_{}_{}",
-        get_shader_model_major_version(m_desc.shader_model),
-        get_shader_model_minor_version(m_desc.shader_model)
+        get_shader_model_major_version(options.shader_model),
+        get_shader_model_minor_version(options.shader_model)
     );
     target_desc.profile = m_device->global_session()->findProfile(profile_str.c_str());
     KALI_CHECK(target_desc.profile != SLANG_PROFILE_UNKNOWN, "Unsupported target profile: {}", profile_str);
 
     // Get compiler flags and override with global enabled/disabled flags.
-    ShaderCompilerFlags compiler_flags = m_desc.compiler_flags;
+    SlangCompilerFlags compiler_flags = options.compiler_flags;
     // TODO handle global flags
     // compiler_flags &= ~m_program_manager->get_global_disabled_compiler_flags();
     // compiler_flags |= m_program_manager->get_global_enabled_compiler_flags();
 
     // Set floating point mode. If no shader compiler flags for this were set, we use Slang's default mode.
-    bool flag_fast = is_set(compiler_flags, ShaderCompilerFlags::floating_point_mode_fast);
-    bool flag_precise = is_set(compiler_flags, ShaderCompilerFlags::floating_point_mode_precise);
+    bool flag_fast = is_set(compiler_flags, SlangCompilerFlags::floating_point_mode_fast);
+    bool flag_precise = is_set(compiler_flags, SlangCompilerFlags::floating_point_mode_precise);
     if (flag_fast && flag_precise) {
         log_warn("Shader compiler flags 'floating_point_mode_fast' and 'floating_point_mode_precise' can't be used "
                  "simultaneously. Ignoring 'floating_point_mode_fast'.");
@@ -111,7 +113,7 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
     const auto add_macro = [&macros](const char* name, const char* value) { macros.push_back({name, value}); };
 
     // Add module local defines first, followed by global defines.
-    for (const auto& d : m_desc.defines)
+    for (const auto& d : options.defines)
         add_macro(d.first.c_str(), d.second.c_str());
     // TODO handle global defines
     // for (const auto& d : m_program_manager->get_global_defines())
@@ -121,8 +123,8 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
     add_macro(target_define, "1");
 
     // Add shader model defines.
-    std::string shader_model_major = std::to_string(get_shader_model_major_version(m_desc.shader_model));
-    std::string shader_model_minor = std::to_string(get_shader_model_minor_version(m_desc.shader_model));
+    std::string shader_model_major = std::to_string(get_shader_model_major_version(options.shader_model));
+    std::string shader_model_minor = std::to_string(get_shader_model_minor_version(options.shader_model));
     add_macro("__SHADER_TARGET_MAJOR", shader_model_major.c_str());
     add_macro("__SHADER_TARGET_MINOR", shader_model_minor.c_str());
 
@@ -136,7 +138,7 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
     // to allow it to compute correct reflection information. Slang then invokes the downstream compiler.
     // Column major option can be useful when compiling external shader sources that don't depend
     // on anything Falcor.
-    bool use_column_major = is_set(compiler_flags, ShaderCompilerFlags::matrix_layout_column_major);
+    bool use_column_major = is_set(compiler_flags, SlangCompilerFlags::matrix_layout_column_major);
     session_desc.defaultMatrixLayoutMode
         = use_column_major ? SLANG_MATRIX_LAYOUT_COLUMN_MAJOR : SLANG_MATRIX_LAYOUT_ROW_MAJOR;
 
@@ -172,7 +174,7 @@ std::filesystem::path SlangSession::resolve_path(const std::filesystem::path& pa
     if (path.is_absolute())
         return path;
 
-    for (const std::filesystem::path& search_path : m_desc.search_paths) {
+    for (const std::filesystem::path& search_path : m_desc.compiler_options.search_paths) {
         std::filesystem::path full_path = search_path / path;
         if (std::filesystem::exists(full_path))
             return full_path;
@@ -196,15 +198,15 @@ SlangModule::SlangModule(ref<SlangSession> session, SlangModuleDesc desc)
     // for (int warning : m_disabled_warnings)
     //     m_compile_request->overrideDiagnosticSeverity(warning, SLANG_SEVERITY_DISABLED);
 
-    ShaderCompilerFlags compiler_flags = m_session->desc().compiler_flags;
+    SlangCompilerFlags compiler_flags = m_session->desc().compiler_options.compiler_flags;
 
     // Enable/disable intermediates dump.
-    bool dump_intermediates = is_set(compiler_flags, ShaderCompilerFlags::dump_intermediates);
+    bool dump_intermediates = is_set(compiler_flags, SlangCompilerFlags::dump_intermediates);
     m_compile_request->setDumpIntermediates(dump_intermediates);
     // TODO(@skallweit): set dump prefix
 
     // Set debug level.
-    bool generate_debug_info = is_set(compiler_flags, ShaderCompilerFlags::generate_debug_info);
+    bool generate_debug_info = is_set(compiler_flags, SlangCompilerFlags::generate_debug_info);
     if (generate_debug_info)
         m_compile_request->setDebugInfoLevel(SLANG_DEBUG_INFO_LEVEL_STANDARD);
 
@@ -221,7 +223,7 @@ SlangModule::SlangModule(ref<SlangSession> session, SlangModuleDesc desc)
     // Set compiler arguments.
     {
         std::vector<const char*> args;
-        for (const auto& arg : m_session->desc().compiler_args)
+        for (const auto& arg : m_session->desc().compiler_options.compiler_args)
             args.push_back(arg.c_str());
 #if KALI_NVAPI_AVAILABLE
         std::string nvapi_include = "-I" + (get_runtime_directory() / "shaders/nvapi").string();

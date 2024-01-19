@@ -29,6 +29,64 @@ KALI_PY_EXPORT(device_types)
     // Graphics
     // ------------------------------------------------------------------------
 
+    nb::kali_enum<PrimitiveType>(m, "PrimitiveType");
+    nb::kali_enum<StencilOp>(m, "StencilOp");
+    nb::kali_enum<FillMode>(m, "FillMode");
+    nb::kali_enum<CullMode>(m, "CullMode");
+    nb::kali_enum<FrontFaceMode>(m, "FrontFaceMode");
+
+    nb::class_<DepthStencilOpDesc>(m, "DepthStencilOpDesc")
+        .def_rw("stencil_fail_op", &DepthStencilOpDesc::stencil_fail_op)
+        .def_rw("stencil_depth_fail_op", &DepthStencilOpDesc::stencil_depth_fail_op)
+        .def_rw("stencil_pass_op", &DepthStencilOpDesc::stencil_pass_op)
+        .def_rw("stencil_func", &DepthStencilOpDesc::stencil_func);
+
+    nb::class_<DepthStencilDesc>(m, "DepthStencilDesc")
+        .def_rw("depth_test_enable", &DepthStencilDesc::depth_test_enable)
+        .def_rw("depth_write_enable", &DepthStencilDesc::depth_write_enable)
+        .def_rw("depth_func", &DepthStencilDesc::depth_func)
+        .def_rw("stencil_enable", &DepthStencilDesc::stencil_enable)
+        .def_rw("stencil_read_mask", &DepthStencilDesc::stencil_read_mask)
+        .def_rw("stencil_write_mask", &DepthStencilDesc::stencil_write_mask)
+        .def_rw("front_face", &DepthStencilDesc::front_face)
+        .def_rw("back_face", &DepthStencilDesc::back_face)
+        .def_rw("stencil_ref", &DepthStencilDesc::stencil_ref);
+
+    nb::class_<RasterizerDesc>(m, "RasterizerDesc")
+        .def_rw("fill_mode", &RasterizerDesc::fill_mode)
+        .def_rw("cull_mode", &RasterizerDesc::cull_mode)
+        .def_rw("front_face", &RasterizerDesc::front_face)
+        .def_rw("depth_bias", &RasterizerDesc::depth_bias)
+        .def_rw("depth_bias_clamp", &RasterizerDesc::depth_bias_clamp)
+        .def_rw("slope_scaled_depth_bias", &RasterizerDesc::slope_scaled_depth_bias)
+        .def_rw("depth_clip_enable", &RasterizerDesc::depth_clip_enable)
+        .def_rw("scissor_enable", &RasterizerDesc::scissor_enable)
+        .def_rw("multisample_enable", &RasterizerDesc::multisample_enable)
+        .def_rw("antialiased_line_enable", &RasterizerDesc::antialiased_line_enable)
+        .def_rw("enable_conservative_rasterization", &RasterizerDesc::enable_conservative_rasterization)
+        .def_rw("forced_sample_count", &RasterizerDesc::forced_sample_count);
+
+    nb::kali_enum<LogicOp>(m, "LogicOp");
+    nb::kali_enum<BlendOp>(m, "LogicOp");
+    nb::kali_enum<BlendFactor>(m, "LogicOp");
+    nb::kali_enum_flags<RenderTargetWriteMask>(m, "LogicOp");
+
+    nb::class_<AspectBlendDesc>(m, "AspectBlendDesc")
+        .def_rw("src_factor", &AspectBlendDesc::src_factor)
+        .def_rw("dst_factor", &AspectBlendDesc::dst_factor)
+        .def_rw("op", &AspectBlendDesc::op);
+
+    nb::class_<TargetBlendDesc>(m, "TargetBlendDesc")
+        .def_rw("color", &TargetBlendDesc::color)
+        .def_rw("alpha", &TargetBlendDesc::alpha)
+        .def_rw("enable_blend", &TargetBlendDesc::enable_blend)
+        .def_rw("logic_op", &TargetBlendDesc::logic_op)
+        .def_rw("write_mask", &TargetBlendDesc::write_mask);
+
+    nb::class_<BlendDesc>(m, "BlendDesc")
+        // TODO targets
+        .def_rw("alpha_to_coverage_enable", &BlendDesc::alpha_to_coverage_enable);
+
     // ------------------------------------------------------------------------
     // Queries
     // ------------------------------------------------------------------------

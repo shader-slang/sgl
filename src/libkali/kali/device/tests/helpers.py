@@ -24,6 +24,10 @@ ALL_SHADER_MODELS = [
 ]
 
 
+def all_shader_models_from(shader_model: kali.ShaderModel) -> list[kali.ShaderModel]:
+    return ALL_SHADER_MODELS[ALL_SHADER_MODELS.index(shader_model) :]
+
+
 DEVICE_CACHE = {}
 
 
@@ -55,10 +59,13 @@ def dispatch_compute(
     if shader_model > device.supported_shader_model:
         pytest.skip(f"Shader model {str(shader_model)} not supported")
 
+    compiler_options = kali.SlangCompilerOptions()
+    compiler_options.shader_model = shader_model
+
     # TODO set shader_model
-    kernel = device.load_module(path=path, defines=defines).create_compute_kernel(
-        entry_point
-    )
+    kernel = device.load_module(
+        path=path, defines=defines, compiler_options=compiler_options
+    ).create_compute_kernel(entry_point)
 
     ctx = Context()
     vars = {}
