@@ -54,6 +54,7 @@ KALI_PY_EXPORT(device_shader_cursor)
     def_setter(ref<Buffer>);
     def_setter(ref<Texture>);
     def_setter(ref<Sampler>);
+    def_setter(ref<AccelerationStructure>);
 
     def_setter(uint2);
     def_setter(uint3);

@@ -137,7 +137,9 @@ program = module.create_program(module.global_scope, [ray_gen, miss, closest_hit
 pipeline = device.create_ray_tracing_pipeline(
     program=program,
     hit_groups=[
-        {"hit_group_name": "hit_group", "closest_hit_entry_point": "closest_hit"}
+        kali.HitGroupDesc(
+            hit_group_name="hit_group", closest_hit_entry_point="closest_hit"
+        )
     ],
     max_recursion=1,
     max_ray_payload_size=12,
@@ -152,10 +154,10 @@ shader_table = device.create_shader_table(
 
 with command_stream.begin_ray_tracing_pass() as raytracing_pass:
     shader_object = raytracing_pass.bind_pipeline(pipeline)
-    cursor = kali.Shadercursor(shader_object)
+    cursor = kali.ShaderCursor(shader_object)
     cursor.tlas = tlas
     cursor.render_texture = render_texture
-    # raytracing_pass.dispatch_rays
+    raytracing_pass.dispatch_rays(0, shader_table, [1024, 1024, 1])
 
 
-kali.utils.show_in_tev(render_texture, "raytracing")
+kali.utils.show_in_tev(render_texture, "raytracing_pipeline")

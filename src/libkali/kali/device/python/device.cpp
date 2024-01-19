@@ -4,6 +4,7 @@
 #include "kali/device/sampler.h"
 #include "kali/device/fence.h"
 #include "kali/device/resource.h"
+#include "kali/device/pipeline.h"
 #include "kali/device/raytracing.h"
 #include "kali/device/query.h"
 #include "kali/device/memory_heap.h"
@@ -408,6 +409,30 @@ KALI_PY_EXPORT(device_device)
         "buffer"_a,
         "offset"_a = 0,
         "size"_a = 0
+    );
+    device.def("create_shader_table", &Device::create_shader_table, "desc"_a);
+    device.def(
+        "create_shader_table",
+        [](Device* self,
+           const ShaderProgram* program,
+           std::vector<std::string> ray_gen_entry_points,
+           std::vector<std::string> miss_entry_points,
+           std::vector<std::string> hit_group_names,
+           std::vector<std::string> callable_entry_points)
+        {
+            return self->create_shader_table({
+                .program = program,
+                .ray_gen_entry_points = std::move(ray_gen_entry_points),
+                .miss_entry_points = std::move(miss_entry_points),
+                .hit_group_names = std::move(hit_group_names),
+                .callable_entry_points = std::move(callable_entry_points),
+            });
+        },
+        "program"_a,
+        "ray_gen_entry_points"_a = std::vector<std::string>{},
+        "miss_entry_points"_a = std::vector<std::string>{},
+        "hit_group_names"_a = std::vector<std::string>{},
+        "callable_entry_points"_a = std::vector<std::string>{}
     );
     device.def("create_slang_session", [](Device* self) { return self->create_slang_session(SlangSessionDesc{}); });
     device.def(

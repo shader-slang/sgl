@@ -1,6 +1,7 @@
 #include "nanobind.h"
 
 #include "kali/device/raytracing.h"
+#include "kali/device/shader.h"
 
 KALI_PY_EXPORT(device_raytracing)
 {
@@ -21,4 +22,14 @@ KALI_PY_EXPORT(device_raytracing)
     acceleration_structure //
         .def("kind", &AccelerationStructure::kind)
         .def_prop_ro("device_address", &AccelerationStructure::device_address);
+
+    nb::class_<ShaderTableDesc>(m, "ShaderTableDesc")
+        .def(nb::init<>())
+        .def_rw("program", &ShaderTableDesc::program)
+        .def_rw("ray_gen_entry_points", &ShaderTableDesc::ray_gen_entry_points)
+        .def_rw("miss_entry_points", &ShaderTableDesc::miss_entry_points)
+        .def_rw("hit_group_names", &ShaderTableDesc::hit_group_names)
+        .def_rw("callable_entry_points", &ShaderTableDesc::callable_entry_points);
+
+    nb::class_<ShaderTable, DeviceResource>(m, "ShaderTable");
 }

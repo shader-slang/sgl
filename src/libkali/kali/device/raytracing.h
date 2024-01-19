@@ -58,8 +58,7 @@ private:
 };
 
 struct ShaderTableDesc {
-    // TODO should be a weak_ref
-    ref<ShaderProgram> program;
+    const ShaderProgram* program;
     std::vector<std::string> ray_gen_entry_points;
     std::vector<std::string> miss_entry_points;
     std::vector<std::string> hit_group_names;
@@ -72,14 +71,11 @@ public:
     ShaderTable(ref<Device> device, ShaderTableDesc desc);
     ~ShaderTable();
 
-    const ShaderTableDesc& desc() const { return m_desc; }
-
     gfx::IShaderTable* gfx_shader_table() const { return m_gfx_shader_table; }
 
     std::string to_string() const override;
 
 private:
-    ShaderTableDesc m_desc;
     Slang::ComPtr<gfx::IShaderTable> m_gfx_shader_table;
 };
 

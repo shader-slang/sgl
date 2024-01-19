@@ -52,26 +52,25 @@ std::string AccelerationStructure::to_string() const
 
 ShaderTable::ShaderTable(ref<Device> device, ShaderTableDesc desc)
     : DeviceResource(std::move(device))
-    , m_desc(desc)
 {
     ShortVector<const char*, 16> gfx_ray_gen_entry_points;
-    gfx_ray_gen_entry_points.reserve(m_desc.ray_gen_entry_points.size());
-    for (const auto& name : m_desc.ray_gen_entry_points)
+    gfx_ray_gen_entry_points.reserve(desc.ray_gen_entry_points.size());
+    for (const auto& name : desc.ray_gen_entry_points)
         gfx_ray_gen_entry_points.push_back(name.c_str());
 
     ShortVector<const char*, 16> gfx_miss_entry_points;
-    gfx_miss_entry_points.reserve(m_desc.miss_entry_points.size());
-    for (const auto& name : m_desc.miss_entry_points)
+    gfx_miss_entry_points.reserve(desc.miss_entry_points.size());
+    for (const auto& name : desc.miss_entry_points)
         gfx_miss_entry_points.push_back(name.c_str());
 
     ShortVector<const char*, 16> gfx_hit_group_names;
-    gfx_hit_group_names.reserve(m_desc.hit_group_names.size());
-    for (const auto& name : m_desc.hit_group_names)
+    gfx_hit_group_names.reserve(desc.hit_group_names.size());
+    for (const auto& name : desc.hit_group_names)
         gfx_hit_group_names.push_back(name.c_str());
 
     ShortVector<const char*, 16> gfx_callable_names;
-    gfx_callable_names.reserve(m_desc.callable_entry_points.size());
-    for (const auto& name : m_desc.callable_entry_points)
+    gfx_callable_names.reserve(desc.callable_entry_points.size());
+    for (const auto& name : desc.callable_entry_points)
         gfx_callable_names.push_back(name.c_str());
 
     gfx::IShaderTable::Desc gfx_desc{
@@ -87,7 +86,7 @@ ShaderTable::ShaderTable(ref<Device> device, ShaderTableDesc desc)
         // .callableShaderCount = narrow_cast<gfx::GfxCount>(gfx_callable_names.size()),
         // .callableShaderEntryPointNames = gfx_callable_names.data(),
         // .callableShaderRecordOverwrites = nullptr,
-        .program = m_desc.program->gfx_shader_program(),
+        .program = desc.program->gfx_shader_program(),
     };
 
     SLANG_CALL(m_device->gfx_device()->createShaderTable(gfx_desc, m_gfx_shader_table.writeRef()));
@@ -102,19 +101,9 @@ std::string ShaderTable::to_string() const
 {
     return fmt::format(
         "ShaderTable(\n"
-        "  device={},\n"
-        "  program={},\n"
-        "  ray_gen_entry_points=[{}],\n"
-        "  miss_entry_points=[{}],\n"
-        "  hit_group_names=[{}]\n"
-        "  callable_entry_points=[{}]\n"
+        "  device={}\n"
         ")",
-        m_device,
-        m_desc.program,
-        m_desc.ray_gen_entry_points,
-        m_desc.miss_entry_points,
-        m_desc.hit_group_names,
-        m_desc.callable_entry_points
+        m_device
     );
 }
 

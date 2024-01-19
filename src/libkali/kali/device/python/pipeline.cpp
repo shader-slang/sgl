@@ -19,6 +19,13 @@ KALI_PY_EXPORT(device_pipeline)
 
     nb::class_<HitGroupDesc>(m, "HitGroupDesc")
         .def(nb::init<>())
+        .def(
+            nb::init<std::string, std::string, std::string, std::string>(),
+            "hit_group_name"_a,
+            "closest_hit_entry_point"_a = "",
+            "any_hit_entry_point"_a = "",
+            "intersection_entry_point"_a = ""
+        )
         .def_rw("hit_group_name", &HitGroupDesc::hit_group_name)
         .def_rw("closest_hit_entry_point", &HitGroupDesc::closest_hit_entry_point)
         .def_rw("any_hit_entry_point", &HitGroupDesc::any_hit_entry_point)

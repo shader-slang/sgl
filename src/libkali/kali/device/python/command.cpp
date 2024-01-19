@@ -172,13 +172,13 @@ KALI_PY_EXPORT(device_command)
             "pipeline"_a,
             "shader_object"_a
         )
-        // .def(
-        //     "dispatch_rays",
-        //     &RayTracingPassEncoder::dispatch_rays,
-        //     "ray_gen_shader_index"_a,
-        //     "shader_table"_a,
-        //     "dimensions"_a
-        // );
+        .def(
+            "dispatch_rays",
+            &RayTracingPassEncoder::dispatch_rays,
+            "ray_gen_shader_index"_a,
+            "shader_table"_a,
+            "dimensions"_a
+        )
         .def(
             "build_acceleration_structure",
             [](RayTracingPassEncoder* self,
