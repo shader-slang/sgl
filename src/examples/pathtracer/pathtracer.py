@@ -125,7 +125,8 @@ class CameraController:
 
 
 class Material:
-    pass
+    def __init__(self, base_color=kali.float3(0.5)):
+        self.base_color = base_color
 
 
 class Mesh:
@@ -270,9 +271,15 @@ class Transform:
 class Stage:
     def __init__(self):
         self.camera = Camera()
+        self.materials = []
         self.meshes = []
         self.transforms = []
         self.instances = []
+
+    def add_material(self, material: Material):
+        material_id = len(self.materials)
+        self.materials.append(material)
+        return material_id
 
     def add_mesh(self, mesh: Mesh):
         mesh_id = len(self.meshes)
@@ -284,9 +291,9 @@ class Stage:
         self.transforms.append(transform)
         return transform_id
 
-    def add_instance(self, mesh_id: int, transform_id: int):
+    def add_instance(self, mesh_id: int, material_id: int, transform_id: int):
         instance_id = len(self.instances)
-        self.instances.append((mesh_id, transform_id))
+        self.instances.append((mesh_id, material_id, transform_id))
         return instance_id
 
     @classmethod
@@ -294,13 +301,20 @@ class Stage:
         stage = Stage()
         stage.camera.target = kali.float3(0, 1, 0)
         stage.camera.position = kali.float3(2, 1, 2)
-        quad = stage.add_mesh(Mesh.create_quad([5, 5]))
+        floor_material = stage.add_material(Material(base_color=kali.float3(0.5)))
+        floor = stage.add_mesh(Mesh.create_quad([5, 5]))
+        cube_materials = []
+        for _ in range(10):
+            cube_materials.append(
+                stage.add_material(
+                    Material(base_color=np.random.rand(3).astype(np.float32))
+                )
+            )
         cube = stage.add_mesh(Mesh.create_cube([0.1, 0.1, 0.1]))
         identity = stage.add_transform(Transform())
-        stage.add_instance(quad, identity)
-        stage.add_instance(cube, identity)
+        stage.add_instance(floor, floor_material, identity)
 
-        for _ in range(1000):
+        for i in range(1000):
             transform = Transform()
             transform.translation = (np.random.rand(3) * 2 - 1).astype(np.float32)
             transform.translation[1] += 1
@@ -308,12 +322,21 @@ class Stage:
             transform.rotation = (np.random.rand(3) * 10).astype(np.float32)
             transform.update_matrix()
             id = stage.add_transform(transform)
-            stage.add_instance(cube, id)
+            stage.add_instance(cube, cube_materials[i % len(cube_materials)], id)
 
         return stage
 
 
 class Scene:
+    @dataclass
+    class MaterialDesc:
+        base_color: kali.float3
+
+        def pack(self):
+            return struct.pack(
+                "fff", self.base_color[0], self.base_color[1], self.base_color[2]
+            )
+
     @dataclass
     class MeshDesc:
         vertex_count: int
@@ -333,15 +356,29 @@ class Scene:
     @dataclass
     class InstanceDesc:
         mesh_id: int
+        material_id: int
         transform_id: int
 
         def pack(self):
-            return struct.pack("II", self.mesh_id, self.transform_id)
+            return struct.pack("III", self.mesh_id, self.material_id, self.transform_id)
 
     def __init__(self, device: kali.Device, stage: Stage):
         self.device = device
 
         self.camera = stage.camera
+
+        # Prepare material descriptors
+        self.material_descs = [
+            Scene.MaterialDesc(base_color=m.base_color) for m in stage.materials
+        ]
+        material_descs_data = np.frombuffer(
+            b"".join(d.pack() for d in self.material_descs), dtype=np.uint8
+        ).flatten()
+        self.material_descs_buffer = device.create_buffer(
+            usage=kali.ResourceUsage.shader_resource,
+            debug_name="material_descs_buffer",
+            init_data=material_descs_data,
+        )
 
         # Prepare mesh descriptors
         vertex_count = 0
@@ -361,8 +398,10 @@ class Scene:
 
         # Prepare instance descriptors
         self.instance_descs = []
-        for mesh_id, transform_id in stage.instances:
-            self.instance_descs.append(Scene.InstanceDesc(mesh_id, transform_id))
+        for mesh_id, material_id, transform_id in stage.instances:
+            self.instance_descs.append(
+                Scene.InstanceDesc(mesh_id, material_id, transform_id)
+            )
 
         # Create vertex and index buffers
         vertices = np.concatenate([mesh.vertices for mesh in stage.meshes], axis=0)
@@ -550,6 +589,7 @@ class Scene:
 
     def bind(self, cursor: kali.ShaderCursor):
         cursor["tlas"] = self.tlas
+        cursor["material_descs"] = self.material_descs_buffer
         cursor["vertices"] = self.vertex_buffer
         cursor["indices"] = self.index_buffer
         cursor["mesh_descs"] = self.mesh_descs_buffer

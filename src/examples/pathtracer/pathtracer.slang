@@ -94,6 +94,10 @@ struct Camera {
     }
 };
 
+struct MaterialDesc {
+    float3 base_color;
+};
+
 struct Vertex {
     float3 position;
     float3 normal;
@@ -109,12 +113,14 @@ struct MeshDesc {
 
 struct InstanceDesc {
     uint mesh_id;
+    uint material_id;
     uint transform_id;
 };
 
 struct Scene {
     RaytracingAccelerationStructure tlas;
 
+    StructuredBuffer<MaterialDesc> material_descs;
     StructuredBuffer<Vertex> vertices;
     StructuredBuffer<uint> indices;
     StructuredBuffer<MeshDesc> mesh_descs;
@@ -123,6 +129,12 @@ struct Scene {
     StructuredBuffer<float4x4> inverse_transpose_transforms;
 
     Camera camera;
+
+    MaterialDesc get_material(HitInfo hit_info)
+    {
+        InstanceDesc instance_desc = g_scene.instance_descs[hit_info.instance_id];
+        return g_scene.material_descs[instance_desc.material_id];
+    }
 
     Vertex get_vertex(HitInfo hit_info)
     {
@@ -231,7 +243,8 @@ void trace_path(inout Path path)
         float3 wi = frame.to_local(-path.ray.dir);
         float pdf;
         float3 wo = diffuse_brdf_sample(wi, path.rng.next_2d(), pdf);
-        float3 f = float3(0.5, 0.3, 0.1) * INV_PI;
+        MaterialDesc material = g_scene.get_material(hit);
+        float3 f = material.base_color * INV_PI;
         path.thp *= f * abs(dot(wo, frame.n)) / pdf;
         path.vertex_index++;
         path.ray = Ray(vertex.position + vertex.normal * 1e-6f, frame.to_global(wo));
