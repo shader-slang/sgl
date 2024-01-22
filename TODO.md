@@ -6,5 +6,4 @@
 - implement `weak_ref`
 - add support for texture init data
 - add more type checking to `ShaderCursor`
-- add `quat` python bindings
 - check vector bindings .. if we compare two python lists of different float3 it always returns true

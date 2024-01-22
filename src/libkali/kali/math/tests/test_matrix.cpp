@@ -737,7 +737,7 @@ TEST_CASE("matrix_from_look_at")
             float3(10, 5, 0),
             float3(0, -5, 0),
             float3(0, 1, 0),
-            math::Handedness::RightHanded
+            math::Handedness::right_handed
         );
         CHECK_ALMOST_EQ(m[0], float4(0, 0, -1, 0));
         CHECK_ALMOST_EQ(m[1], float4(-0.707107f, 0.707107f, 0, 3.535535f));
@@ -751,7 +751,7 @@ TEST_CASE("matrix_from_look_at")
             float3(10, 5, 0),
             float3(0, -5, 0),
             float3(0, 1, 0),
-            math::Handedness::LeftHanded
+            math::Handedness::left_handed
         );
         CHECK_ALMOST_EQ(m[0], float4(0, 0, 1, 0));
         CHECK_ALMOST_EQ(m[1], float4(-0.707107f, 0.707107f, 0, 3.535535f));

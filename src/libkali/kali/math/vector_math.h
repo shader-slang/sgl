@@ -1652,6 +1652,22 @@ template<floating_point T, int N>
     return uint4{f32tof16(value.x), f32tof16(value.y), f32tof16(value.z), f32tof16(value.w)};
 }
 
+[[nodiscard]] inline uint2 asuint(const float2& value) noexcept
+{
+    return uint2(asuint(value.x), asuint(value.y));
+}
+
+[[nodiscard]] inline uint3 asuint(const float3& value) noexcept
+{
+    return uint3(asuint(value.x), asuint(value.y), asuint(value.z));
+}
+
+[[nodiscard]] inline uint4 asuint(const float4& value) noexcept
+{
+    return uint4(asuint(value.x), asuint(value.y), asuint(value.z), asuint(value.w));
+}
+
+
 // TODO(@skallweit) should we have implicit scalar -> vector conversion?
 template<floating_point T, int N>
 [[nodiscard]] constexpr vector<T, N> lerp(const vector<T, N>& a, const vector<T, N>& b, const T& s)

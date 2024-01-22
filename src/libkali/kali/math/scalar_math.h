@@ -232,8 +232,8 @@ template<floating_point T>
 // ----------------------------------------------------------------------------
 
 // clang-format off
-[[nodiscard]] inline float f16tof32(uint v) noexcept { return float16_to_float32(v & 0xffff); }
-[[nodiscard]] inline uint f32tof16(float v) noexcept { return float32_to_float16(v); }
+[[nodiscard]] inline float f16tof32(uint32_t v) noexcept { return float16_to_float32(v & 0xffff); }
+[[nodiscard]] inline uint32_t f32tof16(float v) noexcept { return float32_to_float16(v); }
 
 [[nodiscard]] inline float asfloat(uint32_t i) noexcept { return stdx::bit_cast<float>(i); }
 [[nodiscard]] inline float asfloat(int32_t i) noexcept { return stdx::bit_cast<float>(i); }

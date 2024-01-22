@@ -9,6 +9,13 @@
 
 namespace kali::math {
 
+inline void bind_enums(nb::module_& m)
+{
+    nb::enum_<Handedness>(m, "Handedness")
+        .value("right_handed", Handedness::right_handed)
+        .value("left_handed", Handedness::left_handed);
+}
+
 inline void bind_float16(nb::module_& m)
 {
     nb::class_<float16_t> float16(m, "float16_t");
@@ -20,143 +27,143 @@ inline void bind_scalar(nb::module_& m)
 {
     // Floating point checks
 
-    m.def("isfinite", [](float x) { return isfinite(x); });
-    m.def("isfinite", [](double x) { return isfinite(x); });
-    m.def("isfinite", [](float16_t x) { return isfinite(x); });
+    m.def("isfinite", isfinite<float>, "x"_a);
+    m.def("isfinite", isfinite<double>, "x"_a);
+    m.def("isfinite", isfinite<float16_t>, "x"_a);
 
-    m.def("isinf", [](float x) { return isinf(x); });
-    m.def("isinf", [](double x) { return isinf(x); });
-    m.def("isinf", [](float16_t x) { return isinf(x); });
+    m.def("isinf", isinf<float>, "x"_a);
+    m.def("isinf", isinf<double>, "x"_a);
+    m.def("isinf", isinf<float16_t>, "x"_a);
 
-    m.def("isnan", [](float x) { return isnan(x); });
-    m.def("isnan", [](double x) { return isnan(x); });
-    m.def("isnan", [](float16_t x) { return isnan(x); });
+    m.def("isnan", isnan<float>, "x"_a);
+    m.def("isnan", isnan<double>, "x"_a);
+    m.def("isnan", isnan<float16_t>, "x"_a);
 
     // Rounding
 
-    m.def("floor", [](float x) { return floor(x); });
-    m.def("floor", [](double x) { return floor(x); });
-    // m.def("floor", [](float16_t x) { return floor(x); });
+    m.def("floor", floor<float>, "x"_a);
+    m.def("floor", floor<double>, "x"_a);
+    // m.def("floor", floor<float16_t>, "x"_a);
 
-    m.def("ceil", [](float x) { return ceil(x); });
-    m.def("ceil", [](double x) { return ceil(x); });
-    // m.def("ceil", [](float16_t x) { return ceil(x); });
+    m.def("ceil", ceil<float>, "x"_a);
+    m.def("ceil", ceil<double>, "x"_a);
+    // m.def("ceil", ceil<float16_t>, "x"_a);
 
-    m.def("trunc", [](float x) { return trunc(x); });
-    m.def("trunc", [](double x) { return trunc(x); });
-    // m.def("trunc", [](float16_t x) { return trunc(x); });
+    m.def("trunc", trunc<float>, "x"_a);
+    m.def("trunc", trunc<double>, "x"_a);
+    // m.def("trunc", trunc<float16_t>, "x"_a);
 
-    m.def("round", [](float x) { return round(x); });
-    m.def("round", [](double x) { return round(x); });
-    // m.def("round", [](float16_t x) { return round(x); });
+    m.def("round", round<float>, "x"_a);
+    m.def("round", round<double>, "x"_a);
+    // m.def("round", round<float16_t>, "x"_a);
 
     // Exponential
 
-    m.def("pow", [](float x, float y) { return pow(x, y); });
-    m.def("pow", [](double x, double y) { return pow(x, y); });
-    // m.def("pow", [](float16_t x, float16_t y) { return pow(x, y); });
+    m.def("pow", pow<float>, "x"_a, "y"_a);
+    m.def("pow", pow<double>, "x"_a, "y"_a);
+    // m.def("pow", pow<float16_t>, "x"_a, "y"_a);
 
-    m.def("sqrt", [](float x) { return sqrt(x); });
-    m.def("sqrt", [](double x) { return sqrt(x); });
-    // m.def("sqrt", [](float16_t x) { return sqrt(x); });
+    m.def("sqrt", sqrt<float>, "x"_a);
+    m.def("sqrt", sqrt<double>, "x"_a);
+    // m.def("sqrt", sqrt<float16_t>, "x"_a);
 
-    m.def("rsqrt", [](float x) { return rsqrt(x); });
-    m.def("rsqrt", [](double x) { return rsqrt(x); });
-    // m.def("rsqrt", [](float16_t x) { return rsqrt(x); });
+    m.def("rsqrt", rsqrt<float>, "x"_a);
+    m.def("rsqrt", rsqrt<double>, "x"_a);
+    // m.def("rsqrt", rsqrt<float16_t>, "x"_a);
 
-    m.def("exp", [](float x) { return exp(x); });
-    m.def("exp", [](double x) { return exp(x); });
-    m.def("exp", [](float16_t x) { return exp(x); });
+    m.def("exp", exp<float>, "x"_a);
+    m.def("exp", exp<double>, "x"_a);
+    m.def("exp", exp<float16_t>, "x"_a);
 
-    m.def("exp2", [](float x) { return exp2(x); });
-    m.def("exp2", [](double x) { return exp2(x); });
-    m.def("exp2", [](float16_t x) { return exp2(x); });
+    m.def("exp2", exp2<float>, "x"_a);
+    m.def("exp2", exp2<double>, "x"_a);
+    m.def("exp2", exp2<float16_t>, "x"_a);
 
-    m.def("log", [](float x) { return log(x); });
-    m.def("log", [](double x) { return log(x); });
-    m.def("log", [](float16_t x) { return log(x); });
+    m.def("log", log<float>, "x"_a);
+    m.def("log", log<double>, "x"_a);
+    m.def("log", log<float16_t>, "x"_a);
 
-    m.def("log2", [](float x) { return log2(x); });
-    m.def("log2", [](double x) { return log2(x); });
-    // m.def("log2", [](float16_t x) { return log2(x); });
+    m.def("log2", log2<float>, "x"_a);
+    m.def("log2", log2<double>, "x"_a);
+    // m.def("log2", log2<float16_t>, "x"_a);
 
-    m.def("log10", [](float x) { return log10(x); });
-    m.def("log10", [](double x) { return log10(x); });
-    // m.def("log10", [](float16_t x) { return log10(x); });
+    m.def("log10", log10<float>, "x"_a);
+    m.def("log10", log10<double>, "x"_a);
+    // m.def("log10", log10<float16_t>, "x"_a);
 
     // Trigonometry
 
-    m.def("radians", [](float x) { return radians(x); });
-    m.def("radians", [](double x) { return radians(x); });
+    m.def("radians", radians<float>, "x"_a);
+    m.def("radians", radians<double>, "x"_a);
 
-    m.def("degrees", [](float x) { return degrees(x); });
-    m.def("degrees", [](double x) { return degrees(x); });
+    m.def("degrees", degrees<float>, "x"_a);
+    m.def("degrees", degrees<double>, "x"_a);
 
-    m.def("sin", [](float x) { return sin(x); });
-    m.def("sin", [](double x) { return sin(x); });
+    m.def("sin", sin<float>, "x"_a);
+    m.def("sin", sin<double>, "x"_a);
 
-    m.def("cos", [](float x) { return cos(x); });
-    m.def("cos", [](double x) { return cos(x); });
+    m.def("cos", cos<float>, "x"_a);
+    m.def("cos", cos<double>, "x"_a);
 
-    m.def("tan", [](float x) { return tan(x); });
-    m.def("tan", [](double x) { return tan(x); });
+    m.def("tan", tan<float>, "x"_a);
+    m.def("tan", tan<double>, "x"_a);
 
-    m.def("asin", [](float x) { return asin(x); });
-    m.def("asin", [](double x) { return asin(x); });
+    m.def("asin", asin<float>, "x"_a);
+    m.def("asin", asin<double>, "x"_a);
 
-    m.def("acos", [](float x) { return acos(x); });
-    m.def("acos", [](double x) { return acos(x); });
+    m.def("acos", acos<float>, "x"_a);
+    m.def("acos", acos<double>, "x"_a);
 
-    m.def("atan", [](float x) { return atan(x); });
-    m.def("atan", [](double x) { return atan(x); });
+    m.def("atan", atan<float>, "x"_a);
+    m.def("atan", atan<double>, "x"_a);
 
-    m.def("atan2", [](float y, float x) { return atan2(y, x); });
-    m.def("atan2", [](double y, double x) { return atan2(y, x); });
+    m.def("atan2", atan2<float>, "y"_a, "x"_a);
+    m.def("atan2", atan2<double>, "y"_a, "x"_a);
 
-    m.def("sinh", [](float x) { return sinh(x); });
-    m.def("sinh", [](double x) { return sinh(x); });
+    m.def("sinh", sinh<float>, "x"_a);
+    m.def("sinh", sinh<double>, "x"_a);
 
-    m.def("cosh", [](float x) { return cosh(x); });
-    m.def("cosh", [](double x) { return cosh(x); });
+    m.def("cosh", cosh<float>, "x"_a);
+    m.def("cosh", cosh<double>, "x"_a);
 
-    m.def("tanh", [](float x) { return tanh(x); });
-    m.def("tanh", [](double x) { return tanh(x); });
+    m.def("tanh", tanh<float>, "x"_a);
+    m.def("tanh", tanh<double>, "x"_a);
 
     // Misc
 
-    m.def("fmod", [](float x, float y) { return fmod(x, y); });
-    m.def("fmod", [](double x, double y) { return fmod(x, y); });
+    m.def("fmod", fmod<float>, "x"_a, "y"_a);
+    m.def("fmod", fmod<double>, "x"_a, "y"_a);
 
-    m.def("frac", [](float x) { return frac(x); });
-    m.def("frac", [](double x) { return frac(x); });
+    m.def("frac", frac<float>, "x"_a);
+    m.def("frac", frac<double>, "x"_a);
 
-    m.def("lerp", [](float x, float y, float s) { return lerp(x, y, s); });
-    m.def("lerp", [](double x, double y, double s) { return lerp(x, y, s); });
+    m.def("lerp", lerp<float>, "x"_a, "y"_a, "s"_a);
+    m.def("lerp", lerp<double>, "x"_a, "y"_a, "s"_a);
 
-    m.def("rcp", [](float x) { return rcp(x); });
-    m.def("rcp", [](double x) { return rcp(x); });
+    m.def("rcp", rcp<float>, "x"_a);
+    m.def("rcp", rcp<double>, "x"_a);
 
-    m.def("saturate", [](float x) { return saturate(x); });
-    m.def("saturate", [](double x) { return saturate(x); });
+    m.def("saturate", saturate<float>, "x"_a);
+    m.def("saturate", saturate<double>, "x"_a);
 
-    m.def("step", [](float x, float y) { return step(x, y); });
-    m.def("step", [](double x, double y) { return step(x, y); });
+    m.def("step", step<float>, "x"_a, "y"_a);
+    m.def("step", step<double>, "x"_a, "y"_a);
 
-    m.def("smoothstep", [](float min_, float max_, float x) { return smoothstep(min_, max_, x); });
-    m.def("smoothstep", [](double min_, double max_, double x) { return smoothstep(min_, max_, x); });
+    m.def("smoothstep", smoothstep<float>, "min"_a, "max"_a, "x"_a);
+    m.def("smoothstep", smoothstep<double>, "min"_a, "max"_a, "x"_a);
 
     // Conversion
 
-    m.def("f16tof32", [](uint v) { return f16tof32(v); });
-    m.def("f32tof16", [](float v) { return f32tof16(v); });
+    m.def("f16tof32", nb::overload_cast<uint>(f16tof32), "x"_a);
+    m.def("f32tof16", nb::overload_cast<float>(f32tof16), "x"_a);
 
-    m.def("asfloat", [](uint32_t i) { return asfloat(i); });
-    m.def("asfloat", [](int32_t i) { return asfloat(i); });
-    m.def("asfloat16", [](uint16_t i) { return asfloat16(i); });
+    m.def("asfloat", nb::overload_cast<uint32_t>(asfloat), "x"_a);
+    m.def("asfloat", nb::overload_cast<int32_t>(asfloat), "x"_a);
+    m.def("asfloat16", asfloat16, "x"_a);
 
-    m.def("asuint", [](float f) { return asuint(f); });
-    m.def("asint", [](float f) { return asint(f); });
-    m.def("asuint16", [](float16_t f) { return asuint16(f); });
+    m.def("asuint", nb::overload_cast<float>(asuint), "x"_a);
+    m.def("asint", nb::overload_cast<float>(asint), "x"_a);
+    m.def("asuint16", asuint16, "x"_a);
 }
 
 } // namespace kali::math
@@ -164,6 +171,8 @@ inline void bind_scalar(nb::module_& m)
 KALI_PY_EXPORT(math_scalar)
 {
     nb::module_ math = m.attr("math");
+
+    kali::math::bind_enums(math);
 
     kali::math::bind_float16(math);
     kali::math::bind_scalar(math);

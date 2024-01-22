@@ -3,6 +3,7 @@
 #include "kali/math/scalar_types.h"
 #include "kali/math/vector_types.h"
 
+#include <array>
 #include <type_traits>
 
 namespace kali::math {
@@ -28,7 +29,7 @@ struct quat {
 
     T x, y, z, w;
 
-    quat()
+    constexpr quat() noexcept
         : x{T(0)}
         , y{T(0)}
         , z{T(0)}
@@ -36,18 +37,28 @@ struct quat {
     {
     }
 
-    explicit quat(const vector<T, 3>& xyz, const T& w)
+    explicit constexpr quat(const vector<T, 3>& xyz, const T& w) noexcept
         : x{xyz.x}
         , y{xyz.y}
         , z{xyz.z}
         , w{w}
     {
     }
-    explicit quat(const T& x, const T& y, const T& z, const T& w)
+
+    explicit constexpr quat(const T& x, const T& y, const T& z, const T& w) noexcept
         : x{x}
         , y{y}
         , z{z}
         , w{w}
+    {
+    }
+
+    template<typename U>
+    explicit constexpr quat(const std::array<U, 4>& a) noexcept
+        : x{T(a[0])}
+        , y{T(a[1])}
+        , z{T(a[2])}
+        , w{T(a[3])}
     {
     }
 

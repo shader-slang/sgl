@@ -11,8 +11,8 @@
 namespace kali::math {
 
 enum class Handedness {
-    RightHanded,
-    LeftHanded,
+    right_handed,
+    left_handed,
 };
 
 using uint = uint32_t;

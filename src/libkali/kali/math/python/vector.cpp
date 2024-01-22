@@ -18,19 +18,6 @@ void bind_vector_type(nb::module_& m, const char* name)
 
     nb::class_<T> vec(m, name);
 
-    // Field access
-
-    vec.def_rw("x", &T::x);
-    if constexpr (dimension >= 2)
-        vec.def_rw("y", &T::y);
-    if constexpr (dimension >= 3)
-        vec.def_rw("z", &T::z);
-    if constexpr (dimension >= 4)
-        vec.def_rw("w", &T::w);
-
-    vec.def("__getitem__", [](const T& self, int i) { return self[i]; });
-    vec.def("__setitem__", [](T& self, int i, value_type v) { self[i] = v; });
-
     // Constructors
 
     auto init_empty = [](T* self) { new (self) T(value_type(0)); };
@@ -46,6 +33,21 @@ void bind_vector_type(nb::module_& m, const char* name)
         vec.def(nb::init<value_type, value_type, value_type, value_type>(), "x"_a, "y"_a, "z"_a, "w"_a);
 
     vec.def(nb::init_implicit<std::array<value_type, dimension>>(), "a"_a);
+
+    // Field access
+
+    vec.def_rw("x", &T::x);
+    if constexpr (dimension >= 2)
+        vec.def_rw("y", &T::y);
+    if constexpr (dimension >= 3)
+        vec.def_rw("z", &T::z);
+    if constexpr (dimension >= 4)
+        vec.def_rw("w", &T::w);
+
+    vec.def("__getitem__", [](const T& self, int i) { return self[i]; });
+    vec.def("__setitem__", [](T& self, int i, value_type v) { self[i] = v; });
+
+    // Conversion
 
     auto to_string_ = [](const T& self) { return to_string(self); };
     vec.def("__repr__", to_string_);
@@ -163,101 +165,138 @@ void bind_vector_type(nb::module_& m, const char* name)
 
     // Intrinsics
 
+#define WRAP_INTRINSIC_X(name) [](const T& x) { return name(x); }, "x"_a
+#define WRAP_INTRINSIC_XY(name) [](const T& x, const T& y) { return name(x, y); }, "x"_a, "y"_a
+#define WRAP_INTRINSIC_YX(name) [](const T& y, const T& x) { return name(y, x); }, "y"_a, "x"_a
+
     if constexpr (BindIntrinsics) {
 
         // Reductions
 
         if constexpr (boolean<value_type>) {
-            m.def("any", [](const T& v) { return any(v); });
-            m.def("all", [](const T& v) { return all(v); });
-            m.def("none", [](const T& v) { return none(v); });
+            m.def("any", WRAP_INTRINSIC_X(any));
+            m.def("all", WRAP_INTRINSIC_X(all));
+            m.def("none", WRAP_INTRINSIC_X(none));
         }
 
         // Basic functions
 
         if constexpr (arithmetic<value_type>) {
-            m.def("min", [](const T& x, const T& y) { return min(x, y); });
-            m.def("max", [](const T& x, const T& y) { return max(x, y); });
-            m.def("clamp", [](const T& x, const T& min_, const T& max_) { return clamp(x, min_, max_); });
+            m.def("min", WRAP_INTRINSIC_XY(min));
+            m.def("max", WRAP_INTRINSIC_XY(max));
+            m.def(
+                "clamp",
+                [](const T& x, const T& min_, const T& max_) { return clamp(x, min_, max_); },
+                "x"_a,
+                "min"_a,
+                "max"_a
+            );
         }
 
         if constexpr (signed_number<value_type>) {
-            m.def("abs", [](const T& x) { return abs(x); });
-            m.def("sign", [](const T& x) { return sign(x); });
+            m.def("abs", WRAP_INTRINSIC_X(abs));
+            m.def("sign", WRAP_INTRINSIC_X(sign));
         }
 
         // Floating point checks
 
         if constexpr (floating_point<value_type>) {
-            m.def("isfinite", [](const T& x) { return isfinite(x); });
-            m.def("isinf", [](const T& x) { return isinf(x); });
-            m.def("isnan", [](const T& x) { return isnan(x); });
+            m.def("isfinite", WRAP_INTRINSIC_X(isfinite));
+            m.def("isinf", WRAP_INTRINSIC_X(isinf));
+            m.def("isnan", WRAP_INTRINSIC_X(isnan));
         }
 
         // Rounding
 
         if constexpr (floating_point<value_type>) {
-            m.def("floor", [](const T& x) { return floor(x); });
-            m.def("ceil", [](const T& x) { return ceil(x); });
-            m.def("trunc", [](const T& x) { return trunc(x); });
-            m.def("round", [](const T& x) { return round(x); });
+            m.def("floor", WRAP_INTRINSIC_X(floor));
+            m.def("ceil", WRAP_INTRINSIC_X(ceil));
+            m.def("trunc", WRAP_INTRINSIC_X(trunc));
+            m.def("round", WRAP_INTRINSIC_X(round));
         }
 
         // Exponential
 
         if constexpr (floating_point<value_type>) {
-            m.def("pow", [](const T& x, const T& y) { return pow(x, y); });
-            m.def("sqrt", [](const T& x) { return sqrt(x); });
-            m.def("rsqrt", [](const T& x) { return rsqrt(x); });
-            m.def("exp", [](const T& x) { return exp(x); });
-            m.def("exp2", [](const T& x) { return exp2(x); });
-            m.def("log", [](const T& x) { return log(x); });
-            m.def("log2", [](const T& x) { return log2(x); });
-            m.def("log10", [](const T& x) { return log10(x); });
+            m.def("pow", WRAP_INTRINSIC_XY(pow));
+            m.def("sqrt", WRAP_INTRINSIC_X(sqrt));
+            m.def("rsqrt", WRAP_INTRINSIC_X(rsqrt));
+            m.def("exp", WRAP_INTRINSIC_X(exp));
+            m.def("exp2", WRAP_INTRINSIC_X(exp2));
+            m.def("log", WRAP_INTRINSIC_X(log));
+            m.def("log2", WRAP_INTRINSIC_X(log2));
+            m.def("log10", WRAP_INTRINSIC_X(log10));
         }
 
         // Trigonometry
 
         if constexpr (floating_point<value_type>) {
-            m.def("radians", [](const T& x) { return radians(x); });
-            m.def("degrees", [](const T& x) { return degrees(x); });
-            m.def("sin", [](const T& x) { return sin(x); });
-            m.def("cos", [](const T& x) { return cos(x); });
-            m.def("tan", [](const T& x) { return tan(x); });
-            m.def("asin", [](const T& x) { return asin(x); });
-            m.def("acos", [](const T& x) { return acos(x); });
-            m.def("atan", [](const T& x) { return atan(x); });
-            m.def("atan2", [](const T& y, const T& x) { return atan2(y, x); });
-            m.def("sinh", [](const T& x) { return sinh(x); });
-            m.def("cosh", [](const T& x) { return cosh(x); });
-            m.def("tanh", [](const T& x) { return tanh(x); });
+            m.def("radians", WRAP_INTRINSIC_X(radians));
+            m.def("degrees", WRAP_INTRINSIC_X(degrees));
+            m.def("sin", WRAP_INTRINSIC_X(sin));
+            m.def("cos", WRAP_INTRINSIC_X(cos));
+            m.def("tan", WRAP_INTRINSIC_X(tan));
+            m.def("asin", WRAP_INTRINSIC_X(asin));
+            m.def("acos", WRAP_INTRINSIC_X(acos));
+            m.def("atan", WRAP_INTRINSIC_X(atan));
+            m.def("atan2", WRAP_INTRINSIC_YX(atan2));
+            m.def("sinh", WRAP_INTRINSIC_X(sinh));
+            m.def("cosh", WRAP_INTRINSIC_X(cosh));
+            m.def("tanh", WRAP_INTRINSIC_X(tanh));
         }
 
         // Misc
 
         if constexpr (floating_point<value_type>) {
-            m.def("fmod", [](const T& x, const T& y) { return fmod(x, y); });
-            m.def("frac", [](const T& x) { return frac(x); });
-            m.def("lerp", [](const T& x, const T& y, const T& s) { return lerp(x, y, s); });
-            m.def("lerp", [](const T& x, const T& y, const value_type& s) { return lerp(x, y, s); });
-            m.def("rcp", [](const T& x) { return rcp(x); });
-            m.def("saturate", [](const T& x) { return saturate(x); });
-            m.def("smoothstep", [](const T& min_, const T& max_, const T& x) { return smoothstep(min_, max_, x); });
-            m.def("step", [](const T& x, const T& y) { return step(x, y); });
+            m.def("fmod", WRAP_INTRINSIC_XY(fmod));
+            m.def("frac", WRAP_INTRINSIC_X(frac));
+            m.def(
+                "lerp",
+                [](const T& x, const T& y, const T& s) { return lerp(x, y, s); },
+                "x"_a,
+                "y"_a,
+                "s"_a
+            );
+            m.def(
+                "lerp",
+                [](const T& x, const T& y, const value_type& s) { return lerp(x, y, s); },
+                "x"_a,
+                "y"_a,
+                "s"_a
+            );
+            m.def("rcp", WRAP_INTRINSIC_X(rcp));
+            m.def("saturate", WRAP_INTRINSIC_X(saturate));
+            m.def(
+                "smoothstep",
+                [](const T& min_, const T& max_, const T& x) { return smoothstep(min_, max_, x); },
+                "min"_a,
+                "max"_a,
+                "x"_a
+            );
+            m.def("step", WRAP_INTRINSIC_XY(step));
         }
 
         if constexpr (arithmetic<value_type> && !boolean<value_type>) {
-            m.def("dot", [](const T& x, const T& y) { return dot(x, y); });
+            m.def("dot", WRAP_INTRINSIC_XY(dot));
             if constexpr (dimension == 3)
-                m.def("cross", [](const T& x, const T& y) { return cross(x, y); });
+                m.def("cross", WRAP_INTRINSIC_XY(cross));
         }
 
         if constexpr (floating_point<value_type>) {
-            m.def("length", [](const T& x) { return length(x); });
-            m.def("normalize", [](const T& x) { return normalize(x); });
-            m.def("reflect", [](const T& i, const T& n) { return reflect(i, n); });
+            m.def("length", WRAP_INTRINSIC_X(length));
+            m.def("normalize", WRAP_INTRINSIC_X(normalize));
+            m.def(
+                "reflect",
+                [](const T& i, const T& n) { return reflect(i, n); },
+                "i"_a,
+                "n"_a
+            );
         }
     }
+
+#undef WRAP_INTRINSIC_X
+#undef WRAP_INTRINSIC_XY
+#undef WRAP_INTRINSIC_YX
 }
 
 inline void bind_vector(nb::module_& m)
@@ -283,13 +322,20 @@ inline void bind_vector(nb::module_& m)
     bind_vector_type<bool3>(m, "bool3");
     bind_vector_type<bool4>(m, "bool4");
 
-    m.def("f16tof32", [](const uint2& value) { return f16tof32(value); });
-    m.def("f16tof32", [](const uint3& value) { return f16tof32(value); });
-    m.def("f16tof32", [](const uint4& value) { return f16tof32(value); });
+#define WRAP_INTRINSIC_X(name, type) [](const type& x) { return name(x); }, "x"_a
 
-    m.def("f32tof16", [](const float2& value) { return f32tof16(value); });
-    m.def("f32tof16", [](const float3& value) { return f32tof16(value); });
-    m.def("f32tof16", [](const float4& value) { return f32tof16(value); });
+    m.def("f16tof32", WRAP_INTRINSIC_X(f16tof32, uint2));
+    m.def("f16tof32", WRAP_INTRINSIC_X(f16tof32, uint3));
+    m.def("f16tof32", WRAP_INTRINSIC_X(f16tof32, uint4));
+    m.def("f32tof16", WRAP_INTRINSIC_X(f32tof16, float2));
+    m.def("f32tof16", WRAP_INTRINSIC_X(f32tof16, float3));
+    m.def("f32tof16", WRAP_INTRINSIC_X(f32tof16, float4));
+
+    m.def("asuint", WRAP_INTRINSIC_X(asuint, float2));
+    m.def("asuint", WRAP_INTRINSIC_X(asuint, float3));
+    m.def("asuint", WRAP_INTRINSIC_X(asuint, float4));
+
+#undef WRAP_INTRINSIC_X
 }
 
 } // namespace kali::math

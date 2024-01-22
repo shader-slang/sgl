@@ -630,6 +630,12 @@ template<floating_point T>
     return m;
 }
 
+template<floating_point T>
+[[nodiscard]] inline matrix<T, 4, 4> matrix_from_rotation_xyz(const vector<T, 3>& angles)
+{
+    return matrix_from_rotation_xyz(angles.x, angles.y, angles.z);
+}
+
 /// Creates a scaling matrix.
 template<floating_point T>
 [[nodiscard]] inline matrix<T, 4, 4> matrix_from_scaling(const vector<T, 3>& v)
@@ -651,10 +657,10 @@ template<floating_point T>
     const vector<T, 3>& eye,
     const vector<T, 3>& center,
     const vector<T, 3>& up,
-    Handedness handedness = Handedness::RightHanded
+    Handedness handedness = Handedness::right_handed
 )
 {
-    vector<T, 3> f(handedness == Handedness::RightHanded ? normalize(eye - center) : normalize(center - eye));
+    vector<T, 3> f(handedness == Handedness::right_handed ? normalize(eye - center) : normalize(center - eye));
     vector<T, 3> r(normalize(cross(up, f)));
     vector<T, 3> u(cross(f, r));
 
@@ -732,7 +738,7 @@ struct fmt::formatter<kali::math::matrix<T, R, C>> : formatter<typename kali::ma
     {
         auto out = ctx.out();
         for (int r = 0; r < R; ++r) {
-            out = ::fmt::format_to(out, "{}", (r == 0) ? "{" : ", ");
+            out = ::fmt::format_to(out, "{}", (r == 0) ? "{" : ",\n ");
             out = formatter<row_type>::format(matrix.get_row(r), ctx);
         }
         out = fmt::format_to(out, "}}");

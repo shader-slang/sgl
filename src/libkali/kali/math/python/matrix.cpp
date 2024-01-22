@@ -19,10 +19,43 @@ void bind_matrix_type(nb::module_& m, const char* name)
     using row_type = typename T::row_type;
     using col_type = typename T::col_type;
 
+    // Constructors
+
     mat.def(nb::init<>());
 
     // Initialization from array (to allow implicit conversion from python lists).
     mat.def(nb::init_implicit<std::array<value_type, rows * cols>>());
+
+    // Initialization from ndarray.
+    mat.def(
+        "__init__",
+        [](T* self, nb::ndarray<value_type, nb::shape<rows, cols>> a)
+        {
+            new (self) T();
+            for (int c = 0; c < cols; ++c)
+                for (int r = 0; r < rows; ++r)
+                    (*self)[r][c] = a(r, c);
+        }
+    );
+    nb::implicitly_convertible<nb::ndarray<value_type, nb::shape<rows, cols>>, T>();
+
+    if constexpr (rows == 4 && cols == 4) {
+        mat.def(nb::init<matrix<value_type, 3, 3>>());
+        mat.def(nb::init<matrix<value_type, 3, 4>>());
+    }
+    if constexpr (rows == 3 && cols == 4) {
+        mat.def(nb::init<matrix<value_type, 3, 3>>());
+        mat.def(nb::init<matrix<value_type, 4, 4>>());
+    }
+    if constexpr (rows == 3 && cols == 3) {
+        mat.def(nb::init<matrix<value_type, 4, 4>>());
+        mat.def(nb::init<matrix<value_type, 3, 4>>());
+    }
+
+    mat.def_static("zeros", &T::zeros);
+    mat.def_static("identity", &T::identity);
+
+    // Field access
 
     mat.def("__getitem__", [](const T& self, int i) { return self[i]; });
     mat.def("__setitem__", [](T& self, int i, const row_type& v) { self[i] = v; });
@@ -35,15 +68,17 @@ void bind_matrix_type(nb::module_& m, const char* name)
     mat.def("get_col", &T::get_col, "col"_a);
     mat.def("set_col", &T::set_col, "col"_a, "value"_a);
 
-    auto to_string_ = [](const T& self) { return to_string(self); };
-    mat.def("__repr__", to_string_);
-    mat.def("__str__", to_string_);
+    // Conversion
 
-    mat.def_static("zeros", &T::zeros);
-    mat.def_static("identity", &T::identity);
-
-    mat.def(nb::self == nb::self);
-    mat.def(nb::self != nb::self);
+    mat.def(
+        "__dlpack__",
+        [](nb::handle_t<T> self)
+        {
+            const T& m = nb::cast<const T&>(self);
+            const size_t shape[2] = {T::rows, T::cols};
+            return nb::ndarray<value_type>((void*)(m.data()), 2, shape, self);
+        }
+    );
 
     mat.def(
         "to_numpy",
@@ -54,30 +89,53 @@ void bind_matrix_type(nb::module_& m, const char* name)
         }
     );
 
-    m.def("transpose", [](const T& m) { return transpose(m); });
+    auto to_string_ = [](const T& self) { return to_string(self); };
+    mat.def("__repr__", to_string_);
+    mat.def("__str__", to_string_);
+
+    // Operators
+
+    mat.def(nb::self == nb::self);
+    mat.def(nb::self != nb::self);
+
+    // Intrinsics
+
+    m.def(
+        "transpose",
+        [](const T& x) { return transpose(x); },
+        "x"_a
+    );
 
     if constexpr (rows == cols) {
-        m.def("determinant", [](const T& m) { return determinant(m); });
-        m.def("inverse", [](const T& m) { return inverse(m); });
+        m.def(
+            "determinant",
+            [](const T& x) { return determinant(x); },
+            "x"_a
+        );
+        m.def(
+            "inverse",
+            [](const T& x) { return inverse(x); },
+            "x"_a
+        );
     }
 
     m.def(
         "mul",
-        [](const matrix<value_type, rows, cols>& a, const matrix<value_type, cols, rows>& b) { return mul(a, b); },
-        "a"_a,
-        "b"_a
+        [](const matrix<value_type, rows, cols>& x, const matrix<value_type, cols, rows>& y) { return mul(x, y); },
+        "x"_a,
+        "y"_a
     );
     m.def(
         "mul",
-        [](const T& a, const row_type& b) { return mul(a, b); },
-        "a"_a,
-        "b"_a
+        [](const T& x, const row_type& y) { return mul(x, y); },
+        "x"_a,
+        "y"_a
     );
     m.def(
         "mul",
-        [](const col_type& a, const T& b) { return mul(a, b); },
-        "a"_a,
-        "b"_a
+        [](const col_type& x, const T& y) { return mul(x, y); },
+        "x"_a,
+        "y"_a
     );
 }
 
@@ -89,9 +147,24 @@ inline void bind_matrix(nb::module_& m)
     bind_matrix_type<float3x4>(m, "float3x4");
     bind_matrix_type<float4x4>(m, "float4x4");
 
-    m.def("transform_point", [](const float4x4& m, const float3& v) { return transform_point(m, v); });
-    m.def("transform_vector", [](const float3x3& m, const float3& v) { return transform_vector(m, v); });
-    m.def("transform_vector", [](const float4x4& m, const float3& v) { return transform_vector(m, v); });
+    m.def(
+        "transform_point",
+        [](const float4x4& m, const float3& v) { return transform_point(m, v); },
+        "m"_a,
+        "v"_a
+    );
+    m.def(
+        "transform_vector",
+        [](const float3x3& m, const float3& v) { return transform_vector(m, v); },
+        "m"_a,
+        "v"_a
+    );
+    m.def(
+        "transform_vector",
+        [](const float4x4& m, const float3& v) { return transform_vector(m, v); },
+        "m"_a,
+        "v"_a
+    );
 
     m.def(
         "translate",
@@ -115,12 +188,83 @@ inline void bind_matrix(nb::module_& m)
 
     m.def(
         "perspective",
-        [](float fovy, float aspect, float z_near, float z_far) { return perspective(fovy, aspect, z_near, z_far); }
+        [](float fovy, float aspect, float z_near, float z_far) { return perspective(fovy, aspect, z_near, z_far); },
+        "fovy"_a,
+        "aspect"_a,
+        "z_near"_a,
+        "z_far"_a
     );
     m.def(
         "ortho",
         [](float left, float right, float bottom, float top, float z_near, float z_far)
-        { return ortho(left, right, bottom, top, z_near, z_far); }
+        { return ortho(left, right, bottom, top, z_near, z_far); },
+        "left"_a,
+        "right"_a,
+        "bottom"_a,
+        "top"_a,
+        "z_near"_a,
+        "z_far"_a
+    );
+
+    m.def(
+        "matrix_from_translation",
+        [](const float3& v) { return matrix_from_translation(v); },
+        "v"_a
+    );
+
+    m.def(
+        "matrix_from_scaling",
+        [](const float3& v) { return matrix_from_scaling(v); },
+        "v"_a
+    );
+
+    m.def(
+        "matrix_from_rotation",
+        [](float angle, const float3& axis) { return matrix_from_rotation(angle, axis); },
+        "angle"_a,
+        "axis"_a
+    );
+
+    m.def(
+        "matrix_from_rotation_x",
+        [](float angle) { return matrix_from_rotation_x(angle); },
+        "angle"_a
+    );
+    m.def(
+        "matrix_from_rotation_y",
+        [](float angle) { return matrix_from_rotation_y(angle); },
+        "angle"_a
+    );
+    m.def(
+        "matrix_from_rotation_z",
+        [](float angle) { return matrix_from_rotation_z(angle); },
+        "angle"_a
+    );
+    m.def(
+        "matrix_from_rotation_xyz",
+        [](float angle_x, float angle_y, float angle_z) { return matrix_from_rotation_xyz(angle_x, angle_y, angle_z); },
+        "angle_x"_a,
+        "angle_y"_a,
+        "angle_z"_a
+    );
+    m.def(
+        "matrix_from_rotation_xyz",
+        [](const float3& angles) { return matrix_from_rotation_xyz(angles); },
+        "angles"_a
+    );
+    m.def(
+        "matrix_from_look_at",
+        [](const float3& eye, const float3& center, const float3& up, Handedness handedness)
+        { return matrix_from_look_at(eye, center, up, handedness); },
+        "eye"_a,
+        "center"_a,
+        "up"_a,
+        "handedness"_a = Handedness::right_handed
+    );
+    m.def(
+        "matrix_from_quat",
+        [](const quatf& q) { return matrix_from_quat(q); },
+        "q"_a
     );
 }
 

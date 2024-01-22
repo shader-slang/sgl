@@ -51,7 +51,7 @@ struct vector<T, 1> {
     }
 
     template<typename U>
-    constexpr vector(const std::array<U, 1>& a) noexcept
+    explicit constexpr vector(const std::array<U, 1>& a) noexcept
         : x{T(a[0])}
     {
     }
@@ -112,7 +112,7 @@ struct vector<T, 2> {
     }
 
     template<typename U>
-    constexpr vector(const std::array<U, 2>& a) noexcept
+    explicit constexpr vector(const std::array<U, 2>& a) noexcept
         : x{T(a[0])}
         , y{T(a[1])}
     {
@@ -181,7 +181,7 @@ struct vector<T, 3> {
     }
 
     template<typename U>
-    constexpr vector(const std::array<U, 3>& a) noexcept
+    explicit constexpr vector(const std::array<U, 3>& a) noexcept
         : x{T(a[0])}
         , y{T(a[1])}
         , z{T(a[2])}
@@ -260,7 +260,7 @@ struct vector<T, 4> {
     }
 
     template<typename U>
-    constexpr vector(const std::array<U, 4>& a) noexcept
+    explicit constexpr vector(const std::array<U, 4>& a) noexcept
         : x{T(a[0])}
         , y{T(a[1])}
         , z{T(a[2])}

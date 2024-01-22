@@ -229,35 +229,35 @@ quat<T> inverse(const quat<T>& q)
 
 /// Linear interpolation.
 template<typename T>
-[[nodiscard]] constexpr quat<T> lerp(const quat<T>& q1, const quat<T>& q2, T t)
+[[nodiscard]] constexpr quat<T> lerp(const quat<T>& x, const quat<T>& y, T t)
 {
-    return q1 * (T(1) - t) + q2 * t;
+    return x * (T(1) - t) + y * t;
 }
 
 /// Spherical linear interpolation.
 template<typename T>
-[[nodiscard]] constexpr quat<T> slerp(const quat<T>& q1, const quat<T>& q2_, T t)
+[[nodiscard]] constexpr quat<T> slerp(const quat<T>& x, const quat<T>& y_, T t)
 {
-    quat<T> q2 = q2_;
+    quat<T> y = y_;
 
-    T cosTheta = dot(q1, q2);
+    T cos_theta = dot(x, y);
 
-    // If cosTheta < 0, the interpolation will take the long way around the sphere.
+    // If cos_theta < 0, the interpolation will take the long way around the sphere.
     // To fix this, one quat must be negated.
-    if (cosTheta < T(0)) {
-        q2 = -q2;
-        cosTheta = -cosTheta;
+    if (cos_theta < T(0)) {
+        y = -y;
+        cos_theta = -cos_theta;
     }
 
-    // Perform a linear interpolation when cosTheta is close to 1 to avoid side effect of sin(angle) becoming a zero
+    // Perform a linear interpolation when cos_theta is close to 1 to avoid side effect of sin(angle) becoming a zero
     // denominator
-    if (cosTheta > T(1) - std::numeric_limits<T>::epsilon()) {
+    if (cos_theta > T(1) - std::numeric_limits<T>::epsilon()) {
         // Linear interpolation
-        return lerp(q1, q2, t);
+        return lerp(x, y, t);
     } else {
         // Essential Mathematics, page 467
-        T angle = acos(cosTheta);
-        return (sin((T(1) - t) * angle) * q1 + sin(t * angle) * q2) / sin(angle);
+        T angle = acos(cos_theta);
+        return (sin((T(1) - t) * angle) * x + sin(t * angle) * y) / sin(angle);
     }
 }
 
@@ -319,38 +319,38 @@ template<typename T>
 
 /**
  * Compute the rotation between two vectors.
- * @param orig Origin vector (must to be normalized).
- * @param dest Destination vector (must to be normalized).
+ * @param from From vector (must to be normalized).
+ * @param to To vector (must to be normalized).
  */
 template<typename T>
-[[nodiscard]] inline quat<T> quat_from_rotation_between_vectors(const vector<T, 3>& orig, const vector<T, 3>& dest)
+[[nodiscard]] inline quat<T> quat_from_rotation_between_vectors(const vector<T, 3>& from, const vector<T, 3>& to)
 {
-    T cosTheta = dot(orig, dest);
+    T cos_theta = dot(from, to);
     vector<T, 3> axis;
 
-    if (cosTheta >= T(1) - std::numeric_limits<T>::epsilon()) {
-        // orig and dest point in the same direction
+    if (cos_theta >= T(1) - std::numeric_limits<T>::epsilon()) {
+        // from and to point in the same direction
         return quat<T>::identity();
     }
 
-    if (cosTheta < T(-1) + std::numeric_limits<T>::epsilon()) {
+    if (cos_theta < T(-1) + std::numeric_limits<T>::epsilon()) {
         // special case when vectors in opposite directions :
         // there is no "ideal" rotation axis
         // So guess one; any will do as long as it's perpendicular to start
         // This implementation favors a rotation around the Up axis (Y),
         // since it's often what you want to do.
-        axis = cross(vector<T, 3>(0, 0, 1), orig);
+        axis = cross(vector<T, 3>(0, 0, 1), from);
         if (dot(axis, axis) < std::numeric_limits<T>::epsilon()) // bad luck, they were parallel, try again!
-            axis = cross(vector<T, 3>(1, 0, 0), orig);
+            axis = cross(vector<T, 3>(1, 0, 0), from);
 
         axis = normalize(axis);
         return quat_from_angle_axis(T(M_PI), axis);
     }
 
     // Implementation from Stan Melax's Game Programming Gems 1 article
-    axis = cross(orig, dest);
+    axis = cross(from, to);
 
-    T s = sqrt((T(1) + cosTheta) * T(2));
+    T s = sqrt((T(1) + cos_theta) * T(2));
     T invs = T(1) / s;
 
     return quat<T>(axis.x * invs, axis.y * invs, axis.z * invs, s * T(0.5f));
@@ -360,10 +360,10 @@ template<typename T>
  * Build a quaternion from euler angles (pitch, yaw, roll), in radians.
  */
 template<typename T>
-[[nodiscard]] inline quat<T> quat_from_euler_angles(const vector<T, 3>& euler_angles)
+[[nodiscard]] inline quat<T> quat_from_euler_angles(const vector<T, 3>& angles)
 {
-    vector<T, 3> c = cos(euler_angles * T(0.5));
-    vector<T, 3> s = sin(euler_angles * T(0.5));
+    vector<T, 3> c = cos(angles * T(0.5));
+    vector<T, 3> s = sin(angles * T(0.5));
 
     return quat<T>(
         s.x * c.y * c.z - c.x * s.y * s.z, // x
@@ -426,15 +426,15 @@ template<typename T>
  */
 template<typename T>
 [[nodiscard]] inline quat<T>
-quat_from_look_at(const vector<T, 3>& dir, const vector<T, 3>& up, Handedness handedness = Handedness::RightHanded)
+quat_from_look_at(const vector<T, 3>& dir, const vector<T, 3>& up, Handedness handedness = Handedness::right_handed)
 {
     matrix<T, 3, 3> m;
-    m.setCol(2, handedness == Handedness::RightHanded ? -dir : dir);
-    vector<T, 3> right = normalize(cross(up, m.getCol(2)));
-    m.setCol(0, right);
-    m.setCol(1, cross(m.getCol(2), m.getCol(0)));
+    m.set_col(2, handedness == Handedness::right_handed ? -dir : dir);
+    vector<T, 3> right = normalize(cross(up, m.get_col(2)));
+    m.set_col(0, right);
+    m.set_col(1, cross(m.get_col(2), m.get_col(0)));
 
-    return quatFromMatrix(m);
+    return quat_from_matrix(m);
 }
 
 template<typename T>
