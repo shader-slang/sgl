@@ -1,6 +1,7 @@
 #pragma once
 
 #include "kali/core/macros.h"
+#include "kali/core/object.h"
 
 #include <span>
 #include <string_view>
@@ -80,13 +81,20 @@ namespace kali::string {
  */
 [[nodiscard]] KALI_API std::string indent(std::string_view str, std::string_view indentation = "  ");
 
+template<typename T>
+concept object_to_string = requires(std::remove_pointer<typename remove_ref<T>::type>::type t) {
+    {
+        t.to_string()
+    } -> std::convertible_to<std::string>;
+};
+
 /**
- * Convert a list of objects that have a to_string() method to a string. *
+ * Convert a list of objects that have a to_string() method to a string.
  * @tparam T Type of objects.
  * @param list List of objects.
  * @return The list of objects as a string.
  */
-template<typename T>
+template<object_to_string T>
 inline std::string list_to_string(std::span<T> list, std::string_view indentation = "  ")
 {
     if (list.empty())
@@ -94,7 +102,7 @@ inline std::string list_to_string(std::span<T> list, std::string_view indentatio
     std::string result = "[\n";
     for (const auto& item : list) {
         result += indentation;
-        if constexpr (std::is_pointer_v<T>)
+        if constexpr (std::is_pointer_v<T> || is_ref_v<T>)
             result += string::indent(item->to_string());
         else
             result += string::indent(item.to_string());
@@ -105,7 +113,35 @@ inline std::string list_to_string(std::span<T> list, std::string_view indentatio
 }
 
 template<typename T>
-inline std::string list_to_string(const std::vector<T> list, std::string_view indentation = "  ")
+concept free_standing_to_string = requires(T t) {
+    {
+        to_string(t)
+    } -> std::convertible_to<std::string>;
+};
+
+/**
+ * Convert a list of objects that have a free-standing to_string() method to a string.
+ * @tparam T Type of objects.
+ * @param list List of objects.
+ * @return The list of objects as a string.
+ */
+template<free_standing_to_string T>
+inline std::string list_to_string(std::span<T> list, std::string_view indentation = "  ")
+{
+    if (list.empty())
+        return "[]";
+    std::string result = "[\n";
+    for (const auto& item : list) {
+        result += indentation;
+        result += string::indent(to_string(item));
+        result += ",\n";
+    }
+    result += "]";
+    return result;
+}
+
+template<typename T>
+inline std::string list_to_string(const std::vector<T>& list, std::string_view indentation = "  ")
 {
     return list_to_string(std::span{list}, indentation);
 }

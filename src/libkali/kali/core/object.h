@@ -519,6 +519,41 @@ ref<T> dynamic_ref_cast(const ref<U>& r) noexcept
     return ref<T>(dynamic_cast<T*>(r.get()));
 }
 
+template<typename T>
+struct is_ref : std::false_type {};
+
+template<typename T>
+struct is_ref<ref<T>> : std::true_type {};
+
+template<typename T>
+struct is_ref<const ref<T>> : std::true_type {};
+
+template<typename T>
+inline constexpr bool is_ref_v = is_ref<T>::value;
+
+static_assert(is_ref_v<Object> == false);
+static_assert(is_ref_v<ref<Object>> == true);
+
+template<class T>
+struct remove_ref {
+    using type = T;
+};
+
+template<class T>
+struct remove_ref<ref<T>> {
+    using type = T;
+};
+
+template<class T>
+struct remove_ref<const ref<T>> {
+    using type = T;
+};
+
+static_assert(std::is_same_v<remove_ref<Object>::type, Object> == true);
+static_assert(std::is_same_v<remove_ref<ref<Object>>::type, Object> == true);
+static_assert(std::is_same_v<remove_ref<const ref<Object>>::type, Object> == true);
+
+
 /**
  * @brief Breakable reference counting helper for avoding reference cycles.
  *
