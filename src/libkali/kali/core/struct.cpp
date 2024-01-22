@@ -185,7 +185,7 @@ std::string Struct::to_string() const
         ")",
         m_pack,
         m_byte_order,
-        string::indent(string::list_to_string(std::span{m_fields})),
+        string::indent(string::list_to_string(m_fields)),
         size(),
         alignment()
     );

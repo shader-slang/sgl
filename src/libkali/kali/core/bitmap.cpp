@@ -444,13 +444,13 @@ std::string Bitmap::to_string() const
 {
     return fmt::format(
         "Bitmap(\n"
-        "  pixel_format = {},\n"
-        "  component_type = {},\n"
-        "  channel_count = {},\n"
-        "  width = {},\n"
-        "  height = {},\n"
-        "  srgb_gamma = {},\n"
-        "  data = {},\n"
+        "  pixel_format={},\n"
+        "  component_type={},\n"
+        "  channel_count={},\n"
+        "  width={},\n"
+        "  height={},\n"
+        "  srgb_gamma={},\n"
+        "  data={},\n"
         ")",
         m_pixel_format,
         m_component_type,
