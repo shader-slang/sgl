@@ -36,12 +36,14 @@ KALI_PY_EXPORT(device_types)
     nb::kali_enum<FrontFaceMode>(m, "FrontFaceMode");
 
     nb::class_<DepthStencilOpDesc>(m, "DepthStencilOpDesc")
+        .def(nb::init<>())
         .def_rw("stencil_fail_op", &DepthStencilOpDesc::stencil_fail_op)
         .def_rw("stencil_depth_fail_op", &DepthStencilOpDesc::stencil_depth_fail_op)
         .def_rw("stencil_pass_op", &DepthStencilOpDesc::stencil_pass_op)
         .def_rw("stencil_func", &DepthStencilOpDesc::stencil_func);
 
     nb::class_<DepthStencilDesc>(m, "DepthStencilDesc")
+        .def(nb::init<>())
         .def_rw("depth_test_enable", &DepthStencilDesc::depth_test_enable)
         .def_rw("depth_write_enable", &DepthStencilDesc::depth_write_enable)
         .def_rw("depth_func", &DepthStencilDesc::depth_func)
@@ -53,6 +55,7 @@ KALI_PY_EXPORT(device_types)
         .def_rw("stencil_ref", &DepthStencilDesc::stencil_ref);
 
     nb::class_<RasterizerDesc>(m, "RasterizerDesc")
+        .def(nb::init<>())
         .def_rw("fill_mode", &RasterizerDesc::fill_mode)
         .def_rw("cull_mode", &RasterizerDesc::cull_mode)
         .def_rw("front_face", &RasterizerDesc::front_face)
@@ -67,16 +70,18 @@ KALI_PY_EXPORT(device_types)
         .def_rw("forced_sample_count", &RasterizerDesc::forced_sample_count);
 
     nb::kali_enum<LogicOp>(m, "LogicOp");
-    nb::kali_enum<BlendOp>(m, "LogicOp");
-    nb::kali_enum<BlendFactor>(m, "LogicOp");
-    nb::kali_enum_flags<RenderTargetWriteMask>(m, "LogicOp");
+    nb::kali_enum<BlendOp>(m, "BlendOp");
+    nb::kali_enum<BlendFactor>(m, "BlendFactor");
+    nb::kali_enum_flags<RenderTargetWriteMask>(m, "RenderTargetWriteMask");
 
     nb::class_<AspectBlendDesc>(m, "AspectBlendDesc")
+        .def(nb::init<>())
         .def_rw("src_factor", &AspectBlendDesc::src_factor)
         .def_rw("dst_factor", &AspectBlendDesc::dst_factor)
         .def_rw("op", &AspectBlendDesc::op);
 
     nb::class_<TargetBlendDesc>(m, "TargetBlendDesc")
+        .def(nb::init<>())
         .def_rw("color", &TargetBlendDesc::color)
         .def_rw("alpha", &TargetBlendDesc::alpha)
         .def_rw("enable_blend", &TargetBlendDesc::enable_blend)
@@ -84,6 +89,7 @@ KALI_PY_EXPORT(device_types)
         .def_rw("write_mask", &TargetBlendDesc::write_mask);
 
     nb::class_<BlendDesc>(m, "BlendDesc")
+        .def(nb::init<>())
         // TODO targets
         .def_rw("alpha_to_coverage_enable", &BlendDesc::alpha_to_coverage_enable);
 

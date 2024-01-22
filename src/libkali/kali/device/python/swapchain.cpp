@@ -8,6 +8,7 @@ KALI_PY_EXPORT(device_swapchain)
     using namespace kali;
 
     nb::class_<SwapchainDesc>(m, "SwapchainDesc")
+        .def(nb::init<>())
         .def_rw("format", &SwapchainDesc::format)
         .def_rw("width", &SwapchainDesc::width)
         .def_rw("height", &SwapchainDesc::height)

@@ -157,6 +157,7 @@ KALI_PY_EXPORT(device_resource)
         .def_prop_ro("resource", &ResourceView::resource);
 
     nb::class_<BufferDesc>(m, "BufferDesc")
+        .def(nb::init<>())
         .def_rw("size", &BufferDesc::size)
         .def_rw("struct_size", &BufferDesc::struct_size)
         .def_rw("format", &BufferDesc::format)
@@ -191,6 +192,7 @@ KALI_PY_EXPORT(device_resource)
     nb::kali_enum<TextureType>(m, "TextureType");
 
     nb::class_<TextureDesc>(m, "TextureDesc")
+        .def(nb::init<>())
         .def_rw("type", &TextureDesc::type)
         .def_rw("format", &TextureDesc::format)
         .def_rw("width", &TextureDesc::width)

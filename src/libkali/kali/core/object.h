@@ -520,13 +520,13 @@ ref<T> dynamic_ref_cast(const ref<U>& r) noexcept
 }
 
 template<typename T>
-struct is_ref : std::false_type {};
+struct is_ref : std::false_type { };
 
 template<typename T>
-struct is_ref<ref<T>> : std::true_type {};
+struct is_ref<ref<T>> : std::true_type { };
 
 template<typename T>
-struct is_ref<const ref<T>> : std::true_type {};
+struct is_ref<const ref<T>> : std::true_type { };
 
 template<typename T>
 inline constexpr bool is_ref_v = is_ref<T>::value;

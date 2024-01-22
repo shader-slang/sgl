@@ -48,7 +48,9 @@ KALI_PY_EXPORT(device_shader)
         .def_rw("search_paths", &SlangCompilerOptions::search_paths)
         .def_rw("defines", &SlangCompilerOptions::defines);
 
-    nb::class_<SlangSessionDesc>(m, "SlangSessionDesc").def_rw("compiler_options", &SlangSessionDesc::compiler_options);
+    nb::class_<SlangSessionDesc>(m, "SlangSessionDesc")
+        .def(nb::init<>())
+        .def_rw("compiler_options", &SlangSessionDesc::compiler_options);
 
     // Disambiguate from the types in slang.h
     using kali::SlangSession;
