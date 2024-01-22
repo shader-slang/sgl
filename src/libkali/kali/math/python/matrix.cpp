@@ -22,9 +22,7 @@ void bind_matrix_type(nb::module_& m, const char* name)
     // Constructors
 
     mat.def(nb::init<>());
-
-    // Initialization from array (to allow implicit conversion from python lists).
-    mat.def(nb::init_implicit<std::array<value_type, rows * cols>>());
+    mat.def(nb::init<std::array<value_type, rows * cols>>());
 
     // Initialization from ndarray.
     mat.def(
