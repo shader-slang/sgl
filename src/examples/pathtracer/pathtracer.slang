@@ -42,7 +42,10 @@ struct RNG {
 
     __init(uint seed) { state = seed; }
 
-    __init(uint2 pixel, uint sample_index) { state = (pixel.x * 5507) ^ (pixel.y * 5519) ^ (sample_index * 5521); }
+    __init(uint2 pixel, uint sample_index)
+    {
+        state = (pixel.x * 100591) ^ (pixel.y * 102191) ^ (sample_index * 103643);
+    }
 
     [mutating]
     uint next()
@@ -208,15 +211,11 @@ float3 diffuse_brdf_sample(float3 wi, float2 uv, out float pdf)
 float3 envmap(float3 dir)
 {
     return float3(1);
-    float3 env = float3(0);
-    // Sky
-    env += saturate(dot(dir, float3(0, 1, 0))) * float3(0.5, 0.5, 1);
-    // Sun
-    // const float3 SUN_DIR = normalize(float3(0.2, 1, 0.2));
-    // env += saturate(smoothstep(0.999, 0.9995, dot(dir, SUN_DIR))) * float3(100);
-    // Ground
-    env += dir.y < 0 ? float3(0.0, 0.2, 0.0) : float3(0);
-    return env;
+    // float3 env = float3(0);
+    // env += saturate(dot(dir, float3(0, 1, 0))) * float3(0.5, 0.5, 1);
+    // const float3 LIGHT_DIR = normalize(float3(0.5, 1, -0.8));
+    // env += saturate(smoothstep(0.95, 0.96, dot(dir, LIGHT_DIR))) * float3(10);
+    // return env;
 }
 
 void trace_path(inout Path path)

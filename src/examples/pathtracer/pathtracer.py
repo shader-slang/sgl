@@ -5,25 +5,6 @@ from dataclasses import dataclass
 import struct
 
 
-def float4x4_to_float3x4(m: kali.float4x4):
-    return kali.float3x4(
-        [
-            m[0][0],
-            m[0][1],
-            m[0][2],
-            m[0][3],
-            m[1][0],
-            m[1][1],
-            m[1][2],
-            m[1][3],
-            m[2][0],
-            m[2][1],
-            m[2][2],
-            m[2][3],
-        ],
-    )
-
-
 class Camera:
     def __init__(self):
         self.width = 100
@@ -64,12 +45,14 @@ class CameraController:
         kali.KeyCode.w: kali.float3(0, 0, 1),
         kali.KeyCode.s: kali.float3(0, 0, -1),
     }
+    MOVE_SHIFT_FACTOR = 10.0
 
     def __init__(self, camera: Camera):
         self.camera = camera
         self.mouse_down = False
         self.mouse_pos = kali.float2()
         self.key_state = {k: False for k in CameraController.MOVE_KEYS.keys()}
+        self.shift_down = False
 
         self.move_delta = kali.float3()
         self.rotate_delta = kali.float2()
@@ -89,7 +72,8 @@ class CameraController:
             offset = right * self.move_delta.x
             offset += up * self.move_delta.y
             offset += fwd * self.move_delta.z
-            offset *= self.move_speed * dt
+            factor = CameraController.MOVE_SHIFT_FACTOR if self.shift_down else 1.0
+            offset *= self.move_speed * factor * dt
             position += offset
             changed = True
 
@@ -116,10 +100,12 @@ class CameraController:
         return changed
 
     def on_keyboard_event(self, event: kali.KeyboardEvent):
-        if event.is_key_press() and event.key in CameraController.MOVE_KEYS:
-            self.key_state[event.key] = True
-        if event.is_key_release() and event.key in CameraController.MOVE_KEYS:
-            self.key_state[event.key] = False
+        if event.is_key_press() or event.is_key_release():
+            down = event.is_key_press()
+            if event.key in CameraController.MOVE_KEYS:
+                self.key_state[event.key] = down
+            elif event.key == kali.KeyCode.left_shift:
+                self.shift_down = down
         self.move_delta = kali.float3()
         for key, state in self.key_state.items():
             if state:
@@ -275,9 +261,9 @@ class Transform:
         self.matrix = kali.float4x4.identity()
 
     def update_matrix(self):
-        T = kali.math.translate(kali.float4x4.identity(), self.translation)
-        S = kali.math.scale(kali.float4x4.identity(), self.scaling)
-        R = kali.float4x4.identity()
+        T = kali.math.matrix_from_translation(self.translation)
+        S = kali.math.matrix_from_scaling(self.scaling)
+        R = kali.math.matrix_from_rotation_xyz(self.rotation)
         self.matrix = kali.math.mul(kali.math.mul(T, R), S)
 
 
@@ -306,7 +292,9 @@ class Stage:
     @classmethod
     def demo(cls):
         stage = Stage()
-        quad = stage.add_mesh(Mesh.create_quad([1, 1]))
+        stage.camera.target = kali.float3(0, 1, 0)
+        stage.camera.position = kali.float3(2, 1, 2)
+        quad = stage.add_mesh(Mesh.create_quad([5, 5]))
         cube = stage.add_mesh(Mesh.create_cube([0.1, 0.1, 0.1]))
         identity = stage.add_transform(Transform())
         stage.add_instance(quad, identity)
@@ -315,7 +303,9 @@ class Stage:
         for _ in range(1000):
             transform = Transform()
             transform.translation = (np.random.rand(3) * 2 - 1).astype(np.float32)
+            transform.translation[1] += 1
             transform.scaling = (np.random.rand(3) + 0.5).astype(np.float32)
+            transform.rotation = (np.random.rand(3) * 10).astype(np.float32)
             transform.update_matrix()
             id = stage.add_transform(transform)
             stage.add_instance(cube, id)
@@ -500,7 +490,7 @@ class Scene:
         rt_instance_descs = []
         for instance_id, instance_desc in enumerate(self.instance_descs):
             rt_instance_desc = kali.RayTracingInstanceDesc()
-            rt_instance_desc.transform = float4x4_to_float3x4(
+            rt_instance_desc.transform = kali.float3x4(
                 self.transforms[instance_desc.transform_id]
             )
             rt_instance_desc.instance_id = instance_id
@@ -660,7 +650,7 @@ class App:
         self.window = kali.Window(
             width=1920, height=1080, title="PathTracer", resizable=True
         )
-        self.device = kali.Device(enable_debug_layers=True)
+        self.device = kali.Device(enable_debug_layers=False)
         self.swapchain = self.device.create_swapchain(
             format=kali.Format.rgba8_unorm,
             width=self.window.width,
@@ -768,7 +758,9 @@ class App:
                 )
 
             self.path_tracer.execute(self.render_texture, frame)
-            self.accumulator.execute(self.render_texture, self.accum_texture, frame == 0)
+            self.accumulator.execute(
+                self.render_texture, self.accum_texture, frame == 0
+            )
             self.tone_mapper.execute(self.accum_texture, self.output_texture)
 
             self.device.command_stream.copy_resource(dst=image, src=self.output_texture)
