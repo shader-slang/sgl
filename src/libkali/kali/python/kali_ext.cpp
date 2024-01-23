@@ -22,6 +22,7 @@ KALI_PY_DECLARE(device_device_resource);
 KALI_PY_DECLARE(device_device);
 KALI_PY_DECLARE(device_fence);
 KALI_PY_DECLARE(device_formats);
+KALI_PY_DECLARE(device_framebuffer);
 KALI_PY_DECLARE(device_kernel);
 KALI_PY_DECLARE(device_memory_heap);
 KALI_PY_DECLARE(device_pipeline);
@@ -88,6 +89,7 @@ NB_MODULE(kali_ext, m)
     KALI_PY_IMPORT(device_shader);
     KALI_PY_IMPORT(device_shader_object);
     KALI_PY_IMPORT(device_shader_cursor);
+    KALI_PY_IMPORT(device_framebuffer);
     KALI_PY_IMPORT(device_swapchain);
     KALI_PY_IMPORT(device_command);
     KALI_PY_IMPORT(device_kernel);
