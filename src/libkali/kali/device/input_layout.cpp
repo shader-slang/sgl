@@ -48,7 +48,7 @@ std::string InputLayout::to_string() const
     std::vector<std::string> input_elements;
     for (const auto& input_element : m_desc.input_elements) {
         input_elements.push_back(fmt::format(
-            "InputElementDesc(semantic_name={}, semantic_index={}, format={}, offset={}, buffer_slot_index={})",
+            "InputElementDesc(semantic_name=\"{}\", semantic_index={}, format={}, offset={}, buffer_slot_index={})",
             input_element.semantic_name,
             input_element.semantic_index,
             input_element.format,
@@ -70,8 +70,8 @@ std::string InputLayout::to_string() const
     return fmt::format(
         "InputLayout(\n"
         "  device={},\n"
-        "  input_elements=[{}],\n",
-        "  vertex_streams=[{}]\n",
+        "  input_elements=[{}],\n"
+        "  vertex_streams=[{}]\n"
         ")",
         m_device,
         string::indent(string::join(input_elements, ",\n")),

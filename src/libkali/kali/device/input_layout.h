@@ -29,22 +29,22 @@ struct InputElementDesc {
     std::string semantic_name;
     /// The index of the corresponding parameter in shader code.
     /// Only needed if multiple parameters share a semantic name.
-    uint32_t semantic_index;
+    uint32_t semantic_index{0};
     /// The format of the data being fetched for this element.
-    Format format;
+    Format format{Format::unknown};
     /// The offset in bytes of this element from the start of the corresponding chunk of vertex stream data.
-    size_t offset;
+    size_t offset{0};
     /// The index of the vertex stream to fetch this element's data from.
-    uint32_t buffer_slot_index;
+    uint32_t buffer_slot_index{0};
 };
 
 struct VertexStreamDesc {
     /// The stride in bytes for this vertex stream.
-    size_t stride;
+    size_t stride{0};
     /// Whether the stream contains per-vertex or per-instance data.
-    InputSlotClass slot_class;
+    InputSlotClass slot_class{InputSlotClass::per_vertex};
     /// How many instances to draw per chunk of data.
-    uint32_t instance_data_step_rate;
+    uint32_t instance_data_step_rate{0};
 };
 
 struct InputLayoutDesc {
@@ -52,7 +52,7 @@ struct InputLayoutDesc {
     std::vector<VertexStreamDesc> vertex_streams;
 };
 
-class InputLayout : public DeviceResource {
+class KALI_API InputLayout : public DeviceResource {
     KALI_OBJECT(InputLayout)
 public:
     InputLayout(ref<Device> device, InputLayoutDesc desc);
