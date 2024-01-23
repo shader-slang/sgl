@@ -6,6 +6,7 @@
 #include "kali/device/fence.h"
 #include "kali/device/query.h"
 #include "kali/device/input_layout.h"
+#include "kali/device/framebuffer.h"
 #include "kali/device/shader.h"
 #include "kali/device/shader_object.h"
 #include "kali/device/pipeline.h"
@@ -305,6 +306,11 @@ ref<QueryPool> Device::create_query_pool(QueryPoolDesc desc)
 ref<InputLayout> Device::create_input_layout(InputLayoutDesc desc)
 {
     return make_ref<InputLayout>(ref<Device>(this), std::move(desc));
+}
+
+ref<Framebuffer> Device::create_framebuffer(FramebufferDesc desc)
+{
+    return make_ref<Framebuffer>(ref<Device>(this), std::move(desc));
 }
 
 AccelerationStructurePrebuildInfo

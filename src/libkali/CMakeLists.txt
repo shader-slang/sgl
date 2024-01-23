@@ -72,6 +72,8 @@ target_sources(kali PRIVATE
     kali/device/fence.h
     kali/device/formats.cpp
     kali/device/formats.h
+    kali/device/framebuffer.cpp
+    kali/device/framebuffer.h
     kali/device/fwd.h
     kali/device/helpers.h
     kali/device/input_layout.cpp
@@ -337,6 +339,7 @@ nanobind_add_module(kali_ext NB_STATIC LTO
     kali/device/python/device.cpp
     kali/device/python/fence.cpp
     kali/device/python/formats.cpp
+    kali/device/python/framebuffer.cpp
     kali/device/python/kernel.cpp
     kali/device/python/memory_heap.cpp
     kali/device/python/pipeline.cpp

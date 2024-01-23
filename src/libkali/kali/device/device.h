@@ -186,6 +186,8 @@ public:
 
     ref<InputLayout> create_input_layout(InputLayoutDesc desc);
 
+    ref<Framebuffer> create_framebuffer(FramebufferDesc desc);
+
     AccelerationStructurePrebuildInfo
     get_acceleration_structure_prebuild_info(const AccelerationStructureBuildInputs& build_inputs);
 

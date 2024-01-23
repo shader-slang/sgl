@@ -218,7 +218,12 @@ inline constexpr uint64_t const_hash(std::string_view str)
         desc.name = nb::cast<type>(v);                                                                                 \
         break;
 
-#define KALI_DICT_TO_DESC_FIELD_VECTOR(name, type)                                                                     \
+#define KALI_DICT_TO_DESC_FIELD_DICT(name, type)                                                                       \
+    case ::kali::detail::const_hash(#name):                                                                            \
+        desc.name = dict_to_##type(nb::cast<nb::dict>(v));                                                             \
+        break;
+
+#define KALI_DICT_TO_DESC_FIELD_LIST(name, type)                                                                       \
     case ::kali::detail::const_hash(#name):                                                                            \
         desc.name = {};                                                                                                \
         for (const auto& item : v)                                                                                     \

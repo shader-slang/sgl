@@ -39,6 +39,12 @@ class Sampler;
 struct FenceDesc;
 class Fence;
 
+// framebuffer.h
+
+struct FramebufferAttachmentDesc;
+struct FramebufferDesc;
+class Framebuffer;
+
 // shader.h
 
 struct SlangSessionDesc;

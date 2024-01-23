@@ -147,6 +147,10 @@ ResourceView::ResourceView(const ResourceViewDesc& desc, const Texture* texture)
     gfx::IResourceView::Desc gfx_desc{
         .type = static_cast<gfx::IResourceView::Type>(m_desc.type),
         .format = static_cast<gfx::Format>(m_desc.format),
+        .renderTarget{
+            .shape = m_desc.type == ResourceViewType::render_target ? static_cast<gfx::IResource::Type>(texture->type())
+                                                                    : gfx::IResource::Type::Unknown,
+        },
         .subresourceRange{
             .aspectMask = static_cast<gfx::TextureAspect>(m_desc.subresource_range.texture_aspect),
             .mipLevel = static_cast<gfx::GfxIndex>(m_desc.subresource_range.mip_level),

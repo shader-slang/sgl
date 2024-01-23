@@ -7,6 +7,8 @@
 #include "kali/device/pipeline.h"
 #include "kali/device/raytracing.h"
 #include "kali/device/query.h"
+#include "kali/device/input_layout.h"
+#include "kali/device/framebuffer.h"
 #include "kali/device/memory_heap.h"
 #include "kali/device/swapchain.h"
 #include "kali/device/shader.h"
@@ -399,6 +401,34 @@ KALI_PY_EXPORT(device_device)
         { return self->create_query_pool({.type = type, .count = count}); },
         "type"_a,
         "count"_a
+    );
+    device.def("create_input_layout", &Device::create_input_layout, "desc"_a);
+    device.def(
+        "create_input_layout",
+        [](Device* self, std::vector<InputElementDesc> input_elements, std::vector<VertexStreamDesc> vertex_streams)
+        {
+            return self->create_input_layout({
+                .input_elements = std::move(input_elements),
+                .vertex_streams = std::move(vertex_streams),
+            });
+        },
+        "input_elements"_a,
+        "vertex_streams"_a
+    );
+    device.def("create_framebuffer", &Device::create_framebuffer, "desc"_a);
+    device.def(
+        "create_framebuffer",
+        [](Device* self,
+           std::vector<FramebufferAttachmentDesc> render_targets,
+           std::optional<FramebufferAttachmentDesc> depth_stencil)
+        {
+            return self->create_framebuffer({
+                .render_targets = std::move(render_targets),
+                .depth_stencil = std::move(depth_stencil),
+            });
+        },
+        "render_targets"_a,
+        "depth_stencil"_a.none() = nb::none()
     );
     device.def("create_command_stream", &Device::create_command_stream);
     device.def(

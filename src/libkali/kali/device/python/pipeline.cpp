@@ -17,7 +17,7 @@ KALI_DICT_TO_DESC_END()
 
 KALI_DICT_TO_DESC_BEGIN(RayTracingPipelineDesc)
 KALI_DICT_TO_DESC_FIELD(program, ShaderProgram*)
-KALI_DICT_TO_DESC_FIELD_VECTOR(hit_groups, HitGroupDesc)
+KALI_DICT_TO_DESC_FIELD_LIST(hit_groups, HitGroupDesc)
 KALI_DICT_TO_DESC_FIELD(max_recursion, uint32_t)
 KALI_DICT_TO_DESC_FIELD(max_ray_payload_size, uint32_t)
 KALI_DICT_TO_DESC_FIELD(max_attribute_size, uint32_t)
