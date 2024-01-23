@@ -88,7 +88,7 @@ RayTracingPipeline::RayTracingPipeline(ref<Device> device, RayTracingPipelineDes
 {
     KALI_CHECK_NOT_NULL(desc.program);
 
-    ShortVector<gfx::HitGroupDesc, 16> gfx_hit_groups;
+    short_vector<gfx::HitGroupDesc, 16> gfx_hit_groups;
     gfx_hit_groups.reserve(desc.hit_groups.size());
     for (const auto& hit_group : desc.hit_groups) {
         gfx_hit_groups.push_back({

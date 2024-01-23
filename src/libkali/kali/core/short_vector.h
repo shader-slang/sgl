@@ -12,9 +12,9 @@ namespace kali {
  * @tparam N Size of the short vector
  */
 template<typename T, std::size_t N>
-class ShortVector {
+class short_vector {
 public:
-    static_assert(N > 0, "ShortVector must have a size greater than zero.");
+    static_assert(N > 0, "short_vector must have a size greater than zero.");
 
     using value_type = T;
     using size_type = std::size_t;
@@ -25,7 +25,7 @@ public:
     using const_iterator = const value_type*;
 
     /// Default constructor.
-    ShortVector() noexcept
+    short_vector() noexcept
         : m_data(m_short_data)
         , m_size(0)
         , m_capacity(N)
@@ -33,7 +33,7 @@ public:
     }
 
     /// Size constructor.
-    ShortVector(size_type size, const value_type& value)
+    short_vector(size_type size, const value_type& value)
         : m_data(m_short_data)
         , m_size(size)
         , m_capacity(N)
@@ -45,7 +45,7 @@ public:
     }
 
     /// Initializer list constructor.
-    ShortVector(std::initializer_list<value_type> list)
+    short_vector(std::initializer_list<value_type> list)
         : m_data(m_short_data)
         , m_size(0)
         , m_capacity(N)
@@ -54,17 +54,17 @@ public:
             push_back(value);
     }
 
-    ~ShortVector()
+    ~short_vector()
     {
         if (m_data != m_short_data)
             delete[] m_data;
     }
 
-    ShortVector(const ShortVector& other) = delete;
-    ShortVector(ShortVector&& other) = delete;
+    short_vector(const short_vector& other) = delete;
+    short_vector(short_vector&& other) = delete;
 
-    ShortVector& operator=(const ShortVector& other) = delete;
-    ShortVector& operator=(ShortVector&& other) = delete;
+    short_vector& operator=(const short_vector& other) = delete;
+    short_vector& operator=(short_vector&& other) = delete;
 
     reference operator[](size_type index) noexcept { return m_data[index]; }
     const_reference operator[](size_type index) const noexcept { return m_data[index]; }

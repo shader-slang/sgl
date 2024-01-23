@@ -55,7 +55,12 @@ class breakable_ref;
 // short_vector.h
 
 template<typename T, size_t N>
-class ShortVector;
+class short_vector;
+
+// static_vector.h
+
+template<typename T, size_t N>
+class static_vector;
 
 // stream.h
 

@@ -53,22 +53,22 @@ std::string AccelerationStructure::to_string() const
 ShaderTable::ShaderTable(ref<Device> device, ShaderTableDesc desc)
     : DeviceResource(std::move(device))
 {
-    ShortVector<const char*, 16> gfx_ray_gen_entry_points;
+    short_vector<const char*, 16> gfx_ray_gen_entry_points;
     gfx_ray_gen_entry_points.reserve(desc.ray_gen_entry_points.size());
     for (const auto& name : desc.ray_gen_entry_points)
         gfx_ray_gen_entry_points.push_back(name.c_str());
 
-    ShortVector<const char*, 16> gfx_miss_entry_points;
+    short_vector<const char*, 16> gfx_miss_entry_points;
     gfx_miss_entry_points.reserve(desc.miss_entry_points.size());
     for (const auto& name : desc.miss_entry_points)
         gfx_miss_entry_points.push_back(name.c_str());
 
-    ShortVector<const char*, 16> gfx_hit_group_names;
+    short_vector<const char*, 16> gfx_hit_group_names;
     gfx_hit_group_names.reserve(desc.hit_group_names.size());
     for (const auto& name : desc.hit_group_names)
         gfx_hit_group_names.push_back(name.c_str());
 
-    ShortVector<const char*, 16> gfx_callable_names;
+    short_vector<const char*, 16> gfx_callable_names;
     gfx_callable_names.reserve(desc.callable_entry_points.size());
     for (const auto& name : desc.callable_entry_points)
         gfx_callable_names.push_back(name.c_str());

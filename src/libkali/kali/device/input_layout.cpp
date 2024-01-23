@@ -14,7 +14,7 @@ InputLayout::InputLayout(ref<Device> device, InputLayoutDesc desc)
     : DeviceResource(std::move(device))
     , m_desc(std::move(desc))
 {
-    ShortVector<gfx::InputElementDesc, 16> gfx_input_elements;
+    short_vector<gfx::InputElementDesc, 16> gfx_input_elements;
     for (const auto& input_element : m_desc.input_elements) {
         gfx_input_elements.push_back({
             .semanticName = input_element.semantic_name.c_str(),
@@ -25,7 +25,7 @@ InputLayout::InputLayout(ref<Device> device, InputLayoutDesc desc)
         });
     }
 
-    ShortVector<gfx::VertexStreamDesc, 16> gfx_vertex_streams;
+    short_vector<gfx::VertexStreamDesc, 16> gfx_vertex_streams;
     for (const auto& vertex_stream : m_desc.vertex_streams) {
         gfx_vertex_streams.push_back({
             .stride = vertex_stream.stride,

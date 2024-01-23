@@ -254,8 +254,8 @@ void RenderPassEncoder::set_stencil_reference(uint32_t reference_value)
 
 void RenderPassEncoder::set_vertex_buffers(uint32_t start_slot, std::span<Slot> slots)
 {
-    ShortVector<gfx::IBufferResource*, 16> gfx_buffers(slots.size(), nullptr);
-    ShortVector<gfx::Offset, 16> gfx_offsets(slots.size(), 0);
+    short_vector<gfx::IBufferResource*, 16> gfx_buffers(slots.size(), nullptr);
+    short_vector<gfx::Offset, 16> gfx_offsets(slots.size(), 0);
     for (size_t i = 0; i < slots.size(); i++) {
         gfx_buffers[i] = slots[i].buffer->gfx_buffer_resource();
         gfx_offsets[i] = slots[i].offset;
@@ -355,7 +355,7 @@ void RayTracingPassEncoder::build_acceleration_structure(
         .scratchData = desc.scratch_data,
     };
 
-    ShortVector<gfx::AccelerationStructureQueryDesc, 16> gfx_query_descs(queries.size(), {});
+    short_vector<gfx::AccelerationStructureQueryDesc, 16> gfx_query_descs(queries.size(), {});
     for (size_t i = 0; i < queries.size(); i++) {
         gfx_query_descs[i] = {
             .queryType = static_cast<gfx::QueryType>(queries[i].query_type),
@@ -392,11 +392,11 @@ void RayTracingPassEncoder::query_acceleration_structure_properties(
     std::span<AccelerationStructureQueryDesc> queries
 )
 {
-    ShortVector<gfx::IAccelerationStructure*, 16> gfx_acceleration_structures(acceleration_structures.size(), nullptr);
+    short_vector<gfx::IAccelerationStructure*, 16> gfx_acceleration_structures(acceleration_structures.size(), nullptr);
     for (size_t i = 0; i < acceleration_structures.size(); i++)
         gfx_acceleration_structures[i] = acceleration_structures[i]->gfx_acceleration_structure();
 
-    ShortVector<gfx::AccelerationStructureQueryDesc, 16> gfx_queries(queries.size(), {});
+    short_vector<gfx::AccelerationStructureQueryDesc, 16> gfx_queries(queries.size(), {});
     for (size_t i = 0; i < queries.size(); i++) {
         gfx_queries[i] = {
             .queryType = static_cast<gfx::QueryType>(queries[i].query_type),
@@ -570,7 +570,7 @@ void CommandStream::uav_barrier(const Resource* resource)
 
 void CommandStream::buffer_barrier(std::span<const Buffer*> buffers, ResourceState old_state, ResourceState new_state)
 {
-    ShortVector<gfx::IBufferResource*, 16> gfx_buffers(buffers.size(), nullptr);
+    short_vector<gfx::IBufferResource*, 16> gfx_buffers(buffers.size(), nullptr);
     for (size_t i = 0; i < buffers.size(); i++)
         gfx_buffers[i] = buffers[i]->gfx_buffer_resource();
     get_gfx_resource_command_encoder()->bufferBarrier(
@@ -600,7 +600,7 @@ void CommandStream::texture_barrier(
     ResourceState new_state
 )
 {
-    ShortVector<gfx::ITextureResource*, 16> gfx_textures(textures.size(), nullptr);
+    short_vector<gfx::ITextureResource*, 16> gfx_textures(textures.size(), nullptr);
     for (size_t i = 0; i < textures.size(); i++)
         gfx_textures[i] = textures[i]->gfx_texture_resource();
     get_gfx_resource_command_encoder()->textureBarrier(
