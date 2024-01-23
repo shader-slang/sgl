@@ -30,7 +30,7 @@ Swapchain::Swapchain(SwapchainDesc desc, WindowHandle window_handle, ref<Command
 #elif KALI_LINUX
     gfx::WindowHandle gfx_window_handle = gfx::WindowHandle::FromXWindow(window_handle.xdisplay, window_handle.xwindow);
 #elif KALI_MACOS
-    gfx::WindowHandle gfx_window_handle = {}; // gfx::WindowHandle::FromNSView(window_handle.nsview);
+    gfx::WindowHandle gfx_window_handle = gfx::WindowHandle::FromNSView(window_handle.nsview);
 #endif
 
     SLANG_CALL(m_device->gfx_device()->createSwapchain(gfx_desc, gfx_window_handle, m_gfx_swapchain.writeRef()));

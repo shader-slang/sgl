@@ -13,6 +13,7 @@ enable_testing()
 
 include(GNUInstallDirs)
 
+set(CMAKE_OSX_DEPLOYMENT_TARGET "13.0")
 
 if (APPLE)
   set(KALI_ORIGIN "@loader_path")
@@ -64,7 +65,7 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(KALI_PLATFORM "macOS")
     set(KALI_MACOS TRUE)
     set(KALI_HAS_D3D12 OFF)
-    set(KALI_HAS_VULKAN OFF)
+    set(KALI_HAS_VULKAN ON)
 else()
     message(FATAL_ERROR "Unsupported platform!")
 endif()

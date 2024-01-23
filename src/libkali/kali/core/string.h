@@ -82,7 +82,7 @@ namespace kali::string {
 [[nodiscard]] KALI_API std::string indent(std::string_view str, std::string_view indentation = "  ");
 
 template<typename T>
-concept object_to_string = requires(std::remove_pointer<typename remove_ref<T>::type>::type t) {
+concept object_to_string = requires(typename std::remove_pointer<typename remove_ref<T>::type>::type t) {
     {
         t.to_string()
     } -> std::convertible_to<std::string>;

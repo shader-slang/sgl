@@ -1,6 +1,10 @@
 #include "window.h"
+#include "kali/core/config.h"
 #include "kali/core/error.h"
 
+#if KALI_HAS_VULKAN
+#define GLFW_INCLUDE_VULKAN
+#endif
 #include <GLFW/glfw3.h>
 
 #if KALI_WINDOWS
@@ -9,6 +13,10 @@
 #include <X11/Xlib.h>
 #include <X11/extensions/Xrandr.h>
 #define GLFW_EXPOSE_NATIVE_X11
+#elif KALI_MACOS
+#define GLFW_EXPOSE_NATIVE_COCOA
+using CGDirectDisplayID = void*;
+using id = void*;
 #endif
 #define GLFW_NATIVE_INCLUDE_NONE
 #include <GLFW/glfw3native.h>
@@ -391,6 +399,8 @@ WindowHandle Window::window_handle() const
 #elif KALI_LINUX
     handle.xdisplay = glfwGetX11Display();
     handle.xwindow = glfwGetX11Window(m_window);
+#elif KALI_MACOS
+    handle.nsview = glfwGetCocoaWindow(m_window);
 #endif
     return handle;
 }

@@ -108,7 +108,7 @@ Device::Device(const DeviceDesc& desc)
     if (m_desc.type == DeviceType::automatic) {
 #if KALI_WINDOWS
         m_desc.type = DeviceType::d3d12;
-#elif KALI_LINUX
+#elif KALI_LINUX || KALI_MACOS
         m_desc.type = DeviceType::vulkan;
 #endif
     }
@@ -175,6 +175,10 @@ Device::Device(const DeviceDesc& desc)
             m_supported_shader_model = sm;
             break;
         }
+    }
+    if (m_supported_shader_model == ShaderModel::unknown) {
+        m_supported_shader_model = ShaderModel::sm_6_0;
+        log_warn("No supported shader model found, pretending to support {}.", m_supported_shader_model);
     }
 
     // Set default shader model.
