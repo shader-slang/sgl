@@ -483,6 +483,10 @@ inline void process_texture_desc(TextureDesc& desc)
         }
     }
 
+    desc.width = std::max(desc.width, 1u);
+    desc.height = std::max(desc.height, 1u);
+    desc.depth = std::max(desc.depth, 1u);
+
     if (desc.mip_count == 0) {
         desc.mip_count = stdx::bit_width(std::max({desc.width, desc.height, desc.depth}));
     }
