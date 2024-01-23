@@ -38,13 +38,10 @@ input_layout = device.create_input_layout(
     ],
     vertex_streams=[{"stride": 8}],
 )
-print(input_layout)
 
 framebuffer = device.create_framebuffer(render_targets=[{"texture": render_texture}])
-print(framebuffer)
 
 module = device.load_module(Path(__file__).parent / "graphics_pipeline.slang")
-print(module)
 vs = module.entry_point("vertex_main")
 fs = module.entry_point("fragment_main")
 program = module.create_program(module.global_scope, [vs, fs])
@@ -56,13 +53,8 @@ pipeline = device.create_graphics_pipeline(
 
 command_stream = device.command_stream
 
-with command_stream.begin_render_pass() as render_pass:
-    pass
-    # shader_object = raytracing_pass.bind_pipeline(pipeline)
-    # cursor = kali.ShaderCursor(shader_object)
-    # cursor.tlas = tlas
-    # cursor.render_texture = render_texture
-    # raytracing_pass.dispatch_rays(0, shader_table, [1024, 1024, 1])
+with command_stream.begin_render_pass(framebuffer) as render_pass:
+    shader_object = render_pass.bind_pipeline(pipeline)
 
 
 kali.utils.show_in_tev(render_texture, "graphics_pipeline")

@@ -33,6 +33,7 @@ public:
 
     gfx::IFramebufferLayout* gfx_framebuffer_layout() const { return m_gfx_framebuffer_layout; }
     gfx::IFramebuffer* gfx_framebuffer() const { return m_gfx_framebuffer; }
+    gfx::IRenderPassLayout* gfx_render_pass_layout() const { return m_gfx_render_pass_layout; }
 
     std::string to_string() const override;
 
@@ -40,7 +41,7 @@ private:
     FramebufferDesc m_desc;
     Slang::ComPtr<gfx::IFramebufferLayout> m_gfx_framebuffer_layout;
     Slang::ComPtr<gfx::IFramebuffer> m_gfx_framebuffer;
+    Slang::ComPtr<gfx::IRenderPassLayout> m_gfx_render_pass_layout;
 };
-
 
 } // namespace kali

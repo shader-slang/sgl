@@ -542,7 +542,14 @@ public:
      * The compute pass is ended when the \c ComputePassEncoder is destroyed.
      */
     ComputePassEncoder begin_compute_pass();
-    // RenderPassEncoder begin_render_pass(RenderPassLayout*, FrameBuffer*);
+
+    /**
+     * @brief Begin a new render pass.
+     *
+     * The returned \c RenderPassEncoder is used to bind graphics pipelines and issue dispatches.
+     * The render pass is ended when the \c RenderPassEncoder is destroyed.
+     */
+    RenderPassEncoder begin_render_pass(Framebuffer* framebuffer);
 
     /**
      * @brief Begin a new ray-tracing pass.

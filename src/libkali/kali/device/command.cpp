@@ -8,6 +8,7 @@
 #include "kali/device/pipeline.h"
 #include "kali/device/raytracing.h"
 #include "kali/device/shader_object.h"
+#include "kali/device/framebuffer.h"
 
 #include "kali/core/short_vector.h"
 #include "kali/core/maths.h"
@@ -1066,6 +1067,26 @@ ComputePassEncoder CommandStream::begin_compute_pass()
 
     m_pass_open = true;
     return ComputePassEncoder(this, (static_cast<gfx::IComputeCommandEncoder*>(m_gfx_command_encoder.get())));
+}
+
+RenderPassEncoder CommandStream::begin_render_pass(Framebuffer* framebuffer)
+{
+    KALI_CHECK(!m_pass_open, "CommandStream already has an active pass encoder");
+    KALI_CHECK_NOT_NULL(framebuffer);
+
+    create_command_buffer();
+
+    if (m_active_encoder != EncoderType::render) {
+        end_current_encoder();
+        m_gfx_command_encoder = m_command_buffer->gfx_command_buffer()->encodeRenderCommands(
+            framebuffer->gfx_render_pass_layout(),
+            framebuffer->gfx_framebuffer()
+        );
+        m_active_encoder = EncoderType::render;
+    }
+
+    m_pass_open = true;
+    return RenderPassEncoder(this, (static_cast<gfx::IRenderCommandEncoder*>(m_gfx_command_encoder.get())));
 }
 
 RayTracingPassEncoder CommandStream::begin_ray_tracing_pass()

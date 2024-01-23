@@ -3,6 +3,7 @@
 #include "kali/device/command.h"
 #include "kali/device/query.h"
 #include "kali/device/pipeline.h"
+#include "kali/device/framebuffer.h"
 #include "kali/device/shader_object.h"
 #include "kali/device/raytracing.h"
 
@@ -127,6 +128,7 @@ KALI_PY_EXPORT(device_command)
         )
         .def("copy_resource", &CommandStream::copy_resource, "dst"_a, "src"_a)
         .def("begin_compute_pass", &CommandStream::begin_compute_pass, nb::rv_policy::reference_internal)
+        .def("begin_render_pass", &CommandStream::begin_render_pass, nb::rv_policy::reference_internal)
         .def("begin_ray_tracing_pass", &CommandStream::begin_ray_tracing_pass, nb::rv_policy::reference_internal);
 
     nb::class_<ComputePassEncoder>(m, "ComputePassEncoder")
@@ -151,6 +153,27 @@ KALI_PY_EXPORT(device_command)
         )
         .def("dispatch", &ComputePassEncoder::dispatch, "thread_count"_a)
         .def("dispatch_thread_groups", &ComputePassEncoder::dispatch_thread_groups, "thread_group_count"_a);
+
+    nb::class_<RenderPassEncoder>(m, "RenderPassEncoder")
+        .def("__enter__", [](RenderPassEncoder* self) { return self; })
+        .def(
+            "__exit__",
+            [](RenderPassEncoder* self, nb::object, nb::object, nb::object) { self->end(); },
+            "exc_type"_a = nb::none(),
+            "exc_value"_a = nb::none(),
+            "traceback"_a = nb::none()
+        )
+        .def(
+            "bind_pipeline",
+            nb::overload_cast<const GraphicsPipeline*>(&RenderPassEncoder::bind_pipeline),
+            "pipeline"_a
+        )
+        .def(
+            "bind_pipeline",
+            nb::overload_cast<const GraphicsPipeline*, const ShaderObject*>(&RenderPassEncoder::bind_pipeline),
+            "pipeline"_a,
+            "shader_object"_a
+        );
 
     nb::class_<RayTracingPassEncoder>(m, "RayTracingPassEncoder")
         .def("__enter__", [](RayTracingPassEncoder* self) { return self; })
