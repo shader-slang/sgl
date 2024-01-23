@@ -31,6 +31,11 @@ Framebuffer::Framebuffer(ref<Device> device, FramebufferDesc desc)
         short_vector<gfx::IResourceView*, 16> gfx_render_target_views;
         for (size_t i = 0; i < m_desc.render_targets.size(); ++i) {
             const FramebufferAttachmentDesc& attachment = m_desc.render_targets[i];
+            KALI_CHECK(attachment.texture, "Render target texture is null");
+            KALI_CHECK(
+                is_set(attachment.texture->desc().usage, ResourceUsage::render_target),
+                "Texture is not render target"
+            );
             gfx_render_targets.push_back({
                 .format = static_cast<gfx::Format>(attachment.texture->format()),
                 .sampleCount = narrow_cast<gfx::GfxCount>(attachment.texture->desc().sample_count),
@@ -45,6 +50,11 @@ Framebuffer::Framebuffer(ref<Device> device, FramebufferDesc desc)
         gfx::IResourceView* gfx_depth_stencil_view{nullptr};
         if (m_desc.depth_stencil) {
             const FramebufferAttachmentDesc& attachment = *m_desc.depth_stencil;
+            KALI_CHECK(attachment.texture, "Render target texture is null");
+            KALI_CHECK(
+                is_set(attachment.texture->desc().usage, ResourceUsage::depth_stencil),
+                "Texture is not depth stencil"
+            );
             gfx_depth_stencil = {
                 .format = static_cast<gfx::Format>(attachment.texture->format()),
                 .sampleCount = narrow_cast<gfx::GfxCount>(attachment.texture->desc().sample_count),
