@@ -738,7 +738,7 @@ struct fmt::formatter<kali::math::matrix<T, R, C>> : formatter<typename kali::ma
     {
         auto out = ctx.out();
         for (int r = 0; r < R; ++r) {
-            out = ::fmt::format_to(out, "{}", (r == 0) ? "{" : ",\n ");
+            out = ::fmt::format_to(out, "{}", (r == 0) ? "{" : ", ");
             out = formatter<row_type>::format(matrix.get_row(r), ctx);
         }
         out = fmt::format_to(out, "}}");
