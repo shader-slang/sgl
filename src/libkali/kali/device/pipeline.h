@@ -53,9 +53,8 @@ private:
 
 struct GraphicsPipelineDesc {
     const ShaderProgram* program;
-
-    ref<InputLayout> input_layout;
-    // ref<FramebufferLayout> framebuffer_layout;
+    const InputLayout* input_layout;
+    const Framebuffer* framebuffer;
     PrimitiveType primitive_type{PrimitiveType::triangle};
     DepthStencilDesc depth_stencil;
     RasterizerDesc rasterizer;

@@ -2,6 +2,8 @@
 
 #include "kali/device/device.h"
 #include "kali/device/shader.h"
+#include "kali/device/input_layout.h"
+#include "kali/device/framebuffer.h"
 #include "kali/device/helpers.h"
 #include "kali/device/native_handle_traits.h"
 
@@ -77,6 +79,51 @@ GraphicsPipeline::GraphicsPipeline(ref<Device> device, GraphicsPipelineDesc desc
     : Pipeline(std::move(device))
 {
     KALI_CHECK_NOT_NULL(desc.program);
+
+    gfx::GraphicsPipelineStateDesc gfx_desc{
+        .program = desc.program->gfx_shader_program(),
+        .inputLayout = desc.input_layout->gfx_input_layout(),
+        .framebufferLayout = desc.framebuffer->gfx_framebuffer_layout(),
+        .primitiveType = static_cast<gfx::PrimitiveType>(desc.primitive_type),
+        .depthStencil = {
+            .depthTestEnable = desc.depth_stencil.depth_test_enable,
+            .depthWriteEnable = desc.depth_stencil.depth_write_enable,
+            .depthFunc = static_cast<gfx::ComparisonFunc>(desc.depth_stencil.depth_func),
+            .stencilEnable = desc.depth_stencil.stencil_enable,
+            .stencilReadMask = desc.depth_stencil.stencil_read_mask,
+            .stencilWriteMask = desc.depth_stencil.stencil_write_mask,
+            .frontFace = {
+                .stencilFailOp = static_cast<gfx::StencilOp>(desc.depth_stencil.front_face.stencil_fail_op),
+                .stencilDepthFailOp = static_cast<gfx::StencilOp>(desc.depth_stencil.front_face.stencil_depth_fail_op),
+                .stencilPassOp = static_cast<gfx::StencilOp>(desc.depth_stencil.front_face.stencil_pass_op),
+                .stencilFunc = static_cast<gfx::ComparisonFunc>(desc.depth_stencil.front_face.stencil_func),
+            },
+            .backFace = {
+                .stencilFailOp = static_cast<gfx::StencilOp>(desc.depth_stencil.back_face.stencil_fail_op),
+                .stencilDepthFailOp = static_cast<gfx::StencilOp>(desc.depth_stencil.back_face.stencil_depth_fail_op),
+                .stencilPassOp = static_cast<gfx::StencilOp>(desc.depth_stencil.back_face.stencil_pass_op),
+                .stencilFunc = static_cast<gfx::ComparisonFunc>(desc.depth_stencil.back_face.stencil_func),
+            },
+            .stencilRef = desc.depth_stencil.stencil_ref,
+        },
+        .rasterizer = {
+            .fillMode = static_cast<gfx::FillMode>(desc.rasterizer.fill_mode),
+            .cullMode = static_cast<gfx::CullMode>(desc.rasterizer.cull_mode),
+            .frontFace = static_cast<gfx::FrontFaceMode>(desc.rasterizer.front_face),
+            .depthBias = desc.rasterizer.depth_bias,
+            .depthBiasClamp = desc.rasterizer.depth_bias_clamp,
+            .slopeScaledDepthBias = desc.rasterizer.slope_scaled_depth_bias,
+            .depthClipEnable = desc.rasterizer.depth_clip_enable,
+            .scissorEnable = desc.rasterizer.scissor_enable,
+            .multisampleEnable = desc.rasterizer.multisample_enable,
+            .antialiasedLineEnable = desc.rasterizer.antialiased_line_enable,
+            .enableConservativeRasterization = desc.rasterizer.enable_conservative_rasterization,
+            .forcedSampleCount = desc.rasterizer.forced_sample_count,
+        },
+        // TODO
+        .blend = {}
+    };
+    SLANG_CALL(m_device->gfx_device()->createGraphicsPipelineState(gfx_desc, m_gfx_pipeline_state.writeRef()));
 }
 
 // ----------------------------------------------------------------------------

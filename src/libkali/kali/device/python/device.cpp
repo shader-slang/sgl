@@ -515,6 +515,37 @@ KALI_PY_EXPORT(device_device)
         "program"_a
     );
 
+    device.def("create_graphics_pipeline", &Device::create_graphics_pipeline, "desc"_a);
+    device.def(
+        "create_graphics_pipeline",
+        [](Device* self,
+           const ShaderProgram* program,
+           const InputLayout* input_layout,
+           const Framebuffer* framebuffer,
+           PrimitiveType primitive_type,
+           DepthStencilDesc depth_stencil,
+           RasterizerDesc rasterizer,
+           BlendDesc blend)
+        {
+            return self->create_graphics_pipeline({
+                .program = program,
+                .input_layout = input_layout,
+                .framebuffer = framebuffer,
+                .primitive_type = primitive_type,
+                .depth_stencil = depth_stencil,
+                .rasterizer = rasterizer,
+                .blend = blend,
+            });
+        },
+        "program"_a,
+        "input_layout"_a,
+        "framebuffer"_a,
+        "primitive_type"_a = PrimitiveType::triangle,
+        "depth_stencil"_a = DepthStencilDesc{},
+        "rasterizer"_a = RasterizerDesc{},
+        "blend"_a = BlendDesc{}
+    );
+
     device.def("create_ray_tracing_pipeline", &Device::create_ray_tracing_pipeline, "desc"_a);
     device.def(
         "create_ray_tracing_pipeline",
