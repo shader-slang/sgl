@@ -138,40 +138,11 @@ public:
     ref<TransientShaderObject> bind_pipeline(const GraphicsPipeline* pipeline);
     void bind_pipeline(const GraphicsPipeline* pipeline, const ShaderObject* shader_object);
 
-    struct Viewport {
-        float2 origin{0.f, 0.f};
-        float2 extent{0.f, 0.f};
-        float2 zrange{0.f, 1.f};
-    }; // TODO
-    static_assert(
-        (sizeof(Viewport) == sizeof(gfx::Viewport))
-            && (offsetof(Viewport, origin.x) == offsetof(gfx::Viewport, originX))
-            && (offsetof(Viewport, origin.y) == offsetof(gfx::Viewport, originY))
-            && (offsetof(Viewport, extent.x) == offsetof(gfx::Viewport, extentX))
-            && (offsetof(Viewport, extent.y) == offsetof(gfx::Viewport, extentY))
-            && (offsetof(Viewport, zrange.x) == offsetof(gfx::Viewport, minZ))
-            && (offsetof(Viewport, zrange.y) == offsetof(gfx::Viewport, maxZ)),
-        "Viewport struct mismatch"
-    );
-
     void set_viewports(std::span<Viewport> viewports);
-    struct ScissorRect {
-        int2 min{0, 0};
-        int2 max{0, 0};
-    }; // TODO
-    static_assert(
-        (sizeof(ScissorRect) == sizeof(gfx::ScissorRect))
-            && (offsetof(ScissorRect, min.x) == offsetof(gfx::ScissorRect, minX))
-            && (offsetof(ScissorRect, min.y) == offsetof(gfx::ScissorRect, minY))
-            && (offsetof(ScissorRect, max.x) == offsetof(gfx::ScissorRect, maxX))
-            && (offsetof(ScissorRect, max.y) == offsetof(gfx::ScissorRect, maxY)),
-        "ScissorRect struct mismatch"
-    );
     void set_scissor_rects(std::span<ScissorRect> scissor_rects);
-
     void set_viewport_and_scissor_rect(const Viewport& viewport);
 
-    // void set_primitive_topology(PrimitiveTopology topology);
+    void set_primitive_topology(PrimitiveTopology topology);
 
     void set_stencil_reference(uint32_t reference_value);
 

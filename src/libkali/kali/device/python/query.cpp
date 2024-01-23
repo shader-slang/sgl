@@ -17,7 +17,7 @@ KALI_PY_EXPORT(device_query)
         .def(nb::init<>())
         .def(
             "__init__",
-            [](QueryPoolDesc* self, const nb::dict& dict) { new (self) QueryPoolDesc(dict_to_QueryPoolDesc(dict)); }
+            [](QueryPoolDesc* self, nb::dict dict) { new (self) QueryPoolDesc(dict_to_QueryPoolDesc(dict)); }
         )
         .def_rw("type", &QueryPoolDesc::type)
         .def_rw("count", &QueryPoolDesc::count);

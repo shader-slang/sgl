@@ -173,7 +173,16 @@ KALI_PY_EXPORT(device_command)
             nb::overload_cast<const GraphicsPipeline*, const ShaderObject*>(&RenderPassEncoder::bind_pipeline),
             "pipeline"_a,
             "shader_object"_a
-        );
+        )
+        .def("set_viewports", &RenderPassEncoder::set_viewports, "viewports"_a)
+        .def("set_scissor_rects", &RenderPassEncoder::set_scissor_rects, "scissor_rects"_a)
+        .def("set_viewport_and_scissor_rect", &RenderPassEncoder::set_viewport_and_scissor_rect, "viewport"_a)
+        .def("set_primitive_topology", &RenderPassEncoder::set_primitive_topology, "topology"_a)
+        .def("set_stencil_reference", &RenderPassEncoder::set_stencil_reference, "reference_value"_a)
+        .def("set_vertex_buffer", &RenderPassEncoder::set_vertex_buffer, "slot"_a, "buffer"_a, "offset"_a = 0)
+        .def("set_index_buffer", &RenderPassEncoder::set_index_buffer, "buffer"_a, "index_format"_a, "offset"_a = 0)
+        .def("draw", &RenderPassEncoder::draw, "vertex_count"_a, "start_vertex"_a = 0);
+
 
     nb::class_<RayTracingPassEncoder>(m, "RayTracingPassEncoder")
         .def("__enter__", [](RayTracingPassEncoder* self) { return self; })

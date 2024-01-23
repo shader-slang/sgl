@@ -182,6 +182,41 @@ KALI_ENUM_REGISTER(TextureReductionOp);
 // Graphics
 // ----------------------------------------------------------------------------
 
+struct Viewport {
+    float x{0.f};
+    float y{0.f};
+    float width{0.f};
+    float height{0.f};
+    float min_depth{0.f};
+    float max_depth{1.f};
+};
+
+static_assert(
+    (sizeof(Viewport) == sizeof(gfx::Viewport)) && (offsetof(Viewport, x) == offsetof(gfx::Viewport, originX))
+        && (offsetof(Viewport, y) == offsetof(gfx::Viewport, originY))
+        && (offsetof(Viewport, width) == offsetof(gfx::Viewport, extentX))
+        && (offsetof(Viewport, height) == offsetof(gfx::Viewport, extentY))
+        && (offsetof(Viewport, min_depth) == offsetof(gfx::Viewport, minZ))
+        && (offsetof(Viewport, max_depth) == offsetof(gfx::Viewport, maxZ)),
+    "Viewport struct mismatch"
+);
+
+struct ScissorRect {
+    int32_t min_x{0};
+    int32_t min_y{0};
+    int32_t max_x{0};
+    int32_t max_y{0};
+};
+
+static_assert(
+    (sizeof(ScissorRect) == sizeof(gfx::ScissorRect))
+        && (offsetof(ScissorRect, min_x) == offsetof(gfx::ScissorRect, minX))
+        && (offsetof(ScissorRect, min_y) == offsetof(gfx::ScissorRect, minY))
+        && (offsetof(ScissorRect, max_x) == offsetof(gfx::ScissorRect, maxX))
+        && (offsetof(ScissorRect, max_y) == offsetof(gfx::ScissorRect, maxY)),
+    "ScissorRect struct mismatch"
+);
+
 enum class PrimitiveType : uint8_t {
     point = static_cast<uint8_t>(gfx::PrimitiveType::Point),
     line = static_cast<uint8_t>(gfx::PrimitiveType::Line),
@@ -199,6 +234,26 @@ KALI_ENUM_INFO(
     }
 );
 KALI_ENUM_REGISTER(PrimitiveType);
+
+enum class PrimitiveTopology : uint8_t {
+    triangle_list = static_cast<uint8_t>(gfx::PrimitiveTopology::TriangleList),
+    triangle_strip = static_cast<uint8_t>(gfx::PrimitiveTopology::TriangleStrip),
+    point_list = static_cast<uint8_t>(gfx::PrimitiveTopology::PointList),
+    line_list = static_cast<uint8_t>(gfx::PrimitiveTopology::LineList),
+    line_strip = static_cast<uint8_t>(gfx::PrimitiveTopology::LineStrip),
+};
+
+KALI_ENUM_INFO(
+    PrimitiveTopology,
+    {
+        {PrimitiveTopology::triangle_list, "triangle_list"},
+        {PrimitiveTopology::triangle_strip, "triangle_strip"},
+        {PrimitiveTopology::point_list, "point_list"},
+        {PrimitiveTopology::line_list, "line_list"},
+        {PrimitiveTopology::line_strip, "line_strip"},
+    }
+);
+KALI_ENUM_REGISTER(PrimitiveTopology);
 
 enum class StencilOp : uint8_t {
     keep = static_cast<uint8_t>(gfx::StencilOp::Keep),

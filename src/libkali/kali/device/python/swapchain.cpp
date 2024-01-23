@@ -21,7 +21,7 @@ KALI_PY_EXPORT(device_swapchain)
         .def(nb::init<>())
         .def(
             "__init__",
-            [](SwapchainDesc* self, const nb::dict& dict) { new (self) SwapchainDesc(dict_to_SwapchainDesc(dict)); }
+            [](SwapchainDesc* self, nb::dict dict) { new (self) SwapchainDesc(dict_to_SwapchainDesc(dict)); }
         )
         .def_rw("format", &SwapchainDesc::format)
         .def_rw("width", &SwapchainDesc::width)

@@ -15,7 +15,7 @@ KALI_PY_EXPORT(device_fence)
 
     nb::class_<FenceDesc>(m, "FenceDesc")
         .def(nb::init<>())
-        .def("__init__", [](FenceDesc* self, const nb::dict& dict) { new (self) FenceDesc(dict_to_FenceDesc(dict)); })
+        .def("__init__", [](FenceDesc* self, nb::dict dict) { new (self) FenceDesc(dict_to_FenceDesc(dict)); })
         .def_rw("initial_value", &FenceDesc::initial_value)
         .def_rw("shared", &FenceDesc::shared);
     nb::implicitly_convertible<nb::dict, FenceDesc>();

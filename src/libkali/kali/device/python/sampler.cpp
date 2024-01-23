@@ -26,10 +26,7 @@ KALI_PY_EXPORT(device_sampler)
 
     nb::class_<SamplerDesc>(m, "SamplerDesc")
         .def(nb::init<>())
-        .def(
-            "__init__",
-            [](SamplerDesc* self, const nb::dict& dict) { new (self) SamplerDesc(dict_to_SamplerDesc(dict)); }
-        )
+        .def("__init__", [](SamplerDesc* self, nb::dict dict) { new (self) SamplerDesc(dict_to_SamplerDesc(dict)); })
         .def_rw("min_filter", &SamplerDesc::min_filter)
         .def_rw("mag_filter", &SamplerDesc::mag_filter)
         .def_rw("mip_filter", &SamplerDesc::mip_filter)

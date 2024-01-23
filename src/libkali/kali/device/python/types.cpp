@@ -3,6 +3,24 @@
 #include "kali/device/types.h"
 
 namespace kali {
+KALI_DICT_TO_DESC_BEGIN(Viewport)
+KALI_DICT_TO_DESC_FIELD(x, float)
+KALI_DICT_TO_DESC_FIELD(y, float)
+KALI_DICT_TO_DESC_FIELD(width, float)
+KALI_DICT_TO_DESC_FIELD(height, float)
+KALI_DICT_TO_DESC_FIELD(min_depth, float)
+KALI_DICT_TO_DESC_FIELD(max_depth, float)
+KALI_DICT_TO_DESC_END()
+
+KALI_DICT_TO_DESC_BEGIN(ScissorRect)
+KALI_DICT_TO_DESC_FIELD(min_x, int32_t)
+KALI_DICT_TO_DESC_FIELD(min_y, int32_t)
+KALI_DICT_TO_DESC_FIELD(max_x, int32_t)
+KALI_DICT_TO_DESC_FIELD(max_y, int32_t)
+KALI_DICT_TO_DESC_END()
+} // namespace kali
+
+namespace kali {
 struct PyAccelerationStructureBuildInputs : AccelerationStructureBuildInputs {
     std::vector<RayTracingGeometryDesc> geometry_descs_data;
 };
@@ -29,7 +47,28 @@ KALI_PY_EXPORT(device_types)
     // Graphics
     // ------------------------------------------------------------------------
 
+    nb::class_<Viewport>(m, "Viewport")
+        .def(nb::init<>())
+        .def("__init__", [](Viewport* self, nb::dict dict) { new (self) Viewport(dict_to_Viewport(dict)); })
+        .def_rw("x", &Viewport::x)
+        .def_rw("y", &Viewport::y)
+        .def_rw("width", &Viewport::width)
+        .def_rw("height", &Viewport::height)
+        .def_rw("min_depth", &Viewport::min_depth)
+        .def_rw("max_depth", &Viewport::max_depth);
+    nb::implicitly_convertible<nb::dict, Viewport>();
+
+    nb::class_<ScissorRect>(m, "ScissorRect")
+        .def(nb::init<>())
+        .def("__init__", [](ScissorRect* self, nb::dict dict) { new (self) ScissorRect(dict_to_ScissorRect(dict)); })
+        .def_rw("min_x", &ScissorRect::min_x)
+        .def_rw("min_y", &ScissorRect::min_y)
+        .def_rw("max_x", &ScissorRect::max_x)
+        .def_rw("max_y", &ScissorRect::max_y);
+    nb::implicitly_convertible<nb::dict, ScissorRect>();
+
     nb::kali_enum<PrimitiveType>(m, "PrimitiveType");
+    nb::kali_enum<PrimitiveTopology>(m, "PrimitiveTopology");
     nb::kali_enum<StencilOp>(m, "StencilOp");
     nb::kali_enum<FillMode>(m, "FillMode");
     nb::kali_enum<CullMode>(m, "CullMode");

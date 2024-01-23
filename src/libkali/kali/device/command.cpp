@@ -246,7 +246,10 @@ void RenderPassEncoder::set_viewport_and_scissor_rect(const Viewport& viewport)
     m_gfx_render_command_encoder->setViewportAndScissor(reinterpret_cast<const gfx::Viewport&>(viewport));
 }
 
-// void set_primitive_topology(PrimitiveTopology topology);
+void RenderPassEncoder::set_primitive_topology(PrimitiveTopology topology)
+{
+    m_gfx_render_command_encoder->setPrimitiveTopology(static_cast<gfx::PrimitiveTopology>(topology));
+}
 
 void RenderPassEncoder::set_stencil_reference(uint32_t reference_value)
 {

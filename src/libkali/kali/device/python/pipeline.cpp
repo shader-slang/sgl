@@ -79,7 +79,7 @@ KALI_PY_EXPORT(device_pipeline)
         .def(nb::init<>())
         .def(
             "__init__",
-            [](ComputePipelineDesc* self, const nb::dict& dict)
+            [](ComputePipelineDesc* self, nb::dict dict)
             { new (self) ComputePipelineDesc(dict_to_ComputePipelineDesc(dict)); }
         )
         .def_rw("program", &ComputePipelineDesc::program);
@@ -88,14 +88,26 @@ KALI_PY_EXPORT(device_pipeline)
     nb::class_<ComputePipeline, Pipeline>(m, "ComputePipeline")
         .def_prop_ro("thread_group_size", &ComputePipeline::thread_group_size);
 
+    nb::class_<GraphicsPipelineDesc>(m, "GraphicsPipelineDesc")
+        .def(nb::init<>())
+        .def(
+            "__init__",
+            [](GraphicsPipelineDesc* self, nb::dict dict)
+            { new (self) GraphicsPipelineDesc(dict_to_GraphicsPipelineDesc(dict)); }
+        )
+        .def_rw("program", &GraphicsPipelineDesc::program)
+        .def_rw("input_layout", &GraphicsPipelineDesc::input_layout)
+        .def_rw("framebuffer", &GraphicsPipelineDesc::framebuffer)
+        .def_rw("primitive_type", &GraphicsPipelineDesc::primitive_type)
+        .def_rw("depth_stencil", &GraphicsPipelineDesc::depth_stencil)
+        .def_rw("rasterizer", &GraphicsPipelineDesc::rasterizer)
+        .def_rw("blend", &GraphicsPipelineDesc::blend);
+
     nb::class_<GraphicsPipeline, Pipeline>(m, "GraphicsPipeline");
 
     nb::class_<HitGroupDesc>(m, "HitGroupDesc")
         .def(nb::init<>())
-        .def(
-            "__init__",
-            [](HitGroupDesc* self, const nb::dict& dict) { new (self) HitGroupDesc(dict_to_HitGroupDesc(dict)); }
-        )
+        .def("__init__", [](HitGroupDesc* self, nb::dict dict) { new (self) HitGroupDesc(dict_to_HitGroupDesc(dict)); })
         .def(
             nb::init<std::string, std::string, std::string, std::string>(),
             "hit_group_name"_a,
@@ -113,7 +125,7 @@ KALI_PY_EXPORT(device_pipeline)
         .def(nb::init<>())
         .def(
             "__init__",
-            [](RayTracingPipelineDesc* self, const nb::dict& dict)
+            [](RayTracingPipelineDesc* self, nb::dict dict)
             { new (self) RayTracingPipelineDesc(dict_to_RayTracingPipelineDesc(dict)); }
         )
         .def_rw("program", &RayTracingPipelineDesc::program)

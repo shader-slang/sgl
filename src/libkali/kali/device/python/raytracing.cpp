@@ -37,8 +37,7 @@ KALI_PY_EXPORT(device_raytracing)
         .def(nb::init<>())
         .def(
             "__init__",
-            [](ShaderTableDesc* self, const nb::dict& dict)
-            { new (self) ShaderTableDesc(dict_to_ShaderTableDesc(dict)); }
+            [](ShaderTableDesc* self, nb::dict dict) { new (self) ShaderTableDesc(dict_to_ShaderTableDesc(dict)); }
         )
         .def_rw("program", &ShaderTableDesc::program)
         .def_rw("ray_gen_entry_points", &ShaderTableDesc::ray_gen_entry_points)
