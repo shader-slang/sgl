@@ -43,6 +43,7 @@ target_sources(kali PRIVATE
     kali/core/plugin.h
     kali/core/resolver.h
     kali/core/short_vector.h
+    kali/core/static_vector.h
     kali/core/stream.h
     kali/core/string.cpp
     kali/core/string.h
@@ -406,6 +407,7 @@ target_sources(kali_tests PRIVATE
     kali/core/tests/test_platform.cpp
     kali/core/tests/test_plugin.cpp
     kali/core/tests/test_short_vector.cpp
+    kali/core/tests/test_static_vector.cpp
     kali/core/tests/test_stream.cpp
     kali/core/tests/test_string.cpp
     kali/device/tests/test_device.cpp
