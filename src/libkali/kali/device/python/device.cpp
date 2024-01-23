@@ -14,6 +14,16 @@
 
 #include "kali/core/window.h"
 
+namespace kali {
+KALI_DICT_TO_DESC_BEGIN(DeviceDesc)
+KALI_DICT_TO_DESC_FIELD(type, DeviceType);
+KALI_DICT_TO_DESC_FIELD(enable_debug_layers, bool);
+KALI_DICT_TO_DESC_FIELD(adapter_luid, AdapterLUID);
+KALI_DICT_TO_DESC_FIELD(default_shader_model, ShaderModel);
+KALI_DICT_TO_DESC_FIELD(shader_cache_path, std::filesystem::path);
+KALI_DICT_TO_DESC_END()
+} // namespace kali
+
 KALI_PY_EXPORT(device_device)
 {
     using namespace kali;
@@ -29,11 +39,13 @@ KALI_PY_EXPORT(device_device)
 
     nb::class_<DeviceDesc>(m, "DeviceDesc")
         .def(nb::init<>())
+        .def("__init__", [](DeviceDesc* self, nb::dict dict) { new (self) DeviceDesc(dict_to_DeviceDesc(dict)); })
         .def_rw("type", &DeviceDesc::type)
         .def_rw("enable_debug_layers", &DeviceDesc::enable_debug_layers)
         .def_rw("adapter_luid", &DeviceDesc::adapter_luid)
         .def_rw("default_shader_model", &DeviceDesc::default_shader_model)
         .def_rw("shader_cache_path", &DeviceDesc::shader_cache_path);
+    nb::implicitly_convertible<nb::dict, DeviceDesc>();
 
     nb::class_<DeviceLimits>(m, "DeviceLimits")
         .def_ro("max_texture_dimension_1d", &DeviceLimits::max_texture_dimension_1d)

@@ -190,6 +190,53 @@ inline std::optional<Struct::Type> dtype_to_struct_type(nb::dlpack::dtype dtype)
 
 } // namespace kali
 
+
+namespace kali::detail {
+inline constexpr uint64_t const_hash(std::string_view str)
+{
+    uint64_t hash = 0xcbf29ce484222325;
+    constexpr size_t prime = 0x00000100000001b3;
+    for (auto c : str) {
+        hash ^= static_cast<size_t>(c);
+        hash *= prime;
+    }
+    return hash;
+}
+} // namespace kali::detail
+
+#define KALI_DICT_TO_DESC_BEGIN(type)                                                                                  \
+    inline type dict_to_##type(nb::dict dict)                                                                          \
+    {                                                                                                                  \
+        type desc = {};                                                                                                \
+        for (const auto& [k, v] : dict) {                                                                              \
+            std::string_view key = nb::cast<std::string_view>(k);                                                      \
+            uint64_t hash = ::kali::detail::const_hash(key);                                                           \
+            switch (hash) {
+
+#define KALI_DICT_TO_DESC_FIELD(name, type)                                                                            \
+    case ::kali::detail::const_hash(#name):                                                                            \
+        desc.name = nb::cast<type>(v);                                                                                 \
+        break;
+
+#define KALI_DICT_TO_DESC_FIELD_VECTOR(name, type)                                                                     \
+    case ::kali::detail::const_hash(#name):                                                                            \
+        desc.name = {};                                                                                                \
+        for (const auto& item : v)                                                                                     \
+            desc.name.push_back(dict_to_##type(nb::cast<nb::dict>(item)));                                             \
+        break;
+
+#define KALI_DICT_TO_DESC_FIELD_CUSTOM(name, code)                                                                     \
+    case ::kali::detail::const_hash(#name):                                                                            \
+        desc.name = code;                                                                                              \
+        break;
+
+#define KALI_DICT_TO_DESC_END()                                                                                        \
+    }                                                                                                                  \
+    }                                                                                                                  \
+    return desc;                                                                                                       \
+    }
+
+
 #define KALI_PY_DECLARE(name) extern void kali_python_export_##name(nb::module_& m)
 #define KALI_PY_EXPORT(name) void kali_python_export_##name([[maybe_unused]] ::nb::module_& m)
 #define KALI_PY_IMPORT(name) kali_python_export_##name(m)

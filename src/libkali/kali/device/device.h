@@ -85,7 +85,7 @@ struct DeviceDesc {
     std::optional<AdapterLUID> adapter_luid;
 
     /// Default shader model to use when compiling shaders.
-    ShaderModel default_shader_model = ShaderModel::sm_6_6;
+    ShaderModel default_shader_model{ShaderModel::sm_6_6};
 
     /// Path to the shader cache directory. Leave empty to disable shader cache.
     std::filesystem::path shader_cache_path;

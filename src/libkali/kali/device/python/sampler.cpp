@@ -2,12 +2,34 @@
 
 #include "kali/device/sampler.h"
 
+namespace kali {
+KALI_DICT_TO_DESC_BEGIN(SamplerDesc)
+KALI_DICT_TO_DESC_FIELD(min_filter, TextureFilteringMode)
+KALI_DICT_TO_DESC_FIELD(mag_filter, TextureFilteringMode)
+KALI_DICT_TO_DESC_FIELD(mip_filter, TextureFilteringMode)
+KALI_DICT_TO_DESC_FIELD(reduction_op, TextureReductionOp)
+KALI_DICT_TO_DESC_FIELD(address_u, TextureAddressingMode)
+KALI_DICT_TO_DESC_FIELD(address_v, TextureAddressingMode)
+KALI_DICT_TO_DESC_FIELD(address_w, TextureAddressingMode)
+KALI_DICT_TO_DESC_FIELD(mip_lod_bias, float)
+KALI_DICT_TO_DESC_FIELD(max_anisotropy, uint32_t)
+KALI_DICT_TO_DESC_FIELD(comparison_func, ComparisonFunc)
+KALI_DICT_TO_DESC_FIELD(border_color, float4)
+KALI_DICT_TO_DESC_FIELD(min_lod, float)
+KALI_DICT_TO_DESC_FIELD(max_lod, float)
+KALI_DICT_TO_DESC_END()
+} // namespace kali
+
 KALI_PY_EXPORT(device_sampler)
 {
     using namespace kali;
 
     nb::class_<SamplerDesc>(m, "SamplerDesc")
         .def(nb::init<>())
+        .def(
+            "__init__",
+            [](SamplerDesc* self, const nb::dict& dict) { new (self) SamplerDesc(dict_to_SamplerDesc(dict)); }
+        )
         .def_rw("min_filter", &SamplerDesc::min_filter)
         .def_rw("mag_filter", &SamplerDesc::mag_filter)
         .def_rw("mip_filter", &SamplerDesc::mip_filter)
@@ -21,6 +43,7 @@ KALI_PY_EXPORT(device_sampler)
         .def_rw("border_color", &SamplerDesc::border_color)
         .def_rw("min_lod", &SamplerDesc::min_lod)
         .def_rw("max_lod", &SamplerDesc::max_lod);
+    nb::implicitly_convertible<nb::dict, SamplerDesc>();
 
     nb::class_<Sampler, DeviceResource>(m, "Sampler").def_prop_ro("desc", &Sampler::desc);
 }

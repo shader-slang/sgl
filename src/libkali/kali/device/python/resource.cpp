@@ -9,6 +9,33 @@
 
 namespace kali {
 
+KALI_DICT_TO_DESC_BEGIN(BufferDesc)
+KALI_DICT_TO_DESC_FIELD(size, size_t)
+KALI_DICT_TO_DESC_FIELD(struct_size, size_t)
+KALI_DICT_TO_DESC_FIELD(format, Format)
+KALI_DICT_TO_DESC_FIELD(initial_state, ResourceState)
+KALI_DICT_TO_DESC_FIELD(usage, ResourceUsage)
+KALI_DICT_TO_DESC_FIELD(memory_type, MemoryType)
+KALI_DICT_TO_DESC_FIELD(debug_name, std::string)
+KALI_DICT_TO_DESC_END()
+
+KALI_DICT_TO_DESC_BEGIN(TextureDesc)
+KALI_DICT_TO_DESC_FIELD(type, TextureType)
+KALI_DICT_TO_DESC_FIELD(format, Format)
+KALI_DICT_TO_DESC_FIELD(width, uint32_t)
+KALI_DICT_TO_DESC_FIELD(height, uint32_t)
+KALI_DICT_TO_DESC_FIELD(depth, uint32_t)
+KALI_DICT_TO_DESC_FIELD(array_size, uint32_t)
+KALI_DICT_TO_DESC_FIELD(mip_count, uint32_t)
+KALI_DICT_TO_DESC_FIELD(sample_count, uint32_t)
+KALI_DICT_TO_DESC_FIELD(quality, uint32_t)
+KALI_DICT_TO_DESC_FIELD(initial_state, ResourceState)
+KALI_DICT_TO_DESC_FIELD(usage, ResourceUsage)
+KALI_DICT_TO_DESC_FIELD(memory_type, MemoryType)
+KALI_DICT_TO_DESC_FIELD(debug_name, std::string)
+KALI_DICT_TO_DESC_END()
+
+
 inline std::optional<nb::dlpack::dtype> resource_format_to_dtype(Format format)
 {
     const auto& info = get_format_info(format);
@@ -158,6 +185,7 @@ KALI_PY_EXPORT(device_resource)
 
     nb::class_<BufferDesc>(m, "BufferDesc")
         .def(nb::init<>())
+        .def("__init__", [](BufferDesc* self, nb::dict dict) { new (self) BufferDesc(dict_to_BufferDesc(dict)); })
         .def_rw("size", &BufferDesc::size)
         .def_rw("struct_size", &BufferDesc::struct_size)
         .def_rw("format", &BufferDesc::format)
@@ -165,6 +193,7 @@ KALI_PY_EXPORT(device_resource)
         .def_rw("usage", &BufferDesc::usage)
         .def_rw("memory_type", &BufferDesc::memory_type)
         .def_rw("debug_name", &BufferDesc::debug_name);
+    nb::implicitly_convertible<nb::dict, BufferDesc>();
 
     nb::class_<Buffer, Resource>(m, "Buffer")
         .def_prop_ro("desc", &Buffer::desc)
@@ -193,6 +222,7 @@ KALI_PY_EXPORT(device_resource)
 
     nb::class_<TextureDesc>(m, "TextureDesc")
         .def(nb::init<>())
+        .def("__init__", [](TextureDesc* self, nb::dict dict) { new (self) TextureDesc(dict_to_TextureDesc(dict)); })
         .def_rw("type", &TextureDesc::type)
         .def_rw("format", &TextureDesc::format)
         .def_rw("width", &TextureDesc::width)
@@ -206,6 +236,7 @@ KALI_PY_EXPORT(device_resource)
         .def_rw("usage", &TextureDesc::usage)
         .def_rw("memory_type", &TextureDesc::memory_type)
         .def_rw("debug_name", &TextureDesc::debug_name);
+    nb::implicitly_convertible<nb::dict, TextureDesc>();
 
     nb::class_<SubresourceLayout>(m, "SubresourceLayout")
         .def_ro("row_size", &SubresourceLayout::row_size)
