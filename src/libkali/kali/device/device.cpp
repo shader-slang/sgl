@@ -117,6 +117,8 @@ Device::Device(const DeviceDesc& desc)
 
     gfx::IDevice::Desc gfx_desc{
         .deviceType = gfx_device_type(m_desc.type),
+        .adapterLUID
+        = m_desc.adapter_luid ? reinterpret_cast<const gfx::AdapterLUID*>(m_desc.adapter_luid->data()) : nullptr,
         .slang{
             .slangGlobalSession = m_global_session,
         },
