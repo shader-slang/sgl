@@ -73,7 +73,12 @@ int main(int argc, const char* argv[])
         .mip_count = 1,
         .usage = ResourceUsage::shader_resource,
     });
-    device->command_stream()->upload_texture_data(input_tex, 0, input->data());
+    // TODO use convenience function (or init data) when available
+    {
+        ref<CommandBuffer> command_buffer = device->create_command_buffer();
+        command_buffer->upload_texture_data(input_tex, 0, input->data());
+        command_buffer->submit();
+    }
 
     // Show input texture in tev
     if (tev)
@@ -107,8 +112,9 @@ int main(int argc, const char* argv[])
     ref<QueryPool> queries = device->create_query_pool({.type = QueryType::timestamp, .count = num_iters * 2});
 
     // Compress!
+    ref<CommandBuffer> command_buffer = device->create_command_buffer();
     for (uint32_t i = 0; i < num_iters; ++i) {
-        device->command_stream()->write_timestamp(queries, i * 2);
+        command_buffer->write_timestamp(queries, i * 2);
         encoder->dispatch(
             uint3(w, h, 1),
             [&](ShaderCursor cursor)
@@ -118,10 +124,12 @@ int main(int argc, const char* argv[])
                 cursor["lr"] = 0.1f;
                 cursor["adam_beta_1"] = 0.9f;
                 cursor["adam_beta_2"] = 0.999f;
-            }
+            },
+            command_buffer
         );
-        device->command_stream()->write_timestamp(queries, i * 2 + 1);
+        command_buffer->write_timestamp(queries, i * 2 + 1);
     }
+    command_buffer->submit();
 
     device->wait();
 

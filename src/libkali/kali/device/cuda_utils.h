@@ -104,8 +104,8 @@ namespace cuda_utils {
         void signal(uint64_t value, cudaStream_t stream = 0);
         void wait(uint64_t value, cudaStream_t stream = 0);
 
-        void wait_for_cuda(CommandStream* command_stream, cudaStream_t cuda_stream = 0, uint64_t value = Fence::AUTO);
-        void wait_for_device(CommandStream* command_stream, cudaStream_t cuda_stream = 0, uint64_t value = Fence::AUTO);
+        void wait_for_cuda(CommandQueue* command_queue, cudaStream_t cuda_stream = 0, uint64_t value = Fence::AUTO);
+        void wait_for_device(CommandQueue* command_queue, cudaStream_t cuda_stream = 0, uint64_t value = Fence::AUTO);
 
     private:
         /// Non-owning pointer to the fence.

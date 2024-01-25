@@ -98,7 +98,10 @@ inline void buffer_from_numpy(Buffer* self, nb::ndarray<nb::numpy> data)
     size_t data_size = data.nbytes();
     KALI_CHECK(data_size <= buffer_size, "numpy array is larger than the buffer ({} > {})", data_size, buffer_size);
 
-    self->device()->command_stream()->upload_buffer_data(self, 0, data_size, data.data());
+    // TODO use convenience function on buffer when available
+    ref<CommandBuffer> command_buffer = self->device()->create_command_buffer();
+    command_buffer->upload_buffer_data(self, 0, data_size, data.data());
+    command_buffer->submit();
 }
 
 /**
@@ -157,7 +160,10 @@ inline void texture_from_numpy(Texture* self, nb::ndarray<nb::numpy> data, uint3
         subresource_size
     );
 
-    self->device()->command_stream()->upload_texture_data(self, subresource, data.data());
+    // TODO use convenience function on texture when available
+    ref<CommandBuffer> command_buffer = self->device()->create_command_buffer();
+    command_buffer->upload_texture_data(self, subresource, data.data());
+    command_buffer->submit();
 }
 
 } // namespace kali

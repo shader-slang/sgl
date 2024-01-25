@@ -93,6 +93,7 @@ while not window.should_close():
             debug_name="output_texture",
         )
 
+    command_buffer = device.create_command_buffer()
     kernel.dispatch(
         thread_count=[output_texture.width, output_texture.height, 1],
         vars={
@@ -101,16 +102,17 @@ while not window.should_close():
             "g_mouse_pos": mouse_pos,
             "g_mouse_down": mouse_down,
         },
+        command_buffer=command_buffer
     )
-    device.command_stream.copy_resource(dst=image, src=output_texture)
-    device.command_stream.texture_barrier(image, kali.ResourceState.present)
-    device.command_stream.submit()
+    command_buffer.copy_resource(dst=image, src=output_texture)
+    command_buffer.texture_barrier(image, kali.ResourceState.present)
+    command_buffer.submit()
     del image
 
     swapchain.present()
 
-    frame += 1
-
     device.end_frame()
+
+    frame += 1
 
     print(kali.platform.memory_stats().peak_rss / (1024 * 1024))

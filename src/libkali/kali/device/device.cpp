@@ -30,6 +30,8 @@
 
 namespace kali {
 
+static constexpr uint32_t IN_FLIGHT_FRAME_COUNT = 3;
+
 class DebugLogger : public gfx::IDebugCallback {
 public:
     DebugLogger()
@@ -200,8 +202,7 @@ Device::Device(const DeviceDesc& desc)
         m_features.push_back(features[i]);
 
     // Create per-frame data.
-    // TODO hardcoded frame count, maybe add to device desc?
-    m_frame_data.resize(3);
+    m_frame_data.resize(IN_FLIGHT_FRAME_COUNT);
     for (auto& frame_data : m_frame_data) {
         m_gfx_device->createTransientResourceHeap(
             gfx::ITransientResourceHeap::Desc{
@@ -220,11 +221,8 @@ Device::Device(const DeviceDesc& desc)
     m_frame_fence = create_fence({.shared = true});
     m_frame_fence->break_strong_reference_to_device();
 
-    m_default_queue = create_command_queue({.type = CommandQueueType::graphics});
-    m_default_queue->break_strong_reference_to_device();
-
-    m_command_stream = create_command_stream();
-    m_command_stream->break_strong_reference_to_device();
+    m_graphics_queue = make_ref<CommandQueue>(ref<Device>(this), CommandQueueDesc{.type = CommandQueueType::graphics});
+    m_graphics_queue->break_strong_reference_to_device();
 
     m_upload_heap = create_memory_heap(
         {.memory_type = MemoryType::upload,
@@ -252,8 +250,7 @@ Device::~Device()
     m_read_back_heap.reset();
     m_upload_heap.reset();
 
-    m_command_stream.reset();
-    m_default_queue.reset();
+    m_graphics_queue.reset();
     m_frame_fence.reset();
 
     m_deferred_release_queue = {};
@@ -263,7 +260,7 @@ Device::~Device()
 
 ref<Swapchain> Device::create_swapchain(SwapchainDesc desc, Window* window)
 {
-    return make_ref<Swapchain>(std::move(desc), window, m_default_queue, ref<Device>(this));
+    return make_ref<Swapchain>(std::move(desc), window, m_graphics_queue, ref<Device>(this));
 }
 
 ref<Buffer> Device::create_buffer(BufferDesc desc, const void* init_data, size_t init_data_size)
@@ -397,20 +394,12 @@ ref<RayTracingPipeline> Device::create_ray_tracing_pipeline(RayTracingPipelineDe
     return make_ref<RayTracingPipeline>(ref<Device>(this), std::move(desc));
 }
 
-ref<CommandQueue> Device::create_command_queue(CommandQueueDesc desc)
-{
-    return make_ref<CommandQueue>(ref<Device>(this), std::move(desc));
-}
-
 ref<CommandBuffer> Device::create_command_buffer()
 {
-    // TODO increment frame
-    return make_ref<CommandBuffer>(ref<Device>(this), m_frame_data[0].transient_resource_heap->createCommandBuffer());
-}
-
-ref<CommandStream> Device::create_command_stream()
-{
-    return make_ref<CommandStream>(ref<Device>(this), m_default_queue);
+    return make_ref<CommandBuffer>(
+        ref<Device>(this),
+        m_frame_data[m_current_frame_index].transient_resource_heap->createCommandBuffer()
+    );
 }
 
 ref<MemoryHeap> Device::create_memory_heap(MemoryHeapDesc desc)
@@ -418,17 +407,29 @@ ref<MemoryHeap> Device::create_memory_heap(MemoryHeapDesc desc)
     return make_ref<MemoryHeap>(ref<Device>(this), m_frame_fence, std::move(desc));
 }
 
+void Device::end_frame()
+{
+    if (m_frame_fence->signaled_value() > IN_FLIGHT_FRAME_COUNT)
+        m_frame_fence->wait(m_frame_fence->signaled_value() - IN_FLIGHT_FRAME_COUNT);
+
+    m_frame_data[m_current_frame_index].transient_resource_heap->finish();
+    m_current_frame_index = (m_current_frame_index + 1) % IN_FLIGHT_FRAME_COUNT;
+    m_frame_data[m_current_frame_index].transient_resource_heap->synchronizeAndReset();
+
+    m_graphics_queue->signal(m_frame_fence);
+}
+
 void Device::wait()
 {
-    m_command_stream->submit();
-    // TODO maybe we should keep track of all queues and wait for all of them?
-    m_default_queue->wait();
+    m_graphics_queue->wait();
 }
 
 void Device::read_buffer(const Buffer* buffer, size_t offset, size_t size, void* out_data)
 {
-    m_command_stream->buffer_barrier(buffer, ResourceState::copy_source);
-    m_command_stream->submit();
+    // TODO move this to CommandBuffer
+    ref<CommandBuffer> command_buffer = create_command_buffer();
+    command_buffer->buffer_barrier(buffer, ResourceState::copy_source);
+    command_buffer->submit();
 
     Slang::ComPtr<ISlangBlob> blob;
     if (offset + size > buffer->size())
@@ -445,8 +446,10 @@ void Device::read_texture(
     size_t* out_pixel_size
 )
 {
-    m_command_stream->texture_barrier(texture, ResourceState::copy_source);
-    m_command_stream->submit();
+    // TODO move this to CommandBuffer
+    ref<CommandBuffer> command_buffer = create_command_buffer();
+    command_buffer->texture_barrier(texture, ResourceState::copy_source);
+    command_buffer->submit();
 
     Slang::ComPtr<ISlangBlob> blob;
     SLANG_CALL(m_gfx_device->readTextureResource(

@@ -490,15 +490,14 @@ class Scene:
             size=blas_buffer.size,
         )
 
-        command_stream = self.device.command_stream
-
-        with command_stream.begin_ray_tracing_pass() as ray_tracing_pass:
+        command_buffer = self.device.create_command_buffer()
+        with command_buffer.begin_ray_tracing_pass() as ray_tracing_pass:
             ray_tracing_pass.build_acceleration_structure(
                 inputs=blas_build_inputs,
                 dst=blas,
                 scratch_data=blas_scratch_buffer.device_address,
             )
-        command_stream.submit()
+        command_buffer.submit()
 
         return blas
 
@@ -552,15 +551,14 @@ class Scene:
             size=tlas_buffer.size,
         )
 
-        command_stream = self.device.command_stream
-
-        with command_stream.begin_ray_tracing_pass() as ray_tracing_pass:
+        command_buffer = self.device.create_command_buffer()
+        with command_buffer.begin_ray_tracing_pass() as ray_tracing_pass:
             ray_tracing_pass.build_acceleration_structure(
                 inputs=tlas_build_inputs,
                 dst=tlas,
                 scratch_data=tlas_scratch_buffer.device_address,
             )
-        command_stream.submit()
+        command_buffer.submit()
 
         return tlas
 
@@ -597,13 +595,15 @@ class PathTracer:
         self.scene.camera.height = h
         self.scene.camera.recompute()
 
-        with self.device.command_stream.begin_compute_pass() as compute_pass:
+        command_buffer = self.device.create_command_buffer()
+        with command_buffer.begin_compute_pass() as compute_pass:
             shader_object = compute_pass.bind_pipeline(self.pipeline)
             cursor = kali.ShaderCursor(shader_object)
             cursor.g_output = output
             cursor.g_frame = frame
             self.scene.bind(cursor.g_scene)
             compute_pass.dispatch(thread_count=[w, h, 1])
+        command_buffer.submit()
 
 
 class Accumulator:
@@ -780,14 +780,17 @@ class App:
             )
             self.tone_mapper.execute(self.accum_texture, self.output_texture)
 
-            self.device.command_stream.copy_resource(dst=image, src=self.output_texture)
-            self.device.command_stream.texture_barrier(
+            command_buffer = self.device.create_command_buffer()
+            command_buffer.copy_resource(dst=image, src=self.output_texture)
+            command_buffer.texture_barrier(
                 image, kali.ResourceState.present
             )
-            self.device.command_stream.submit()
+            command_buffer.submit()
             del image
 
             self.swapchain.present()
+
+            self.device.end_frame()
 
             frame += 1
 

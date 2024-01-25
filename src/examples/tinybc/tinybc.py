@@ -76,8 +76,9 @@ num_iters = 1000 if args.benchmark else 1
 queries = device.create_query_pool(kali.QueryType.timestamp, num_iters * 2)
 
 # Compress!
+command_buffer = device.create_command_buffer()
 for i in range(num_iters):
-    device.command_stream.write_timestamp(queries, i * 2)
+    command_buffer.write_timestamp(queries, i * 2)
     encoder.dispatch(
         thread_count=[w, h, 1],
         vars={
@@ -87,8 +88,10 @@ for i in range(num_iters):
             "adam_beta_1": 0.9,
             "adam_beta_2": 0.999,
         },
+        command_buffer=command_buffer,
     )
-    device.command_stream.write_timestamp(queries, i * 2 + 1)
+    command_buffer.write_timestamp(queries, i * 2 + 1)
+command_buffer.submit()
 
 # Wait for GPU to finish and get timestamps
 device.wait()

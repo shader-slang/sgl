@@ -430,7 +430,7 @@ KALI_PY_EXPORT(device_device)
         "render_targets"_a,
         "depth_stencil"_a.none() = nb::none()
     );
-    device.def("create_command_stream", &Device::create_command_stream);
+    device.def("create_command_buffer", &Device::create_command_buffer);
     device.def(
         "get_acceleration_structure_prebuild_info",
         &Device::get_acceleration_structure_prebuild_info,
@@ -574,12 +574,6 @@ KALI_PY_EXPORT(device_device)
         "flags"_a = RayTracingPipelineFlags::none
     );
 
-    device.def("create_command_queue", &Device::create_command_queue, "desc"_a);
-    device.def(
-        "create_command_queue",
-        [](Device* self, CommandQueueType type) { return self->create_command_queue({.type = type}); },
-        "type"_a = CommandQueueType::graphics
-    );
     device.def("create_memory_heap", &Device::create_memory_heap, "desc"_a);
     device.def(
         "create_memory_heap",
@@ -605,10 +599,10 @@ KALI_PY_EXPORT(device_device)
         "debug_name"_a = ""
     );
 
-    device.def_prop_ro("default_queue", &Device::default_queue);
-    device.def_prop_ro("command_stream", &Device::command_stream);
+    device.def_prop_ro("graphics_queue", &Device::graphics_queue);
     device.def_prop_ro("upload_heap", &Device::upload_heap);
     device.def_prop_ro("read_back_heap", &Device::read_back_heap);
+    device.def("end_frame", &Device::end_frame);
     device.def("wait", &Device::wait);
 
     device.def_static("enumerate_adapters", &Device::enumerate_adapters, "type"_a = DeviceType::automatic);

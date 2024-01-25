@@ -37,7 +37,7 @@ public:
 
     void dispatch(uint3 thread_count, BindVarsCallback bind_vars, ComputePassEncoder& compute_pass);
 
-    void dispatch(uint3 thread_count, BindVarsCallback bind_vars, CommandStream* stream = nullptr);
+    void dispatch(uint3 thread_count, BindVarsCallback bind_vars, CommandBuffer* command_buffer = nullptr);
 
 private:
     uint3 m_thread_group_size;
@@ -54,7 +54,7 @@ public:
 
     void dispatch(uint3 thread_count, BindVarsCallback bind_vars, RayTracingPassEncoder* pass_encoder);
 
-    void dispatch(uint3 thread_count, BindVarsCallback bind_vars, CommandStream* stream = nullptr);
+    void dispatch(uint3 thread_count, BindVarsCallback bind_vars, CommandBuffer* command_buffer = nullptr);
 
 private:
     mutable ref<RayTracingPipeline> m_pipeline;

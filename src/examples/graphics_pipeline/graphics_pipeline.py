@@ -51,9 +51,8 @@ pipeline = device.create_graphics_pipeline(
     framebuffer=framebuffer,
 )
 
-command_stream = device.command_stream
-
-with command_stream.begin_render_pass(framebuffer) as render_pass:
+command_buffer = device.create_command_buffer()
+with command_buffer.begin_render_pass(framebuffer) as render_pass:
     shader_object = render_pass.bind_pipeline(pipeline)
     render_pass.set_vertex_buffer(0, vertex_buffer)
     render_pass.set_primitive_topology(kali.PrimitiveTopology.triangle_list)
@@ -61,6 +60,7 @@ with command_stream.begin_render_pass(framebuffer) as render_pass:
         {"width": render_texture.width, "height": render_texture.height}
     )
     render_pass.draw(3)
+command_buffer.submit()
 
 
 kali.utils.show_in_tev(render_texture, "graphics_pipeline")

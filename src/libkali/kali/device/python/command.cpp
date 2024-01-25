@@ -17,7 +17,12 @@ KALI_PY_EXPORT(device_command)
 
     nb::class_<CommandQueue, DeviceResource>(m, "CommandQueue")
         .def("desc", &CommandQueue::desc)
-        .def("submit", &CommandQueue::submit, "command_buffer"_a)
+        .def("submit", nb::overload_cast<const CommandBuffer*>(&CommandQueue::submit), "command_buffer"_a)
+        .def(
+            "submit_and_wait",
+            nb::overload_cast<const CommandBuffer*>(&CommandQueue::submit_and_wait),
+            "command_buffer"_a
+        )
         .def("wait", nb::overload_cast<>(&CommandQueue::wait))
         .def("signal", &CommandQueue::signal, "fence"_a, "value"_a = Fence::AUTO)
         .def(
@@ -27,21 +32,13 @@ KALI_PY_EXPORT(device_command)
             "value"_a = Fence::AUTO
         );
 
-    nb::class_<CommandBuffer, DeviceResource>(m, "CommandBuffer");
-
-    nb::class_<CommandStream, DeviceResource>(m, "CommandStream")
-        .def("submit", &CommandStream::submit)
-        .def("signal", &CommandStream::signal, "fence"_a, "value"_a = Fence::AUTO)
-        .def(
-            "wait",
-            nb::overload_cast<const Fence*, uint64_t>(&CommandStream::wait),
-            "fence"_a,
-            "value"_a = Fence::AUTO
-        )
-        .def("write_timestamp", &CommandStream::write_timestamp, "query_pool"_a, "index"_a)
+    nb::class_<CommandBuffer, DeviceResource>(m, "CommandBuffer")
+        .def("close", &CommandBuffer::close)
+        .def("submit", &CommandBuffer::submit)
+        .def("write_timestamp", &CommandBuffer::write_timestamp, "query_pool"_a, "index"_a)
         .def(
             "resolve_query",
-            &CommandStream::resolve_query,
+            &CommandBuffer::resolve_query,
             "query_pool"_a,
             "index"_a,
             "count"_a,
@@ -50,21 +47,21 @@ KALI_PY_EXPORT(device_command)
         )
         .def(
             "buffer_barrier",
-            nb::overload_cast<const Buffer*, ResourceState>(&CommandStream::buffer_barrier),
+            nb::overload_cast<const Buffer*, ResourceState>(&CommandBuffer::buffer_barrier),
             "buffer"_a,
             "new_state"_a
         )
         .def(
             "texture_barrier",
-            nb::overload_cast<const Texture*, ResourceState>(&CommandStream::texture_barrier),
+            nb::overload_cast<const Texture*, ResourceState>(&CommandBuffer::texture_barrier),
             "texture"_a,
             "new_state"_a
         )
-        .def("uav_barrier", &CommandStream::uav_barrier, "resource"_a)
+        .def("uav_barrier", &CommandBuffer::uav_barrier, "resource"_a)
         // .def(
         //     "buffer_barrier",
         //     nb::overload_cast<std::span<Buffer*>, ResourceState,
-        //     ResourceState>(&CommandStream::buffer_barrier
+        //     ResourceState>(&CommandBuffer::buffer_barrier
         //     ),
         //     "buffers"_a,
         //     "old_state"_a,
@@ -72,7 +69,7 @@ KALI_PY_EXPORT(device_command)
         // )
         .def(
             "buffer_barrier",
-            nb::overload_cast<const Buffer*, ResourceState, ResourceState>(&CommandStream::buffer_barrier),
+            nb::overload_cast<const Buffer*, ResourceState, ResourceState>(&CommandBuffer::buffer_barrier),
             "buffer"_a,
             "old_state"_a,
             "new_state"_a
@@ -80,7 +77,7 @@ KALI_PY_EXPORT(device_command)
         // .def(
         //     "texture_barrier",
         //     nb::overload_cast<std::span<Texture*>, ResourceState, ResourceState>(
-        //         &CommandStream::texture_barrier
+        //         &CommandBuffer::texture_barrier
         //     ),
         //     "textures"_a,
         //     "old_state"_a,
@@ -88,26 +85,26 @@ KALI_PY_EXPORT(device_command)
         // )
         .def(
             "texture_barrier",
-            nb::overload_cast<const Texture*, ResourceState, ResourceState>(&CommandStream::texture_barrier),
+            nb::overload_cast<const Texture*, ResourceState, ResourceState>(&CommandBuffer::texture_barrier),
             "texture"_a,
             "old_state"_a,
             "new_state"_a
         )
         .def(
             "clear_resource_view",
-            nb::overload_cast<ResourceView*, float4>(&CommandStream::clear_resource_view),
+            nb::overload_cast<ResourceView*, float4>(&CommandBuffer::clear_resource_view),
             "resource_view"_a,
             "clear_value"_a
         )
         .def(
             "clear_resource_view",
-            nb::overload_cast<ResourceView*, uint4>(&CommandStream::clear_resource_view),
+            nb::overload_cast<ResourceView*, uint4>(&CommandBuffer::clear_resource_view),
             "resource_view"_a,
             "clear_value"_a
         )
         .def(
             "clear_resource_view",
-            nb::overload_cast<ResourceView*, float, uint32_t, bool, bool>(&CommandStream::clear_resource_view),
+            nb::overload_cast<ResourceView*, float, uint32_t, bool, bool>(&CommandBuffer::clear_resource_view),
             "resource_view"_a,
             "depth_value"_a,
             "stencil_value"_a,
@@ -116,20 +113,20 @@ KALI_PY_EXPORT(device_command)
         )
         .def(
             "clear_texture",
-            nb::overload_cast<Texture*, float4>(&CommandStream::clear_texture),
+            nb::overload_cast<Texture*, float4>(&CommandBuffer::clear_texture),
             "texture"_a,
             "clear_value"_a
         )
         .def(
             "clear_texture",
-            nb::overload_cast<Texture*, uint4>(&CommandStream::clear_texture),
+            nb::overload_cast<Texture*, uint4>(&CommandBuffer::clear_texture),
             "texture"_a,
             "clear_value"_a
         )
-        .def("copy_resource", &CommandStream::copy_resource, "dst"_a, "src"_a)
-        .def("begin_compute_pass", &CommandStream::begin_compute_pass, nb::rv_policy::reference_internal)
-        .def("begin_render_pass", &CommandStream::begin_render_pass, nb::rv_policy::reference_internal)
-        .def("begin_ray_tracing_pass", &CommandStream::begin_ray_tracing_pass, nb::rv_policy::reference_internal);
+        .def("copy_resource", &CommandBuffer::copy_resource, "dst"_a, "src"_a)
+        .def("begin_compute_pass", &CommandBuffer::begin_compute_pass, nb::rv_policy::reference_internal)
+        .def("begin_render_pass", &CommandBuffer::begin_render_pass, nb::rv_policy::reference_internal)
+        .def("begin_ray_tracing_pass", &CommandBuffer::begin_ray_tracing_pass, nb::rv_policy::reference_internal);
 
     nb::class_<ComputePassEncoder>(m, "ComputePassEncoder")
         .def("__enter__", [](ComputePassEncoder* self) { return self; })

@@ -58,14 +58,16 @@ int main()
         });
 
         if (true) {
-            // Method 1: Use compute pass on command stream
-            auto compute_pass = device->command_stream()->begin_compute_pass();
+            // Method 1: Manual command buffer
+            ref<CommandBuffer> command_buffer = device->create_command_buffer();
+            auto compute_pass = command_buffer->begin_compute_pass();
             auto shader_object = compute_pass.bind_pipeline(kernel->pipeline());
             auto processor = ShaderCursor(shader_object)["processor"];
             processor["a"] = buffer_a;
             processor["b"] = buffer_b;
             processor["c"] = buffer_c;
             compute_pass.dispatch_thread_groups(uint3{N / 16, 1, 1});
+            command_buffer->submit();
 
             std::vector<uint32_t> data_c = device->read_buffer<uint32_t>(buffer_c, 0, N);
             log_info("{}", data_c);

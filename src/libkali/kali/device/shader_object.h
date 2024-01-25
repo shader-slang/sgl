@@ -43,7 +43,7 @@ protected:
 class KALI_API TransientShaderObject : public ShaderObject {
     KALI_OBJECT(TransientShaderObject)
 public:
-    TransientShaderObject(gfx::IShaderObject* shader_object, CommandStream* command_stream);
+    TransientShaderObject(gfx::IShaderObject* shader_object, CommandBuffer* command_buffer);
 
     virtual ref<ShaderObject> get_entry_point(uint32_t index) override;
 
@@ -53,7 +53,7 @@ public:
     virtual void set_resource(const ShaderOffset& offset, const ref<ResourceView>& resource_view) override;
 
 private:
-    CommandStream* m_command_stream;
+    CommandBuffer* m_command_buffer;
     std::vector<ref<TransientShaderObject>> m_sub_objects;
 };
 
@@ -71,7 +71,7 @@ public:
 
     virtual void set_resource(const ShaderOffset& offset, const ref<ResourceView>& resource_view) override;
 
-    void set_resource_states(CommandStream* command_stream);
+    void set_resource_states(CommandBuffer* command_buffer);
 
 private:
     ref<Device> m_device;

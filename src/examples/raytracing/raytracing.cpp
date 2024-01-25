@@ -94,17 +94,16 @@ int main()
             .size = blas_buffer->size(),
         });
 
-        CommandStream* command_stream = device->command_stream();
-
         {
-            auto raytracing_pass = command_stream->begin_ray_tracing_pass();
+            ref<CommandBuffer> command_buffer = device->create_command_buffer();
+            auto raytracing_pass = command_buffer->begin_ray_tracing_pass();
             raytracing_pass.build_acceleration_structure({
                 .inputs = blas_build_inputs,
                 .dst = blas,
                 .scratch_data = blas_scratch_buffer->device_address(),
             });
+            command_buffer->submit();
         }
-        command_stream->submit();
 
         RayTracingInstanceDesc instance_desc{
             .transform = identity_transform,
@@ -156,14 +155,15 @@ int main()
         });
 
         {
-            auto raytracing_pass = command_stream->begin_ray_tracing_pass();
+            ref<CommandBuffer> command_buffer = device->create_command_buffer();
+            auto raytracing_pass = command_buffer->begin_ray_tracing_pass();
             raytracing_pass.build_acceleration_structure({
                 .inputs = tlas_build_inputs,
                 .dst = tlas,
                 .scratch_data = tlas_scratch_buffer->device_address(),
             });
+            command_buffer->submit();
         }
-        command_stream->submit();
 
         ref<Texture> render_texture = device->create_texture({
             .type = TextureType::texture_2d,

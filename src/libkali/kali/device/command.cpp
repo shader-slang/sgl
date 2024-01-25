@@ -51,6 +51,22 @@ void CommandQueue::submit(const CommandBuffer* command_buffer)
     m_gfx_command_queue->executeCommandBuffer(command_buffer->gfx_command_buffer());
 }
 
+void CommandQueue::submit(std::span<const CommandBuffer*> command_buffers)
+{
+    KALI_UNUSED(command_buffers);
+    // m_gfx_command_queue->executeCommandBuffers(
+    //     narrow_cast<gfx::GfxCount>(command_buffers.size()),
+    //     reinterpret_cast<gfx::ICommandBuffer*>(command_buffers.data())
+    // );
+}
+
+void CommandQueue::submit_and_wait(const CommandBuffer* command_buffer)
+{
+    KALI_CHECK_NOT_NULL(command_buffer);
+    m_gfx_command_queue->executeCommandBuffer(command_buffer->gfx_command_buffer());
+    m_gfx_command_queue->waitOnHost();
+}
+
 void CommandQueue::wait()
 {
     m_gfx_command_queue->waitOnHost();
@@ -103,26 +119,6 @@ std::string CommandQueue::to_string() const
 }
 
 // ----------------------------------------------------------------------------
-// CommandBuffer
-// ----------------------------------------------------------------------------
-
-CommandBuffer::CommandBuffer(ref<Device> device, Slang::ComPtr<gfx::ICommandBuffer> gfx_command_buffer)
-    : DeviceResource(std::move(device))
-    , m_gfx_command_buffer(std::move(gfx_command_buffer))
-{
-}
-
-std::string CommandBuffer::to_string() const
-{
-    return fmt::format(
-        "CommandBuffer(\n"
-        "  device={}\n"
-        ")",
-        m_device
-    );
-}
-
-// ----------------------------------------------------------------------------
 // ComputePassEncoder
 // ----------------------------------------------------------------------------
 
@@ -133,9 +129,9 @@ ComputePassEncoder::~ComputePassEncoder()
 
 void ComputePassEncoder::end()
 {
-    if (m_command_stream) {
-        m_command_stream->end_pass();
-        m_command_stream = nullptr;
+    if (m_command_buffer) {
+        m_command_buffer->end_pass();
+        m_command_buffer = nullptr;
     }
 }
 
@@ -146,7 +142,7 @@ ref<TransientShaderObject> ComputePassEncoder::bind_pipeline(const ComputePipeli
     m_bound_pipeline = pipeline;
     gfx::IShaderObject* gfx_shader_object;
     SLANG_CALL(m_gfx_compute_command_encoder->bindPipeline(pipeline->gfx_pipeline_state(), &gfx_shader_object));
-    return make_ref<TransientShaderObject>(gfx_shader_object, m_command_stream);
+    return make_ref<TransientShaderObject>(gfx_shader_object, m_command_buffer);
 }
 
 void ComputePassEncoder::bind_pipeline(const ComputePipeline* pipeline, const ShaderObject* shader_object)
@@ -199,9 +195,9 @@ RenderPassEncoder::~RenderPassEncoder()
 
 void RenderPassEncoder::end()
 {
-    if (m_command_stream) {
-        m_command_stream->end_pass();
-        m_command_stream = nullptr;
+    if (m_command_buffer) {
+        m_command_buffer->end_pass();
+        m_command_buffer = nullptr;
     }
 }
 
@@ -212,7 +208,7 @@ ref<TransientShaderObject> RenderPassEncoder::bind_pipeline(const GraphicsPipeli
     m_bound_pipeline = pipeline;
     gfx::IShaderObject* gfx_shader_object;
     SLANG_CALL(m_gfx_render_command_encoder->bindPipeline(pipeline->gfx_pipeline_state(), &gfx_shader_object));
-    return make_ref<TransientShaderObject>(gfx_shader_object, m_command_stream);
+    return make_ref<TransientShaderObject>(gfx_shader_object, m_command_buffer);
 }
 
 void RenderPassEncoder::bind_pipeline(const GraphicsPipeline* pipeline, const ShaderObject* shader_object)
@@ -302,9 +298,9 @@ RayTracingPassEncoder::~RayTracingPassEncoder()
 
 void RayTracingPassEncoder::end()
 {
-    if (m_command_stream) {
-        m_command_stream->end_pass();
-        m_command_stream = nullptr;
+    if (m_command_buffer) {
+        m_command_buffer->end_pass();
+        m_command_buffer = nullptr;
     }
 }
 
@@ -316,7 +312,7 @@ ref<TransientShaderObject> RayTracingPassEncoder::bind_pipeline(const RayTracing
     gfx::IShaderObject* gfx_shader_object;
     // TODO gfx bindPipeline should return Result (fix in slang/gfx)
     m_gfx_ray_tracing_command_encoder->bindPipeline(pipeline->gfx_pipeline_state(), &gfx_shader_object);
-    return make_ref<TransientShaderObject>(gfx_shader_object, m_command_stream);
+    return make_ref<TransientShaderObject>(gfx_shader_object, m_command_buffer);
 }
 
 void RayTracingPassEncoder::bind_pipeline(const RayTracingPipeline* pipeline, const ShaderObject* shader_object)
@@ -428,44 +424,38 @@ void RayTracingPassEncoder::deserialize_acceleration_structure(AccelerationStruc
 }
 
 // ----------------------------------------------------------------------------
-// CommandStream
+// CommandBuffer
 // ----------------------------------------------------------------------------
 
-CommandStream::CommandStream(ref<Device> device, ref<CommandQueue> command_queue)
+CommandBuffer::CommandBuffer(ref<Device> device, Slang::ComPtr<gfx::ICommandBuffer> gfx_command_buffer)
     : DeviceResource(std::move(device))
-    , m_command_queue(std::move(command_queue))
+    , m_gfx_command_buffer(std::move(gfx_command_buffer))
 {
 }
 
-void CommandStream::submit()
+void CommandBuffer::close()
 {
-    if (m_command_buffer) {
-        end_current_encoder();
-        m_command_buffer->gfx_command_buffer()->close();
-        m_command_queue->submit(m_command_buffer);
-        m_command_buffer = nullptr;
-    }
+    end_current_encoder();
+    m_gfx_command_buffer->close();
+    m_open = false;
 }
 
-uint64_t CommandStream::signal(Fence* fence, uint64_t value)
+void CommandBuffer::submit()
 {
-    return m_command_queue->signal(fence, value);
+    close();
+    m_device->graphics_queue()->submit(this);
 }
 
-void CommandStream::wait(const Fence* fence, uint64_t value)
+void CommandBuffer::write_timestamp(QueryPool* query_pool, uint32_t index)
 {
-    return m_command_queue->wait(fence, value);
-}
-
-void CommandStream::write_timestamp(QueryPool* query_pool, uint32_t index)
-{
+    KALI_CHECK(m_open, "Command buffer is closed");
     KALI_CHECK_NOT_NULL(query_pool);
     KALI_CHECK_LE(index, query_pool->desc().count);
 
     get_gfx_resource_command_encoder()->writeTimestamp(query_pool->gfx_query_pool(), index);
 }
 
-void CommandStream::resolve_query(
+void CommandBuffer::resolve_query(
     QueryPool* query_pool,
     uint32_t index,
     uint32_t count,
@@ -484,7 +474,7 @@ void CommandStream::resolve_query(
         ->resolveQuery(query_pool->gfx_query_pool(), index, count, buffer->gfx_buffer_resource(), offset);
 }
 
-bool CommandStream::buffer_barrier(const Buffer* buffer, ResourceState new_state)
+bool CommandBuffer::buffer_barrier(const Buffer* buffer, ResourceState new_state)
 {
     KALI_CHECK_NOT_NULL(buffer);
 
@@ -497,7 +487,7 @@ bool CommandStream::buffer_barrier(const Buffer* buffer, ResourceState new_state
     return true;
 }
 
-bool CommandStream::texture_barrier(const Texture* texture, ResourceState new_state)
+bool CommandBuffer::texture_barrier(const Texture* texture, ResourceState new_state)
 {
     KALI_CHECK_NOT_NULL(texture);
 
@@ -510,7 +500,7 @@ bool CommandStream::texture_barrier(const Texture* texture, ResourceState new_st
     return true;
 }
 
-bool CommandStream::texture_subresource_barrier(
+bool CommandBuffer::texture_subresource_barrier(
     const Texture* texture,
     uint32_t array_slice,
     uint32_t mip_level,
@@ -542,7 +532,7 @@ bool CommandStream::texture_subresource_barrier(
     return true;
 }
 
-bool CommandStream::resource_barrier(const Resource* resource, ResourceState new_state)
+bool CommandBuffer::resource_barrier(const Resource* resource, ResourceState new_state)
 {
     KALI_CHECK_NOT_NULL(resource);
 
@@ -553,7 +543,7 @@ bool CommandStream::resource_barrier(const Resource* resource, ResourceState new
     }
 }
 
-void CommandStream::uav_barrier(const Resource* resource)
+void CommandBuffer::uav_barrier(const Resource* resource)
 {
     KALI_CHECK_NOT_NULL(resource);
 
@@ -572,7 +562,7 @@ void CommandStream::uav_barrier(const Resource* resource)
     }
 }
 
-void CommandStream::buffer_barrier(std::span<const Buffer*> buffers, ResourceState old_state, ResourceState new_state)
+void CommandBuffer::buffer_barrier(std::span<const Buffer*> buffers, ResourceState old_state, ResourceState new_state)
 {
     short_vector<gfx::IBufferResource*, 16> gfx_buffers(buffers.size(), nullptr);
     for (size_t i = 0; i < buffers.size(); i++)
@@ -585,7 +575,7 @@ void CommandStream::buffer_barrier(std::span<const Buffer*> buffers, ResourceSta
     );
 }
 
-void CommandStream::buffer_barrier(const Buffer* buffer, ResourceState old_state, ResourceState new_state)
+void CommandBuffer::buffer_barrier(const Buffer* buffer, ResourceState old_state, ResourceState new_state)
 {
     KALI_ASSERT(buffer != nullptr);
 
@@ -598,7 +588,7 @@ void CommandStream::buffer_barrier(const Buffer* buffer, ResourceState old_state
     );
 }
 
-void CommandStream::texture_barrier(
+void CommandBuffer::texture_barrier(
     std::span<const Texture*> textures,
     ResourceState old_state,
     ResourceState new_state
@@ -615,7 +605,7 @@ void CommandStream::texture_barrier(
     );
 }
 
-void CommandStream::texture_barrier(const Texture* texture, ResourceState old_state, ResourceState new_state)
+void CommandBuffer::texture_barrier(const Texture* texture, ResourceState old_state, ResourceState new_state)
 {
     KALI_ASSERT(texture != nullptr);
 
@@ -628,7 +618,7 @@ void CommandStream::texture_barrier(const Texture* texture, ResourceState old_st
     );
 }
 
-void CommandStream::texture_subresource_barrier(
+void CommandBuffer::texture_subresource_barrier(
     const Texture* texture,
     SubresourceRange subresource_range,
     ResourceState old_state,
@@ -657,7 +647,7 @@ void CommandStream::texture_subresource_barrier(
     );
 }
 
-void CommandStream::clear_resource_view(ResourceView* resource_view, float4 clear_value)
+void CommandBuffer::clear_resource_view(ResourceView* resource_view, float4 clear_value)
 {
     KALI_CHECK_NOT_NULL(resource_view);
 
@@ -687,7 +677,7 @@ void CommandStream::clear_resource_view(ResourceView* resource_view, float4 clea
     );
 }
 
-void CommandStream::clear_resource_view(ResourceView* resource_view, uint4 clear_value)
+void CommandBuffer::clear_resource_view(ResourceView* resource_view, uint4 clear_value)
 {
     KALI_CHECK_NOT_NULL(resource_view);
 
@@ -714,7 +704,7 @@ void CommandStream::clear_resource_view(ResourceView* resource_view, uint4 clear
         ->clearResourceView(resource_view->gfx_resource_view(), &gfx_clear_value, gfx::ClearResourceViewFlags::None);
 }
 
-void CommandStream::clear_resource_view(
+void CommandBuffer::clear_resource_view(
     ResourceView* resource_view,
     float depth_value,
     uint32_t stencil_value,
@@ -747,7 +737,7 @@ void CommandStream::clear_resource_view(
     );
 }
 
-void CommandStream::clear_texture(Texture* texture, float4 clear_value)
+void CommandBuffer::clear_texture(Texture* texture, float4 clear_value)
 {
     KALI_CHECK_NOT_NULL(texture);
     FormatType format_type = get_format_info(texture->format()).type;
@@ -765,7 +755,7 @@ void CommandStream::clear_texture(Texture* texture, float4 clear_value)
     }
 }
 
-void CommandStream::clear_texture(Texture* texture, uint4 clear_value)
+void CommandBuffer::clear_texture(Texture* texture, uint4 clear_value)
 {
     KALI_CHECK_NOT_NULL(texture);
     FormatType format_type = get_format_info(texture->format()).type;
@@ -783,7 +773,7 @@ void CommandStream::clear_texture(Texture* texture, uint4 clear_value)
     }
 }
 
-void CommandStream::copy_resource(Resource* dst, const Resource* src)
+void CommandBuffer::copy_resource(Resource* dst, const Resource* src)
 {
     KALI_CHECK_NOT_NULL(dst);
     KALI_CHECK_NOT_NULL(src);
@@ -824,7 +814,7 @@ void CommandStream::copy_resource(Resource* dst, const Resource* src)
     }
 }
 
-void CommandStream::copy_buffer_region(
+void CommandBuffer::copy_buffer_region(
     Buffer* dst,
     DeviceOffset dst_offset,
     const Buffer* src,
@@ -844,7 +834,7 @@ void CommandStream::copy_buffer_region(
         ->copyBuffer(dst->gfx_buffer_resource(), dst_offset, src->gfx_buffer_resource(), src_offset, size);
 }
 
-void CommandStream::copy_texture_region(
+void CommandBuffer::copy_texture_region(
     Texture* dst,
     uint32_t dst_subresource,
     const Texture* src,
@@ -886,7 +876,7 @@ void CommandStream::copy_texture_region(
     );
 }
 
-void CommandStream::copy_texture_to_buffer(
+void CommandBuffer::copy_texture_to_buffer(
     Buffer* dst,
     DeviceOffset dst_offset,
     DeviceSize dst_size,
@@ -922,7 +912,7 @@ void CommandStream::copy_texture_to_buffer(
     );
 }
 
-void CommandStream::upload_buffer_data(Buffer* buffer, size_t offset, size_t size, const void* data)
+void CommandBuffer::upload_buffer_data(Buffer* buffer, size_t offset, size_t size, const void* data)
 {
     KALI_CHECK_NOT_NULL(buffer);
     KALI_CHECK(offset + size <= buffer->size(), "Buffer upload is out of bounds");
@@ -934,7 +924,7 @@ void CommandStream::upload_buffer_data(Buffer* buffer, size_t offset, size_t siz
         ->uploadBufferData(buffer->gfx_buffer_resource(), offset, size, const_cast<void*>(data));
 }
 
-void CommandStream::upload_texture_data(Texture* texture, uint32_t subresource, const void* data)
+void CommandBuffer::upload_texture_data(Texture* texture, uint32_t subresource, const void* data)
 {
     KALI_CHECK_NOT_NULL(texture);
     KALI_CHECK_LT(subresource, texture->subresource_count());
@@ -966,7 +956,7 @@ void CommandStream::upload_texture_data(Texture* texture, uint32_t subresource, 
     );
 }
 
-void CommandStream::resolve_texture(Texture* dst, const Texture* src)
+void CommandBuffer::resolve_texture(Texture* dst, const Texture* src)
 {
     KALI_CHECK_NOT_NULL(dst);
     KALI_CHECK_NOT_NULL(src);
@@ -1006,7 +996,7 @@ void CommandStream::resolve_texture(Texture* dst, const Texture* src)
     );
 }
 
-void CommandStream::resolve_subresource(
+void CommandBuffer::resolve_subresource(
     Texture* dst,
     uint32_t dst_subresource,
     const Texture* src,
@@ -1056,15 +1046,13 @@ void CommandStream::resolve_subresource(
     );
 }
 
-ComputePassEncoder CommandStream::begin_compute_pass()
+ComputePassEncoder CommandBuffer::begin_compute_pass()
 {
-    KALI_CHECK(!m_pass_open, "CommandStream already has an active pass encoder");
-
-    create_command_buffer();
+    KALI_CHECK(!m_pass_open, "CommandBuffer already has an active pass encoder");
 
     if (m_active_encoder != EncoderType::compute) {
         end_current_encoder();
-        m_gfx_command_encoder = m_command_buffer->gfx_command_buffer()->encodeComputeCommands();
+        m_gfx_command_encoder = m_gfx_command_buffer->encodeComputeCommands();
         m_active_encoder = EncoderType::compute;
     }
 
@@ -1072,16 +1060,14 @@ ComputePassEncoder CommandStream::begin_compute_pass()
     return ComputePassEncoder(this, (static_cast<gfx::IComputeCommandEncoder*>(m_gfx_command_encoder.get())));
 }
 
-RenderPassEncoder CommandStream::begin_render_pass(Framebuffer* framebuffer)
+RenderPassEncoder CommandBuffer::begin_render_pass(Framebuffer* framebuffer)
 {
-    KALI_CHECK(!m_pass_open, "CommandStream already has an active pass encoder");
+    KALI_CHECK(!m_pass_open, "CommandBuffer already has an active pass encoder");
     KALI_CHECK_NOT_NULL(framebuffer);
-
-    create_command_buffer();
 
     if (m_active_encoder != EncoderType::render) {
         end_current_encoder();
-        m_gfx_command_encoder = m_command_buffer->gfx_command_buffer()->encodeRenderCommands(
+        m_gfx_command_encoder = m_gfx_command_buffer->encodeRenderCommands(
             framebuffer->gfx_render_pass_layout(),
             framebuffer->gfx_framebuffer()
         );
@@ -1092,15 +1078,13 @@ RenderPassEncoder CommandStream::begin_render_pass(Framebuffer* framebuffer)
     return RenderPassEncoder(this, (static_cast<gfx::IRenderCommandEncoder*>(m_gfx_command_encoder.get())));
 }
 
-RayTracingPassEncoder CommandStream::begin_ray_tracing_pass()
+RayTracingPassEncoder CommandBuffer::begin_ray_tracing_pass()
 {
-    KALI_CHECK(!m_pass_open, "CommandStream already has an active pass encoder");
-
-    create_command_buffer();
+    KALI_CHECK(!m_pass_open, "CommandBuffer already has an active pass encoder");
 
     if (m_active_encoder != EncoderType::raytracing) {
         end_current_encoder();
-        m_gfx_command_encoder = m_command_buffer->gfx_command_buffer()->encodeRayTracingCommands();
+        m_gfx_command_encoder = m_gfx_command_buffer->encodeRayTracingCommands();
         m_active_encoder = EncoderType::raytracing;
     }
 
@@ -1108,55 +1092,43 @@ RayTracingPassEncoder CommandStream::begin_ray_tracing_pass()
     return RayTracingPassEncoder(this, (static_cast<gfx::IRayTracingCommandEncoder*>(m_gfx_command_encoder.get())));
 }
 
-void CommandStream::begin_debug_event(const char* name, float3 color)
+void CommandBuffer::begin_debug_event(const char* name, float3 color)
 {
     get_gfx_resource_command_encoder()->beginDebugEvent(name, &color.x);
 }
 
-void CommandStream::end_debug_event()
+void CommandBuffer::end_debug_event()
 {
     get_gfx_resource_command_encoder()->endDebugEvent();
 }
 
-std::string CommandStream::to_string() const
+std::string CommandBuffer::to_string() const
 {
     return fmt::format(
-        "CommandStream(\n"
+        "CommandBuffer(\n"
         "  device={}\n"
-        "  command_queue={}\n"
         ")",
-        m_device,
-        m_command_queue
+        m_device
     );
 }
 
-void CommandStream::end_pass()
+void CommandBuffer::end_pass()
 {
     KALI_ASSERT(m_pass_open);
     m_pass_open = false;
     end_current_encoder();
 }
 
-void CommandStream::create_command_buffer()
+gfx::IResourceCommandEncoder* CommandBuffer::get_gfx_resource_command_encoder()
 {
-    if (!m_command_buffer) {
-        m_command_buffer = m_device->create_command_buffer();
-        m_command_buffer->break_strong_reference_to_device();
-    }
-}
-
-gfx::IResourceCommandEncoder* CommandStream::get_gfx_resource_command_encoder()
-{
-    create_command_buffer();
-
     if (m_active_encoder == EncoderType::none) {
-        m_gfx_command_encoder = m_command_buffer->gfx_command_buffer()->encodeResourceCommands();
+        m_gfx_command_encoder = m_gfx_command_buffer->encodeResourceCommands();
         m_active_encoder = EncoderType::resource;
     }
     return static_cast<gfx::IResourceCommandEncoder*>(m_gfx_command_encoder.get());
 }
 
-void CommandStream::end_current_encoder()
+void CommandBuffer::end_current_encoder()
 {
     if (m_active_encoder != EncoderType::none) {
         m_gfx_command_encoder->endEncoding();

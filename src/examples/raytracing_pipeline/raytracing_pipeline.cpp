@@ -95,17 +95,16 @@ int main()
             .size = blas_buffer->size(),
         });
 
-        CommandStream* command_stream = device->command_stream();
-
         {
-            auto raytracing_pass = command_stream->begin_ray_tracing_pass();
+            ref<CommandBuffer> command_buffer = device->create_command_buffer();
+            auto raytracing_pass = command_buffer->begin_ray_tracing_pass();
             raytracing_pass.build_acceleration_structure({
                 .inputs = blas_build_inputs,
                 .dst = blas,
                 .scratch_data = blas_scratch_buffer->device_address(),
             });
+            command_buffer->submit();
         }
-        command_stream->submit();
 
         RayTracingInstanceDesc instance_desc{
             .transform = identity_transform,
@@ -157,14 +156,15 @@ int main()
         });
 
         {
-            auto raytracing_pass = command_stream->begin_ray_tracing_pass();
+            ref<CommandBuffer> command_buffer = device->create_command_buffer();
+            auto raytracing_pass = command_buffer->begin_ray_tracing_pass();
             raytracing_pass.build_acceleration_structure({
                 .inputs = tlas_build_inputs,
                 .dst = tlas,
                 .scratch_data = tlas_scratch_buffer->device_address(),
             });
+            command_buffer->submit();
         }
-        command_stream->submit();
 
         ref<Texture> render_texture = device->create_texture({
             .type = TextureType::texture_2d,
@@ -199,12 +199,14 @@ int main()
         });
 
         {
-            auto raytracing_pass = command_stream->begin_ray_tracing_pass();
+            ref<CommandBuffer> command_buffer = device->create_command_buffer();
+            auto raytracing_pass = command_buffer->begin_ray_tracing_pass();
             auto shader_object = raytracing_pass.bind_pipeline(pipeline);
             auto cursor = ShaderCursor(shader_object);
             cursor["tlas"] = tlas;
             cursor["render_texture"] = render_texture;
             raytracing_pass.dispatch_rays(0, shader_table, uint3{1024, 1024, 1});
+            command_buffer->submit();
         }
 
         utils::show_in_tev(render_texture, "raytracing_pipeline");

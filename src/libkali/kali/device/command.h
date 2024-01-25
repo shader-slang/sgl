@@ -34,12 +34,14 @@ class KALI_API CommandQueue : public DeviceResource {
     KALI_OBJECT(CommandQueue)
 public:
     /// Constructor.
-    /// Do not use directly, instead use @c Device::create_command_queue.
     CommandQueue(ref<Device> device, CommandQueueDesc desc);
 
     const CommandQueueDesc& desc() const { return m_desc; }
 
     void submit(const CommandBuffer* command_buffer);
+    void submit(std::span<const CommandBuffer*> command_buffers);
+
+    void submit_and_wait(const CommandBuffer* command_buffer);
 
     void wait();
 
@@ -74,23 +76,10 @@ private:
     Slang::ComPtr<gfx::ICommandQueue> m_gfx_command_queue;
 };
 
-class KALI_API CommandBuffer : public DeviceResource {
-    KALI_OBJECT(CommandBuffer)
-public:
-    CommandBuffer(ref<Device> device, Slang::ComPtr<gfx::ICommandBuffer> gfx_command_buffer);
-
-    gfx::ICommandBuffer* gfx_command_buffer() const { return m_gfx_command_buffer; }
-
-    std::string to_string() const override;
-
-private:
-    Slang::ComPtr<gfx::ICommandBuffer> m_gfx_command_buffer;
-};
-
 class KALI_API ComputePassEncoder {
 public:
     ComputePassEncoder(ComputePassEncoder&& other) noexcept
-        : m_command_stream(std::exchange(other.m_command_stream, nullptr))
+        : m_command_buffer(std::exchange(other.m_command_buffer, nullptr))
         , m_gfx_compute_command_encoder(std::exchange(other.m_gfx_compute_command_encoder, nullptr))
     {
     }
@@ -106,8 +95,8 @@ public:
     void dispatch_thread_groups_indirect(const Buffer* cmd_buffer, DeviceOffset offset);
 
 private:
-    ComputePassEncoder(CommandStream* command_stream, gfx::IComputeCommandEncoder* gfx_compute_command_encoder)
-        : m_command_stream(command_stream)
+    ComputePassEncoder(CommandBuffer* command_buffer, gfx::IComputeCommandEncoder* gfx_compute_command_encoder)
+        : m_command_buffer(command_buffer)
         , m_gfx_compute_command_encoder(gfx_compute_command_encoder)
     {
     }
@@ -116,17 +105,17 @@ private:
     ComputePassEncoder& operator=(const ComputePassEncoder&) = delete;
     ComputePassEncoder& operator=(ComputePassEncoder&& other) noexcept = delete;
 
-    CommandStream* m_command_stream;
+    CommandBuffer* m_command_buffer;
     gfx::IComputeCommandEncoder* m_gfx_compute_command_encoder;
     const ComputePipeline* m_bound_pipeline{nullptr};
 
-    friend class CommandStream;
+    friend class CommandBuffer;
 };
 
 class KALI_API RenderPassEncoder {
 public:
     RenderPassEncoder(RenderPassEncoder&& other) noexcept
-        : m_command_stream(std::exchange(other.m_command_stream, nullptr))
+        : m_command_buffer(std::exchange(other.m_command_buffer, nullptr))
         , m_gfx_render_command_encoder(std::exchange(other.m_gfx_render_command_encoder, nullptr))
     {
     }
@@ -196,8 +185,8 @@ public:
     void draw_mesh_tasks(uint32_t x, uint32_t y, uint32_t z);
 
 private:
-    RenderPassEncoder(CommandStream* command_stream, gfx::IRenderCommandEncoder* gfx_render_command_encoder)
-        : m_command_stream(command_stream)
+    RenderPassEncoder(CommandBuffer* command_buffer, gfx::IRenderCommandEncoder* gfx_render_command_encoder)
+        : m_command_buffer(command_buffer)
         , m_gfx_render_command_encoder(gfx_render_command_encoder)
     {
     }
@@ -206,17 +195,17 @@ private:
     RenderPassEncoder& operator=(const RenderPassEncoder&) = delete;
     RenderPassEncoder& operator=(RenderPassEncoder&& other) noexcept = delete;
 
-    CommandStream* m_command_stream;
+    CommandBuffer* m_command_buffer;
     gfx::IRenderCommandEncoder* m_gfx_render_command_encoder;
     const GraphicsPipeline* m_bound_pipeline{nullptr};
 
-    friend class CommandStream;
+    friend class CommandBuffer;
 };
 
 class KALI_API RayTracingPassEncoder {
 public:
     RayTracingPassEncoder(RayTracingPassEncoder&& other) noexcept
-        : m_command_stream(std::exchange(other.m_command_stream, nullptr))
+        : m_command_buffer(std::exchange(other.m_command_buffer, nullptr))
         , m_gfx_ray_tracing_command_encoder(std::exchange(other.m_gfx_ray_tracing_command_encoder, nullptr))
     {
     }
@@ -250,10 +239,10 @@ public:
 
 private:
     RayTracingPassEncoder(
-        CommandStream* command_stream,
+        CommandBuffer* command_buffer,
         gfx::IRayTracingCommandEncoder* gfx_ray_tracing_command_encoder
     )
-        : m_command_stream(command_stream)
+        : m_command_buffer(command_buffer)
         , m_gfx_ray_tracing_command_encoder(gfx_ray_tracing_command_encoder)
     {
     }
@@ -262,43 +251,24 @@ private:
     RayTracingPassEncoder& operator=(const RayTracingPassEncoder&) = delete;
     RayTracingPassEncoder& operator=(RayTracingPassEncoder&& other) noexcept = delete;
 
-    CommandStream* m_command_stream;
+    CommandBuffer* m_command_buffer;
     gfx::IRayTracingCommandEncoder* m_gfx_ray_tracing_command_encoder;
     const RayTracingPipeline* m_bound_pipeline{nullptr};
 
-    friend class CommandStream;
+    friend class CommandBuffer;
 };
 
-class KALI_API CommandStream : public DeviceResource {
-    KALI_OBJECT(CommandStream)
+class KALI_API CommandBuffer : public DeviceResource {
+    KALI_OBJECT(CommandBuffer)
 public:
-    CommandStream(ref<Device> device, ref<CommandQueue> command_queue);
+    CommandBuffer(ref<Device> device, Slang::ComPtr<gfx::ICommandBuffer> gfx_command_buffer);
+
+    void close();
 
     /**
      * Submit all recorded commands to the command queue.
      */
     void submit();
-
-    // ------------------------------------------------------------------------
-    // Fences
-    // ------------------------------------------------------------------------
-
-    /**
-     * Signal a fence.
-     * @param pFence The fence to signal.
-     * @param value The value to signal. If @c Fence::AUTO, the signaled value will be auto-incremented.
-     * @return The signaled value.
-     */
-    uint64_t signal(Fence* fence, uint64_t value = Fence::AUTO);
-
-    /**
-     * Wait for a fence to be signaled on the device.
-     * Queues a device-side wait and returns immediately.
-     * The device will wait until the fence reaches or exceeds the specified value.
-     * @param pFence The fence to wait for.
-     * @param value The value to wait for. If @c Fence::AUTO, wait for the last signaled value.
-     */
-    void wait(const Fence* fence, uint64_t value = Fence::AUTO);
 
     // ------------------------------------------------------------------------
     // Queries
@@ -541,21 +511,20 @@ public:
     /// End a debug event.
     void end_debug_event();
 
+    gfx::ICommandBuffer* gfx_command_buffer() const { return m_gfx_command_buffer; }
+
     std::string to_string() const override;
 
 private:
     /// Called by pass encoders when they are destroyed.
     void end_pass();
 
-    /// Create the internal command buffer if it doesn't exist yet.
-    void create_command_buffer();
-
     gfx::IResourceCommandEncoder* get_gfx_resource_command_encoder();
     void end_current_encoder();
 
-    ref<CommandQueue> m_command_queue;
-    ref<CommandBuffer> m_command_buffer;
+    Slang::ComPtr<gfx::ICommandBuffer> m_gfx_command_buffer;
 
+    bool m_open{true};
     bool m_pass_open{false};
 
     enum class EncoderType {

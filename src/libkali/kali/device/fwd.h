@@ -99,7 +99,6 @@ class ShaderTable;
 struct CommandQueueDesc;
 class CommandQueue;
 class CommandBuffer;
-class CommandStream;
 class ComputePassEncoder;
 class RenderPassEncoder;
 class RayTracingPassEncoder;

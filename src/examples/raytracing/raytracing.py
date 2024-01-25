@@ -62,15 +62,14 @@ blas = device.create_acceleration_structure(
     size=blas_buffer.size,
 )
 
-command_stream = device.command_stream
-
-with command_stream.begin_ray_tracing_pass() as ray_tracing_pass:
+command_buffer = device.create_command_buffer()
+with command_buffer.begin_ray_tracing_pass() as ray_tracing_pass:
     ray_tracing_pass.build_acceleration_structure(
         inputs=blas_build_inputs,
         dst=blas,
         scratch_data=blas_scratch_buffer.device_address,
     )
-command_stream.submit()
+command_buffer.submit()
 
 instance_desc = kali.RayTracingInstanceDesc()
 instance_desc.transform = kali.float3x4.identity()
@@ -112,13 +111,14 @@ tlas = device.create_acceleration_structure(
     size=tlas_buffer.size,
 )
 
-with command_stream.begin_ray_tracing_pass() as ray_tracing_pass:
+command_buffer = device.create_command_buffer()
+with command_buffer.begin_ray_tracing_pass() as ray_tracing_pass:
     ray_tracing_pass.build_acceleration_structure(
         inputs=tlas_build_inputs,
         dst=tlas,
         scratch_data=tlas_scratch_buffer.device_address,
     )
-command_stream.submit()
+command_buffer.submit()
 
 render_texture = device.create_texture(
     type=kali.TextureType.texture_2d,

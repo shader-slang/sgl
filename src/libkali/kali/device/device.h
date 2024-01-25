@@ -220,20 +220,16 @@ public:
 
     ref<RayTracingPipeline> create_ray_tracing_pipeline(RayTracingPipelineDesc desc);
 
-    ref<CommandQueue> create_command_queue(CommandQueueDesc desc);
-
     ref<CommandBuffer> create_command_buffer();
-
-    ref<CommandStream> create_command_stream();
 
     ref<MemoryHeap> create_memory_heap(MemoryHeapDesc desc);
 
-    CommandQueue* default_queue() const { return m_default_queue; }
-
-    CommandStream* command_stream() { return m_command_stream; }
+    CommandQueue* graphics_queue() const { return m_graphics_queue; }
 
     MemoryHeap* upload_heap() const { return m_upload_heap; }
     MemoryHeap* read_back_heap() const { return m_read_back_heap; }
+
+    void end_frame();
 
     void wait();
 
@@ -303,8 +299,7 @@ private:
 
     std::vector<std::string> m_features;
 
-    ref<CommandQueue> m_default_queue;
-    ref<CommandStream> m_command_stream;
+    ref<CommandQueue> m_graphics_queue;
 
     ref<MemoryHeap> m_upload_heap;
     ref<MemoryHeap> m_read_back_heap;

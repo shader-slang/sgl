@@ -50,13 +50,19 @@ void ComputeKernel::dispatch(uint3 thread_count, BindVarsCallback bind_vars, Com
     compute_pass.dispatch_thread_groups(thread_group_count);
 }
 
-void ComputeKernel::dispatch(uint3 thread_count, BindVarsCallback bind_vars, CommandStream* stream)
+void ComputeKernel::dispatch(uint3 thread_count, BindVarsCallback bind_vars, CommandBuffer* command_buffer)
 {
-    if (stream == nullptr)
-        stream = m_device->command_stream();
+    ref<CommandBuffer> temp_command_buffer;
+    if (command_buffer == nullptr) {
+        temp_command_buffer = m_device->create_command_buffer();
+        command_buffer = temp_command_buffer;
+    }
 
-    auto compute_pass = stream->begin_compute_pass();
+    auto compute_pass = command_buffer->begin_compute_pass();
     dispatch(thread_count, bind_vars, compute_pass);
+
+    if (temp_command_buffer)
+        temp_command_buffer->submit();
 }
 
 // ----------------------------------------------------------------------------
@@ -83,6 +89,6 @@ RayTracingPipeline* RayTracingKernel::pipeline() const
 //     encoder->dispatch_rays()
 // }
 
-// void RayTracingKernel::dispatch(uint3 thread_count, BindVarsCallback bind_vars, CommandStream* stream) { }
+// void RayTracingKernel::dispatch(uint3 thread_count, BindVarsCallback bind_vars, CommandBuffer* command_buffer) { }
 
 } // namespace kali

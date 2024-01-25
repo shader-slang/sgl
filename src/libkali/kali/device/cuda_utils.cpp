@@ -260,16 +260,16 @@ namespace cuda_utils {
         wait_external_semaphore(m_external_semaphore, value, stream);
     }
 
-    void ExternalSemaphore::wait_for_cuda(CommandStream* command_stream, cudaStream_t cuda_stream, uint64_t value)
+    void ExternalSemaphore::wait_for_cuda(CommandQueue* command_queue, cudaStream_t cuda_stream, uint64_t value)
     {
         uint64_t signal_value = m_fence->update_signaled_value(value);
         signal(signal_value, cuda_stream);
-        command_stream->wait(m_fence, signal_value);
+        command_queue->wait(m_fence, signal_value);
     }
 
-    void ExternalSemaphore::wait_for_device(CommandStream* command_stream, cudaStream_t cuda_stream, uint64_t value)
+    void ExternalSemaphore::wait_for_device(CommandQueue* command_queue, cudaStream_t cuda_stream, uint64_t value)
     {
-        uint64_t signal_value = command_stream->signal(m_fence, value);
+        uint64_t signal_value = command_queue->signal(m_fence, value);
         wait(signal_value, cuda_stream);
     }
 
