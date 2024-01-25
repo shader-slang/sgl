@@ -99,9 +99,9 @@ class ShaderTable;
 struct CommandQueueDesc;
 class CommandQueue;
 class CommandBuffer;
-class ComputePassEncoder;
-class RenderPassEncoder;
-class RayTracingPassEncoder;
+class ComputeCommandEncoder;
+class RenderCommandEncoder;
+class RayTracingCommandEncoder;
 
 // shader_cursor.h
 

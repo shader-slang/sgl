@@ -63,8 +63,8 @@ blas = device.create_acceleration_structure(
 )
 
 command_buffer = device.create_command_buffer()
-with command_buffer.begin_ray_tracing_pass() as ray_tracing_pass:
-    ray_tracing_pass.build_acceleration_structure(
+with command_buffer.encode_ray_tracing_commands() as encoder:
+    encoder.build_acceleration_structure(
         inputs=blas_build_inputs,
         dst=blas,
         scratch_data=blas_scratch_buffer.device_address,
@@ -112,8 +112,8 @@ tlas = device.create_acceleration_structure(
 )
 
 command_buffer = device.create_command_buffer()
-with command_buffer.begin_ray_tracing_pass() as ray_tracing_pass:
-    ray_tracing_pass.build_acceleration_structure(
+with command_buffer.encode_ray_tracing_commands() as encoder:
+    encoder.build_acceleration_structure(
         inputs=tlas_build_inputs,
         dst=tlas,
         scratch_data=tlas_scratch_buffer.device_address,
@@ -153,12 +153,12 @@ shader_table = device.create_shader_table(
 )
 
 command_buffer = device.create_command_buffer()
-with command_buffer.begin_ray_tracing_pass() as raytracing_pass:
-    shader_object = raytracing_pass.bind_pipeline(pipeline)
+with command_buffer.encode_ray_tracing_commands() as encoder:
+    shader_object = encoder.bind_pipeline(pipeline)
     cursor = kali.ShaderCursor(shader_object)
     cursor.tlas = tlas
     cursor.render_texture = render_texture
-    raytracing_pass.dispatch_rays(0, shader_table, [1024, 1024, 1])
+    encoder.dispatch_rays(0, shader_table, [1024, 1024, 1])
 command_buffer.submit()
 
 

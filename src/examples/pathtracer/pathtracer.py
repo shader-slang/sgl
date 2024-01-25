@@ -491,8 +491,8 @@ class Scene:
         )
 
         command_buffer = self.device.create_command_buffer()
-        with command_buffer.begin_ray_tracing_pass() as ray_tracing_pass:
-            ray_tracing_pass.build_acceleration_structure(
+        with command_buffer.encode_ray_tracing_commands() as encoder:
+            encoder.build_acceleration_structure(
                 inputs=blas_build_inputs,
                 dst=blas,
                 scratch_data=blas_scratch_buffer.device_address,
@@ -552,8 +552,8 @@ class Scene:
         )
 
         command_buffer = self.device.create_command_buffer()
-        with command_buffer.begin_ray_tracing_pass() as ray_tracing_pass:
-            ray_tracing_pass.build_acceleration_structure(
+        with command_buffer.encode_ray_tracing_commands() as encoder:
+            encoder.build_acceleration_structure(
                 inputs=tlas_build_inputs,
                 dst=tlas,
                 scratch_data=tlas_scratch_buffer.device_address,
@@ -596,13 +596,13 @@ class PathTracer:
         self.scene.camera.recompute()
 
         command_buffer = self.device.create_command_buffer()
-        with command_buffer.begin_compute_pass() as compute_pass:
-            shader_object = compute_pass.bind_pipeline(self.pipeline)
+        with command_buffer.encode_compute_commands() as encoder:
+            shader_object = encoder.bind_pipeline(self.pipeline)
             cursor = kali.ShaderCursor(shader_object)
             cursor.g_output = output
             cursor.g_frame = frame
             self.scene.bind(cursor.g_scene)
-            compute_pass.dispatch(thread_count=[w, h, 1])
+            encoder.dispatch(thread_count=[w, h, 1])
         command_buffer.submit()
 
 

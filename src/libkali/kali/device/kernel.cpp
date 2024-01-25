@@ -37,9 +37,9 @@ ComputePipeline* ComputeKernel::pipeline() const
     return m_pipeline;
 }
 
-void ComputeKernel::dispatch(uint3 thread_count, BindVarsCallback bind_vars, ComputePassEncoder& compute_pass)
+void ComputeKernel::dispatch(uint3 thread_count, BindVarsCallback bind_vars, ComputeCommandEncoder& encoder)
 {
-    ref<ShaderObject> shader_object = compute_pass.bind_pipeline(pipeline());
+    ref<ShaderObject> shader_object = encoder.bind_pipeline(pipeline());
     if (bind_vars)
         bind_vars(ShaderCursor(shader_object));
 
@@ -47,7 +47,7 @@ void ComputeKernel::dispatch(uint3 thread_count, BindVarsCallback bind_vars, Com
         div_round_up(thread_count.x, m_thread_group_size.x),
         div_round_up(thread_count.y, m_thread_group_size.y),
         div_round_up(thread_count.z, m_thread_group_size.z)};
-    compute_pass.dispatch_thread_groups(thread_group_count);
+    encoder.dispatch_thread_groups(thread_group_count);
 }
 
 void ComputeKernel::dispatch(uint3 thread_count, BindVarsCallback bind_vars, CommandBuffer* command_buffer)
@@ -58,8 +58,8 @@ void ComputeKernel::dispatch(uint3 thread_count, BindVarsCallback bind_vars, Com
         command_buffer = temp_command_buffer;
     }
 
-    auto compute_pass = command_buffer->begin_compute_pass();
-    dispatch(thread_count, bind_vars, compute_pass);
+    auto encoder = command_buffer->encode_compute_commands();
+    dispatch(thread_count, bind_vars, encoder);
 
     if (temp_command_buffer)
         temp_command_buffer->submit();

@@ -96,8 +96,8 @@ int main()
 
         {
             ref<CommandBuffer> command_buffer = device->create_command_buffer();
-            auto raytracing_pass = command_buffer->begin_ray_tracing_pass();
-            raytracing_pass.build_acceleration_structure({
+            auto encoder = command_buffer->encode_ray_tracing_commands();
+            encoder.build_acceleration_structure({
                 .inputs = blas_build_inputs,
                 .dst = blas,
                 .scratch_data = blas_scratch_buffer->device_address(),
@@ -156,8 +156,8 @@ int main()
 
         {
             ref<CommandBuffer> command_buffer = device->create_command_buffer();
-            auto raytracing_pass = command_buffer->begin_ray_tracing_pass();
-            raytracing_pass.build_acceleration_structure({
+            auto encoder = command_buffer->encode_ray_tracing_commands();
+            encoder.build_acceleration_structure({
                 .inputs = tlas_build_inputs,
                 .dst = tlas,
                 .scratch_data = tlas_scratch_buffer->device_address(),

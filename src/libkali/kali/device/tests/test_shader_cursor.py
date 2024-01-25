@@ -283,12 +283,12 @@ def test_shader_cursor(device_type):
                     write_var(cursor, i, var, name_prefix)
 
     command_buffer = device.create_command_buffer()
-    with command_buffer.begin_compute_pass() as compute_pass:
-        shader_object = compute_pass.bind_pipeline(kernel.pipeline)
+    with command_buffer.encode_compute_commands() as encoder:
+        shader_object = encoder.bind_pipeline(kernel.pipeline)
         cursor = kali.ShaderCursor(shader_object)
         cursor["results"] = result_buffer
         write_vars(cursor, TEST_VARS)
-        compute_pass.dispatch(thread_count=[1, 1, 1])
+        encoder.dispatch(thread_count=[1, 1, 1])
     command_buffer.submit()
 
     data = result_buffer.to_numpy().tobytes()

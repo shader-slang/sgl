@@ -76,15 +76,15 @@ private:
     Slang::ComPtr<gfx::ICommandQueue> m_gfx_command_queue;
 };
 
-class KALI_API ComputePassEncoder {
+class KALI_API ComputeCommandEncoder {
 public:
-    ComputePassEncoder(ComputePassEncoder&& other) noexcept
+    ComputeCommandEncoder(ComputeCommandEncoder&& other) noexcept
         : m_command_buffer(std::exchange(other.m_command_buffer, nullptr))
         , m_gfx_compute_command_encoder(std::exchange(other.m_gfx_compute_command_encoder, nullptr))
     {
     }
 
-    ~ComputePassEncoder();
+    ~ComputeCommandEncoder();
 
     void end();
 
@@ -95,15 +95,15 @@ public:
     void dispatch_thread_groups_indirect(const Buffer* cmd_buffer, DeviceOffset offset);
 
 private:
-    ComputePassEncoder(CommandBuffer* command_buffer, gfx::IComputeCommandEncoder* gfx_compute_command_encoder)
+    ComputeCommandEncoder(CommandBuffer* command_buffer, gfx::IComputeCommandEncoder* gfx_compute_command_encoder)
         : m_command_buffer(command_buffer)
         , m_gfx_compute_command_encoder(gfx_compute_command_encoder)
     {
     }
 
-    ComputePassEncoder(const ComputePassEncoder&) = delete;
-    ComputePassEncoder& operator=(const ComputePassEncoder&) = delete;
-    ComputePassEncoder& operator=(ComputePassEncoder&& other) noexcept = delete;
+    ComputeCommandEncoder(const ComputeCommandEncoder&) = delete;
+    ComputeCommandEncoder& operator=(const ComputeCommandEncoder&) = delete;
+    ComputeCommandEncoder& operator=(ComputeCommandEncoder&& other) noexcept = delete;
 
     CommandBuffer* m_command_buffer;
     gfx::IComputeCommandEncoder* m_gfx_compute_command_encoder;
@@ -112,15 +112,15 @@ private:
     friend class CommandBuffer;
 };
 
-class KALI_API RenderPassEncoder {
+class KALI_API RenderCommandEncoder {
 public:
-    RenderPassEncoder(RenderPassEncoder&& other) noexcept
+    RenderCommandEncoder(RenderCommandEncoder&& other) noexcept
         : m_command_buffer(std::exchange(other.m_command_buffer, nullptr))
         , m_gfx_render_command_encoder(std::exchange(other.m_gfx_render_command_encoder, nullptr))
     {
     }
 
-    ~RenderPassEncoder();
+    ~RenderCommandEncoder();
 
     void end();
 
@@ -185,15 +185,15 @@ public:
     void draw_mesh_tasks(uint32_t x, uint32_t y, uint32_t z);
 
 private:
-    RenderPassEncoder(CommandBuffer* command_buffer, gfx::IRenderCommandEncoder* gfx_render_command_encoder)
+    RenderCommandEncoder(CommandBuffer* command_buffer, gfx::IRenderCommandEncoder* gfx_render_command_encoder)
         : m_command_buffer(command_buffer)
         , m_gfx_render_command_encoder(gfx_render_command_encoder)
     {
     }
 
-    RenderPassEncoder(const RenderPassEncoder&) = delete;
-    RenderPassEncoder& operator=(const RenderPassEncoder&) = delete;
-    RenderPassEncoder& operator=(RenderPassEncoder&& other) noexcept = delete;
+    RenderCommandEncoder(const RenderCommandEncoder&) = delete;
+    RenderCommandEncoder& operator=(const RenderCommandEncoder&) = delete;
+    RenderCommandEncoder& operator=(RenderCommandEncoder&& other) noexcept = delete;
 
     CommandBuffer* m_command_buffer;
     gfx::IRenderCommandEncoder* m_gfx_render_command_encoder;
@@ -202,15 +202,15 @@ private:
     friend class CommandBuffer;
 };
 
-class KALI_API RayTracingPassEncoder {
+class KALI_API RayTracingCommandEncoder {
 public:
-    RayTracingPassEncoder(RayTracingPassEncoder&& other) noexcept
+    RayTracingCommandEncoder(RayTracingCommandEncoder&& other) noexcept
         : m_command_buffer(std::exchange(other.m_command_buffer, nullptr))
         , m_gfx_ray_tracing_command_encoder(std::exchange(other.m_gfx_ray_tracing_command_encoder, nullptr))
     {
     }
 
-    ~RayTracingPassEncoder();
+    ~RayTracingCommandEncoder();
 
     void end();
 
@@ -238,7 +238,7 @@ public:
     void deserialize_acceleration_structure(AccelerationStructure* dst, DeviceAddress src);
 
 private:
-    RayTracingPassEncoder(
+    RayTracingCommandEncoder(
         CommandBuffer* command_buffer,
         gfx::IRayTracingCommandEncoder* gfx_ray_tracing_command_encoder
     )
@@ -247,9 +247,9 @@ private:
     {
     }
 
-    RayTracingPassEncoder(const RayTracingPassEncoder&) = delete;
-    RayTracingPassEncoder& operator=(const RayTracingPassEncoder&) = delete;
-    RayTracingPassEncoder& operator=(RayTracingPassEncoder&& other) noexcept = delete;
+    RayTracingCommandEncoder(const RayTracingCommandEncoder&) = delete;
+    RayTracingCommandEncoder& operator=(const RayTracingCommandEncoder&) = delete;
+    RayTracingCommandEncoder& operator=(RayTracingCommandEncoder&& other) noexcept = delete;
 
     CommandBuffer* m_command_buffer;
     gfx::IRayTracingCommandEncoder* m_gfx_ray_tracing_command_encoder;
@@ -477,29 +477,29 @@ public:
     void resolve_subresource(Texture* dst, uint32_t dst_subresource, const Texture* src, uint32_t src_subresource);
 
     /**
-     * @brief Begin a new compute pass.
+     * @brief Start encoding compute commands.
      *
-     * The returned \c ComputePassEncoder is used to bind compute pipelines and issue dispatches.
-     * The compute pass is ended when the \c ComputePassEncoder is destroyed.
+     * The returned \c ComputeCommandEncoder is used to bind compute pipelines and issue dispatches.
+     * The encoding is ended when the \c ComputeCommandEncoder is destroyed.
      */
-    ComputePassEncoder begin_compute_pass();
+    ComputeCommandEncoder encode_compute_commands();
 
     /**
-     * @brief Begin a new render pass.
+     * @brief Start encoding render commands.
      *
-     * The returned \c RenderPassEncoder is used to bind graphics pipelines and issue dispatches.
-     * The render pass is ended when the \c RenderPassEncoder is destroyed.
+     * The returned \c RenderCommandEncoder is used to bind graphics pipelines and issue dispatches.
+     * The encoding is ended when the \c RenderCommandEncoder is destroyed.
      */
-    RenderPassEncoder begin_render_pass(Framebuffer* framebuffer);
+    RenderCommandEncoder encode_render_commands(Framebuffer* framebuffer);
 
     /**
-     * @brief Begin a new ray-tracing pass.
+     * @brief Start encoding ray tracing commands.
      *
-     * The returned \c RayTracingPassEncoder is used to bind raytracing pipelines and issue dispatches.
+     * The returned \c RayTracingCommandEncoder is used to bind ray tracing pipelines and issue dispatches.
      * It also serves for building and managing acceleration structures.
-     * The ray-tracing pass is ended when the \c RayTracingPassEncoder is destroyed.
+     * The encoding is ended when the \c RayTracingCommandEncoder is destroyed.
      */
-    RayTracingPassEncoder begin_ray_tracing_pass();
+    RayTracingCommandEncoder encode_ray_tracing_commands();
 
     // ------------------------------------------------------------------------
     // Debug events
@@ -538,9 +538,9 @@ private:
     EncoderType m_active_encoder{EncoderType::none};
     Slang::ComPtr<gfx::ICommandEncoder> m_gfx_command_encoder;
 
-    friend class ComputePassEncoder;
-    friend class RenderPassEncoder;
-    friend class RayTracingPassEncoder;
+    friend class ComputeCommandEncoder;
+    friend class RenderCommandEncoder;
+    friend class RayTracingCommandEncoder;
 };
 
 } // namespace kali

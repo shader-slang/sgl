@@ -124,93 +124,97 @@ KALI_PY_EXPORT(device_command)
             "clear_value"_a
         )
         .def("copy_resource", &CommandBuffer::copy_resource, "dst"_a, "src"_a)
-        .def("begin_compute_pass", &CommandBuffer::begin_compute_pass, nb::rv_policy::reference_internal)
-        .def("begin_render_pass", &CommandBuffer::begin_render_pass, nb::rv_policy::reference_internal)
-        .def("begin_ray_tracing_pass", &CommandBuffer::begin_ray_tracing_pass, nb::rv_policy::reference_internal);
+        .def("encode_compute_commands", &CommandBuffer::encode_compute_commands, nb::rv_policy::reference_internal)
+        .def("encode_render_commands", &CommandBuffer::encode_render_commands, nb::rv_policy::reference_internal)
+        .def(
+            "encode_ray_tracing_commands",
+            &CommandBuffer::encode_ray_tracing_commands,
+            nb::rv_policy::reference_internal
+        );
 
-    nb::class_<ComputePassEncoder>(m, "ComputePassEncoder")
-        .def("__enter__", [](ComputePassEncoder* self) { return self; })
+    nb::class_<ComputeCommandEncoder>(m, "ComputeCommandEncoder")
+        .def("__enter__", [](ComputeCommandEncoder* self) { return self; })
         .def(
             "__exit__",
-            [](ComputePassEncoder* self, nb::object, nb::object, nb::object) { self->end(); },
+            [](ComputeCommandEncoder* self, nb::object, nb::object, nb::object) { self->end(); },
             "exc_type"_a = nb::none(),
             "exc_value"_a = nb::none(),
             "traceback"_a = nb::none()
         )
         .def(
             "bind_pipeline",
-            nb::overload_cast<const ComputePipeline*>(&ComputePassEncoder::bind_pipeline),
+            nb::overload_cast<const ComputePipeline*>(&ComputeCommandEncoder::bind_pipeline),
             "pipeline"_a
         )
         .def(
             "bind_pipeline",
-            nb::overload_cast<const ComputePipeline*, const ShaderObject*>(&ComputePassEncoder::bind_pipeline),
+            nb::overload_cast<const ComputePipeline*, const ShaderObject*>(&ComputeCommandEncoder::bind_pipeline),
             "pipeline"_a,
             "shader_object"_a
         )
-        .def("dispatch", &ComputePassEncoder::dispatch, "thread_count"_a)
-        .def("dispatch_thread_groups", &ComputePassEncoder::dispatch_thread_groups, "thread_group_count"_a);
+        .def("dispatch", &ComputeCommandEncoder::dispatch, "thread_count"_a)
+        .def("dispatch_thread_groups", &ComputeCommandEncoder::dispatch_thread_groups, "thread_group_count"_a);
 
-    nb::class_<RenderPassEncoder>(m, "RenderPassEncoder")
-        .def("__enter__", [](RenderPassEncoder* self) { return self; })
+    nb::class_<RenderCommandEncoder>(m, "RenderCommandEncoder")
+        .def("__enter__", [](RenderCommandEncoder* self) { return self; })
         .def(
             "__exit__",
-            [](RenderPassEncoder* self, nb::object, nb::object, nb::object) { self->end(); },
+            [](RenderCommandEncoder* self, nb::object, nb::object, nb::object) { self->end(); },
             "exc_type"_a = nb::none(),
             "exc_value"_a = nb::none(),
             "traceback"_a = nb::none()
         )
         .def(
             "bind_pipeline",
-            nb::overload_cast<const GraphicsPipeline*>(&RenderPassEncoder::bind_pipeline),
+            nb::overload_cast<const GraphicsPipeline*>(&RenderCommandEncoder::bind_pipeline),
             "pipeline"_a
         )
         .def(
             "bind_pipeline",
-            nb::overload_cast<const GraphicsPipeline*, const ShaderObject*>(&RenderPassEncoder::bind_pipeline),
+            nb::overload_cast<const GraphicsPipeline*, const ShaderObject*>(&RenderCommandEncoder::bind_pipeline),
             "pipeline"_a,
             "shader_object"_a
         )
-        .def("set_viewports", &RenderPassEncoder::set_viewports, "viewports"_a)
-        .def("set_scissor_rects", &RenderPassEncoder::set_scissor_rects, "scissor_rects"_a)
-        .def("set_viewport_and_scissor_rect", &RenderPassEncoder::set_viewport_and_scissor_rect, "viewport"_a)
-        .def("set_primitive_topology", &RenderPassEncoder::set_primitive_topology, "topology"_a)
-        .def("set_stencil_reference", &RenderPassEncoder::set_stencil_reference, "reference_value"_a)
-        .def("set_vertex_buffer", &RenderPassEncoder::set_vertex_buffer, "slot"_a, "buffer"_a, "offset"_a = 0)
-        .def("set_index_buffer", &RenderPassEncoder::set_index_buffer, "buffer"_a, "index_format"_a, "offset"_a = 0)
-        .def("draw", &RenderPassEncoder::draw, "vertex_count"_a, "start_vertex"_a = 0);
+        .def("set_viewports", &RenderCommandEncoder::set_viewports, "viewports"_a)
+        .def("set_scissor_rects", &RenderCommandEncoder::set_scissor_rects, "scissor_rects"_a)
+        .def("set_viewport_and_scissor_rect", &RenderCommandEncoder::set_viewport_and_scissor_rect, "viewport"_a)
+        .def("set_primitive_topology", &RenderCommandEncoder::set_primitive_topology, "topology"_a)
+        .def("set_stencil_reference", &RenderCommandEncoder::set_stencil_reference, "reference_value"_a)
+        .def("set_vertex_buffer", &RenderCommandEncoder::set_vertex_buffer, "slot"_a, "buffer"_a, "offset"_a = 0)
+        .def("set_index_buffer", &RenderCommandEncoder::set_index_buffer, "buffer"_a, "index_format"_a, "offset"_a = 0)
+        .def("draw", &RenderCommandEncoder::draw, "vertex_count"_a, "start_vertex"_a = 0);
 
 
-    nb::class_<RayTracingPassEncoder>(m, "RayTracingPassEncoder")
-        .def("__enter__", [](RayTracingPassEncoder* self) { return self; })
+    nb::class_<RayTracingCommandEncoder>(m, "RayTracingCommandEncoder")
+        .def("__enter__", [](RayTracingCommandEncoder* self) { return self; })
         .def(
             "__exit__",
-            [](RayTracingPassEncoder* self, nb::object, nb::object, nb::object) { self->end(); },
+            [](RayTracingCommandEncoder* self, nb::object, nb::object, nb::object) { self->end(); },
             "exc_type"_a = nb::none(),
             "exc_value"_a = nb::none(),
             "traceback"_a = nb::none()
         )
         .def(
             "bind_pipeline",
-            nb::overload_cast<const RayTracingPipeline*>(&RayTracingPassEncoder::bind_pipeline),
+            nb::overload_cast<const RayTracingPipeline*>(&RayTracingCommandEncoder::bind_pipeline),
             "pipeline"_a
         )
         .def(
             "bind_pipeline",
-            nb::overload_cast<const RayTracingPipeline*, const ShaderObject*>(&RayTracingPassEncoder::bind_pipeline),
+            nb::overload_cast<const RayTracingPipeline*, const ShaderObject*>(&RayTracingCommandEncoder::bind_pipeline),
             "pipeline"_a,
             "shader_object"_a
         )
         .def(
             "dispatch_rays",
-            &RayTracingPassEncoder::dispatch_rays,
+            &RayTracingCommandEncoder::dispatch_rays,
             "ray_gen_shader_index"_a,
             "shader_table"_a,
             "dimensions"_a
         )
         .def(
             "build_acceleration_structure",
-            [](RayTracingPassEncoder* self,
+            [](RayTracingCommandEncoder* self,
                const AccelerationStructureBuildInputs& inputs,
                AccelerationStructure* src,
                AccelerationStructure* dst,
@@ -226,7 +230,7 @@ KALI_PY_EXPORT(device_command)
         )
         .def(
             "copy_acceleration_structure",
-            &RayTracingPassEncoder::copy_acceleration_structure,
+            &RayTracingCommandEncoder::copy_acceleration_structure,
             "src"_a,
             "dst"_a,
             "mode"_a

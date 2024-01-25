@@ -52,14 +52,14 @@ pipeline = device.create_graphics_pipeline(
 )
 
 command_buffer = device.create_command_buffer()
-with command_buffer.begin_render_pass(framebuffer) as render_pass:
-    shader_object = render_pass.bind_pipeline(pipeline)
-    render_pass.set_vertex_buffer(0, vertex_buffer)
-    render_pass.set_primitive_topology(kali.PrimitiveTopology.triangle_list)
-    render_pass.set_viewport_and_scissor_rect(
+with command_buffer.encode_render_commands(framebuffer) as encoder:
+    shader_object = encoder.bind_pipeline(pipeline)
+    encoder.set_vertex_buffer(0, vertex_buffer)
+    encoder.set_primitive_topology(kali.PrimitiveTopology.triangle_list)
+    encoder.set_viewport_and_scissor_rect(
         {"width": render_texture.width, "height": render_texture.height}
     )
-    render_pass.draw(3)
+    encoder.draw(3)
 command_buffer.submit()
 
 
