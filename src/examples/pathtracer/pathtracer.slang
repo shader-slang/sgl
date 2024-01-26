@@ -121,10 +121,10 @@ struct Scene {
     RaytracingAccelerationStructure tlas;
 
     StructuredBuffer<MaterialDesc> material_descs;
-    StructuredBuffer<Vertex> vertices;
-    StructuredBuffer<uint> indices;
     StructuredBuffer<MeshDesc> mesh_descs;
     StructuredBuffer<InstanceDesc> instance_descs;
+    StructuredBuffer<Vertex> vertices;
+    StructuredBuffer<uint> indices;
     StructuredBuffer<float4x4> transforms;
     StructuredBuffer<float4x4> inverse_transpose_transforms;
 

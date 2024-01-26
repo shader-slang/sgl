@@ -4,6 +4,8 @@ from pathlib import Path
 from dataclasses import dataclass
 import struct
 
+EXAMPLE_DIR = Path(__file__).parent
+
 
 class Camera:
     def __init__(self):
@@ -565,10 +567,10 @@ class Scene:
     def bind(self, cursor: kali.ShaderCursor):
         cursor["tlas"] = self.tlas
         cursor["material_descs"] = self.material_descs_buffer
-        cursor["vertices"] = self.vertex_buffer
-        cursor["indices"] = self.index_buffer
         cursor["mesh_descs"] = self.mesh_descs_buffer
         cursor["instance_descs"] = self.instance_descs_buffer
+        cursor["vertices"] = self.vertex_buffer
+        cursor["indices"] = self.index_buffer
         cursor["transforms"] = self.transform_buffer
         cursor[
             "inverse_transpose_transforms"
@@ -582,7 +584,7 @@ class PathTracer:
         self.scene = scene
 
         self.program = self.device.load_module(
-            Path(__file__).parent / "pathtracer.slang"
+            EXAMPLE_DIR / "pathtracer.slang"
         ).create_program("main")
 
         self.pipeline = self.device.create_compute_pipeline(self.program)
@@ -610,7 +612,7 @@ class Accumulator:
     def __init__(self, device: kali.Device):
         self.device = device
         self.kernel = self.device.load_module(
-            Path(__file__).parent / "accumulator.slang"
+            EXAMPLE_DIR / "accumulator.slang"
         ).create_compute_kernel("main")
         self.accumulator: kali.Texture = None
 
@@ -647,7 +649,7 @@ class ToneMapper:
     def __init__(self, device: kali.Device):
         self.device = device
         self.kernel = self.device.load_module(
-            Path(__file__).parent / "tone_mapper.slang"
+            EXAMPLE_DIR / "tone_mapper.slang"
         ).create_compute_kernel("main")
 
     def execute(self, input: kali.Texture, output: kali.Texture):
@@ -667,7 +669,9 @@ class App:
         self.window = kali.Window(
             width=1920, height=1080, title="PathTracer", resizable=True
         )
-        self.device = kali.Device(enable_debug_layers=False)
+        self.device = kali.Device(
+            type=kali.DeviceType.d3d12, enable_debug_layers=False
+        )
         self.swapchain = self.device.create_swapchain(
             format=kali.Format.rgba8_unorm,
             width=self.window.width,
@@ -679,9 +683,6 @@ class App:
         self.render_texture: kali.Texture = None
         self.accum_texture: kali.Texture = None
         self.output_texture: kali.Texture = None
-
-        self.mouse_pos = kali.float2()
-        self.mouse_down = False
 
         self.window.on_keyboard_event = self.on_keyboard_event
         self.window.on_mouse_event = self.on_mouse_event
@@ -782,9 +783,7 @@ class App:
 
             command_buffer = self.device.create_command_buffer()
             command_buffer.copy_resource(dst=image, src=self.output_texture)
-            command_buffer.texture_barrier(
-                image, kali.ResourceState.present
-            )
+            command_buffer.texture_barrier(image, kali.ResourceState.present)
             command_buffer.submit()
             del image
 
