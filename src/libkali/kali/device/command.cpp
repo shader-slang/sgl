@@ -60,11 +60,13 @@ void CommandQueue::submit(const CommandBuffer* command_buffer)
 {
     KALI_CHECK_NOT_NULL(command_buffer);
 #if KALI_HAS_CUDA
-    handle_copy_from_cuda(command_buffer);
+    if (m_device->supports_cuda_interop())
+        handle_copy_from_cuda(command_buffer);
 #endif
     m_gfx_command_queue->executeCommandBuffer(command_buffer->gfx_command_buffer());
 #if KALI_HAS_CUDA
-    handle_copy_to_cuda(command_buffer);
+    if (m_device->supports_cuda_interop())
+        handle_copy_to_cuda(command_buffer);
 #endif
 }
 
@@ -214,7 +216,9 @@ void ComputeCommandEncoder::bind_pipeline(const ComputePipeline* pipeline, const
     KALI_CHECK_NOT_NULL(shader_object);
 
     m_bound_pipeline = pipeline;
-    m_bound_shader_object = shader_object;
+    // TODO we should probably take shader_object by ref<const ShaderObject>
+    // alternatively we could process CUDA buffers at bind time
+    m_bound_shader_object = ref<const ShaderObject>(shader_object);
     SLANG_CALL(m_gfx_compute_command_encoder
                    ->bindPipelineWithRootObject(pipeline->gfx_pipeline_state(), shader_object->gfx_shader_object()));
 }
@@ -288,7 +292,7 @@ void RenderCommandEncoder::bind_pipeline(const GraphicsPipeline* pipeline, const
     KALI_CHECK_NOT_NULL(shader_object);
 
     m_bound_pipeline = pipeline;
-    m_bound_shader_object = shader_object;
+    m_bound_shader_object = ref<const ShaderObject>(shader_object);
     SLANG_CALL(m_gfx_render_command_encoder
                    ->bindPipelineWithRootObject(pipeline->gfx_pipeline_state(), shader_object->gfx_shader_object()));
 }
@@ -400,7 +404,7 @@ void RayTracingCommandEncoder::bind_pipeline(const RayTracingPipeline* pipeline,
     KALI_CHECK_NOT_NULL(shader_object);
 
     m_bound_pipeline = pipeline;
-    m_bound_shader_object = shader_object;
+    m_bound_shader_object = ref<const ShaderObject>(shader_object);
     SLANG_CALL(m_gfx_ray_tracing_command_encoder
                    ->bindPipelineWithRootObject(pipeline->gfx_pipeline_state(), shader_object->gfx_shader_object()));
 }

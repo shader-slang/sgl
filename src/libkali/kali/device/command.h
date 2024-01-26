@@ -140,7 +140,7 @@ private:
     CommandBuffer* m_command_buffer;
     gfx::IComputeCommandEncoder* m_gfx_compute_command_encoder;
     const ComputePipeline* m_bound_pipeline{nullptr};
-    const ShaderObject* m_bound_shader_object{nullptr};
+    ref<const ShaderObject> m_bound_shader_object;
 
     friend class CommandBuffer;
 };
@@ -231,7 +231,7 @@ private:
     CommandBuffer* m_command_buffer;
     gfx::IRenderCommandEncoder* m_gfx_render_command_encoder;
     const GraphicsPipeline* m_bound_pipeline{nullptr};
-    const ShaderObject* m_bound_shader_object{nullptr};
+    ref<const ShaderObject> m_bound_shader_object;
 
     friend class CommandBuffer;
 };
@@ -288,7 +288,7 @@ private:
     CommandBuffer* m_command_buffer;
     gfx::IRayTracingCommandEncoder* m_gfx_ray_tracing_command_encoder;
     const RayTracingPipeline* m_bound_pipeline{nullptr};
-    const ShaderObject* m_bound_shader_object{nullptr};
+    ref<const ShaderObject> m_bound_shader_object;
 
     friend class CommandBuffer;
 };
