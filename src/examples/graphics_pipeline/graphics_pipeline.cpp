@@ -14,6 +14,8 @@
 
 KALI_EXPORT_AGILITY_SDK
 
+static const std::filesystem::path EXAMPLE_DIR(KALI_EXAMPLE_DIR);
+
 using namespace kali;
 
 int main()
@@ -70,8 +72,7 @@ int main()
             {.texture = render_texture},
         }});
 
-        auto path = platform::project_directory() / "src/examples/graphics_pipeline/graphics_pipeline.slang";
-        ref<SlangModule> module_ = device->load_module(path);
+        ref<SlangModule> module_ = device->load_module(EXAMPLE_DIR / "graphics_pipeline.slang");
         auto vs = module_->entry_point("vertex_main");
         auto fs = module_->entry_point("fragment_main");
         ref<ShaderProgram> program = module_->create_program(module_->global_scope(), {vs, fs});

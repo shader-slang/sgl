@@ -2,10 +2,13 @@ import kali
 import numpy as np
 from pathlib import Path
 
-device = kali.Device(enable_debug_layers=True)
+EXAMPLE_DIR = Path(__file__).parent
 
-path = Path(__file__).parent / "compute.cs.slang"
-kernel = device.load_module(path).create_compute_kernel("main")
+device = kali.Device(enable_debug_layers=False)
+
+kernel = device.load_module(EXAMPLE_DIR / "simple_compute.slang").create_compute_kernel(
+    "main"
+)
 
 N = 1024
 

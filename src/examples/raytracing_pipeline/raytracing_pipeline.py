@@ -2,6 +2,8 @@ import kali
 import numpy as np
 from pathlib import Path
 
+EXAMPLE_DIR = Path(__file__).parent
+
 device = kali.Device(enable_debug_layers=True)
 
 vertices = np.array([-1, -1, 0, 1, -1, 0, 0, 1, 0], dtype=np.float32)
@@ -129,7 +131,7 @@ render_texture = device.create_texture(
     debug_name="render_texture",
 )
 
-module = device.load_module(Path(__file__).parent / "raytracing_pipeline.slang")
+module = device.load_module(EXAMPLE_DIR / "raytracing_pipeline.slang")
 ray_gen = module.entry_point("ray_gen")
 miss = module.entry_point("miss")
 closest_hit = module.entry_point("closest_hit")

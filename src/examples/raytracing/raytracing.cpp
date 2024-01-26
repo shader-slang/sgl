@@ -11,6 +11,8 @@
 
 KALI_EXPORT_AGILITY_SDK
 
+static const std::filesystem::path EXAMPLE_DIR(KALI_EXAMPLE_DIR);
+
 using namespace kali;
 
 int main()
@@ -174,8 +176,8 @@ int main()
             .debug_name = "render_texture",
         });
 
-        auto path = platform::project_directory() / "src/examples/raytracing/raytracing.cs.slang";
-        ref<ComputeKernel> kernel = device->load_module(path)->create_compute_kernel("main");
+        ref<ComputeKernel> kernel
+            = device->load_module(EXAMPLE_DIR / "raytracing.slang")->create_compute_kernel("main");
 
         kernel->dispatch(
             uint3{1024, 1024, 1},

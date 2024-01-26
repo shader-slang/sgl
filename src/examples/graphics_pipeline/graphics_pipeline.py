@@ -2,6 +2,8 @@ import kali
 import numpy as np
 from pathlib import Path
 
+EXAMPLE_DIR = Path(__file__).parent
+
 device = kali.Device(enable_debug_layers=True)
 
 vertices = np.array([-1, -1, 1, -1, 0, 1], dtype=np.float32)
@@ -41,7 +43,7 @@ input_layout = device.create_input_layout(
 
 framebuffer = device.create_framebuffer(render_targets=[{"texture": render_texture}])
 
-module = device.load_module(Path(__file__).parent / "graphics_pipeline.slang")
+module = device.load_module(EXAMPLE_DIR / "graphics_pipeline.slang")
 vs = module.entry_point("vertex_main")
 fs = module.entry_point("fragment_main")
 program = module.create_program(module.global_scope, [vs, fs])

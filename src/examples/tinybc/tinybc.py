@@ -4,6 +4,8 @@ import numpy as np
 import kali
 from pathlib import Path
 
+EXAMPLE_DIR = Path(__file__).parent
+
 # Build and parse command line
 # fmt: off
 parser = argparse.ArgumentParser(description="Slang-based BC7 - mode 6 compressor")
@@ -60,7 +62,7 @@ decoded_tex = device.create_texture(
 
 # Load shader module
 encoder = device.load_module(
-    Path(__file__).parent / "tinybc.slang",
+    EXAMPLE_DIR / "tinybc.slang",
     defines={
         "CONFIG_USE_ADAM": "true",
         "CONFIG_OPT_STEPS": str(args.opt_steps),

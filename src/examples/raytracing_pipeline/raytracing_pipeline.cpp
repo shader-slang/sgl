@@ -12,6 +12,8 @@
 
 KALI_EXPORT_AGILITY_SDK
 
+static const std::filesystem::path EXAMPLE_DIR(KALI_EXAMPLE_DIR);
+
 using namespace kali;
 
 int main()
@@ -175,8 +177,7 @@ int main()
             .debug_name = "render_texture",
         });
 
-        auto path = platform::project_directory() / "src/examples/raytracing_pipeline/raytracing_pipeline.slang";
-        ref<SlangModule> module = device->load_module(path);
+        ref<SlangModule> module = device->load_module(EXAMPLE_DIR / "raytracing_pipeline.slang");
         ref<kali::SlangEntryPoint> ray_gen = module->entry_point("ray_gen");
         ref<kali::SlangEntryPoint> miss = module->entry_point("miss");
         ref<kali::SlangEntryPoint> closest_hit = module->entry_point("closest_hit");

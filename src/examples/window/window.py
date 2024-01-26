@@ -2,6 +2,8 @@ import kali
 import numpy as np
 from pathlib import Path
 
+EXAMPLE_DIR = Path(__file__).parent
+
 window = kali.Window(width=1280, height=720, title="Window Example", resizable=True)
 
 device = kali.Device(enable_debug_layers=True)
@@ -16,9 +18,7 @@ swapchain = device.create_swapchain(
 
 output_texture = None
 
-kernel = device.load_module(Path(__file__).parent / "draw.slang").create_compute_kernel(
-    "main"
-)
+kernel = device.load_module(EXAMPLE_DIR / "draw.slang").create_compute_kernel("main")
 
 mouse_pos = kali.float2()
 mouse_down = False
@@ -102,7 +102,7 @@ while not window.should_close():
             "g_mouse_pos": mouse_pos,
             "g_mouse_down": mouse_down,
         },
-        command_buffer=command_buffer
+        command_buffer=command_buffer,
     )
     command_buffer.copy_resource(dst=image, src=output_texture)
     command_buffer.texture_barrier(image, kali.ResourceState.present)

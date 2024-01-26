@@ -9,10 +9,14 @@
 #include "kali/device/shader_object.h"
 #include "kali/device/kernel.h"
 #include "kali/device/query.h"
+#include "kali/device/agility_sdk.h"
 #include "kali/utils/tev.h"
 
 #include <argparse/argparse.hpp>
 
+KALI_EXPORT_AGILITY_SDK
+
+static const std::filesystem::path EXAMPLE_DIR(KALI_EXAMPLE_DIR);
 
 using namespace kali;
 
@@ -96,7 +100,7 @@ int main(int argc, const char* argv[])
 
     ref<ComputeKernel> encoder = device
                                      ->load_module(
-                                         platform::project_directory() / "src/examples/tinybc/tinybc.slang",
+                                         EXAMPLE_DIR / "tinybc.slang",
                                          DefineList({
                                              {"CONFIG_USE_ADAM", "true"},
                                              {"CONFIG_OPT_STEPS", std::to_string(opt_steps)},

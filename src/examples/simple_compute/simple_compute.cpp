@@ -10,6 +10,8 @@
 
 KALI_EXPORT_AGILITY_SDK
 
+static const std::filesystem::path EXAMPLE_DIR(KALI_EXAMPLE_DIR);
+
 using namespace kali;
 
 int main()
@@ -17,10 +19,10 @@ int main()
     kali::static_init();
 
     {
-        ref<Device> device = Device::create({.type = DeviceType::automatic, .enable_debug_layers = true});
+        ref<Device> device = Device::create({.enable_debug_layers = true});
 
-        auto path = platform::project_directory() / "src/examples/simple_compute/compute.cs.slang";
-        ref<ComputeKernel> kernel = device->load_module(path)->create_compute_kernel("main");
+        ref<ComputeKernel> kernel
+            = device->load_module(EXAMPLE_DIR / "simple_compute.slang")->create_compute_kernel("main");
 
         const uint32_t N = 1024;
 

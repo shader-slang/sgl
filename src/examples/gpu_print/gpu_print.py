@@ -1,8 +1,9 @@
 import kali
 from pathlib import Path
-import os
 import numpy as np
 import struct
+
+EXAMPLE_DIR = Path(__file__).parent
 
 device = kali.Device()
 
@@ -101,7 +102,7 @@ class PrintOutput:
 print_output = PrintOutput(device)
 
 kernel = device.load_module(
-    path=Path(__file__).parent / "gpu_print.slang", defines={**print_output.defines()}
+    path=EXAMPLE_DIR / "gpu_print.slang", defines={**print_output.defines()}
 ).create_compute_kernel("main")
 
 kernel.dispatch(
