@@ -281,7 +281,7 @@ ResolvedStackTrace resolve_stacktrace(std::span<const StackFrame> trace)
 
     char** info = ::backtrace_symbols(reinterpret_cast<void* const*>(trace.data()), trace.size());
 
-    std::regex re("(\\S+)\\((\\S*)\\+(0x[0-9a-f]*)\\)\\s+\\[(0x[0-9a-f]+)\\].*");
+    std::regex re("([0-9]+)\\s+(\\S+)\\s+(0x[0-9a-f]+)\\s+(\\S+)\\s\\+\\s([0-9]*)");
 
     ResolvedStackTrace resolved_trace(trace.size());
     for (size_t i = 0; i < trace.size(); i++) {
@@ -291,10 +291,11 @@ ResolvedStackTrace resolve_stacktrace(std::span<const StackFrame> trace)
 
         std::cmatch m;
         if (std::regex_match(info[i], m, re)) {
-            resolved.module = m[1];
-            resolved.symbol = m[2];
+            resolved.address = std::stoull(m[3], nullptr, 16);
+            resolved.module = m[2];
+            resolved.symbol = m[4];
             resolved.symbol = demangle(resolved.symbol.c_str());
-            resolved.offset = std::stoul(m[3], nullptr, 16);
+            resolved.offset = std::stoull(m[5], nullptr, 10);
         } else {
             resolved.symbol = info[i];
         }
