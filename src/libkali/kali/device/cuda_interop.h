@@ -22,8 +22,7 @@ public:
 
     Buffer* buffer() const { return m_buffer; }
     bool is_uav() const { return m_is_uav; }
-    ref<ResourceView> get_srv() const;
-    ref<ResourceView> get_uav() const;
+    ref<ResourceView> get_resource_view() const;
 
     void copy_from_cuda(void* cuda_stream = 0);
     void copy_to_cuda(void* cuda_stream = 0);

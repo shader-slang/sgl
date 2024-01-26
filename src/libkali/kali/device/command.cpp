@@ -392,7 +392,6 @@ ref<TransientShaderObject> RayTracingCommandEncoder::bind_pipeline(const RayTrac
         = make_ref<TransientShaderObject>(ref<Device>(m_command_buffer->device()), gfx_shader_object, m_command_buffer);
     m_bound_shader_object = transient_shader_object;
     return transient_shader_object;
-
 }
 
 void RayTracingCommandEncoder::bind_pipeline(const RayTracingPipeline* pipeline, const ShaderObject* shader_object)
@@ -522,12 +521,6 @@ void CommandBuffer::close()
 {
     if (!m_open)
         return;
-
-    // TODO we probably don't need these barriers because synchronization happens through
-    // a shared CUDA semaphore.
-    for (const auto& cuda_interop_buffer : m_cuda_interop_buffers)
-        if (cuda_interop_buffer->is_uav())
-            buffer_barrier(cuda_interop_buffer->buffer(), ResourceState::copy_source);
 
     end_current_encoder();
     m_gfx_command_buffer->close();

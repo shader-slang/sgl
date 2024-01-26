@@ -16,22 +16,17 @@ InteropBuffer::InteropBuffer(kali::Device* device, const TensorView tensor_view,
     m_buffer = device->create_buffer({
         .size = m_tensor_view.size,
         .struct_size = 4,
-        .initial_state = ResourceState::copy_destination,
-        .usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access | ResourceUsage::shared,
+        .initial_state = is_uav ? ResourceState::unordered_access : ResourceState::shader_resource,
+        .usage = ResourceUsage::shared | (is_uav ? ResourceUsage::unordered_access : ResourceUsage::shader_resource),
     });
     m_external_memory = make_ref<cuda::ExternalMemory>(m_buffer);
 }
 
 InteropBuffer::~InteropBuffer() { }
 
-ref<ResourceView> InteropBuffer::get_srv() const
+ref<ResourceView> InteropBuffer::get_resource_view() const
 {
-    return m_buffer->get_srv();
-}
-
-ref<ResourceView> InteropBuffer::get_uav() const
-{
-    return m_buffer->get_uav();
+    return m_is_uav ? m_buffer->get_uav() : m_buffer->get_srv();
 }
 
 void InteropBuffer::copy_from_cuda(void* cuda_stream)
