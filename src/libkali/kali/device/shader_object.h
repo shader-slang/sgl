@@ -1,5 +1,6 @@
 #pragma once
 
+#include "kali/core/config.h"
 #include "kali/core/object.h"
 #include "kali/core/type_utils.h"
 
@@ -18,7 +19,7 @@ namespace kali {
 class KALI_API ShaderObject : public Object {
     KALI_OBJECT(ShaderObject)
 public:
-    ShaderObject(gfx::IShaderObject* shader_object);
+    ShaderObject(ref<Device> device, gfx::IShaderObject* shader_object);
 
     virtual const TypeLayoutReflection* element_type_layout() const;
 
@@ -34,16 +35,26 @@ public:
     set_acceleration_structure(const ShaderOffset& offset, const ref<AccelerationStructure>& acceleration_structure);
     virtual void set_data(const ShaderOffset& offset, void const* data, size_t size);
 
+#if KALI_HAS_CUDA
+    virtual void set_cuda_tensor_view(const ShaderOffset& offset, const cuda::TensorView& tensor_view, bool is_uav);
+    virtual void get_cuda_interop_buffers(std::vector<ref<cuda::InteropBuffer>>& cuda_interop_buffers) const;
+#endif
+
     gfx::IShaderObject* gfx_shader_object() const { return m_shader_object; }
 
 protected:
+    ref<Device> m_device;
     gfx::IShaderObject* m_shader_object;
+
+#if KALI_HAS_CUDA
+    std::vector<ref<cuda::InteropBuffer>> m_cuda_interop_buffers;
+#endif
 };
 
 class KALI_API TransientShaderObject : public ShaderObject {
     KALI_OBJECT(TransientShaderObject)
 public:
-    TransientShaderObject(gfx::IShaderObject* shader_object, CommandBuffer* command_buffer);
+    TransientShaderObject(ref<Device> device, gfx::IShaderObject* shader_object, CommandBuffer* command_buffer);
 
     virtual ref<ShaderObject> get_entry_point(uint32_t index) override;
 
@@ -51,6 +62,10 @@ public:
     virtual void set_object(const ShaderOffset& offset, const ref<ShaderObject>& object) override;
 
     virtual void set_resource(const ShaderOffset& offset, const ref<ResourceView>& resource_view) override;
+
+#if KALI_HAS_CUDA
+    virtual void get_cuda_interop_buffers(std::vector<ref<cuda::InteropBuffer>>& cuda_interop_buffers) const override;
+#endif
 
 private:
     CommandBuffer* m_command_buffer;
@@ -60,7 +75,7 @@ private:
 class KALI_API MutableShaderObject : public ShaderObject {
     KALI_OBJECT(MutableShaderObject)
 public:
-    MutableShaderObject(gfx::IShaderObject* shader_object);
+    MutableShaderObject(ref<Device> device, gfx::IShaderObject* shader_object);
     MutableShaderObject(ref<Device> device, const ShaderProgram* shader_program);
     MutableShaderObject(ref<Device> device, const TypeLayoutReflection* type_layout);
     ~MutableShaderObject();
@@ -73,8 +88,11 @@ public:
 
     void set_resource_states(CommandBuffer* command_buffer);
 
+#if KALI_HAS_CUDA
+    virtual void get_cuda_interop_buffers(std::vector<ref<cuda::InteropBuffer>>& cuda_interop_buffers) const override;
+#endif
+
 private:
-    ref<Device> m_device;
     std::map<ShaderOffset, ref<ResourceView>> m_resource_views;
     std::vector<ref<MutableShaderObject>> m_sub_objects;
 };

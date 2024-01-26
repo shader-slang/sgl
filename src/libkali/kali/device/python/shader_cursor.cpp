@@ -5,6 +5,7 @@
 #include "kali/device/resource.h"
 #include "kali/device/sampler.h"
 #include "kali/device/raytracing.h"
+#include "kali/device/cuda_interop.h"
 
 #include "kali/math/vector_types.h"
 #include "kali/math/matrix_types.h"
@@ -186,4 +187,16 @@ KALI_PY_EXPORT(device_shader_cursor)
     shader_cursor.def("__setitem__", set_float_field);
     shader_cursor.def("__setitem__", set_float_element);
     shader_cursor.def("__setattr__", set_float_field);
+
+#if KALI_HAS_CUDA
+    auto set_cuda_tensor_field = [](ShaderCursor& self, std::string_view name, nb::ndarray<nb::device::cuda> ndarray)
+    { self[name].set_cuda_tensor_view(ndarray_to_cuda_tensor_view(ndarray)); };
+
+    auto set_cuda_tensor_element = [](ShaderCursor& self, int index, nb::ndarray<nb::device::cuda> ndarray)
+    { self[index].set_cuda_tensor_view(ndarray_to_cuda_tensor_view(ndarray)); };
+
+    shader_cursor.def("__setitem__", set_cuda_tensor_field);
+    shader_cursor.def("__setitem__", set_cuda_tensor_element);
+    shader_cursor.def("__setattr__", set_cuda_tensor_field);
+#endif
 }

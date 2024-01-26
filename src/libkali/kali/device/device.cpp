@@ -16,6 +16,7 @@
 #include "kali/device/helpers.h"
 #include "kali/device/native_handle_traits.h"
 #include "kali/device/agility_sdk.h"
+#include "kali/device/cuda_utils.h"
 
 #include "kali/core/config.h"
 #include "kali/core/error.h"
@@ -219,6 +220,20 @@ Device::Device(const DeviceDesc& desc)
             frame_data.transient_resource_heap.writeRef()
         );
     }
+
+    // Create CUDA device before creating the graphics queue, which internally
+    // allocates a shared semaphore for synchronization.
+#if KALI_HAS_CUDA
+    if (m_desc.enable_cuda_interop) {
+        KALI_CHECK(m_desc.type == DeviceType::d3d12, "CUDA interop is only supported on D3D12 devices");
+        m_cuda_device = make_ref<cuda::Device>(this);
+        m_supports_cuda_interop = true;
+    }
+#else
+    if (m_desc.enable_cuda_interop) {
+        KALI_THROW("CUDA interop is not supported");
+    }
+#endif
 
     m_frame_fence = create_fence({.shared = true});
     m_frame_fence->break_strong_reference_to_device();

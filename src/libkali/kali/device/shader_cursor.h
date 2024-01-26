@@ -4,6 +4,7 @@
 #include "kali/device/shader_offset.h"
 #include "kali/device/reflection.h"
 
+#include "kali/core/config.h"
 #include "kali/core/macros.h"
 
 #include <string_view>
@@ -53,6 +54,10 @@ public:
     void set_acceleration_structure(const ref<AccelerationStructure>& acceleration_structure) const;
 
     void set_data(const void* data, size_t size) const;
+
+#if KALI_HAS_CUDA
+    void set_cuda_tensor_view(const cuda::TensorView& tensor_view) const;
+#endif
 
     template<typename T>
     void operator=(const T& value) const

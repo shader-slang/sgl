@@ -9,6 +9,9 @@
 #include "kali/device/raytracing.h"
 #include "kali/device/shader_object.h"
 #include "kali/device/framebuffer.h"
+#include "kali/device/native_handle_traits.h"
+#include "kali/device/cuda_utils.h"
+#include "kali/device/cuda_interop.h"
 
 #include "kali/core/short_vector.h"
 #include "kali/core/maths.h"
@@ -43,12 +46,26 @@ CommandQueue::CommandQueue(ref<Device> device, CommandQueueDesc desc)
     };
 
     SLANG_CALL(m_device->gfx_device()->createCommandQueue(gfx_desc, m_gfx_command_queue.writeRef()));
+
+#if KALI_HAS_CUDA
+    if (m_device->supports_cuda_interop()) {
+        m_cuda_fence = m_device->create_fence({.shared = true});
+        m_cuda_fence->break_strong_reference_to_device();
+        m_cuda_semaphore = make_ref<cuda::ExternalSemaphore>(m_cuda_fence);
+    }
+#endif
 }
 
 void CommandQueue::submit(const CommandBuffer* command_buffer)
 {
     KALI_CHECK_NOT_NULL(command_buffer);
+#if KALI_HAS_CUDA
+    handle_copy_from_cuda(command_buffer);
+#endif
     m_gfx_command_queue->executeCommandBuffer(command_buffer->gfx_command_buffer());
+#if KALI_HAS_CUDA
+    handle_copy_to_cuda(command_buffer);
+#endif
 }
 
 void CommandQueue::submit(std::span<const CommandBuffer*> command_buffers)
@@ -62,9 +79,8 @@ void CommandQueue::submit(std::span<const CommandBuffer*> command_buffers)
 
 void CommandQueue::submit_and_wait(const CommandBuffer* command_buffer)
 {
-    KALI_CHECK_NOT_NULL(command_buffer);
-    m_gfx_command_queue->executeCommandBuffer(command_buffer->gfx_command_buffer());
-    m_gfx_command_queue->waitOnHost();
+    submit(command_buffer);
+    wait();
 }
 
 void CommandQueue::wait()
@@ -90,6 +106,21 @@ void CommandQueue::wait(const Fence* fence, uint64_t value)
     uint64_t wait_values[] = {wait_value};
     SLANG_CALL(m_gfx_command_queue->waitForFenceValuesOnDevice(1, fences, wait_values));
 }
+
+#if KALI_HAS_CUDA
+void CommandQueue::wait_for_cuda(void* cuda_stream)
+{
+    KALI_CHECK(m_device->supports_cuda_interop(), "Device does not support CUDA interop");
+    m_cuda_semaphore->wait_for_cuda(this, static_cast<cudaStream_t>(cuda_stream));
+}
+
+void CommandQueue::wait_for_device(void* cuda_stream)
+{
+    KALI_CHECK(m_device->supports_cuda_interop(), "Device does not support CUDA interop");
+    m_cuda_semaphore->wait_for_device(this, static_cast<cudaStream_t>(cuda_stream));
+}
+#endif // KALI_HAS_CUDA
+
 
 NativeHandle CommandQueue::get_native_handle() const
 {
@@ -118,6 +149,35 @@ std::string CommandQueue::to_string() const
     );
 }
 
+#if KALI_HAS_CUDA
+void CommandQueue::handle_copy_from_cuda(const CommandBuffer* command_buffer)
+{
+    void* cuda_stream = 0; // TODO
+
+    if (command_buffer->m_cuda_interop_buffers.empty())
+        return;
+
+    for (const auto& buffer : command_buffer->m_cuda_interop_buffers)
+        buffer->copy_from_cuda(cuda_stream);
+
+    wait_for_cuda(cuda_stream);
+}
+
+void CommandQueue::handle_copy_to_cuda(const CommandBuffer* command_buffer)
+{
+    void* cuda_stream = 0; // TODO
+
+    if (command_buffer->m_cuda_interop_buffers.empty())
+        return;
+
+    wait_for_device(cuda_stream);
+
+    for (const auto& buffer : command_buffer->m_cuda_interop_buffers)
+        if (buffer->is_uav())
+            buffer->copy_to_cuda(cuda_stream);
+}
+#endif
+
 // ----------------------------------------------------------------------------
 // ComputeCommandEncoder
 // ----------------------------------------------------------------------------
@@ -142,7 +202,10 @@ ref<TransientShaderObject> ComputeCommandEncoder::bind_pipeline(const ComputePip
     m_bound_pipeline = pipeline;
     gfx::IShaderObject* gfx_shader_object;
     SLANG_CALL(m_gfx_compute_command_encoder->bindPipeline(pipeline->gfx_pipeline_state(), &gfx_shader_object));
-    return make_ref<TransientShaderObject>(gfx_shader_object, m_command_buffer);
+    ref<TransientShaderObject> transient_shader_object
+        = make_ref<TransientShaderObject>(ref<Device>(m_command_buffer->device()), gfx_shader_object, m_command_buffer);
+    m_bound_shader_object = transient_shader_object;
+    return transient_shader_object;
 }
 
 void ComputeCommandEncoder::bind_pipeline(const ComputePipeline* pipeline, const ShaderObject* shader_object)
@@ -151,6 +214,7 @@ void ComputeCommandEncoder::bind_pipeline(const ComputePipeline* pipeline, const
     KALI_CHECK_NOT_NULL(shader_object);
 
     m_bound_pipeline = pipeline;
+    m_bound_shader_object = shader_object;
     SLANG_CALL(m_gfx_compute_command_encoder
                    ->bindPipelineWithRootObject(pipeline->gfx_pipeline_state(), shader_object->gfx_shader_object()));
 }
@@ -170,6 +234,10 @@ void ComputeCommandEncoder::dispatch(uint3 thread_count)
 void ComputeCommandEncoder::dispatch_thread_groups(uint3 thread_group_count)
 {
     KALI_CHECK(m_bound_pipeline, "No pipeline bound");
+
+#if KALI_HAS_CUDA
+    m_bound_shader_object->get_cuda_interop_buffers(m_command_buffer->m_cuda_interop_buffers);
+#endif
 
     SLANG_CALL(
         m_gfx_compute_command_encoder->dispatchCompute(thread_group_count.x, thread_group_count.y, thread_group_count.z)
@@ -208,7 +276,10 @@ ref<TransientShaderObject> RenderCommandEncoder::bind_pipeline(const GraphicsPip
     m_bound_pipeline = pipeline;
     gfx::IShaderObject* gfx_shader_object;
     SLANG_CALL(m_gfx_render_command_encoder->bindPipeline(pipeline->gfx_pipeline_state(), &gfx_shader_object));
-    return make_ref<TransientShaderObject>(gfx_shader_object, m_command_buffer);
+    ref<TransientShaderObject> transient_shader_object
+        = make_ref<TransientShaderObject>(ref<Device>(m_command_buffer->device()), gfx_shader_object, m_command_buffer);
+    m_bound_shader_object = transient_shader_object;
+    return transient_shader_object;
 }
 
 void RenderCommandEncoder::bind_pipeline(const GraphicsPipeline* pipeline, const ShaderObject* shader_object)
@@ -217,6 +288,7 @@ void RenderCommandEncoder::bind_pipeline(const GraphicsPipeline* pipeline, const
     KALI_CHECK_NOT_NULL(shader_object);
 
     m_bound_pipeline = pipeline;
+    m_bound_shader_object = shader_object;
     SLANG_CALL(m_gfx_render_command_encoder
                    ->bindPipelineWithRootObject(pipeline->gfx_pipeline_state(), shader_object->gfx_shader_object()));
 }
@@ -284,6 +356,10 @@ void RenderCommandEncoder::draw(uint32_t vertex_count, uint32_t start_vertex)
 {
     KALI_CHECK(m_bound_pipeline, "No pipeline bound");
 
+#if KALI_HAS_CUDA
+    m_bound_shader_object->get_cuda_interop_buffers(m_command_buffer->m_cuda_interop_buffers);
+#endif
+
     SLANG_CALL(m_gfx_render_command_encoder->draw(vertex_count, start_vertex));
 }
 
@@ -312,7 +388,11 @@ ref<TransientShaderObject> RayTracingCommandEncoder::bind_pipeline(const RayTrac
     gfx::IShaderObject* gfx_shader_object;
     // TODO gfx bindPipeline should return Result (fix in slang/gfx)
     m_gfx_ray_tracing_command_encoder->bindPipeline(pipeline->gfx_pipeline_state(), &gfx_shader_object);
-    return make_ref<TransientShaderObject>(gfx_shader_object, m_command_buffer);
+    ref<TransientShaderObject> transient_shader_object
+        = make_ref<TransientShaderObject>(ref<Device>(m_command_buffer->device()), gfx_shader_object, m_command_buffer);
+    m_bound_shader_object = transient_shader_object;
+    return transient_shader_object;
+
 }
 
 void RayTracingCommandEncoder::bind_pipeline(const RayTracingPipeline* pipeline, const ShaderObject* shader_object)
@@ -321,6 +401,7 @@ void RayTracingCommandEncoder::bind_pipeline(const RayTracingPipeline* pipeline,
     KALI_CHECK_NOT_NULL(shader_object);
 
     m_bound_pipeline = pipeline;
+    m_bound_shader_object = shader_object;
     SLANG_CALL(m_gfx_ray_tracing_command_encoder
                    ->bindPipelineWithRootObject(pipeline->gfx_pipeline_state(), shader_object->gfx_shader_object()));
 }
@@ -333,6 +414,10 @@ void RayTracingCommandEncoder::dispatch_rays(
 {
     KALI_CHECK_NOT_NULL(shader_table);
     KALI_CHECK(m_bound_pipeline, "No pipeline bound");
+
+#if KALI_HAS_CUDA
+    m_bound_shader_object->get_cuda_interop_buffers(m_command_buffer->m_cuda_interop_buffers);
+#endif
 
     SLANG_CALL(m_gfx_ray_tracing_command_encoder->dispatchRays(
         narrow_cast<gfx::GfxIndex>(ray_gen_shader_index),
@@ -435,6 +520,15 @@ CommandBuffer::CommandBuffer(ref<Device> device, Slang::ComPtr<gfx::ICommandBuff
 
 void CommandBuffer::close()
 {
+    if (!m_open)
+        return;
+
+    // TODO we probably don't need these barriers because synchronization happens through
+    // a shared CUDA semaphore.
+    for (const auto& cuda_interop_buffer : m_cuda_interop_buffers)
+        if (cuda_interop_buffer->is_uav())
+            buffer_barrier(cuda_interop_buffer->buffer(), ResourceState::copy_source);
+
     end_current_encoder();
     m_gfx_command_buffer->close();
     m_open = false;

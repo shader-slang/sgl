@@ -20,6 +20,7 @@ namespace kali {
 KALI_DICT_TO_DESC_BEGIN(DeviceDesc)
 KALI_DICT_TO_DESC_FIELD(type, DeviceType);
 KALI_DICT_TO_DESC_FIELD(enable_debug_layers, bool);
+KALI_DICT_TO_DESC_FIELD(enable_cuda_interop, bool);
 KALI_DICT_TO_DESC_FIELD(adapter_luid, AdapterLUID);
 KALI_DICT_TO_DESC_FIELD(default_shader_model, ShaderModel);
 KALI_DICT_TO_DESC_FIELD(shader_cache_path, std::filesystem::path);
@@ -44,6 +45,7 @@ KALI_PY_EXPORT(device_device)
         .def("__init__", [](DeviceDesc* self, nb::dict dict) { new (self) DeviceDesc(dict_to_DeviceDesc(dict)); })
         .def_rw("type", &DeviceDesc::type)
         .def_rw("enable_debug_layers", &DeviceDesc::enable_debug_layers)
+        .def_rw("enable_cuda_interop", &DeviceDesc::enable_cuda_interop)
         .def_rw("adapter_luid", &DeviceDesc::adapter_luid)
         .def_rw("default_shader_model", &DeviceDesc::default_shader_model)
         .def_rw("shader_cache_path", &DeviceDesc::shader_cache_path);
@@ -81,6 +83,7 @@ KALI_PY_EXPORT(device_device)
         [](Device* self,
            DeviceType type,
            bool enable_debug_layers,
+           bool enable_cuda_interop,
            std::optional<AdapterLUID> adapter_luid,
            ShaderModel default_shader_model,
            std::string shader_cache_path)
@@ -88,6 +91,7 @@ KALI_PY_EXPORT(device_device)
             new (self) Device({
                 .type = type,
                 .enable_debug_layers = enable_debug_layers,
+                .enable_cuda_interop = enable_cuda_interop,
                 .adapter_luid = adapter_luid,
                 .default_shader_model = default_shader_model,
                 .shader_cache_path = std::move(shader_cache_path),
@@ -95,6 +99,7 @@ KALI_PY_EXPORT(device_device)
         },
         "type"_a = DeviceType::automatic,
         "enable_debug_layers"_a = false,
+        "enable_cuda_interop"_a = false,
         "adapter_luid"_a = std::optional<AdapterLUID>{},
         "default_shader_model"_a = ShaderModel::sm_6_6,
         "shader_cache_path"_a = std::string{}

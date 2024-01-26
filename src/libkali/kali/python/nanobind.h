@@ -20,6 +20,8 @@
 #include "kali/core/type_utils.h"
 #include "kali/core/struct.h"
 
+#include "kali/device/cuda_interop.h"
+
 #include <span>
 
 namespace nb = nanobind;
@@ -145,6 +147,15 @@ size_t is_ndarray_contiguous(const nb::ndarray<Args...>& array)
         --i;
     }
     return true;
+}
+
+inline cuda::TensorView ndarray_to_cuda_tensor_view(nb::ndarray<nb::device::cuda> array)
+{
+    return cuda::TensorView{
+        .data = array.data(),
+        .size = array.nbytes(),
+        .stride = 0, // TODO
+    };
 }
 
 inline std::optional<Struct::Type> dtype_to_struct_type(nb::dlpack::dtype dtype)

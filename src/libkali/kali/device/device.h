@@ -6,6 +6,7 @@
 #include "kali/device/resource.h"
 #include "kali/device/shader.h"
 
+#include "kali/core/config.h"
 #include "kali/core/macros.h"
 #include "kali/core/enum.h"
 #include "kali/core/object.h"
@@ -78,8 +79,14 @@ KALI_ENUM_INFO(
 KALI_ENUM_REGISTER(DeviceType);
 
 struct DeviceDesc {
+    /// The type of the device.
     DeviceType type{DeviceType::automatic};
+
+    /// Enable debug layers.
     bool enable_debug_layers{false};
+
+    /// Enable CUDA interoperability.
+    bool enable_cuda_interop{false};
 
     /// Adapter LUID to select adapeter on which the device will be created.
     std::optional<AdapterLUID> adapter_luid;
@@ -164,6 +171,8 @@ public:
     ShaderModel default_shader_model() const { return m_default_shader_model; }
 
     const std::vector<std::string>& features() const { return m_features; }
+
+    bool supports_cuda_interop() const { return m_supports_cuda_interop; }
 
     ref<Swapchain> create_swapchain(SwapchainDesc desc, Window* window);
 
@@ -318,6 +327,11 @@ private:
     };
 
     std::queue<DeferredRelease> m_deferred_release_queue;
+
+#if KALI_HAS_CUDA
+    bool m_supports_cuda_interop{false};
+    ref<cuda::Device> m_cuda_device;
+#endif
 };
 
 } // namespace kali

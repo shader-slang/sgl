@@ -62,6 +62,28 @@ public:
      */
     void wait(const Fence* fence, uint64_t value = Fence::AUTO);
 
+#if KALI_HAS_CUDA
+    /**
+     * @brief Synchronize CUDA -> device.
+     *
+     * This first signals a shared CUDA semaphore in the CUDA stream.
+     * Then it adds a wait for the shared CUDA semaphore on the command queue.
+     *
+     * @param cuda_stream CUDA stream
+     */
+    void wait_for_cuda(void* cuda_stream = 0);
+
+    /**
+     * @brief Synchronize device -> CUDA.
+     *
+     * This first signals a shared CUDA semaphore on the command queue.
+     * Then it adds a wait for the shared CUDA semaphore in the CUDA stream.
+     *
+     * @param cuda_stream CUDA stream
+     */
+    void wait_for_device(void* cuda_stream = 0);
+#endif
+
     /// Returns the native API handle for the command queue:
     /// - D3D12: ID3D12CommandQueue*
     /// - Vulkan: VkQueue (Vulkan)
@@ -72,8 +94,18 @@ public:
     std::string to_string() const override;
 
 private:
+#if KALI_HAS_CUDA
+    void handle_copy_from_cuda(const CommandBuffer* command_buffer);
+    void handle_copy_to_cuda(const CommandBuffer* command_buffer);
+#endif
+
     CommandQueueDesc m_desc;
     Slang::ComPtr<gfx::ICommandQueue> m_gfx_command_queue;
+
+#if KALI_HAS_CUDA
+    ref<Fence> m_cuda_fence;
+    ref<cuda::ExternalSemaphore> m_cuda_semaphore;
+#endif
 };
 
 class KALI_API ComputeCommandEncoder {
@@ -108,6 +140,7 @@ private:
     CommandBuffer* m_command_buffer;
     gfx::IComputeCommandEncoder* m_gfx_compute_command_encoder;
     const ComputePipeline* m_bound_pipeline{nullptr};
+    const ShaderObject* m_bound_shader_object{nullptr};
 
     friend class CommandBuffer;
 };
@@ -198,6 +231,7 @@ private:
     CommandBuffer* m_command_buffer;
     gfx::IRenderCommandEncoder* m_gfx_render_command_encoder;
     const GraphicsPipeline* m_bound_pipeline{nullptr};
+    const ShaderObject* m_bound_shader_object{nullptr};
 
     friend class CommandBuffer;
 };
@@ -254,6 +288,7 @@ private:
     CommandBuffer* m_command_buffer;
     gfx::IRayTracingCommandEncoder* m_gfx_ray_tracing_command_encoder;
     const RayTracingPipeline* m_bound_pipeline{nullptr};
+    const ShaderObject* m_bound_shader_object{nullptr};
 
     friend class CommandBuffer;
 };
@@ -538,6 +573,11 @@ private:
     EncoderType m_active_encoder{EncoderType::none};
     Slang::ComPtr<gfx::ICommandEncoder> m_gfx_command_encoder;
 
+#if KALI_HAS_CUDA
+    std::vector<ref<cuda::InteropBuffer>> m_cuda_interop_buffers;
+#endif
+
+    friend class CommandQueue;
     friend class ComputeCommandEncoder;
     friend class RenderCommandEncoder;
     friend class RayTracingCommandEncoder;

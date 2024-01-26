@@ -7,6 +7,7 @@
 #include "kali/device/command.h"
 #include "kali/device/shader.h"
 #include "kali/device/device.h"
+#include "kali/device/cuda_interop.h"
 
 namespace kali {
 
@@ -23,8 +24,9 @@ inline gfx::ShaderOffset gfx_shader_offset(const ShaderOffset& offset)
 // ShaderObject
 //
 
-ShaderObject::ShaderObject(gfx::IShaderObject* shader_object)
-    : m_shader_object(shader_object)
+ShaderObject::ShaderObject(ref<Device> device, gfx::IShaderObject* shader_object)
+    : m_device(std::move(device))
+    , m_shader_object(shader_object)
 {
 }
 
@@ -68,27 +70,50 @@ void ShaderObject::set_data(const ShaderOffset& offset, void const* data, size_t
     SLANG_CALL(m_shader_object->setData(gfx_shader_offset(offset), data, size));
 }
 
+#if KALI_HAS_CUDA
+void ShaderObject::set_cuda_tensor_view(const ShaderOffset& offset, const cuda::TensorView& tensor_view, bool is_uav)
+{
+    KALI_CHECK(m_device->supports_cuda_interop(), "Device does not support CUDA interop");
+    ref<cuda::InteropBuffer> cuda_interop_buffer = make_ref<cuda::InteropBuffer>(m_device, tensor_view, is_uav);
+    set_resource(offset, is_uav ? cuda_interop_buffer->get_uav() : cuda_interop_buffer->get_srv());
+    m_cuda_interop_buffers.push_back(cuda_interop_buffer);
+}
+
+void ShaderObject::get_cuda_interop_buffers(std::vector<ref<cuda::InteropBuffer>>& cuda_interop_buffers) const
+{
+    cuda_interop_buffers
+        .insert(cuda_interop_buffers.end(), m_cuda_interop_buffers.begin(), m_cuda_interop_buffers.end());
+}
+#endif // KALI_HAS_CUDA
+
 //
 // TransientShaderObject
 //
 
-TransientShaderObject::TransientShaderObject(gfx::IShaderObject* shader_object, CommandBuffer* command_buffer)
-    : ShaderObject(shader_object)
+TransientShaderObject::TransientShaderObject(
+    ref<Device> device,
+    gfx::IShaderObject* shader_object,
+    CommandBuffer* command_buffer
+)
+    : ShaderObject(std::move(device), shader_object)
     , m_command_buffer(command_buffer)
 {
 }
 
 ref<ShaderObject> TransientShaderObject::get_entry_point(uint32_t index)
 {
-    auto object = make_ref<TransientShaderObject>(m_shader_object->getEntryPoint(index), m_command_buffer);
+    auto object = make_ref<TransientShaderObject>(m_device, m_shader_object->getEntryPoint(index), m_command_buffer);
     m_sub_objects.push_back(object);
     return object;
 }
 
 ref<ShaderObject> TransientShaderObject::get_object(const ShaderOffset& offset)
 {
-    auto object
-        = make_ref<TransientShaderObject>(m_shader_object->getObject(gfx_shader_offset(offset)), m_command_buffer);
+    auto object = make_ref<TransientShaderObject>(
+        m_device,
+        m_shader_object->getObject(gfx_shader_offset(offset)),
+        m_command_buffer
+    );
     m_sub_objects.push_back(object);
     return object;
 }
@@ -128,25 +153,32 @@ void TransientShaderObject::set_resource(const ShaderOffset& offset, const ref<R
     ShaderObject::set_resource(offset, resource_view);
 }
 
+#if KALI_HAS_CUDA
+void TransientShaderObject::get_cuda_interop_buffers(std::vector<ref<cuda::InteropBuffer>>& cuda_interop_buffers) const
+{
+    ShaderObject::get_cuda_interop_buffers(cuda_interop_buffers);
+    for (const auto& sub_object : m_sub_objects)
+        sub_object->get_cuda_interop_buffers(cuda_interop_buffers);
+}
+#endif // KALI_HAS_CUDA
+
 //
 // MutableShaderObject
 //
 
-MutableShaderObject::MutableShaderObject(gfx::IShaderObject* shader_object)
-    : ShaderObject(shader_object)
+MutableShaderObject::MutableShaderObject(ref<Device> device, gfx::IShaderObject* shader_object)
+    : ShaderObject(std::move(device), shader_object)
 {
 }
 
 MutableShaderObject::MutableShaderObject(ref<Device> device, const ShaderProgram* shader_program)
-    : ShaderObject(nullptr)
-    , m_device(std::move(device))
+    : ShaderObject(std::move(device), nullptr)
 {
     m_device->gfx_device()->createMutableRootShaderObject(shader_program->gfx_shader_program(), &m_shader_object);
 }
 
 MutableShaderObject::MutableShaderObject(ref<Device> device, const TypeLayoutReflection* type_layout)
-    : ShaderObject(nullptr)
-    , m_device(std::move(device))
+    : ShaderObject(std::move(device), nullptr)
 {
     m_device->gfx_device()->createMutableShaderObjectFromTypeLayout(type_layout->base(), &m_shader_object);
 }
@@ -164,7 +196,7 @@ ref<ShaderObject> MutableShaderObject::get_entry_point(uint32_t index)
 
 ref<ShaderObject> MutableShaderObject::get_object(const ShaderOffset& offset)
 {
-    auto object = make_ref<MutableShaderObject>(m_shader_object->getObject(gfx_shader_offset(offset)));
+    auto object = make_ref<MutableShaderObject>(m_device, m_shader_object->getObject(gfx_shader_offset(offset)));
     m_sub_objects.push_back(object);
     return object;
 }
@@ -200,5 +232,14 @@ void MutableShaderObject::set_resource_states(CommandBuffer* command_buffer)
         }
     }
 }
+
+#if KALI_HAS_CUDA
+void MutableShaderObject::get_cuda_interop_buffers(std::vector<ref<cuda::InteropBuffer>>& cuda_interop_buffers) const
+{
+    ShaderObject::get_cuda_interop_buffers(cuda_interop_buffers);
+    for (const auto& sub_object : m_sub_objects)
+        sub_object->get_cuda_interop_buffers(cuda_interop_buffers);
+}
+#endif // KALI_HAS_CUDA
 
 } // namespace kali

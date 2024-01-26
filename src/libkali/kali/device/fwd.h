@@ -120,4 +120,19 @@ class InputLayout;
 struct MemoryHeapDesc;
 class MemoryHeap;
 
+// cuda_interop.h
+
+namespace cuda {
+    struct TensorView;
+    class InteropBuffer;
+} // namespace cuda
+
+// cuda_utils.h
+
+namespace cuda {
+    class Device;
+    class ExternalMemory;
+    class ExternalSemaphore;
+} // namespace cuda
+
 } // namespace kali

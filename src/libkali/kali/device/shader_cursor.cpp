@@ -2,6 +2,7 @@
 
 #include "kali/device/shader_object.h"
 #include "kali/device/resource.h"
+#include "kali/device/cuda_interop.h"
 
 #include "kali/core/error.h"
 
@@ -412,6 +413,23 @@ void ShaderCursor::set_object(const ref<MutableShaderObject>& object) const
 
     m_shader_object->set_object(m_offset, object);
 }
+
+#if KALI_HAS_CUDA
+void ShaderCursor::set_cuda_tensor_view(const cuda::TensorView& tensor_view) const
+{
+    const TypeReflection* type = m_type_layout->unwrap_array()->type();
+
+    KALI_CHECK(is_buffer_resource_type(type), "'{}' cannot bind a CUDA tensor view", m_type_layout->name());
+
+    if (is_shader_resource_type(type)) {
+        m_shader_object->set_cuda_tensor_view(m_offset, tensor_view, false);
+    } else if (is_unordered_access_type(type)) {
+        m_shader_object->set_cuda_tensor_view(m_offset, tensor_view, true);
+    } else {
+        KALI_THROW("'{}' expects a valid buffer", m_type_layout->name());
+    }
+}
+#endif
 
 void ShaderCursor::set_scalar(const void* data, size_t size, TypeReflection::ScalarType scalar_type) const
 {
