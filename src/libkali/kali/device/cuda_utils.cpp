@@ -71,15 +71,15 @@ cudaExternalMemory_t import_external_memory(const Buffer* buffer)
         desc.type = cudaExternalMemoryHandleTypeD3D12Resource;
         desc.handle.win32.handle = shared_handle;
         break;
-        // case DeviceType::vulkan:
-        //     desc.type = cudaExternalMemoryHandleTypeOpaqueWin32;
-        //     desc.handle.win32.handle = shared_handle;
-        //     break;
+    case DeviceType::vulkan:
+        desc.type = cudaExternalMemoryHandleTypeOpaqueWin32;
+        desc.handle.win32.handle = shared_handle;
+        break;
 #elif KALI_LINUX
-        // case DeviceType::vulkan:
-        //     desc.type = cudaExternalMemoryHandleTypeOpaqueFd;
-        //     desc.handle.fd = shared_handle;
-        //     break;
+    case DeviceType::vulkan:
+        desc.type = cudaExternalMemoryHandleTypeOpaqueFd;
+        desc.handle.fd = shared_handle;
+        break;
 #endif
     default:
         KALI_THROW("Unsupported device type {}.", buffer->device()->type());
@@ -122,15 +122,15 @@ cudaExternalSemaphore_t import_external_semaphore(const Fence* fence)
         desc.type = cudaExternalSemaphoreHandleTypeD3D12Fence;
         desc.handle.win32.handle = (void*)shared_handle;
         break;
-        // case DeviceType::vulkan:
-        //     desc.type = cudaExternalSemaphoreHandleTypeOpaqueWin32;
-        //     desc.handle.win32.handle = (void*)shared_handle;
-        //     break;
+    case DeviceType::vulkan:
+        desc.type = cudaExternalSemaphoreHandleTypeTimelineSemaphoreWin32;
+        desc.handle.win32.handle = (void*)shared_handle;
+        break;
 #elif KALI_LINUX
-        // case DeviceType::vulkan:
-        //     desc.type = cudaExternalSemaphoreHandleTypeOpaqueFd;
-        //     desc.handle.fd = shared_handle;
-        //     break;
+    case DeviceType::vulkan:
+        desc.type = cudaExternalSemaphoreHandleTypeTimelineSemaphoreFd;
+        desc.handle.fd = shared_handle;
+        break;
 #endif
     default:
         KALI_THROW("Unsupported device type {}.", fence->device()->type());
