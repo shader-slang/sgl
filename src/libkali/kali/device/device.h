@@ -172,7 +172,9 @@ public:
 
     const std::vector<std::string>& features() const { return m_features; }
 
+#if KALI_HAS_CUDA
     bool supports_cuda_interop() const { return m_supports_cuda_interop; }
+#endif
 
     ref<Swapchain> create_swapchain(SwapchainDesc desc, Window* window);
 

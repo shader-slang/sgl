@@ -1,5 +1,3 @@
-#pragma once
-
 #include "kali/kali.h"
 
 #include "kali/core/window.h"
