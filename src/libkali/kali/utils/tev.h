@@ -6,7 +6,6 @@
 #include "kali/device/fwd.h"
 
 #include <string>
-#include <optional>
 #include <cstdint>
 
 namespace kali::utils {
@@ -25,32 +24,32 @@ namespace kali::utils {
  */
 KALI_API bool show_in_tev(
     const Bitmap* bitmap,
-    std::optional<std::string> name,
-    const std::string& host = "127.0.0.1",
+    std::string name = "",
+    std::string host = "127.0.0.1",
     uint16_t port = 14158,
     uint32_t max_retries = 3
 );
 
 KALI_API bool show_in_tev(
     const Texture* texture,
-    std::optional<std::string> name,
-    const std::string& host = "127.0.0.1",
+    std::string name = "",
+    std::string host = "127.0.0.1",
     uint16_t port = 14158,
     uint32_t max_retries = 3
 );
 
 KALI_API void show_in_tev_async(
     const Bitmap* bitmap,
-    std::optional<std::string> name,
-    const std::string& host = "127.0.0.1",
+    std::string name = "",
+    std::string host = "127.0.0.1",
     uint16_t port = 14158,
     uint32_t max_retries = 3
 );
 
 KALI_API void show_in_tev_async(
     const Texture* texture,
-    std::optional<std::string> name,
-    const std::string& host = "127.0.0.1",
+    std::string name = "",
+    std::string host = "127.0.0.1",
     uint16_t port = 14158,
     uint32_t max_retries = 3
 );

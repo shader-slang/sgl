@@ -28,7 +28,7 @@ public:
         tevclient::shutdown();
     }
 
-    std::unique_ptr<tevclient::Client> acquire_client(const std::string& host, uint16_t port)
+    std::unique_ptr<tevclient::Client> acquire_client(std::string host, uint16_t port)
     {
         std::unique_ptr<tevclient::Client> client;
         {
@@ -69,13 +69,7 @@ private:
 
 #endif // KALI_HAS_TEVCLIENT
 
-bool show_in_tev(
-    const Bitmap* bitmap,
-    std::optional<std::string> name,
-    const std::string& host,
-    uint16_t port,
-    uint32_t max_retries
-)
+bool show_in_tev(const Bitmap* bitmap, std::string name, std::string host, uint16_t port, uint32_t max_retries)
 {
     KALI_CHECK_NOT_NULL(bitmap);
 
@@ -91,7 +85,7 @@ bool show_in_tev(
     }
 
     static std::atomic<uint32_t> image_counter{0};
-    if (!name)
+    if (name.empty())
         name = fmt::format("image_{}", image_counter++);
 
     std::vector<const char*> channel_names(bitmap->channel_names().size());
@@ -114,7 +108,7 @@ bool show_in_tev(
         }
 
         if (client->createImage(
-                name->c_str(),
+                name.c_str(),
                 bitmap->width(),
                 bitmap->height(),
                 bitmap->channel_count(),
@@ -131,7 +125,7 @@ bool show_in_tev(
         }
 
         if (client->updateImage(
-                name->c_str(),
+                name.c_str(),
                 0,
                 0,
                 bitmap->width(),
@@ -164,13 +158,7 @@ bool show_in_tev(
 #endif
 }
 
-bool show_in_tev(
-    const Texture* texture,
-    std::optional<std::string> name,
-    const std::string& host,
-    uint16_t port,
-    uint32_t max_retries
-)
+bool show_in_tev(const Texture* texture, std::string name, std::string host, uint16_t port, uint32_t max_retries)
 {
     KALI_CHECK_NOT_NULL(texture);
 
@@ -178,13 +166,7 @@ bool show_in_tev(
     return show_in_tev(bitmap, name, host, port, max_retries);
 }
 
-void show_in_tev_async(
-    const Bitmap* bitmap,
-    std::optional<std::string> name,
-    const std::string& host,
-    uint16_t port,
-    uint32_t max_retries
-)
+void show_in_tev_async(const Bitmap* bitmap, std::string name, std::string host, uint16_t port, uint32_t max_retries)
 {
     KALI_CHECK_NOT_NULL(bitmap);
 
@@ -202,13 +184,7 @@ void show_in_tev_async(
     );
 }
 
-void show_in_tev_async(
-    const Texture* texture,
-    std::optional<std::string> name,
-    const std::string& host,
-    uint16_t port,
-    uint32_t max_retries
-)
+void show_in_tev_async(const Texture* texture, std::string name, std::string host, uint16_t port, uint32_t max_retries)
 {
     KALI_CHECK_NOT_NULL(texture);
 

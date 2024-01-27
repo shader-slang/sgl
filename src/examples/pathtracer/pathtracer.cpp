@@ -810,9 +810,8 @@ struct App {
             if (event.key == KeyCode::escape) {
                 window->close();
             } else if (event.key == KeyCode::f1) {
-                // if (output_texture) {
-                //     kali::utils::show_in_tev_async(output_texture);
-                // }
+                if (output_texture)
+                    utils::show_in_tev_async(output_texture);
             } else if (event.key == KeyCode::f2) {
                 if (output_texture) {
                     ref<Bitmap> bitmap = output_texture->to_bitmap();
