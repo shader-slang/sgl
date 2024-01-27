@@ -239,6 +239,8 @@ void trace_path(inout Path path)
             break;
         }
         Vertex vertex = g_scene.get_vertex(hit);
+        // Flip normal if we hit the backside of the triangle
+        vertex.normal *= sign(-dot(vertex.normal, path.ray.dir));
         Frame frame = Frame(vertex.normal);
         float3 wi = frame.to_local(-path.ray.dir);
         float pdf;

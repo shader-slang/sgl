@@ -178,35 +178,35 @@ class Mesh:
             [
                 # position, normal, uv
                 # left
-                [-0.5, -0.5, -0.5, +0, -1, +0, 0.0, 0.0],
-                [-0.5, -0.5, +0.5, +0, -1, +0, 1.0, 0.0],
-                [+0.5, -0.5, +0.5, +0, -1, +0, 1.0, 1.0],
-                [+0.5, -0.5, -0.5, +0, -1, +0, 0.0, 1.0],
+                [-0.5, -0.5, -0.5, 0, -1, 0, 0.0, 0.0],
+                [-0.5, -0.5, +0.5, 0, -1, 0, 1.0, 0.0],
+                [+0.5, -0.5, +0.5, 0, -1, 0, 1.0, 1.0],
+                [+0.5, -0.5, -0.5, 0, -1, 0, 0.0, 1.0],
                 # right
-                [-0.5, +0.5, +0.5, +0, +1, +0, 0.0, 0.0],
-                [-0.5, +0.5, -0.5, +0, +1, +0, 1.0, 0.0],
-                [+0.5, +0.5, -0.5, +0, +1, +0, 1.0, 1.0],
-                [+0.5, +0.5, +0.5, +0, +1, +0, 0.0, 1.0],
+                [-0.5, +0.5, +0.5, 0, +1, 0, 0.0, 0.0],
+                [-0.5, +0.5, -0.5, 0, +1, 0, 1.0, 0.0],
+                [+0.5, +0.5, -0.5, 0, +1, 0, 1.0, 1.0],
+                [+0.5, +0.5, +0.5, 0, +1, 0, 0.0, 1.0],
                 # back
-                [-0.5, +0.5, -0.5, +0, +0, -1, 0.0, 0.0],
-                [-0.5, -0.5, -0.5, +0, +0, -1, 1.0, 0.0],
-                [+0.5, -0.5, -0.5, +0, +0, -1, 1.0, 1.0],
-                [+0.5, +0.5, -0.5, +0, +0, -1, 0.0, 1.0],
+                [-0.5, +0.5, -0.5, 0, 0, -1, 0.0, 0.0],
+                [-0.5, -0.5, -0.5, 0, 0, -1, 1.0, 0.0],
+                [+0.5, -0.5, -0.5, 0, 0, -1, 1.0, 1.0],
+                [+0.5, +0.5, -0.5, 0, 0, -1, 0.0, 1.0],
                 # front
-                [+0.5, +0.5, +0.5, +0, +0, +1, 0.0, 0.0],
-                [+0.5, -0.5, +0.5, +0, +0, +1, 1.0, 0.0],
-                [-0.5, -0.5, +0.5, +0, +0, +1, 1.0, 1.0],
-                [-0.5, +0.5, +0.5, +0, +0, +1, 0.0, 1.0],
+                [+0.5, +0.5, +0.5, 0, 0, +1, 0.0, 0.0],
+                [+0.5, -0.5, +0.5, 0, 0, +1, 1.0, 0.0],
+                [-0.5, -0.5, +0.5, 0, 0, +1, 1.0, 1.0],
+                [-0.5, +0.5, +0.5, 0, 0, +1, 0.0, 1.0],
                 # bottom
-                [-0.5, +0.5, +0.5, -1, +0, +0, 0.0, 0.0],
-                [-0.5, -0.5, +0.5, -1, +0, +0, 1.0, 0.0],
-                [-0.5, -0.5, -0.5, -1, +0, +0, 1.0, 1.0],
-                [-0.5, +0.5, -0.5, -1, +0, +0, 0.0, 1.0],
+                [-0.5, +0.5, +0.5, -1, 0, 0, 0.0, 0.0],
+                [-0.5, -0.5, +0.5, -1, 0, 0, 1.0, 0.0],
+                [-0.5, -0.5, -0.5, -1, 0, 0, 1.0, 1.0],
+                [-0.5, +0.5, -0.5, -1, 0, 0, 0.0, 1.0],
                 # top
-                [+0.5, +0.5, -0.5, +1, +0, +0, 0.0, 0.0],
-                [+0.5, -0.5, -0.5, +1, +0, +0, 1.0, 0.0],
-                [+0.5, -0.5, +0.5, +1, +0, +0, 1.0, 1.0],
-                [+0.5, +0.5, +0.5, +1, +0, +0, 0.0, 1.0],
+                [+0.5, +0.5, -0.5, +1, 0, 0, 0.0, 0.0],
+                [+0.5, -0.5, -0.5, +1, 0, 0, 1.0, 0.0],
+                [+0.5, -0.5, +0.5, +1, 0, 0, 1.0, 1.0],
+                [+0.5, +0.5, +0.5, +1, 0, 0, 0.0, 1.0],
             ],
             dtype=np.float32,
         )
@@ -280,8 +280,12 @@ class Stage:
         stage = Stage()
         stage.camera.target = kali.float3(0, 1, 0)
         stage.camera.position = kali.float3(2, 1, 2)
+
         floor_material = stage.add_material(Material(base_color=kali.float3(0.5)))
-        floor = stage.add_mesh(Mesh.create_quad([5, 5]))
+        floor_mesh = stage.add_mesh(Mesh.create_quad([5, 5]))
+        floor_transform = stage.add_transform(Transform())
+        stage.add_instance(floor_mesh, floor_material, floor_transform)
+
         cube_materials = []
         for _ in range(10):
             cube_materials.append(
@@ -289,9 +293,7 @@ class Stage:
                     Material(base_color=np.random.rand(3).astype(np.float32))
                 )
             )
-        cube = stage.add_mesh(Mesh.create_cube([0.1, 0.1, 0.1]))
-        identity = stage.add_transform(Transform())
-        stage.add_instance(floor, floor_material, identity)
+        cube_mesh = stage.add_mesh(Mesh.create_cube([0.1, 0.1, 0.1]))
 
         for i in range(1000):
             transform = Transform()
@@ -300,8 +302,10 @@ class Stage:
             transform.scaling = (np.random.rand(3) + 0.5).astype(np.float32)
             transform.rotation = (np.random.rand(3) * 10).astype(np.float32)
             transform.update_matrix()
-            id = stage.add_transform(transform)
-            stage.add_instance(cube, cube_materials[i % len(cube_materials)], id)
+            cube_transform = stage.add_transform(transform)
+            stage.add_instance(
+                cube_mesh, cube_materials[i % len(cube_materials)], cube_transform
+            )
 
         return stage
 
@@ -669,9 +673,7 @@ class App:
         self.window = kali.Window(
             width=1920, height=1080, title="PathTracer", resizable=True
         )
-        self.device = kali.Device(
-            type=kali.DeviceType.d3d12, enable_debug_layers=False
-        )
+        self.device = kali.Device(enable_debug_layers=False)
         self.swapchain = self.device.create_swapchain(
             format=kali.Format.rgba8_unorm,
             width=self.window.width,

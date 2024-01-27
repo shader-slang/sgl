@@ -83,8 +83,8 @@ struct CameraController {
     float2 mouse_pos;
     std::map<KeyCode, bool> key_state;
     bool shift_down{false};
-    float3 move_delta;
-    float2 rotate_delta;
+    float3 move_delta{0.f};
+    float2 rotate_delta{0.f};
     float move_speed{1.0f};
     float rotate_speed{0.002f};
 
@@ -153,7 +153,7 @@ struct CameraController {
                 shift_down = down;
             }
         }
-        move_delta = float3();
+        move_delta = float3(0.f);
         for (auto& [key, state] : key_state) {
             if (state) {
                 move_delta += MOVE_KEYS.at(key);
@@ -235,15 +235,15 @@ struct Mesh {
         std::vector<Vertex> vertices{
             // position, normal, uv
             // left
-            {{-0.5, -0.5, -0.5}, {-1, 0, 0}, {0, 0}},
-            {{-0.5, -0.5, +0.5}, {-1, 0, 0}, {1, 0}},
-            {{-0.5, +0.5, +0.5}, {-1, 0, 0}, {1, 1}},
-            {{-0.5, +0.5, -0.5}, {-1, 0, 0}, {0, 1}},
+            {{-0.5, -0.5, -0.5}, {0, -1, 0}, {0, 0}},
+            {{-0.5, -0.5, +0.5}, {0, -1, 0}, {1, 0}},
+            {{+0.5, -0.5, +0.5}, {0, -1, 0}, {1, 1}},
+            {{+0.5, -0.5, -0.5}, {0, -1, 0}, {0, 1}},
             // right
-            {{+0.5, -0.5, +0.5}, {+1, 0, 0}, {0, 0}},
-            {{+0.5, -0.5, -0.5}, {+1, 0, 0}, {1, 0}},
-            {{+0.5, +0.5, -0.5}, {+1, 0, 0}, {1, 1}},
-            {{+0.5, +0.5, +0.5}, {+1, 0, 0}, {0, 1}},
+            {{-0.5, +0.5, +0.5}, {0, +1, 0}, {0, 0}},
+            {{-0.5, +0.5, -0.5}, {0, +1, 0}, {1, 0}},
+            {{+0.5, +0.5, -0.5}, {0, +1, 0}, {1, 1}},
+            {{+0.5, +0.5, +0.5}, {0, +1, 0}, {0, 1}},
             // back
             {{-0.5, +0.5, -0.5}, {0, 0, -1}, {0, 0}},
             {{-0.5, -0.5, -0.5}, {0, 0, -1}, {1, 0}},
@@ -255,15 +255,15 @@ struct Mesh {
             {{-0.5, -0.5, +0.5}, {0, 0, +1}, {1, 1}},
             {{-0.5, +0.5, +0.5}, {0, 0, +1}, {0, 1}},
             // bottom
-            {{-0.5, +0.5, +0.5}, {0, -1, 0}, {0, 0}},
-            {{-0.5, -0.5, +0.5}, {0, -1, 0}, {1, 0}},
-            {{-0.5, -0.5, -0.5}, {0, -1, 0}, {1, 1}},
-            {{-0.5, +0.5, -0.5}, {0, -1, 0}, {0, 1}},
+            {{-0.5, +0.5, +0.5}, {-1, 0, 0}, {0, 0}},
+            {{-0.5, -0.5, +0.5}, {-1, 0, 0}, {1, 0}},
+            {{-0.5, -0.5, -0.5}, {-1, 0, 0}, {1, 1}},
+            {{-0.5, +0.5, -0.5}, {-1, 0, 0}, {0, 1}},
             // top
-            {{+0.5, +0.5, -0.5}, {0, +1, 0}, {0, 0}},
-            {{+0.5, -0.5, -0.5}, {0, +1, 0}, {1, 0}},
-            {{+0.5, -0.5, +0.5}, {0, +1, 0}, {1, 1}},
-            {{+0.5, +0.5, +0.5}, {0, +1, 0}, {0, 1}},
+            {{+0.5, +0.5, -0.5}, {+1, 0, 0}, {0, 0}},
+            {{+0.5, -0.5, -0.5}, {+1, 0, 0}, {1, 0}},
+            {{+0.5, -0.5, +0.5}, {+1, 0, 0}, {1, 1}},
+            {{+0.5, +0.5, +0.5}, {+1, 0, 0}, {0, 1}},
         };
         for (auto& vertex : vertices) {
             vertex.position *= size;
@@ -331,16 +331,16 @@ struct Stage {
         std::unique_ptr<Stage> stage = std::make_unique<Stage>();
         stage->camera.target = float3(0, 1, 0);
         stage->camera.position = float3(2, 1, 2);
-        uint32_t floor_material = stage->add_material(Material(float3(0.5)));
-        uint32_t floor = stage->add_mesh(Mesh::create_quad(float2(5, 5)));
-        std::vector<uint32_t> cube_materials;
-        for (uint32_t i = 0; i < 10; ++i) {
-            cube_materials.push_back(stage->add_material(Material(random_float3())));
-        }
-        uint32_t cube = stage->add_mesh(Mesh::create_cube(float3(0.1)));
-        uint32_t identity = stage->add_transform(Transform());
-        stage->add_instance(floor, floor_material, identity);
 
+        uint32_t floor_material = stage->add_material(Material(float3(0.5)));
+        uint32_t floor_mesh = stage->add_mesh(Mesh::create_quad(float2(5, 5)));
+        uint32_t floor_transform = stage->add_transform(Transform());
+        stage->add_instance(floor_mesh, floor_material, floor_transform);
+
+        std::vector<uint32_t> cube_materials;
+        for (uint32_t i = 0; i < 10; ++i)
+            cube_materials.push_back(stage->add_material(Material(random_float3())));
+        uint32_t cube_mesh = stage->add_mesh(Mesh::create_cube(float3(0.1)));
         for (uint32_t i = 0; i < 1000; ++i) {
             Transform transform;
             transform.translation = random_float3() * 2.f - 1.f;
@@ -348,8 +348,8 @@ struct Stage {
             transform.scaling = random_float3() + 0.5f;
             transform.rotation = random_float3() * 10.f;
             transform.update_matrix();
-            uint32_t id = stage->add_transform(transform);
-            stage->add_instance(cube, cube_materials[i % cube_materials.size()], id);
+            uint32_t cube_transform = stage->add_transform(transform);
+            stage->add_instance(cube_mesh, cube_materials[i % cube_materials.size()], cube_transform);
         }
 
         return stage;
@@ -885,9 +885,9 @@ struct App {
             stage->camera.height = image->height();
             stage->camera.recompute();
 
-            path_tracer->execute(output_texture, frame);
-            // accumulator->execute(render_texture, accum_texture, frame == 0);
-            // tone_mapper->execute(accum_texture, output_texture);
+            path_tracer->execute(render_texture, frame);
+            accumulator->execute(render_texture, accum_texture, frame == 0);
+            tone_mapper->execute(accum_texture, output_texture);
 
             ref<CommandBuffer> command_buffer = device->create_command_buffer();
             command_buffer->copy_resource(image, output_texture);
