@@ -721,15 +721,15 @@ struct AccelerationStructureBuildInputs {
 
     AccelerationStructureBuildFlags flags;
 
-    uint32_t desc_count;
+    uint32_t desc_count{0};
 
     /// Array of `RayTracingInstanceDesc` values in device memory.
     /// Used when `kind` is `top_level`.
-    DeviceAddress instance_descs;
+    DeviceAddress instance_descs{0};
 
     /// Array of `RayTracingGeometryDesc` values.
     /// Used when `kind` is `bottom_level`.
-    const RayTracingGeometryDesc* geometry_descs;
+    const RayTracingGeometryDesc* geometry_descs{nullptr};
 };
 // clang-format off
 static_assert(sizeof(AccelerationStructureBuildInputs) == sizeof(gfx::IAccelerationStructure::BuildInputs));
