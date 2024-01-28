@@ -57,7 +57,7 @@ int main()
         RayTracingGeometryDesc blas_geometry_desc{
             .type = RayTracingGeometryType::triangles,
             .flags = RayTracingGeometryFlags::opaque,
-            .content{.triangles{
+            .triangles{
                 .transform3x4 = transform_buffer->device_address(),
                 .index_format = Format::r32_uint,
                 .vertex_format = Format::rgb32_float,
@@ -66,7 +66,7 @@ int main()
                 .index_data = index_buffer->device_address(),
                 .vertex_data = vertex_buffer->device_address(),
                 .vertex_stride = sizeof(float3),
-            }}};
+            }};
 
         AccelerationStructureBuildInputs blas_build_inputs{
             .kind = AccelerationStructureKind::bottom_level,

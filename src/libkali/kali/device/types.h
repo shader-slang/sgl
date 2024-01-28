@@ -610,13 +610,14 @@ struct RayTracingGeometryDesc {
     union {
         RayTracingTrianglesDesc triangles;
         RayTracingAABBsDesc aabbs;
-    } content;
+    };
 };
 // clang-format off
 static_assert(sizeof(RayTracingGeometryDesc) == sizeof(gfx::IAccelerationStructure::GeometryDesc));
 static_assert(offsetof(RayTracingGeometryDesc, type) == offsetof(gfx::IAccelerationStructure::GeometryDesc, type));
 static_assert(offsetof(RayTracingGeometryDesc, flags) == offsetof(gfx::IAccelerationStructure::GeometryDesc, flags));
-static_assert(offsetof(RayTracingGeometryDesc, content) == offsetof(gfx::IAccelerationStructure::GeometryDesc, content));
+static_assert(offsetof(RayTracingGeometryDesc, triangles) == offsetof(gfx::IAccelerationStructure::GeometryDesc, content));
+static_assert(offsetof(RayTracingGeometryDesc, aabbs) == offsetof(gfx::IAccelerationStructure::GeometryDesc, content));
 // clang-format on
 
 enum class RayTracingInstanceFlags : uint32_t {

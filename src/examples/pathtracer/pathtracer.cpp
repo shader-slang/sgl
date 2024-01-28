@@ -531,15 +531,14 @@ struct Scene {
         RayTracingGeometryDesc blas_geometry_desc;
         blas_geometry_desc.type = RayTracingGeometryType::triangles;
         blas_geometry_desc.flags = RayTracingGeometryFlags::opaque;
-        blas_geometry_desc.content.triangles.transform3x4 = identity_buffer->device_address();
-        blas_geometry_desc.content.triangles.index_format = Format::r32_uint;
-        blas_geometry_desc.content.triangles.vertex_format = Format::rgb32_float;
-        blas_geometry_desc.content.triangles.index_count = mesh_desc.index_count;
-        blas_geometry_desc.content.triangles.vertex_count = mesh_desc.vertex_count;
-        blas_geometry_desc.content.triangles.index_data = index_buffer->device_address() + mesh_desc.index_offset * 4;
-        blas_geometry_desc.content.triangles.vertex_data
-            = vertex_buffer->device_address() + mesh_desc.vertex_offset * 32;
-        blas_geometry_desc.content.triangles.vertex_stride = 32;
+        blas_geometry_desc.triangles.transform3x4 = identity_buffer->device_address();
+        blas_geometry_desc.triangles.index_format = Format::r32_uint;
+        blas_geometry_desc.triangles.vertex_format = Format::rgb32_float;
+        blas_geometry_desc.triangles.index_count = mesh_desc.index_count;
+        blas_geometry_desc.triangles.vertex_count = mesh_desc.vertex_count;
+        blas_geometry_desc.triangles.index_data = index_buffer->device_address() + mesh_desc.index_offset * 4;
+        blas_geometry_desc.triangles.vertex_data = vertex_buffer->device_address() + mesh_desc.vertex_offset * 32;
+        blas_geometry_desc.triangles.vertex_stride = 32;
 
         AccelerationStructureBuildInputs blas_build_inputs;
         blas_build_inputs.kind = AccelerationStructureKind::bottom_level;

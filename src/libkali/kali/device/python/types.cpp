@@ -178,12 +178,12 @@ KALI_PY_EXPORT(device_types)
             [](RayTracingGeometryDesc& self) -> RayTracingTrianglesDesc&
             {
                 KALI_CHECK(self.type == RayTracingGeometryType::triangles, "geometry type is not triangles");
-                return self.content.triangles;
+                return self.triangles;
             },
             [](RayTracingGeometryDesc& self, const RayTracingTrianglesDesc& value)
             {
                 self.type = RayTracingGeometryType::triangles;
-                self.content.triangles = value;
+                self.triangles = value;
             },
             nb::rv_policy::reference_internal
         )
@@ -195,12 +195,12 @@ KALI_PY_EXPORT(device_types)
                     self.type == RayTracingGeometryType::procedural_primitives,
                     "geometry type is not proecedural_primitives"
                 );
-                return self.content.aabbs;
+                return self.aabbs;
             },
             [](RayTracingGeometryDesc& self, const RayTracingAABBsDesc& value)
             {
                 self.type = RayTracingGeometryType::procedural_primitives;
-                self.content.aabbs = value;
+                self.aabbs = value;
             }
         );
 
