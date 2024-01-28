@@ -360,7 +360,7 @@ class Scene:
         self.material_descs_buffer = device.create_buffer(
             usage=kali.ResourceUsage.shader_resource,
             debug_name="material_descs_buffer",
-            init_data=material_descs_data,
+            data=material_descs_data,
         )
 
         # Prepare mesh descriptors
@@ -395,13 +395,13 @@ class Scene:
         self.vertex_buffer = device.create_buffer(
             usage=kali.ResourceUsage.shader_resource,
             debug_name="vertex_buffer",
-            init_data=vertices,
+            data=vertices,
         )
 
         self.index_buffer = device.create_buffer(
             usage=kali.ResourceUsage.shader_resource,
             debug_name="index_buffer",
-            init_data=indices,
+            data=indices,
         )
 
         mesh_descs_data = np.frombuffer(
@@ -410,7 +410,7 @@ class Scene:
         self.mesh_descs_buffer = device.create_buffer(
             usage=kali.ResourceUsage.shader_resource,
             debug_name="mesh_descs_buffer",
-            init_data=mesh_descs_data,
+            data=mesh_descs_data,
         )
 
         instance_descs_data = np.frombuffer(
@@ -419,7 +419,7 @@ class Scene:
         self.instance_descs_buffer = device.create_buffer(
             usage=kali.ResourceUsage.shader_resource,
             debug_name="instance_descs_buffer",
-            init_data=instance_descs_data,
+            data=instance_descs_data,
         )
 
         # Prepare transforms
@@ -430,20 +430,18 @@ class Scene:
         self.transform_buffer = device.create_buffer(
             usage=kali.ResourceUsage.shader_resource,
             debug_name="transform_buffer",
-            init_data=np.stack([t.to_numpy() for t in self.transforms]),
+            data=np.stack([t.to_numpy() for t in self.transforms]),
         )
         self.inverse_transpose_transforms_buffer = device.create_buffer(
             usage=kali.ResourceUsage.shader_resource,
             debug_name="inverse_transpose_transforms_buffer",
-            init_data=np.stack(
-                [t.to_numpy() for t in self.inverse_transpose_transforms]
-            ),
+            data=np.stack([t.to_numpy() for t in self.inverse_transpose_transforms]),
         )
 
         self.identity_buffer = device.create_buffer(
             usage=kali.ResourceUsage.shader_resource,
             debug_name="identity_buffer",
-            init_data=kali.float3x4.identity().to_numpy(),
+            data=kali.float3x4.identity().to_numpy(),
         )
 
         # Build BLASes
@@ -526,7 +524,7 @@ class Scene:
         rt_instance_buffer = self.device.create_buffer(
             usage=kali.ResourceUsage.shader_resource,
             debug_name="rt_instance_buffer",
-            init_data=np.stack([i.to_numpy() for i in rt_instance_descs]),
+            data=np.stack([i.to_numpy() for i in rt_instance_descs]),
         )
 
         tlas_build_inputs = kali.AccelerationStructureBuildInputs()

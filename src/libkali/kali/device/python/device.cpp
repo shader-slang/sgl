@@ -156,23 +156,21 @@ KALI_PY_EXPORT(device_device)
            ResourceUsage usage,
            MemoryType memory_type,
            std::string debug_name,
-           std::optional<nb::ndarray<nb::numpy>> init_data)
+           std::optional<nb::ndarray<nb::numpy>> data)
         {
-            if (init_data) {
-                KALI_CHECK(is_ndarray_contiguous(*init_data), "Initial data is not contiguous.");
+            if (data) {
+                KALI_CHECK(is_ndarray_contiguous(*data), "Data is not contiguous.");
             }
-            return self->create_buffer(
-                {
-                    .size = size,
-                    .struct_size = struct_size,
-                    .format = format,
-                    .usage = usage,
-                    .memory_type = memory_type,
-                    .debug_name = std::move(debug_name),
-                },
-                init_data ? init_data->data() : nullptr,
-                init_data ? init_data->nbytes() : 0
-            );
+            return self->create_buffer({
+                .size = size,
+                .struct_size = struct_size,
+                .format = format,
+                .usage = usage,
+                .memory_type = memory_type,
+                .debug_name = std::move(debug_name),
+                .data = data ? data->data() : nullptr,
+                .data_size = data ? data->nbytes() : 0,
+            });
         },
         "size"_a = 0,
         "struct_size"_a = 0,
@@ -180,7 +178,7 @@ KALI_PY_EXPORT(device_device)
         "usage"_a = ResourceUsage::none,
         "memory_type"_a = MemoryType::device_local,
         "debug_name"_a = "",
-        "init_data"_a = std::optional<nb::ndarray<nb::numpy>>{}
+        "data"_a = std::optional<nb::ndarray<nb::numpy>>{}
     );
     device.def(
         "create_structured_buffer",
@@ -191,23 +189,21 @@ KALI_PY_EXPORT(device_device)
            ResourceUsage usage,
            MemoryType memory_type,
            std::string debug_name,
-           std::optional<nb::ndarray<nb::numpy>> init_data)
+           std::optional<nb::ndarray<nb::numpy>> data)
         {
-            if (init_data) {
-                KALI_CHECK(is_ndarray_contiguous(*init_data), "Initial data is not contiguous.");
+            if (data) {
+                KALI_CHECK(is_ndarray_contiguous(*data), "Data is not contiguous.");
             }
-            return self->create_structured_buffer(
-                {
-                    .element_count = element_count,
-                    .struct_size = struct_size,
-                    .struct_type = struct_type,
-                    .usage = usage,
-                    .memory_type = memory_type,
-                    .debug_name = std::move(debug_name),
-                },
-                init_data ? init_data->data() : nullptr,
-                init_data ? init_data->nbytes() : 0
-            );
+            return self->create_structured_buffer({
+                .element_count = element_count,
+                .struct_size = struct_size,
+                .struct_type = struct_type,
+                .usage = usage,
+                .memory_type = memory_type,
+                .debug_name = std::move(debug_name),
+                .data = data ? data->data() : nullptr,
+                .data_size = data ? data->nbytes() : 0,
+            });
         },
         "element_count"_a = 0,
         "struct_size"_a = 0,
@@ -215,7 +211,7 @@ KALI_PY_EXPORT(device_device)
         "usage"_a = ResourceUsage::none,
         "memory_type"_a = MemoryType::device_local,
         "debug_name"_a = "",
-        "init_data"_a = std::optional<nb::ndarray<nb::numpy>>{}
+        "data"_a = std::optional<nb::ndarray<nb::numpy>>{}
     );
     // Convenience overload that takes a reflection cursor instead of a type layout.
     device.def(
@@ -227,23 +223,21 @@ KALI_PY_EXPORT(device_device)
            ResourceUsage usage,
            MemoryType memory_type,
            std::string debug_name,
-           std::optional<nb::ndarray<nb::numpy>> init_data)
+           std::optional<nb::ndarray<nb::numpy>> data)
         {
-            if (init_data) {
-                KALI_CHECK(is_ndarray_contiguous(*init_data), "Initial data is not contiguous.");
+            if (data) {
+                KALI_CHECK(is_ndarray_contiguous(*data), "Data is not contiguous.");
             }
-            return self->create_structured_buffer(
-                {
-                    .element_count = element_count,
-                    .struct_size = struct_size,
-                    .struct_type = struct_type.type_layout(),
-                    .usage = usage,
-                    .memory_type = memory_type,
-                    .debug_name = std::move(debug_name),
-                },
-                init_data ? init_data->data() : nullptr,
-                init_data ? init_data->nbytes() : 0
-            );
+            return self->create_structured_buffer({
+                .element_count = element_count,
+                .struct_size = struct_size,
+                .struct_type = struct_type.type_layout(),
+                .usage = usage,
+                .memory_type = memory_type,
+                .debug_name = std::move(debug_name),
+                .data = data ? data->data() : nullptr,
+                .data_size = data ? data->nbytes() : 0,
+            });
         },
         "element_count"_a = 0,
         "struct_size"_a = 0,
@@ -251,7 +245,7 @@ KALI_PY_EXPORT(device_device)
         "usage"_a = ResourceUsage::none,
         "memory_type"_a = MemoryType::device_local,
         "debug_name"_a = "",
-        "init_data"_a = std::optional<nb::ndarray<nb::numpy>>{}
+        "data"_a = std::optional<nb::ndarray<nb::numpy>>{}
     );
     device.def(
         "create_typed_buffer",
@@ -261,29 +255,27 @@ KALI_PY_EXPORT(device_device)
            ResourceUsage usage,
            MemoryType memory_type,
            std::string debug_name,
-           std::optional<nb::ndarray<nb::numpy>> init_data)
+           std::optional<nb::ndarray<nb::numpy>> data)
         {
-            if (init_data) {
-                KALI_CHECK(is_ndarray_contiguous(*init_data), "Initial data is not contiguous.");
+            if (data) {
+                KALI_CHECK(is_ndarray_contiguous(*data), "Data is not contiguous.");
             }
-            return self->create_typed_buffer(
-                {
-                    .element_count = element_count,
-                    .format = format,
-                    .usage = usage,
-                    .memory_type = memory_type,
-                    .debug_name = std::move(debug_name),
-                },
-                init_data ? init_data->data() : nullptr,
-                init_data ? init_data->nbytes() : 0
-            );
+            return self->create_typed_buffer({
+                .element_count = element_count,
+                .format = format,
+                .usage = usage,
+                .memory_type = memory_type,
+                .debug_name = std::move(debug_name),
+                .data = data ? data->data() : nullptr,
+                .data_size = data ? data->nbytes() : 0,
+            });
         },
         "element_count"_a = 0,
         "format"_a = Format::unknown,
         "usage"_a = ResourceUsage::none,
         "memory_type"_a = MemoryType::device_local,
         "debug_name"_a = "",
-        "init_data"_a = std::optional<nb::ndarray<nb::numpy>>{}
+        "data"_a = std::optional<nb::ndarray<nb::numpy>>{}
     );
 
     device.def(
@@ -306,29 +298,27 @@ KALI_PY_EXPORT(device_device)
            ResourceUsage usage,
            MemoryType memory_type,
            std::string debug_name,
-           std::optional<nb::ndarray<nb::numpy>> init_data)
+           std::optional<nb::ndarray<nb::numpy>> data)
         {
-            if (init_data) {
-                KALI_CHECK(is_ndarray_contiguous(*init_data), "Initial data is not contiguous.");
+            if (data) {
+                KALI_CHECK(is_ndarray_contiguous(*data), "Data is not contiguous.");
             }
-            return self->create_texture(
-                {
-                    .type = type,
-                    .format = format,
-                    .width = width,
-                    .height = height,
-                    .depth = depth,
-                    .array_size = array_size,
-                    .mip_count = mip_count,
-                    .sample_count = sample_count,
-                    .quality = quality,
-                    .usage = usage,
-                    .memory_type = memory_type,
-                    .debug_name = std::move(debug_name),
-                },
-                init_data ? init_data->data() : nullptr,
-                init_data ? init_data->nbytes() : 0
-            );
+            return self->create_texture({
+                .type = type,
+                .format = format,
+                .width = width,
+                .height = height,
+                .depth = depth,
+                .array_size = array_size,
+                .mip_count = mip_count,
+                .sample_count = sample_count,
+                .quality = quality,
+                .usage = usage,
+                .memory_type = memory_type,
+                .debug_name = std::move(debug_name),
+                .data = data ? data->data() : nullptr,
+                .data_size = data ? data->nbytes() : 0,
+            });
         },
         "type"_a = TextureType::unknown,
         "format"_a = Format::unknown,
@@ -342,7 +332,7 @@ KALI_PY_EXPORT(device_device)
         "usage"_a = ResourceUsage::none,
         "memory_type"_a = MemoryType::device_local,
         "debug_name"_a = "",
-        "init_data"_a = std::optional<nb::ndarray<nb::numpy>>{}
+        "data"_a = std::optional<nb::ndarray<nb::numpy>>{}
     );
     device.def("create_sampler", &Device::create_sampler, "desc"_a);
     device.def(

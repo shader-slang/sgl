@@ -12,13 +12,13 @@ indices = np.array([0, 1, 2], dtype=np.uint32)
 vertex_buffer = device.create_buffer(
     usage=kali.ResourceUsage.shader_resource,
     debug_name="vertex_buffer",
-    init_data=vertices,
+    data=vertices,
 )
 
 index_buffer = device.create_buffer(
     usage=kali.ResourceUsage.shader_resource,
     debug_name="index_buffer",
-    init_data=indices,
+    data=indices,
 )
 
 render_texture = device.create_texture(

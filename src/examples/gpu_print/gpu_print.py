@@ -15,7 +15,7 @@ class PrintOutput:
         self.counter_buffer = device.create_buffer(
             size=4,
             usage=kali.ResourceUsage.unordered_access,
-            init_data=np.zeros(1, dtype=np.uint32),
+            data=np.zeros(1, dtype=np.uint32),
         )
 
         self.output_buffer = device.create_buffer(

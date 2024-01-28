@@ -12,19 +12,19 @@ indices = np.array([0, 1, 2], dtype=np.uint32)
 vertex_buffer = device.create_buffer(
     usage=kali.ResourceUsage.shader_resource,
     debug_name="vertex_buffer",
-    init_data=vertices,
+    data=vertices,
 )
 
 index_buffer = device.create_buffer(
     usage=kali.ResourceUsage.shader_resource,
     debug_name="index_buffer",
-    init_data=indices,
+    data=indices,
 )
 
 transform_buffer = device.create_buffer(
     usage=kali.ResourceUsage.shader_resource,
     debug_name="transform_buffer",
-    init_data=kali.float3x4.identity().to_numpy(),
+    data=kali.float3x4.identity().to_numpy(),
 )
 
 blas_geometry_desc = kali.RayTracingGeometryDesc()
@@ -84,7 +84,7 @@ instance_desc.acceleration_structure = blas.device_address
 instance_buffer = device.create_buffer(
     usage=kali.ResourceUsage.shader_resource,
     debug_name="instance_buffer",
-    init_data=instance_desc.to_numpy(),
+    data=instance_desc.to_numpy(),
 )
 
 tlas_build_inputs = kali.AccelerationStructureBuildInputs()

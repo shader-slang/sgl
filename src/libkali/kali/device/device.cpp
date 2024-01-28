@@ -280,24 +280,29 @@ ref<Swapchain> Device::create_swapchain(SwapchainDesc desc, Window* window)
     return make_ref<Swapchain>(std::move(desc), window, m_graphics_queue, ref<Device>(this));
 }
 
-ref<Buffer> Device::create_buffer(BufferDesc desc, const void* init_data, size_t init_data_size)
+ref<Buffer> Device::create_buffer(BufferDesc desc)
 {
-    return make_ref<Buffer>(ref<Device>(this), std::move(desc), init_data, init_data_size);
+    return make_ref<Buffer>(ref<Device>(this), std::move(desc));
 }
 
-ref<Buffer> Device::create_structured_buffer(StructuredBufferDesc desc, const void* init_data, size_t init_data_size)
+ref<Buffer> Device::create_raw_buffer(RawBufferDesc desc)
 {
-    return make_ref<Buffer>(ref<Device>(this), std::move(desc), init_data, init_data_size);
+    return make_ref<Buffer>(ref<Device>(this), std::move(desc));
 }
 
-ref<Buffer> Device::create_typed_buffer(TypedBufferDesc desc, const void* init_data, size_t init_data_size)
+ref<Buffer> Device::create_structured_buffer(StructuredBufferDesc desc)
 {
-    return make_ref<Buffer>(ref<Device>(this), std::move(desc), init_data, init_data_size);
+    return make_ref<Buffer>(ref<Device>(this), std::move(desc));
 }
 
-ref<Texture> Device::create_texture(TextureDesc desc, const void* init_data, size_t init_data_size)
+ref<Buffer> Device::create_typed_buffer(TypedBufferDesc desc)
 {
-    return make_ref<Texture>(ref<Device>(this), std::move(desc), init_data, init_data_size);
+    return make_ref<Buffer>(ref<Device>(this), std::move(desc));
+}
+
+ref<Texture> Device::create_texture(TextureDesc desc)
+{
+    return make_ref<Texture>(ref<Device>(this), std::move(desc));
 }
 
 ref<Texture>

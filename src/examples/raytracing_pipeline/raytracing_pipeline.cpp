@@ -26,33 +26,27 @@ int main()
         std::vector<float3> vertices{{-1, -1, 0}, {1, -1, 0}, {0, 1, 0}};
         std::vector<uint32_t> indices{0, 1, 2};
 
-        ref<Buffer> vertex_buffer = device->create_buffer(
-            {
-                .usage = ResourceUsage::shader_resource,
-                .debug_name = "vertex_buffer",
-            },
-            vertices.data(),
-            vertices.size() * sizeof(float3)
-        );
+        ref<Buffer> vertex_buffer = device->create_buffer({
+            .usage = ResourceUsage::shader_resource,
+            .debug_name = "vertex_buffer",
+            .data = vertices.data(),
+            .data_size = vertices.size() * sizeof(float3),
+        });
 
-        ref<Buffer> index_buffer = device->create_buffer(
-            {
-                .usage = ResourceUsage::shader_resource,
-                .debug_name = "index_buffer",
-            },
-            indices.data(),
-            indices.size() * sizeof(uint32_t)
-        );
+        ref<Buffer> index_buffer = device->create_buffer({
+            .usage = ResourceUsage::shader_resource,
+            .debug_name = "index_buffer",
+            .data = indices.data(),
+            .data_size = indices.size() * sizeof(uint32_t),
+        });
 
         float3x4 identity_transform = float3x4::identity();
-        ref<Buffer> transform_buffer = device->create_buffer(
-            {
-                .usage = ResourceUsage::shader_resource,
-                .debug_name = "transform_buffer",
-            },
-            &identity_transform,
-            sizeof(identity_transform)
-        );
+        ref<Buffer> transform_buffer = device->create_buffer({
+            .usage = ResourceUsage::shader_resource,
+            .debug_name = "transform_buffer",
+            .data = &identity_transform,
+            .data_size = sizeof(identity_transform),
+        });
 
         RayTracingGeometryDesc blas_geometry_desc{
             .type = RayTracingGeometryType::triangles,
@@ -117,16 +111,14 @@ int main()
             .acceleration_structure = blas->device_address(),
         };
 
-        ref<Buffer> instance_buffer = device->create_structured_buffer(
-            {
-                .element_count = 1,
-                .struct_size = sizeof(RayTracingInstanceDesc),
-                .usage = ResourceUsage::shader_resource,
-                .debug_name = "instance_buffer",
-            },
-            &instance_desc,
-            sizeof(instance_desc)
-        );
+        ref<Buffer> instance_buffer = device->create_structured_buffer({
+            .element_count = 1,
+            .struct_size = sizeof(RayTracingInstanceDesc),
+            .usage = ResourceUsage::shader_resource,
+            .debug_name = "instance_buffer",
+            .data = &instance_desc,
+            .data_size = sizeof(instance_desc),
+        });
 
         AccelerationStructureBuildInputs tlas_build_inputs{
             .kind = AccelerationStructureKind::top_level,

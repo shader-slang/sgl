@@ -404,14 +404,12 @@ struct Scene {
         for (size_t i = 0; i < stage.materials.size(); ++i)
             material_descs[i].base_color = stage.materials[i].base_color;
 
-        material_descs_buffer = device->create_buffer(
-            {
-                .usage = ResourceUsage::shader_resource,
-                .debug_name = "material_descs_buffer",
-            },
-            material_descs.data(),
-            material_descs.size() * sizeof(MaterialDesc)
-        );
+        material_descs_buffer = device->create_buffer({
+            .usage = ResourceUsage::shader_resource,
+            .debug_name = "material_descs_buffer",
+            .data = material_descs.data(),
+            .data_size = material_descs.size() * sizeof(MaterialDesc),
+        });
 
         // Prepare mesh descriptors
         mesh_descs.reserve(stage.meshes.size());
@@ -447,40 +445,32 @@ struct Scene {
             vertices.insert(vertices.end(), mesh.vertices.begin(), mesh.vertices.end());
             indices.insert(indices.end(), mesh.indices.begin(), mesh.indices.end());
         }
-        vertex_buffer = device->create_buffer(
-            {
-                .usage = ResourceUsage::shader_resource,
-                .debug_name = "vertex_buffer",
-            },
-            vertices.data(),
-            vertices.size() * sizeof(Mesh::Vertex)
-        );
-        index_buffer = device->create_buffer(
-            {
-                .usage = ResourceUsage::shader_resource,
-                .debug_name = "index_buffer",
-            },
-            indices.data(),
-            indices.size() * sizeof(uint32_t)
-        );
+        vertex_buffer = device->create_buffer({
+            .usage = ResourceUsage::shader_resource,
+            .debug_name = "vertex_buffer",
+            .data = vertices.data(),
+            .data_size = vertices.size() * sizeof(Mesh::Vertex),
+        });
+        index_buffer = device->create_buffer({
+            .usage = ResourceUsage::shader_resource,
+            .debug_name = "index_buffer",
+            .data = indices.data(),
+            .data_size = indices.size() * sizeof(uint32_t),
+        });
 
-        mesh_descs_buffer = device->create_buffer(
-            {
-                .usage = ResourceUsage::shader_resource,
-                .debug_name = "mesh_descs_buffer",
-            },
-            mesh_descs.data(),
-            mesh_descs.size() * sizeof(MeshDesc)
-        );
+        mesh_descs_buffer = device->create_buffer({
+            .usage = ResourceUsage::shader_resource,
+            .debug_name = "mesh_descs_buffer",
+            .data = mesh_descs.data(),
+            .data_size = mesh_descs.size() * sizeof(MeshDesc),
+        });
 
-        instance_descs_buffer = device->create_buffer(
-            {
-                .usage = ResourceUsage::shader_resource,
-                .debug_name = "instance_descs_buffer",
-            },
-            instance_descs.data(),
-            instance_descs.size() * sizeof(InstanceDesc)
-        );
+        instance_descs_buffer = device->create_buffer({
+            .usage = ResourceUsage::shader_resource,
+            .debug_name = "instance_descs_buffer",
+            .data = instance_descs.data(),
+            .data_size = instance_descs.size() * sizeof(InstanceDesc),
+        });
 
         // Prepare transforms
         transforms.resize(stage.transforms.size());
@@ -490,33 +480,27 @@ struct Scene {
         for (size_t i = 0; i < transforms.size(); ++i)
             inverse_transpose_transforms[i] = transpose(inverse(transforms[i]));
 
-        transforms_buffer = device->create_buffer(
-            {
-                .usage = ResourceUsage::shader_resource,
-                .debug_name = "transforms_buffer",
-            },
-            transforms.data(),
-            transforms.size() * sizeof(float4x4)
-        );
+        transforms_buffer = device->create_buffer({
+            .usage = ResourceUsage::shader_resource,
+            .debug_name = "transforms_buffer",
+            .data = transforms.data(),
+            .data_size = transforms.size() * sizeof(float4x4),
+        });
 
-        inverse_transpose_transforms_buffer = device->create_buffer(
-            {
-                .usage = ResourceUsage::shader_resource,
-                .debug_name = "inverse_transpose_transforms_buffer",
-            },
-            inverse_transpose_transforms.data(),
-            inverse_transpose_transforms.size() * sizeof(float4x4)
-        );
+        inverse_transpose_transforms_buffer = device->create_buffer({
+            .usage = ResourceUsage::shader_resource,
+            .debug_name = "inverse_transpose_transforms_buffer",
+            .data = inverse_transpose_transforms.data(),
+            .data_size = inverse_transpose_transforms.size() * sizeof(float4x4),
+        });
 
         float3x4 identity = float3x4::identity();
-        identity_buffer = device->create_buffer(
-            {
-                .usage = ResourceUsage::shader_resource,
-                .debug_name = "identity_buffer",
-            },
-            &identity,
-            sizeof(identity)
-        );
+        identity_buffer = device->create_buffer({
+            .usage = ResourceUsage::shader_resource,
+            .debug_name = "identity_buffer",
+            .data = &identity,
+            .data_size = sizeof(identity),
+        });
 
         // Build BLASes
         for (const MeshDesc& mesh_desc : mesh_descs)
@@ -597,14 +581,12 @@ struct Scene {
             rt_instance_descs.push_back(rt_instance_desc);
         }
 
-        ref<Buffer> rt_instance_buffer = device->create_buffer(
-            {
-                .usage = ResourceUsage::shader_resource,
-                .debug_name = "rt_instance_buffer",
-            },
-            rt_instance_descs.data(),
-            rt_instance_descs.size() * sizeof(RayTracingInstanceDesc)
-        );
+        ref<Buffer> rt_instance_buffer = device->create_buffer({
+            .usage = ResourceUsage::shader_resource,
+            .debug_name = "rt_instance_buffer",
+            .data = rt_instance_descs.data(),
+            .data_size = rt_instance_descs.size() * sizeof(RayTracingInstanceDesc),
+        });
 
         AccelerationStructureBuildInputs tlas_build_inputs;
         tlas_build_inputs.kind = AccelerationStructureKind::top_level;

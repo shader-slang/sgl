@@ -28,23 +28,19 @@ int main()
         std::vector<float2> vertices{{-1.f, -1.f}, {1.f, -1.f}, {0.f, 1.f}};
         std::vector<uint32_t> indices{0, 1, 2};
 
-        ref<Buffer> vertex_buffer = device->create_buffer(
-            {
-                .usage = ResourceUsage::shader_resource,
-                .debug_name = "vertex_buffer",
-            },
-            vertices.data(),
-            vertices.size() * sizeof(float2)
-        );
+        ref<Buffer> vertex_buffer = device->create_buffer({
+            .usage = ResourceUsage::shader_resource,
+            .debug_name = "vertex_buffer",
+            .data = vertices.data(),
+            .data_size = vertices.size() * sizeof(float2),
+        });
 
-        ref<Buffer> index_buffer = device->create_buffer(
-            {
-                .usage = ResourceUsage::shader_resource,
-                .debug_name = "index_buffer",
-            },
-            indices.data(),
-            indices.size() * sizeof(uint32_t)
-        );
+        ref<Buffer> index_buffer = device->create_buffer({
+            .usage = ResourceUsage::shader_resource,
+            .debug_name = "index_buffer",
+            .data = indices.data(),
+            .data_size = indices.size() * sizeof(uint32_t),
+        });
 
         ref<Texture> render_texture = device->create_texture({
             .type = TextureType::texture_2d,

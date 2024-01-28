@@ -178,14 +178,15 @@ public:
 
     ref<Swapchain> create_swapchain(SwapchainDesc desc, Window* window);
 
-    ref<Buffer> create_buffer(BufferDesc desc, const void* init_data = nullptr, size_t init_data_size = 0);
+    ref<Buffer> create_buffer(BufferDesc desc);
 
-    ref<Buffer>
-    create_structured_buffer(StructuredBufferDesc desc, const void* init_data = nullptr, size_t init_data_size = 0);
+    ref<Buffer> create_raw_buffer(RawBufferDesc desc);
 
-    ref<Buffer> create_typed_buffer(TypedBufferDesc desc, const void* init_data = nullptr, size_t init_data_size = 0);
+    ref<Buffer> create_structured_buffer(StructuredBufferDesc desc);
 
-    ref<Texture> create_texture(TextureDesc desc, const void* init_data = nullptr, size_t init_data_size = 0);
+    ref<Buffer> create_typed_buffer(TypedBufferDesc desc);
+
+    ref<Texture> create_texture(TextureDesc desc);
 
     ref<Texture> create_texture_from_resource(TextureDesc desc, gfx::ITextureResource* resource, bool deferred_release);
 

@@ -229,24 +229,23 @@ std::string ResourceView::to_string() const
 // Buffer
 // ----------------------------------------------------------------------------
 
-Buffer::Buffer(ref<Device> device, BufferDesc desc, const void* init_data, size_t init_data_size)
+Buffer::Buffer(ref<Device> device, BufferDesc desc)
     : Resource(std::move(device), ResourceType::buffer)
     , m_desc(std::move(desc))
 {
-    // Derive buffer size from init data.
-    if (m_desc.size == 0 && init_data && init_data_size > 0)
-        m_desc.size = init_data_size;
+    // Derive buffer size from initial data.
+    if (m_desc.size == 0 && m_desc.data && m_desc.data_size > 0)
+        m_desc.size = m_desc.data_size;
 
     // TODO check init_data size
-    KALI_UNUSED(init_data_size);
     KALI_ASSERT(m_desc.size > 0);
     KALI_ASSERT(m_desc.struct_size == 0 || m_desc.format == Format::unknown);
     KALI_ASSERT(m_desc.struct_size == 0 || m_desc.size % m_desc.struct_size == 0);
 
     KALI_CHECK(
-        (init_data == nullptr && init_data_size == 0) || init_data_size == m_desc.size,
-        "Invalid init data size (got {} bytes, expected {} bytes)",
-        init_data_size,
+        (m_desc.data == nullptr && m_desc.data_size == 0) || m_desc.data_size == m_desc.size,
+        "Invalid data size (got {} bytes, expected {} bytes)",
+        m_desc.data_size,
         m_desc.size
     );
 
@@ -270,10 +269,32 @@ Buffer::Buffer(ref<Device> device, BufferDesc desc, const void* init_data, size_
     gfx_desc.elementSize = static_cast<gfx::Size>(m_desc.struct_size);
     gfx_desc.format = static_cast<gfx::Format>(m_desc.format);
 
-    SLANG_CALL(m_device->gfx_device()->createBufferResource(gfx_desc, init_data, m_gfx_buffer.writeRef()));
+    SLANG_CALL(m_device->gfx_device()->createBufferResource(gfx_desc, m_desc.data, m_gfx_buffer.writeRef()));
 
     if (!m_desc.debug_name.empty())
         m_gfx_buffer->setDebugName(m_desc.debug_name.c_str());
+
+    // Clear initial data fields in desc.
+    m_desc.data = nullptr;
+    m_desc.data_size = 0;
+}
+
+inline BufferDesc to_buffer_desc(RawBufferDesc desc)
+{
+    return {
+        .size = desc.size,
+        .initial_state = desc.initial_state,
+        .usage = desc.usage,
+        .memory_type = desc.memory_type,
+        .debug_name = desc.debug_name,
+        .data = desc.data,
+        .data_size = desc.data_size,
+    };
+}
+
+Buffer::Buffer(ref<Device> device, RawBufferDesc desc)
+    : Buffer(std::move(device), to_buffer_desc(std::move(desc)))
+{
 }
 
 inline BufferDesc to_buffer_desc(StructuredBufferDesc desc)
@@ -294,11 +315,13 @@ inline BufferDesc to_buffer_desc(StructuredBufferDesc desc)
         .usage = desc.usage,
         .memory_type = desc.memory_type,
         .debug_name = desc.debug_name,
+        .data = desc.data,
+        .data_size = desc.data_size,
     };
 }
 
-Buffer::Buffer(ref<Device> device, StructuredBufferDesc desc, const void* init_data, size_t init_data_size)
-    : Buffer(std::move(device), to_buffer_desc(std::move(desc)), init_data, init_data_size)
+Buffer::Buffer(ref<Device> device, StructuredBufferDesc desc)
+    : Buffer(std::move(device), to_buffer_desc(std::move(desc)))
 {
 }
 
@@ -313,11 +336,13 @@ inline BufferDesc to_buffer_desc(TypedBufferDesc desc)
         .usage = desc.usage,
         .memory_type = desc.memory_type,
         .debug_name = desc.debug_name,
+        .data = desc.data,
+        .data_size = desc.data_size,
     };
 }
 
-Buffer::Buffer(ref<Device> device, TypedBufferDesc desc, const void* init_data, size_t init_data_size)
-    : Buffer(std::move(device), to_buffer_desc(std::move(desc)), init_data, init_data_size)
+Buffer::Buffer(ref<Device> device, TypedBufferDesc desc)
+    : Buffer(std::move(device), to_buffer_desc(std::move(desc)))
 {
 }
 
@@ -498,7 +523,7 @@ inline void process_texture_desc(TextureDesc& desc)
     KALI_CHECK(desc.sample_count >= 1, "Invalid sample count.");
 }
 
-Texture::Texture(ref<Device> device, TextureDesc desc, const void* init_data, size_t init_data_size)
+Texture::Texture(ref<Device> device, TextureDesc desc)
     : Resource(std::move(device), ResourceType(desc.type))
     , m_desc(std::move(desc))
 {
@@ -522,13 +547,16 @@ Texture::Texture(ref<Device> device, TextureDesc desc, const void* init_data, si
     gfx_desc.sampleDesc.quality = m_desc.quality;
 
     // TODO(@skallweit): add support for init data
-    KALI_UNUSED(init_data, init_data_size);
     gfx::ITextureResource::SubresourceData* gfx_init_data{nullptr};
 
     SLANG_CALL(m_device->gfx_device()->createTextureResource(gfx_desc, gfx_init_data, m_gfx_texture.writeRef()));
 
     if (!m_desc.debug_name.empty())
         m_gfx_texture->setDebugName(m_desc.debug_name.c_str());
+
+    // Clear initial data fields in desc.
+    m_desc.data = nullptr;
+    m_desc.data_size = 0;
 }
 
 Texture::Texture(ref<Device> device, TextureDesc desc, gfx::ITextureResource* resource, bool deferred_release)

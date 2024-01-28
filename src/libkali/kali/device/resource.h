@@ -369,6 +369,26 @@ struct BufferDesc {
     MemoryType memory_type{MemoryType::device_local};
 
     std::string debug_name;
+
+    /// Initial data to upload to the buffer.
+    const void* data{nullptr};
+    /// Size of the initial data in bytes.
+    size_t data_size{0};
+};
+
+struct RawBufferDesc {
+    size_t size{0};
+
+    ResourceState initial_state{ResourceState::undefined};
+    ResourceUsage usage{ResourceUsage::none};
+    MemoryType memory_type{MemoryType::device_local};
+
+    std::string debug_name;
+
+    /// Initial data to upload to the buffer.
+    const void* data{nullptr};
+    /// Size of the initial data in bytes.
+    size_t data_size{0};
 };
 
 struct StructuredBufferDesc {
@@ -388,6 +408,11 @@ struct StructuredBufferDesc {
     MemoryType memory_type{MemoryType::device_local};
 
     std::string debug_name;
+
+    /// Initial data to upload to the buffer.
+    const void* data{nullptr};
+    /// Size of the initial data in bytes.
+    size_t data_size{0};
 };
 
 struct TypedBufferDesc {
@@ -402,14 +427,20 @@ struct TypedBufferDesc {
     MemoryType memory_type{MemoryType::device_local};
 
     std::string debug_name;
+
+    /// Initial data to upload to the buffer.
+    const void* data{nullptr};
+    /// Size of the initial data in bytes.
+    size_t data_size{0};
 };
 
 class KALI_API Buffer : public Resource {
     KALI_OBJECT(Buffer)
 public:
-    Buffer(ref<Device> device, BufferDesc desc, const void* init_data, size_t init_data_size);
-    Buffer(ref<Device> device, StructuredBufferDesc desc, const void* init_data, size_t init_data_size);
-    Buffer(ref<Device> device, TypedBufferDesc desc, const void* init_data, size_t init_data_size);
+    Buffer(ref<Device> device, BufferDesc desc);
+    Buffer(ref<Device> device, RawBufferDesc desc);
+    Buffer(ref<Device> device, StructuredBufferDesc desc);
+    Buffer(ref<Device> device, TypedBufferDesc desc);
 
     ~Buffer();
 
@@ -529,6 +560,9 @@ struct TextureDesc {
     MemoryType memory_type{MemoryType::device_local};
 
     std::string debug_name;
+
+    const void* data{nullptr};
+    size_t data_size{0};
 };
 
 struct SubresourceLayout {
@@ -551,7 +585,7 @@ struct SubresourceLayout {
 class KALI_API Texture : public Resource {
     KALI_OBJECT(Texture)
 public:
-    Texture(ref<Device> device, TextureDesc desc, const void* init_data, size_t init_data_size);
+    Texture(ref<Device> device, TextureDesc desc);
     Texture(ref<Device> device, TextureDesc desc, gfx::ITextureResource* resource, bool deferred_release);
 
     ~Texture();
