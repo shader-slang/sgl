@@ -186,6 +186,7 @@ struct SlangCompilerOptions {
     SlangCompilerFlags compiler_flags{SlangCompilerFlags::none};
     std::vector<std::string> compiler_args;
     std::vector<std::filesystem::path> search_paths;
+    bool add_default_search_paths{true};
     DefineList defines;
 };
 

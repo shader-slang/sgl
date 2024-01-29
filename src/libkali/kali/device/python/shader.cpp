@@ -46,6 +46,7 @@ KALI_PY_EXPORT(device_shader)
         .def_rw("compiler_flags", &SlangCompilerOptions::compiler_flags)
         .def_rw("compiler_args", &SlangCompilerOptions::compiler_args)
         .def_rw("search_paths", &SlangCompilerOptions::search_paths)
+        .def_rw("add_default_search_paths", &SlangCompilerOptions::add_default_search_paths)
         .def_rw("defines", &SlangCompilerOptions::defines);
 
     nb::class_<SlangSessionDesc>(m, "SlangSessionDesc")

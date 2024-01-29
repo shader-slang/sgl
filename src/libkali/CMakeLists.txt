@@ -306,6 +306,7 @@ set_target_properties(kali PROPERTIES
 
 kali_header_validation(kali)
 
+target_copy_shaders(kali .)
 
 # TODO: Move this to the main CMakeLists.txt, requires to not be based on kali target.
 # Copy binary files.

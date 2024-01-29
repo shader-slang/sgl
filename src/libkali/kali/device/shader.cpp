@@ -6,6 +6,7 @@
 #include "kali/device/kernel.h"
 
 #include "kali/core/type_utils.h"
+#include "kali/core/platform.h"
 
 #include <slang.h>
 
@@ -40,16 +41,19 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
     // Setup search paths.
     // Slang will search for files in the order they are specified.
     // Use module local search paths first, followed by global search paths.
-    const auto& search_paths = options.search_paths;
+    std::vector<std::filesystem::path> search_paths(options.search_paths);
+    if (options.add_default_search_paths) {
+        search_paths.push_back(platform::runtime_directory() / "shaders");
+    }
     std::vector<std::string> search_path_strings(search_paths.size());
-    std::vector<const char*> search_paths_cstrings(search_paths.size());
+    std::vector<const char*> search_path_cstrings(search_paths.size());
     for (size_t i = 0; i < search_paths.size(); ++i) {
         search_path_strings[i] = search_paths[i].string();
-        search_paths_cstrings[i] = search_path_strings[i].c_str();
+        search_path_cstrings[i] = search_path_strings[i].c_str();
     }
 
-    session_desc.searchPaths = search_paths_cstrings.data();
-    session_desc.searchPathCount = narrow_cast<SlangInt>(search_paths_cstrings.size());
+    session_desc.searchPaths = search_path_cstrings.data();
+    session_desc.searchPathCount = narrow_cast<SlangInt>(search_path_cstrings.size());
 
     // Select target profile.
     slang::TargetDesc target_desc;
