@@ -44,8 +44,25 @@ void bind_vector_type(nb::module_& m, const char* name)
     if constexpr (dimension >= 4)
         vec.def_rw("w", &T::w);
 
-    vec.def("__getitem__", [](const T& self, int i) { return self[i]; });
-    vec.def("__setitem__", [](T& self, int i, value_type v) { self[i] = v; });
+    vec.def("__len__", [](const T&) { return dimension; });
+    vec.def(
+        "__getitem__",
+        [](const T& self, int i)
+        {
+            if (i >= dimension)
+                throw nb::index_error();
+            return self[i];
+        }
+    );
+    vec.def(
+        "__setitem__",
+        [](T& self, int i, value_type v)
+        {
+            if (i >= dimension)
+                throw nb::index_error();
+            self[i] = v;
+        }
+    );
 
     // Conversion
 
@@ -139,6 +156,12 @@ void bind_vector_type(nb::module_& m, const char* name)
         // vec.def(nb::self && nb::self);
         // vec.def(nb::self && value_type());
         // vec.def(value_type() && nb::self);
+
+        // The vector comparisons operators use component-wise comparisons.
+        // In order to compare lists of vectors in Python, we need to
+        // implement the `bool` operator, which returns `True` if all
+        // components are `True`.
+        vec.def("__bool__", [](const T& self) { return all(self); });
     }
 
     vec.def(nb::self == nb::self);

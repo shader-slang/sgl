@@ -55,11 +55,43 @@ void bind_matrix_type(nb::module_& m, const char* name)
 
     // Field access
 
-    mat.def("__getitem__", [](const T& self, int i) { return self[i]; });
-    mat.def("__setitem__", [](T& self, int i, const row_type& v) { self[i] = v; });
+    mat.def(
+        "__getitem__",
+        [](const T& self, int i)
+        {
+            if (i > rows)
+                throw nb::index_error();
+            return self[i];
+        }
+    );
+    mat.def(
+        "__setitem__",
+        [](T& self, int i, const row_type& v)
+        {
+            if (i > rows)
+                throw nb::index_error();
+            self[i] = v;
+        }
+    );
 
-    mat.def("__getitem__", [](const T& self, std::array<int, 2> ij) { return self[ij[0]][ij[1]]; });
-    mat.def("__setitem__", [](T& self, std::array<int, 2> ij, const value_type& v) { self[ij[0]][ij[1]] = v; });
+    mat.def(
+        "__getitem__",
+        [](const T& self, std::array<int, 2> ij)
+        {
+            if (ij[0] > rows || ij[1] > cols)
+                throw nb::index_error();
+            return self[ij[0]][ij[1]];
+        }
+    );
+    mat.def(
+        "__setitem__",
+        [](T& self, std::array<int, 2> ij, const value_type& v)
+        {
+            if (ij[0] > rows || ij[1] > cols)
+                throw nb::index_error();
+            self[ij[0]][ij[1]] = v;
+        }
+    );
 
     mat.def("get_row", nb::overload_cast<int>(&T::get_row, nb::const_), "row"_a);
     mat.def("set_row", &T::set_row, "row"_a, "value"_a);
