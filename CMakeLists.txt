@@ -78,7 +78,7 @@ message(STATUS "Platform: ${KALI_PLATFORM}")
 find_package(Python 3.8 COMPONENTS Interpreter Development.Module REQUIRED)
 
 # -----------------------------------------------------------------------------
-# Python
+# CUDA
 # -----------------------------------------------------------------------------
 
 find_package(CUDAToolkit)
@@ -122,7 +122,7 @@ else()
     set(KALI_OUTPUT_DIRECTORY ${KALI_RUNTIME_OUTPUT_DIRECTORY})
 endif()
 
-# set(KALI_SHADER_OUTPUT_DIRECTORY ${KALI_OUTPUT_DIRECTORY}/shaders)
+set(KALI_SHADER_OUTPUT_DIRECTORY ${KALI_OUTPUT_DIRECTORY}/shaders)
 # set(KALI_PLUGIN_OUTPUT_DIRECTORY ${KALI_OUTPUT_DIRECTORY}/plugins)
 
 # -----------------------------------------------------------------------------
@@ -200,6 +200,42 @@ function(kali_header_validation target)
 
     target_sources(${validate_target} PRIVATE ${validate_sources})
     set_target_properties(${validate_target} PROPERTIES FOLDER "Validation")
+endfunction()
+
+# -----------------------------------------------------------------------------
+# Shader files
+# -----------------------------------------------------------------------------
+
+# Regex for matching shader files.
+set(SHADER_EXTENSION_REGEX "\.(slang|slangh|hlsli|hlsl)$")
+
+# Setup build rules to copy all shaders of a target to the output directory.
+# The specified output_dir is relative to the global shader output directory (KALI_SHADER_OUTPUT_DIRECTORY).
+function(target_copy_shaders target output_dir)
+    get_target_property(target_source_dir ${target} SOURCE_DIR)
+    set(shader_output_dir ${KALI_SHADER_OUTPUT_DIRECTORY}/${output_dir})
+
+    # Get list of all target sources.
+    get_target_property(target_sources_ ${target} SOURCES)
+
+    # Create custom commands for copying shader sources.
+    foreach(file ${target_sources_})
+        if(${file} MATCHES ${SHADER_EXTENSION_REGEX})
+            if(IS_ABSOLUTE ${file})
+                file(RELATIVE_PATH file ${target_source_dir} ${file})
+            endif()
+
+            set(src_file ${target_source_dir}/${file})
+            set(dst_file ${shader_output_dir}/${file})
+
+            add_custom_command(
+                OUTPUT ${dst_file}
+                COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different ${src_file} ${dst_file}
+                MAIN_DEPENDENCY ${src_file}
+                COMMENT "${target}: Copying shader ${file}"
+            )
+        endif()
+    endforeach()
 endfunction()
 
 # -----------------------------------------------------------------------------
