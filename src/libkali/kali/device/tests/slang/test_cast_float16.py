@@ -23,7 +23,7 @@ def test_cast_float16(device_type):
         entry_point="main",
         thread_count=[ELEMENT_COUNT, 1, 1],
         buffers={
-            "data": {"init_data": data},
+            "data": {"data": data},
             "result": {"element_count": ELEMENT_COUNT},
         },
     )

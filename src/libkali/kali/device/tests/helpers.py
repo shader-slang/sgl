@@ -78,8 +78,8 @@ def dispatch_compute(
         }
         if "element_count" in desc:
             args["element_count"] = desc["element_count"]
-        if "init_data" in desc:
-            args["init_data"] = desc["init_data"]
+        if "data" in desc:
+            args["data"] = desc["data"]
 
         buffer = device.create_structured_buffer(**args)
         ctx.buffers[name] = buffer

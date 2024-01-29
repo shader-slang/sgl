@@ -27,7 +27,7 @@ def test_float64(device_type, shader_model, view):
         shader_model=shader_model,
         thread_count=[ELEMENT_COUNT, 1, 1],
         buffers={
-            "data": {"init_data": data},
+            "data": {"data": data},
             "result": {"element_count": ELEMENT_COUNT},
         },
     )
