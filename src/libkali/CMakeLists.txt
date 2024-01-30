@@ -87,6 +87,9 @@ target_sources(kali PRIVATE
     kali/device/native_formats.h
     kali/device/pipeline.cpp
     kali/device/pipeline.h
+    kali/device/print.cpp
+    kali/device/print.h
+    kali/device/print.slang
     kali/device/query.cpp
     kali/device/query.h
     kali/device/raytracing.cpp
@@ -110,6 +113,7 @@ target_sources(kali PRIVATE
     kali/device/types.h
 
     kali/math/constants.h
+    kali/math/constants.slang
     kali/math/float16.cpp
     kali/math/float16.h
     kali/math/matrix_math.h
@@ -119,6 +123,7 @@ target_sources(kali PRIVATE
     kali/math/quaternion_types.h
     kali/math/quaternion.h
     kali/math/ray.h
+    kali/math/ray.slang
     kali/math/scalar_math.h
     kali/math/scalar_types.h
     kali/math/vector_math.h
