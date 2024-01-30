@@ -4,6 +4,7 @@
 #include "kali/device/helpers.h"
 #include "kali/device/reflection.h"
 #include "kali/device/kernel.h"
+#include "kali/device/print.h"
 
 #include "kali/core/type_utils.h"
 #include "kali/core/platform.h"
@@ -131,6 +132,9 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
     std::string shader_model_minor = std::to_string(get_shader_model_minor_version(options.shader_model));
     add_macro("__SHADER_TARGET_MAJOR", shader_model_major.c_str());
     add_macro("__SHADER_TARGET_MINOR", shader_model_minor.c_str());
+
+    // Add device print enable flag.
+    add_macro("__KALI_DEVICE_PRINT_ENABLED", m_device->desc().enable_print ? "1" : "0");
 
     session_desc.preprocessorMacros = macros.data();
     session_desc.preprocessorMacroCount = narrow_cast<SlangInt>(macros.size());
@@ -264,6 +268,16 @@ SlangModule::SlangModule(ref<SlangSession> session, SlangModuleDesc desc)
     // Query number of entry points.
     slang::ProgramLayout* layout = slang::ProgramLayout::get(m_compile_request);
     m_entry_point_count = layout->getEntryPointCount();
+
+    // Register string hashes with the debug printer.
+    // TODO: inc_ref/dec_ref is needed here because global_scope() returns an object that has
+    // holds a shared reference to this module. The returned object is destroyed within this
+    // function, decreasing the reference count of this module to zero, leading to the object
+    // being destroyed.
+    inc_ref();
+    if (m_session->device()->debug_printer())
+        m_session->device()->debug_printer()->add_hashed_strings(global_scope()->layout()->hashed_strings_map());
+    dec_ref(false);
 }
 
 SlangModule::~SlangModule() { }

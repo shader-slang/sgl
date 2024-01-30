@@ -21,6 +21,7 @@ KALI_DICT_TO_DESC_BEGIN(DeviceDesc)
 KALI_DICT_TO_DESC_FIELD(type, DeviceType);
 KALI_DICT_TO_DESC_FIELD(enable_debug_layers, bool);
 KALI_DICT_TO_DESC_FIELD(enable_cuda_interop, bool);
+KALI_DICT_TO_DESC_FIELD(enable_print, bool);
 KALI_DICT_TO_DESC_FIELD(adapter_luid, AdapterLUID);
 KALI_DICT_TO_DESC_FIELD(default_shader_model, ShaderModel);
 KALI_DICT_TO_DESC_FIELD(shader_cache_path, std::filesystem::path);
@@ -46,6 +47,7 @@ KALI_PY_EXPORT(device_device)
         .def_rw("type", &DeviceDesc::type)
         .def_rw("enable_debug_layers", &DeviceDesc::enable_debug_layers)
         .def_rw("enable_cuda_interop", &DeviceDesc::enable_cuda_interop)
+        .def_rw("enable_print", &DeviceDesc::enable_print)
         .def_rw("adapter_luid", &DeviceDesc::adapter_luid)
         .def_rw("default_shader_model", &DeviceDesc::default_shader_model)
         .def_rw("shader_cache_path", &DeviceDesc::shader_cache_path);
@@ -84,6 +86,7 @@ KALI_PY_EXPORT(device_device)
            DeviceType type,
            bool enable_debug_layers,
            bool enable_cuda_interop,
+           bool enable_print,
            std::optional<AdapterLUID> adapter_luid,
            ShaderModel default_shader_model,
            std::string shader_cache_path)
@@ -92,6 +95,7 @@ KALI_PY_EXPORT(device_device)
                 .type = type,
                 .enable_debug_layers = enable_debug_layers,
                 .enable_cuda_interop = enable_cuda_interop,
+                .enable_print = enable_print,
                 .adapter_luid = adapter_luid,
                 .default_shader_model = default_shader_model,
                 .shader_cache_path = std::move(shader_cache_path),
@@ -100,6 +104,7 @@ KALI_PY_EXPORT(device_device)
         "type"_a = DeviceType::automatic,
         "enable_debug_layers"_a = false,
         "enable_cuda_interop"_a = false,
+        "enable_print"_a = false,
         "adapter_luid"_a = std::optional<AdapterLUID>{},
         "default_shader_model"_a = ShaderModel::sm_6_6,
         "shader_cache_path"_a = std::string{}
@@ -597,6 +602,7 @@ KALI_PY_EXPORT(device_device)
     device.def_prop_ro("graphics_queue", &Device::graphics_queue);
     device.def_prop_ro("upload_heap", &Device::upload_heap);
     device.def_prop_ro("read_back_heap", &Device::read_back_heap);
+    device.def("flush_print", &Device::flush_print);
     device.def("end_frame", &Device::end_frame);
     device.def("wait", &Device::wait);
 

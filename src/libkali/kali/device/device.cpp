@@ -17,6 +17,7 @@
 #include "kali/device/native_handle_traits.h"
 #include "kali/device/agility_sdk.h"
 #include "kali/device/cuda_utils.h"
+#include "kali/device/print.h"
 
 #include "kali/core/config.h"
 #include "kali/core/error.h"
@@ -262,12 +263,17 @@ Device::Device(const DeviceDesc& desc)
     );
     m_read_back_heap->break_strong_reference_to_device();
 
+    if (m_desc.enable_print)
+        m_debug_printer = std::make_unique<DebugPrinter>(this);
+
     dec_ref(false);
 }
 
 Device::~Device()
 {
     wait();
+
+    m_debug_printer.reset();
 
     m_read_back_heap.reset();
     m_upload_heap.reset();
@@ -392,7 +398,13 @@ ref<SlangModule> Device::load_module_from_source(
 
 ref<MutableShaderObject> Device::create_mutable_shader_object(const ShaderProgram* shader_program)
 {
-    return make_ref<MutableShaderObject>(ref<Device>(this), shader_program);
+    ref<MutableShaderObject> shader_object = make_ref<MutableShaderObject>(ref<Device>(this), shader_program);
+
+    // Bind the debug printer to the new shader object, if enabled.
+    if (m_debug_printer)
+        m_debug_printer->bind(shader_object.get());
+
+    return shader_object;
 }
 
 ref<MutableShaderObject> Device::create_mutable_shader_object(const TypeLayoutReflection* type_layout)
@@ -434,6 +446,12 @@ ref<MemoryHeap> Device::create_memory_heap(MemoryHeapDesc desc)
     return make_ref<MemoryHeap>(ref<Device>(this), m_frame_fence, std::move(desc));
 }
 
+void Device::flush_print()
+{
+    if (m_debug_printer)
+        m_debug_printer->flush();
+}
+
 void Device::end_frame()
 {
     if (m_frame_fence->signaled_value() > IN_FLIGHT_FRAME_COUNT)
@@ -444,6 +462,8 @@ void Device::end_frame()
     m_frame_data[m_current_frame_index].transient_resource_heap->synchronizeAndReset();
 
     m_graphics_queue->signal(m_frame_fence);
+
+    flush_print();
 }
 
 void Device::wait()

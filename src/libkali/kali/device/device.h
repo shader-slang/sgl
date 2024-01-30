@@ -24,6 +24,7 @@
 namespace kali {
 
 class Window;
+class DebugPrinter;
 
 /// Adapter LUID (locally unique identifier).
 using AdapterLUID = std::array<uint8_t, 16>;
@@ -87,6 +88,9 @@ struct DeviceDesc {
 
     /// Enable CUDA interoperability.
     bool enable_cuda_interop{false};
+
+    /// Enable device side printing (adds performance overhead).
+    bool enable_print{false};
 
     /// Adapter LUID to select adapeter on which the device will be created.
     std::optional<AdapterLUID> adapter_luid;
@@ -214,6 +218,7 @@ public:
         const DefineList& defines = DefineList{},
         const SlangCompilerOptions& compiler_options = SlangCompilerOptions{}
     );
+
     ref<SlangModule> load_module_from_source(
         const std::string& source,
         const DefineList& defines = DefineList{},
@@ -240,6 +245,11 @@ public:
 
     MemoryHeap* upload_heap() const { return m_upload_heap; }
     MemoryHeap* read_back_heap() const { return m_read_back_heap; }
+
+    DebugPrinter* debug_printer() const { return m_debug_printer.get(); }
+
+    /// Block and flush all shader side debug print output.
+    void flush_print();
 
     void end_frame();
 
@@ -315,6 +325,8 @@ private:
 
     ref<MemoryHeap> m_upload_heap;
     ref<MemoryHeap> m_read_back_heap;
+
+    std::unique_ptr<DebugPrinter> m_debug_printer;
 
     struct FrameData {
         Slang::ComPtr<gfx::ITransientResourceHeap> transient_resource_heap;

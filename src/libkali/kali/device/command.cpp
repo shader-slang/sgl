@@ -12,6 +12,8 @@
 #include "kali/device/native_handle_traits.h"
 #include "kali/device/cuda_utils.h"
 #include "kali/device/cuda_interop.h"
+#include "kali/device/shader_cursor.h"
+#include "kali/device/print.h"
 
 #include "kali/core/short_vector.h"
 #include "kali/core/maths.h"
@@ -206,6 +208,8 @@ ref<TransientShaderObject> ComputeCommandEncoder::bind_pipeline(const ComputePip
     SLANG_CALL(m_gfx_compute_command_encoder->bindPipeline(pipeline->gfx_pipeline_state(), &gfx_shader_object));
     ref<TransientShaderObject> transient_shader_object
         = make_ref<TransientShaderObject>(ref<Device>(m_command_buffer->device()), gfx_shader_object, m_command_buffer);
+    if (m_command_buffer->device()->debug_printer())
+        m_command_buffer->device()->debug_printer()->bind(ShaderCursor(transient_shader_object));
     m_bound_shader_object = transient_shader_object;
     return transient_shader_object;
 }
@@ -282,6 +286,8 @@ ref<TransientShaderObject> RenderCommandEncoder::bind_pipeline(const GraphicsPip
     SLANG_CALL(m_gfx_render_command_encoder->bindPipeline(pipeline->gfx_pipeline_state(), &gfx_shader_object));
     ref<TransientShaderObject> transient_shader_object
         = make_ref<TransientShaderObject>(ref<Device>(m_command_buffer->device()), gfx_shader_object, m_command_buffer);
+    if (m_command_buffer->device()->debug_printer())
+        m_command_buffer->device()->debug_printer()->bind(ShaderCursor(transient_shader_object));
     m_bound_shader_object = transient_shader_object;
     return transient_shader_object;
 }
@@ -394,6 +400,8 @@ ref<TransientShaderObject> RayTracingCommandEncoder::bind_pipeline(const RayTrac
     m_gfx_ray_tracing_command_encoder->bindPipeline(pipeline->gfx_pipeline_state(), &gfx_shader_object);
     ref<TransientShaderObject> transient_shader_object
         = make_ref<TransientShaderObject>(ref<Device>(m_command_buffer->device()), gfx_shader_object, m_command_buffer);
+    if (m_command_buffer->device()->debug_printer())
+        m_command_buffer->device()->debug_printer()->bind(ShaderCursor(transient_shader_object));
     m_bound_shader_object = transient_shader_object;
     return transient_shader_object;
 }
