@@ -11,7 +11,6 @@
 #include <fmt/args.h>
 
 namespace kali {
-
 namespace print_buffer {
 
     /// Argument value kind.
@@ -59,6 +58,7 @@ namespace print_buffer {
         uint32_t element_count;
     };
 } // namespace print_buffer
+} // namespace kali
 
 /// Custom formatter for argument values.
 /// Supports printing scalars, vectors and matrices.
@@ -96,6 +96,7 @@ struct fmt::formatter<kali::print_buffer::Value<T>> : formatter<T> {
     }
 };
 
+namespace kali {
 namespace print_buffer {
 
     template<typename T>
