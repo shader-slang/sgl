@@ -158,3 +158,9 @@ if(KALI_WINDOWS)
 else()
     set(KALI_HAS_AGILITY_SDK OFF PARENT_SCOPE)
 endif()
+
+# imgui
+
+set(IMGUI_VERSION "1.90.1")
+kali_download_package(imgui "https://github.com/ocornut/imgui/archive/refs/tags/v${IMGUI_VERSION}.zip")
+set(KALI_IMGUI_DIR ${imgui_SOURCE_DIR} PARENT_SCOPE)

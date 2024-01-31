@@ -134,9 +134,20 @@ target_sources(kali PRIVATE
 
     kali/utils/tev.cpp
     kali/utils/tev.h
+
+    ${KALI_IMGUI_DIR}/imconfig.h
+    ${KALI_IMGUI_DIR}/imgui.h
+    ${KALI_IMGUI_DIR}/imgui_internal.h
+    ${KALI_IMGUI_DIR}/imstb_rectpack.h
+    ${KALI_IMGUI_DIR}/imstb_textedit.h
+    ${KALI_IMGUI_DIR}/imstb_truetype.h
+    ${KALI_IMGUI_DIR}/imgui.cpp
+    ${KALI_IMGUI_DIR}/imgui_draw.cpp
+    ${KALI_IMGUI_DIR}/imgui_widgets.cpp
+    ${KALI_IMGUI_DIR}/imgui_tables.cpp
 )
 
-target_include_directories(kali PUBLIC .)
+target_include_directories(kali PUBLIC . ${KALI_IMGUI_DIR})
 
 target_compile_features(kali PUBLIC cxx_std_20)
 
@@ -249,8 +260,9 @@ target_compile_definitions(kali
         KALI_ENABLE_ASSERTS=$<NOT:$<BOOL:${KALI_DISABLE_ASSERTS}>>
     PRIVATE
         KALI_DLL
-        # $<$<PLATFORM_ID:Windows>:IMGUI_API=__declspec\(dllexport\)>
-        # $<$<PLATFORM_ID:Linux>:IMGUI_API=__attribute__\(\(visibility\("default"\)\)\)>
+        $<$<PLATFORM_ID:Windows>:IMGUI_API=__declspec\(dllexport\)>
+        $<$<PLATFORM_ID:Linux>:IMGUI_API=__attribute__\(\(visibility\("default"\)\)\)>
+        $<$<PLATFORM_ID:Darwin>:IMGUI_API=__attribute__\(\(visibility\("default"\)\)\)>
         # Linux.
         $<$<PLATFORM_ID:Linux>:__USE_LARGEFILE64>
         KALI_PROJECT_DIR="${CMAKE_SOURCE_DIR}"
