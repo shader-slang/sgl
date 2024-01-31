@@ -135,7 +135,7 @@ endif()
 
 # agility-sdk
 
-set(AGILITY_SDK_VERSION "1.611.0")
+set(AGILITY_SDK_VERSION "1.611.2")
 
 if(KALI_WINDOWS)
     kali_download_package(agility_sdk "https://www.nuget.org/api/v2/package/Microsoft.Direct3D.D3D12/${AGILITY_SDK_VERSION}")
