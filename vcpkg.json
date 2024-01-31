@@ -2,19 +2,6 @@
     "name": "kali",
     "version-string": "0.0.1",
     "dependencies": [
-        "slang",
-        {
-            "name": "nvapi",
-            "platform": "windows"
-        },
-        {
-            "name": "dxc",
-            "platform": "windows"
-        },
-        {
-            "name": "agility-sdk",
-            "platform": "windows"
-        },
         "doctest",
         "fmt",
         "glfw3",

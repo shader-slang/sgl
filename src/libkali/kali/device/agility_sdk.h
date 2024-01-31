@@ -8,7 +8,7 @@
 
 #if KALI_HAS_AGILITY_SDK
 #define KALI_AGILITY_SDK_VERSION 611
-#define KALI_AGILITY_SDK_PATH ".\\D3D12\\"
+#define KALI_AGILITY_SDK_PATH ".\\d3d12\\"
 // To enable the D3D12 Agility SDK, this macro needs to be added to the main source file of the executable.
 #define KALI_EXPORT_AGILITY_SDK                                                                                        \
     extern "C" {                                                                                                       \
