@@ -92,15 +92,16 @@ def _test_console_output():
 def test_console_output(capfd):
     _test_console_output()
     out, err = capfd.readouterr()
-    # TODO: for some reason all output ends up in stdout or stderr although only error/fatal should be in stderr
-    lines = err.splitlines() if len(err) > len(out) else out.splitlines()
-    assert len(lines) == 6
-    assert lines[0].startswith("plain message")
-    assert lines[1].startswith("[DEBUG] (test) debug message")
-    assert lines[2].startswith("[INFO] (test) info message")
-    assert lines[3].startswith("[WARN] (test) warn message")
-    assert lines[4].startswith("[ERROR] (test) error message")
-    assert lines[5].startswith("[FATAL] (test) fatal message")
+    out_lines = out.splitlines()
+    err_lines = err.splitlines()
+    assert len(out_lines) == 4
+    assert out_lines[0].startswith("plain message")
+    assert out_lines[1].startswith("[DEBUG] (test) debug message")
+    assert out_lines[2].startswith("[INFO] (test) info message")
+    assert out_lines[3].startswith("[WARN] (test) warn message")
+    assert len(err_lines) == 2
+    assert err_lines[0].startswith("[ERROR] (test) error message")
+    assert err_lines[1].startswith("[FATAL] (test) fatal message")
 
 
 def test_file_output(tmpdir):

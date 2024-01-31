@@ -46,7 +46,7 @@ void ConsoleLoggerOutput::write(LogLevel level, const std::string_view module, c
     std::string_view level_str = s_level_str[static_cast<int>(level)];
     fmt::terminal_color color = s_level_color[static_cast<int>(level)];
 
-    ::FILE* stream = level >= LogLevel::error ? stdout : stdout;
+    ::FILE* stream = level >= LogLevel::error ? stderr : stdout;
 
     if (level == LogLevel::none) {
         fmt::print(stream, "{}\n", msg);
