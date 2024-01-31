@@ -23,9 +23,14 @@ public:
     /// Flush the print buffer and output any messages to stdout.
     void flush();
 
+    /// Flush the print buffer and output any messages as a string.
+    std::string flush_to_string();
+
     void bind(ShaderCursor cursor);
 
 private:
+    void flush_device(bool wait);
+
     Device* m_device;
 
     ref<Buffer> m_buffer;

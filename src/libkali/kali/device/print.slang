@@ -13,8 +13,14 @@ enum class Kind {
 /// Printable primitive types.
 enum class Type {
     boolean,
+    int8,
+    int16,
     int32,
+    int64,
+    uint8,
+    uint16,
     uint32,
+    uint64,
     float16,
     float32,
     float64,
@@ -67,7 +73,25 @@ extension bool : IPrintable {
     uint get_printable_data(uint index) { return asuint(this); }
 };
 
-extension int : IPrintable {
+extension int8_t : IPrintable {
+    [ForceInline]
+    static Layout printable_layout() { return Layout(Kind::scalar, Type::int8); }
+    [ForceInline]
+    static uint printable_data_count() { return 1; }
+    [ForceInline]
+    uint get_printable_data(uint index) { return asuint(this); }
+};
+
+extension int16_t : IPrintable {
+    [ForceInline]
+    static Layout printable_layout() { return Layout(Kind::scalar, Type::int16); }
+    [ForceInline]
+    static uint printable_data_count() { return 1; }
+    [ForceInline]
+    uint get_printable_data(uint index) { return asuint(this); }
+};
+
+extension int32_t : IPrintable {
     [ForceInline]
     static Layout printable_layout() { return Layout(Kind::scalar, Type::int32); }
     [ForceInline]
@@ -76,13 +100,49 @@ extension int : IPrintable {
     uint get_printable_data(uint index) { return asuint(this); }
 };
 
-extension uint : IPrintable {
+extension int64_t : IPrintable {
+    [ForceInline]
+    static Layout printable_layout() { return Layout(Kind::scalar, Type::int64); }
+    [ForceInline]
+    static uint printable_data_count() { return 2; }
+    [ForceInline]
+    uint get_printable_data(uint index) { return index == 0 ? uint(this & 0xffffffff) : uint(this >> 32); }
+};
+
+extension uint8_t : IPrintable {
+    [ForceInline]
+    static Layout printable_layout() { return Layout(Kind::scalar, Type::uint8); }
+    [ForceInline]
+    static uint printable_data_count() { return 1; }
+    [ForceInline]
+    uint get_printable_data(uint index) { return this; }
+};
+
+extension uint16_t : IPrintable {
+    [ForceInline]
+    static Layout printable_layout() { return Layout(Kind::scalar, Type::uint16); }
+    [ForceInline]
+    static uint printable_data_count() { return 1; }
+    [ForceInline]
+    uint get_printable_data(uint index) { return this; }
+};
+
+extension uint32_t : IPrintable {
     [ForceInline]
     static Layout printable_layout() { return Layout(Kind::scalar, Type::uint32); }
     [ForceInline]
     static uint printable_data_count() { return 1; }
     [ForceInline]
     uint get_printable_data(uint index) { return this; }
+};
+
+extension uint64_t : IPrintable {
+    [ForceInline]
+    static Layout printable_layout() { return Layout(Kind::scalar, Type::uint64); }
+    [ForceInline]
+    static uint printable_data_count() { return 2; }
+    [ForceInline]
+    uint get_printable_data(uint index) { return index == 0 ? uint(this & 0xffffffffu) : uint(this >> 32); }
 };
 
 extension float16_t : IPrintable {

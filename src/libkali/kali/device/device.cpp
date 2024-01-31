@@ -452,6 +452,11 @@ void Device::flush_print()
         m_debug_printer->flush();
 }
 
+std::string Device::flush_print_to_string()
+{
+    return m_debug_printer ? m_debug_printer->flush_to_string() : "";
+}
+
 void Device::end_frame()
 {
     if (m_frame_fence->signaled_value() > IN_FLIGHT_FRAME_COUNT)

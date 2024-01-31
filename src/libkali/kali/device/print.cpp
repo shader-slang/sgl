@@ -26,8 +26,14 @@ namespace print_buffer {
     /// This needs to be in sync with the enum in print.slang.
     enum class Type {
         boolean,
+        int8,
+        int16,
         int32,
+        int64,
+        uint8,
+        uint16,
         uint32,
+        uint64,
         float16,
         float32,
         float64,
@@ -137,11 +143,29 @@ namespace print_buffer {
         case Type::boolean:
             arg_store.push_back(decode_value<bool>(data.subspan(4), layout));
             break;
+        case Type::int8:
+            arg_store.push_back(decode_value<int8_t>(data.subspan(4), layout));
+            break;
+        case Type::int16:
+            arg_store.push_back(decode_value<int16_t>(data.subspan(4), layout));
+            break;
         case Type::int32:
             arg_store.push_back(decode_value<int32_t>(data.subspan(4), layout));
             break;
+        case Type::int64:
+            arg_store.push_back(decode_value<int64_t>(data.subspan(4), layout));
+            break;
+        case Type::uint8:
+            arg_store.push_back(decode_value<uint8_t>(data.subspan(4), layout));
+            break;
+        case Type::uint16:
+            arg_store.push_back(decode_value<uint16_t>(data.subspan(4), layout));
+            break;
         case Type::uint32:
             arg_store.push_back(decode_value<uint32_t>(data.subspan(4), layout));
+            break;
+        case Type::uint64:
+            arg_store.push_back(decode_value<uint64_t>(data.subspan(4), layout));
             break;
         case Type::float16:
             arg_store.push_back(decode_value<float16_t>(data.subspan(4), layout));
@@ -251,14 +275,7 @@ void DebugPrinter::add_hashed_strings(const std::map<uint32_t, std::string>& has
 
 void DebugPrinter::flush()
 {
-    ref<CommandBuffer> command_buffer = m_device->create_command_buffer();
-    command_buffer->break_strong_reference_to_device();
-    command_buffer->copy_resource(m_readback_buffer, m_buffer);
-    command_buffer->clear_resource_view(m_buffer->get_uav(0, 4), uint4(0));
-    command_buffer->submit();
-    m_device->graphics_queue()->signal(m_fence);
-
-    m_fence->wait();
+    flush_device(true);
     const void* data = m_readback_buffer->map();
     print_buffer::decode_buffer(
         data,
@@ -269,12 +286,43 @@ void DebugPrinter::flush()
     m_readback_buffer->unmap();
 }
 
+std::string DebugPrinter::flush_to_string()
+{
+    flush_device(true);
+    std::string result;
+    const void* data = m_readback_buffer->map();
+    print_buffer::decode_buffer(
+        data,
+        m_readback_buffer->size(),
+        m_hashed_strings,
+        [&result](std::string_view str)
+        {
+            result += str;
+            result += "\n";
+        }
+    );
+    m_readback_buffer->unmap();
+    return result;
+}
+
 void DebugPrinter::bind(ShaderCursor cursor)
 {
     if (cursor.is_valid())
         cursor = cursor.find_field("g_debug_printer");
     if (cursor.is_valid())
         cursor["buffer"] = m_buffer;
+}
+
+void DebugPrinter::flush_device(bool wait)
+{
+    ref<CommandBuffer> command_buffer = m_device->create_command_buffer();
+    command_buffer->break_strong_reference_to_device();
+    command_buffer->copy_resource(m_readback_buffer, m_buffer);
+    command_buffer->clear_resource_view(m_buffer->get_uav(0, 4), uint4(0));
+    command_buffer->submit();
+    m_device->graphics_queue()->signal(m_fence);
+    if (wait)
+        m_fence->wait();
 }
 
 } // namespace kali

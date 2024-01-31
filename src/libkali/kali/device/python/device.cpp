@@ -603,6 +603,7 @@ KALI_PY_EXPORT(device_device)
     device.def_prop_ro("upload_heap", &Device::upload_heap);
     device.def_prop_ro("read_back_heap", &Device::read_back_heap);
     device.def("flush_print", &Device::flush_print);
+    device.def("flush_print_to_string", &Device::flush_print_to_string);
     device.def("end_frame", &Device::end_frame);
     device.def("wait", &Device::wait);
 

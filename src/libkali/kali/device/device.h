@@ -251,6 +251,9 @@ public:
     /// Block and flush all shader side debug print output.
     void flush_print();
 
+    /// Block and flush all shader side debug print output to a string.
+    std::string flush_print_to_string();
+
     void end_frame();
 
     void wait();
