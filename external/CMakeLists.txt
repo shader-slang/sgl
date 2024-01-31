@@ -27,6 +27,10 @@ nanobind_build_library(nanobind SHARED)
 
 # slang
 
+set(KALI_LOCAL_SLANG OFF CACHE BOOL "Use a local build of slang instead of downloading a prebuilt binary")
+set(KALI_LOCAL_SLANG_DIR "${CMAKE_SOURCE_DIR}/../slang" CACHE PATH "Path to a local slang build")
+set(KALI_LOCAL_SLANG_CONFIG "debug" CACHE STRING "Build configuration of the local slang build")
+
 set(SLANG_VERSION "2024.0.0")
 set(SLANG_URL_BASE "https://github.com/shader-slang/slang/releases/download/v${SLANG_VERSION}")
 
@@ -50,6 +54,13 @@ kali_download_package(slang ${SLANG_URL})
 
 set(SLANG_INCLUDE_DIR ${slang_SOURCE_DIR})
 set(SLANG_BIN_DIR ${slang_SOURCE_DIR}/${SLANG_BIN_PATH})
+
+if(KALI_LOCAL_SLANG)
+    set(SLANG_INCLUDE_DIR ${KALI_LOCAL_SLANG_DIR})
+    string(REPLACE release ${KALI_LOCAL_SLANG_CONFIG} SLANG_BIN_PATH ${SLANG_BIN_PATH})
+    set(SLANG_BIN_DIR ${KALI_LOCAL_SLANG_DIR}/${SLANG_BIN_PATH})
+endif()
+
 if(KALI_WINDOWS)
     add_library(slang::slang SHARED IMPORTED GLOBAL)
     set_target_properties(slang::slang PROPERTIES
