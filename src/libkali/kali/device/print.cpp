@@ -21,6 +21,7 @@ namespace print_buffer {
         vector,
         matrix,
     };
+    static_assert(int(Kind::matrix) <= 16, "Kind is encoded in 4 bits");
 
     /// Argument value type.
     /// This needs to be in sync with the enum in print.slang.
@@ -37,7 +38,9 @@ namespace print_buffer {
         float16,
         float32,
         float64,
+        count,
     };
+    static_assert(int(Type::count) <= 16, "Type is encoded in 4 bits");
 
     /// Argument value layout.
     struct Layout {
