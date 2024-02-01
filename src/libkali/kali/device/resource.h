@@ -248,7 +248,7 @@ public:
 
     ~ResourceView();
 
-    void invalidate();
+    void invalidate(bool deferred_release);
 
     const ResourceViewDesc& desc() const { return m_desc; }
 
@@ -351,6 +351,8 @@ protected:
     mutable ResourceStateTracker m_state_tracker;
 
     mutable std::unordered_map<ResourceViewDesc, ref<ResourceView>> m_views;
+
+    bool m_deferred_release{true};
 
     friend class ResourceView;
 };
@@ -672,7 +674,6 @@ public:
 private:
     TextureDesc m_desc;
     Slang::ComPtr<gfx::ITextureResource> m_gfx_texture;
-    bool m_deferred_release{true};
 };
 
 } // namespace kali

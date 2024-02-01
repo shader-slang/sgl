@@ -77,7 +77,7 @@ Resource::Resource(ref<Device> device, ResourceType type)
 Resource::~Resource()
 {
     for (auto& [desc, view] : m_views)
-        view->invalidate();
+        view->invalidate(m_deferred_release);
 }
 
 SharedResourceHandle Resource::get_shared_handle() const
@@ -169,10 +169,11 @@ ResourceView::~ResourceView()
         m_resource->device()->deferred_release(m_gfx_resource_view);
 }
 
-void ResourceView::invalidate()
+void ResourceView::invalidate(bool deferred_release)
 {
     if (m_resource) {
-        m_resource->device()->deferred_release(m_gfx_resource_view);
+        if (deferred_release)
+            m_resource->device()->deferred_release(m_gfx_resource_view);
         m_resource = nullptr;
     }
 }
@@ -562,11 +563,11 @@ Texture::Texture(ref<Device> device, TextureDesc desc)
 Texture::Texture(ref<Device> device, TextureDesc desc, gfx::ITextureResource* resource, bool deferred_release)
     : Resource(std::move(device), ResourceType(desc.type))
     , m_desc(std::move(desc))
-    , m_deferred_release(deferred_release)
 {
     process_texture_desc(m_desc);
 
     m_gfx_texture = resource;
+    m_deferred_release = deferred_release;
 }
 
 Texture::~Texture()
