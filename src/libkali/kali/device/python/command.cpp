@@ -191,8 +191,49 @@ KALI_PY_EXPORT(device_command)
         .def("set_stencil_reference", &RenderCommandEncoder::set_stencil_reference, "reference_value"_a)
         .def("set_vertex_buffer", &RenderCommandEncoder::set_vertex_buffer, "slot"_a, "buffer"_a, "offset"_a = 0)
         .def("set_index_buffer", &RenderCommandEncoder::set_index_buffer, "buffer"_a, "index_format"_a, "offset"_a = 0)
-        .def("draw", &RenderCommandEncoder::draw, "vertex_count"_a, "start_vertex"_a = 0);
-
+        .def("draw", &RenderCommandEncoder::draw, "vertex_count"_a, "start_vertex"_a = 0)
+        .def(
+            "draw_indexed",
+            &RenderCommandEncoder::draw_indexed,
+            "index_count"_a,
+            "start_index"_a = 0,
+            "base_vertex"_a = 0
+        )
+        .def(
+            "draw_instanced",
+            &RenderCommandEncoder::draw_instanced,
+            "vertex_count"_a,
+            "instance_count"_a,
+            "start_vertex"_a = 0,
+            "start_instance"_a = 0
+        )
+        .def(
+            "draw_indexed_instanced",
+            &RenderCommandEncoder::draw_indexed_instanced,
+            "index_count"_a,
+            "instance_count"_a,
+            "start_index"_a = 0,
+            "base_vertex"_a = 0,
+            "start_instance"_a = 0
+        )
+        .def(
+            "draw_indirect",
+            &RenderCommandEncoder::draw_indirect,
+            "max_draw_count"_a,
+            "arg_buffer"_a,
+            "arg_offset"_a,
+            "count_buffer"_a = nullptr,
+            "count_offset"_a = 0
+        )
+        .def(
+            "draw_indexed_indirect",
+            &RenderCommandEncoder::draw_indexed_indirect,
+            "max_draw_count"_a,
+            "arg_buffer"_a,
+            "arg_offset"_a,
+            "count_buffer"_a = nullptr,
+            "count_offset"_a = 0
+        );
 
     nb::class_<RayTracingCommandEncoder>(m, "RayTracingCommandEncoder")
         .def("__enter__", [](RayTracingCommandEncoder* self) { return self; })

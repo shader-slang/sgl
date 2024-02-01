@@ -373,6 +373,97 @@ void RenderCommandEncoder::draw(uint32_t vertex_count, uint32_t start_vertex)
     SLANG_CALL(m_gfx_render_command_encoder->draw(vertex_count, start_vertex));
 }
 
+void RenderCommandEncoder::draw_indexed(uint32_t index_count, uint32_t start_index, uint32_t base_vertex)
+{
+    KALI_CHECK(m_bound_pipeline, "No pipeline bound");
+
+#if KALI_HAS_CUDA
+    m_bound_shader_object->get_cuda_interop_buffers(m_command_buffer->m_cuda_interop_buffers);
+#endif
+
+    SLANG_CALL(m_gfx_render_command_encoder->drawIndexed(index_count, start_index, base_vertex));
+}
+
+void RenderCommandEncoder::draw_instanced(
+    uint32_t vertex_count,
+    uint32_t instance_count,
+    uint32_t start_vertex,
+    uint32_t start_instance
+)
+{
+    KALI_CHECK(m_bound_pipeline, "No pipeline bound");
+
+#if KALI_HAS_CUDA
+    m_bound_shader_object->get_cuda_interop_buffers(m_command_buffer->m_cuda_interop_buffers);
+#endif
+
+    SLANG_CALL(m_gfx_render_command_encoder->drawInstanced(vertex_count, instance_count, start_vertex, start_instance));
+}
+
+void RenderCommandEncoder::draw_indexed_instanced(
+    uint32_t index_count,
+    uint32_t instance_count,
+    uint32_t start_index,
+    uint32_t base_vertex,
+    uint32_t start_instance
+)
+{
+    KALI_CHECK(m_bound_pipeline, "No pipeline bound");
+
+#if KALI_HAS_CUDA
+    m_bound_shader_object->get_cuda_interop_buffers(m_command_buffer->m_cuda_interop_buffers);
+#endif
+
+    SLANG_CALL(m_gfx_render_command_encoder
+                   ->drawIndexedInstanced(index_count, instance_count, start_index, base_vertex, start_instance));
+}
+
+void RenderCommandEncoder::draw_indirect(
+    uint32_t max_draw_count,
+    const Buffer* arg_buffer,
+    DeviceOffset arg_offset,
+    const Buffer* count_buffer,
+    DeviceOffset count_offset
+)
+{
+    KALI_CHECK(m_bound_pipeline, "No pipeline bound");
+
+#if KALI_HAS_CUDA
+    m_bound_shader_object->get_cuda_interop_buffers(m_command_buffer->m_cuda_interop_buffers);
+#endif
+
+    SLANG_CALL(m_gfx_render_command_encoder->drawIndirect(
+        max_draw_count,
+        arg_buffer->gfx_buffer_resource(),
+        arg_offset,
+        count_buffer ? count_buffer->gfx_buffer_resource() : nullptr,
+        count_offset
+    ));
+}
+
+void RenderCommandEncoder::draw_indexed_indirect(
+    uint32_t max_draw_count,
+    const Buffer* arg_buffer,
+    DeviceOffset arg_offset,
+    const Buffer* count_buffer,
+    DeviceOffset count_offset
+)
+{
+    KALI_CHECK(m_bound_pipeline, "No pipeline bound");
+
+#if KALI_HAS_CUDA
+    m_bound_shader_object->get_cuda_interop_buffers(m_command_buffer->m_cuda_interop_buffers);
+#endif
+
+    SLANG_CALL(m_gfx_render_command_encoder->drawIndexedIndirect(
+        max_draw_count,
+        arg_buffer->gfx_buffer_resource(),
+        arg_offset,
+        count_buffer ? count_buffer->gfx_buffer_resource() : nullptr,
+        count_offset
+    ));
+}
+
 // ----------------------------------------------------------------------------
 // RayTracingCommandEncoder
 // ----------------------------------------------------------------------------
