@@ -20,6 +20,8 @@ public:
     const TypeLayoutReflection* type_layout() const { return m_type_layout; }
     const TypeReflection* type() const { return m_type_layout->type(); }
 
+    ShaderOffset offset() const { return m_offset; }
+
     bool is_valid() const { return m_offset.is_valid(); }
 
     std::string to_string() const;

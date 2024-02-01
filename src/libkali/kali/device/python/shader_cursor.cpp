@@ -14,9 +14,18 @@ KALI_PY_EXPORT(device_shader_cursor)
 {
     using namespace kali;
 
+    nb::class_<ShaderOffset>(m, "ShaderOffset")
+        .def_ro("uniform_offset", &ShaderOffset::uniform_offset)
+        .def_ro("binding_range_index", &ShaderOffset::binding_range_index)
+        .def_ro("binding_array_index", &ShaderOffset::binding_array_index)
+        .def("is_valid", &ShaderOffset::is_valid);
+
     nb::class_<ShaderCursor> shader_cursor(m, "ShaderCursor");
 
     shader_cursor.def(nb::init<ShaderObject*>(), "shader_object"_a);
+    shader_cursor.def_prop_ro("type_layout", &ShaderCursor::type_layout);
+    shader_cursor.def_prop_ro("type", &ShaderCursor::type);
+    shader_cursor.def_prop_ro("offset", &ShaderCursor::offset);
     shader_cursor.def("is_valid", &ShaderCursor::is_valid);
     shader_cursor.def("dereference", &ShaderCursor::dereference);
     shader_cursor.def("find_field", &ShaderCursor::find_field, "name"_a);
