@@ -182,6 +182,31 @@ KALI_ENUM_REGISTER(TextureReductionOp);
 // Graphics
 // ----------------------------------------------------------------------------
 
+struct IndirectDispatchArguments {
+    uint32_t thread_group_count_x;
+    uint32_t thread_group_count_y;
+    uint32_t thread_group_count_z;
+};
+
+// ----------------------------------------------------------------------------
+// Graphics
+// ----------------------------------------------------------------------------
+
+struct IndirectDrawArguments {
+    uint32_t vertex_count_per_instance{0};
+    uint32_t instance_count{1};
+    uint32_t start_vertex_location{0};
+    uint32_t start_instance_location{0};
+};
+
+struct IndirectDrawIndexedArguments {
+    uint32_t index_count_per_instance{0};
+    uint32_t instance_count{1};
+    uint32_t start_index_location{0};
+    int32_t base_vertex_location{0};
+    uint32_t start_instance_location{0};
+};
+
 struct Viewport {
     float x{0.f};
     float y{0.f};
@@ -467,17 +492,15 @@ struct AspectBlendDesc {
 };
 
 struct TargetBlendDesc {
+    bool enable_blend{false};
     AspectBlendDesc color;
     AspectBlendDesc alpha;
-    bool enable_blend{false};
     LogicOp logic_op{LogicOp::no_op};
     RenderTargetWriteMask write_mask{RenderTargetWriteMask::enable_all};
 };
 
 struct BlendDesc {
-    // TargetBlendDesc targets[kMaxRenderTargetCount];
-    uint32_t target_count{0};
-
+    std::vector<TargetBlendDesc> targets;
     bool alpha_to_coverage_enable{false};
 };
 
