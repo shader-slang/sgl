@@ -12,6 +12,7 @@ set(CTEST_OUTPUT_ON_FAILURE TRUE)
 enable_testing()
 
 include(GNUInstallDirs)
+include(CMakeRC)
 
 set(CMAKE_OSX_DEPLOYMENT_TARGET "13.0")
 
