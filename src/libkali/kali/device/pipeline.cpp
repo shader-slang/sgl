@@ -120,9 +120,33 @@ GraphicsPipeline::GraphicsPipeline(ref<Device> device, GraphicsPipelineDesc desc
             .enableConservativeRasterization = desc.rasterizer.enable_conservative_rasterization,
             .forcedSampleCount = desc.rasterizer.forced_sample_count,
         },
-        // TODO
-        .blend = {}
+        .blend = {
+            .targetCount = narrow_cast<gfx::GfxCount>(desc.blend.targets.size()),
+            .alphaToCoverageEnable = desc.blend.alpha_to_coverage_enable,
+        }
     };
+
+    KALI_CHECK(desc.blend.targets.size() <= 8, "Too many blend targets");
+
+    gfx::TargetBlendDesc* gfx_target = gfx_desc.blend.targets;
+    for (const auto& target : desc.blend.targets) {
+        *gfx_target++ = {
+            .color{
+                .srcFactor = static_cast<gfx::BlendFactor>(target.color.src_factor),
+                .dstFactor = static_cast<gfx::BlendFactor>(target.color.dst_factor),
+                .op = static_cast<gfx::BlendOp>(target.color.op),
+            },
+            .alpha{
+                .srcFactor = static_cast<gfx::BlendFactor>(target.alpha.src_factor),
+                .dstFactor = static_cast<gfx::BlendFactor>(target.alpha.dst_factor),
+                .op = static_cast<gfx::BlendOp>(target.alpha.op),
+            },
+            .enableBlend = target.enable_blend,
+            .logicOp = static_cast<gfx::LogicOp>(target.logic_op),
+            .writeMask = static_cast<gfx::RenderTargetWriteMaskT>(target.write_mask),
+        };
+    }
+
     SLANG_CALL(m_device->gfx_device()->createGraphicsPipelineState(gfx_desc, m_gfx_pipeline_state.writeRef()));
 }
 
