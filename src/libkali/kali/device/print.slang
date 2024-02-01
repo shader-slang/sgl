@@ -410,9 +410,9 @@ struct DebugPrinter : IPrintOutput {
 
 } // namespace detail
 
-ParameterBlock<detail::DebugPrinter> g_debug_printer;
-
 #if __KALI_DEVICE_PRINT_ENABLED
+
+ParameterBlock<detail::DebugPrinter> g_debug_printer;
 
 // clang-format off
 [ForceInline] void print(String fmt) { detail::print(g_debug_printer, fmt); }
