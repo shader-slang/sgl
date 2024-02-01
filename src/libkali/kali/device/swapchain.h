@@ -14,7 +14,7 @@ namespace kali {
 class Window;
 
 struct SwapchainDesc {
-    Format format{Format::unknown};
+    Format format{Format::rgba8_unorm_srgb};
     uint32_t width{0};
     uint32_t height{0};
     uint32_t image_count{3};
