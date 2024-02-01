@@ -132,6 +132,11 @@ target_sources(kali PRIVATE
 
     kali/stl/bit.h
 
+    kali/ui/fwd.h
+    kali/ui/imgui.slang
+    kali/ui/ui.cpp
+    kali/ui/ui.h
+
     kali/utils/tev.cpp
     kali/utils/tev.h
 
