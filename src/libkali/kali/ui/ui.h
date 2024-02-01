@@ -1,7 +1,8 @@
 #pragma once
 
-#include "kali/core/object.h"
 #include "kali/core/fwd.h"
+#include "kali/core/object.h"
+#include "kali/core/timer.h"
 
 #include "kali/device/fwd.h"
 
@@ -34,6 +35,7 @@ private:
     ref<Device> m_device;
     ImGuiContext* m_imgui_context;
 
+    Timer m_timer;
     uint32_t m_frame_index{0};
 
     ref<Sampler> m_sampler;

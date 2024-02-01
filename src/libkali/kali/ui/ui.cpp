@@ -352,7 +352,12 @@ ImFont* Context::get_font(const char* name)
 void Context::new_frame(uint32_t width, uint32_t height)
 {
     ImGui::SetCurrentContext(m_imgui_context);
-    ImGui::GetIO().DisplaySize = ImVec2(static_cast<float>(width), static_cast<float>(height));
+
+    ImGuiIO& io = ImGui::GetIO();
+    io.DisplaySize = ImVec2(static_cast<float>(width), static_cast<float>(height));
+    io.DeltaTime = static_cast<float>(m_timer.elapsed_s());
+    m_timer.reset();
+
     ImGui::NewFrame();
 }
 
