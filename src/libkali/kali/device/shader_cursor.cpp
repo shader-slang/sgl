@@ -327,20 +327,22 @@ void ShaderCursor::set_resource(const ref<ResourceView>& resource_view) const
 
     KALI_CHECK(is_resource_type(type), "'{}' cannot bind a resource", m_type_layout->name());
 
-    if (is_shader_resource_type(type)) {
-        KALI_CHECK(
-            resource_view->type() == ResourceViewType::shader_resource,
-            "'{}' expects a shader resource view",
-            m_type_layout->name()
-        );
-    } else if (is_unordered_access_type(type)) {
-        KALI_CHECK(
-            resource_view->type() == ResourceViewType::unordered_access,
-            "'{}' expects an unordered access view",
-            m_type_layout->name()
-        );
-    } else {
-        KALI_THROW("'{}' expects a valid resource view", m_type_layout->name());
+    if (resource_view) {
+        if (is_shader_resource_type(type)) {
+            KALI_CHECK(
+                resource_view->type() == ResourceViewType::shader_resource,
+                "'{}' expects a shader resource view",
+                m_type_layout->name()
+            );
+        } else if (is_unordered_access_type(type)) {
+            KALI_CHECK(
+                resource_view->type() == ResourceViewType::unordered_access,
+                "'{}' expects an unordered access view",
+                m_type_layout->name()
+            );
+        } else {
+            KALI_THROW("'{}' expects a valid resource view", m_type_layout->name());
+        }
     }
 
     m_shader_object->set_resource(m_offset, resource_view);
@@ -352,12 +354,16 @@ void ShaderCursor::set_buffer(const ref<Buffer>& buffer) const
 
     KALI_CHECK(is_buffer_resource_type(type), "'{}' cannot bind a buffer", m_type_layout->name());
 
-    if (is_shader_resource_type(type)) {
-        set_resource(buffer->get_srv());
-    } else if (is_unordered_access_type(type)) {
-        set_resource(buffer->get_uav());
+    if (buffer) {
+        if (is_shader_resource_type(type)) {
+            set_resource(buffer->get_srv());
+        } else if (is_unordered_access_type(type)) {
+            set_resource(buffer->get_uav());
+        } else {
+            KALI_THROW("'{}' expects a valid buffer", m_type_layout->name());
+        }
     } else {
-        KALI_THROW("'{}' expects a valid buffer", m_type_layout->name());
+        set_resource(nullptr);
     }
 }
 
@@ -367,12 +373,16 @@ void ShaderCursor::set_texture(const ref<Texture>& texture) const
 
     KALI_CHECK(is_texture_resource_type(type), "'{}' cannot bind a texture", m_type_layout->name());
 
-    if (is_shader_resource_type(type)) {
-        set_resource(texture->get_srv());
-    } else if (is_unordered_access_type(type)) {
-        set_resource(texture->get_uav());
+    if (texture) {
+        if (is_shader_resource_type(type)) {
+            set_resource(texture->get_srv());
+        } else if (is_unordered_access_type(type)) {
+            set_resource(texture->get_uav());
+        } else {
+            KALI_THROW("'{}' expects a valid texture", m_type_layout->name());
+        }
     } else {
-        KALI_THROW("'{}' expects a valid texture", m_type_layout->name());
+        set_resource(nullptr);
     }
 }
 

@@ -42,17 +42,21 @@ uint32_t ShaderObject::get_entry_point_count() const
 
 void ShaderObject::set_object(const ShaderOffset& offset, const ref<ShaderObject>& object)
 {
-    SLANG_CALL(m_shader_object->setObject(gfx_shader_offset(offset), object->gfx_shader_object()));
+    SLANG_CALL(m_shader_object->setObject(gfx_shader_offset(offset), object ? object->gfx_shader_object() : nullptr));
 }
 
 void ShaderObject::set_resource(const ShaderOffset& offset, const ref<ResourceView>& resource_view)
 {
-    SLANG_CALL(m_shader_object->setResource(gfx_shader_offset(offset), resource_view->gfx_resource_view()));
+    SLANG_CALL(m_shader_object->setResource(
+        gfx_shader_offset(offset),
+        resource_view ? resource_view->gfx_resource_view() : nullptr
+    ));
 }
 
 void ShaderObject::set_sampler(const ShaderOffset& offset, const ref<Sampler>& sampler)
 {
-    SLANG_CALL(m_shader_object->setSampler(gfx_shader_offset(offset), sampler->gfx_sampler_state()));
+    SLANG_CALL(m_shader_object->setSampler(gfx_shader_offset(offset), sampler ? sampler->gfx_sampler_state() : nullptr)
+    );
 }
 
 void ShaderObject::set_acceleration_structure(
@@ -60,9 +64,10 @@ void ShaderObject::set_acceleration_structure(
     const ref<AccelerationStructure>& acceleration_structure
 )
 {
-    SLANG_CALL(
-        m_shader_object->setResource(gfx_shader_offset(offset), acceleration_structure->gfx_acceleration_structure())
-    );
+    SLANG_CALL(m_shader_object->setResource(
+        gfx_shader_offset(offset),
+        acceleration_structure ? acceleration_structure->gfx_acceleration_structure() : nullptr
+    ));
 }
 
 void ShaderObject::set_data(const ShaderOffset& offset, void const* data, size_t size)
@@ -120,10 +125,8 @@ ref<ShaderObject> TransientShaderObject::get_object(const ShaderOffset& offset)
 
 void TransientShaderObject::set_object(const ShaderOffset& offset, const ref<ShaderObject>& object)
 {
-    if (m_command_buffer) {
-        if (ref<MutableShaderObject> mutable_object = dynamic_ref_cast<MutableShaderObject>(object)) {
-            mutable_object->set_resource_states(m_command_buffer);
-        }
+    if (ref<MutableShaderObject> mutable_object = dynamic_ref_cast<MutableShaderObject>(object)) {
+        mutable_object->set_resource_states(m_command_buffer);
     }
 
     ShaderObject::set_object(offset, object);
@@ -131,7 +134,7 @@ void TransientShaderObject::set_object(const ShaderOffset& offset, const ref<Sha
 
 void TransientShaderObject::set_resource(const ShaderOffset& offset, const ref<ResourceView>& resource_view)
 {
-    if (m_command_buffer) {
+    if (resource_view) {
         switch (resource_view->type()) {
         case ResourceViewType::unknown:
             break;
