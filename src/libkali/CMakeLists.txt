@@ -384,6 +384,7 @@ nanobind_add_module(kali_ext NB_STATIC LTO
     kali/math/python/quaternion.cpp
     kali/math/python/scalar.cpp
     kali/math/python/vector.cpp
+    kali/ui/python/ui.cpp
     kali/utils/python/tev.cpp
 )
 
