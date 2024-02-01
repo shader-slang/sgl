@@ -283,6 +283,15 @@ find_package(tevclient)
 ternary(KALI_HAS_TEVCLIENT ${tevclient_FOUND} ON OFF)
 
 # -----------------------------------------------------------------------------
+# Embedded resources
+# -----------------------------------------------------------------------------
+
+cmrc_add_resource_library(kali_data
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/fonts/Montserrat-Regular.ttf
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/fonts/Inconsolata-Regular.ttf
+)
+
+# -----------------------------------------------------------------------------
 # Sources
 # -----------------------------------------------------------------------------
 

@@ -294,6 +294,7 @@ target_link_libraries(kali
         Vulkan::Headers
         $<$<BOOL:${KALI_HAS_CUDA}>:CUDA::cuda_driver>
         $<$<BOOL:${KALI_HAS_CUDA}>:CUDA::cudart_static>
+        kali_data
     PRIVATE
         git_version
         glfw stb
