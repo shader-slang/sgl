@@ -23,10 +23,15 @@ enum class WindowMode {
 };
 
 struct WindowDesc {
+    /// Width of the window in pixels.
     uint32_t width;
+    /// Height of the window in pixels.
     uint32_t height;
+    /// Title of the window.
     std::string title;
+    /// Window mode.
     WindowMode mode{WindowMode::normal};
+    /// Whether the window is resizable.
     bool resizable{true};
 };
 
