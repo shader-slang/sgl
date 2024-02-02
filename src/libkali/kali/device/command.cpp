@@ -1255,6 +1255,12 @@ RenderCommandEncoder CommandBuffer::encode_render_commands(Framebuffer* framebuf
     KALI_CHECK(!m_pass_open, "CommandBuffer already has an active encoder");
     KALI_CHECK_NOT_NULL(framebuffer);
 
+    // Set the render target and depth-stencil barriers.
+    for (const auto& render_target : framebuffer->desc().render_targets)
+        texture_barrier(render_target.texture, ResourceState::render_target);
+    if (framebuffer->desc().depth_stencil)
+        texture_barrier(framebuffer->desc().depth_stencil->texture, ResourceState::depth_write);
+
     if (m_active_encoder != EncoderType::render) {
         end_current_encoder();
         m_gfx_command_encoder = m_gfx_command_buffer->encodeRenderCommands(
