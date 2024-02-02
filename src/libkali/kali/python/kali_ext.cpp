@@ -44,6 +44,7 @@ KALI_PY_DECLARE(math_matrix);
 KALI_PY_DECLARE(math_quaternion);
 
 KALI_PY_DECLARE(ui);
+KALI_PY_DECLARE(ui_widgets);
 
 KALI_PY_DECLARE(utils_tev);
 
@@ -102,6 +103,7 @@ NB_MODULE(kali_ext, m)
 
     m.def_submodule("ui", "UI module");
     KALI_PY_IMPORT(ui);
+    KALI_PY_IMPORT(ui_widgets);
 
     m.def_submodule("utils", "Utility module");
     KALI_PY_IMPORT(utils_tev);

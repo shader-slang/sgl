@@ -136,6 +136,8 @@ target_sources(kali PRIVATE
     kali/ui/imgui.slang
     kali/ui/ui.cpp
     kali/ui/ui.h
+    kali/ui/widgets.cpp
+    kali/ui/widgets.h
 
     kali/utils/tev.cpp
     kali/utils/tev.h
@@ -385,6 +387,7 @@ nanobind_add_module(kali_ext NB_STATIC LTO
     kali/math/python/scalar.cpp
     kali/math/python/vector.cpp
     kali/ui/python/ui.cpp
+    kali/ui/python/widgets.cpp
     kali/utils/python/tev.cpp
 )
 

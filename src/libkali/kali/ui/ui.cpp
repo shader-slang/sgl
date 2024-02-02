@@ -1,5 +1,7 @@
 #include "ui.h"
 
+#include "kali/ui/widgets.h"
+
 #include "kali/core/error.h"
 #include "kali/core/input.h"
 #include "kali/core/platform.h"
@@ -247,9 +249,11 @@ Context::Context(ref<Device> device)
     m_imgui_context = ImGui::CreateContext();
     ImGui::SetCurrentContext(m_imgui_context);
 
+    m_screen = ref<Screen>(new Screen());
+
     ImGuiIO& io = ImGui::GetIO();
     io.UserData = this;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard | ImGuiConfigFlags_NavNoCaptureKeyboard;
     io.IniFilename = nullptr;
 
     float scale_factor = platform::display_scale_factor();
@@ -355,8 +359,8 @@ void Context::new_frame(uint32_t width, uint32_t height)
 
     ImGuiIO& io = ImGui::GetIO();
     io.DisplaySize = ImVec2(static_cast<float>(width), static_cast<float>(height));
-    io.DeltaTime = static_cast<float>(m_timer.elapsed_s());
-    m_timer.reset();
+    io.DeltaTime = static_cast<float>(m_frame_timer.elapsed_s());
+    m_frame_timer.reset();
 
     ImGui::NewFrame();
 }
@@ -367,6 +371,8 @@ void Context::render(Framebuffer* framebuffer, CommandBuffer* command_buffer)
     ImGuiIO& io = ImGui::GetIO();
 
     bool is_srgb_format = get_format_info(framebuffer->desc().render_targets[0].texture->format()).is_srgb_format();
+
+    m_screen->render();
 
     ImGui::Render();
     ImDrawData* draw_data = ImGui::GetDrawData();
@@ -509,6 +515,11 @@ bool Context::handle_mouse_event(const MouseEvent& event)
     }
 
     return io.WantCaptureMouse;
+}
+
+void Context::process_events()
+{
+    m_screen->dispatch_events();
 }
 
 GraphicsPipeline* Context::get_pipeline(Framebuffer* framebuffer)

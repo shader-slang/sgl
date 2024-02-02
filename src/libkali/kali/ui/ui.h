@@ -1,5 +1,7 @@
 #pragma once
 
+#include "kali/ui/fwd.h"
+
 #include "kali/core/fwd.h"
 #include "kali/core/object.h"
 #include "kali/core/timer.h"
@@ -19,6 +21,8 @@ public:
     Context(ref<Device> device);
     ~Context();
 
+    ref<Screen> screen() const { return m_screen; }
+
     ImFont* get_font(const char* name);
 
     void new_frame(uint32_t width, uint32_t height);
@@ -26,6 +30,8 @@ public:
 
     bool handle_keyboard_event(const KeyboardEvent& event);
     bool handle_mouse_event(const MouseEvent& event);
+
+    void process_events();
 
 private:
     GraphicsPipeline* get_pipeline(Framebuffer* framebuffer);
@@ -35,8 +41,10 @@ private:
     ref<Device> m_device;
     ImGuiContext* m_imgui_context;
 
-    Timer m_timer;
+    ref<Screen> m_screen;
+
     uint32_t m_frame_index{0};
+    Timer m_frame_timer;
 
     ref<Sampler> m_sampler;
     ref<Buffer> m_vertex_buffers[FRAME_COUNT];

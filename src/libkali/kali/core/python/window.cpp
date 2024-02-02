@@ -5,7 +5,6 @@
 // GC traversal and clear functions for the window callbacks.
 // This is used to clean up cyclic references which can easily occur with callbacks.
 // See https://nanobind.readthedocs.io/en/latest/typeslots.html#reference-cycles-involving-functions
-
 int window_tp_traverse(PyObject* self, visitproc visit, void* arg)
 {
     kali::Window* window = nb::inst_ptr<kali::Window>(self);
@@ -30,24 +29,12 @@ int window_tp_traverse(PyObject* self, visitproc visit, void* arg)
 
 int window_tp_clear(PyObject* self)
 {
-    kali::Window* window = nb::inst_ptr<kali::Window>(self);
-
-#define CLEAR(callback) window->set_##callback(nullptr);
-
-    CLEAR(on_resize);
-    CLEAR(on_keyboard_event);
-    CLEAR(on_mouse_event);
-    CLEAR(on_gamepad_event);
-    CLEAR(on_gamepad_state);
-    CLEAR(on_drop_files);
-
-#undef CLEAR
-
+    KALI_UNUSED(self);
     return 0;
 }
 
 // Slot data structure referencing the above two functions.
-PyType_Slot window_slots[] = {
+PyType_Slot window_type_slots[] = {
     {Py_tp_traverse, (void*)window_tp_traverse},
     {Py_tp_clear, (void*)window_tp_clear},
     {0, nullptr},
@@ -62,7 +49,7 @@ KALI_PY_EXPORT(core_window)
         .value("minimized", WindowMode::minimized)
         .value("fullscreen", WindowMode::fullscreen);
 
-    nb::class_<Window, Object> window(m, "Window", nb::type_slots(window_slots));
+    nb::class_<Window, Object> window(m, "Window", nb::type_slots(window_type_slots));
     window.def(
         "__init__",
         [](Window* window, uint32_t width, uint32_t height, std::string title, WindowMode mode, bool resizable)
