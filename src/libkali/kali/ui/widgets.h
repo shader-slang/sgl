@@ -453,13 +453,13 @@ public:
     Drag(
         Widget* parent,
         std::string_view label = "",
-        Base::Callback callback = {},
+        typename Base::Callback callback = {},
         type value = type(0),
         float speed = 1.f,
         scalar_type min = scalar_type(0),
         scalar_type max = scalar_type(0),
         std::string_view format = default_format,
-        SliderFlags flags = SliderFlags::None
+        SliderFlags flags = SliderFlags::none
     )
         : Base(parent, label, callback, value)
         , m_speed(speed)
@@ -586,16 +586,6 @@ private:
     SliderFlags m_flags;
 };
 
-
-extern template Drag<float>;
-extern template Drag<float2>;
-extern template Drag<float3>;
-extern template Drag<float4>;
-extern template Drag<int>;
-extern template Drag<int2>;
-extern template Drag<int3>;
-extern template Drag<int4>;
-
 using DragFloat = Drag<float>;
 using DragFloat2 = Drag<float2>;
 using DragFloat3 = Drag<float3>;
@@ -626,12 +616,12 @@ public:
     Slider(
         Widget* parent,
         std::string_view label = "",
-        Base::Callback callback = {},
+        typename Base::Callback callback = {},
         type value = type(0),
         scalar_type min = scalar_type(0),
         scalar_type max = scalar_type(0),
         std::string_view format = default_format,
-        SliderFlags flags = SliderFlags::None
+        SliderFlags flags = SliderFlags::none
     )
         : Base(parent, label, callback, value)
         , m_min(min)

@@ -155,7 +155,8 @@
             "hidden": true,
             "inherits": "base",
             "cacheVariables": {
-                "VCPKG_TARGET_TRIPLET": "arm64-osx"
+                "VCPKG_TARGET_TRIPLET": "arm64-osx",
+                "CMAKE_APPLE_SILICON_PROCESSOR": "arm64"
             },
             "cmakeExecutable": "${sourceDir}/tools/host/cmake/CMake.app/Contents/bin/cmake"
         },
