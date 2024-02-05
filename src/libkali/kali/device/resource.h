@@ -96,19 +96,30 @@ KALI_ENUM_INFO(
 KALI_ENUM_REGISTER(ResourceState);
 
 enum class ResourceUsage : uint32_t {
-    none = 0x0,              ///< The resource will not be bound the pipeline. Use this to create a staging resource
-    vertex = 0x1,            ///< The resource will be bound as a vertex-buffer
-    index = 0x2,             ///< The resource will be bound as a index-buffer
-    constant = 0x4,          ///< The resource will be bound as a constant-buffer
-    stream_output = 0x8,     ///< The resource will be bound to the stream-output stage as an output buffer
-    shader_resource = 0x10,  ///< The resource will be bound as a shader-resource
-    unordered_access = 0x20, ///< The resource will be bound as an UAV
-    render_target = 0x40,    ///< The resource will be bound as a render-target
-    depth_stencil = 0x80,    ///< The resource will be bound as a depth-stencil buffer
-    indirect_arg = 0x100,    ///< The resource will be bound as an indirect argument buffer
-    shared = 0x200, ///< The resource will be shared with a different adapter. Mostly useful for sharing resoures with
-                    ///< CUDA
-    acceleration_structure = 0x80000000, ///< The resource will be bound as an acceleration structure
+    /// The resource will not be bound the pipeline. Use this to create a staging resource.
+    none = 0x0,
+    /// The resource will be bound as a vertex-buffer.
+    vertex = 0x1,
+    /// The resource will be bound as a index-buffer.
+    index = 0x2,
+    /// The resource will be bound as a constant-buffer.
+    constant = 0x4,
+    /// The resource will be bound to the stream-output stage as an output buffer.
+    stream_output = 0x8,
+    /// The resource will be bound as a shader-resource.
+    shader_resource = 0x10,
+    /// The resource will be bound as an UAV.
+    unordered_access = 0x20,
+    /// The resource will be bound as a render-target.
+    render_target = 0x40,
+    /// The resource will be bound as a depth-stencil buffer.
+    depth_stencil = 0x80,
+    /// The resource will be bound as an indirect argument buffer.
+    indirect_arg = 0x100,
+    /// The resource will be shared with a different adapter. Mostly useful for sharing resoures with CUDA.
+    shared = 0x200,
+    /// The resource will be bound as an acceleration structure
+    acceleration_structure = 0x80000000,
 };
 
 KALI_ENUM_INFO(

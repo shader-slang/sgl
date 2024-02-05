@@ -117,14 +117,22 @@ enum class Format : uint32_t {
 
 /// Resource format types.
 enum class FormatType {
-    unknown,    ///< Unknown format
-    typeless,   ///< Typeless formats
-    float_,     ///< Floating-point formats
-    unorm,      ///< Unsigned normalized formats
-    unorm_srgb, ///< Unsigned normalized SRGB formats
-    snorm,      ///< Signed normalized formats
-    uint,       ///< Unsigned integer formats
-    sint        ///< Signed integer formats
+    /// Unknown format.
+    unknown,
+    /// Typeless formats.
+    typeless,
+    /// Floating-point formats.
+    float_,
+    /// Unsigned normalized formats.
+    unorm,
+    /// Unsigned normalized SRGB formats.
+    unorm_srgb,
+    /// Signed normalized formats.
+    snorm,
+    /// Unsigned integer formats.
+    uint,
+    /// Signed integer formats.
+    sint
 };
 
 KALI_ENUM_INFO(

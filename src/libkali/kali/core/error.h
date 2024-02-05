@@ -56,8 +56,10 @@ namespace kali {
 
 enum class ExceptionDiagnosticFlags {
     none = 0,
-    break_debugger = 1, ///< Break into debugger when throwing an exception.
-    log = 2,            ///< Log exception message.
+    /// Break into debugger when throwing an exception.
+    break_debugger = 1,
+    /// Log exception message.
+    log = 2,
 };
 KALI_ENUM_CLASS_OPERATORS(ExceptionDiagnosticFlags);
 

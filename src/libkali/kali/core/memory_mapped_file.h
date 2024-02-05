@@ -14,9 +14,12 @@ namespace kali {
 class KALI_API MemoryMappedFile {
 public:
     enum class AccessHint {
-        normal,     ///< Good overall performance.
-        sequential, ///< Read file once with few seeks.
-        random      ///< Good for random access.
+        /// Good overall performance.
+        normal,
+        /// Read file once with few seeks.
+        sequential,
+        /// Good for random access.
+        random
     };
 
     static constexpr size_t WHOLE_FILE = std::numeric_limits<size_t>::max();
