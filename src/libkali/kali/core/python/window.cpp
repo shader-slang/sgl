@@ -44,12 +44,12 @@ KALI_PY_EXPORT(core_window)
 {
     using namespace kali;
 
-    nb::enum_<WindowMode>(m, "WindowMode")
+    nb::enum_<WindowMode>(m, "WindowMode", D(WindowMode))
         .value("normal", WindowMode::normal)
         .value("minimized", WindowMode::minimized)
         .value("fullscreen", WindowMode::fullscreen);
 
-    nb::class_<Window, Object> window(m, "Window", nb::type_slots(window_type_slots));
+    nb::class_<Window, Object> window(m, "Window", nb::type_slots(window_type_slots), D(Window));
     window.def(
         "__init__",
         [](Window* window, uint32_t width, uint32_t height, std::string title, WindowMode mode, bool resizable)
@@ -66,24 +66,53 @@ KALI_PY_EXPORT(core_window)
         "height"_a = 1024,
         "title"_a = "kali",
         "mode"_a = WindowMode::normal,
-        "resizable"_a = true
+        "resizable"_a = true,
+        D(Window, Window)
     );
-    window.def_prop_ro("width", &Window::width);
-    window.def_prop_ro("height", &Window::height);
-    window.def("resize", &Window::resize, "width"_a, "height"_a);
-    window.def_prop_rw("title", &Window::title, &Window::set_title);
-    window.def("close", &Window::close);
-    window.def("should_close", &Window::should_close);
-    window.def("process_events", &Window::process_events);
-    window.def("main_loop", &Window::main_loop);
-    window.def("set_clipboard", &Window::set_clipboard, "text"_a);
-    window.def("get_clipboard", &Window::get_clipboard);
+    window.def_prop_ro("width", &Window::width, D(Window, width));
+    window.def_prop_ro("height", &Window::height, D(Window, height));
+    window.def("resize", &Window::resize, "width"_a, "height"_a, D(Window, resize));
+    window.def_prop_rw("title", &Window::title, &Window::set_title, D(Window, title));
+    window.def("close", &Window::close, D(Window, close));
+    window.def("should_close", &Window::should_close, D(Window, should_close));
+    window.def("process_events", &Window::process_events, D(Window, process_events));
+    window.def("set_clipboard", &Window::set_clipboard, "text"_a, D(Window, set_clipboard));
+    window.def("get_clipboard", &Window::get_clipboard, D(Window, get_clipboard));
 
-    window.def_prop_rw("on_resize", &Window::on_resize, &Window::set_on_resize, nb::arg().none());
-    window
-        .def_prop_rw("on_keyboard_event", &Window::on_keyboard_event, &Window::set_on_keyboard_event, nb::arg().none());
-    window.def_prop_rw("on_mouse_event", &Window::on_mouse_event, &Window::set_on_mouse_event, nb::arg().none());
-    window.def_prop_rw("on_gamepad_event", &Window::on_gamepad_event, &Window::set_on_gamepad_event, nb::arg().none());
-    window.def_prop_rw("on_gamepad_state", &Window::on_gamepad_state, &Window::set_on_gamepad_state, nb::arg().none());
-    window.def_prop_rw("on_drop_files", &Window::on_drop_files, &Window::set_on_drop_files, nb::arg().none());
+    window.def_prop_rw("on_resize", &Window::on_resize, &Window::set_on_resize, nb::arg().none(), D(Window, on_resize));
+    window.def_prop_rw(
+        "on_keyboard_event",
+        &Window::on_keyboard_event,
+        &Window::set_on_keyboard_event,
+        nb::arg().none(),
+        D(Window, on_keyboard_event)
+    );
+    window.def_prop_rw(
+        "on_mouse_event",
+        &Window::on_mouse_event,
+        &Window::set_on_mouse_event,
+        nb::arg().none(),
+        D(Window, on_mouse_event)
+    );
+    window.def_prop_rw(
+        "on_gamepad_event",
+        &Window::on_gamepad_event,
+        &Window::set_on_gamepad_event,
+        nb::arg().none(),
+        D(Window, on_gamepad_event)
+    );
+    window.def_prop_rw(
+        "on_gamepad_state",
+        &Window::on_gamepad_state,
+        &Window::set_on_gamepad_state,
+        nb::arg().none(),
+        D(Window, on_gamepad_state)
+    );
+    window.def_prop_rw(
+        "on_drop_files",
+        &Window::on_drop_files,
+        &Window::set_on_drop_files,
+        nb::arg().none(),
+        D(Window, on_drop_files)
+    );
 }

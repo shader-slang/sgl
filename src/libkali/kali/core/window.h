@@ -16,12 +16,14 @@ struct GLFWwindow;
 
 namespace kali {
 
+/// Window modes.
 enum class WindowMode {
     normal,
     minimized,
     fullscreen,
 };
 
+/// Window description.
 struct WindowDesc {
     /// Width of the window in pixels.
     uint32_t width;
@@ -35,38 +37,53 @@ struct WindowDesc {
     bool resizable{true};
 };
 
+/**
+ * @brief Window class.
+ *
+ * Platform independent class for managing a window and handle input events.
+ */
 class KALI_API Window : public Object {
     KALI_OBJECT(Window)
 public:
+    /// Constructor.
+    /// @param desc The window description.
     Window(WindowDesc desc);
     ~Window();
 
     static ref<Window> create(WindowDesc desc) { return make_ref<Window>(desc); }
 
+    /// The native window handle.
     WindowHandle window_handle() const;
 
+    /// The width of the window in pixels.
     uint32_t width() const { return m_width; }
+    /// The height of the window in pixels.
     uint32_t height() const { return m_height; }
+
+    /// Resize the window.
+    /// @param width The new width of the window in pixels.
+    /// @param height The new height of the window in pixels.
     void resize(uint32_t width, uint32_t height);
 
-    // void set_position(uint2 position);
-    // uint2 get_position() const { return m_position; }
-
+    /// The title of the window.
     const std::string& title() const { return m_title; }
     void set_title(std::string title);
 
     void set_icon(const std::filesystem::path& path);
 
+    /// Close the window.
     void close();
+
+    /// True if the window should be closed.
     bool should_close() const;
 
+    /// Process any pending events.
     void process_events();
 
-    void main_loop();
-
-    // clipboard
-
+    /// Set the clipboard content.
     void set_clipboard(const std::string& text);
+
+    /// Get the clipboard content.
     std::optional<std::string> get_clipboard() const;
 
     // events
@@ -78,30 +95,36 @@ public:
     using GamepadStateCallback = std::function<void(const GamepadState& /* state */)>;
     using DropFilesCallback = std::function<void(std::span<const char*> /* files */)>;
 
+    /// Event handler to be called when the window is resized.
     const ResizeCallback& on_resize() const { return m_on_resize; }
     void set_on_resize(ResizeCallback on_resize) { m_on_resize = std::move(on_resize); }
 
+    /// Event handler to be called when a keyboard event occurs.
     const KeyboardEventCallback& on_keyboard_event() const { return m_on_keyboard_event; }
     void set_on_keyboard_event(KeyboardEventCallback on_keyboard_event)
     {
         m_on_keyboard_event = std::move(on_keyboard_event);
     }
 
+    /// Event handler to be called when a mouse event occurs.
     const MouseEventCallback& on_mouse_event() const { return m_on_mouse_event; }
     void set_on_mouse_event(MouseEventCallback on_mouse_event) { m_on_mouse_event = std::move(on_mouse_event); }
 
+    /// Event handler to be called when a gamepad event occurs.
     const GamepadEventCallback& on_gamepad_event() const { return m_on_gamepad_event; }
     void set_on_gamepad_event(GamepadEventCallback on_gamepad_event)
     {
         m_on_gamepad_event = std::move(on_gamepad_event);
     }
 
+    /// Event handler to be called when the gamepad state changes.
     const GamepadStateCallback& on_gamepad_state() const { return m_on_gamepad_state; }
     void set_on_gamepad_state(GamepadStateCallback on_gamepad_state)
     {
         m_on_gamepad_state = std::move(on_gamepad_state);
     }
 
+    /// Event handler to be called when files are dropped onto the window.
     const DropFilesCallback& on_drop_files() const { return m_on_drop_files; }
     void set_on_drop_files(DropFilesCallback on_drop_files) { m_on_drop_files = std::move(on_drop_files); }
 

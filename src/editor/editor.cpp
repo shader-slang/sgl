@@ -63,8 +63,6 @@ int main()
 
     Renderer renderer(window);
 
-    window->main_loop();
-
     kali::static_shutdown();
 
     return 0;

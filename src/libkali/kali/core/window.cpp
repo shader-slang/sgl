@@ -440,13 +440,6 @@ void Window::process_events()
     poll_gamepad_input();
 }
 
-void Window::main_loop()
-{
-    while (!should_close()) {
-        process_events();
-    }
-}
-
 void Window::set_clipboard(const std::string& text)
 {
     glfwSetClipboardString(m_window, text.c_str());
