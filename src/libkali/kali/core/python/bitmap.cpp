@@ -8,11 +8,11 @@ KALI_PY_EXPORT(core_bitmap)
 {
     using namespace kali;
 
-    nb::class_<Bitmap, Object> bitmap(m, "Bitmap");
+    nb::class_<Bitmap, Object> bitmap(m, "Bitmap", D(Bitmap));
 
-    nb::kali_enum<Bitmap::PixelFormat>(bitmap, "PixelFormat");
+    nb::kali_enum<Bitmap::PixelFormat>(bitmap, "PixelFormat", D(Bitmap, PixelFormat));
     bitmap.attr("ComponentType") = m.attr("Struct").attr("Type");
-    nb::kali_enum<Bitmap::FileFormat>(bitmap, "FileFormat");
+    nb::kali_enum<Bitmap::FileFormat>(bitmap, "FileFormat", D(Bitmap, FileFormat));
 
     bitmap //
         .def(
@@ -30,7 +30,8 @@ KALI_PY_EXPORT(core_bitmap)
             "width"_a,
             "height"_a,
             "channel_count"_a = 0,
-            "channel_names"_a = std::vector<std::string>{}
+            "channel_names"_a = std::vector<std::string>{},
+            D(Bitmap, Bitmap)
         )
         .def(
             "__init__",
@@ -94,21 +95,22 @@ KALI_PY_EXPORT(core_bitmap)
         .def(
             "__init__",
             [](Bitmap* self, const std::filesystem::path& path) { new (self) Bitmap(path); },
-            "path"_a
+            "path"_a,
+            D(Bitmap, Bitmap_3)
         )
-        .def_prop_ro("pixel_format", &Bitmap::pixel_format)
-        .def_prop_ro("component_type", &Bitmap::component_type)
-        .def_prop_ro("width", &Bitmap::width)
-        .def_prop_ro("height", &Bitmap::height)
-        .def_prop_ro("pixel_count", &Bitmap::pixel_count)
-        .def_prop_ro("channel_count", &Bitmap::channel_count)
-        .def_prop_ro("channel_names", &Bitmap::channel_names)
-        .def_prop_rw("srgb_gamma", &Bitmap::srgb_gamma, &Bitmap::set_srgb_gamma)
-        .def("has_alpha", &Bitmap::has_alpha)
-        .def_prop_ro("bytes_per_pixel", &Bitmap::bytes_per_pixel)
-        .def_prop_ro("buffer_size", &Bitmap::buffer_size)
-        .def("clear", &Bitmap::clear)
-        .def("vflip", &Bitmap::vflip)
+        .def_prop_ro("pixel_format", &Bitmap::pixel_format, D(Bitmap, pixel_format))
+        .def_prop_ro("component_type", &Bitmap::component_type, D(Bitmap, component_type))
+        .def_prop_ro("width", &Bitmap::width, D(Bitmap, width))
+        .def_prop_ro("height", &Bitmap::height, D(Bitmap, height))
+        .def_prop_ro("pixel_count", &Bitmap::pixel_count, D(Bitmap, pixel_count))
+        .def_prop_ro("channel_count", &Bitmap::channel_count, D(Bitmap, channel_count))
+        .def_prop_ro("channel_names", &Bitmap::channel_names, D(Bitmap, channel_names))
+        .def_prop_rw("srgb_gamma", &Bitmap::srgb_gamma, &Bitmap::set_srgb_gamma, D(Bitmap, srgb_gamma))
+        .def("has_alpha", &Bitmap::has_alpha, D(Bitmap, has_alpha))
+        .def_prop_ro("bytes_per_pixel", &Bitmap::bytes_per_pixel, D(Bitmap, bytes_per_pixel))
+        .def_prop_ro("buffer_size", &Bitmap::buffer_size, D(Bitmap, buffer_size))
+        .def("clear", &Bitmap::clear, D(Bitmap, clear))
+        .def("vflip", &Bitmap::vflip, D(Bitmap, vflip))
         .def(
             "convert",
             [](Bitmap& self,
@@ -124,17 +126,32 @@ KALI_PY_EXPORT(core_bitmap)
             },
             "pixel_format"_a = std::optional<Bitmap::PixelFormat>{},
             "component_type"_a = std::optional<Bitmap::ComponentType>{},
-            "srgb_gamma"_a = std::optional<bool>{}
+            "srgb_gamma"_a = std::optional<bool>{},
+            D(Bitmap, convert)
         )
         .def(
             "write",
             nb::overload_cast<const std::filesystem::path&, Bitmap::FileFormat, int>(&Bitmap::write, nb::const_),
             "path"_a,
             "format"_a = Bitmap::FileFormat::auto_,
-            "quality"_a = -1
+            "quality"_a = -1,
+            D(Bitmap, write)
         )
-        .def("write_async", &Bitmap::write_async, "path"_a, "format"_a = Bitmap::FileFormat::auto_, "quality"_a = -1)
-        .def_static("read_multiple", &Bitmap::read_multiple, "paths"_a, "format"_a = Bitmap::FileFormat::auto_)
+        .def(
+            "write_async",
+            &Bitmap::write_async,
+            "path"_a,
+            "format"_a = Bitmap::FileFormat::auto_,
+            "quality"_a = -1,
+            D(Bitmap, write_async)
+        )
+        .def_static(
+            "read_multiple",
+            &Bitmap::read_multiple,
+            "paths"_a,
+            "format"_a = Bitmap::FileFormat::auto_,
+            D(Bitmap, read_multiple)
+        )
         .def(nb::self == nb::self)
         .def(nb::self != nb::self)
         .def_prop_ro(
