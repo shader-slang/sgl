@@ -422,6 +422,50 @@ if(KALI_BUILD_PYTHON)
         )
     endif()
 
+    if(KALI_MASTER_PROJECT)
+        set(MKDOC_ARGS "")
+
+        # Add system include directories.
+        foreach(value ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES})
+            list(APPEND MKDOC_ARGS -I${value})
+        endforeach()
+
+        # Add target include directories.
+        get_target_property(list kali INCLUDE_DIRECTORIES)
+        foreach(value ${list})
+            list(APPEND MKDOC_ARGS -I${value})
+        endforeach()
+
+        get_target_property(list kali INTERFACE_INCLUDE_DIRECTORIES)
+        foreach(value ${list})
+            list(APPEND MKDOC_ARGS -I${value})
+        endforeach()
+
+        get_target_property(list slang::slang INTERFACE_INCLUDE_DIRECTORIES)
+        foreach(value ${list})
+            list(APPEND MKDOC_ARGS -I${value})
+        endforeach()
+
+        # Note: The current version of pybind11_mkdoc does not support C++20.
+        # Running this will result in the following error:
+        # ValueError: Unknown template argument kind 604
+        # To fix this, we need to manually change the cindex.py file in the
+        # clang package and add the following lines:
+        # > # A concept declaration
+        # > CursorKind.CONCEPT_DECL = CursorKind(604)
+        add_custom_target(pydoc USES_TERMINAL COMMAND
+            COMMAND ${Python_EXECUTABLE} -m pybind11_mkdoc -std=c++20 -stdlib=libc++
+            ${MKDOC_ARGS}
+            -I${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include
+            -I${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include
+            ${CMAKE_CURRENT_SOURCE_DIR}/kali/core/*.h
+            ${CMAKE_CURRENT_SOURCE_DIR}/kali/device/*.h
+            ${CMAKE_CURRENT_SOURCE_DIR}/kali/math/*.h
+            ${CMAKE_CURRENT_SOURCE_DIR}/kali/ui/*.h
+            ${CMAKE_CURRENT_SOURCE_DIR}/kali/utils/*.h
+            -o ${CMAKE_CURRENT_SOURCE_DIR}/kali/python/py_doc.h
+        )
+    endif()
 endif(KALI_BUILD_PYTHON)
 
 # -----------------------------------------------------------------------------
