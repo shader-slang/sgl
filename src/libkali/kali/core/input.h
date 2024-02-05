@@ -8,6 +8,7 @@
 
 namespace kali {
 
+/// Mouse buttons.
 enum class MouseButton : uint32_t {
     left,
     middle,
@@ -26,6 +27,7 @@ KALI_ENUM_INFO(
 );
 KALI_ENUM_REGISTER(MouseButton);
 
+/// Keyboard modifier flags.
 enum class KeyModifierFlags : uint32_t {
     none = 0,
     shift = 1,
@@ -45,6 +47,7 @@ KALI_ENUM_INFO(
 );
 KALI_ENUM_REGISTER(KeyModifierFlags);
 
+/// Keyboard modifiers.
 enum class KeyModifier : uint32_t {
     shift = (uint32_t)KeyModifierFlags::shift,
     ctrl = (uint32_t)KeyModifierFlags::ctrl,
@@ -61,6 +64,7 @@ KALI_ENUM_INFO(
 );
 KALI_ENUM_REGISTER(KeyModifier);
 
+/// Keyboard key codes.
 enum class KeyCode : uint32_t {
     // Key codes 0..255 are reserved for ASCII codes.
     space = ' ',
@@ -286,11 +290,16 @@ KALI_ENUM_INFO(
 );
 KALI_ENUM_REGISTER(KeyCode);
 
+/// Keyboard event types.
 enum class KeyboardEventType {
-    key_press,   ///< Key was pressed.
-    key_release, ///< Key was released.
-    key_repeat,  ///< Key is repeatedly down.
-    input        ///< Character input.
+    /// Key was pressed.
+    key_press,
+    /// Key was released.
+    key_release,
+    /// Key is repeatedly down.
+    key_repeat,
+    /// Character input.
+    input
 };
 
 KALI_ENUM_INFO(
@@ -304,27 +313,42 @@ KALI_ENUM_INFO(
 );
 KALI_ENUM_REGISTER(KeyboardEventType);
 
+/// Keyboard event.
 struct KALI_API KeyboardEvent {
-    KeyboardEventType type;        ///< The event type.
-    KeyCode key{KeyCode::unknown}; ///< The last key that was pressed/released.
-    uint32_t codepoint{0};         ///< UTF-32 codepoint from GLFW for events.
-    KeyModifierFlags mods{0};      ///< Keyboard modifier flags.
+    /// The event type.
+    KeyboardEventType type;
+    /// The key that was pressed/released/repeated.
+    KeyCode key{KeyCode::unknown};
+    /// UTF-32 codepoint for input events.
+    uint32_t codepoint{0};
+    /// Keyboard modifier flags.
+    KeyModifierFlags mods{0};
 
+    /// Returns true if this event is a key press event.
     bool is_key_press() const { return type == KeyboardEventType::key_press; }
+    /// Returns true if this event is a key release event.
     bool is_key_release() const { return type == KeyboardEventType::key_release; }
+    /// Returns true if this event is a key repeat event.
     bool is_key_repeat() const { return type == KeyboardEventType::key_repeat; }
+    /// Returns true if this event is an input event.
     bool is_input() const { return type == KeyboardEventType::input; }
 
+    /// Returns true if the specified modifier is set.
     bool has_modifier(KeyModifier mod) const { return is_set(mods, (KeyModifierFlags)mod); }
 
     std::string to_string() const;
 };
 
+/// Mouse event types.
 enum class MouseEventType {
-    button_down, ///< Mouse button was pressed.
-    button_up,   ///< Mouse button was released.
-    move,        ///< Mouse cursor position changed.
-    scroll       ///< Mouse wheel was scrolled.
+    /// Mouse button was pressed.
+    button_down,
+    /// Mouse button was released.
+    button_up,
+    /// Mouse cursor position changed.
+    move,
+    /// Mouse wheel was scrolled.
+    scroll
 };
 
 KALI_ENUM_INFO(
@@ -338,27 +362,43 @@ KALI_ENUM_INFO(
 );
 KALI_ENUM_REGISTER(MouseEventType);
 
+/// Mouse event.
 struct KALI_API MouseEvent {
+    /// The event type.
     MouseEventType type;
+    /// The mouse position.
     float2 pos{0.f, 0.f};
+    /// The scroll offset.
     float2 scroll{0.f, 0.f};
+    /// The mouse button that was pressed/released.
     MouseButton button{MouseButton::unknown};
+    /// Keyboard modifier flags.
     KeyModifierFlags mods{0};
 
+    /// Returns true if this event is a mouse button down event.
     bool is_button_down() const { return type == MouseEventType::button_down; }
+    /// Returns true if this event is a mouse button up event.
     bool is_button_up() const { return type == MouseEventType::button_up; }
+    /// Returns true if this event is a mouse move event.
     bool is_move() const { return type == MouseEventType::move; }
+    /// Returns true if this event is a mouse scroll event.
     bool is_scroll() const { return type == MouseEventType::scroll; }
 
+    /// Returns true if the specified modifier is set.
     bool has_modifier(KeyModifier mod) const { return is_set(mods, (KeyModifierFlags)mod); }
 
     std::string to_string() const;
 };
 
+/// Gamepad event types.
 enum class GamepadEventType {
+    /// Gamepad button was pressed.
     button_down,
+    /// Gamepad button was released.
     button_up,
+    /// Gamepad was connected.
     connect,
+    /// Gamepad was disconnected.
     disconnect,
 };
 
@@ -373,6 +413,7 @@ KALI_ENUM_INFO(
 );
 KALI_ENUM_REGISTER(GamepadEventType);
 
+/// Gamepad buttons.
 enum class GamepadButton : uint32_t {
     a,
     b,
@@ -413,23 +454,44 @@ KALI_ENUM_INFO(
 );
 KALI_ENUM_REGISTER(GamepadButton);
 
+/// Gamepad event.
 struct KALI_API GamepadEvent {
+    /// The event type.
     GamepadEventType type;
+    /// The gamepad button that was pressed/released.
     GamepadButton button;
+
+    /// Returns true if this event is a gamepad button down event.
+    bool is_button_down() const { return type == GamepadEventType::button_down; }
+    /// Returns true if this event is a gamepad button up event.
+    bool is_button_up() const { return type == GamepadEventType::button_up; }
+    /// Returns true if this event is a gamepad connect event.
+    bool is_connect() const { return type == GamepadEventType::connect; }
+    /// Returns true if this event is a gamepad disconnect event.
+    bool is_disconnect() const { return type == GamepadEventType::disconnect; }
 
     std::string to_string() const;
 };
 
+/// Gamepad state.
 struct KALI_API GamepadState {
+    /// X-axis of the left analog stick.
     float left_x;
+    /// Y-axis of the left analog stick.
     float left_y;
+    /// X-axis of the right analog stick.
     float right_x;
+    /// Y-axis of the right analog stick.
     float right_y;
+    /// Value of the left analog trigger.
     float left_trigger;
+    /// Value of the right analog trigger.
     float right_trigger;
 
+    /// Bitfield of gamepad buttons (see \ref GamepadButton).
     uint32_t buttons;
 
+    /// Returns true if the specified button is down.
     bool is_button_down(GamepadButton button) const { return buttons & (1 << uint32_t(button)); }
 
     std::string to_string() const;

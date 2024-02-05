@@ -2190,7 +2190,7 @@ static const char *__doc_kali_FrontFaceMode_info_items = R"doc()doc";
 
 static const char *__doc_kali_FrontFaceMode_info_name = R"doc()doc";
 
-static const char *__doc_kali_GamepadButton = R"doc()doc";
+static const char *__doc_kali_GamepadButton = R"doc(Gamepad buttons.)doc";
 
 static const char *__doc_kali_GamepadButton_a = R"doc()doc";
 
@@ -2230,17 +2230,17 @@ static const char *__doc_kali_GamepadButton_y = R"doc()doc";
 
 static const char *__doc_kali_GamepadEvent = R"doc()doc";
 
-static const char *__doc_kali_GamepadEvent_2 = R"doc()doc";
+static const char *__doc_kali_GamepadEvent_2 = R"doc(Gamepad event.)doc";
 
-static const char *__doc_kali_GamepadEventType = R"doc()doc";
+static const char *__doc_kali_GamepadEventType = R"doc(Gamepad event types.)doc";
 
-static const char *__doc_kali_GamepadEventType_button_down = R"doc()doc";
+static const char *__doc_kali_GamepadEventType_button_down = R"doc(Gamepad button was pressed.)doc";
 
-static const char *__doc_kali_GamepadEventType_button_up = R"doc()doc";
+static const char *__doc_kali_GamepadEventType_button_up = R"doc(Gamepad button was released.)doc";
 
-static const char *__doc_kali_GamepadEventType_connect = R"doc()doc";
+static const char *__doc_kali_GamepadEventType_connect = R"doc(Gamepad was connected.)doc";
 
-static const char *__doc_kali_GamepadEventType_disconnect = R"doc()doc";
+static const char *__doc_kali_GamepadEventType_disconnect = R"doc(Gamepad was disconnected.)doc";
 
 static const char *__doc_kali_GamepadEventType_info = R"doc()doc";
 
@@ -2248,31 +2248,39 @@ static const char *__doc_kali_GamepadEventType_info_items = R"doc()doc";
 
 static const char *__doc_kali_GamepadEventType_info_name = R"doc()doc";
 
-static const char *__doc_kali_GamepadEvent_button = R"doc()doc";
+static const char *__doc_kali_GamepadEvent_button = R"doc(The gamepad button that was pressed/released.)doc";
+
+static const char *__doc_kali_GamepadEvent_is_button_down = R"doc(Returns true if this event is a gamepad button down event.)doc";
+
+static const char *__doc_kali_GamepadEvent_is_button_up = R"doc(Returns true if this event is a gamepad button up event.)doc";
+
+static const char *__doc_kali_GamepadEvent_is_connect = R"doc(Returns true if this event is a gamepad connect event.)doc";
+
+static const char *__doc_kali_GamepadEvent_is_disconnect = R"doc(Returns true if this event is a gamepad disconnect event.)doc";
 
 static const char *__doc_kali_GamepadEvent_to_string = R"doc()doc";
 
-static const char *__doc_kali_GamepadEvent_type = R"doc()doc";
+static const char *__doc_kali_GamepadEvent_type = R"doc(The event type.)doc";
 
 static const char *__doc_kali_GamepadState = R"doc()doc";
 
-static const char *__doc_kali_GamepadState_2 = R"doc()doc";
+static const char *__doc_kali_GamepadState_2 = R"doc(Gamepad state.)doc";
 
-static const char *__doc_kali_GamepadState_buttons = R"doc()doc";
+static const char *__doc_kali_GamepadState_buttons = R"doc(Bitfield of gamepad buttons (see GamepadButton).)doc";
 
-static const char *__doc_kali_GamepadState_is_button_down = R"doc()doc";
+static const char *__doc_kali_GamepadState_is_button_down = R"doc(Returns true if the specified button is down.)doc";
 
-static const char *__doc_kali_GamepadState_left_trigger = R"doc()doc";
+static const char *__doc_kali_GamepadState_left_trigger = R"doc(Value of the left analog trigger.)doc";
 
-static const char *__doc_kali_GamepadState_left_x = R"doc()doc";
+static const char *__doc_kali_GamepadState_left_x = R"doc(X-axis of the left analog stick.)doc";
 
-static const char *__doc_kali_GamepadState_left_y = R"doc()doc";
+static const char *__doc_kali_GamepadState_left_y = R"doc(Y-axis of the left analog stick.)doc";
 
-static const char *__doc_kali_GamepadState_right_trigger = R"doc()doc";
+static const char *__doc_kali_GamepadState_right_trigger = R"doc(Value of the right analog trigger.)doc";
 
-static const char *__doc_kali_GamepadState_right_x = R"doc()doc";
+static const char *__doc_kali_GamepadState_right_x = R"doc(X-axis of the right analog stick.)doc";
 
-static const char *__doc_kali_GamepadState_right_y = R"doc()doc";
+static const char *__doc_kali_GamepadState_right_y = R"doc(Y-axis of the right analog stick.)doc";
 
 static const char *__doc_kali_GamepadState_to_string = R"doc()doc";
 
@@ -2410,7 +2418,7 @@ static const char *__doc_kali_Kernel_program = R"doc()doc";
 
 static const char *__doc_kali_Kernel_reflection = R"doc()doc";
 
-static const char *__doc_kali_KeyCode = R"doc()doc";
+static const char *__doc_kali_KeyCode = R"doc(Keyboard key codes.)doc";
 
 static const char *__doc_kali_KeyCode_a = R"doc()doc";
 
@@ -2630,9 +2638,9 @@ static const char *__doc_kali_KeyCode_y = R"doc()doc";
 
 static const char *__doc_kali_KeyCode_z = R"doc()doc";
 
-static const char *__doc_kali_KeyModifier = R"doc()doc";
+static const char *__doc_kali_KeyModifier = R"doc(Keyboard modifiers.)doc";
 
-static const char *__doc_kali_KeyModifierFlags = R"doc()doc";
+static const char *__doc_kali_KeyModifierFlags = R"doc(Keyboard modifier flags.)doc";
 
 static const char *__doc_kali_KeyModifierFlags_alt = R"doc()doc";
 
@@ -2662,9 +2670,9 @@ static const char *__doc_kali_KeyModifier_shift = R"doc()doc";
 
 static const char *__doc_kali_KeyboardEvent = R"doc()doc";
 
-static const char *__doc_kali_KeyboardEvent_2 = R"doc()doc";
+static const char *__doc_kali_KeyboardEvent_2 = R"doc(Keyboard event.)doc";
 
-static const char *__doc_kali_KeyboardEventType = R"doc()doc";
+static const char *__doc_kali_KeyboardEventType = R"doc(Keyboard event types.)doc";
 
 static const char *__doc_kali_KeyboardEventType_info = R"doc()doc";
 
@@ -2672,33 +2680,33 @@ static const char *__doc_kali_KeyboardEventType_info_items = R"doc()doc";
 
 static const char *__doc_kali_KeyboardEventType_info_name = R"doc()doc";
 
-static const char *__doc_kali_KeyboardEventType_input = R"doc(< Character input.)doc";
+static const char *__doc_kali_KeyboardEventType_input = R"doc(Character input.)doc";
 
-static const char *__doc_kali_KeyboardEventType_key_press = R"doc(< Key was pressed.)doc";
+static const char *__doc_kali_KeyboardEventType_key_press = R"doc(Key was pressed.)doc";
 
-static const char *__doc_kali_KeyboardEventType_key_release = R"doc(< Key was released.)doc";
+static const char *__doc_kali_KeyboardEventType_key_release = R"doc(Key was released.)doc";
 
-static const char *__doc_kali_KeyboardEventType_key_repeat = R"doc(< Key is repeatedly down.)doc";
+static const char *__doc_kali_KeyboardEventType_key_repeat = R"doc(Key is repeatedly down.)doc";
 
-static const char *__doc_kali_KeyboardEvent_codepoint = R"doc(< UTF-32 codepoint from GLFW for events.)doc";
+static const char *__doc_kali_KeyboardEvent_codepoint = R"doc(UTF-32 codepoint for input events.)doc";
 
-static const char *__doc_kali_KeyboardEvent_has_modifier = R"doc()doc";
+static const char *__doc_kali_KeyboardEvent_has_modifier = R"doc(Returns true if the specified modifier is set.)doc";
 
-static const char *__doc_kali_KeyboardEvent_is_input = R"doc()doc";
+static const char *__doc_kali_KeyboardEvent_is_input = R"doc(Returns true if this event is an input event.)doc";
 
-static const char *__doc_kali_KeyboardEvent_is_key_press = R"doc()doc";
+static const char *__doc_kali_KeyboardEvent_is_key_press = R"doc(Returns true if this event is a key press event.)doc";
 
-static const char *__doc_kali_KeyboardEvent_is_key_release = R"doc()doc";
+static const char *__doc_kali_KeyboardEvent_is_key_release = R"doc(Returns true if this event is a key release event.)doc";
 
-static const char *__doc_kali_KeyboardEvent_is_key_repeat = R"doc()doc";
+static const char *__doc_kali_KeyboardEvent_is_key_repeat = R"doc(Returns true if this event is a key repeat event.)doc";
 
-static const char *__doc_kali_KeyboardEvent_key = R"doc(< The last key that was pressed/released.)doc";
+static const char *__doc_kali_KeyboardEvent_key = R"doc(The key that was pressed/released/repeated.)doc";
 
-static const char *__doc_kali_KeyboardEvent_mods = R"doc(< Keyboard modifier flags.)doc";
+static const char *__doc_kali_KeyboardEvent_mods = R"doc(Keyboard modifier flags.)doc";
 
 static const char *__doc_kali_KeyboardEvent_to_string = R"doc()doc";
 
-static const char *__doc_kali_KeyboardEvent_type = R"doc(< The event type.)doc";
+static const char *__doc_kali_KeyboardEvent_type = R"doc(The event type.)doc";
 
 static const char *__doc_kali_LogFrequency = R"doc(Log frequency.)doc";
 
@@ -3197,7 +3205,7 @@ static const char *__doc_kali_MemoryType_read_back = R"doc()doc";
 
 static const char *__doc_kali_MemoryType_upload = R"doc()doc";
 
-static const char *__doc_kali_MouseButton = R"doc()doc";
+static const char *__doc_kali_MouseButton = R"doc(Mouse buttons.)doc";
 
 static const char *__doc_kali_MouseButton_info = R"doc()doc";
 
@@ -3215,13 +3223,13 @@ static const char *__doc_kali_MouseButton_unknown = R"doc()doc";
 
 static const char *__doc_kali_MouseEvent = R"doc()doc";
 
-static const char *__doc_kali_MouseEvent_2 = R"doc()doc";
+static const char *__doc_kali_MouseEvent_2 = R"doc(Mouse event.)doc";
 
-static const char *__doc_kali_MouseEventType = R"doc()doc";
+static const char *__doc_kali_MouseEventType = R"doc(Mouse event types.)doc";
 
-static const char *__doc_kali_MouseEventType_button_down = R"doc(< Mouse button was pressed.)doc";
+static const char *__doc_kali_MouseEventType_button_down = R"doc(Mouse button was pressed.)doc";
 
-static const char *__doc_kali_MouseEventType_button_up = R"doc(< Mouse button was released.)doc";
+static const char *__doc_kali_MouseEventType_button_up = R"doc(Mouse button was released.)doc";
 
 static const char *__doc_kali_MouseEventType_info = R"doc()doc";
 
@@ -3229,31 +3237,31 @@ static const char *__doc_kali_MouseEventType_info_items = R"doc()doc";
 
 static const char *__doc_kali_MouseEventType_info_name = R"doc()doc";
 
-static const char *__doc_kali_MouseEventType_move = R"doc(< Mouse cursor position changed.)doc";
+static const char *__doc_kali_MouseEventType_move = R"doc(Mouse cursor position changed.)doc";
 
-static const char *__doc_kali_MouseEventType_scroll = R"doc(< Mouse wheel was scrolled.)doc";
+static const char *__doc_kali_MouseEventType_scroll = R"doc(Mouse wheel was scrolled.)doc";
 
-static const char *__doc_kali_MouseEvent_button = R"doc()doc";
+static const char *__doc_kali_MouseEvent_button = R"doc(The mouse button that was pressed/released.)doc";
 
-static const char *__doc_kali_MouseEvent_has_modifier = R"doc()doc";
+static const char *__doc_kali_MouseEvent_has_modifier = R"doc(Returns true if the specified modifier is set.)doc";
 
-static const char *__doc_kali_MouseEvent_is_button_down = R"doc()doc";
+static const char *__doc_kali_MouseEvent_is_button_down = R"doc(Returns true if this event is a mouse button down event.)doc";
 
-static const char *__doc_kali_MouseEvent_is_button_up = R"doc()doc";
+static const char *__doc_kali_MouseEvent_is_button_up = R"doc(Returns true if this event is a mouse button up event.)doc";
 
-static const char *__doc_kali_MouseEvent_is_move = R"doc()doc";
+static const char *__doc_kali_MouseEvent_is_move = R"doc(Returns true if this event is a mouse move event.)doc";
 
-static const char *__doc_kali_MouseEvent_is_scroll = R"doc()doc";
+static const char *__doc_kali_MouseEvent_is_scroll = R"doc(Returns true if this event is a mouse scroll event.)doc";
 
-static const char *__doc_kali_MouseEvent_mods = R"doc()doc";
+static const char *__doc_kali_MouseEvent_mods = R"doc(Keyboard modifier flags.)doc";
 
-static const char *__doc_kali_MouseEvent_pos = R"doc()doc";
+static const char *__doc_kali_MouseEvent_pos = R"doc(The mouse position.)doc";
 
-static const char *__doc_kali_MouseEvent_scroll = R"doc()doc";
+static const char *__doc_kali_MouseEvent_scroll = R"doc(The scroll offset.)doc";
 
 static const char *__doc_kali_MouseEvent_to_string = R"doc()doc";
 
-static const char *__doc_kali_MouseEvent_type = R"doc()doc";
+static const char *__doc_kali_MouseEvent_type = R"doc(The event type.)doc";
 
 static const char *__doc_kali_MutableShaderObject = R"doc()doc";
 
