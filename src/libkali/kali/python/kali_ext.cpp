@@ -49,8 +49,12 @@ KALI_PY_DECLARE(ui_widgets);
 KALI_PY_DECLARE(utils_tev);
 
 
-NB_MODULE(kali_ext, m)
+NB_MODULE(kali_ext, m_)
 {
+    KALI_UNUSED(m_);
+    nb::module_ m = nb::module_::import_("kali");
+    m.attr("__doc__") = "kali";
+
     kali::static_init();
     kali::platform::set_python_active(true);
 
