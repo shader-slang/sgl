@@ -104,8 +104,7 @@ int widget_tp_traverse(PyObject* self, visitproc visit, void* arg)
     // Visit callback functions.
     // For now we rely on widgets to expose "_get_callback" methods that return the callback function.
     // It would be better to use the properties but I haven't figured out how to do that yet.
-
-    nb::handle self_obj = nb::borrow(self);
+    nb::handle self_obj = nb::handle(self);
 
 #define VISIT(callback)                                                                                                \
     {                                                                                                                  \
@@ -115,7 +114,7 @@ int widget_tp_traverse(PyObject* self, visitproc visit, void* arg)
         }                                                                                                              \
     }
 
-    VISIT(callback);
+    // VISIT(callback);
 
 #undef VISIT
 

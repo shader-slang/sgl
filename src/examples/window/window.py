@@ -10,7 +10,7 @@ class App:
         self.window = kali.Window(
             width=1920, height=1280, title="Example", resizable=True
         )
-        self.device = kali.Device(type=kali.DeviceType.vulkan, enable_debug_layers=True)
+        self.device = kali.Device(enable_debug_layers=True)
         self.swapchain = self.device.create_swapchain(
             format=kali.Format.rgba8_unorm_srgb,
             image_count=3,
