@@ -269,12 +269,6 @@ static const char *__doc_DXGI_FORMAT_DXGI_FORMAT_Y416 = R"doc()doc";
 
 static const char *__doc_DXGI_FORMAT_DXGI_FORMAT_YUY2 = R"doc()doc";
 
-static const char *__doc_GLFWwindow = R"doc()doc";
-
-static const char *__doc_ImFont = R"doc()doc";
-
-static const char *__doc_ImGuiContext = R"doc()doc";
-
 static const char *__doc_ImGui_PushFont = R"doc()doc";
 
 static const char *__doc_SourceLocation =
@@ -301,8 +295,6 @@ static const char *__doc_formatter_format = R"doc()doc";
 static const char *__doc_formatter_format_2 = R"doc()doc";
 
 static const char *__doc_kali_AccelerationStructure = R"doc()doc";
-
-static const char *__doc_kali_AccelerationStructure_2 = R"doc()doc";
 
 static const char *__doc_kali_AccelerationStructureBuildDesc = R"doc()doc";
 
@@ -365,8 +357,6 @@ static const char *__doc_kali_AccelerationStructureCopyMode_info_items = R"doc()
 static const char *__doc_kali_AccelerationStructureCopyMode_info_name = R"doc()doc";
 
 static const char *__doc_kali_AccelerationStructureDesc = R"doc()doc";
-
-static const char *__doc_kali_AccelerationStructureDesc_2 = R"doc()doc";
 
 static const char *__doc_kali_AccelerationStructureDesc_buffer = R"doc()doc";
 
@@ -447,8 +437,6 @@ static const char *__doc_kali_AspectBlendDesc_op = R"doc()doc";
 static const char *__doc_kali_AspectBlendDesc_src_factor = R"doc()doc";
 
 static const char *__doc_kali_Bitmap = R"doc()doc";
-
-static const char *__doc_kali_Bitmap_2 = R"doc()doc";
 
 static const char *__doc_kali_Bitmap_Bitmap = R"doc()doc";
 
@@ -692,15 +680,9 @@ static const char *__doc_kali_BlendOp_reverse_subtract = R"doc()doc";
 
 static const char *__doc_kali_BlendOp_subtract = R"doc()doc";
 
-static const char *__doc_kali_Blob = R"doc()doc";
-
 static const char *__doc_kali_Buffer = R"doc()doc";
 
-static const char *__doc_kali_Buffer_2 = R"doc()doc";
-
 static const char *__doc_kali_BufferDesc = R"doc()doc";
-
-static const char *__doc_kali_BufferDesc_2 = R"doc()doc";
 
 static const char *__doc_kali_BufferDesc_data = R"doc(Initial data to upload to the buffer.)doc";
 
@@ -795,8 +777,6 @@ static const char *__doc_kali_Buffer_to_string = R"doc()doc";
 static const char *__doc_kali_Buffer_unmap = R"doc(Unmap the buffer.)doc";
 
 static const char *__doc_kali_CommandBuffer = R"doc()doc";
-
-static const char *__doc_kali_CommandBuffer_2 = R"doc()doc";
 
 static const char *__doc_kali_CommandBuffer_CommandBuffer = R"doc()doc";
 
@@ -1086,11 +1066,7 @@ Parameter ``index``:
 
 static const char *__doc_kali_CommandQueue = R"doc()doc";
 
-static const char *__doc_kali_CommandQueue_2 = R"doc()doc";
-
 static const char *__doc_kali_CommandQueueDesc = R"doc()doc";
-
-static const char *__doc_kali_CommandQueueDesc_2 = R"doc()doc";
 
 static const char *__doc_kali_CommandQueueDesc_type = R"doc()doc";
 
@@ -1181,8 +1157,6 @@ static const char *__doc_kali_ComparisonFunc_not_equal = R"doc()doc";
 
 static const char *__doc_kali_ComputeCommandEncoder = R"doc()doc";
 
-static const char *__doc_kali_ComputeCommandEncoder_2 = R"doc()doc";
-
 static const char *__doc_kali_ComputeCommandEncoder_ComputeCommandEncoder = R"doc()doc";
 
 static const char *__doc_kali_ComputeCommandEncoder_ComputeCommandEncoder_2 = R"doc()doc";
@@ -1215,8 +1189,6 @@ static const char *__doc_kali_ComputeCommandEncoder_operator_assign_2 = R"doc()d
 
 static const char *__doc_kali_ComputeKernel = R"doc()doc";
 
-static const char *__doc_kali_ComputeKernel_2 = R"doc()doc";
-
 static const char *__doc_kali_ComputeKernel_ComputeKernel = R"doc()doc";
 
 static const char *__doc_kali_ComputeKernel_class_name = R"doc()doc";
@@ -1233,11 +1205,7 @@ static const char *__doc_kali_ComputeKernel_pipeline = R"doc()doc";
 
 static const char *__doc_kali_ComputePipeline = R"doc()doc";
 
-static const char *__doc_kali_ComputePipeline_2 = R"doc()doc";
-
 static const char *__doc_kali_ComputePipelineDesc = R"doc()doc";
-
-static const char *__doc_kali_ComputePipelineDesc_2 = R"doc()doc";
 
 static const char *__doc_kali_ComputePipelineDesc_program = R"doc()doc";
 
@@ -1249,9 +1217,7 @@ static const char *__doc_kali_ComputePipeline_thread_group_size = R"doc()doc";
 
 static const char *__doc_kali_ComputePipeline_to_string = R"doc()doc";
 
-static const char *__doc_kali_ConsoleLoggerOutput = R"doc()doc";
-
-static const char *__doc_kali_ConsoleLoggerOutput_2 =
+static const char *__doc_kali_ConsoleLoggerOutput =
 R"doc(Logger output that writes to the console. Error messages are printed
 to stderr, all other messages to stdout. Messages are optionally
 colored.)doc";
@@ -1280,17 +1246,13 @@ static const char *__doc_kali_CullMode_info_name = R"doc()doc";
 
 static const char *__doc_kali_CullMode_none = R"doc()doc";
 
-static const char *__doc_kali_DebugConsoleLoggerOutput = R"doc()doc";
-
-static const char *__doc_kali_DebugConsoleLoggerOutput_2 = R"doc(Logger output that writes to the debug console (Windows only).)doc";
+static const char *__doc_kali_DebugConsoleLoggerOutput = R"doc(Logger output that writes to the debug console (Windows only).)doc";
 
 static const char *__doc_kali_DebugConsoleLoggerOutput_to_string = R"doc()doc";
 
 static const char *__doc_kali_DebugConsoleLoggerOutput_write = R"doc()doc";
 
-static const char *__doc_kali_DebugPrinter = R"doc()doc";
-
-static const char *__doc_kali_DebugPrinter_2 =
+static const char *__doc_kali_DebugPrinter =
 R"doc(Debug printer.
 
 This class implements host-side support for shader debug printing.)doc";
@@ -1320,8 +1282,6 @@ static const char *__doc_kali_DebugPrinter_m_hashed_strings = R"doc()doc";
 static const char *__doc_kali_DebugPrinter_m_readback_buffer = R"doc()doc";
 
 static const char *__doc_kali_DefineList = R"doc()doc";
-
-static const char *__doc_kali_DefineList_2 = R"doc()doc";
 
 static const char *__doc_kali_DefineList_DefineList = R"doc()doc";
 
@@ -1396,11 +1356,7 @@ static const char *__doc_kali_DepthStencilOpDesc_stencil_pass_op = R"doc()doc";
 
 static const char *__doc_kali_Device = R"doc()doc";
 
-static const char *__doc_kali_Device_2 = R"doc()doc";
-
 static const char *__doc_kali_DeviceDesc = R"doc()doc";
-
-static const char *__doc_kali_DeviceDesc_2 = R"doc()doc";
 
 static const char *__doc_kali_DeviceDesc_adapter_luid = R"doc(Adapter LUID to select adapeter on which the device will be created.)doc";
 
@@ -1680,8 +1636,6 @@ static const char *__doc_kali_Device_wait = R"doc()doc";
 
 static const char *__doc_kali_EOFException = R"doc()doc";
 
-static const char *__doc_kali_EOFException_2 = R"doc()doc";
-
 static const char *__doc_kali_EOFException_EOFException = R"doc()doc";
 
 static const char *__doc_kali_EOFException_gcount = R"doc()doc";
@@ -1691,8 +1645,6 @@ static const char *__doc_kali_EOFException_m_gcount = R"doc()doc";
 static const char *__doc_kali_EntryPointLayout = R"doc()doc";
 
 static const char *__doc_kali_EntryPointLayout_2 = R"doc()doc";
-
-static const char *__doc_kali_EntryPointLayout_3 = R"doc()doc";
 
 static const char *__doc_kali_EntryPointLayout_base =
 R"doc(Cast to non-const base pointer. The underlying slang API is not const-
@@ -1720,19 +1672,15 @@ static const char *__doc_kali_EntryPointLayout_uses_any_sample_rate_input = R"do
 
 static const char *__doc_kali_ExceptionDiagnosticFlags = R"doc()doc";
 
-static const char *__doc_kali_ExceptionDiagnosticFlags_break_debugger = R"doc(< Break into debugger when throwing an exception.)doc";
+static const char *__doc_kali_ExceptionDiagnosticFlags_break_debugger = R"doc(Break into debugger when throwing an exception.)doc";
 
-static const char *__doc_kali_ExceptionDiagnosticFlags_log = R"doc(< Log exception message.)doc";
+static const char *__doc_kali_ExceptionDiagnosticFlags_log = R"doc(Log exception message.)doc";
 
 static const char *__doc_kali_ExceptionDiagnosticFlags_none = R"doc()doc";
 
 static const char *__doc_kali_Fence = R"doc(Fence.)doc";
 
-static const char *__doc_kali_Fence_2 = R"doc()doc";
-
 static const char *__doc_kali_FenceDesc = R"doc(Fence descriptor.)doc";
-
-static const char *__doc_kali_FenceDesc_2 = R"doc()doc";
 
 static const char *__doc_kali_FenceDesc_initial_value = R"doc(Initial fence value.)doc";
 
@@ -1804,9 +1752,7 @@ Parameter ``timeout_ns``:
     The timeout in nanoseconds. If ``TIMEOUT_INFINITE``, the function
     will block indefinitely.)doc";
 
-static const char *__doc_kali_FileLoggerOutput = R"doc()doc";
-
-static const char *__doc_kali_FileLoggerOutput_2 = R"doc(Logger output that writes to a file.)doc";
+static const char *__doc_kali_FileLoggerOutput = R"doc(Logger output that writes to a file.)doc";
 
 static const char *__doc_kali_FileLoggerOutput_FileLoggerOutput = R"doc()doc";
 
@@ -1821,8 +1767,6 @@ static const char *__doc_kali_FileLoggerOutput_to_string = R"doc()doc";
 static const char *__doc_kali_FileLoggerOutput_write = R"doc()doc";
 
 static const char *__doc_kali_FileStream = R"doc()doc";
-
-static const char *__doc_kali_FileStream_2 = R"doc()doc";
 
 static const char *__doc_kali_FileStream_FileStream = R"doc()doc";
 
@@ -1938,7 +1882,7 @@ static const char *__doc_kali_FormatInfo_vk_format = R"doc()doc";
 
 static const char *__doc_kali_FormatType = R"doc(Resource format types.)doc";
 
-static const char *__doc_kali_FormatType_float = R"doc(< Floating-point formats)doc";
+static const char *__doc_kali_FormatType_float = R"doc(Floating-point formats.)doc";
 
 static const char *__doc_kali_FormatType_info = R"doc()doc";
 
@@ -1946,19 +1890,19 @@ static const char *__doc_kali_FormatType_info_items = R"doc()doc";
 
 static const char *__doc_kali_FormatType_info_name = R"doc()doc";
 
-static const char *__doc_kali_FormatType_sint = R"doc(< Signed integer formats)doc";
+static const char *__doc_kali_FormatType_sint = R"doc(Signed integer formats.)doc";
 
-static const char *__doc_kali_FormatType_snorm = R"doc(< Signed normalized formats)doc";
+static const char *__doc_kali_FormatType_snorm = R"doc(Signed normalized formats.)doc";
 
-static const char *__doc_kali_FormatType_typeless = R"doc(< Typeless formats)doc";
+static const char *__doc_kali_FormatType_typeless = R"doc(Typeless formats.)doc";
 
-static const char *__doc_kali_FormatType_uint = R"doc(< Unsigned integer formats)doc";
+static const char *__doc_kali_FormatType_uint = R"doc(Unsigned integer formats.)doc";
 
-static const char *__doc_kali_FormatType_unknown = R"doc(< Unknown format)doc";
+static const char *__doc_kali_FormatType_unknown = R"doc(Unknown format.)doc";
 
-static const char *__doc_kali_FormatType_unorm = R"doc(< Unsigned normalized formats)doc";
+static const char *__doc_kali_FormatType_unorm = R"doc(Unsigned normalized formats.)doc";
 
-static const char *__doc_kali_FormatType_unorm_srgb = R"doc(< Unsigned normalized SRGB formats)doc";
+static const char *__doc_kali_FormatType_unorm_srgb = R"doc(Unsigned normalized SRGB formats.)doc";
 
 static const char *__doc_kali_Format_b5g5r5a1_unorm = R"doc()doc";
 
@@ -2134,11 +2078,7 @@ static const char *__doc_kali_Format_unknown = R"doc()doc";
 
 static const char *__doc_kali_Framebuffer = R"doc()doc";
 
-static const char *__doc_kali_Framebuffer_2 = R"doc()doc";
-
 static const char *__doc_kali_FramebufferAttachmentDesc = R"doc()doc";
-
-static const char *__doc_kali_FramebufferAttachmentDesc_2 = R"doc()doc";
 
 static const char *__doc_kali_FramebufferAttachmentDesc_base_array_layer = R"doc()doc";
 
@@ -2149,8 +2089,6 @@ static const char *__doc_kali_FramebufferAttachmentDesc_mip_level = R"doc()doc";
 static const char *__doc_kali_FramebufferAttachmentDesc_texture = R"doc()doc";
 
 static const char *__doc_kali_FramebufferDesc = R"doc()doc";
-
-static const char *__doc_kali_FramebufferDesc_2 = R"doc()doc";
 
 static const char *__doc_kali_FramebufferDesc_depth_stencil = R"doc()doc";
 
@@ -2228,9 +2166,7 @@ static const char *__doc_kali_GamepadButton_x = R"doc()doc";
 
 static const char *__doc_kali_GamepadButton_y = R"doc()doc";
 
-static const char *__doc_kali_GamepadEvent = R"doc()doc";
-
-static const char *__doc_kali_GamepadEvent_2 = R"doc(Gamepad event.)doc";
+static const char *__doc_kali_GamepadEvent = R"doc(Gamepad event.)doc";
 
 static const char *__doc_kali_GamepadEventType = R"doc(Gamepad event types.)doc";
 
@@ -2262,9 +2198,7 @@ static const char *__doc_kali_GamepadEvent_to_string = R"doc()doc";
 
 static const char *__doc_kali_GamepadEvent_type = R"doc(The event type.)doc";
 
-static const char *__doc_kali_GamepadState = R"doc()doc";
-
-static const char *__doc_kali_GamepadState_2 = R"doc(Gamepad state.)doc";
+static const char *__doc_kali_GamepadState = R"doc(Gamepad state.)doc";
 
 static const char *__doc_kali_GamepadState_buttons = R"doc(Bitfield of gamepad buttons (see GamepadButton).)doc";
 
@@ -2286,11 +2220,7 @@ static const char *__doc_kali_GamepadState_to_string = R"doc()doc";
 
 static const char *__doc_kali_GraphicsPipeline = R"doc()doc";
 
-static const char *__doc_kali_GraphicsPipeline_2 = R"doc()doc";
-
 static const char *__doc_kali_GraphicsPipelineDesc = R"doc()doc";
-
-static const char *__doc_kali_GraphicsPipelineDesc_2 = R"doc()doc";
 
 static const char *__doc_kali_GraphicsPipelineDesc_blend = R"doc()doc";
 
@@ -2366,11 +2296,7 @@ static const char *__doc_kali_InputElementDesc_semantic_name = R"doc(The name of
 
 static const char *__doc_kali_InputLayout = R"doc()doc";
 
-static const char *__doc_kali_InputLayout_2 = R"doc()doc";
-
 static const char *__doc_kali_InputLayoutDesc = R"doc()doc";
-
-static const char *__doc_kali_InputLayoutDesc_2 = R"doc()doc";
 
 static const char *__doc_kali_InputLayoutDesc_input_elements = R"doc()doc";
 
@@ -2403,8 +2329,6 @@ static const char *__doc_kali_InputSlotClass_per_instance = R"doc()doc";
 static const char *__doc_kali_InputSlotClass_per_vertex = R"doc()doc";
 
 static const char *__doc_kali_Kernel = R"doc()doc";
-
-static const char *__doc_kali_Kernel_2 = R"doc()doc";
 
 static const char *__doc_kali_Kernel_Kernel = R"doc()doc";
 
@@ -2668,9 +2592,7 @@ static const char *__doc_kali_KeyModifier_info_name = R"doc()doc";
 
 static const char *__doc_kali_KeyModifier_shift = R"doc()doc";
 
-static const char *__doc_kali_KeyboardEvent = R"doc()doc";
-
-static const char *__doc_kali_KeyboardEvent_2 = R"doc(Keyboard event.)doc";
+static const char *__doc_kali_KeyboardEvent = R"doc(Keyboard event.)doc";
 
 static const char *__doc_kali_KeyboardEventType = R"doc(Keyboard event types.)doc";
 
@@ -2730,11 +2652,7 @@ static const char *__doc_kali_LogLevel_warn = R"doc()doc";
 
 static const char *__doc_kali_Logger = R"doc()doc";
 
-static const char *__doc_kali_Logger_2 = R"doc()doc";
-
-static const char *__doc_kali_LoggerOutput = R"doc()doc";
-
-static const char *__doc_kali_LoggerOutput_2 = R"doc(Abstract base class for logger outputs.)doc";
+static const char *__doc_kali_LoggerOutput = R"doc(Abstract base class for logger outputs.)doc";
 
 static const char *__doc_kali_LoggerOutput_class_name = R"doc()doc";
 
@@ -2899,9 +2817,7 @@ static const char *__doc_kali_LogicOp_info_name = R"doc()doc";
 
 static const char *__doc_kali_LogicOp_no_op = R"doc()doc";
 
-static const char *__doc_kali_MemoryHeap = R"doc()doc";
-
-static const char *__doc_kali_MemoryHeap_2 =
+static const char *__doc_kali_MemoryHeap =
 R"doc(A memory heap is used to allocate temporary host-visible memory.
 
 A memory heap is a collection of memory pages. Each page has a buffer
@@ -2922,8 +2838,6 @@ destroyed, the allocation is released. This ensures that the memory is
 freed when it is no longer used.)doc";
 
 static const char *__doc_kali_MemoryHeapDesc = R"doc()doc";
-
-static const char *__doc_kali_MemoryHeapDesc_2 = R"doc()doc";
 
 static const char *__doc_kali_MemoryHeapDesc_debug_name = R"doc(The debug name of the heap.)doc";
 
@@ -3042,13 +2956,9 @@ static const char *__doc_kali_MemoryHeap_stats = R"doc(Statistics of the heap.)d
 
 static const char *__doc_kali_MemoryHeap_to_string = R"doc()doc";
 
-static const char *__doc_kali_MemoryMappedFile = R"doc()doc";
-
-static const char *__doc_kali_MemoryMappedFile_2 = R"doc(Utility class for reading memory-mapped files.)doc";
+static const char *__doc_kali_MemoryMappedFile = R"doc(Utility class for reading memory-mapped files.)doc";
 
 static const char *__doc_kali_MemoryMappedFileStream = R"doc()doc";
-
-static const char *__doc_kali_MemoryMappedFileStream_2 = R"doc()doc";
 
 static const char *__doc_kali_MemoryMappedFileStream_MemoryMappedFileStream = R"doc()doc";
 
@@ -3064,11 +2974,11 @@ static const char *__doc_kali_MemoryMappedFileStream_to_string = R"doc()doc";
 
 static const char *__doc_kali_MemoryMappedFile_AccessHint = R"doc()doc";
 
-static const char *__doc_kali_MemoryMappedFile_AccessHint_normal = R"doc(< Good overall performance.)doc";
+static const char *__doc_kali_MemoryMappedFile_AccessHint_normal = R"doc(Good overall performance.)doc";
 
-static const char *__doc_kali_MemoryMappedFile_AccessHint_random = R"doc(< Good for random access.)doc";
+static const char *__doc_kali_MemoryMappedFile_AccessHint_random = R"doc(Good for random access.)doc";
 
-static const char *__doc_kali_MemoryMappedFile_AccessHint_sequential = R"doc(< Read file once with few seeks.)doc";
+static const char *__doc_kali_MemoryMappedFile_AccessHint_sequential = R"doc(Read file once with few seeks.)doc";
 
 static const char *__doc_kali_MemoryMappedFile_MemoryMappedFile = R"doc(Default constructor. Use open() for opening a file.)doc";
 
@@ -3147,8 +3057,6 @@ Returns:
 static const char *__doc_kali_MemoryMappedFile_size = R"doc(Get the file size in bytes.)doc";
 
 static const char *__doc_kali_MemoryStream = R"doc()doc";
-
-static const char *__doc_kali_MemoryStream_2 = R"doc()doc";
 
 static const char *__doc_kali_MemoryStream_MemoryStream = R"doc(Create a read/write memory stream with the given initial capacity.)doc";
 
@@ -3232,9 +3140,7 @@ static const char *__doc_kali_MouseButton_right = R"doc()doc";
 
 static const char *__doc_kali_MouseButton_unknown = R"doc()doc";
 
-static const char *__doc_kali_MouseEvent = R"doc()doc";
-
-static const char *__doc_kali_MouseEvent_2 = R"doc(Mouse event.)doc";
+static const char *__doc_kali_MouseEvent = R"doc(Mouse event.)doc";
 
 static const char *__doc_kali_MouseEventType = R"doc(Mouse event types.)doc";
 
@@ -3275,8 +3181,6 @@ static const char *__doc_kali_MouseEvent_to_string = R"doc()doc";
 static const char *__doc_kali_MouseEvent_type = R"doc(The event type.)doc";
 
 static const char *__doc_kali_MutableShaderObject = R"doc()doc";
-
-static const char *__doc_kali_MutableShaderObject_2 = R"doc()doc";
 
 static const char *__doc_kali_MutableShaderObject_MutableShaderObject = R"doc()doc";
 
@@ -3438,9 +3342,7 @@ static const char *__doc_kali_NativeHandle_m_value = R"doc()doc";
 
 static const char *__doc_kali_NativeHandle_type = R"doc()doc";
 
-static const char *__doc_kali_Object = R"doc()doc";
-
-static const char *__doc_kali_Object_2 =
+static const char *__doc_kali_Object =
 R"doc(Object base class with intrusive reference counting
 
 The Object class provides a convenient foundation of a class hierarchy
@@ -3519,8 +3421,6 @@ R"doc(Return a string representation of this object. This is used for
 debugging purposes.)doc";
 
 static const char *__doc_kali_Pipeline = R"doc()doc";
-
-static const char *__doc_kali_Pipeline_2 = R"doc()doc";
 
 static const char *__doc_kali_Pipeline_Pipeline = R"doc()doc";
 
@@ -3792,8 +3692,6 @@ static const char *__doc_kali_ProgramLayout = R"doc()doc";
 
 static const char *__doc_kali_ProgramLayout_2 = R"doc()doc";
 
-static const char *__doc_kali_ProgramLayout_3 = R"doc()doc";
-
 static const char *__doc_kali_ProgramLayout_HashedString = R"doc()doc";
 
 static const char *__doc_kali_ProgramLayout_HashedString_hash = R"doc()doc";
@@ -3842,11 +3740,7 @@ static const char *__doc_kali_ProgramLayout_type_parameter_count = R"doc()doc";
 
 static const char *__doc_kali_QueryPool = R"doc()doc";
 
-static const char *__doc_kali_QueryPool_2 = R"doc()doc";
-
 static const char *__doc_kali_QueryPoolDesc = R"doc()doc";
-
-static const char *__doc_kali_QueryPoolDesc_2 = R"doc()doc";
 
 static const char *__doc_kali_QueryPoolDesc_count = R"doc()doc";
 
@@ -3955,8 +3849,6 @@ static const char *__doc_kali_RayTracingAABBsDesc_data = R"doc(Pointer to an arr
 static const char *__doc_kali_RayTracingAABBsDesc_stride = R"doc(Stride in bytes of the AABB values array.)doc";
 
 static const char *__doc_kali_RayTracingCommandEncoder = R"doc()doc";
-
-static const char *__doc_kali_RayTracingCommandEncoder_2 = R"doc()doc";
 
 static const char *__doc_kali_RayTracingCommandEncoder_RayTracingCommandEncoder = R"doc()doc";
 
@@ -4078,11 +3970,7 @@ static const char *__doc_kali_RayTracingKernel_pipeline = R"doc()doc";
 
 static const char *__doc_kali_RayTracingPipeline = R"doc()doc";
 
-static const char *__doc_kali_RayTracingPipeline_2 = R"doc()doc";
-
 static const char *__doc_kali_RayTracingPipelineDesc = R"doc()doc";
-
-static const char *__doc_kali_RayTracingPipelineDesc_2 = R"doc()doc";
 
 static const char *__doc_kali_RayTracingPipelineDesc_flags = R"doc()doc";
 
@@ -4188,8 +4076,6 @@ static const char *__doc_kali_ReflectionCursor_type_layout = R"doc()doc";
 
 static const char *__doc_kali_RenderCommandEncoder = R"doc()doc";
 
-static const char *__doc_kali_RenderCommandEncoder_2 = R"doc()doc";
-
 static const char *__doc_kali_RenderCommandEncoder_RenderCommandEncoder = R"doc()doc";
 
 static const char *__doc_kali_RenderCommandEncoder_RenderCommandEncoder_2 = R"doc()doc";
@@ -4275,8 +4161,6 @@ static const char *__doc_kali_Resolver = R"doc()doc";
 static const char *__doc_kali_Resolver_resolve = R"doc()doc";
 
 static const char *__doc_kali_Resource = R"doc()doc";
-
-static const char *__doc_kali_Resource_2 = R"doc()doc";
 
 static const char *__doc_kali_ResourceState = R"doc()doc";
 
@@ -4372,15 +4256,15 @@ static const char *__doc_kali_ResourceType_unknown = R"doc()doc";
 
 static const char *__doc_kali_ResourceUsage = R"doc()doc";
 
-static const char *__doc_kali_ResourceUsage_acceleration_structure = R"doc(< The resource will be bound as an acceleration structure)doc";
+static const char *__doc_kali_ResourceUsage_acceleration_structure = R"doc(The resource will be bound as an acceleration structure)doc";
 
-static const char *__doc_kali_ResourceUsage_constant = R"doc(< The resource will be bound as a constant-buffer)doc";
+static const char *__doc_kali_ResourceUsage_constant = R"doc(The resource will be bound as a constant-buffer.)doc";
 
-static const char *__doc_kali_ResourceUsage_depth_stencil = R"doc(< The resource will be bound as a depth-stencil buffer)doc";
+static const char *__doc_kali_ResourceUsage_depth_stencil = R"doc(The resource will be bound as a depth-stencil buffer.)doc";
 
-static const char *__doc_kali_ResourceUsage_index = R"doc(< The resource will be bound as a index-buffer)doc";
+static const char *__doc_kali_ResourceUsage_index = R"doc(The resource will be bound as a index-buffer.)doc";
 
-static const char *__doc_kali_ResourceUsage_indirect_arg = R"doc(< The resource will be bound as an indirect argument buffer)doc";
+static const char *__doc_kali_ResourceUsage_indirect_arg = R"doc(The resource will be bound as an indirect argument buffer.)doc";
 
 static const char *__doc_kali_ResourceUsage_info = R"doc()doc";
 
@@ -4389,32 +4273,28 @@ static const char *__doc_kali_ResourceUsage_info_items = R"doc()doc";
 static const char *__doc_kali_ResourceUsage_info_name = R"doc()doc";
 
 static const char *__doc_kali_ResourceUsage_none =
-R"doc(< The resource will not be bound the pipeline. Use this to create a
-staging resource)doc";
+R"doc(The resource will not be bound the pipeline. Use this to create a
+staging resource.)doc";
 
-static const char *__doc_kali_ResourceUsage_render_target = R"doc(< The resource will be bound as a render-target)doc";
+static const char *__doc_kali_ResourceUsage_render_target = R"doc(The resource will be bound as a render-target.)doc";
 
-static const char *__doc_kali_ResourceUsage_shader_resource = R"doc(< The resource will be bound as a shader-resource)doc";
+static const char *__doc_kali_ResourceUsage_shader_resource = R"doc(The resource will be bound as a shader-resource.)doc";
 
 static const char *__doc_kali_ResourceUsage_shared =
-R"doc(< The resource will be shared with a different adapter. Mostly useful
-for sharing resoures with < CUDA)doc";
+R"doc(The resource will be shared with a different adapter. Mostly useful
+for sharing resoures with CUDA.)doc";
 
 static const char *__doc_kali_ResourceUsage_stream_output =
-R"doc(< The resource will be bound to the stream-output stage as an output
-buffer)doc";
+R"doc(The resource will be bound to the stream-output stage as an output
+buffer.)doc";
 
-static const char *__doc_kali_ResourceUsage_unordered_access = R"doc(< The resource will be bound as an UAV)doc";
+static const char *__doc_kali_ResourceUsage_unordered_access = R"doc(The resource will be bound as an UAV.)doc";
 
-static const char *__doc_kali_ResourceUsage_vertex = R"doc(< The resource will be bound as a vertex-buffer)doc";
+static const char *__doc_kali_ResourceUsage_vertex = R"doc(The resource will be bound as a vertex-buffer.)doc";
 
 static const char *__doc_kali_ResourceView = R"doc()doc";
 
-static const char *__doc_kali_ResourceView_2 = R"doc()doc";
-
 static const char *__doc_kali_ResourceViewDesc = R"doc()doc";
-
-static const char *__doc_kali_ResourceViewDesc_2 = R"doc()doc";
 
 static const char *__doc_kali_ResourceViewDesc_buffer_element_size = R"doc()doc";
 
@@ -4509,11 +4389,7 @@ static const char *__doc_kali_Resource_type = R"doc()doc";
 
 static const char *__doc_kali_Sampler = R"doc()doc";
 
-static const char *__doc_kali_Sampler_2 = R"doc()doc";
-
 static const char *__doc_kali_SamplerDesc = R"doc()doc";
-
-static const char *__doc_kali_SamplerDesc_2 = R"doc()doc";
 
 static const char *__doc_kali_SamplerDesc_address_u = R"doc()doc";
 
@@ -4578,8 +4454,6 @@ static const char *__doc_kali_SearchPathsResolver_m_search_paths = R"doc()doc";
 static const char *__doc_kali_SearchPathsResolver_resolve = R"doc()doc";
 
 static const char *__doc_kali_ShaderCursor = R"doc()doc";
-
-static const char *__doc_kali_ShaderCursor_2 = R"doc()doc";
 
 static const char *__doc_kali_ShaderCursor_ShaderCursor = R"doc()doc";
 
@@ -4669,8 +4543,6 @@ static const char *__doc_kali_ShaderModel_unknown = R"doc()doc";
 
 static const char *__doc_kali_ShaderObject = R"doc()doc";
 
-static const char *__doc_kali_ShaderObject_2 = R"doc()doc";
-
 static const char *__doc_kali_ShaderObject_ShaderObject = R"doc()doc";
 
 static const char *__doc_kali_ShaderObject_class_name = R"doc()doc";
@@ -4733,10 +4605,6 @@ static const char *__doc_kali_ShaderOffset_uniform_offset = R"doc()doc";
 static const char *__doc_kali_ShaderOffset_zero = R"doc(Create a zero offset.)doc";
 
 static const char *__doc_kali_ShaderProgram = R"doc()doc";
-
-static const char *__doc_kali_ShaderProgram_2 = R"doc()doc";
-
-static const char *__doc_kali_ShaderProgram_3 = R"doc()doc";
 
 static const char *__doc_kali_ShaderProgram_ShaderProgram = R"doc()doc";
 
@@ -4804,11 +4672,7 @@ static const char *__doc_kali_ShaderStage_vertex = R"doc()doc";
 
 static const char *__doc_kali_ShaderTable = R"doc()doc";
 
-static const char *__doc_kali_ShaderTable_2 = R"doc()doc";
-
 static const char *__doc_kali_ShaderTableDesc = R"doc()doc";
-
-static const char *__doc_kali_ShaderTableDesc_2 = R"doc()doc";
 
 static const char *__doc_kali_ShaderTableDesc_callable_entry_points = R"doc()doc";
 
@@ -4872,8 +4736,6 @@ static const char *__doc_kali_SlangCompilerOptions_shader_model = R"doc()doc";
 
 static const char *__doc_kali_SlangComponentType = R"doc()doc";
 
-static const char *__doc_kali_SlangComponentType_2 = R"doc()doc";
-
 static const char *__doc_kali_SlangComponentType_SlangComponentType = R"doc()doc";
 
 static const char *__doc_kali_SlangComponentType_class_name = R"doc()doc";
@@ -4885,8 +4747,6 @@ static const char *__doc_kali_SlangComponentType_m_module = R"doc()doc";
 static const char *__doc_kali_SlangComponentType_module = R"doc()doc";
 
 static const char *__doc_kali_SlangEntryPoint = R"doc()doc";
-
-static const char *__doc_kali_SlangEntryPoint_2 = R"doc()doc";
 
 static const char *__doc_kali_SlangEntryPoint_SlangEntryPoint = R"doc()doc";
 
@@ -4908,8 +4768,6 @@ static const char *__doc_kali_SlangEntryPoint_to_string = R"doc()doc";
 
 static const char *__doc_kali_SlangGlobalScope = R"doc()doc";
 
-static const char *__doc_kali_SlangGlobalScope_2 = R"doc()doc";
-
 static const char *__doc_kali_SlangGlobalScope_SlangGlobalScope = R"doc()doc";
 
 static const char *__doc_kali_SlangGlobalScope_class_name = R"doc()doc";
@@ -4919,8 +4777,6 @@ static const char *__doc_kali_SlangGlobalScope_layout = R"doc()doc";
 static const char *__doc_kali_SlangGlobalScope_to_string = R"doc()doc";
 
 static const char *__doc_kali_SlangModule = R"doc()doc";
-
-static const char *__doc_kali_SlangModule_2 = R"doc()doc";
 
 static const char *__doc_kali_SlangModuleDesc = R"doc()doc";
 
@@ -4968,11 +4824,7 @@ static const char *__doc_kali_SlangModule_m_session = R"doc()doc";
 
 static const char *__doc_kali_SlangSession = R"doc()doc";
 
-static const char *__doc_kali_SlangSession_2 = R"doc()doc";
-
 static const char *__doc_kali_SlangSessionDesc = R"doc()doc";
-
-static const char *__doc_kali_SlangSessionDesc_2 = R"doc()doc";
 
 static const char *__doc_kali_SlangSessionDesc_compiler_options = R"doc()doc";
 
@@ -5022,9 +4874,7 @@ static const char *__doc_kali_StencilOp_replace = R"doc()doc";
 
 static const char *__doc_kali_StencilOp_zero = R"doc()doc";
 
-static const char *__doc_kali_Stream = R"doc()doc";
-
-static const char *__doc_kali_Stream_2 = R"doc(Base class for all stream objects.)doc";
+static const char *__doc_kali_Stream = R"doc(Base class for all stream objects.)doc";
 
 static const char *__doc_kali_Stream_class_name = R"doc()doc";
 
@@ -5058,18 +4908,14 @@ static const char *__doc_kali_Stream_write =
 R"doc(Write data to the stream. Throws an exception if not all data could be
 written.)doc";
 
-static const char *__doc_kali_Struct = R"doc()doc";
-
-static const char *__doc_kali_Struct_2 =
+static const char *__doc_kali_Struct =
 R"doc(Structured data definition.
 
 This class is used to describe a structured data type layout. It is
 used by the StructConverter class to convert between different
 layouts.)doc";
 
-static const char *__doc_kali_StructConverter = R"doc()doc";
-
-static const char *__doc_kali_StructConverter_2 =
+static const char *__doc_kali_StructConverter =
 R"doc(Struct converter.
 
 This helper class can be used to convert between structs with
@@ -5291,8 +5137,6 @@ static const char *__doc_kali_Struct_type_size = R"doc(Get the size of a type in
 
 static const char *__doc_kali_StructuredBufferDesc = R"doc()doc";
 
-static const char *__doc_kali_StructuredBufferDesc_2 = R"doc()doc";
-
 static const char *__doc_kali_StructuredBufferDesc_data = R"doc(Initial data to upload to the buffer.)doc";
 
 static const char *__doc_kali_StructuredBufferDesc_data_size = R"doc(Size of the initial data in bytes.)doc";
@@ -5345,11 +5189,7 @@ static const char *__doc_kali_SubresourceRange_texture_aspect = R"doc(Texture as
 
 static const char *__doc_kali_Swapchain = R"doc()doc";
 
-static const char *__doc_kali_Swapchain_2 = R"doc()doc";
-
 static const char *__doc_kali_SwapchainDesc = R"doc()doc";
-
-static const char *__doc_kali_SwapchainDesc_2 = R"doc()doc";
 
 static const char *__doc_kali_SwapchainDesc_enable_vsync = R"doc()doc";
 
@@ -5417,8 +5257,6 @@ static const char *__doc_kali_TargetBlendDesc_write_mask = R"doc()doc";
 
 static const char *__doc_kali_Texture = R"doc()doc";
 
-static const char *__doc_kali_Texture_2 = R"doc()doc";
-
 static const char *__doc_kali_TextureAddressingMode = R"doc()doc";
 
 static const char *__doc_kali_TextureAddressingMode_clamp_to_border = R"doc()doc";
@@ -5476,8 +5314,6 @@ static const char *__doc_kali_TextureChannelFlags_rgb = R"doc()doc";
 static const char *__doc_kali_TextureChannelFlags_rgba = R"doc()doc";
 
 static const char *__doc_kali_TextureDesc = R"doc()doc";
-
-static const char *__doc_kali_TextureDesc_2 = R"doc()doc";
 
 static const char *__doc_kali_TextureDesc_array_size = R"doc(Number of array slices (1 for non-array textures).)doc";
 
@@ -5621,9 +5457,7 @@ static const char *__doc_kali_Texture_to_string = R"doc()doc";
 
 static const char *__doc_kali_Texture_width = R"doc()doc";
 
-static const char *__doc_kali_Timer = R"doc()doc";
-
-static const char *__doc_kali_Timer_2 = R"doc(High resolution CPU timer.)doc";
+static const char *__doc_kali_Timer = R"doc(High resolution CPU timer.)doc";
 
 static const char *__doc_kali_Timer_Timer = R"doc()doc";
 
@@ -5650,8 +5484,6 @@ static const char *__doc_kali_Timer_now = R"doc(Current time point in nanosecond
 static const char *__doc_kali_Timer_reset = R"doc(Reset the timer.)doc";
 
 static const char *__doc_kali_TransientShaderObject = R"doc()doc";
-
-static const char *__doc_kali_TransientShaderObject_2 = R"doc()doc";
 
 static const char *__doc_kali_TransientShaderObject_TransientShaderObject = R"doc()doc";
 
@@ -5730,8 +5562,6 @@ static const char *__doc_kali_TypeLayoutReflection = R"doc()doc";
 
 static const char *__doc_kali_TypeLayoutReflection_2 = R"doc()doc";
 
-static const char *__doc_kali_TypeLayoutReflection_3 = R"doc()doc";
-
 static const char *__doc_kali_TypeLayoutReflection_alignment = R"doc()doc";
 
 static const char *__doc_kali_TypeLayoutReflection_base =
@@ -5783,8 +5613,6 @@ static const char *__doc_kali_TypeLayoutReflection_unwrap_array = R"doc()doc";
 static const char *__doc_kali_TypeReflection = R"doc()doc";
 
 static const char *__doc_kali_TypeReflection_2 = R"doc()doc";
-
-static const char *__doc_kali_TypeReflection_3 = R"doc()doc";
 
 static const char *__doc_kali_TypeReflection_Kind = R"doc()doc";
 
@@ -6026,8 +5854,6 @@ static const char *__doc_kali_TypeReflection_unwrap_array = R"doc()doc";
 
 static const char *__doc_kali_TypedBufferDesc = R"doc()doc";
 
-static const char *__doc_kali_TypedBufferDesc_2 = R"doc()doc";
-
 static const char *__doc_kali_TypedBufferDesc_data = R"doc(Initial data to upload to the buffer.)doc";
 
 static const char *__doc_kali_TypedBufferDesc_data_size = R"doc(Size of the initial data in bytes.)doc";
@@ -6048,8 +5874,6 @@ static const char *__doc_kali_VariableLayoutReflection = R"doc()doc";
 
 static const char *__doc_kali_VariableLayoutReflection_2 = R"doc()doc";
 
-static const char *__doc_kali_VariableLayoutReflection_3 = R"doc()doc";
-
 static const char *__doc_kali_VariableLayoutReflection_base =
 R"doc(Cast to non-const base pointer. The underlying slang API is not const-
 correct.)doc";
@@ -6067,8 +5891,6 @@ static const char *__doc_kali_VariableLayoutReflection_variable = R"doc()doc";
 static const char *__doc_kali_VariableReflection = R"doc()doc";
 
 static const char *__doc_kali_VariableReflection_2 = R"doc()doc";
-
-static const char *__doc_kali_VariableReflection_3 = R"doc()doc";
 
 static const char *__doc_kali_VariableReflection_base =
 R"doc(Cast to non-const base pointer. The underlying slang API is not const-
@@ -6102,17 +5924,11 @@ static const char *__doc_kali_Viewport_x = R"doc()doc";
 
 static const char *__doc_kali_Viewport_y = R"doc()doc";
 
-static const char *__doc_kali_Window = R"doc()doc";
-
-static const char *__doc_kali_Window_2 =
+static const char *__doc_kali_Window =
 R"doc(Window class.
 
 Platform independent class for managing a window and handle input
 events.)doc";
-
-static const char *__doc_kali_Window_3 = R"doc()doc";
-
-static const char *__doc_kali_Window_4 = R"doc()doc";
 
 static const char *__doc_kali_WindowDesc = R"doc(Window description.)doc";
 
@@ -6143,8 +5959,20 @@ static const char *__doc_kali_WindowMode_normal = R"doc()doc";
 static const char *__doc_kali_Window_Window =
 R"doc(Constructor.
 
-Parameter ``desc``:
-    The window description.)doc";
+Parameter ``width``:
+    Width of the window in pixels.
+
+Parameter ``height``:
+    Height of the window in pixels.
+
+Parameter ``title``:
+    Title of the window.
+
+Parameter ``mode``:
+    Window mode.
+
+Parameter ``resizable``:
+    Whether the window is resizable.)doc";
 
 static const char *__doc_kali_Window_class_name = R"doc()doc";
 
@@ -6305,16 +6133,6 @@ static const char *__doc_kali_clamp = R"doc(Clamp x to [lo..hi] range.)doc";
 static const char *__doc_kali_comparator = R"doc()doc";
 
 static const char *__doc_kali_comparator_operator_call = R"doc()doc";
-
-static const char *__doc_kali_cuda_Device = R"doc()doc";
-
-static const char *__doc_kali_cuda_ExternalMemory = R"doc()doc";
-
-static const char *__doc_kali_cuda_ExternalSemaphore = R"doc()doc";
-
-static const char *__doc_kali_cuda_InteropBuffer = R"doc()doc";
-
-static const char *__doc_kali_cuda_TensorView = R"doc()doc";
 
 static const char *__doc_kali_detail_HostTypeToFormat = R"doc()doc";
 
@@ -8329,8 +8147,6 @@ static const char *__doc_kali_throw_exception = R"doc(Throw an exception.)doc";
 
 static const char *__doc_kali_ui_Button = R"doc()doc";
 
-static const char *__doc_kali_ui_Button_2 = R"doc()doc";
-
 static const char *__doc_kali_ui_Button_Button = R"doc()doc";
 
 static const char *__doc_kali_ui_Button_callback = R"doc()doc";
@@ -8353,8 +8169,6 @@ static const char *__doc_kali_ui_Button_set_label = R"doc()doc";
 
 static const char *__doc_kali_ui_Checkbox = R"doc()doc";
 
-static const char *__doc_kali_ui_Checkbox_2 = R"doc()doc";
-
 static const char *__doc_kali_ui_Checkbox_Checkbox = R"doc()doc";
 
 static const char *__doc_kali_ui_Checkbox_class_name = R"doc()doc";
@@ -8362,8 +8176,6 @@ static const char *__doc_kali_ui_Checkbox_class_name = R"doc()doc";
 static const char *__doc_kali_ui_Checkbox_render = R"doc()doc";
 
 static const char *__doc_kali_ui_Combobox = R"doc()doc";
-
-static const char *__doc_kali_ui_Combobox_2 = R"doc()doc";
 
 static const char *__doc_kali_ui_Combobox_Combobox = R"doc()doc";
 
@@ -8378,8 +8190,6 @@ static const char *__doc_kali_ui_Combobox_render = R"doc()doc";
 static const char *__doc_kali_ui_Combobox_set_items = R"doc()doc";
 
 static const char *__doc_kali_ui_Context = R"doc()doc";
-
-static const char *__doc_kali_ui_Context_2 = R"doc()doc";
 
 static const char *__doc_kali_ui_Context_Context = R"doc()doc";
 
@@ -8473,8 +8283,6 @@ static const char *__doc_kali_ui_Event_sender = R"doc()doc";
 
 static const char *__doc_kali_ui_Group = R"doc()doc";
 
-static const char *__doc_kali_ui_Group_2 = R"doc()doc";
-
 static const char *__doc_kali_ui_Group_Group = R"doc()doc";
 
 static const char *__doc_kali_ui_Group_class_name = R"doc()doc";
@@ -8488,8 +8296,6 @@ static const char *__doc_kali_ui_Group_render = R"doc()doc";
 static const char *__doc_kali_ui_Group_set_label = R"doc()doc";
 
 static const char *__doc_kali_ui_ProgressBar = R"doc()doc";
-
-static const char *__doc_kali_ui_ProgressBar_2 = R"doc()doc";
 
 static const char *__doc_kali_ui_ProgressBar_ProgressBar = R"doc()doc";
 
@@ -8505,23 +8311,17 @@ static const char *__doc_kali_ui_ProgressBar_set_fraction = R"doc()doc";
 
 static const char *__doc_kali_ui_PropertyValue = R"doc()doc";
 
-static const char *__doc_kali_ui_ScopedDisable = R"doc()doc";
-
-static const char *__doc_kali_ui_ScopedDisable_2 = R"doc(Scoped begin/end for disabling ImGUI widgets.)doc";
+static const char *__doc_kali_ui_ScopedDisable = R"doc(Scoped begin/end for disabling ImGUI widgets.)doc";
 
 static const char *__doc_kali_ui_ScopedDisable_ScopedDisable = R"doc()doc";
 
 static const char *__doc_kali_ui_ScopedDisable_m_disabled = R"doc()doc";
 
-static const char *__doc_kali_ui_ScopedID = R"doc()doc";
-
-static const char *__doc_kali_ui_ScopedID_2 = R"doc(Scoped push/pop of ImGui ID.)doc";
+static const char *__doc_kali_ui_ScopedID = R"doc(Scoped push/pop of ImGui ID.)doc";
 
 static const char *__doc_kali_ui_ScopedID_ScopedID = R"doc()doc";
 
-static const char *__doc_kali_ui_Screen = R"doc()doc";
-
-static const char *__doc_kali_ui_Screen_2 =
+static const char *__doc_kali_ui_Screen =
 R"doc(This is the main widget that represents the screen. It is intended to
 be used as the parent for ``Window`` widgets.)doc";
 
@@ -8603,8 +8403,6 @@ static const char *__doc_kali_ui_Slider_set_min = R"doc()doc";
 
 static const char *__doc_kali_ui_Text = R"doc()doc";
 
-static const char *__doc_kali_ui_Text_2 = R"doc()doc";
-
 static const char *__doc_kali_ui_Text_Text = R"doc()doc";
 
 static const char *__doc_kali_ui_Text_class_name = R"doc()doc";
@@ -8641,11 +8439,9 @@ static const char *__doc_kali_ui_ValueProperty_set_value = R"doc()doc";
 
 static const char *__doc_kali_ui_ValueProperty_value = R"doc()doc";
 
-static const char *__doc_kali_ui_Widget = R"doc()doc";
+static const char *__doc_kali_ui_Widget = R"doc(Base class for Python UI widgets. Widgets own their children.)doc";
 
 static const char *__doc_kali_ui_Widget_2 = R"doc(Base class for Python UI widgets. Widgets own their children.)doc";
-
-static const char *__doc_kali_ui_Widget_3 = R"doc(Base class for Python UI widgets. Widgets own their children.)doc";
 
 static const char *__doc_kali_ui_Widget_Widget = R"doc()doc";
 
@@ -8684,8 +8480,6 @@ static const char *__doc_kali_ui_Widget_set_visible = R"doc()doc";
 static const char *__doc_kali_ui_Widget_visible = R"doc()doc";
 
 static const char *__doc_kali_ui_Window = R"doc()doc";
-
-static const char *__doc_kali_ui_Window_2 = R"doc()doc";
 
 static const char *__doc_kali_ui_Window_Window = R"doc()doc";
 
