@@ -343,123 +343,128 @@ foreach(file IN ZIP_LISTS binary_files_src binary_files_dst)
     add_custom_command(TARGET kali POST_BUILD COMMAND ${CMAKE_COMMAND} -E make_directory ${file_1} COMMAND ${CMAKE_COMMAND} -E copy_if_different ${file_0} ${file_1}/)
 endforeach()
 
-
-
-
-
 # -----------------------------------------------------------------------------
 # kali python bindings
 # -----------------------------------------------------------------------------
 
-nanobind_add_module(kali_ext NB_STATIC LTO
-    kali/python/kali_ext.cpp
-    kali/core/python/bitmap.cpp
-    kali/core/python/input.cpp
-    kali/core/python/logger.cpp
-    kali/core/python/object.cpp
-    kali/core/python/platform.cpp
-    kali/core/python/struct.cpp
-    kali/core/python/thread.cpp
-    kali/core/python/timer.cpp
-    kali/core/python/window.cpp
-    kali/device/python/command.cpp
-    kali/device/python/device_resource.cpp
-    kali/device/python/device.cpp
-    kali/device/python/fence.cpp
-    kali/device/python/formats.cpp
-    kali/device/python/framebuffer.cpp
-    kali/device/python/input_layout.cpp
-    kali/device/python/kernel.cpp
-    kali/device/python/memory_heap.cpp
-    kali/device/python/pipeline.cpp
-    kali/device/python/query.cpp
-    kali/device/python/raytracing.cpp
-    kali/device/python/reflection.cpp
-    kali/device/python/resource.cpp
-    kali/device/python/sampler.cpp
-    kali/device/python/shader_cursor.cpp
-    kali/device/python/shader_object.cpp
-    kali/device/python/shader.cpp
-    kali/device/python/swapchain.cpp
-    kali/device/python/types.cpp
-    kali/math/python/matrix.cpp
-    kali/math/python/quaternion.cpp
-    kali/math/python/scalar.cpp
-    kali/math/python/vector.cpp
-    kali/ui/python/ui.cpp
-    kali/ui/python/widgets.cpp
-    kali/utils/python/tev.cpp
-)
-
-if(KALI_ENABLE_PCH)
-    target_precompile_headers(kali_ext
-        PRIVATE
-            kali/python/kali_ext_pch.h
+if(KALI_BUILD_PYTHON)
+    nanobind_add_module(kali_ext NB_STATIC LTO
+        kali/python/kali_ext.cpp
+        kali/core/python/bitmap.cpp
+        kali/core/python/input.cpp
+        kali/core/python/logger.cpp
+        kali/core/python/object.cpp
+        kali/core/python/platform.cpp
+        kali/core/python/struct.cpp
+        kali/core/python/thread.cpp
+        kali/core/python/timer.cpp
+        kali/core/python/window.cpp
+        kali/device/python/command.cpp
+        kali/device/python/device_resource.cpp
+        kali/device/python/device.cpp
+        kali/device/python/fence.cpp
+        kali/device/python/formats.cpp
+        kali/device/python/framebuffer.cpp
+        kali/device/python/input_layout.cpp
+        kali/device/python/kernel.cpp
+        kali/device/python/memory_heap.cpp
+        kali/device/python/pipeline.cpp
+        kali/device/python/query.cpp
+        kali/device/python/raytracing.cpp
+        kali/device/python/reflection.cpp
+        kali/device/python/resource.cpp
+        kali/device/python/sampler.cpp
+        kali/device/python/shader_cursor.cpp
+        kali/device/python/shader_object.cpp
+        kali/device/python/shader.cpp
+        kali/device/python/swapchain.cpp
+        kali/device/python/types.cpp
+        kali/math/python/matrix.cpp
+        kali/math/python/quaternion.cpp
+        kali/math/python/scalar.cpp
+        kali/math/python/vector.cpp
+        kali/ui/python/ui.cpp
+        kali/ui/python/widgets.cpp
+        kali/utils/python/tev.cpp
     )
-endif()
 
-target_include_directories(kali_ext PRIVATE kali/python)
-
-target_link_libraries(kali_ext PRIVATE kali)
-set_target_properties(kali_ext PROPERTIES
-    OUTPUT_NAME kali_ext
-    ARCHIVE_OUTPUT_NAME kali_ext
-    RUNTIME_OUTPUT_DIRECTORY ${KALI_OUTPUT_DIRECTORY}/python/kali
-    LIBRARY_OUTPUT_DIRECTORY ${KALI_OUTPUT_DIRECTORY}/python/kali
-)
-
-# Generate python stub files.
-if(KALI_WINDOWS)
-    add_custom_command(
-        TARGET kali_ext POST_BUILD
-        COMMAND ${KALI_OUTPUT_DIRECTORY}/setpath.bat & ${Python_EXECUTABLE} -m nanobind_stubgen --out ${KALI_OUTPUT_DIRECTORY}/python kali
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tools/nanobind-stubgen
+    if(KALI_ENABLE_PCH)
+        target_precompile_headers(kali_ext
+            PRIVATE
+                kali/python/kali_ext_pch.h
         )
-endif()
-if(KALI_LINUX OR KALI_MACOS)
-    add_custom_command(
-        TARGET kali_ext POST_BUILD
-        WORKING_DIRECTORY ${KALI_OUTPUT_DIRECTORY}
-        COMMAND /bin/bash -c \"source ${KALI_OUTPUT_DIRECTORY}/setpath.sh && ${Python_EXECUTABLE} -m nanobind_stubgen --out ${KALI_OUTPUT_DIRECTORY}/python kali\"
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tools/nanobind-stubgen
-    )
-endif()
+    endif()
 
+    target_include_directories(kali_ext PRIVATE kali/python)
+
+    target_link_libraries(kali_ext PRIVATE kali)
+    set_target_properties(kali_ext PROPERTIES
+        OUTPUT_NAME kali_ext
+        ARCHIVE_OUTPUT_NAME kali_ext
+        RUNTIME_OUTPUT_DIRECTORY ${KALI_OUTPUT_DIRECTORY}/python/kali
+        LIBRARY_OUTPUT_DIRECTORY ${KALI_OUTPUT_DIRECTORY}/python/kali
+    )
+
+    # Generate python stub files.
+    if(KALI_WINDOWS)
+        add_custom_command(
+            TARGET kali_ext POST_BUILD
+            COMMAND ${KALI_OUTPUT_DIRECTORY}/setpath.bat & ${Python_EXECUTABLE} -m nanobind_stubgen --out ${KALI_OUTPUT_DIRECTORY}/python kali
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tools/nanobind-stubgen
+            )
+    endif()
+    if(KALI_LINUX OR KALI_MACOS)
+        add_custom_command(
+            TARGET kali_ext POST_BUILD
+            WORKING_DIRECTORY ${KALI_OUTPUT_DIRECTORY}
+            COMMAND /bin/bash -c \"source ${KALI_OUTPUT_DIRECTORY}/setpath.sh && ${Python_EXECUTABLE} -m nanobind_stubgen --out ${KALI_OUTPUT_DIRECTORY}/python kali\"
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tools/nanobind-stubgen
+        )
+    endif()
+
+endif(KALI_BUILD_PYTHON)
 
 # -----------------------------------------------------------------------------
 # kali unit tests
 # -----------------------------------------------------------------------------
 
-add_executable(kali_tests)
-target_sources(kali_tests PRIVATE
-    kali/tests/kali_tests.cpp
-    kali/tests/testing.cpp
-    kali/core/tests/test_enum.cpp
-    kali/core/tests/test_maths.cpp
-    kali/core/tests/test_memory_mapped_file.cpp
-    kali/core/tests/test_object.cpp
-    kali/core/tests/test_platform.cpp
-    kali/core/tests/test_plugin.cpp
-    kali/core/tests/test_short_vector.cpp
-    kali/core/tests/test_static_vector.cpp
-    kali/core/tests/test_stream.cpp
-    kali/core/tests/test_string.cpp
-    kali/device/tests/test_device.cpp
-    kali/device/tests/test_formats.cpp
-    kali/device/tests/test_shader.cpp
-    kali/math/tests/test_float16.cpp
-    kali/math/tests/test_matrix.cpp
-    kali/math/tests/test_quaternion.cpp
-    kali/math/tests/test_vector.cpp
-)
-target_include_directories(kali_tests BEFORE PRIVATE kali/tests)
-target_link_libraries(kali_tests PRIVATE doctest::doctest kali)
-target_compile_definitions(kali_tests PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+if(KALI_BUILD_TESTS)
 
-set_target_properties(kali_tests PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${KALI_RUNTIME_OUTPUT_DIRECTORY}
-    LIBRARY_OUTPUT_DIRECTORY ${KALI_LIBRARY_OUTPUT_DIRECTORY}
-)
+    add_executable(kali_tests)
+    target_sources(kali_tests PRIVATE
+        kali/tests/kali_tests.cpp
+        kali/tests/testing.cpp
+        kali/core/tests/test_enum.cpp
+        kali/core/tests/test_maths.cpp
+        kali/core/tests/test_memory_mapped_file.cpp
+        kali/core/tests/test_object.cpp
+        kali/core/tests/test_platform.cpp
+        kali/core/tests/test_plugin.cpp
+        kali/core/tests/test_short_vector.cpp
+        kali/core/tests/test_static_vector.cpp
+        kali/core/tests/test_stream.cpp
+        kali/core/tests/test_string.cpp
+        kali/device/tests/test_device.cpp
+        kali/device/tests/test_formats.cpp
+        kali/device/tests/test_shader.cpp
+        kali/math/tests/test_float16.cpp
+        kali/math/tests/test_matrix.cpp
+        kali/math/tests/test_quaternion.cpp
+        kali/math/tests/test_vector.cpp
+    )
+    target_include_directories(kali_tests BEFORE PRIVATE kali/tests)
+    target_link_libraries(kali_tests PRIVATE doctest::doctest kali)
+    target_compile_definitions(kali_tests PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
-add_test(NAME kali_tests COMMAND $<TARGET_FILE:kali_tests>)
-add_test(NAME python_tests COMMAND ${Python_EXECUTABLE} -m pytest ${CMAKE_SOURCE_DIR}/src)
+    set_target_properties(kali_tests PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${KALI_RUNTIME_OUTPUT_DIRECTORY}
+        LIBRARY_OUTPUT_DIRECTORY ${KALI_LIBRARY_OUTPUT_DIRECTORY}
+    )
+
+    add_test(NAME kali_tests COMMAND $<TARGET_FILE:kali_tests>)
+
+    if(KALI_BUILD_PYTHON)
+        add_test(NAME python_tests COMMAND ${Python_EXECUTABLE} -m pytest ${CMAKE_SOURCE_DIR}/src)
+    endif()
+
+endif(KALI_BUILD_TESTS)

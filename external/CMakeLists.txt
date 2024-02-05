@@ -22,8 +22,10 @@ target_link_libraries(d3d12 INTERFACE dxgi.lib d3d12.lib)
 
 # nanobind
 
-add_subdirectory(nanobind)
-nanobind_build_library(nanobind SHARED)
+if(KALI_BUILD_PYTHON)
+    add_subdirectory(nanobind)
+    nanobind_build_library(nanobind SHARED)
+endif()
 
 # slang
 

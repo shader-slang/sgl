@@ -25,10 +25,20 @@ endif()
 # TODO we should probably set install RPATH on individual targets instead
 set(CMAKE_INSTALL_RPATH "${KALI_ORIGIN};${KALI_ORIGIN}/../lib")
 
+# Check if this project is the master cmake project (i.e. not included via add_subdirectory).
+set(KALI_MASTER_PROJECT OFF)
+if (${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${CMAKE_SOURCE_DIR})
+  set(KALI_MASTER_PROJECT ON)
+endif()
 
 # -----------------------------------------------------------------------------
 # Configuration
 # -----------------------------------------------------------------------------
+
+set(KALI_BUILD_PYTHON ON CACHE BOOL "Build kali python extension")
+set(KALI_BUILD_EXAMPLES ON CACHE BOOL "Build kali example applications")
+set(KALI_BUILD_TESTS ON CACHE BOOL "Build kali tests")
+set(KALI_BUILD_DOC OFF CACHE BOOL "Build kali documentation")
 
 # Disable asserts.
 # By default, asserts are enabled in both debug and release builds.
@@ -44,9 +54,6 @@ set(KALI_ENABLE_ASAN OFF CACHE BOOL "Enable address sanitizer")
 # Enable/disable header validation.
 # If enabled, additional targets are generated to validate that headers are self sufficient.
 set(KALI_ENABLE_HEADER_VALIDATION OFF CACHE BOOL "Enable header validation")
-
-# Enable/disable building documentation.
-set(KALI_BUILD_DOC OFF CACHE BOOL "Build documentation")
 
 # -----------------------------------------------------------------------------
 # Check platform
@@ -310,8 +317,11 @@ message(STATUS "KALI_HAS_ASMJIT: ${KALI_HAS_ASMJIT}")
 message(STATUS "KALI_HAS_TEVCLIENT: ${KALI_HAS_TEVCLIENT}")
 
 add_subdirectory(src/libkali)
-add_subdirectory(src/editor)
-add_subdirectory(src/examples)
+
+if (KALI_BUILD_EXAMPLES)
+    add_subdirectory(src/editor)
+    add_subdirectory(src/examples)
+endif()
 
 if(KALI_BUILD_DOC)
     add_subdirectory(docs)
