@@ -14,6 +14,7 @@ KALI_PY_EXPORT(core_thread)
         {
             nb::gil_scoped_release guard;
             wait_for_tasks();
-        }
+        },
+        D(thread, wait_for_tasks)
     );
 }

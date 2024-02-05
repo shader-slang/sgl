@@ -12,6 +12,7 @@ namespace kali::thread {
 KALI_API void static_init();
 KALI_API void static_shutdown();
 
+/// Block until all scheduled tasks are completed.
 KALI_API void wait_for_tasks();
 
 KALI_API BS::thread_pool& global_thread_pool();
