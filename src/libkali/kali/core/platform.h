@@ -73,12 +73,12 @@ struct FileDialogFilter {
     std::string pattern;
 
     FileDialogFilter() = default;
-    FileDialogFilter(const std::string& name, const std::string& pattern)
+    FileDialogFilter(std::string_view name, std::string_view pattern)
         : name(name)
         , pattern(pattern)
     {
     }
-    FileDialogFilter(const std::pair<std::string, std::string>& pair)
+    FileDialogFilter(std::pair<std::string_view, std::string_view> pair)
         : name(pair.first)
         , pattern(pair.second)
     {
@@ -87,14 +87,19 @@ struct FileDialogFilter {
 using FileDialogFilterList = std::vector<FileDialogFilter>;
 
 /// Show a file open dialog.
+/// \param filters List of file filters.
+/// \return The selected file path or nothing if the dialog was cancelled.
 [[nodiscard]] KALI_API std::optional<std::filesystem::path>
 open_file_dialog(std::span<const FileDialogFilter> filters = {});
 
 /// Show a file save dialog.
+/// \param filters List of file filters.
+/// \return The selected file path or nothing if the dialog was cancelled.
 [[nodiscard]] KALI_API std::optional<std::filesystem::path>
 save_file_dialog(std::span<const FileDialogFilter> filters = {});
 
 /// Show a folder selection dialog.
+/// \return The selected folder path or nothing if the dialog was cancelled.
 [[nodiscard]] KALI_API std::optional<std::filesystem::path> choose_folder_dialog();
 
 // -------------------------------------------------------------------------------------------------
