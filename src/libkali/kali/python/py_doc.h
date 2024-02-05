@@ -2750,7 +2750,18 @@ Parameter ``module``:
 Parameter ``msg``:
     The message.)doc";
 
-static const char *__doc_kali_Logger_Logger = R"doc()doc";
+static const char *__doc_kali_Logger_Logger =
+R"doc(Constructor.
+
+Parameter ``level``:
+    The log level to use (messages with level >= this will be logged).
+
+Parameter ``name``:
+    The name of the logger.
+
+Parameter ``use_default_outputs``:
+    Whether to use the default outputs (console + debug console on
+    windows).)doc";
 
 static const char *__doc_kali_Logger_add_console_output =
 R"doc(Add a console logger output.
@@ -5616,13 +5627,13 @@ static const char *__doc_kali_Timer_2 = R"doc(High resolution CPU timer.)doc";
 
 static const char *__doc_kali_Timer_Timer = R"doc()doc";
 
-static const char *__doc_kali_Timer_delta_ms = R"doc(Elapsed milliseconds between two time points.)doc";
+static const char *__doc_kali_Timer_delta_ms = R"doc(Compute elapsed milliseconds between two time points.)doc";
 
-static const char *__doc_kali_Timer_delta_ns = R"doc(Elapsed nanoseconds between two time points.)doc";
+static const char *__doc_kali_Timer_delta_ns = R"doc(Compute elapsed nanoseconds between two time points.)doc";
 
-static const char *__doc_kali_Timer_delta_s = R"doc(Elapsed seconds between two time points.)doc";
+static const char *__doc_kali_Timer_delta_s = R"doc(Compute elapsed seconds between two time points.)doc";
 
-static const char *__doc_kali_Timer_delta_us = R"doc(Elapsed microseconds between two time points.)doc";
+static const char *__doc_kali_Timer_delta_us = R"doc(Compute elapsed microseconds between two time points.)doc";
 
 static const char *__doc_kali_Timer_elapsed_ms = R"doc(Elapsed milliseconds since last reset.)doc";
 
@@ -6093,13 +6104,17 @@ static const char *__doc_kali_Viewport_y = R"doc()doc";
 
 static const char *__doc_kali_Window = R"doc()doc";
 
-static const char *__doc_kali_Window_2 = R"doc()doc";
+static const char *__doc_kali_Window_2 =
+R"doc(Window class.
+
+Platform independent class for managing a window and handle input
+events.)doc";
 
 static const char *__doc_kali_Window_3 = R"doc()doc";
 
 static const char *__doc_kali_Window_4 = R"doc()doc";
 
-static const char *__doc_kali_WindowDesc = R"doc()doc";
+static const char *__doc_kali_WindowDesc = R"doc(Window description.)doc";
 
 static const char *__doc_kali_WindowDesc_height = R"doc(Height of the window in pixels.)doc";
 
@@ -6117,7 +6132,7 @@ static const char *__doc_kali_WindowHandle_xdisplay = R"doc()doc";
 
 static const char *__doc_kali_WindowHandle_xwindow = R"doc()doc";
 
-static const char *__doc_kali_WindowMode = R"doc()doc";
+static const char *__doc_kali_WindowMode = R"doc(Window modes.)doc";
 
 static const char *__doc_kali_WindowMode_fullscreen = R"doc()doc";
 
@@ -6125,15 +6140,19 @@ static const char *__doc_kali_WindowMode_minimized = R"doc()doc";
 
 static const char *__doc_kali_WindowMode_normal = R"doc()doc";
 
-static const char *__doc_kali_Window_Window = R"doc()doc";
+static const char *__doc_kali_Window_Window =
+R"doc(Constructor.
+
+Parameter ``desc``:
+    The window description.)doc";
 
 static const char *__doc_kali_Window_class_name = R"doc()doc";
 
-static const char *__doc_kali_Window_close = R"doc()doc";
+static const char *__doc_kali_Window_close = R"doc(Close the window.)doc";
 
 static const char *__doc_kali_Window_create = R"doc()doc";
 
-static const char *__doc_kali_Window_get_clipboard = R"doc()doc";
+static const char *__doc_kali_Window_get_clipboard = R"doc(Get the clipboard content.)doc";
 
 static const char *__doc_kali_Window_handle_drop_files = R"doc()doc";
 
@@ -6145,7 +6164,7 @@ static const char *__doc_kali_Window_handle_mouse_event = R"doc()doc";
 
 static const char *__doc_kali_Window_handle_window_size = R"doc()doc";
 
-static const char *__doc_kali_Window_height = R"doc()doc";
+static const char *__doc_kali_Window_height = R"doc(The height of the window in pixels.)doc";
 
 static const char *__doc_kali_Window_m_gamepad_id = R"doc()doc";
 
@@ -6177,27 +6196,32 @@ static const char *__doc_kali_Window_m_width = R"doc()doc";
 
 static const char *__doc_kali_Window_m_window = R"doc()doc";
 
-static const char *__doc_kali_Window_main_loop = R"doc()doc";
+static const char *__doc_kali_Window_on_drop_files = R"doc(Event handler to be called when files are dropped onto the window.)doc";
 
-static const char *__doc_kali_Window_on_drop_files = R"doc()doc";
+static const char *__doc_kali_Window_on_gamepad_event = R"doc(Event handler to be called when a gamepad event occurs.)doc";
 
-static const char *__doc_kali_Window_on_gamepad_event = R"doc()doc";
+static const char *__doc_kali_Window_on_gamepad_state = R"doc(Event handler to be called when the gamepad state changes.)doc";
 
-static const char *__doc_kali_Window_on_gamepad_state = R"doc()doc";
+static const char *__doc_kali_Window_on_keyboard_event = R"doc(Event handler to be called when a keyboard event occurs.)doc";
 
-static const char *__doc_kali_Window_on_keyboard_event = R"doc()doc";
+static const char *__doc_kali_Window_on_mouse_event = R"doc(Event handler to be called when a mouse event occurs.)doc";
 
-static const char *__doc_kali_Window_on_mouse_event = R"doc()doc";
-
-static const char *__doc_kali_Window_on_resize = R"doc()doc";
+static const char *__doc_kali_Window_on_resize = R"doc(Event handler to be called when the window is resized.)doc";
 
 static const char *__doc_kali_Window_poll_gamepad_input = R"doc()doc";
 
-static const char *__doc_kali_Window_process_events = R"doc()doc";
+static const char *__doc_kali_Window_process_events = R"doc(Process any pending events.)doc";
 
-static const char *__doc_kali_Window_resize = R"doc()doc";
+static const char *__doc_kali_Window_resize =
+R"doc(Resize the window.
 
-static const char *__doc_kali_Window_set_clipboard = R"doc()doc";
+Parameter ``width``:
+    The new width of the window in pixels.
+
+Parameter ``height``:
+    The new height of the window in pixels.)doc";
+
+static const char *__doc_kali_Window_set_clipboard = R"doc(Set the clipboard content.)doc";
 
 static const char *__doc_kali_Window_set_icon = R"doc()doc";
 
@@ -6215,15 +6239,15 @@ static const char *__doc_kali_Window_set_on_resize = R"doc()doc";
 
 static const char *__doc_kali_Window_set_title = R"doc()doc";
 
-static const char *__doc_kali_Window_should_close = R"doc()doc";
+static const char *__doc_kali_Window_should_close = R"doc(True if the window should be closed.)doc";
 
-static const char *__doc_kali_Window_title = R"doc()doc";
+static const char *__doc_kali_Window_title = R"doc(The title of the window.)doc";
 
 static const char *__doc_kali_Window_to_string = R"doc()doc";
 
-static const char *__doc_kali_Window_width = R"doc()doc";
+static const char *__doc_kali_Window_width = R"doc(The width of the window in pixels.)doc";
 
-static const char *__doc_kali_Window_window_handle = R"doc()doc";
+static const char *__doc_kali_Window_window_handle = R"doc(The native window handle.)doc";
 
 static const char *__doc_kali_align_to = R"doc(Align an integer value to the given alignment.)doc";
 
@@ -7752,7 +7776,11 @@ static const char *__doc_kali_platform_app_data_directory = R"doc(The applicatio
 
 static const char *__doc_kali_platform_backtrace = R"doc(Generate a backtrace.)doc";
 
-static const char *__doc_kali_platform_choose_folder_dialog = R"doc(Show a folder selection dialog.)doc";
+static const char *__doc_kali_platform_choose_folder_dialog =
+R"doc(Show a folder selection dialog.
+
+Returns:
+    The selected folder path or nothing if the dialog was cancelled.)doc";
 
 static const char *__doc_kali_platform_create_junction = R"doc(Create a junction (soft link).)doc";
 
@@ -7806,7 +7834,14 @@ static const char *__doc_kali_platform_load_shared_library = R"doc(Load a shared
 
 static const char *__doc_kali_platform_memory_stats = R"doc(Get the current memory stats.)doc";
 
-static const char *__doc_kali_platform_open_file_dialog = R"doc(Show a file open dialog.)doc";
+static const char *__doc_kali_platform_open_file_dialog =
+R"doc(Show a file open dialog.
+
+Parameter ``filters``:
+    List of file filters.
+
+Returns:
+    The selected file path or nothing if the dialog was cancelled.)doc";
 
 static const char *__doc_kali_platform_page_size = R"doc(The page size of the system.)doc";
 
@@ -7824,7 +7859,14 @@ static const char *__doc_kali_platform_runtime_directory =
 R"doc(Thehe runtime directory. This is the path where the kali runtime
 library (kali.dll or libkali.so) resides.)doc";
 
-static const char *__doc_kali_platform_save_file_dialog = R"doc(Show a file save dialog.)doc";
+static const char *__doc_kali_platform_save_file_dialog =
+R"doc(Show a file save dialog.
+
+Parameter ``filters``:
+    List of file filters.
+
+Returns:
+    The selected file path or nothing if the dialog was cancelled.)doc";
 
 static const char *__doc_kali_platform_set_keyboard_interrupt_handler =
 R"doc(Setup a callback function to be called when Ctrl-C is detected. Use
@@ -8281,7 +8323,7 @@ static const char *__doc_kali_thread_static_init = R"doc()doc";
 
 static const char *__doc_kali_thread_static_shutdown = R"doc()doc";
 
-static const char *__doc_kali_thread_wait_for_tasks = R"doc()doc";
+static const char *__doc_kali_thread_wait_for_tasks = R"doc(Block until all scheduled tasks are completed.)doc";
 
 static const char *__doc_kali_throw_exception = R"doc(Throw an exception.)doc";
 
