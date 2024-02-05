@@ -22,6 +22,8 @@
 
 #include "kali/device/cuda_interop.h"
 
+#include "py_doc.h"
+
 #include <span>
 
 namespace nb = nanobind;
@@ -268,3 +270,6 @@ inline constexpr uint64_t const_hash(std::string_view str)
         .def(nb::self& nb::self)                                                                                       \
         .def(nb::self &= nb::self)                                                                                     \
         .def(~nb::self)
+
+
+#define D(...) DOC(kali, __VA_ARGS__)
