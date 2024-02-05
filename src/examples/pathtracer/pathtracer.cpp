@@ -32,7 +32,7 @@ using namespace kali;
 
 inline float3 random_float3()
 {
-    return float3(std::rand(), std::rand(), std::rand()) * (1.f / RAND_MAX);
+    return float3(std::rand(), std::rand(), std::rand()) * (1.f / float(RAND_MAX));
 }
 
 struct Camera {

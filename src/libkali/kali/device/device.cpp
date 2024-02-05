@@ -241,7 +241,7 @@ Device::Device(const DeviceDesc& desc)
     }
 #endif
 
-    m_frame_fence = create_fence({.shared = true});
+    m_frame_fence = create_fence({});
     m_frame_fence->break_strong_reference_to_device();
 
     m_graphics_queue = make_ref<CommandQueue>(ref<Device>(this), CommandQueueDesc{.type = CommandQueueType::graphics});
