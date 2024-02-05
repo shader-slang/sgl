@@ -1,5 +1,9 @@
 #pragma once
 
+#include "kali/core/config.h"
+
+#if KALI_HAS_CUDA
+
 /**
  * CUDA runtime defines vector types in the global namespace. Some of these
  * types clash with the vector types in kali, which live in the kali::math
@@ -34,3 +38,5 @@
 #undef float2
 #undef float3
 #undef float4
+
+#endif // KALI_HAS_CUDA
