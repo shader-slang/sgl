@@ -43,11 +43,11 @@ public:
 
     /**
      * Adds a type conformance. If the type conformance exists, it will be replaced.
-     * @param[in] type_name The name of the implementation type.
-     * @param[in] interface_name The name of the interface type.
-     * @param[in] id Optional. The id representing the implementation type for this interface. If it is -1, Slang will
+     * \param type_name The name of the implementation type.
+     * \param interface_name The name of the interface type.
+     * \param id Optional. The id representing the implementation type for this interface. If it is -1, Slang will
      * automatically assign a unique Id for the type.
-     * @return The updated list of type conformances.
+     * \return The updated list of type conformances.
      */
     TypeConformanceList& add(std::string type_name, std::string interface_name, uint32_t id = -1)
     {
@@ -57,9 +57,9 @@ public:
 
     /**
      * Removes a type conformance. If the type conformance doesn't exist, the call will be silently ignored.
-     * @param[in] type_name The name of the implementation type.
-     * @param[in] interface_name The name of the interface type.
-     * @return The updated list of type conformances.
+     * \param type_name The name of the implementation type.
+     * \param interface_name The name of the interface type.
+     * \return The updated list of type conformances.
      */
     TypeConformanceList& remove(std::string type_name, std::string interface_name)
     {
@@ -103,9 +103,9 @@ public:
 
     /**
      * Adds a macro definition. If the macro already exists, it will be replaced.
-     * @param[in] name The name of macro.
-     * @param[in] value Optional. The value of the macro.
-     * @return The updated list of macro definitions.
+     * \param name The name of macro.
+     * \param value Optional. The value of the macro.
+     * \return The updated list of macro definitions.
      */
     DefineList& add(std::string_view name, std::string_view value = "")
     {
@@ -115,8 +115,8 @@ public:
 
     /**
      * Removes a macro definition. If the macro doesn't exist, the call will be silently ignored.
-     * @param[in] name The name of macro.
-     * @return The updated list of macro definitions.
+     * \param name The name of macro.
+     * \return The updated list of macro definitions.
      */
     DefineList& remove(std::string_view name)
     {

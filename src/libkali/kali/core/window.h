@@ -38,7 +38,7 @@ struct WindowDesc {
 };
 
 /**
- * @brief Window class.
+ * \brief Window class.
  *
  * Platform independent class for managing a window and handle input events.
  */
@@ -65,8 +65,8 @@ public:
     uint32_t height() const { return m_height; }
 
     /// Resize the window.
-    /// @param width The new width of the window in pixels.
-    /// @param height The new height of the window in pixels.
+    /// \param width The new width of the window in pixels.
+    /// \param height The new height of the window in pixels.
     void resize(uint32_t width, uint32_t height);
 
     /// The title of the window.

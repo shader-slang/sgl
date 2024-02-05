@@ -470,7 +470,7 @@ public:
     size_t element_count() const;
 
     /// Map the whole buffer.
-    /// Only available for buffers created with @c MemoryType::upload or @c MemoryType::read_back.
+    /// Only available for buffers created with \c MemoryType::upload or \c MemoryType::read_back.
     void* map() const;
 
     template<typename T>
@@ -480,7 +480,7 @@ public:
     }
 
     /// Map a range of the buffer.
-    /// Only available for buffers created with @c MemoryType::upload or @c MemoryType::read_back.
+    /// Only available for buffers created with \c MemoryType::upload or \c MemoryType::read_back.
     void* map(DeviceOffset offset, DeviceSize size_in_bytes) const;
 
     template<typename T>

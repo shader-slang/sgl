@@ -647,10 +647,10 @@ template<floating_point T>
  * Build a look-at matrix.
  * If right handed, forward direction is mapped onto -Z axis.
  * If left handed, forward direction is mapped onto +Z axis.
- * @param eye Eye position
- * @param center Center position
- * @param up Up vector
- * @param handedness Coordinate system handedness.
+ * \param eye Eye position
+ * \param center Center position
+ * \param up Up vector
+ * \param handedness Coordinate system handedness.
  */
 template<floating_point T>
 [[nodiscard]] inline matrix<T, 4, 4> matrix_from_look_at(

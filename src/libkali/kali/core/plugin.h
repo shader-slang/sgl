@@ -16,7 +16,7 @@
 namespace kali {
 
 /**
- * @brief Plugin manager for loading plugin libraries and creating plugin instances.
+ * \brief Plugin manager for loading plugin libraries and creating plugin instances.
  *
  * The plugin system is based around the following principles:
  * - Plugins are compiled into shared libraries known as _plugin libraries_.
@@ -30,7 +30,7 @@ namespace kali {
  * The KALI_PLUGIN_BASE_CLASS macro extends the class with the required members for the plugin system.
  * For example:
  *
- * @code
+ * \code
  * class KALI_API PluginBase
  * {
  * public:
@@ -40,14 +40,14 @@ namespace kali {
  *
  *     virtual void do_struff() = 0;
  * };
- * @endcode
+ * \endcode
  *
  * To implement a _plugin class_ type, we simply inherit from the base class.
  * The KALI_PLUGIN_CLASS macro extends the class with the required members for the plugin system.
  * The class also needs to implement a static create function, matching the `PluginCreate` type of the base class.
  * For example:
  *
- * @code
+ * \code
  * class PluginA : public PluginBase
  * {
  * public:
@@ -57,23 +57,23 @@ namespace kali {
  *
  *     void do_struff() override { ... }
  * };
- * @endcode
+ * \endcode
  *
  * The _plugin library_ must export a `register_plugin` function for registering all the plugin class types when called.
  *
- * @code
+ * \code
  * extern "C" KALI_API_EXPORT void register_plugin(kali::PluginRegistry& registry)
  * {
  *     registry.register_class<PluginBase, PluginA>();
  * }
- * @endcode
+ * \endcode
  *
  * At runtime, the plugin manager can load plugin libraries using `load_plugin_by_name` and `load_plugin`.
  * New plugin instances can be created using `create_class`, for example:
  *
- * @code
+ * \code
  * PluginBase* p = PluginManager::instance().create_class<PluginBase>("PluginA");
- * @endcode
+ * \endcode
  *
  * The `get_infos` function returns a list of plugin infos for all loaded plugin types of a given plugin base class.
  */
@@ -83,13 +83,13 @@ public:
     static PluginManager& instance();
 
     /**
-     * @brief Create an instance of a plugin class.
+     * \brief Create an instance of a plugin class.
      *
-     * @tparam BaseT The plugin base class.
-     * @tparam Args The argument type pack used for construction.
-     * @param type The plugin type name.
-     * @param args Additional arguments passed on construction.
-     * @return Returns a new instance of the requested plugin type or nullptr if not registered.
+     * \tparam BaseT The plugin base class.
+     * \tparam Args The argument type pack used for construction.
+     * \param type The plugin type name.
+     * \param args Additional arguments passed on construction.
+     * \return Returns a new instance of the requested plugin type or nullptr if not registered.
      */
     template<typename BaseT, typename... Args>
     std::invoke_result_t<typename BaseT::PluginCreate, Args...> create_class(std::string_view type, Args... args) const
@@ -101,11 +101,11 @@ public:
     }
 
     /**
-     * @brief Check if a given type of a plugin is available.
+     * \brief Check if a given type of a plugin is available.
      *
-     * @tparam BaseT The plugin base class.
-     * @param type The plugin type name.
-     * @return True if plugin type is available.
+     * \tparam BaseT The plugin base class.
+     * \param type The plugin type name.
+     * \return True if plugin type is available.
      */
     template<typename BaseT>
     bool has_class(std::string_view type) const
@@ -116,10 +116,10 @@ public:
     }
 
     /**
-     * @brief Get infos for all registered plugin types for a given plugin base class.
+     * \brief Get infos for all registered plugin types for a given plugin base class.
      *
-     * @tparam BaseT The plugin base class.
-     * @return A list of infos.
+     * \tparam BaseT The plugin base class.
+     * \return A list of infos.
      */
     template<typename BaseT>
     std::vector<std::pair<std::string, typename BaseT::PluginInfo>> get_infos() const
@@ -135,32 +135,32 @@ public:
     }
 
     /**
-     * @brief Load a plugin library by name.
+     * \brief Load a plugin library by name.
      * This will automatically determine the plugin path and file extension.
-     * @param plugin_dir Path to plugin directory.
-     * @param name Name of the plugin library.
-     * @return True if successful.
+     * \param plugin_dir Path to plugin directory.
+     * \param name Name of the plugin library.
+     * \return True if successful.
      */
     bool load_plugin_by_name(const std::filesystem::path& plugin_dir, std::string_view name);
 
     /**
      * Load a list of plugin libraries.
-     * @param plugin_dir Path to plugin directory.
-     * @param names Names of the plugin libraries.
+     * \param plugin_dir Path to plugin directory.
+     * \param names Names of the plugin libraries.
      */
     void load_plugins_by_name(const std::filesystem::path& plugin_dir, std::span<const std::string> names);
 
     /**
      * Load a plugin library.
-     * @param path File path of the plugin library.
-     * @return True if successful.
+     * \param path File path of the plugin library.
+     * \return True if successful.
      */
     bool load_plugin(const std::filesystem::path& path);
 
     /**
      * Release a previously loaded plugin library.
-     * @param path File path of the plugin library.
-     * @return True if successful.
+     * \param path File path of the plugin library.
+     * \return True if successful.
      */
     bool release_plugin(const std::filesystem::path& path);
 
@@ -241,7 +241,7 @@ private:
 };
 
 /**
- * @brief Helper class passed to plugin libraries to register plugin classes.
+ * \brief Helper class passed to plugin libraries to register plugin classes.
  */
 class PluginRegistry {
 public:
@@ -254,13 +254,13 @@ public:
     PluginRegistry& operator=(const PluginRegistry&) = delete;
 
     /**
-     * @brief Register a plugin class.
+     * \brief Register a plugin class.
      * Throws if a class with the same type name (and same base class) has already been registered.
      *
-     * @tparam BaseT The plugin base class.
-     * @param type The plugin type name.
-     * @param info The plugin info (type of BaseT::PluginInfo).
-     * @param create The plugin create function (type of BaseT::PluginCreate).
+     * \tparam BaseT The plugin base class.
+     * \param type The plugin type name.
+     * \param info The plugin info (type of BaseT::PluginInfo).
+     * \param create The plugin create function (type of BaseT::PluginCreate).
      */
     template<typename BaseT>
     void register_class(std::string_view type, typename BaseT::PluginInfo info, typename BaseT::PluginCreate create)
@@ -269,11 +269,11 @@ public:
     }
 
     /**
-     * @brief Register a plugin class.
+     * \brief Register a plugin class.
      * This helper assumes that the plugin class has a `create` function matching the BaseT::PluginCreate type.
      *
-     * @tparam BaseT The plugin base class.
-     * @tparam T The plugin class.
+     * \tparam BaseT The plugin base class.
+     * \tparam T The plugin class.
      */
     template<typename BaseT, typename T>
     void register_class()
@@ -287,7 +287,7 @@ private:
 };
 
 /**
- * @brief Macro for extending a class to be used as a plugin base class.
+ * \brief Macro for extending a class to be used as a plugin base class.
  *
  * This macro must be applied in the class declaration of the plugin base class.
  * It assumes that both a public PluginInfo struct type and a PluginCreate typedef
@@ -307,7 +307,7 @@ public:                                                                         
     virtual const PluginInfo& get_plugin_info() const = 0;
 
 /**
- * @brief Macro for extending a class to be used as a plugin class.
+ * \brief Macro for extending a class to be used as a plugin class.
  *
  * This macro must be applied in the class declaration of the plugin class.
  */

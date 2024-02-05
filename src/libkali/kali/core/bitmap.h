@@ -147,27 +147,27 @@ public:
 
 #if 0
     /// Read a bitmap from a stream.
-    /// @param stream The stream to read from.
-    /// @param format The file format to read (auto-detect by default).
-    /// @return The loaded bitmap.
+    /// \param stream The stream to read from.
+    /// \param format The file format to read (auto-detect by default).
+    /// \return The loaded bitmap.
     static ref<Bitmap> read(Stream* stream, FileFormat format = FileFormat::auto_);
 
     /// Read a bitmap from a file.
-    /// @param path The file path to read from.
-    /// @param format The file format to read (auto-detect by default).
-    /// @return The loaded bitmap.
+    /// \param path The file path to read from.
+    /// \param format The file format to read (auto-detect by default).
+    /// \return The loaded bitmap.
     static ref<Bitmap> read(const std::filesystem::path& path, FileFormat format = FileFormat::auto_);
 
     /// Read a bitmap from a stream asynchronously.
-    /// @param stream The stream to read from.
-    /// @param format The file format to read (auto-detect by default).
-    /// @return A future to the loaded bitmap.
+    /// \param stream The stream to read from.
+    /// \param format The file format to read (auto-detect by default).
+    /// \return A future to the loaded bitmap.
     static std::future<ref<Bitmap>> read_async(ref<Stream> stream, FileFormat format = FileFormat::auto_);
 
     /// Read a bitmap from a file asynchronously.
-    /// @param path The file path to read from.
-    /// @param format The file format to read (auto-detect by default).
-    /// @return A future to the loaded bitmap.
+    /// \param path The file path to read from.
+    /// \param format The file format to read (auto-detect by default).
+    /// \return A future to the loaded bitmap.
     static std::future<ref<Bitmap>>
     read_async(const std::filesystem::path& path, FileFormat format = FileFormat::auto_);
 #endif

@@ -306,8 +306,8 @@ template<typename T>
 
 /**
  * Build a quaternion from an angle and a normalized axis.
- * @param angle Angle expressed in radians.
- * @param axis Axis of the quaternion (must be normalized).
+ * \param angle Angle expressed in radians.
+ * \param axis Axis of the quaternion (must be normalized).
  */
 template<typename T>
 [[nodiscard]] inline quat<T> quat_from_angle_axis(T angle, const vector<T, 3>& axis)
@@ -319,8 +319,8 @@ template<typename T>
 
 /**
  * Compute the rotation between two vectors.
- * @param from From vector (must to be normalized).
- * @param to To vector (must to be normalized).
+ * \param from From vector (must to be normalized).
+ * \param to To vector (must to be normalized).
  */
 template<typename T>
 [[nodiscard]] inline quat<T> quat_from_rotation_between_vectors(const vector<T, 3>& from, const vector<T, 3>& to)
@@ -420,9 +420,9 @@ template<typename T>
  * Build a look-at quaternion.
  * If right handed, forward direction is mapped onto -Z axis.
  * If left handed, forward direction is mapped onto +Z axis.
- * @param dir Forward direction (must to be normalized).
- * @param up Up vector (must be normalized).
- * @param handedness Coordinate system handedness.
+ * \param dir Forward direction (must to be normalized).
+ * \param up Up vector (must be normalized).
+ * \param handedness Coordinate system handedness.
  */
 template<typename T>
 [[nodiscard]] inline quat<T>

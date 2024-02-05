@@ -47,9 +47,9 @@ public:
 
     /**
      * Signal a fence.
-     * @param pFence The fence to signal.
-     * @param value The value to signal. If @c Fence::AUTO, the signaled value will be auto-incremented.
-     * @return The signaled value.
+     * \param pFence The fence to signal.
+     * \param value The value to signal. If \c Fence::AUTO, the signaled value will be auto-incremented.
+     * \return The signaled value.
      */
     uint64_t signal(Fence* fence, uint64_t value = Fence::AUTO);
 
@@ -57,29 +57,29 @@ public:
      * Wait for a fence to be signaled on the device.
      * Queues a device-side wait and returns immediately.
      * The device will wait until the fence reaches or exceeds the specified value.
-     * @param pFence The fence to wait for.
-     * @param value The value to wait for. If @c Fence::AUTO, wait for the last signaled value.
+     * \param pFence The fence to wait for.
+     * \param value The value to wait for. If \c Fence::AUTO, wait for the last signaled value.
      */
     void wait(const Fence* fence, uint64_t value = Fence::AUTO);
 
 #if KALI_HAS_CUDA
     /**
-     * @brief Synchronize CUDA -> device.
+     * \brief Synchronize CUDA -> device.
      *
      * This first signals a shared CUDA semaphore in the CUDA stream.
      * Then it adds a wait for the shared CUDA semaphore on the command queue.
      *
-     * @param cuda_stream CUDA stream
+     * \param cuda_stream CUDA stream
      */
     void wait_for_cuda(void* cuda_stream = 0);
 
     /**
-     * @brief Synchronize device -> CUDA.
+     * \brief Synchronize device -> CUDA.
      *
      * This first signals a shared CUDA semaphore on the command queue.
      * Then it adds a wait for the shared CUDA semaphore in the CUDA stream.
      *
-     * @param cuda_stream CUDA stream
+     * \param cuda_stream CUDA stream
      */
     void wait_for_device(void* cuda_stream = 0);
 #endif
@@ -334,17 +334,17 @@ public:
 
     /**
      * Transition resource state of a buffer and add a barrier if state has changed.
-     * @param buffer Buffer
-     * @param new_state New state
-     * @return True if barrier was recorded (i.e. state has changed).
+     * \param buffer Buffer
+     * \param new_state New state
+     * \return True if barrier was recorded (i.e. state has changed).
      */
     bool buffer_barrier(const Buffer* buffer, ResourceState new_state);
 
     /**
      * Transition resource state of a texture and add a barrier if state has changed.
-     * @param texture Texture
-     * @param new_state New state
-     * @return True if barrier was recorded (i.e. state has changed).
+     * \param texture Texture
+     * \param new_state New state
+     * \return True if barrier was recorded (i.e. state has changed).
      */
     bool texture_barrier(const Texture* texture, ResourceState new_state);
 
@@ -363,11 +363,11 @@ public:
     void uav_barrier(const Resource* resource);
 
     /**
-     * @brief Insert a barrier for a set of buffers.
+     * \brief Insert a barrier for a set of buffers.
      *
-     * @param buffers List of buffers.
-     * @param old_state The state the buffers must be in before the barrier.
-     * @param new_state The state the buffers must be in after the barrier.
+     * \param buffers List of buffers.
+     * \param old_state The state the buffers must be in before the barrier.
+     * \param new_state The state the buffers must be in after the barrier.
      */
     void buffer_barrier(std::span<const Buffer*> buffers, ResourceState old_state, ResourceState new_state);
     void buffer_barrier(const Buffer* buffer, ResourceState old_state, ResourceState new_state);
@@ -405,21 +405,21 @@ public:
     void clear_texture(Texture* texture, uint4 clear_value);
 
     /**
-     * @brief Copy an entire resource.
+     * \brief Copy an entire resource.
      *
-     * @param dst Destination resource.
-     * @param src Source resource.
+     * \param dst Destination resource.
+     * \param src Source resource.
      */
     void copy_resource(Resource* dst, const Resource* src);
 
     /**
-     * @brief Copy a buffer region.
+     * \brief Copy a buffer region.
      *
-     * @param dst Destination buffer.
-     * @param dst_offset Destination offset in bytes.
-     * @param src Source buffer.
-     * @param src_offset Source offset in bytes.
-     * @param size Size in bytes.
+     * \param dst Destination buffer.
+     * \param dst_offset Destination offset in bytes.
+     * \param src Source buffer.
+     * \param src_offset Source offset in bytes.
+     * \param size Size in bytes.
      */
     void copy_buffer_region(
         Buffer* dst,
@@ -430,15 +430,15 @@ public:
     );
 
     /**
-     * @brief Copy a texture region.
+     * \brief Copy a texture region.
      *
-     * @param dst Destination texture.
-     * @param dst_subresource Destination subresource index.
-     * @param src Source texture.
-     * @param src_subresource Source subresource index.
-     * @param dst_offset Destination offset in texels.
-     * @param src_offset Source offset in texels.
-     * @param extent Size in texels (-1 for maximum possible size).
+     * \param dst Destination texture.
+     * \param dst_subresource Destination subresource index.
+     * \param src Source texture.
+     * \param src_subresource Source subresource index.
+     * \param dst_offset Destination offset in texels.
+     * \param src_offset Source offset in texels.
+     * \param extent Size in texels (-1 for maximum possible size).
      */
     void copy_texture_region(
         Texture* dst,
@@ -451,16 +451,16 @@ public:
     );
 
     /**
-     * @brief Copy a texture to a buffer.
+     * \brief Copy a texture to a buffer.
      *
-     * @param dst Destination buffer.
-     * @param dst_offset Destination offset in bytes.
-     * @param dst_size Destination size in bytes.
-     * @param dst_row_stride Destination row stride in bytes.
-     * @param src Source texture.
-     * @param src_subresource Source subresource index.
-     * @param src_offset Source offset in texels.
-     * @param extent Extent in texels (-1 for maximum possible extent).
+     * \param dst Destination buffer.
+     * \param dst_offset Destination offset in bytes.
+     * \param dst_size Destination size in bytes.
+     * \param dst_row_stride Destination row stride in bytes.
+     * \param src Source texture.
+     * \param src_subresource Source subresource index.
+     * \param src_offset Source offset in texels.
+     * \param extent Extent in texels (-1 for maximum possible extent).
      */
     void copy_texture_to_buffer(
         Buffer* dst,
@@ -474,13 +474,13 @@ public:
     );
 
     /**
-     * @brief Copy data from one buffer to another.
+     * \brief Copy data from one buffer to another.
      *
-     * @param dst Destination buffer.
-     * @param dst_offset Offset into the destination buffer.
-     * @param src Source buffer.
-     * @param src_offset Offset into the source buffer.
-     * @param size Number of bytes to copy.
+     * \param dst Destination buffer.
+     * \param dst_offset Offset into the destination buffer.
+     * \param src Source buffer.
+     * \param src_offset Offset into the source buffer.
+     * \param size Number of bytes to copy.
      */
     void copy_buffer(Buffer* dst, DeviceOffset dst_offset, const Buffer* src, DeviceOffset src_offset, DeviceSize size);
 
@@ -512,7 +512,7 @@ public:
     void resolve_subresource(Texture* dst, uint32_t dst_subresource, const Texture* src, uint32_t src_subresource);
 
     /**
-     * @brief Start encoding compute commands.
+     * \brief Start encoding compute commands.
      *
      * The returned \c ComputeCommandEncoder is used to bind compute pipelines and issue dispatches.
      * The encoding is ended when the \c ComputeCommandEncoder is destroyed.
@@ -520,7 +520,7 @@ public:
     ComputeCommandEncoder encode_compute_commands();
 
     /**
-     * @brief Start encoding render commands.
+     * \brief Start encoding render commands.
      *
      * The returned \c RenderCommandEncoder is used to bind graphics pipelines and issue dispatches.
      * The encoding is ended when the \c RenderCommandEncoder is destroyed.
@@ -528,7 +528,7 @@ public:
     RenderCommandEncoder encode_render_commands(Framebuffer* framebuffer);
 
     /**
-     * @brief Start encoding ray tracing commands.
+     * \brief Start encoding ray tracing commands.
      *
      * The returned \c RayTracingCommandEncoder is used to bind ray tracing pipelines and issue dispatches.
      * It also serves for building and managing acceleration structures.

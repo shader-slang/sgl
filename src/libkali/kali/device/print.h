@@ -8,7 +8,8 @@
 
 namespace kali {
 
-/** @brief Debug printer.
+/**
+ * \brief Debug printer.
  *
  * This class implements host-side support for shader debug printing.
  */

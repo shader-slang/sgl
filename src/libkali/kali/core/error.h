@@ -9,8 +9,8 @@
 #include <string_view>
 
 /**
- * @file error.h
- * @brief Error handling utilities.
+ * \file error.h
+ * \brief Error handling utilities.
  *
  * Exceptions:
  * - KALI_THROW(msg, ...)

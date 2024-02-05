@@ -24,7 +24,7 @@ struct MemoryHeapDesc {
 };
 
 /**
- * @brief A memory heap is used to allocate temporary host-visible memory.
+ * \brief A memory heap is used to allocate temporary host-visible memory.
  *
  * A memory heap is a collection of memory pages. Each page has a buffer of size \c page_size.
  * When allocating memory, the heap tries to add the allocation to the current page.
@@ -92,16 +92,16 @@ public:
     const Stats& stats() const { return m_stats; }
 
     /**
-     * @brief Allocate memory from this heap.
+     * \brief Allocate memory from this heap.
      *
-     * @param size The number of bytes to allocate.
-     * @param alignment The alignment of the allocation.
-     * @return Returns a unique pointer to the allocation.
+     * \param size The number of bytes to allocate.
+     * \param alignment The alignment of the allocation.
+     * \return Returns a unique pointer to the allocation.
      */
     Allocation allocate(DeviceSize size, DeviceSize alignment = 1);
 
     /**
-     * @brief Execute deferred releases.
+     * \brief Execute deferred releases.
      *
      * This function should be called regularly to execute deferred releases.
      */

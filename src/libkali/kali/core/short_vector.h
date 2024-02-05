@@ -6,10 +6,10 @@
 namespace kali {
 
 /**
- * @brief A vector that stores a small number of elements on the stack.
+ * \brief A vector that stores a small number of elements on the stack.
  *
- * @tparam T Element type
- * @tparam N Size of the short vector
+ * \tparam T Element type
+ * \tparam N Size of the short vector
  */
 template<typename T, std::size_t N>
 class short_vector {

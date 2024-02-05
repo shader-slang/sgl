@@ -8,10 +8,10 @@
 namespace kali {
 
 /**
- * @brief A vector that stores up to a fixed number of elements.
+ * \brief A vector that stores up to a fixed number of elements.
  *
- * @tparam T Element type
- * @tparam N Maximum size of the static vector
+ * \tparam T Element type
+ * \tparam N Maximum size of the static vector
  */
 template<typename T, std::size_t N>
 class static_vector {

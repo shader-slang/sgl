@@ -6,7 +6,7 @@
 namespace kali {
 
 /**
- * @brief Base class for all stream objects.
+ * \brief Base class for all stream objects.
  */
 class KALI_API Stream : public Object {
     KALI_OBJECT(Stream)

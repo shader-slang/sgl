@@ -16,8 +16,8 @@ namespace kali::math {
  * - Math operators are element-wise (e.g. +, -, *, /)
  * - Free standing functions for vector operations (e.g. dot(), cross(), etc.)
  *
- * @tparam T Scalar type
- * @tparam N Number of elements (1-4)
+ * \tparam T Scalar type
+ * \tparam N Number of elements (1-4)
  */
 template<typename T, int N>
 struct vector;

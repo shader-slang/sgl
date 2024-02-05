@@ -37,9 +37,9 @@ public:
     virtual ~LoggerOutput() = default;
 
     /// Write a log message.
-    /// @param level The log level.
-    /// @param module The module name.
-    /// @param msg The message.
+    /// \param level The log level.
+    /// \param module The module name.
+    /// \param msg The message.
     virtual void write(LogLevel level, const std::string_view module, const std::string_view msg) = 0;
 };
 
@@ -117,9 +117,9 @@ class KALI_API Logger : public Object {
     KALI_OBJECT(Logger)
 public:
     /// Constructor.
-    /// @param level The log level to use (messages with level >= this will be logged).
-    /// @param name The name of the logger.
-    /// @param use_default_outputs Whether to use the default outputs (console + debug console on windows).
+    /// \param level The log level to use (messages with level >= this will be logged).
+    /// \param name The name of the logger.
+    /// \param use_default_outputs Whether to use the default outputs (console + debug console on windows).
     Logger(LogLevel level = LogLevel::info, const std::string_view name = {}, bool use_default_outputs = true);
 
     static ref<Logger>
@@ -129,29 +129,29 @@ public:
     }
 
     /// Add a console logger output.
-    /// @param colored Whether to use colored output.
-    /// @return The created logger output.
+    /// \param colored Whether to use colored output.
+    /// \return The created logger output.
     ref<LoggerOutput> add_console_output(bool colored = true);
 
     /// Add a file logger output.
-    /// @param path The path to the log file.
-    /// @return The created logger output.
+    /// \param path The path to the log file.
+    /// \return The created logger output.
     ref<LoggerOutput> add_file_output(const std::filesystem::path& path);
 
     /// Add a debug console logger output (Windows only).
-    /// @return The created logger output.
+    /// \return The created logger output.
     ref<LoggerOutput> add_debug_console_output();
 
     /// Use the same outputs as the given logger.
-    /// @param other Logger to copy outputs from.
+    /// \param other Logger to copy outputs from.
     void use_same_outputs(const Logger& other);
 
     /// Add a logger output.
-    /// @param output The logger output to add.
+    /// \param output The logger output to add.
     void add_output(ref<LoggerOutput> output);
 
     /// Remove a logger output.
-    /// @param output The logger output to remove.
+    /// \param output The logger output to remove.
     void remove_output(ref<LoggerOutput> output);
 
     /// Remove all logger outputs.
@@ -166,9 +166,9 @@ public:
     void set_level(LogLevel level);
 
     /// Log a message.
-    /// @param level The log level.
-    /// @param msg The message.
-    /// @param frequency The log frequency.
+    /// \param level The log level.
+    /// \param msg The message.
+    /// \param frequency The log frequency.
     void log(LogLevel level, const std::string_view msg, LogFrequency frequency = LogFrequency::always);
 
     // Define logging functions.

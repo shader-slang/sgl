@@ -18,9 +18,9 @@ namespace kali::math {
  * - Math operators are element-wise (e.g. +, -, *, /)
  * - Free standing functions for matrix operations (e.g. mul(), transpose(), etc.)
  *
- * @tparam T Scalar type
- * @tparam RowCount Number of rows (1-4)
- * @tparam ColCount Number of columns (1-4)
+ * \tparam T Scalar type
+ * \tparam RowCount Number of rows (1-4)
+ * \tparam ColCount Number of columns (1-4)
  */
 template<typename T, int RowCount, int ColCount>
 class matrix {

@@ -41,7 +41,7 @@ static constexpr bool KALI_TRACK_ALL_REFS{false};
 namespace kali {
 
 /**
- * @brief Object base class with intrusive reference counting
+ * \brief Object base class with intrusive reference counting
  *
  * The Object class provides a convenient foundation of a class hierarchy that
  * will ease lifetime and ownership-related issues whenever Python bindings are
@@ -171,7 +171,7 @@ public:                                                                         
     }
 
 /**
- * @brief Install Python reference counting handlers
+ * \brief Install Python reference counting handlers
  *
  * The `Object` class is designed so that the dependency on Python is
  * *optional*: the code compiles in ordinary C++ projects, in which case the
@@ -197,9 +197,9 @@ namespace detail {
 
 
 /**
- * @brief Reference counting helper.
+ * \brief Reference counting helper.
  *
- * The @a ref template is a simple wrapper to store a pointer to an object. It
+ * The \a ref template is a simple wrapper to store a pointer to an object. It
  * takes care of increasing and decreasing the object's reference count as
  * needed. When the last reference goes out of scope, the associated object
  * will be deallocated.
@@ -555,7 +555,7 @@ static_assert(std::is_same_v<remove_ref<const ref<Object>>::type, Object> == tru
 
 
 /**
- * @brief Breakable reference counting helper for avoding reference cycles.
+ * \brief Breakable reference counting helper for avoding reference cycles.
  *
  * This helper represents a strong reference (ref<T>) that can be broken.
  * This is accomplished by storing both a strong reference and a raw pointer.
@@ -569,7 +569,7 @@ static_assert(std::is_same_v<remove_ref<const ref<Object>>::type, Object> == tru
  * reference to the parent object. This allows the parent object to be destroyed
  * when all of the external references to it are released.
  *
- * This helper can be used in place of a @a ref, but it cannot be reassigned.
+ * This helper can be used in place of a \a ref, but it cannot be reassigned.
  */
 template<typename T>
 class breakable_ref {

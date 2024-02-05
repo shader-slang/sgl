@@ -274,7 +274,7 @@ public:
     void deferred_release(ISlangUnknown* object);
 
     /**
-     * @brief Execute deferred releases.
+     * \brief Execute deferred releases.
      *
      * This function should be called regularly to execute deferred releases.
      */
@@ -308,7 +308,7 @@ public:
      * requires "Developer Mode" to be enabled and the executed Python interpreter to be
      * stored on the same drive as the kali library.
      *
-     * @return Return true if D3D12 Agility SDK was successfully enabled.
+     * \return Return true if D3D12 Agility SDK was successfully enabled.
      */
     static bool enable_agility_sdk();
 

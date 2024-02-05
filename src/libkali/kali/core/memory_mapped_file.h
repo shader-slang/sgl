@@ -31,9 +31,9 @@ public:
 
     /**
      * Constructor opening a file. Use is_open() to check if successful.
-     * @param path Path to open.
-     * @param mapped_size Number of bytes to map into memory (automatically clamped to the file size).
-     * @param access_hint Hint on how memory is accessed.
+     * \param path Path to open.
+     * \param mapped_size Number of bytes to map into memory (automatically clamped to the file size).
+     * \param access_hint Hint on how memory is accessed.
      */
     MemoryMappedFile(
         const std::filesystem::path& path,
@@ -46,10 +46,10 @@ public:
 
     /**
      * Open a file.
-     * @param path Path to open.
-     * @param mapped_size Number of bytes to map into memory (automatically clamped to the file size).
-     * @param access_hint Hint on how memory is accessed.
-     * @return True if file was successfully opened.
+     * \param path Path to open.
+     * \param mapped_size Number of bytes to map into memory (automatically clamped to the file size).
+     * \param access_hint Hint on how memory is accessed.
+     * \return True if file was successfully opened.
      */
     bool open(
         const std::filesystem::path& path,
@@ -83,9 +83,9 @@ private:
 
     /**
      * Replace mapping by a new one of the same file.
-     * @param offset Offset from start of the file in bytes (must be multiple of page size).
-     * @param mapped_size Size of mapping in bytes.
-     * @return True if successful.
+     * \param offset Offset from start of the file in bytes (must be multiple of page size).
+     * \param mapped_size Size of mapping in bytes.
+     * \return True if successful.
      */
     bool remap(uint64_t offset, size_t mapped_size);
 
