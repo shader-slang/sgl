@@ -258,7 +258,7 @@ function(kali_copy_binary src dst_dir)
     set(dst ${KALI_OUTPUT_DIRECTORY}/${dst_dir})
     set_property(GLOBAL APPEND PROPERTY KALI_BINARY_FILES_SRC ${src})
     set_property(GLOBAL APPEND PROPERTY KALI_BINARY_FILES_DST ${dst})
-    install(FILES ${src} DESTINATION ${CMAKE_INSTALL_LIBDIR}/${dst_dir})
+    install(FILES ${src} DESTINATION ${CMAKE_INSTALL_BINDIR}/${dst_dir})
 endfunction()
 
 function(kali_copy_library target)
@@ -361,5 +361,4 @@ install(
 
 # Install python extension
 install(TARGETS kali_ext LIBRARY DESTINATION kali)
-install(FILES ${KALI_OUTPUT_DIRECTORY}/python/kali/__init__.py DESTINATION kali)
-install(DIRECTORY ${KALI_OUTPUT_DIRECTORY}/python/kali/kali_ext DESTINATION kali/kali_ext)
+install(DIRECTORY ${KALI_OUTPUT_DIRECTORY}/python/kali/ DESTINATION kali FILES_MATCHING PATTERN "*.py" PATTERN "*.pyi")
