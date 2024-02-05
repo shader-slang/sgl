@@ -11,7 +11,7 @@
 #include <span>
 #include <string>
 
-// GLFW forward declarations
+// GLFW forward declarations.
 struct GLFWwindow;
 
 namespace kali {
@@ -46,7 +46,11 @@ class KALI_API Window : public Object {
     KALI_OBJECT(Window)
 public:
     /// Constructor.
-    /// @param desc The window description.
+    /// \param width Width of the window in pixels.
+    /// \param height Height of the window in pixels.
+    /// \param title Title of the window.
+    /// \param mode Window mode.
+    /// \param resizable Whether the window is resizable.
     Window(WindowDesc desc);
     ~Window();
 
