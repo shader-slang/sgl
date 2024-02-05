@@ -17,7 +17,8 @@ KALI_PY_EXPORT(utils_tev)
         "name"_a = "",
         "host"_a = "127.0.0.1",
         "port"_a = 14158,
-        "max_retries"_a = 3
+        "max_retries"_a = 3,
+        D(utils, show_in_tev)
     );
     utils.def(
         "show_in_tev",
@@ -26,7 +27,8 @@ KALI_PY_EXPORT(utils_tev)
         "name"_a = "",
         "host"_a = "127.0.0.1",
         "port"_a = 14158,
-        "max_retries"_a = 3
+        "max_retries"_a = 3,
+        D(utils, show_in_tev_2)
     );
     utils.def(
         "show_in_tev_async",
@@ -35,7 +37,8 @@ KALI_PY_EXPORT(utils_tev)
         "name"_a = "",
         "host"_a = "127.0.0.1",
         "port"_a = 14158,
-        "max_retries"_a = 3
+        "max_retries"_a = 3,
+        D(utils, show_in_tev_async)
     );
     utils.def(
         "show_in_tev_async",
@@ -44,6 +47,7 @@ KALI_PY_EXPORT(utils_tev)
         "name"_a = "",
         "host"_a = "127.0.0.1",
         "port"_a = 14158,
-        "max_retries"_a = 3
+        "max_retries"_a = 3,
+        D(utils, show_in_tev_async_2)
     );
 }

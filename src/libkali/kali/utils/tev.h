@@ -11,7 +11,7 @@
 namespace kali::utils {
 
 /**
- * \brief Show an image in the tev viewer (https://github.com/Tom94/tev).
+ * \brief Show a bitmap in the tev viewer (https://github.com/Tom94/tev).
  *
  * This will block until the image is sent over.
  *
@@ -30,6 +30,18 @@ KALI_API bool show_in_tev(
     uint32_t max_retries = 3
 );
 
+/**
+ * \brief Show texture in the tev viewer (https://github.com/Tom94/tev).
+ *
+ * This will block until the image is sent over.
+ *
+ * \param texture Texture to show.
+ * \param name Name of the image in tev. If not specified, a unique name will be generated.
+ * \param host Host to connect to.
+ * \param port Port to connect to.
+ * \param max_retries Maximum number of retries.
+ * \return True if successful.
+ */
 KALI_API bool show_in_tev(
     const Texture* texture,
     std::string name = "",
@@ -38,6 +50,17 @@ KALI_API bool show_in_tev(
     uint32_t max_retries = 3
 );
 
+/**
+ * \brief Show a bitmap in the tev viewer (https://github.com/Tom94/tev).
+ *
+ * This will return immediately and send the image asynchronously in the background.
+ *
+ * \param bitmap Bitmap to show.
+ * \param name Name of the image in tev. If not specified, a unique name will be generated.
+ * \param host Host to connect to.
+ * \param port Port to connect to.
+ * \param max_retries Maximum number of retries.
+ */
 KALI_API void show_in_tev_async(
     const Bitmap* bitmap,
     std::string name = "",
@@ -46,6 +69,17 @@ KALI_API void show_in_tev_async(
     uint32_t max_retries = 3
 );
 
+/**
+ * \brief Show a texture in the tev viewer (https://github.com/Tom94/tev).
+ *
+ * This will return immediately and send the image asynchronously in the background.
+ *
+ * \param bitmap Texture to show.
+ * \param name Name of the image in tev. If not specified, a unique name will be generated.
+ * \param host Host to connect to.
+ * \param port Port to connect to.
+ * \param max_retries Maximum number of retries.
+ */
 KALI_API void show_in_tev_async(
     const Texture* texture,
     std::string name = "",
