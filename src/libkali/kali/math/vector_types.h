@@ -132,7 +132,7 @@ struct vector<T, 2> {
 
     [[nodiscard]] static constexpr int length() noexcept { return dimension; }
 
-#include "vector_swizzle_2.inl.h"
+#include "vector_swizzle_2.inl"
 };
 
 template<typename T>
@@ -202,7 +202,7 @@ struct vector<T, 3> {
 
     [[nodiscard]] static constexpr int length() noexcept { return dimension; }
 
-#include "vector_swizzle_3.inl.h"
+#include "vector_swizzle_3.inl"
 };
 
 template<typename T>
@@ -282,7 +282,7 @@ struct vector<T, 4> {
 
     [[nodiscard]] static constexpr int length() noexcept { return dimension; }
 
-#include "vector_swizzle_4.inl.h"
+#include "vector_swizzle_4.inl"
 };
 
 using bool1 = vector<bool, 1>;
