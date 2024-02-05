@@ -116,6 +116,10 @@ public:
 class KALI_API Logger : public Object {
     KALI_OBJECT(Logger)
 public:
+    /// Constructor.
+    /// @param level The log level to use (messages with level >= this will be logged).
+    /// @param name The name of the logger.
+    /// @param use_default_outputs Whether to use the default outputs (console + debug console on windows).
     Logger(LogLevel level = LogLevel::info, const std::string_view name = {}, bool use_default_outputs = true);
 
     static ref<Logger>

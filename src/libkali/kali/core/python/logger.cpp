@@ -20,7 +20,7 @@ KALI_PY_EXPORT(core_logger)
 {
     using namespace kali;
 
-    nb::enum_<LogLevel>(m, "LogLevel")
+    nb::enum_<LogLevel>(m, "LogLevel", D(LogLevel))
         .value("none", LogLevel::none)
         .value("debug", LogLevel::debug)
         .value("info", LogLevel::info)
@@ -28,18 +28,22 @@ KALI_PY_EXPORT(core_logger)
         .value("error", LogLevel::error)
         .value("fatal", LogLevel::fatal);
 
-    nb::enum_<LogFrequency>(m, "LogFrequency").value("always", LogFrequency::always).value("once", LogFrequency::once);
+    nb::enum_<LogFrequency>(m, "LogFrequency")
+        .value("always", LogFrequency::always, D(LogFrequency, always))
+        .value("once", LogFrequency::once, D(LogFrequency, once));
 
-    nb::class_<LoggerOutput, Object, PyLoggerOutput>(m, "LoggerOutput")
+    nb::class_<LoggerOutput, Object, PyLoggerOutput>(m, "LoggerOutput", D(LoggerOutput))
         .def(nb::init<>())
-        .def("write", &LoggerOutput::write, "level"_a, "name"_a, "msg"_a);
+        .def("write", &LoggerOutput::write, "level"_a, "name"_a, "msg"_a, D(LoggerOutput, write));
 
-    nb::class_<ConsoleLoggerOutput, LoggerOutput>(m, "ConsoleLoggerOutput").def(nb::init<bool>(), "colored"_a = true);
+    nb::class_<ConsoleLoggerOutput, LoggerOutput>(m, "ConsoleLoggerOutput", D(ConsoleLoggerOutput))
+        .def(nb::init<bool>(), "colored"_a = true);
 
-    nb::class_<FileLoggerOutput, LoggerOutput>(m, "FileLoggerOutput")
+    nb::class_<FileLoggerOutput, LoggerOutput>(m, "FileLoggerOutput", D(FileLoggerOutput))
         .def(nb::init<const std::filesystem::path&>(), "path"_a);
 
-    nb::class_<DebugConsoleLoggerOutput, LoggerOutput>(m, "DebugConsoleLoggerOutput").def(nb::init<>());
+    nb::class_<DebugConsoleLoggerOutput, LoggerOutput>(m, "DebugConsoleLoggerOutput", D(DebugConsoleLoggerOutput))
+        .def(nb::init<>());
 
     // clang-format off
 #define DEF_LOG_METHOD(name) def(#name, [](Logger& self, const std::string_view msg) { self.name(msg); }, "msg"_a)
@@ -47,23 +51,22 @@ KALI_PY_EXPORT(core_logger)
 
     nb::class_<Logger>(m, "Logger")
         .def(
-            "__init__",
-            [](Logger* self, LogLevel level, std::string_view name, bool use_default_outputs)
-            { new (self) Logger(level, name, use_default_outputs); },
+            nb::init<LogLevel, std::string_view, bool>(),
             "level"_a = LogLevel::info,
             "name"_a = "",
-            "use_default_outputs"_a = true
+            "use_default_outputs"_a = true,
+            D(Logger, Logger)
         )
-        .def_prop_rw("level", &Logger::level, &Logger::set_level)
-        .def_prop_rw("name", &Logger::name, &Logger::set_name)
-        .def("add_console_output", &Logger::add_console_output, "colored"_a = true)
-        .def("add_file_output", &Logger::add_file_output, "path"_a)
-        .def("add_debug_console_output", &Logger::add_debug_console_output)
-        .def("add_output", &Logger::add_output)
-        .def("use_same_outputs", &Logger::use_same_outputs, "other"_a)
-        .def("remove_output", &Logger::remove_output)
-        .def("remove_all_outputs", &Logger::remove_all_outputs)
-        .def("log", &Logger::log, "level"_a, "msg"_a, "frequency"_a = LogFrequency::always)
+        .def_prop_rw("level", &Logger::level, &Logger::set_level, D(Logger, level))
+        .def_prop_rw("name", &Logger::name, &Logger::set_name, D(Logger, name))
+        .def("add_console_output", &Logger::add_console_output, "colored"_a = true, D(Logger, add_console_output))
+        .def("add_file_output", &Logger::add_file_output, "path"_a, D(Logger, add_file_output))
+        .def("add_debug_console_output", &Logger::add_debug_console_output, D(Logger, add_debug_console_output))
+        .def("add_output", &Logger::add_output, "output"_a, D(Logger, add_output))
+        .def("use_same_outputs", &Logger::use_same_outputs, "other"_a, D(Logger, use_same_outputs))
+        .def("remove_output", &Logger::remove_output, "output"_a, D(Logger, remove_output))
+        .def("remove_all_outputs", &Logger::remove_all_outputs, D(Logger, remove_all_outputs))
+        .def("log", &Logger::log, "level"_a, "msg"_a, "frequency"_a = LogFrequency::always, D(Logger, log))
         .DEF_LOG_METHOD(debug)
         .DEF_LOG_METHOD(info)
         .DEF_LOG_METHOD(warn)
@@ -74,7 +77,7 @@ KALI_PY_EXPORT(core_logger)
         .DEF_LOG_METHOD(warn_once)
         .DEF_LOG_METHOD(error_once)
         .DEF_LOG_METHOD(fatal_once)
-        .def_static("get", &Logger::get, nb::rv_policy::reference);
+        .def_static("get", &Logger::get, nb::rv_policy::reference, D(Logger, get));
 
 #undef DEF_LOG_METHOD
 
