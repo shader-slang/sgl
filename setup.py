@@ -49,9 +49,9 @@ class CMakeBuild(build_ext):
 
         # Run local setup script to download dependencies and cmake/ninja
         if os.name == "nt":
-            os.system("setup.bat")
+            subprocess.run("setup.bat", shell=True, check=True)
         elif os.name == "posix" or os.name == "darwin":
-            os.system("setup.sh")
+            subprocess.run("./setup.sh", shell=True, check=True)
         else:
             raise f"Unsupported OS: {os.name}"
 
@@ -64,7 +64,7 @@ class CMakeBuild(build_ext):
 
         cmake = str(OS_TO_CMAKE_EXE[os.name])
         cmake_preset = OS_TO_CMAKE_PRESET[os.name]
-        build_dir = SOURCE_DIR / "build/pip"
+        build_dir = str(SOURCE_DIR / "build/pip")
 
         cmake_args = [
             "--preset",
@@ -76,7 +76,7 @@ class CMakeBuild(build_ext):
             f"-DCMAKE_INSTALL_LIBDIR=kali",
             f"-DCMAKE_INSTALL_BINDIR=kali",
             f"-DCMAKE_INSTALL_INCLUDEDIR=kali/include",
-            f"-DCMAKE_INSTALL_DATAROOTDIR=kali/share",
+            f"-DCMAKE_INSTALL_DATAROOTDIR=kali",
             "-DKALI_BUILD_EXAMPLES=OFF",
             "-DKALI_BUILD_TESTS=OFF",
         ]
@@ -86,9 +86,9 @@ class CMakeBuild(build_ext):
             cmake_args += [item for item in os.environ["CMAKE_ARGS"].split(" ") if item]
 
         # Configure, build and install
-        subprocess.run([cmake, *cmake_args], shell=True, env=env, check=True)
-        subprocess.run([cmake, "--build", build_dir], shell=True, env=env, check=True)
-        subprocess.run([cmake, "--install", build_dir], shell=True, env=env, check=True)
+        subprocess.run([cmake, *cmake_args], env=env, check=True)
+        subprocess.run([cmake, "--build", build_dir], env=env, check=True)
+        subprocess.run([cmake, "--install", build_dir], env=env, check=True)
 
 
 VERSION_REGEX = re.compile(

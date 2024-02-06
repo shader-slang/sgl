@@ -242,6 +242,8 @@ function(target_copy_shaders target output_dir)
                 MAIN_DEPENDENCY ${src_file}
                 COMMENT "${target}: Copying shader ${file}"
             )
+
+            install(FILES ${src_file} DESTINATION ${CMAKE_INSTALL_DATADIR}/shaders/${file})
         endif()
     endforeach()
 endfunction()
@@ -347,18 +349,20 @@ file(GENERATE OUTPUT ${KALI_OUTPUT_DIRECTORY}/python/kali/__init__.py INPUT ${CM
 # install
 # -----------------------------------------------------------------------------
 
+# Install binaries.
 install(
     TARGETS kali
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
+# Install header files.
 install(
     DIRECTORY src/libkali/kali
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     FILES_MATCHING PATTERN "*.h"
 )
 
-# Install python extension
+# Install python extension.
 install(TARGETS kali_ext LIBRARY DESTINATION kali)
 install(DIRECTORY ${KALI_OUTPUT_DIRECTORY}/python/kali/ DESTINATION kali FILES_MATCHING PATTERN "*.py" PATTERN "*.pyi")
