@@ -20,17 +20,26 @@ except ImportError:
 
 SOURCE_DIR = Path(__file__).parent.resolve()
 
-OS_TO_CMAKE_EXE = {
-    "nt": SOURCE_DIR / "tools/host/cmake/bin/cmake.exe",
-    "posix": SOURCE_DIR / "tools/host/cmake/bin/cmake",
-    "darwin": SOURCE_DIR / "tools/host/cmake/bin/cmake",
-}
+if sys.platform.startswith("win"):
+    PLATFORM="windows"
+elif sys.platform.startswith("linux"):
+    PLATFORM="linux"
+elif sys.platform.startswith("darwin"):
+    PLATFORM="macos"
+else:
+    raise Exception(f"Unsupported platform: {sys.platform}")
 
-OS_TO_CMAKE_PRESET = {
-    "nt": "windows-msvc",
-    "posix": "linux-gcc",
-    "darwin": "macos-clang",
-}
+CMAKE_EXE = {
+    "windows": SOURCE_DIR / "tools/host/cmake/bin/cmake.exe",
+    "linux": SOURCE_DIR / "tools/host/cmake/bin/cmake",
+    "macos": SOURCE_DIR / "tools/host/cmake/CMake.app/Contents/bin/cmake",
+}[PLATFORM]
+
+CMAKE_PRESET = {
+    "windows": "windows-msvc",
+    "linux": "linux-gcc",
+    "macos": "macos-clang",
+}[PLATFORM]
 
 # A CMakeExtension needs a sourcedir instead of a file list.
 # The name must be the _single_ output extension from the CMake build.
@@ -48,12 +57,10 @@ class CMakeBuild(build_ext):
         extdir = ext_fullpath.parent.resolve()
 
         # Run local setup script to download dependencies and cmake/ninja
-        if os.name == "nt":
+        if PLATFORM == "windows":
             subprocess.run("setup.bat", shell=True, check=True)
-        elif os.name == "posix" or os.name == "darwin":
-            subprocess.run("./setup.sh", shell=True, check=True)
         else:
-            raise f"Unsupported OS: {os.name}"
+            subprocess.run("./setup.sh", shell=True, check=True)
 
         # Setup environment variables
         env = os.environ.copy()
@@ -61,14 +68,11 @@ class CMakeBuild(build_ext):
             import setuptools.msvc
             env = setuptools.msvc.msvc14_get_vc_env("x64")
 
-
-        cmake = str(OS_TO_CMAKE_EXE[os.name])
-        cmake_preset = OS_TO_CMAKE_PRESET[os.name]
         build_dir = str(SOURCE_DIR / "build/pip")
 
         cmake_args = [
             "--preset",
-            cmake_preset,
+            CMAKE_PRESET,
             "-B",
             build_dir,
             "-DCMAKE_DEFAULT_BUILD_TYPE=Release",
@@ -86,9 +90,9 @@ class CMakeBuild(build_ext):
             cmake_args += [item for item in os.environ["CMAKE_ARGS"].split(" ") if item]
 
         # Configure, build and install
-        subprocess.run([cmake, *cmake_args], env=env, check=True)
-        subprocess.run([cmake, "--build", build_dir], env=env, check=True)
-        subprocess.run([cmake, "--install", build_dir], env=env, check=True)
+        subprocess.run([CMAKE_EXE, *cmake_args], env=env, check=True)
+        subprocess.run([CMAKE_EXE, "--build", build_dir], env=env, check=True)
+        subprocess.run([CMAKE_EXE, "--install", build_dir], env=env, check=True)
 
 
 VERSION_REGEX = re.compile(
