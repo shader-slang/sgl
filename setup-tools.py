@@ -219,7 +219,7 @@ class Package:
             download_sha512 = read_sha512_file(self.download_sha512_path)
             install_sha512 = read_sha512_file(self.install_sha512_path)
             if download_sha512 == install_sha512:
-                print(f"Skipping, already intalled.")
+                print(f"Skipping, already installed.")
                 return
         self.download(ctx)
         self.deploy(ctx)
