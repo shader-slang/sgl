@@ -1,14 +1,12 @@
 ### 0.1
 
 - rename project
-- pip support
-- reorganize python extension deployment
 - add support for loading EXR files
 - add support for texture init data
 - add more type checking to `ShaderCursor`
-- add a simple windowed application base class
 - add rdoc strings
 - add support for passing entrypoint arguments
+- add a simple windowed application base class
 
 
 ### Misc
