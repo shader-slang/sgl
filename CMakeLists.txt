@@ -222,6 +222,7 @@ set(SHADER_EXTENSION_REGEX "\.(slang|slangh|hlsli|hlsl)$")
 function(target_copy_shaders target output_dir)
     get_target_property(target_source_dir ${target} SOURCE_DIR)
     set(shader_output_dir ${KALI_SHADER_OUTPUT_DIRECTORY}/${output_dir})
+    set(shader_install_dir ${CMAKE_INSTALL_DATADIR}/shaders/${output_dir})
 
     # Get list of all target sources.
     get_target_property(target_sources_ ${target} SOURCES)
@@ -243,7 +244,8 @@ function(target_copy_shaders target output_dir)
                 COMMENT "${target}: Copying shader ${file}"
             )
 
-            install(FILES ${src_file} DESTINATION ${CMAKE_INSTALL_DATADIR}/shaders/${file})
+            get_filename_component(dir ${file} DIRECTORY)
+            install(FILES ${src_file} DESTINATION ${shader_install_dir}/${dir})
         endif()
     endforeach()
 endfunction()
