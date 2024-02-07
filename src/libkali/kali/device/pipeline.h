@@ -86,7 +86,7 @@ struct RayTracingPipelineDesc {
     RayTracingPipelineFlags flags{RayTracingPipelineFlags::none};
 };
 
-class RayTracingPipeline : public Pipeline {
+class KALI_API RayTracingPipeline : public Pipeline {
 public:
     RayTracingPipeline(ref<Device> device, RayTracingPipelineDesc desc);
 
