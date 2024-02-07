@@ -145,8 +145,8 @@ std::string CommandQueue::to_string() const
 {
     return fmt::format(
         "CommandQueue("
-        "  device={}\n",
-        "  type={}\n",
+        "  device = {},\n",
+        "  type = {}\n",
         ")",
         m_device,
         m_desc.type
@@ -1302,7 +1302,7 @@ std::string CommandBuffer::to_string() const
 {
     return fmt::format(
         "CommandBuffer(\n"
-        "  device={}\n"
+        "  device = {}\n"
         ")",
         m_device
     );

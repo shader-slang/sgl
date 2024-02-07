@@ -138,7 +138,14 @@ void FileStream::flush()
 
 std::string FileStream::to_string() const
 {
-    return fmt::format("FileStream(path=\"{}\", mode={})", m_path, m_mode);
+    return fmt::format(
+        "FileStream(\n"
+        "  path = \"{}\",\n"
+        "  mode = {}\n"
+        ")",
+        m_path,
+        m_mode
+    );
 }
 
 } // namespace kali

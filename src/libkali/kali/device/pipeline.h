@@ -65,6 +65,8 @@ class KALI_API GraphicsPipeline : public Pipeline {
 public:
     GraphicsPipeline(ref<Device> device, GraphicsPipelineDesc desc);
 
+    std::string to_string() const override;
+
 private:
 };
 
@@ -87,6 +89,8 @@ struct RayTracingPipelineDesc {
 class RayTracingPipeline : public Pipeline {
 public:
     RayTracingPipeline(ref<Device> device, RayTracingPipelineDesc desc);
+
+    std::string to_string() const override;
 
 private:
 };

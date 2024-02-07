@@ -209,12 +209,12 @@ std::string ResourceView::to_string() const
 {
     return fmt::format(
         "ResourceView(\n"
-        "  type={},\n"
-        "  format={},\n"
-        "  buffer_range=(first_element={}, element_count={}),\n"
-        "  buffer_element_size={},\n"
-        // "  subresource_range={},\n"
-        "  resource={},\n"
+        "  type = {},\n"
+        "  format = {},\n"
+        "  buffer_range = (first_element={}, element_count={}),\n"
+        "  buffer_element_size = {},\n"
+        // "  subresource_range = {},\n"
+        "  resource = {}\n"
         ")",
         m_desc.type,
         m_desc.format,
@@ -456,13 +456,14 @@ std::string Buffer::to_string() const
 {
     return fmt::format(
         "Buffer(\n"
-        "  device={},\n"
-        "  size={},\n"
-        "  struct_size={},\n"
-        "  format={},\n"
-        "  usage={},\n"
-        "  memory_type={},\n"
-        "  memory_usage={}\n"
+        "  device = {},\n"
+        "  size = {},\n"
+        "  struct_size = {},\n"
+        "  format = {},\n"
+        "  usage = {},\n"
+        "  memory_type = {},\n"
+        "  memory_usage = {},\n"
+        "  debug_name = {}\n"
         ")",
         m_device,
         m_desc.size,
@@ -470,7 +471,8 @@ std::string Buffer::to_string() const
         m_desc.format,
         m_desc.usage,
         m_desc.memory_type,
-        string::format_byte_size(memory_usage().device)
+        string::format_byte_size(memory_usage().device),
+        m_desc.debug_name
     );
 }
 
@@ -822,18 +824,19 @@ std::string Texture::to_string() const
 {
     return fmt::format(
         "Texture(\n"
-        "  device={},\n"
-        "  type={},\n"
-        "  width={},\n"
-        "  height={},\n"
-        "  depth={},\n"
-        "  mip_count={},\n"
-        "  array_size={},\n"
-        "  sample_count={},\n"
-        "  format={},\n"
-        "  usage={},\n"
-        "  memory_type={},\n"
-        "  size={}\n"
+        "  device = {},\n"
+        "  type = {},\n"
+        "  width = {},\n"
+        "  height = {},\n"
+        "  depth = {},\n"
+        "  mip_count = {},\n"
+        "  array_size = {},\n"
+        "  sample_count = {},\n"
+        "  format = {},\n"
+        "  usage = {},\n"
+        "  memory_type = {},\n"
+        "  size = {},\n"
+        "  debug_name = {}\n"
         ")",
         m_device,
         m_desc.type,
@@ -846,7 +849,8 @@ std::string Texture::to_string() const
         m_desc.format,
         m_desc.usage,
         m_desc.memory_type,
-        string::format_byte_size(memory_usage().device)
+        string::format_byte_size(memory_usage().device),
+        m_desc.debug_name
     );
 }
 

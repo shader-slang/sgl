@@ -25,13 +25,13 @@ std::string GamepadState::to_string() const
 {
     return fmt::format(
         "GamepadState(\n"
-        "  left_x={},\n"
-        "  left_y={},\n"
-        "  right_x={},\n"
-        "  right_y={},\n"
-        "  left_trigger={},\n"
-        "  right_trigger={},\n"
-        "  buttons={}\n"
+        "  left_x = {},\n"
+        "  left_y = {},\n"
+        "  right_x = {},\n"
+        "  right_y = {},\n"
+        "  left_trigger = {},\n"
+        "  right_trigger = {},\n"
+        "  buttons = {}\n"
         ")",
         left_x,
         left_y,

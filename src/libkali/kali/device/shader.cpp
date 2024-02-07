@@ -8,6 +8,7 @@
 
 #include "kali/core/type_utils.h"
 #include "kali/core/platform.h"
+#include "kali/core/string.h"
 
 #include <slang.h>
 
@@ -441,13 +442,11 @@ std::string ShaderProgram::to_string() const
 {
     return fmt::format(
         "ShaderProgram(\n"
-        "  global_scope={}\n"
-        "  entry_points=[\n"
-        "    {}\n"
-        "  ]\n"
+        "  global_scope = {},\n"
+        "  entry_points = {}\n"
         ")",
         m_global_scope->to_string(),
-        "" // fmt::join(m_entry_points, ",\n        ")
+        string::indent(string::list_to_string(m_entry_points))
     );
 }
 

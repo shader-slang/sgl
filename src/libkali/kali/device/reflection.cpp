@@ -34,11 +34,11 @@ std::string TypeLayoutReflection::to_string() const
     case TypeReflection::Kind::struct_:
         return fmt::format(
             "TypeLayoutReflection(\n"
-            "  name={},\n"
-            "  kind={},\n"
-            "  size={},\n"
-            "  stride={},\n"
-            "  fields={}\n"
+            "  name = {},\n"
+            "  kind = {},\n"
+            "  size = {},\n"
+            "  stride = {},\n"
+            "  fields = {}\n"
             ")",
             c_str_to_string(name()),
             kind(),
@@ -50,11 +50,11 @@ std::string TypeLayoutReflection::to_string() const
     case TypeReflection::Kind::resource:
         return fmt::format(
             "TypeLayoutReflection(\n"
-            "  name={},\n"
-            "  kind={},\n"
-            "  shape={},\n"
-            "  access={},\n"
-            "  element_type_layout={}\n"
+            "  name = {},\n"
+            "  kind = {},\n"
+            "  shape = {},\n"
+            "  access = {},\n"
+            "  element_type_layout = {}\n"
             ")",
             c_str_to_string(name()),
             kind(),
@@ -66,8 +66,8 @@ std::string TypeLayoutReflection::to_string() const
     case TypeReflection::Kind::scalar:
         return fmt::format(
             "TypeLayoutReflection(\n"
-            "  kind={},\n"
-            "  scalar_type={}\n"
+            "  kind = {},\n"
+            "  scalar_type = {}\n"
             ")",
             kind(),
             type()->scalar_type()
@@ -77,10 +77,10 @@ std::string TypeLayoutReflection::to_string() const
     case TypeReflection::Kind::matrix:
         return fmt::format(
             "TypeLayoutReflection(\n"
-            "  kind={},\n"
-            "  scalar_type={},\n"
-            "  row_count={},\n"
-            "  col_count={}\n"
+            "  kind = {},\n"
+            "  scalar_type = {},\n"
+            "  row_count = {},\n"
+            "  col_count = {}\n"
             ")",
             kind(),
             type()->scalar_type(),
@@ -91,7 +91,7 @@ std::string TypeLayoutReflection::to_string() const
     default:
         return fmt::format(
             "TypeLayoutReflection(\n"
-            "  kind={},\n"
+            "  kind = {}\n"
             ")",
             kind()
         );
@@ -102,8 +102,8 @@ std::string VariableLayoutReflection::to_string() const
 {
     return fmt::format(
         "VariableLayoutReflection(\n"
-        "  name={},\n"
-        "  type_layout={}\n"
+        "  name = {},\n"
+        "  type_layout = {}\n"
         ")",
         c_str_to_string(name()),
         string::indent(type_layout()->to_string())
@@ -114,11 +114,11 @@ std::string EntryPointLayout::to_string() const
 {
     return fmt::format(
         "EntryPointLayout(\n"
-        "  name={},\n"
-        "  name_override={},\n"
-        "  stage={},\n"
-        "  compute_thread_group_size={},\n"
-        "  parameters={}\n"
+        "  name = {},\n"
+        "  name_override = {},\n"
+        "  stage = {},\n"
+        "  compute_thread_group_size = {},\n"
+        "  parameters = {}\n"
         ")",
         c_str_to_string(name()),
         c_str_to_string(name_override()),
@@ -132,9 +132,9 @@ std::string ProgramLayout::to_string() const
 {
     return fmt::format(
         "ProgramLayout(\n"
-        "  globals_type={},\n"
-        "  parameters={}\n"
-        "  entry_points={}\n"
+        "  globals_type = {},\n"
+        "  parameters = {},\n"
+        "  entry_points = {}\n"
         ")",
         string::indent(globals_type_layout()->to_string()),
         string::indent(string::list_to_string(parameters())),

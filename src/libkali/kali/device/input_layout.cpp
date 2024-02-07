@@ -43,39 +43,39 @@ InputLayout::InputLayout(ref<Device> device, InputLayoutDesc desc)
     SLANG_CALL(m_device->gfx_device()->createInputLayout(gfx_desc, m_gfx_input_layout.writeRef()));
 }
 
+inline std::string to_string(const InputElementDesc& desc)
+{
+    return fmt::format(
+        "(semantic_name=\"{}\", semantic_index={}, format={}, offset={}, buffer_slot_index={})",
+        desc.semantic_name,
+        desc.semantic_index,
+        desc.format,
+        desc.offset,
+        desc.buffer_slot_index
+    );
+}
+
+inline std::string to_string(const VertexStreamDesc& desc)
+{
+    return fmt::format(
+        "(stride={}, slot_class={}, instance_data_step_rate={})",
+        desc.stride,
+        desc.slot_class,
+        desc.instance_data_step_rate
+    );
+}
+
 std::string InputLayout::to_string() const
 {
-    std::vector<std::string> input_elements;
-    for (const auto& input_element : m_desc.input_elements) {
-        input_elements.push_back(fmt::format(
-            "InputElementDesc(semantic_name=\"{}\", semantic_index={}, format={}, offset={}, buffer_slot_index={})",
-            input_element.semantic_name,
-            input_element.semantic_index,
-            input_element.format,
-            input_element.offset,
-            input_element.buffer_slot_index
-        ));
-    }
-
-    std::vector<std::string> vertex_streams;
-    for (const auto& vertex_stream : m_desc.vertex_streams) {
-        vertex_streams.push_back(fmt::format(
-            "VertexStreamDesc(stride={}, slot_class={}, instance_data_step_rate={})",
-            vertex_stream.stride,
-            vertex_stream.slot_class,
-            vertex_stream.instance_data_step_rate
-        ));
-    }
-
     return fmt::format(
         "InputLayout(\n"
-        "  device={},\n"
-        "  input_elements=[{}],\n"
-        "  vertex_streams=[{}]\n"
+        "  device = {},\n"
+        "  input_elements = {},\n"
+        "  vertex_streams = {}\n"
         ")",
         m_device,
-        string::indent(string::join(input_elements, ",\n")),
-        string::indent(string::join(vertex_streams, ",\n"))
+        string::indent(string::list_to_string(m_desc.input_elements)),
+        string::indent(string::list_to_string(m_desc.vertex_streams))
     );
 }
 

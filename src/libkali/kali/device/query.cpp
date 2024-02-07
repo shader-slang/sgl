@@ -73,9 +73,9 @@ std::string QueryPool::to_string() const
 {
     return fmt::format(
         "QueryPool(\n"
-        "  device={},\n",
-        "  type={},\n",
-        "  count={}\n"
+        "  device = {},\n",
+        "  type = {},\n",
+        "  count = {}\n"
         ")",
         m_device,
         m_desc.type,

@@ -9,18 +9,6 @@
 
 namespace kali {
 
-inline std::string to_string(const FramebufferAttachmentDesc& desc)
-{
-    return fmt::format(
-        "(format={}, sample_count={}, mip_level={}, base_array_layer={}, layer_count={})",
-        desc.texture->format(),
-        desc.texture->desc().sample_count,
-        desc.mip_level,
-        desc.base_array_layer,
-        desc.layer_count
-    );
-}
-
 Framebuffer::Framebuffer(ref<Device> device, FramebufferDesc desc)
     : DeviceResource(std::move(device))
     , m_desc(std::move(desc))
@@ -109,12 +97,24 @@ Framebuffer::Framebuffer(ref<Device> device, FramebufferDesc desc)
     );
 }
 
+inline std::string to_string(const FramebufferAttachmentDesc& desc)
+{
+    return fmt::format(
+        "(format={}, sample_count={}, mip_level={}, base_array_layer={}, layer_count={})",
+        desc.texture->format(),
+        desc.texture->desc().sample_count,
+        desc.mip_level,
+        desc.base_array_layer,
+        desc.layer_count
+    );
+}
+
 std::string Framebuffer::to_string() const
 {
     return fmt::format(
         "Framebuffer(\n"
-        "  render_targets={},\n"
-        "  depth_stencil={}\n"
+        "  render_targets = {},\n"
+        "  depth_stencil = {}\n"
         ")",
         string::indent(string::list_to_string(std::span{m_desc.render_targets})),
         m_desc.depth_stencil ? string::indent(kali::to_string(*m_desc.depth_stencil)) : "null"

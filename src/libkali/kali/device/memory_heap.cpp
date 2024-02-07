@@ -107,13 +107,13 @@ std::string MemoryHeap::to_string() const
 {
     return fmt::format(
         "MemoryHeap(\n"
-        "  device={},\n"
-        "  fence={},\n"
-        "  memory_type={},\n"
-        "  usage={},\n"
-        "  page_size={},\n"
-        "  retain_large_pages={},\n"
-        "  debug_name={}\n"
+        "  device = {},\n"
+        "  fence = {},\n"
+        "  memory_type = {},\n"
+        "  usage = {},\n"
+        "  page_size = {},\n"
+        "  retain_large_pages = {},\n"
+        "  debug_name = {}\n"
         ")",
         m_device,
         m_fence,

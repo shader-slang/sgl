@@ -63,8 +63,8 @@ std::string ComputePipeline::to_string() const
 {
     return fmt::format(
         "ComputePipeline(\n"
-        "  device={},\n"
-        "  thread_group_size={}\n"
+        "  device = {},\n"
+        "  thread_group_size = {}\n"
         ")",
         m_device,
         m_thread_group_size
@@ -150,6 +150,16 @@ GraphicsPipeline::GraphicsPipeline(ref<Device> device, GraphicsPipelineDesc desc
     SLANG_CALL(m_device->gfx_device()->createGraphicsPipelineState(gfx_desc, m_gfx_pipeline_state.writeRef()));
 }
 
+std::string GraphicsPipeline::to_string() const
+{
+    return fmt::format(
+        "GraphicsPipeline(\n"
+        "  device = {}\n"
+        ")",
+        m_device
+    );
+}
+
 // ----------------------------------------------------------------------------
 // RayTracingPipeline
 // ----------------------------------------------------------------------------
@@ -180,6 +190,16 @@ RayTracingPipeline::RayTracingPipeline(ref<Device> device, RayTracingPipelineDes
         .flags = static_cast<gfx::RayTracingPipelineFlags::Enum>(desc.flags),
     };
     SLANG_CALL(m_device->gfx_device()->createRayTracingPipelineState(gfx_desc, m_gfx_pipeline_state.writeRef()));
+}
+
+std::string RayTracingPipeline::to_string() const
+{
+    return fmt::format(
+        "RayTracingPipeline(\n"
+        "  device = {}\n"
+        ")",
+        m_device
+    );
 }
 
 } // namespace kali
