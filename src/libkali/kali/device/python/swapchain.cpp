@@ -32,6 +32,7 @@ KALI_PY_EXPORT(device_swapchain)
 
     nb::class_<Swapchain, Object> swapchain(m, "Swapchain");
     swapchain.def_prop_ro("desc", &Swapchain::desc);
+    swapchain.def_prop_ro("images", &Swapchain::images);
     swapchain.def("get_image", &Swapchain::get_image, "index"_a);
     swapchain.def("present", &Swapchain::present);
     swapchain.def("acquire_next_image", &Swapchain::acquire_next_image);

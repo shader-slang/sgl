@@ -31,6 +31,9 @@ public:
     /// Returns the swapchain description.
     const SwapchainDesc& desc() const { return m_desc; }
 
+    /// Returns the back buffer images.
+    const std::vector<ref<Texture>>& images() const { return m_images; }
+
     /// Returns the back buffer image at position `index`.
     const ref<Texture>& get_image(uint32_t index) const;
 
