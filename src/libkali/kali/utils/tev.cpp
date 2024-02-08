@@ -88,9 +88,9 @@ bool show_in_tev(const Bitmap* bitmap, std::string name, std::string host, uint1
     if (name.empty())
         name = fmt::format("image_{}", image_counter++);
 
-    std::vector<const char*> channel_names(bitmap->channel_names().size());
+    std::vector<const char*> channel_names(bitmap->pixel_struct()->field_count());
     for (size_t i = 0; i < channel_names.size(); ++i)
-        channel_names[i] = bitmap->channel_names()[i].c_str();
+        channel_names[i] = bitmap->pixel_struct()->operator[](i).name.c_str();
 
     for (uint32_t attempt = 1; attempt <= max_retries; ++attempt) {
         std::unique_ptr<tevclient::Client> client = ClientPool::get().acquire_client(host, port);

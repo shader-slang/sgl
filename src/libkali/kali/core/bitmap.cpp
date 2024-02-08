@@ -94,27 +94,6 @@ KALI_DISABLE_MSVC_WARNING(4611)
 
 namespace kali {
 
-inline std::vector<std::string> get_channel_names(Bitmap::PixelFormat pixel_format)
-{
-    switch (pixel_format) {
-    case Bitmap::PixelFormat::y:
-        return {"Y"};
-    case Bitmap::PixelFormat::ya:
-        return {"Y", "A"};
-    case Bitmap::PixelFormat::r:
-        return {"R"};
-    case Bitmap::PixelFormat::rg:
-        return {"R", "G"};
-    case Bitmap::PixelFormat::rgb:
-        return {"R", "G", "B"};
-    case Bitmap::PixelFormat::rgba:
-        return {"R", "G", "B", "A"};
-    case Bitmap::PixelFormat::multi_channel:
-        return {};
-    }
-    KALI_THROW("Invalid pixel format");
-}
-
 Bitmap::Bitmap(
     PixelFormat pixel_format,
     ComponentType component_type,
@@ -128,8 +107,6 @@ Bitmap::Bitmap(
     , m_component_type(component_type)
     , m_width(width)
     , m_height(height)
-    , m_channel_count(channel_count)
-    , m_channel_names(channel_names)
     , m_data(reinterpret_cast<uint8_t*>(data))
     , m_owns_data(false)
 {
@@ -138,13 +115,10 @@ Bitmap::Bitmap(
         "Expected non-zero channel count for multi-channel pixel format."
     );
 
-    if (pixel_format != PixelFormat::multi_channel) {
-        m_channel_names = get_channel_names(pixel_format);
-        m_channel_count = static_cast<uint32_t>(m_channel_names.size());
-    }
-
     // Use sRGB gamma by default for 8-bit and 16-bit images.
     m_srgb_gamma = (m_component_type == ComponentType::uint8) || (m_component_type == ComponentType::uint16);
+
+    rebuild_pixel_struct(channel_count, channel_names);
 
     if (!m_data) {
         m_data = std::make_unique<uint8_t[]>(buffer_size());
@@ -155,10 +129,9 @@ Bitmap::Bitmap(
 Bitmap::Bitmap(const Bitmap& other)
     : m_pixel_format(other.m_pixel_format)
     , m_component_type(other.m_component_type)
+    , m_pixel_struct(new Struct(*other.m_pixel_struct))
     , m_width(other.m_width)
     , m_height(other.m_height)
-    , m_channel_count(other.m_channel_count)
-    , m_channel_names(other.m_channel_names)
     , m_srgb_gamma(other.m_srgb_gamma)
     , m_data(new uint8_t[other.buffer_size()])
 {
@@ -168,10 +141,9 @@ Bitmap::Bitmap(const Bitmap& other)
 Bitmap::Bitmap(Bitmap&& other)
     : m_pixel_format(std::exchange(other.m_pixel_format, PixelFormat(0)))
     , m_component_type(std::exchange(other.m_component_type, ComponentType(0)))
+    , m_pixel_struct(std::exchange(other.m_pixel_struct, nullptr))
     , m_width(std::exchange(other.m_width, 0))
     , m_height(std::exchange(other.m_height, 0))
-    , m_channel_count(std::exchange(other.m_channel_count, 0))
-    , m_channel_names(std::move(other.m_channel_names))
     , m_srgb_gamma(std::exchange(other.m_srgb_gamma, false))
     , m_data(std::move(other.m_data))
 {
@@ -333,9 +305,20 @@ void Bitmap::write_async(const std::filesystem::path& path, FileFormat format, i
     );
 }
 
-size_t Bitmap::bytes_per_pixel() const
+void Bitmap::set_srgb_gamma(bool srgb_gamma)
 {
-    return Struct::type_size(m_component_type) * m_channel_count;
+    m_srgb_gamma = srgb_gamma;
+    // Adjust pixel struct flags.
+    if (m_pixel_format != PixelFormat::multi_channel) {
+        for (Struct::Field& field : *m_pixel_struct) {
+            if (field.name == "A") {
+                if (m_srgb_gamma)
+                    field.flags |= Struct::Flags::srgb_gamma;
+                else
+                    field.flags &= ~Struct::Flags::srgb_gamma;
+            }
+        }
+    }
 }
 
 void Bitmap::clear()
@@ -355,19 +338,6 @@ void Bitmap::vflip()
         std::memcpy(data + j * row_size, temp, row_size);
         j--;
     }
-}
-
-ref<Struct> Bitmap::pixel_struct() const
-{
-    ref<Struct> result = make_ref<Struct>();
-    Struct::Flags flags = Struct::Flags::none;
-    if (m_component_type == ComponentType::uint8 || m_component_type == ComponentType::uint16)
-        flags |= Struct::Flags::normalized;
-    if (m_srgb_gamma)
-        flags |= Struct::Flags::srgb_gamma;
-    for (size_t i = 0; i < m_channel_count; ++i)
-        result->append(m_channel_names[i], m_component_type, flags);
-    return result;
 }
 
 ref<Bitmap> Bitmap::convert(PixelFormat pixel_format, ComponentType component_type, bool srgb_gamma) const
@@ -392,8 +362,8 @@ void Bitmap::convert(Bitmap* target) const
     bool src_is_rgb = m_pixel_format == PixelFormat::rgb || m_pixel_format == PixelFormat::rgba;
     bool src_is_y = m_pixel_format == PixelFormat::y || m_pixel_format == PixelFormat::ya;
 
-    ref<Struct> src_struct = pixel_struct();
-    ref<Struct> dst_struct = target->pixel_struct();
+    const Struct* src_struct = pixel_struct();
+    ref<Struct> dst_struct = make_ref<Struct>(*target->pixel_struct());
 
     for (Struct::Field& field : *dst_struct) {
         if (src_struct->has_field(field.name)) {
@@ -435,9 +405,8 @@ void Bitmap::convert(Bitmap* target) const
 bool Bitmap::operator==(const Bitmap& other) const
 {
     return m_pixel_format == other.m_pixel_format && m_component_type == other.m_component_type
-        && m_width == other.m_width && m_height == other.m_height && m_channel_count == other.m_channel_count
-        && m_channel_names == other.m_channel_names && m_srgb_gamma == other.m_srgb_gamma
-        && std::memcmp(m_data.get(), other.m_data.get(), buffer_size()) == 0;
+        && *m_pixel_struct == *other.m_pixel_struct && m_width == other.m_width && m_height == other.m_height
+        && m_srgb_gamma == other.m_srgb_gamma && std::memcmp(m_data.get(), other.m_data.get(), buffer_size()) == 0;
 }
 
 std::string Bitmap::to_string() const
@@ -446,7 +415,7 @@ std::string Bitmap::to_string() const
         "Bitmap(\n"
         "  pixel_format = {},\n"
         "  component_type = {},\n"
-        "  channel_count = {},\n"
+        "  pixel_struct = {}\n",
         "  width = {},\n"
         "  height = {},\n"
         "  srgb_gamma = {},\n"
@@ -454,7 +423,7 @@ std::string Bitmap::to_string() const
         ")",
         m_pixel_format,
         m_component_type,
-        m_channel_count,
+        string::indent(m_pixel_struct->to_string()),
         m_width,
         m_height,
         m_srgb_gamma,
@@ -468,6 +437,56 @@ void Bitmap::static_init()
 }
 
 void Bitmap::static_shutdown() { }
+
+void Bitmap::rebuild_pixel_struct(uint32_t channel_count, const std::vector<std::string>& channel_names)
+{
+    std::vector<std::string> channels;
+    switch (m_pixel_format) {
+    case PixelFormat::y:
+        channels = {"Y"};
+        break;
+    case PixelFormat::ya:
+        channels = {"Y", "A"};
+        break;
+    case PixelFormat::r:
+        channels = {"R"};
+        break;
+    case PixelFormat::rg:
+        channels = {"R", "G"};
+        break;
+    case PixelFormat::rgb:
+        channels = {"R", "G", "B"};
+        break;
+    case PixelFormat::rgba:
+        channels = {"R", "G", "B", "A"};
+        break;
+    case PixelFormat::multi_channel:
+        KALI_ASSERT(channel_count > 0);
+        channels = channel_names;
+        if (channels.empty()) {
+            for (uint32_t i = 0; i < channel_count; ++i)
+                channels.push_back(fmt::format("channel{}", i));
+        }
+        if (channels.size() != channel_count)
+            KALI_THROW("Channel names do not match the channel count!");
+        std::vector<std::string> sorted_channels{channels};
+        std::sort(sorted_channels.begin(), sorted_channels.end());
+        if (std::unique(sorted_channels.begin(), sorted_channels.end()) != sorted_channels.end())
+            KALI_THROW("Channel names must not contain duplicates!");
+        break;
+    }
+
+    m_pixel_struct = make_ref<Struct>();
+    for (const auto& channel : channels) {
+        bool is_alpha = m_pixel_format != PixelFormat::multi_channel && channel == "A";
+        Struct::Flags flags = Struct::Flags::none;
+        if (Struct::is_integer(m_component_type))
+            flags |= Struct::Flags::normalized;
+        if (m_srgb_gamma && is_alpha)
+            flags |= Struct::Flags::srgb_gamma;
+        m_pixel_struct->append(channel, m_component_type, flags);
+    }
+}
 
 void Bitmap::read(Stream* stream, FileFormat format)
 {
@@ -691,25 +710,19 @@ void Bitmap::read_png(Stream* stream)
     switch (color_type) {
     case PNG_COLOR_TYPE_GRAY:
         m_pixel_format = PixelFormat::y;
-        m_channel_count = 1;
         break;
     case PNG_COLOR_TYPE_GRAY_ALPHA:
         m_pixel_format = PixelFormat::ya;
-        m_channel_count = 2;
         break;
     case PNG_COLOR_TYPE_RGB:
         m_pixel_format = PixelFormat::rgb;
-        m_channel_count = 3;
         break;
     case PNG_COLOR_TYPE_RGB_ALPHA:
         m_pixel_format = PixelFormat::rgba;
-        m_channel_count = 4;
         break;
     default:
         KALI_THROW("Unknown color type {}!", color_type);
     }
-
-    m_channel_names = get_channel_names(m_pixel_format);
 
     switch (bit_depth) {
     case 8:
@@ -724,6 +737,8 @@ void Bitmap::read_png(Stream* stream)
 
     // TODO should we detect non-srgb pngs?
     m_srgb_gamma = true;
+
+    rebuild_pixel_struct();
 
 #if 0
     m_srgb_gamma = true;
@@ -1017,17 +1032,15 @@ void Bitmap::read_jpg(Stream* stream)
     switch (cinfo.output_components) {
     case 1:
         m_pixel_format = PixelFormat::y;
-        m_channel_count = 1;
         break;
     case 3:
         m_pixel_format = PixelFormat::rgb;
-        m_channel_count = 3;
         break;
     default:
         KALI_THROW("Unsupported number of components!");
     }
 
-    m_channel_names = get_channel_names(m_pixel_format);
+    rebuild_pixel_struct();
 
     auto fs = dynamic_cast<FileStream*>(stream);
     log_debug(
@@ -1186,9 +1199,9 @@ void Bitmap::read_bmp(Stream* stream)
     m_height = h;
     m_pixel_format = c == 3 ? PixelFormat::rgb : PixelFormat::rgba;
     m_component_type = ComponentType::uint8;
-    m_channel_count = c;
-    m_channel_names = get_channel_names(m_pixel_format);
     m_srgb_gamma = true;
+
+    rebuild_pixel_struct();
 
     auto fs = dynamic_cast<FileStream*>(stream);
     log_debug(
@@ -1206,7 +1219,6 @@ void Bitmap::read_bmp(Stream* stream)
 
     KALI_ASSERT_EQ(m_width, static_cast<uint32_t>(w));
     KALI_ASSERT_EQ(m_height, static_cast<uint32_t>(h));
-    KALI_ASSERT_EQ(m_channel_count, static_cast<uint32_t>(c));
 
     m_data = std::unique_ptr<uint8_t[]>(data);
     m_owns_data = true;
@@ -1216,7 +1228,7 @@ void Bitmap::write_bmp(Stream* stream) const
 {
     check_required_format("BMP", {PixelFormat::y, PixelFormat::rgb, PixelFormat::rgba}, {ComponentType::uint8});
 
-    if (!stbi_write_bmp_to_func(&stbi_write_func, stream, m_width, m_height, m_channel_count, data()))
+    if (!stbi_write_bmp_to_func(&stbi_write_func, stream, m_width, m_height, int(channel_count()), data()))
         KALI_THROW("Failed to write BMP file!");
 }
 
@@ -1236,9 +1248,9 @@ void Bitmap::read_tga(Stream* stream)
     m_height = h;
     m_pixel_format = c == 1 ? PixelFormat::y : (c == 3 ? PixelFormat::rgb : PixelFormat::rgba);
     m_component_type = ComponentType::uint8;
-    m_channel_count = c;
-    m_channel_names = get_channel_names(m_pixel_format);
     m_srgb_gamma = true;
+
+    rebuild_pixel_struct();
 
     auto fs = dynamic_cast<FileStream*>(stream);
     log_debug(
@@ -1256,7 +1268,6 @@ void Bitmap::read_tga(Stream* stream)
 
     KALI_ASSERT_EQ(m_width, static_cast<uint32_t>(w));
     KALI_ASSERT_EQ(m_height, static_cast<uint32_t>(h));
-    KALI_ASSERT_EQ(m_channel_count, static_cast<uint32_t>(c));
 
     m_data = std::unique_ptr<uint8_t[]>(data);
     m_owns_data = true;
@@ -1266,7 +1277,7 @@ void Bitmap::write_tga(Stream* stream) const
 {
     check_required_format("TGA", {PixelFormat::y, PixelFormat::rgb, PixelFormat::rgba}, {ComponentType::uint8});
 
-    if (!stbi_write_tga_to_func(&stbi_write_func, stream, m_width, m_height, m_channel_count, data()))
+    if (!stbi_write_tga_to_func(&stbi_write_func, stream, m_width, m_height, int(channel_count()), data()))
         KALI_THROW("Failed to write BMP file!");
 }
 
@@ -1286,9 +1297,9 @@ void Bitmap::read_hdr(Stream* stream)
     m_height = h;
     m_pixel_format = PixelFormat::rgb;
     m_component_type = ComponentType::float32;
-    m_channel_count = 3;
-    m_channel_names = get_channel_names(m_pixel_format);
     m_srgb_gamma = false;
+
+    rebuild_pixel_struct();
 
     auto fs = dynamic_cast<FileStream*>(stream);
     log_debug(
@@ -1306,7 +1317,6 @@ void Bitmap::read_hdr(Stream* stream)
 
     KALI_ASSERT_EQ(m_width, static_cast<uint32_t>(w));
     KALI_ASSERT_EQ(m_height, static_cast<uint32_t>(h));
-    KALI_ASSERT_EQ(m_channel_count, static_cast<uint32_t>(c));
 
     m_data = std::unique_ptr<uint8_t[]>(reinterpret_cast<uint8_t*>(data));
     m_owns_data = true;
@@ -1321,7 +1331,7 @@ void Bitmap::write_hdr(Stream* stream) const
             stream,
             m_width,
             m_height,
-            m_channel_count,
+            int(channel_count()),
             reinterpret_cast<const float*>(data())
         ))
         KALI_THROW("Failed to write HDR file!");
@@ -1464,7 +1474,7 @@ void Bitmap::read_exr(Stream* stream)
         KALI_THROW("EXR image contains invalid component type (must be float16, float32 or uint32)");
     }
 
-    enum { Unknown, R, G, B, X, Y, Z, A, RY, BY, NumClasses };
+    enum { unknown, R, G, B, X, Y, Z, A, RY, BY, CLASS_COUNT };
 
     // Classification scheme for color channels
     auto channel_class = [](std::string name) -> uint8_t
@@ -1491,14 +1501,14 @@ void Bitmap::read_exr(Stream* stream)
             return BY;
         if (name == "a")
             return A;
-        return Unknown;
+        return unknown;
     };
 
     // Assign a sorting key to color channels
     auto channel_key = [&](std::string name) -> std::string
     {
         uint8_t class_ = channel_class(name);
-        if (class_ == Unknown)
+        if (class_ == unknown)
             return name;
         auto it = name.rfind(".");
         char suffix('0' + class_);
@@ -1509,9 +1519,7 @@ void Bitmap::read_exr(Stream* stream)
         return name;
     };
 
-#if 0
-
-    bool found[NumClasses] = {false};
+    bool found[CLASS_COUNT] = {false};
     std::vector<std::string> channels_sorted;
     for (auto it = channels.begin(); it != channels.end(); ++it) {
         std::string name(it.name());
@@ -1525,6 +1533,7 @@ void Bitmap::read_exr(Stream* stream)
         [&](auto const& v0, auto const& v1) { return channel_key(v0) < channel_key(v1); }
     );
 
+#if 0
     // Order channel names based on RGB/XYZ[A] suffix
     for (auto const& name : channels_sorted) {
         uint32_t flags = +Struct::Flags::Empty;
@@ -1539,33 +1548,28 @@ void Bitmap::read_exr(Stream* stream)
             flags |= +Struct::Flags::PremultipliedAlpha;
         m_struct->append(name, m_component_format, flags);
     }
+#endif
 
     // Attempt to detect a standard combination of color channels
-    m_pixel_format = PixelFormat::MultiChannel;
+    m_pixel_format = PixelFormat::multi_channel;
     bool luminance_chroma_format = false;
-    if (found[R] && found[G] && found[B]) {
-        if (m_struct->field_count() == 3)
-            m_pixel_format = PixelFormat::RGB;
-        else if (found[A] && m_struct->field_count() == 4)
-            m_pixel_format = PixelFormat::RGBA;
-    } else if (found[X] && found[Y] && found[Z]) {
-        if (m_struct->field_count() == 3)
-            m_pixel_format = PixelFormat::XYZ;
-        else if (found[A] && m_struct->field_count() == 4)
-            m_pixel_format = PixelFormat::XYZA;
-    } else if (found[Y] && found[RY] && found[BY]) {
-        if (m_struct->field_count() == 3)
-            m_pixel_format = PixelFormat::RGB;
-        else if (found[A] && m_struct->field_count() == 4)
-            m_pixel_format = PixelFormat::RGBA;
+    if (m_pixel_struct->field_count() == 3 && found[R] && found[G] && found[B]) {
+        m_pixel_format = PixelFormat::rgb;
+    } else if (m_pixel_struct->field_count() == 4 && found[R] && found[G] && found[B] && found[A]) {
+        m_pixel_format = PixelFormat::rgba;
+    } else if (m_pixel_struct->field_count() == 3 && found[Y] && found[RY] && found[BY]) {
+        m_pixel_format = PixelFormat::rgb;
         luminance_chroma_format = true;
-    } else if (found[Y]) {
-        if (m_struct->field_count() == 1)
-            m_pixel_format = PixelFormat::Y;
-        else if (found[A] && m_struct->field_count() == 2)
-            m_pixel_format = PixelFormat::YA;
+    } else if (m_pixel_struct->field_count() == 4 && found[Y] && found[RY] && found[BY] && found[A]) {
+        m_pixel_format = PixelFormat::rgba;
+        luminance_chroma_format = true;
+    } else if (m_pixel_struct->field_count() == 1 && found[Y]) {
+        m_pixel_format = PixelFormat::y;
+    } else if (m_pixel_struct->field_count() == 2 && found[Y] && found[A]) {
+        m_pixel_format = PixelFormat::ya;
     }
 
+#if 0
     // Check if there is a chromaticity header entry
     Imf::Chromaticities file_chroma;
     if (Imf::hasChromaticities(file.header()))
@@ -1936,15 +1940,14 @@ void Bitmap::write_exr(Stream* stream, int quality) const
     }
 
     size_t component_size = Struct::type_size(m_component_type);
-    size_t pixel_stride = component_size * m_channel_count;
+    size_t pixel_stride = m_pixel_struct->size();
     size_t row_stride = pixel_stride * m_width;
 
     Imf::ChannelList& channels = header.channels();
     Imf::FrameBuffer framebuffer;
     const uint8_t* ptr = uint8_data();
-    KALI_ASSERT(m_channel_count == m_channel_names.size());
-    for (uint32_t i = 0; i < m_channel_count; ++i) {
-        const std::string& channel_name = m_channel_names[i];
+    for (size_t i = 0; i < m_pixel_struct->field_count(); ++i) {
+        const std::string& channel_name = m_pixel_struct->operator[](i).name;
         Imf::Slice slice(pixel_type, (char*)(ptr + i * component_size), pixel_stride, row_stride);
         channels.insert(channel_name, Imf::Channel(pixel_type));
         framebuffer.insert(channel_name, slice);

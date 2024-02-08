@@ -183,6 +183,9 @@ public:
     /// The component type.
     ComponentType component_type() const { return m_component_type; }
 
+    /// Struct describing the pixel layout.
+    const Struct* pixel_struct() const { return m_pixel_struct; }
+
     /// The width of the bitmap in pixels.
     uint32_t width() const { return m_width; }
 
@@ -193,23 +196,20 @@ public:
     size_t pixel_count() const { return static_cast<size_t>(m_width) * m_height; }
 
     /// The number of channels in the bitmap.
-    uint32_t channel_count() const { return m_channel_count; }
-
-    /// The names of the channels in the bitmap.
-    const std::vector<std::string>& channel_names() const { return m_channel_names; }
+    uint32_t channel_count() const { return static_cast<uint32_t>(m_pixel_struct->field_count()); }
 
     /// True if the bitmap is in sRGB gamma space.
     bool srgb_gamma() const { return m_srgb_gamma; }
 
     /// Set the sRGB gamma flag.
-    /// Note that this does not convert the pixel values, it only sets the flag.
-    void set_srgb_gamma(bool srgb_gamma) { m_srgb_gamma = srgb_gamma; }
+    /// Note that this does not convert the pixel values, it only sets the flag and adjusts the pixel struct.
+    void set_srgb_gamma(bool srgb_gamma);
 
     /// Returns true if the bitmap has an alpha channel.
     bool has_alpha() const { return m_pixel_format == PixelFormat::ya || m_pixel_format == PixelFormat::rgba; }
 
     /// The number of bytes per pixel.
-    size_t bytes_per_pixel() const;
+    size_t bytes_per_pixel() const { return m_pixel_struct->size(); }
 
     /// The total size of the bitmap in bytes.
     size_t buffer_size() const { return pixel_count() * bytes_per_pixel(); }
@@ -242,8 +242,6 @@ public:
     /// Vertically flip the bitmap.
     void vflip();
 
-    ref<Struct> pixel_struct() const;
-
     ref<Bitmap> convert(PixelFormat pixel_format, ComponentType component_type, bool srgb_gamma) const;
 
     void convert(Bitmap* target) const;
@@ -260,6 +258,8 @@ public:
     static void static_shutdown();
 
 private:
+    void rebuild_pixel_struct(uint32_t channel_count = 0, const std::vector<std::string>& channel_names = {});
+
     void read(Stream* stream, FileFormat format);
 
     static FileFormat detect_file_format(Stream* stream);
@@ -290,10 +290,9 @@ private:
 
     PixelFormat m_pixel_format;
     ComponentType m_component_type;
+    ref<Struct> m_pixel_struct;
     uint32_t m_width;
     uint32_t m_height;
-    uint32_t m_channel_count;
-    std::vector<std::string> m_channel_names;
     bool m_srgb_gamma;
     std::unique_ptr<uint8_t[]> m_data;
     bool m_owns_data;
