@@ -23,16 +23,23 @@ KALI_PY_EXPORT(device_query)
         .def_rw("count", &QueryPoolDesc::count);
     nb::implicitly_convertible<nb::dict, QueryPoolDesc>();
 
-    nb::class_<QueryPool, DeviceResource>(m, "QueryPool")
-        .def_prop_ro("desc", &QueryPool::desc)
-        .def("reset", &QueryPool::reset)
-        .def("get_result", &QueryPool::get_result, "index"_a)
-        .def("get_results", nb::overload_cast<uint32_t, uint32_t>(&QueryPool::get_results), "index"_a, "count"_a)
-        .def("get_timestamp_result", &QueryPool::get_timestamp_result, "index"_a)
+    nb::class_<QueryPool, DeviceResource>(m, "QueryPool", D(QueryPool))
+        .def_prop_ro("desc", &QueryPool::desc, D(QueryPool, desc))
+        .def("reset", &QueryPool::reset, D(QueryPool, reset))
+        .def("get_result", &QueryPool::get_result, "index"_a, D(QueryPool, get_result))
+        .def(
+            "get_results",
+            nb::overload_cast<uint32_t, uint32_t>(&QueryPool::get_results),
+            "index"_a,
+            "count"_a,
+            D(QueryPool, get_results)
+        )
+        .def("get_timestamp_result", &QueryPool::get_timestamp_result, "index"_a, D(QueryPool, get_timestamp_result))
         .def(
             "get_timestamp_results",
             nb::overload_cast<uint32_t, uint32_t>(&QueryPool::get_timestamp_results),
             "index"_a,
-            "count"_a
+            "count"_a,
+            D(QueryPool, get_timestamp_results)
         );
 }
