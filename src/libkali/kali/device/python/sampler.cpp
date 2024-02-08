@@ -42,5 +42,5 @@ KALI_PY_EXPORT(device_sampler)
         .def_rw("max_lod", &SamplerDesc::max_lod);
     nb::implicitly_convertible<nb::dict, SamplerDesc>();
 
-    nb::class_<Sampler, DeviceResource>(m, "Sampler").def_prop_ro("desc", &Sampler::desc);
+    nb::class_<Sampler, DeviceResource>(m, "Sampler", D(Sampler)).def_prop_ro("desc", &Sampler::desc, D(Sampler, desc));
 }
