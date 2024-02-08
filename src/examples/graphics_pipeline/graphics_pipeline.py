@@ -22,7 +22,6 @@ index_buffer = device.create_buffer(
 )
 
 render_texture = device.create_texture(
-    type=kali.TextureType.texture_2d,
     format=kali.Format.rgba32_float,
     width=1024,
     height=1024,

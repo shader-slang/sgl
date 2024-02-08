@@ -123,7 +123,6 @@ with command_buffer.encode_ray_tracing_commands() as encoder:
 command_buffer.submit()
 
 render_texture = device.create_texture(
-    type=kali.TextureType.texture_2d,
     format=kali.Format.rgba32_float,
     width=1024,
     height=1024,

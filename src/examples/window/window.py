@@ -143,7 +143,6 @@ class App:
                 or self.output_texture.height != image.height
             ):
                 self.output_texture = self.device.create_texture(
-                    type=kali.TextureType.texture_2d,
                     format=kali.Format.rgba8_unorm,
                     width=image.width,
                     height=image.height,

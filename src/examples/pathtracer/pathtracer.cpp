@@ -688,7 +688,6 @@ struct Accumulator {
     {
         if (!accumulator || accumulator->width() != input->width() || accumulator->height() != input->height()) {
             accumulator = device->create_texture({
-                .type = TextureType::texture_2d,
                 .format = Format::rgba32_float,
                 .width = input->width(),
                 .height = input->height(),
@@ -833,7 +832,6 @@ struct App {
             if (!output_texture || output_texture->width() != image->width()
                 || output_texture->height() != image->height()) {
                 output_texture = device->create_texture({
-                    .type = TextureType::texture_2d,
                     .format = Format::rgba8_unorm,
                     .width = image->width(),
                     .height = image->height(),
@@ -842,7 +840,6 @@ struct App {
                     .debug_name = "output_texture",
                 });
                 render_texture = device->create_texture({
-                    .type = TextureType::texture_2d,
                     .format = Format::rgba32_float,
                     .width = image->width(),
                     .height = image->height(),
@@ -851,7 +848,6 @@ struct App {
                     .debug_name = "render_texture",
                 });
                 accum_texture = device->create_texture({
-                    .type = TextureType::texture_2d,
                     .format = Format::rgba32_float,
                     .width = image->width(),
                     .height = image->height(),

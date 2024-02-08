@@ -625,7 +625,6 @@ class Accumulator:
             or self.accumulator.height != input.height
         ):
             self.accumulator = self.device.create_texture(
-                type=kali.TextureType.texture_2d,
                 format=kali.Format.rgba32_float,
                 width=input.width,
                 height=input.height,
@@ -745,7 +744,6 @@ class App:
                 or self.output_texture.height != image.height
             ):
                 self.output_texture = self.device.create_texture(
-                    type=kali.TextureType.texture_2d,
                     format=kali.Format.rgba8_unorm,
                     width=image.width,
                     height=image.height,
@@ -755,7 +753,6 @@ class App:
                     debug_name="output_texture",
                 )
                 self.render_texture = self.device.create_texture(
-                    type=kali.TextureType.texture_2d,
                     format=kali.Format.rgba32_float,
                     width=image.width,
                     height=image.height,
@@ -765,7 +762,6 @@ class App:
                     debug_name="render_texture",
                 )
                 self.accum_texture = self.device.create_texture(
-                    type=kali.TextureType.texture_2d,
                     format=kali.Format.rgba32_float,
                     width=image.width,
                     height=image.height,

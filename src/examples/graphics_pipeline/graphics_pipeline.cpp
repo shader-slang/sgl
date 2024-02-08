@@ -43,7 +43,6 @@ int main()
         });
 
         ref<Texture> render_texture = device->create_texture({
-            .type = TextureType::texture_2d,
             .format = Format::rgba32_float,
             .width = 1024,
             .height = 1024,

@@ -8,7 +8,6 @@ COUNT = 100
 device = kali.Device()
 
 tex = device.create_texture(
-    type=kali.TextureType.texture_2d,
     format=kali.Format.rgba32_float,
     width=IMAGE_WIDTH,
     height=IMAGE_HEIGHT,

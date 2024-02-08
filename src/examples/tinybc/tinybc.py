@@ -37,7 +37,6 @@ device = kali.Device(enable_debug_layers=args.verbose)
 
 # Create input texture
 input_tex = device.create_texture(
-    type=kali.TextureType.texture_2d,
     format=kali.Format.rgba32_float,
     width=w,
     height=h,
@@ -52,7 +51,6 @@ if args.tev:
 
 # Create decoded texture
 decoded_tex = device.create_texture(
-    type=kali.TextureType.texture_2d,
     format=kali.Format.rgba32_float,
     width=w,
     height=h,

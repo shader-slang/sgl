@@ -70,7 +70,6 @@ int main(int argc, const char* argv[])
 
     // Create input texture
     ref<Texture> input_tex = device->create_texture({
-        .type = TextureType::texture_2d,
         .format = Format::rgba32_float,
         .width = w,
         .height = h,
@@ -90,7 +89,6 @@ int main(int argc, const char* argv[])
 
     // Create decoded texture
     ref<Texture> decoded_tex = device->create_texture({
-        .type = TextureType::texture_2d,
         .format = Format::rgba32_float,
         .width = w,
         .height = h,
