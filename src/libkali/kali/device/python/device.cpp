@@ -291,7 +291,7 @@ KALI_PY_EXPORT(device_device)
     device.def(
         "create_texture",
         [](Device* self,
-           TextureType type,
+           ResourceType type,
            Format format,
            uint32_t width,
            uint32_t height,
@@ -325,7 +325,7 @@ KALI_PY_EXPORT(device_device)
                 .data_size = data ? data->nbytes() : 0,
             });
         },
-        "type"_a = TextureType::unknown,
+        "type"_a = ResourceType::unknown,
         "format"_a = Format::unknown,
         "width"_a = 0,
         "height"_a = 0,

@@ -526,29 +526,9 @@ private:
     mutable void* m_mapped_ptr{nullptr};
 };
 
-enum class TextureType : uint32_t {
-    unknown = uint32_t(ResourceType::unknown),
-    texture_1d = uint32_t(ResourceType::texture_1d),
-    texture_2d = uint32_t(ResourceType::texture_2d),
-    texture_3d = uint32_t(ResourceType::texture_3d),
-    texture_cube = uint32_t(ResourceType::texture_cube),
-};
-
-KALI_ENUM_INFO(
-    TextureType,
-    {
-        {TextureType::unknown, "unknown"},
-        {TextureType::texture_1d, "texture_1d"},
-        {TextureType::texture_2d, "texture_2d"},
-        {TextureType::texture_3d, "texture_3d"},
-        {TextureType::texture_cube, "texture_cube"},
-    }
-);
-KALI_ENUM_REGISTER(TextureType);
-
 struct TextureDesc {
-    /// Texture type.
-    TextureType type{TextureType::unknown};
+    /// Texture resource type (optional). Type is inferred from width, height, depth if not specified.
+    ResourceType type{ResourceType::unknown};
     /// Texture format.
     Format format{Format::unknown};
     /// Width in pixels.

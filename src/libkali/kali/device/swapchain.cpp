@@ -95,7 +95,7 @@ void Swapchain::get_images()
 
         m_images.push_back(m_device->create_texture_from_resource(
             {
-                .type = TextureType::texture_2d,
+                .type = ResourceType::texture_2d,
                 .format = m_desc.format,
                 .width = m_desc.width,
                 .height = m_desc.height,

@@ -482,34 +482,35 @@ std::string Buffer::to_string() const
 
 inline void process_texture_desc(TextureDesc& desc)
 {
+    KALI_CHECK(desc.type != ResourceType::buffer, "Invalid resource type.");
     KALI_CHECK(desc.format != Format::unknown, "Invalid texture format.");
 
     // Try to infer texture type from dimensions.
-    if (desc.type == TextureType::unknown) {
+    if (desc.type == ResourceType::unknown) {
         if (desc.width > 0 && desc.height == 0 && desc.depth == 0) {
-            desc.type = TextureType::texture_1d;
+            desc.type = ResourceType::texture_1d;
         } else if (desc.width > 0 && desc.height > 0 && desc.depth == 0) {
-            desc.type = TextureType::texture_2d;
+            desc.type = ResourceType::texture_2d;
         } else if (desc.width > 0 && desc.height > 0 && desc.depth > 0) {
-            desc.type = TextureType::texture_3d;
+            desc.type = ResourceType::texture_3d;
         } else {
             KALI_THROW("Failed to infer texture type from dimensions.");
         }
     } else {
         switch (desc.type) {
-        case TextureType::unknown:
+        case ResourceType::unknown:
             KALI_THROW("Invalid texture type.");
             break;
-        case TextureType::texture_1d:
+        case ResourceType::texture_1d:
             KALI_CHECK(desc.width > 0 && desc.height == 0 && desc.depth == 0, "Invalid dimensions for 1D texture.");
             break;
-        case TextureType::texture_2d:
+        case ResourceType::texture_2d:
             KALI_CHECK(desc.width > 0 && desc.height > 0 && desc.depth == 0, "Invalid dimensions for 2D texture.");
             break;
-        case TextureType::texture_3d:
+        case ResourceType::texture_3d:
             KALI_CHECK(desc.width > 0 && desc.height > 0 && desc.depth > 0, "Invalid dimensions for 3D texture.");
             break;
-        case TextureType::texture_cube:
+        case ResourceType::texture_cube:
             KALI_CHECK(desc.width > 0 && desc.height > 0 && desc.depth == 0, "Invalid dimensions for cube texture.");
             break;
         }
@@ -527,10 +528,11 @@ inline void process_texture_desc(TextureDesc& desc)
 }
 
 Texture::Texture(ref<Device> device, TextureDesc desc)
-    : Resource(std::move(device), ResourceType(desc.type))
+    : Resource(std::move(device), desc.type)
     , m_desc(std::move(desc))
 {
     process_texture_desc(m_desc);
+    m_type = m_desc.type;
 
     gfx::ITextureResource::Desc gfx_desc{};
     gfx_desc.type = static_cast<gfx::IResource::Type>(m_desc.type);

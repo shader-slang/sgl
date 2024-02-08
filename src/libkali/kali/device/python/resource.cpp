@@ -20,7 +20,7 @@ KALI_DICT_TO_DESC_FIELD(debug_name, std::string)
 KALI_DICT_TO_DESC_END()
 
 KALI_DICT_TO_DESC_BEGIN(TextureDesc)
-KALI_DICT_TO_DESC_FIELD(type, TextureType)
+KALI_DICT_TO_DESC_FIELD(type, ResourceType)
 KALI_DICT_TO_DESC_FIELD(format, Format)
 KALI_DICT_TO_DESC_FIELD(width, uint32_t)
 KALI_DICT_TO_DESC_FIELD(height, uint32_t)
@@ -65,6 +65,8 @@ inline std::optional<nb::dlpack::dtype> resource_format_to_dtype(Format format)
     }
 }
 
+static const char* __doc_kali_buffer_to_numpy = R"doc()doc";
+
 inline nb::ndarray<nb::numpy> buffer_to_numpy(Buffer* self)
 {
     size_t buffer_size = self->size();
@@ -90,6 +92,8 @@ inline nb::ndarray<nb::numpy> buffer_to_numpy(Buffer* self)
     }
 }
 
+static const char* __doc_kali_buffer_from_numpy = R"doc()doc";
+
 inline void buffer_from_numpy(Buffer* self, nb::ndarray<nb::numpy> data)
 {
     KALI_CHECK(is_ndarray_contiguous(data), "numpy array is not contiguous");
@@ -103,6 +107,8 @@ inline void buffer_from_numpy(Buffer* self, nb::ndarray<nb::numpy> data)
     command_buffer->upload_buffer_data(self, 0, data_size, data.data());
     command_buffer->submit();
 }
+
+static const char* __doc_kali_texture_to_numpy = R"doc()doc";
 
 /**
  * Python binding wrapper for returning the content of a texture as a numpy array.
@@ -141,6 +147,8 @@ inline nb::ndarray<nb::numpy> texture_to_numpy(Texture* self, uint32_t mip_level
         return nb::ndarray<nb::numpy>(data, 1, shape, owner, nullptr, nb::dtype<uint8_t>(), nb::device::cpu::value);
     }
 }
+
+static const char* __doc_kali_texture_from_numpy = R"doc()doc";
 
 inline void texture_from_numpy(Texture* self, nb::ndarray<nb::numpy> data, uint32_t mip_level, uint32_t array_slice)
 {
@@ -185,9 +193,9 @@ KALI_PY_EXPORT(device_resource)
 
     nb::kali_enum<ResourceViewType>(m, "ResourceViewType");
 
-    nb::class_<ResourceView, Object>(m, "ResourceView")
-        .def_prop_ro("type", &ResourceView::type)
-        .def_prop_ro("resource", &ResourceView::resource);
+    nb::class_<ResourceView, Object>(m, "ResourceView", D(ResourceView))
+        .def_prop_ro("type", &ResourceView::type, D(ResourceView, type))
+        .def_prop_ro("resource", &ResourceView::resource, D(ResourceView, resource));
 
     nb::class_<BufferDesc>(m, "BufferDesc")
         .def(nb::init<>())
@@ -201,30 +209,30 @@ KALI_PY_EXPORT(device_resource)
         .def_rw("debug_name", &BufferDesc::debug_name);
     nb::implicitly_convertible<nb::dict, BufferDesc>();
 
-    nb::class_<Buffer, Resource>(m, "Buffer")
-        .def_prop_ro("desc", &Buffer::desc)
-        .def_prop_ro("size", &Buffer::size)
-        .def_prop_ro("struct_size", &Buffer::struct_size)
-        .def_prop_ro("format", &Buffer::format)
-        .def_prop_ro("element_size", &Buffer::element_size)
-        .def_prop_ro("element_count", &Buffer::element_count)
-        .def_prop_ro("device_address", &Buffer::device_address)
+    nb::class_<Buffer, Resource>(m, "Buffer", D(Buffer))
+        .def_prop_ro("desc", &Buffer::desc, D(Buffer, desc))
+        .def_prop_ro("size", &Buffer::size, D(Buffer, size))
+        .def_prop_ro("struct_size", &Buffer::struct_size, D(Buffer, struct_size))
+        .def_prop_ro("format", &Buffer::format, D(Buffer, format))
+        .def_prop_ro("element_size", &Buffer::element_size, D(Buffer, element_size))
+        .def_prop_ro("element_count", &Buffer::element_count, D(Buffer, element_count))
+        .def_prop_ro("device_address", &Buffer::device_address, D(Buffer, device_address))
         .def(
             "get_srv",
             nb::overload_cast<uint64_t, uint64_t>(&Buffer::get_srv, nb::const_),
             "first_element"_a = 0,
-            "element_count"_a = BufferRange::ALL
+            "element_count"_a = BufferRange::ALL,
+            D(Buffer, get_srv)
         )
         .def(
             "get_uav",
             nb::overload_cast<uint64_t, uint64_t>(&Buffer::get_uav, nb::const_),
             "first_element"_a = 0,
-            "element_count"_a = BufferRange::ALL
+            "element_count"_a = BufferRange::ALL,
+            D(Buffer, get_uav)
         )
-        .def("to_numpy", &buffer_to_numpy)
-        .def("from_numpy", &buffer_from_numpy, "data"_a);
-
-    nb::kali_enum<TextureType>(m, "TextureType");
+        .def("to_numpy", &buffer_to_numpy, D(buffer_to_numpy))
+        .def("from_numpy", &buffer_from_numpy, "data"_a, D(buffer_from_numpy));
 
     nb::class_<TextureDesc>(m, "TextureDesc")
         .def(nb::init<>())
@@ -252,54 +260,85 @@ KALI_PY_EXPORT(device_resource)
         .def_prop_ro("total_size", &SubresourceLayout::total_size)
         .def_prop_ro("total_size_aligned", &SubresourceLayout::total_size_aligned);
 
-    nb::class_<Texture, Resource>(m, "Texture")
-        .def_prop_ro("desc", &Texture::desc)
-        .def_prop_ro("type", &Texture::type)
-        .def_prop_ro("format", &Texture::format)
-        .def_prop_ro("width", &Texture::width)
-        .def_prop_ro("height", &Texture::height)
-        .def_prop_ro("depth", &Texture::depth)
-        .def_prop_ro("array_size", &Texture::array_size)
-        .def_prop_ro("mip_count", &Texture::mip_count)
-        .def_prop_ro("subresource_count", &Texture::subresource_count)
-        .def("get_subresource_index", &Texture::get_subresource_index, "array_slice"_a, "mip_level"_a = 0)
-        .def("get_subresource_array_slice", &Texture::get_subresource_array_slice, "subresource"_a)
-        .def("get_subresource_mip_level", &Texture::get_subresource_mip_level, "subresource"_a)
-        .def("get_mip_width", &Texture::get_mip_width, "mip_level"_a = 0)
-        .def("get_mip_height", &Texture::get_mip_height, "mip_level"_a = 0)
-        .def("get_mip_depth", &Texture::get_mip_depth, "mip_level"_a = 0)
-        .def("get_mip_dimensions", &Texture::get_mip_dimensions, "mip_level"_a = 0)
-        .def("get_subresource_layout", &Texture::get_subresource_layout, "subresource"_a)
+    nb::class_<Texture, Resource>(m, "Texture", D(Texture))
+        .def_prop_ro("desc", &Texture::desc, D(Texture, desc))
+        .def_prop_ro("format", &Texture::format, D(Texture, format))
+        .def_prop_ro("width", &Texture::width, D(Texture, width))
+        .def_prop_ro("height", &Texture::height, D(Texture, height))
+        .def_prop_ro("depth", &Texture::depth, D(Texture, depth))
+        .def_prop_ro("array_size", &Texture::array_size, D(Texture, array_size))
+        .def_prop_ro("mip_count", &Texture::mip_count, D(Texture, mip_count))
+        .def_prop_ro("subresource_count", &Texture::subresource_count, D(Texture, subresource_count))
+        .def(
+            "get_subresource_index",
+            &Texture::get_subresource_index,
+            "array_slice"_a,
+            "mip_level"_a = 0,
+            D(Texture, get_subresource_index)
+        )
+        .def(
+            "get_subresource_array_slice",
+            &Texture::get_subresource_array_slice,
+            "subresource"_a,
+            D(Texture, get_subresource_array_slice)
+        )
+        .def(
+            "get_subresource_mip_level",
+            &Texture::get_subresource_mip_level,
+            "subresource"_a,
+            D(Texture, get_subresource_mip_level)
+        )
+        .def("get_mip_width", &Texture::get_mip_width, "mip_level"_a = 0, D(Texture, get_mip_width))
+        .def("get_mip_height", &Texture::get_mip_height, "mip_level"_a = 0, D(Texture, get_mip_height))
+        .def("get_mip_depth", &Texture::get_mip_depth, "mip_level"_a = 0, D(Texture, get_mip_depth))
+        .def("get_mip_dimensions", &Texture::get_mip_dimensions, "mip_level"_a = 0, D(Texture, get_mip_dimensions))
+        .def(
+            "get_subresource_layout",
+            &Texture::get_subresource_layout,
+            "subresource"_a,
+            D(Texture, get_subresource_layout)
+        )
         .def(
             "get_srv",
             nb::overload_cast<uint32_t, uint32_t, uint32_t, uint32_t>(&Texture::get_srv, nb::const_),
             "mip_level"_a = 0,
             "mip_count"_a = SubresourceRange::ALL,
             "base_array_layer"_a = 0,
-            "layer_count"_a = SubresourceRange::ALL
+            "layer_count"_a = SubresourceRange::ALL,
+            D(Texture, get_srv)
         )
         .def(
             "get_uav",
             nb::overload_cast<uint32_t, uint32_t, uint32_t>(&Texture::get_uav, nb::const_),
             "mip_level"_a = 0,
             "base_array_layer"_a = 0,
-            "layer_count"_a = SubresourceRange::ALL
+            "layer_count"_a = SubresourceRange::ALL,
+            D(Texture, get_uav)
         )
         .def(
             "get_dsv",
             &Texture::get_dsv,
             "mip_level"_a = 0,
             "base_array_layer"_a = 0,
-            "layer_count"_a = SubresourceRange::ALL
+            "layer_count"_a = SubresourceRange::ALL,
+            D(Texture, get_dsv)
         )
         .def(
             "get_rtv",
             &Texture::get_rtv,
             "mip_level"_a = 0,
             "base_array_layer"_a = 0,
-            "layer_count"_a = SubresourceRange::ALL
+            "layer_count"_a = SubresourceRange::ALL,
+            D(Texture, get_rtv)
         )
-        .def("to_bitmap", &Texture::to_bitmap, "mip_level"_a = 0, "array_slice"_a = 0)
-        .def("to_numpy", &texture_to_numpy, "mip_level"_a = 0, "array_slice"_a = 0)
-        .def("from_numpy", &texture_from_numpy, "data"_a, "mip_level"_a = 0, "array_slice"_a = 0);
+        .def("to_bitmap", &Texture::to_bitmap, "mip_level"_a = 0, "array_slice"_a = 0, D(Texture, to_bitmap))
+        .def("to_numpy", &texture_to_numpy, "mip_level"_a = 0, "array_slice"_a = 0, D(texture_to_numpy))
+        .def(
+            "from_numpy",
+            &texture_from_numpy,
+            "data"_a,
+            "mip_level"_a = 0,
+            "array_slice"_a = 0,
+            D(texture_from_numpy)
+        );
 }
