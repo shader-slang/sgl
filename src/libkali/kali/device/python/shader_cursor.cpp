@@ -20,34 +20,41 @@ KALI_PY_EXPORT(device_shader_cursor)
         .def_ro("binding_array_index", &ShaderOffset::binding_array_index)
         .def("is_valid", &ShaderOffset::is_valid);
 
-    nb::class_<ShaderCursor> shader_cursor(m, "ShaderCursor");
+    nb::class_<ShaderCursor> shader_cursor(m, "ShaderCursor", D(ShaderCursor));
 
-    shader_cursor.def(nb::init<ShaderObject*>(), "shader_object"_a);
-    shader_cursor.def_prop_ro("type_layout", &ShaderCursor::type_layout);
-    shader_cursor.def_prop_ro("type", &ShaderCursor::type);
-    shader_cursor.def_prop_ro("offset", &ShaderCursor::offset);
-    shader_cursor.def("is_valid", &ShaderCursor::is_valid);
-    shader_cursor.def("dereference", &ShaderCursor::dereference);
-    shader_cursor.def("find_field", &ShaderCursor::find_field, "name"_a);
-    shader_cursor.def("find_element", &ShaderCursor::find_element, "index"_a);
-    shader_cursor.def("find_entry_point", &ShaderCursor::find_entry_point, "index"_a);
-    shader_cursor.def("has_field", &ShaderCursor::has_field, "name"_a);
-    shader_cursor.def("has_element", &ShaderCursor::has_element, "index"_a);
-    shader_cursor.def("set_object", &ShaderCursor::set_object, "object"_a);
-    shader_cursor.def("set_resource", &ShaderCursor::set_resource, "resource_view"_a);
-    shader_cursor.def("set_buffer", &ShaderCursor::set_buffer, "buffer"_a);
-    shader_cursor.def("set_texture", &ShaderCursor::set_texture, "texture"_a);
-    shader_cursor.def("set_sampler", &ShaderCursor::set_sampler, "sampler"_a);
-    shader_cursor
-        .def("set_acceleration_structure", &ShaderCursor::set_acceleration_structure, "acceleration_structure"_a);
-    shader_cursor.def(
-        "set_data",
-        [](ShaderCursor& self, nb::ndarray<nb::device::cpu> data)
-        {
-            KALI_CHECK(is_ndarray_contiguous(data), "data is not contiguous");
-            self.set_data(data.data(), data.nbytes());
-        }
-    );
+    shader_cursor //
+        .def(nb::init<ShaderObject*>(), "shader_object"_a, D(ShaderCursor, ShaderCursor))
+        .def_prop_ro("type_layout", &ShaderCursor::type_layout, D(ShaderCursor, type_layout))
+        .def_prop_ro("type", &ShaderCursor::type, D(ShaderCursor, type))
+        .def_prop_ro("offset", &ShaderCursor::offset, D(ShaderCursor, offset))
+        .def("is_valid", &ShaderCursor::is_valid, D(ShaderCursor, is_valid))
+        .def("dereference", &ShaderCursor::dereference, D(ShaderCursor, dereference))
+        .def("find_field", &ShaderCursor::find_field, "name"_a, D(ShaderCursor, find_field))
+        .def("find_element", &ShaderCursor::find_element, "index"_a, D(ShaderCursor, find_element))
+        .def("find_entry_point", &ShaderCursor::find_entry_point, "index"_a, D(ShaderCursor, find_entry_point))
+        .def("has_field", &ShaderCursor::has_field, "name"_a, D(ShaderCursor, has_field))
+        .def("has_element", &ShaderCursor::has_element, "index"_a, D(ShaderCursor, has_element))
+        .def("set_object", &ShaderCursor::set_object, "object"_a, D(ShaderCursor, set_object))
+        .def("set_resource", &ShaderCursor::set_resource, "resource_view"_a, D(ShaderCursor, set_resource))
+        .def("set_buffer", &ShaderCursor::set_buffer, "buffer"_a, D(ShaderCursor, set_buffer))
+        .def("set_texture", &ShaderCursor::set_texture, "texture"_a, D(ShaderCursor, set_texture))
+        .def("set_sampler", &ShaderCursor::set_sampler, "sampler"_a, D(ShaderCursor, set_sampler))
+        .def(
+            "set_acceleration_structure",
+            &ShaderCursor::set_acceleration_structure,
+            "acceleration_structure"_a,
+            D(ShaderCursor, set_acceleration_structure)
+        )
+        .def(
+            "set_data",
+            [](ShaderCursor& self, nb::ndarray<nb::device::cpu> data)
+            {
+                KALI_CHECK(is_ndarray_contiguous(data), "data is not contiguous");
+                self.set_data(data.data(), data.nbytes());
+            },
+            "data"_a,
+            D(ShaderCursor, set_data)
+        );
 
     shader_cursor.def("__getitem__", [](ShaderCursor& self, std::string_view name) { return self[name]; });
     shader_cursor.def("__getitem__", [](ShaderCursor& self, int index) { return self[index]; });
