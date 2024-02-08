@@ -62,5 +62,6 @@ KALI_PY_EXPORT(device_input_layout)
         .def_rw("vertex_streams", &InputLayoutDesc::vertex_streams);
     nb::implicitly_convertible<nb::dict, InputLayoutDesc>();
 
-    nb::class_<InputLayout, DeviceResource>(m, "InputLayout").def_prop_ro("desc", &InputLayout::desc);
+    nb::class_<InputLayout, DeviceResource>(m, "InputLayout", D(InputLayout))
+        .def_prop_ro("desc", &InputLayout::desc, D(InputLayout, desc));
 }
