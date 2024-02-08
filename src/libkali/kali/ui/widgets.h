@@ -315,22 +315,22 @@ public:
     using value_type = T;
     using Callback = std::function<void(const value_type&)>;
 
-    ValueProperty(Widget* parent, std::string_view label, Callback callback, const value_type& value)
+    ValueProperty(Widget* parent, std::string_view label, const value_type& value, Callback callback)
         : Widget(parent)
         , m_label(label)
-        , m_callback(callback)
         , m_value(value)
+        , m_callback(callback)
     {
     }
 
     const std::string& label() const { return m_label; }
     void set_label(std::string_view label) { m_label = label; }
 
-    Callback callback() const { return m_callback; }
-    void set_callback(Callback callback) { m_callback = callback; }
-
     value_type value() const { return m_value; }
     void set_value(value_type value) { m_value = value; }
+
+    Callback callback() const { return m_callback; }
+    void set_callback(Callback callback) { m_callback = callback; }
 
     virtual void dispatch_event(const Event& event) override
     {
@@ -341,8 +341,8 @@ public:
 
 protected:
     std::string m_label;
-    Callback m_callback;
     value_type m_value;
+    Callback m_callback;
 };
 
 class Checkbox : public ValueProperty<bool> {
@@ -350,8 +350,8 @@ class Checkbox : public ValueProperty<bool> {
 public:
     using Base = ValueProperty<bool>;
 
-    Checkbox(Widget* parent, std::string_view label = "", Callback callback = {}, bool value = false)
-        : Base(parent, label, callback, value)
+    Checkbox(Widget* parent, std::string_view label = "", bool value = false, Callback callback = {})
+        : Base(parent, label, value, callback)
     {
     }
 
@@ -372,11 +372,11 @@ public:
     Combobox(
         Widget* parent,
         std::string_view label = "",
+        int value = 0,
         Callback callback = {},
-        std::vector<std::string> items = {},
-        int value = 0
+        std::vector<std::string> items = {}
     )
-        : Base(parent, label, callback, value)
+        : Base(parent, label, value, callback)
         , m_items(items)
     {
     }
@@ -453,15 +453,15 @@ public:
     Drag(
         Widget* parent,
         std::string_view label = "",
-        typename Base::Callback callback = {},
         type value = type(0),
+        typename Base::Callback callback = {},
         float speed = 1.f,
         scalar_type min = scalar_type(0),
         scalar_type max = scalar_type(0),
         std::string_view format = default_format,
         SliderFlags flags = SliderFlags::none
     )
-        : Base(parent, label, callback, value)
+        : Base(parent, label, value, callback)
         , m_speed(speed)
         , m_min(min)
         , m_max(max)
@@ -616,14 +616,14 @@ public:
     Slider(
         Widget* parent,
         std::string_view label = "",
-        typename Base::Callback callback = {},
         type value = type(0),
+        typename Base::Callback callback = {},
         scalar_type min = scalar_type(0),
         scalar_type max = scalar_type(0),
         std::string_view format = default_format,
         SliderFlags flags = SliderFlags::none
     )
-        : Base(parent, label, callback, value)
+        : Base(parent, label, value, callback)
         , m_min(min)
         , m_max(max)
         , m_format(format)

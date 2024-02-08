@@ -9,16 +9,16 @@ static void bind_value_property(nb::module_ m, const char* name)
 {
     nb::class_<T, Widget>(m, name)
         .def(
-            nb::init<Widget*, std::string_view, typename T::Callback, typename T::value_type>(),
+            nb::init<Widget*, std::string_view, typename T::value_type, typename T::Callback>(),
             "parent"_a,
             "label"_a = "",
-            "callback"_a = typename T::Callback{},
-            "value"_a = typename T::value_type(0)
+            "value"_a = typename T::value_type(0),
+            "callback"_a = typename T::Callback{}
         )
         .def_prop_rw("label", &T::label, &T::set_label)
+        .def_prop_rw("value", &T::value, &T::set_value)
         .def_prop_rw("callback", &T::callback, &T::set_callback)
-        .def("_get_callback", &T::callback)
-        .def_prop_rw("value", &T::value, &T::set_value);
+        .def("_get_callback", &T::callback);
 }
 
 template<typename T>
@@ -29,8 +29,8 @@ static void bind_drag(nb::module_ m, const char* name)
             nb::init<
                 Widget*,
                 std::string_view,
-                typename T::Callback,
                 typename T::type,
+                typename T::Callback,
                 float,
                 typename T::scalar_type,
                 typename T::scalar_type,
@@ -38,15 +38,14 @@ static void bind_drag(nb::module_ m, const char* name)
                 SliderFlags>(),
             "parent"_a,
             "label"_a = "",
-            "callback"_a = typename T::Callback{},
             "value"_a = typename T::type(0),
+            "callback"_a = typename T::Callback{},
             "speed"_a = 1.f,
             "min"_a = typename T::scalar_type(0),
             "max"_a = typename T::scalar_type(0),
             "format"_a = T::default_format,
             "flags"_a = SliderFlags::none
         )
-        .def_prop_rw("value", &T::value, &T::set_value)
         .def_prop_rw("speed", &T::speed, &T::set_speed)
         .def_prop_rw("min", &T::min, &T::set_min)
         .def_prop_rw("max", &T::max, &T::set_max)
@@ -62,22 +61,21 @@ static void bind_slider(nb::module_ m, const char* name)
             nb::init<
                 Widget*,
                 std::string_view,
-                typename T::Callback,
                 typename T::type,
+                typename T::Callback,
                 typename T::scalar_type,
                 typename T::scalar_type,
                 std::string_view,
                 SliderFlags>(),
             "parent"_a,
             "label"_a = "",
-            "callback"_a = typename T::Callback{},
             "value"_a = typename T::type(0),
+            "callback"_a = typename T::Callback{},
             "min"_a = typename T::scalar_type(0),
             "max"_a = typename T::scalar_type(0),
             "format"_a = T::default_format,
             "flags"_a = SliderFlags::none
         )
-        .def_prop_rw("value", &T::value, &T::set_value)
         .def_prop_rw("min", &T::min, &T::set_min)
         .def_prop_rw("max", &T::max, &T::set_max)
         .def_prop_rw("format", &T::format, &T::set_format)
@@ -200,24 +198,23 @@ KALI_PY_EXPORT(ui_widgets)
 
     nb::class_<Checkbox, ValueProperty<bool>>(ui, "Checkbox")
         .def(
-            nb::init<Widget*, std::string_view, Checkbox::Callback, bool>(),
+            nb::init<Widget*, std::string_view, bool, Checkbox::Callback>(),
             "parent"_a,
             "label"_a = "",
-            "callback"_a = Checkbox::Callback{},
-            "value"_a = false
+            "value"_a = false,
+            "callback"_a = Checkbox::Callback{}
         );
 
     nb::class_<Combobox, ValueProperty<int>>(ui, "Combobox")
         .def(
-            nb::init<Widget*, std::string_view, Combobox::Callback, std::vector<std::string>, int>(),
+            nb::init<Widget*, std::string_view, int, Combobox::Callback, std::vector<std::string>>(),
             "parent"_a,
             "label"_a = "",
+            "value"_a = 0,
             "callback"_a = Combobox::Callback{},
-            "items"_a = std::vector<std::string>{},
-            "value"_a = 0
+            "items"_a = std::vector<std::string>{}
         )
-        .def_prop_rw("items", &Combobox::items, &Combobox::set_items)
-        .def_prop_rw("value", &Combobox::value, &Combobox::set_value);
+        .def_prop_rw("items", &Combobox::items, &Combobox::set_items);
 
     nb::enum_<SliderFlags>(ui, "SliderFlags")
         .value("None_", SliderFlags::none)
