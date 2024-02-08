@@ -419,17 +419,26 @@ enum class SliderFlags {
 };
 
 template<typename T>
+struct DataTypeTraits { };
+
+// clang-format off
+template<> struct DataTypeTraits<float> { static constexpr ImGuiDataType data_type{ImGuiDataType_Float}; static constexpr const char* default_format = "%.3f"; };
+template<> struct DataTypeTraits<int> { static constexpr ImGuiDataType data_type{ImGuiDataType_S32}; static constexpr const char* default_format = "%df"; };
+// clang-format on
+
+
+template<typename T>
 struct SliderTraits { };
 
 // clang-format off
-template<> struct SliderTraits<float> { using type = float; using scalar_type = float; static constexpr bool is_float = true; static constexpr int N = 1; static constexpr const char* default_format = "%.3f"; };
-template<> struct SliderTraits<float2> { using type = float2; using scalar_type = float; static constexpr bool is_float = true; static constexpr int N = 2; static constexpr const char* default_format = "%.3f"; };
-template<> struct SliderTraits<float3> { using type = float3; using scalar_type = float; static constexpr bool is_float = true; static constexpr int N = 3; static constexpr const char* default_format = "%.3f"; };
-template<> struct SliderTraits<float4> { using type = float4; using scalar_type = float; static constexpr bool is_float = true; static constexpr int N = 4; static constexpr const char* default_format = "%.3f"; };
-template<> struct SliderTraits<int> { using type = int; using scalar_type = int; static constexpr bool is_float = false; static constexpr int N = 1; static constexpr const char* default_format = "%d"; };
-template<> struct SliderTraits<int2> { using type = int2; using scalar_type = int; static constexpr bool is_float = false; static constexpr int N = 2; static constexpr const char* default_format = "%d"; };
-template<> struct SliderTraits<int3> { using type = int3; using scalar_type = int; static constexpr bool is_float = false; static constexpr int N = 3; static constexpr const char* default_format = "%d"; };
-template<> struct SliderTraits<int4> { using type = int4; using scalar_type = int; static constexpr bool is_float = false; static constexpr int N = 4; static constexpr const char* default_format = "%d"; };
+template<> struct SliderTraits<float> { using scalar_type = float; static constexpr int N = 1; };
+template<> struct SliderTraits<float2> { using scalar_type = float; static constexpr int N = 2; };
+template<> struct SliderTraits<float3> { using scalar_type = float; static constexpr int N = 3; };
+template<> struct SliderTraits<float4> { using scalar_type = float; static constexpr int N = 4; };
+template<> struct SliderTraits<int> { using scalar_type = int; static constexpr int N = 1; };
+template<> struct SliderTraits<int2> { using scalar_type = int; static constexpr int N = 2; };
+template<> struct SliderTraits<int3> { using scalar_type = int; static constexpr int N = 3; };
+template<> struct SliderTraits<int4> { using scalar_type = int; static constexpr int N = 4; };
 // clang-format on
 
 template<typename T>
@@ -437,23 +446,21 @@ class Drag : public ValueProperty<T> {
     KALI_OBJECT(Drag)
 public:
     using Base = ValueProperty<T>;
+    using Base::value_type;
 
     using Widget::record_event;
     using Widget::m_enabled;
     using Base::m_label;
     using Base::m_value;
 
-    using traits = SliderTraits<T>;
-    using type = typename traits::type;
-    using scalar_type = typename traits::scalar_type;
-    static constexpr bool is_float = traits::is_float;
-    static constexpr int N = traits::N;
-    static constexpr const char* default_format = traits::default_format;
+    using scalar_type = typename SliderTraits<T>::scalar_type;
+    static constexpr int N = SliderTraits<T>::N;
+    static constexpr const char* default_format = DataTypeTraits<scalar_type>::default_format;
 
     Drag(
         Widget* parent,
         std::string_view label = "",
-        type value = type(0),
+        value_type value = value_type(0),
         typename Base::Callback callback = {},
         float speed = 1.f,
         scalar_type min = scalar_type(0),
@@ -488,92 +495,18 @@ public:
     virtual void render() override
     {
         ScopedID id(this);
-        ScopedDisable disable(m_enabled);
-        bool changed = false;
-        if constexpr (is_float == true) {
-            if constexpr (N == 1)
-                changed = ImGui::DragFloat(
-                    m_label.c_str(),
-                    &m_value,
-                    m_speed,
-                    m_min,
-                    m_max,
-                    m_format.c_str(),
-                    (ImGuiSliderFlags)m_flags
-                );
-            if constexpr (N == 2)
-                changed = ImGui::DragFloat2(
-                    m_label.c_str(),
-                    &m_value.x,
-                    m_speed,
-                    m_min,
-                    m_max,
-                    m_format.c_str(),
-                    (ImGuiSliderFlags)m_flags
-                );
-            if constexpr (N == 3)
-                changed = ImGui::DragFloat3(
-                    m_label.c_str(),
-                    &m_value.x,
-                    m_speed,
-                    m_min,
-                    m_max,
-                    m_format.c_str(),
-                    (ImGuiSliderFlags)m_flags
-                );
-            if constexpr (N == 4)
-                changed = ImGui::DragFloat4(
-                    m_label.c_str(),
-                    &m_value.x,
-                    m_speed,
-                    m_min,
-                    m_max,
-                    m_format.c_str(),
-                    (ImGuiSliderFlags)m_flags
-                );
-        } else {
-            if constexpr (N == 1)
-                changed = ImGui::DragInt(
-                    m_label.c_str(),
-                    &m_value,
-                    m_speed,
-                    m_min,
-                    m_max,
-                    m_format.c_str(),
-                    (ImGuiSliderFlags)m_flags
-                );
-            if constexpr (N == 2)
-                changed = ImGui::DragInt2(
-                    m_label.c_str(),
-                    &m_value.x,
-                    m_speed,
-                    m_min,
-                    m_max,
-                    m_format.c_str(),
-                    (ImGuiSliderFlags)m_flags
-                );
-            if constexpr (N == 3)
-                changed = ImGui::DragInt3(
-                    m_label.c_str(),
-                    &m_value.x,
-                    m_speed,
-                    m_min,
-                    m_max,
-                    m_format.c_str(),
-                    (ImGuiSliderFlags)m_flags
-                );
-            if constexpr (N == 4)
-                changed = ImGui::DragInt4(
-                    m_label.c_str(),
-                    &m_value.x,
-                    m_speed,
-                    m_min,
-                    m_max,
-                    m_format.c_str(),
-                    (ImGuiSliderFlags)m_flags
-                );
-        }
-
+        ScopedDisable disable(!m_enabled);
+        bool changed = ImGui::DragScalarN(
+            m_label.c_str(),
+            DataTypeTraits<scalar_type>::data_type,
+            &m_value,
+            N,
+            m_speed,
+            &m_min,
+            &m_max,
+            m_format.c_str(),
+            ImGuiSliderFlags(m_flags)
+        );
         if (changed)
             record_event({this});
     }
@@ -600,23 +533,21 @@ class Slider : public ValueProperty<T> {
     KALI_OBJECT(Slider)
 public:
     using Base = ValueProperty<T>;
+    using Base::value_type;
 
     using Widget::record_event;
     using Widget::m_enabled;
     using Base::m_label;
     using Base::m_value;
 
-    using traits = SliderTraits<T>;
-    using type = typename traits::type;
-    using scalar_type = typename traits::scalar_type;
-    static constexpr bool is_float = traits::is_float;
-    static constexpr int N = traits::N;
-    static constexpr const char* default_format = traits::default_format;
+    using scalar_type = typename SliderTraits<T>::scalar_type;
+    static constexpr int N = SliderTraits<T>::N;
+    static constexpr const char* default_format = DataTypeTraits<scalar_type>::default_format;
 
     Slider(
         Widget* parent,
         std::string_view label = "",
-        type value = type(0),
+        value_type value = value_type(0),
         typename Base::Callback callback = {},
         scalar_type min = scalar_type(0),
         scalar_type max = scalar_type(0),
@@ -647,83 +578,16 @@ public:
     {
         ScopedID id(this);
         ScopedDisable disable(!m_enabled);
-        bool changed = false;
-        if constexpr (is_float == true) {
-            if constexpr (N == 1)
-                changed = ImGui::SliderFloat(
-                    m_label.c_str(),
-                    &m_value,
-                    m_min,
-                    m_max,
-                    m_format.c_str(),
-                    (ImGuiSliderFlags)m_flags
-                );
-            if constexpr (N == 2)
-                changed = ImGui::SliderFloat2(
-                    m_label.c_str(),
-                    &m_value.x,
-                    m_min,
-                    m_max,
-                    m_format.c_str(),
-                    (ImGuiSliderFlags)m_flags
-                );
-            if constexpr (N == 3)
-                changed = ImGui::SliderFloat3(
-                    m_label.c_str(),
-                    &m_value.x,
-                    m_min,
-                    m_max,
-                    m_format.c_str(),
-                    (ImGuiSliderFlags)m_flags
-                );
-            if constexpr (N == 4)
-                changed = ImGui::SliderFloat4(
-                    m_label.c_str(),
-                    &m_value.x,
-                    m_min,
-                    m_max,
-                    m_format.c_str(),
-                    (ImGuiSliderFlags)m_flags
-                );
-        } else {
-            if constexpr (N == 1)
-                changed = ImGui::SliderInt(
-                    m_label.c_str(),
-                    &m_value,
-                    m_min,
-                    m_max,
-                    m_format.c_str(),
-                    (ImGuiSliderFlags)m_flags
-                );
-            if constexpr (N == 2)
-                changed = ImGui::SliderInt2(
-                    m_label.c_str(),
-                    &m_value.x,
-                    m_min,
-                    m_max,
-                    m_format.c_str(),
-                    (ImGuiSliderFlags)m_flags
-                );
-            if constexpr (N == 3)
-                changed = ImGui::SliderInt3(
-                    m_label.c_str(),
-                    &m_value.x,
-                    m_min,
-                    m_max,
-                    m_format.c_str(),
-                    (ImGuiSliderFlags)m_flags
-                );
-            if constexpr (N == 4)
-                changed = ImGui::SliderInt4(
-                    m_label.c_str(),
-                    &m_value.x,
-                    m_min,
-                    m_max,
-                    m_format.c_str(),
-                    (ImGuiSliderFlags)m_flags
-                );
-        }
-
+        bool changed = ImGui::SliderScalarN(
+            m_label.c_str(),
+            DataTypeTraits<scalar_type>::data_type,
+            &m_value,
+            N,
+            &m_min,
+            &m_max,
+            m_format.c_str(),
+            ImGuiSliderFlags(m_flags)
+        );
         if (changed)
             record_event({this});
     }
