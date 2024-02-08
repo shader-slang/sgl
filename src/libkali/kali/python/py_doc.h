@@ -5214,6 +5214,8 @@ static const char *__doc_kali_Swapchain_class_name = R"doc()doc";
 
 static const char *__doc_kali_Swapchain_desc = R"doc(Returns the swapchain description.)doc";
 
+static const char *__doc_kali_Swapchain_images = R"doc()doc";
+
 static const char *__doc_kali_Swapchain_fullscreen_mode = R"doc()doc";
 
 static const char *__doc_kali_Swapchain_get_image = R"doc(Returns the back buffer image at position `index`.)doc";
