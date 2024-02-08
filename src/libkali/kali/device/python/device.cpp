@@ -32,11 +32,11 @@ KALI_PY_EXPORT(device_device)
 {
     using namespace kali;
 
-    nb::class_<AdapterInfo>(m, "AdapterInfo")
-        .def_ro("name", &AdapterInfo::name)
-        .def_ro("vendor_id", &AdapterInfo::vendor_id)
-        .def_ro("device_id", &AdapterInfo::device_id)
-        .def_ro("luid", &AdapterInfo::luid)
+    nb::class_<AdapterInfo>(m, "AdapterInfo", D(AdapterInfo))
+        .def_ro("name", &AdapterInfo::name, D(AdapterInfo, name))
+        .def_ro("vendor_id", &AdapterInfo::vendor_id, D(AdapterInfo, vendor_id))
+        .def_ro("device_id", &AdapterInfo::device_id, D(AdapterInfo, device_id))
+        .def_ro("luid", &AdapterInfo::luid, D(AdapterInfo, luid))
         .def("__repr__", &AdapterInfo::to_string);
 
     nb::kali_enum<DeviceType>(m, "DeviceType");
@@ -54,32 +54,88 @@ KALI_PY_EXPORT(device_device)
     nb::implicitly_convertible<nb::dict, DeviceDesc>();
 
     nb::class_<DeviceLimits>(m, "DeviceLimits")
-        .def_ro("max_texture_dimension_1d", &DeviceLimits::max_texture_dimension_1d)
-        .def_ro("max_texture_dimension_2d", &DeviceLimits::max_texture_dimension_2d)
-        .def_ro("max_texture_dimension_3d", &DeviceLimits::max_texture_dimension_3d)
-        .def_ro("max_texture_dimension_cube", &DeviceLimits::max_texture_dimension_cube)
-        .def_ro("max_texture_array_layers", &DeviceLimits::max_texture_array_layers)
-        .def_ro("max_vertex_input_elements", &DeviceLimits::max_vertex_input_elements)
-        .def_ro("max_vertex_input_element_offset", &DeviceLimits::max_vertex_input_element_offset)
-        .def_ro("max_vertex_streams", &DeviceLimits::max_vertex_streams)
-        .def_ro("max_vertex_stream_stride", &DeviceLimits::max_vertex_stream_stride)
-        .def_ro("max_compute_threads_per_group", &DeviceLimits::max_compute_threads_per_group)
-        .def_ro("max_compute_thread_group_size", &DeviceLimits::max_compute_thread_group_size)
-        .def_ro("max_compute_dispatch_thread_groups", &DeviceLimits::max_compute_dispatch_thread_groups)
-        .def_ro("max_viewports", &DeviceLimits::max_viewports)
-        .def_ro("max_viewport_dimensions", &DeviceLimits::max_viewport_dimensions)
-        .def_ro("max_framebuffer_dimensions", &DeviceLimits::max_framebuffer_dimensions)
-        .def_ro("max_shader_visible_samplers", &DeviceLimits::max_shader_visible_samplers);
+        .def_ro(
+            "max_texture_dimension_1d",
+            &DeviceLimits::max_texture_dimension_1d,
+            D(DeviceLimits, max_texture_dimension_1d)
+        )
+        .def_ro(
+            "max_texture_dimension_2d",
+            &DeviceLimits::max_texture_dimension_2d,
+            D(DeviceLimits, max_texture_dimension_2d)
+        )
+        .def_ro(
+            "max_texture_dimension_3d",
+            &DeviceLimits::max_texture_dimension_3d,
+            D(DeviceLimits, max_texture_dimension_3d)
+        )
+        .def_ro(
+            "max_texture_dimension_cube",
+            &DeviceLimits::max_texture_dimension_cube,
+            D(DeviceLimits, max_texture_dimension_cube)
+        )
+        .def_ro(
+            "max_texture_array_layers",
+            &DeviceLimits::max_texture_array_layers,
+            D(DeviceLimits, max_texture_array_layers)
+        )
+        .def_ro(
+            "max_vertex_input_elements",
+            &DeviceLimits::max_vertex_input_elements,
+            D(DeviceLimits, max_vertex_input_elements)
+        )
+        .def_ro(
+            "max_vertex_input_element_offset",
+            &DeviceLimits::max_vertex_input_element_offset,
+            D(DeviceLimits, max_vertex_input_element_offset)
+        )
+        .def_ro("max_vertex_streams", &DeviceLimits::max_vertex_streams, D(DeviceLimits, max_vertex_streams))
+        .def_ro(
+            "max_vertex_stream_stride",
+            &DeviceLimits::max_vertex_stream_stride,
+            D(DeviceLimits, max_vertex_stream_stride)
+        )
+        .def_ro(
+            "max_compute_threads_per_group",
+            &DeviceLimits::max_compute_threads_per_group,
+            D(DeviceLimits, max_compute_threads_per_group)
+        )
+        .def_ro(
+            "max_compute_thread_group_size",
+            &DeviceLimits::max_compute_thread_group_size,
+            D(DeviceLimits, max_compute_thread_group_size)
+        )
+        .def_ro(
+            "max_compute_dispatch_thread_groups",
+            &DeviceLimits::max_compute_dispatch_thread_groups,
+            D(DeviceLimits, max_compute_dispatch_thread_groups)
+        )
+        .def_ro("max_viewports", &DeviceLimits::max_viewports, D(DeviceLimits, max_viewports))
+        .def_ro(
+            "max_viewport_dimensions",
+            &DeviceLimits::max_viewport_dimensions,
+            D(DeviceLimits, max_viewport_dimensions)
+        )
+        .def_ro(
+            "max_framebuffer_dimensions",
+            &DeviceLimits::max_framebuffer_dimensions,
+            D(DeviceLimits, max_framebuffer_dimensions)
+        )
+        .def_ro(
+            "max_shader_visible_samplers",
+            &DeviceLimits::max_shader_visible_samplers,
+            D(DeviceLimits, max_shader_visible_samplers)
+        );
 
     nb::class_<DeviceInfo>(m, "DeviceInfo")
-        .def_ro("type", &DeviceInfo::type)
-        .def_ro("api_name", &DeviceInfo::api_name)
-        .def_ro("adapter_name", &DeviceInfo::adapter_name)
-        .def_ro("timestamp_frequency", &DeviceInfo::timestamp_frequency)
-        .def_ro("limits", &DeviceInfo::limits);
+        .def_ro("type", &DeviceInfo::type, D(DeviceInfo, type))
+        .def_ro("api_name", &DeviceInfo::api_name, D(DeviceInfo, api_name))
+        .def_ro("adapter_name", &DeviceInfo::adapter_name, D(DeviceInfo, adapter_name))
+        .def_ro("timestamp_frequency", &DeviceInfo::timestamp_frequency, D(DeviceInfo, timestamp_frequency))
+        .def_ro("limits", &DeviceInfo::limits, D(DeviceInfo, limits));
 
-    nb::class_<Device, Object> device(m, "Device");
-    device.def(nb::init<DeviceDesc>(), "desc"_a);
+    nb::class_<Device, Object> device(m, "Device", D(Device));
+    device.def(nb::init<DeviceDesc>(), "desc"_a, D(Device, desc));
     device.def(
         "__init__",
         [](Device* self,
@@ -109,17 +165,18 @@ KALI_PY_EXPORT(device_device)
         "default_shader_model"_a = ShaderModel::sm_6_6,
         "shader_cache_path"_a = std::string{}
     );
-    device.def_prop_ro("desc", &Device::desc);
-    device.def_prop_ro("info", &Device::info);
-    device.def_prop_ro("supported_shader_model", &Device::supported_shader_model);
-    device.def_prop_ro("default_shader_model", &Device::default_shader_model);
-    device.def_prop_ro("features", &Device::features);
+    device.def_prop_ro("desc", &Device::desc, D(Device, desc));
+    device.def_prop_ro("info", &Device::info, D(Device, info));
+    device.def_prop_ro("supported_shader_model", &Device::supported_shader_model, D(Device, supported_shader_model));
+    device.def_prop_ro("default_shader_model", &Device::default_shader_model, D(Device, default_shader_model));
+    device.def_prop_ro("features", &Device::features, D(Device, features));
     device.def(
         "create_swapchain",
         [](Device* self, const SwapchainDesc& desc, ref<Window> window)
         { return self->create_swapchain(desc, window); },
         "desc"_a,
-        "window"_a
+        "window"_a,
+        D(Device, create_swapchain)
     );
     device.def(
         "create_swapchain",
@@ -145,12 +202,14 @@ KALI_PY_EXPORT(device_device)
         "height"_a = 0,
         "image_count"_a = 3,
         "enable_vsync"_a = false,
-        "window"_a
+        "window"_a,
+        D(Device, create_swapchain)
     );
     device.def(
         "create_buffer",
         [](Device* self, const BufferDesc& desc) { return self->create_buffer(desc); },
-        "desc"_a
+        "desc"_a,
+        D(Device, create_buffer)
     );
     device.def(
         "create_buffer",
@@ -183,7 +242,8 @@ KALI_PY_EXPORT(device_device)
         "usage"_a = ResourceUsage::none,
         "memory_type"_a = MemoryType::device_local,
         "debug_name"_a = "",
-        "data"_a = std::optional<nb::ndarray<nb::numpy>>{}
+        "data"_a = std::optional<nb::ndarray<nb::numpy>>{},
+        D(Device, create_buffer)
     );
     device.def(
         "create_structured_buffer",
@@ -216,7 +276,8 @@ KALI_PY_EXPORT(device_device)
         "usage"_a = ResourceUsage::none,
         "memory_type"_a = MemoryType::device_local,
         "debug_name"_a = "",
-        "data"_a = std::optional<nb::ndarray<nb::numpy>>{}
+        "data"_a = std::optional<nb::ndarray<nb::numpy>>{},
+        D(Device, create_structured_buffer)
     );
     // Convenience overload that takes a reflection cursor instead of a type layout.
     device.def(
@@ -250,7 +311,8 @@ KALI_PY_EXPORT(device_device)
         "usage"_a = ResourceUsage::none,
         "memory_type"_a = MemoryType::device_local,
         "debug_name"_a = "",
-        "data"_a = std::optional<nb::ndarray<nb::numpy>>{}
+        "data"_a = std::optional<nb::ndarray<nb::numpy>>{},
+        D(Device, create_structured_buffer)
     );
     device.def(
         "create_typed_buffer",
@@ -280,13 +342,15 @@ KALI_PY_EXPORT(device_device)
         "usage"_a = ResourceUsage::none,
         "memory_type"_a = MemoryType::device_local,
         "debug_name"_a = "",
-        "data"_a = std::optional<nb::ndarray<nb::numpy>>{}
+        "data"_a = std::optional<nb::ndarray<nb::numpy>>{},
+        D(Device, create_typed_buffer)
     );
 
     device.def(
         "create_texture",
         [](Device* self, const TextureDesc& desc) { return self->create_texture(desc); },
-        "desc"_a
+        "desc"_a,
+        D(Device, create_texture)
     );
     device.def(
         "create_texture",
@@ -337,9 +401,10 @@ KALI_PY_EXPORT(device_device)
         "usage"_a = ResourceUsage::none,
         "memory_type"_a = MemoryType::device_local,
         "debug_name"_a = "",
-        "data"_a = std::optional<nb::ndarray<nb::numpy>>{}
+        "data"_a = std::optional<nb::ndarray<nb::numpy>>{},
+        D(Device, create_texture)
     );
-    device.def("create_sampler", &Device::create_sampler, "desc"_a);
+    device.def("create_sampler", &Device::create_sampler, "desc"_a, D(Device, create_sampler));
     device.def(
         "create_sampler",
         [](Device* self,
@@ -385,24 +450,27 @@ KALI_PY_EXPORT(device_device)
         "comparison_func"_a = ComparisonFunc::never,
         "border_color"_a = float4{1.f, 1.f, 1.f, 1.f},
         "min_lod"_a = -1000.f,
-        "max_lod"_a = 1000.f
+        "max_lod"_a = 1000.f,
+        D(Device, create_sampler)
     );
-    device.def("create_fence", &Device::create_fence, "desc"_a);
+    device.def("create_fence", &Device::create_fence, "desc"_a, D(Device, create_fence));
     device.def(
         "create_fence",
         [](Device* self, uint64_t initial_value, bool shared)
         { return self->create_fence({.initial_value = initial_value, .shared = shared}); },
         "initial_value"_a = 0,
-        "shared"_a = false
+        "shared"_a = false,
+        D(Device, create_fence)
     );
     device.def(
         "create_query_pool",
         [](Device* self, QueryType type, uint32_t count)
         { return self->create_query_pool({.type = type, .count = count}); },
         "type"_a,
-        "count"_a
+        "count"_a,
+        D(Device, create_query_pool)
     );
-    device.def("create_input_layout", &Device::create_input_layout, "desc"_a);
+    device.def("create_input_layout", &Device::create_input_layout, "desc"_a, D(Device, create_input_layout));
     device.def(
         "create_input_layout",
         [](Device* self, std::vector<InputElementDesc> input_elements, std::vector<VertexStreamDesc> vertex_streams)
@@ -413,9 +481,10 @@ KALI_PY_EXPORT(device_device)
             });
         },
         "input_elements"_a,
-        "vertex_streams"_a
+        "vertex_streams"_a,
+        D(Device, create_input_layout)
     );
-    device.def("create_framebuffer", &Device::create_framebuffer, "desc"_a);
+    device.def("create_framebuffer", &Device::create_framebuffer, "desc"_a, D(Device, create_framebuffer));
     device.def(
         "create_framebuffer",
         [](Device* self,
@@ -428,13 +497,15 @@ KALI_PY_EXPORT(device_device)
             });
         },
         "render_targets"_a,
-        "depth_stencil"_a.none() = nb::none()
+        "depth_stencil"_a.none() = nb::none(),
+        D(Device, create_framebuffer)
     );
-    device.def("create_command_buffer", &Device::create_command_buffer);
+    device.def("create_command_buffer", &Device::create_command_buffer, D(Device, create_command_buffer));
     device.def(
         "get_acceleration_structure_prebuild_info",
         &Device::get_acceleration_structure_prebuild_info,
-        "build_inputs"_a
+        "build_inputs"_a,
+        D(Device, get_acceleration_structure_prebuild_info)
     );
     device.def(
         "create_acceleration_structure",
@@ -450,9 +521,10 @@ KALI_PY_EXPORT(device_device)
         "kind"_a,
         "buffer"_a,
         "offset"_a = 0,
-        "size"_a = 0
+        "size"_a = 0,
+        D(Device, create_acceleration_structure)
     );
-    device.def("create_shader_table", &Device::create_shader_table, "desc"_a);
+    device.def("create_shader_table", &Device::create_shader_table, "desc"_a, D(Device, create_shader_table));
     device.def(
         "create_shader_table",
         [](Device* self,
@@ -474,48 +546,65 @@ KALI_PY_EXPORT(device_device)
         "ray_gen_entry_points"_a = std::vector<std::string>{},
         "miss_entry_points"_a = std::vector<std::string>{},
         "hit_group_names"_a = std::vector<std::string>{},
-        "callable_entry_points"_a = std::vector<std::string>{}
+        "callable_entry_points"_a = std::vector<std::string>{},
+        D(Device, create_shader_table)
     );
-    device.def("create_slang_session", [](Device* self) { return self->create_slang_session(SlangSessionDesc{}); });
+    device.def(
+        "create_slang_session",
+        [](Device* self) { return self->create_slang_session(SlangSessionDesc{}); },
+        D(Device, create_slang_session)
+    );
     device.def(
         "load_module",
         &Device::load_module,
         "path"_a,
         "defines"_a = DefineList(),
-        "compiler_options"_a = SlangCompilerOptions()
+        "compiler_options"_a = SlangCompilerOptions(),
+        D(Device, load_module)
     );
     device.def(
         "load_module_from_source",
         &Device::load_module_from_source,
         "source"_a,
         "defines"_a = DefineList(),
-        "compiler_options"_a = SlangCompilerOptions()
+        "compiler_options"_a = SlangCompilerOptions(),
+        D(Device, load_module_from_source)
     );
 
     device.def(
         "create_mutable_shader_object",
         nb::overload_cast<const ShaderProgram*>(&Device::create_mutable_shader_object),
-        "shader_program"_a
+        "shader_program"_a,
+        D(Device, create_mutable_shader_object)
     );
     device.def(
         "create_mutable_shader_object",
         nb::overload_cast<const TypeLayoutReflection*>(&Device::create_mutable_shader_object),
-        "type_layout"_a
+        "type_layout"_a,
+        D(Device, create_mutable_shader_object_2)
     );
     device.def(
         "create_mutable_shader_object",
         nb::overload_cast<ReflectionCursor>(&Device::create_mutable_shader_object),
-        "cursor"_a
+        "cursor"_a,
+        D(Device, create_mutable_shader_object_3)
     );
 
-    device.def("create_compute_pipeline", &Device::create_compute_pipeline, "desc"_a);
+    device
+        .def("create_compute_pipeline", &Device::create_compute_pipeline, "desc"_a, D(Device, create_compute_pipeline));
     device.def(
         "create_compute_pipeline",
         [](Device* self, const ShaderProgram* program) { return self->create_compute_pipeline({.program = program}); },
-        "program"_a
+        "program"_a,
+        D(Device, create_compute_pipeline)
     );
 
-    device.def("create_graphics_pipeline", &Device::create_graphics_pipeline, "desc"_a);
+    device.def(
+        "create_graphics_pipeline",
+        &Device::create_graphics_pipeline,
+        "desc"_a,
+        D(Device, create_graphics_pipeline)
+    );
     device.def(
         "create_graphics_pipeline",
         [](Device* self,
@@ -543,10 +632,16 @@ KALI_PY_EXPORT(device_device)
         "primitive_type"_a = PrimitiveType::triangle,
         "depth_stencil"_a = DepthStencilDesc{},
         "rasterizer"_a = RasterizerDesc{},
-        "blend"_a = BlendDesc{}
+        "blend"_a = BlendDesc{},
+        D(Device, create_graphics_pipeline)
     );
 
-    device.def("create_ray_tracing_pipeline", &Device::create_ray_tracing_pipeline, "desc"_a);
+    device.def(
+        "create_ray_tracing_pipeline",
+        &Device::create_ray_tracing_pipeline,
+        "desc"_a,
+        D(Device, create_ray_tracing_pipeline)
+    );
     device.def(
         "create_ray_tracing_pipeline",
         [](Device* self,
@@ -571,10 +666,11 @@ KALI_PY_EXPORT(device_device)
         "max_recursion"_a = 0,
         "max_ray_payload_size"_a = 0,
         "max_attribute_size"_a = 8,
-        "flags"_a = RayTracingPipelineFlags::none
+        "flags"_a = RayTracingPipelineFlags::none,
+        D(Device, create_ray_tracing_pipeline)
     );
 
-    device.def("create_memory_heap", &Device::create_memory_heap, "desc"_a);
+    device.def("create_memory_heap", &Device::create_memory_heap, "desc"_a, D(Device, create_memory_heap));
     device.def(
         "create_memory_heap",
         [](Device* self,
@@ -596,26 +692,23 @@ KALI_PY_EXPORT(device_device)
         "usage"_a,
         "page_size"_a = 4 * 1024 * 1024,
         "retain_large_pages"_a = false,
-        "debug_name"_a = ""
+        "debug_name"_a = "",
+        D(Device, create_memory_heap)
     );
 
-    device.def_prop_ro("graphics_queue", &Device::graphics_queue);
-    device.def_prop_ro("upload_heap", &Device::upload_heap);
-    device.def_prop_ro("read_back_heap", &Device::read_back_heap);
-    device.def("flush_print", &Device::flush_print);
-    device.def("flush_print_to_string", &Device::flush_print_to_string);
-    device.def("end_frame", &Device::end_frame);
-    device.def("wait", &Device::wait);
+    device.def_prop_ro("graphics_queue", &Device::graphics_queue, D(Device, graphics_queue));
+    device.def_prop_ro("upload_heap", &Device::upload_heap, D(Device, upload_heap));
+    device.def_prop_ro("read_back_heap", &Device::read_back_heap, D(Device, read_back_heap));
+    device.def("flush_print", &Device::flush_print, D(Device, flush_print));
+    device.def("flush_print_to_string", &Device::flush_print_to_string, D(Device, flush_print_to_string));
+    device.def("end_frame", &Device::end_frame, D(Device, end_frame));
+    device.def("wait", &Device::wait, D(Device, wait));
 
-    device.def_static("enumerate_adapters", &Device::enumerate_adapters, "type"_a = DeviceType::automatic);
-    device.def_static("report_live_objects", &Device::report_live_objects);
-
-
-    // device.def("create_program", nb::overload_cast<const ProgramDesc&>(&Device::create_program), "desc"_a);
-    // device.def(
-    //     "create_program",
-    //     nb::overload_cast<std::filesystem::path, std::string>(&Device::create_program),
-    //     "path"_a,
-    //     "entrypoint"_a
-    // );
+    device.def_static(
+        "enumerate_adapters",
+        &Device::enumerate_adapters,
+        "type"_a = DeviceType::automatic,
+        D(Device, enumerate_adapters)
+    );
+    device.def_static("report_live_objects", &Device::report_live_objects, D(Device, report_live_objects));
 }

@@ -28,6 +28,8 @@ KALI_PY_EXPORT(device_input_layout)
 {
     using namespace kali;
 
+    nb::kali_enum<InputSlotClass>(m, "InputSlotClass");
+
     nb::class_<InputElementDesc>(m, "InputElementDesc")
         .def(nb::init<>())
         .def(
