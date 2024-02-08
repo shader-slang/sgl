@@ -8,13 +8,6 @@ template<typename T>
 static void bind_value_property(nb::module_ m, const char* name)
 {
     nb::class_<T, Widget>(m, name)
-        .def(
-            nb::init<Widget*, std::string_view, typename T::value_type, typename T::Callback>(),
-            "parent"_a,
-            "label"_a = "",
-            "value"_a = typename T::value_type(0),
-            "callback"_a = typename T::Callback{}
-        )
         .def_prop_rw("label", &T::label, &T::set_label)
         .def_prop_rw("value", &T::value, &T::set_value)
         .def_prop_rw("callback", &T::callback, &T::set_callback)
@@ -195,33 +188,48 @@ KALI_PY_EXPORT(ui_widgets)
     bind_value_property<ValueProperty<float2>>(ui, "ValuePropertyFloat2");
     bind_value_property<ValueProperty<float3>>(ui, "ValuePropertyFloat3");
     bind_value_property<ValueProperty<float4>>(ui, "ValuePropertyFloat4");
+    bind_value_property<ValueProperty<std::string>>(ui, "ValuePropertyString");
 
-    nb::class_<Checkbox, ValueProperty<bool>>(ui, "Checkbox")
+    nb::class_<CheckBox, ValueProperty<bool>>(ui, "CheckBox")
         .def(
-            nb::init<Widget*, std::string_view, bool, Checkbox::Callback>(),
+            nb::init<Widget*, std::string_view, bool, CheckBox::Callback>(),
             "parent"_a,
             "label"_a = "",
             "value"_a = false,
-            "callback"_a = Checkbox::Callback{}
+            "callback"_a = CheckBox::Callback{}
         );
 
-    nb::class_<Combobox, ValueProperty<int>>(ui, "Combobox")
+    nb::class_<ComboBox, ValueProperty<int>>(ui, "ComboBox")
         .def(
-            nb::init<Widget*, std::string_view, int, Combobox::Callback, std::vector<std::string>>(),
+            nb::init<Widget*, std::string_view, int, ComboBox::Callback, std::vector<std::string>>(),
             "parent"_a,
             "label"_a = "",
             "value"_a = 0,
-            "callback"_a = Combobox::Callback{},
+            "callback"_a = ComboBox::Callback{},
             "items"_a = std::vector<std::string>{}
         )
-        .def_prop_rw("items", &Combobox::items, &Combobox::set_items);
+        .def_prop_rw("items", &ComboBox::items, &ComboBox::set_items);
+
+    nb::class_<ListBox, ValueProperty<int>>(ui, "ListBox")
+        .def(
+            nb::init<Widget*, std::string_view, int, ListBox::Callback, std::vector<std::string>, int>(),
+            "parent"_a,
+            "label"_a = "",
+            "value"_a = 0,
+            "callback"_a = ListBox::Callback{},
+            "items"_a = std::vector<std::string>{},
+            "height_in_items"_a = -1
+        )
+        .def_prop_rw("items", &ListBox::items, &ListBox::set_items)
+        .def_prop_rw("height_in_items", &ListBox::height_in_items, &ListBox::set_height_in_items);
 
     nb::enum_<SliderFlags>(ui, "SliderFlags")
-        .value("None_", SliderFlags::none)
-        .value("AlwaysClamp", SliderFlags::always_clamp)
-        .value("Logarithmic", SliderFlags::logarithmic)
-        .value("NoRoundToFormat", SliderFlags::no_round_to_format)
-        .value("NoInput", SliderFlags::no_input);
+        .value("none", SliderFlags::none)
+        .value("always_clamp", SliderFlags::always_clamp)
+        .value("logarithmic", SliderFlags::logarithmic)
+        .value("no_round_to_format", SliderFlags::no_round_to_format)
+        .value("no_input", SliderFlags::no_input)
+        .def_enum_operators();
 
     bind_drag<DragFloat>(ui, "DragFloat");
     bind_drag<DragFloat2>(ui, "DragFloat2");
@@ -240,4 +248,38 @@ KALI_PY_EXPORT(ui_widgets)
     bind_slider<SliderInt2>(ui, "SliderInt2");
     bind_slider<SliderInt3>(ui, "SliderInt3");
     bind_slider<SliderInt4>(ui, "SliderInt4");
+
+    nb::enum_<InputTextFlags>(ui, "InputTextFlags")
+        .value("none", InputTextFlags::none)
+        .value("chars_decimal", InputTextFlags::chars_decimal)
+        .value("chars_hexadecimal", InputTextFlags::chars_hexadecimal)
+        .value("chars_uppercase", InputTextFlags::chars_uppercase)
+        .value("chars_no_blank", InputTextFlags::chars_no_blank)
+        .value("auto_select_all", InputTextFlags::auto_select_all)
+        .value("enter_returns_true", InputTextFlags::enter_returns_true)
+        .value("callback_completion", InputTextFlags::callback_completion)
+        .value("callback_history", InputTextFlags::callback_history)
+        .value("callback_always", InputTextFlags::callback_always)
+        .value("callback_char_filter", InputTextFlags::callback_char_filter)
+        .value("allow_tab_input", InputTextFlags::allow_tab_input)
+        .value("ctrl_enter_for_new_line", InputTextFlags::ctrl_enter_for_new_line)
+        .value("no_horizontal_scroll", InputTextFlags::no_horizontal_scroll)
+        .value("always_overwrite", InputTextFlags::always_overwrite)
+        .value("read_only", InputTextFlags::read_only)
+        .value("password", InputTextFlags::password)
+        .value("no_undo_redo", InputTextFlags::no_undo_redo)
+        .value("chars_scientific", InputTextFlags::chars_scientific)
+        .value("escape_clears_all", InputTextFlags::escape_clears_all)
+        .def_enum_operators();
+
+    nb::class_<InputText, ValueProperty<std::string>>(ui, "InputText")
+        .def(
+            nb::init<Widget*, std::string_view, std::string, InputText::Callback, bool, InputTextFlags>(),
+            "parent"_a,
+            "label"_a = "",
+            "value"_a = false,
+            "callback"_a = InputText::Callback{},
+            "multi_line"_a = false,
+            "flags"_a = InputTextFlags::none
+        );
 }

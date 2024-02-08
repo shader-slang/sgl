@@ -17,12 +17,14 @@ class ProgressBar;
 class Button;
 template<typename T>
 class PropertyValue;
-class Checkbox;
-class Combobox;
+class CheckBox;
+class ComboBox;
+class ListBox;
 template<typename T>
 class Drag;
 template<typename T>
 class Slider;
+class InputText;
 
 class ScopedID;
 class ScopedDisable;

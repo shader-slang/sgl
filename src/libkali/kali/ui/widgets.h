@@ -315,7 +315,7 @@ public:
     using value_type = T;
     using Callback = std::function<void(const value_type&)>;
 
-    ValueProperty(Widget* parent, std::string_view label, const value_type& value, Callback callback)
+    ValueProperty(Widget* parent, std::string_view label, value_type value, Callback callback)
         : Widget(parent)
         , m_label(label)
         , m_value(value)
@@ -326,8 +326,8 @@ public:
     const std::string& label() const { return m_label; }
     void set_label(std::string_view label) { m_label = label; }
 
-    value_type value() const { return m_value; }
-    void set_value(value_type value) { m_value = value; }
+    const value_type& value() const { return m_value; }
+    void set_value(const value_type& value) { m_value = value; }
 
     Callback callback() const { return m_callback; }
     void set_callback(Callback callback) { m_callback = callback; }
@@ -345,12 +345,12 @@ protected:
     Callback m_callback;
 };
 
-class Checkbox : public ValueProperty<bool> {
-    KALI_OBJECT(Checkbox)
+class CheckBox : public ValueProperty<bool> {
+    KALI_OBJECT(CheckBox)
 public:
     using Base = ValueProperty<bool>;
 
-    Checkbox(Widget* parent, std::string_view label = "", bool value = false, Callback callback = {})
+    CheckBox(Widget* parent, std::string_view label = "", bool value = false, Callback callback = {})
         : Base(parent, label, value, callback)
     {
     }
@@ -364,12 +364,12 @@ public:
     }
 };
 
-class Combobox : public ValueProperty<int> {
-    KALI_OBJECT(Combobox)
+class ComboBox : public ValueProperty<int> {
+    KALI_OBJECT(ComboBox)
 public:
     using Base = ValueProperty<int>;
 
-    Combobox(
+    ComboBox(
         Widget* parent,
         std::string_view label = "",
         int value = 0,
@@ -410,6 +410,52 @@ private:
     std::vector<std::string> m_items;
 };
 
+class ListBox : public ValueProperty<int> {
+    KALI_OBJECT(ListBox)
+public:
+    using Base = ValueProperty<int>;
+
+    ListBox(
+        Widget* parent,
+        std::string_view label = "",
+        int value = 0,
+        Callback callback = {},
+        std::vector<std::string> items = {},
+        int height_in_items = -1
+    )
+        : Base(parent, label, value, callback)
+        , m_items(items)
+        , m_height_in_items(height_in_items)
+    {
+    }
+
+    const std::vector<std::string>& items() const { return m_items; }
+    void set_items(const std::vector<std::string>& items) { m_items = items; }
+
+    int height_in_items() const { return m_height_in_items; }
+    void set_height_in_items(int height_in_items) { m_height_in_items = height_in_items; }
+
+    virtual void render() override
+    {
+        ScopedID id(this);
+        ScopedDisable disable(!m_enabled);
+        if (ImGui::ListBox(
+                m_label.c_str(),
+                &m_value,
+                [](void* user_data, int idx) { return static_cast<const ListBox*>(user_data)->m_items[idx].c_str(); },
+                this,
+                int(m_items.size()),
+                m_height_in_items
+            )) {
+            record_event({this});
+        }
+    }
+
+private:
+    std::vector<std::string> m_items;
+    int m_height_in_items;
+};
+
 enum class SliderFlags {
     none = ImGuiSliderFlags_None,
     always_clamp = ImGuiSliderFlags_AlwaysClamp,
@@ -417,6 +463,7 @@ enum class SliderFlags {
     no_round_to_format = ImGuiSliderFlags_NoRoundToFormat,
     no_input = ImGuiSliderFlags_NoInput,
 };
+KALI_ENUM_CLASS_OPERATORS(SliderFlags);
 
 template<typename T>
 struct DataTypeTraits { };
@@ -607,5 +654,88 @@ using SliderInt = Slider<int>;
 using SliderInt2 = Slider<int2>;
 using SliderInt3 = Slider<int3>;
 using SliderInt4 = Slider<int4>;
+
+enum class InputTextFlags {
+    none = ImGuiInputTextFlags_None,
+    chars_decimal = ImGuiInputTextFlags_CharsDecimal,
+    chars_hexadecimal = ImGuiInputTextFlags_CharsHexadecimal,
+    chars_uppercase = ImGuiInputTextFlags_CharsUppercase,
+    chars_no_blank = ImGuiInputTextFlags_CharsNoBlank,
+    auto_select_all = ImGuiInputTextFlags_AutoSelectAll,
+    enter_returns_true = ImGuiInputTextFlags_EnterReturnsTrue,
+    callback_completion = ImGuiInputTextFlags_CallbackCompletion,
+    callback_history = ImGuiInputTextFlags_CallbackHistory,
+    callback_always = ImGuiInputTextFlags_CallbackAlways,
+    callback_char_filter = ImGuiInputTextFlags_CallbackCharFilter,
+    allow_tab_input = ImGuiInputTextFlags_AllowTabInput,
+    ctrl_enter_for_new_line = ImGuiInputTextFlags_CtrlEnterForNewLine,
+    no_horizontal_scroll = ImGuiInputTextFlags_NoHorizontalScroll,
+    always_overwrite = ImGuiInputTextFlags_AlwaysOverwrite,
+    read_only = ImGuiInputTextFlags_ReadOnly,
+    password = ImGuiInputTextFlags_Password,
+    no_undo_redo = ImGuiInputTextFlags_NoUndoRedo,
+    chars_scientific = ImGuiInputTextFlags_CharsScientific,
+    escape_clears_all = ImGuiInputTextFlags_EscapeClearsAll,
+};
+KALI_ENUM_CLASS_OPERATORS(InputTextFlags);
+
+class InputText : public ValueProperty<std::string> {
+    KALI_OBJECT(InputText)
+public:
+    using Base = ValueProperty<std::string>;
+
+    InputText(
+        Widget* parent,
+        std::string_view label = "",
+        std::string value = "",
+        Callback callback = {},
+        bool multi_line = false,
+        InputTextFlags flags = InputTextFlags::none
+    )
+        : Base(parent, label, value, callback)
+        , m_multi_line(multi_line)
+        , m_flags(flags)
+    {
+    }
+
+    virtual void render() override
+    {
+        auto text_callback = [](ImGuiInputTextCallbackData* data)
+        {
+            auto self = static_cast<InputText*>(data->UserData);
+            if (data->EventFlag == ImGuiInputTextFlags_CallbackResize) {
+                self->m_value.resize(data->BufTextLen);
+                data->Buf = self->m_value.data();
+            }
+            return 0;
+        };
+
+        ImGuiInputTextFlags flags = ImGuiInputTextFlags(m_flags) | ImGuiInputTextFlags_CallbackResize;
+
+        ScopedID id(this);
+        ScopedDisable disable(!m_enabled);
+        bool changed = false;
+        if (m_multi_line) {
+            changed = ImGui::InputTextMultiline(
+                m_label.c_str(),
+                m_value.data(),
+                m_value.capacity() + 1,
+                ImVec2(0, 0),
+                flags,
+                text_callback,
+                this
+            );
+        } else {
+            changed
+                = ImGui::InputText(m_label.c_str(), m_value.data(), m_value.capacity() + 1, flags, text_callback, this);
+        }
+        if (changed)
+            record_event({this});
+    }
+
+private:
+    bool m_multi_line;
+    InputTextFlags m_flags;
+};
 
 } // namespace kali::ui
