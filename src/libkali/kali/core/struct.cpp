@@ -1467,9 +1467,9 @@ private:
 };
 
 
-StructConverter::StructConverter(ref<const Struct> src, ref<const Struct> dst)
-    : m_src(std::move(src))
-    , m_dst(std::move(dst))
+StructConverter::StructConverter(const Struct* src, const Struct* dst)
+    : m_src(new Struct(*src))
+    , m_dst(new Struct(*dst))
 {
 }
 

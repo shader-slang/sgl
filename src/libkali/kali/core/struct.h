@@ -332,13 +332,13 @@ public:
     /// Constructor.
     /// \param src Source struct definition.
     /// \param dst Destination struct definition.
-    StructConverter(ref<const Struct> src, ref<const Struct> dst);
+    StructConverter(const Struct* src, const Struct* dst);
 
     /// The source struct definition.
-    ref<const Struct> src() const { return m_src; }
+    const Struct* src() const { return m_src; }
 
     /// The destination struct definition.
-    ref<const Struct> dst() const { return m_dst; }
+    const Struct* dst() const { return m_dst; }
 
     /// Convert data from source struct to destination struct.
     /// \param src Source data.
