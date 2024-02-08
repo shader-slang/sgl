@@ -44,5 +44,6 @@ KALI_PY_EXPORT(device_framebuffer)
         .def_rw("depth_stencil", &FramebufferDesc::depth_stencil);
     nb::implicitly_convertible<nb::dict, FramebufferDesc>();
 
-    nb::class_<Framebuffer, DeviceResource>(m, "Framebuffer").def_prop_ro("desc", &Framebuffer::desc);
+    nb::class_<Framebuffer, DeviceResource>(m, "Framebuffer", D(Framebuffer))
+        .def_prop_ro("desc", &Framebuffer::desc, D(Framebuffer, desc));
 }
