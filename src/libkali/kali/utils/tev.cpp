@@ -88,9 +88,15 @@ bool show_in_tev(const Bitmap* bitmap, std::string name, std::string host, uint1
     if (name.empty())
         name = fmt::format("image_{}", image_counter++);
 
-    std::vector<const char*> channel_names(bitmap->pixel_struct()->field_count());
-    for (size_t i = 0; i < channel_names.size(); ++i)
-        channel_names[i] = bitmap->pixel_struct()->operator[](i).name.c_str();
+    const auto& pixel_struct = *bitmap->pixel_struct();
+    std::vector<const char*> channel_names(pixel_struct.field_count());
+    std::vector<size_t> channel_offsets(pixel_struct.field_count());
+    std::vector<size_t> channel_strides(pixel_struct.field_count());
+    for (size_t i = 0; i < channel_names.size(); ++i) {
+        channel_names[i] = pixel_struct[i].name.c_str();
+        channel_offsets[i] = pixel_struct[i].offset / sizeof(float);
+        channel_strides[i] = pixel_struct.size() / sizeof(float);
+    }
 
     for (uint32_t attempt = 1; attempt <= max_retries; ++attempt) {
         std::unique_ptr<tevclient::Client> client = ClientPool::get().acquire_client(host, port);
@@ -132,8 +138,8 @@ bool show_in_tev(const Bitmap* bitmap, std::string name, std::string host, uint1
                 bitmap->height(),
                 bitmap->channel_count(),
                 channel_names.data(),
-                nullptr,
-                nullptr,
+                channel_offsets.data(),
+                channel_strides.data(),
                 (const float*)bitmap->data(),
                 bitmap->buffer_size() / 4
             )
