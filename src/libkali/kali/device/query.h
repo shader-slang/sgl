@@ -15,7 +15,9 @@
 namespace kali {
 
 struct QueryPoolDesc {
+    /// Query type.
     QueryType type;
+    /// Number of queries in the pool.
     uint32_t count;
 };
 

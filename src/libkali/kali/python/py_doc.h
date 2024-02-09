@@ -1484,13 +1484,45 @@ static const char *__doc_kali_Device_create_command_buffer = R"doc()doc";
 
 static const char *__doc_kali_Device_create_compute_pipeline = R"doc()doc";
 
-static const char *__doc_kali_Device_create_fence = R"doc()doc";
+static const char *__doc_kali_Device_create_fence =
+R"doc(Create a new fence.
 
-static const char *__doc_kali_Device_create_framebuffer = R"doc()doc";
+Parameter ``initial_value``:
+    Initial fence value.
+
+Parameter ``shared``:
+    Create a shared fence.
+
+Returns:
+    New fence object.)doc";
+
+static const char *__doc_kali_Device_create_framebuffer =
+R"doc(Create a new framebuffer.
+
+Parameter ``render_target``:
+    List of render targets (see FramebufferAttachmentDesc for
+    details).
+
+Parameter ``depth_stencil``:
+    Optional depth-stencil attachment (see FramebufferAttachmentDesc
+    for details).
+
+Returns:
+    New framebuffer object.)doc";
 
 static const char *__doc_kali_Device_create_graphics_pipeline = R"doc()doc";
 
-static const char *__doc_kali_Device_create_input_layout = R"doc()doc";
+static const char *__doc_kali_Device_create_input_layout =
+R"doc(Create a new input layout.
+
+Parameter ``input_elements``:
+    List of input elements (see InputElementDesc for details).
+
+Parameter ``vertex_streams``:
+    List of vertex streams (see VertexStreamDesc for details).
+
+Returns:
+    New input layout object.)doc";
 
 static const char *__doc_kali_Device_create_memory_heap = R"doc()doc";
 
@@ -1500,17 +1532,77 @@ static const char *__doc_kali_Device_create_mutable_shader_object_2 = R"doc()doc
 
 static const char *__doc_kali_Device_create_mutable_shader_object_3 = R"doc()doc";
 
-static const char *__doc_kali_Device_create_query_pool = R"doc()doc";
+static const char *__doc_kali_Device_create_query_pool =
+R"doc(Create a new query pool.
+
+Parameter ``type``:
+    Query type.
+
+Parameter ``count``:
+    Number of queries in the pool.
+
+Returns:
+    New query pool object.)doc";
 
 static const char *__doc_kali_Device_create_raw_buffer = R"doc()doc";
 
 static const char *__doc_kali_Device_create_ray_tracing_pipeline = R"doc()doc";
 
-static const char *__doc_kali_Device_create_sampler = R"doc()doc";
+static const char *__doc_kali_Device_create_sampler =
+R"doc(Create a new sampler.
+
+Parameter ``min_filter``:
+    Minification filter.
+
+Parameter ``mag_filter``:
+    Magnification filter.
+
+Parameter ``mip_filter``:
+    Mip-map filter.
+
+Parameter ``reduction_op``:
+    Reduction operation.
+
+Parameter ``address_u``:
+    Texture addressing mode for the U coordinate.
+
+Parameter ``address_v``:
+    Texture addressing mode for the V coordinate.
+
+Parameter ``address_w``:
+    Texture addressing mode for the W coordinate.
+
+Parameter ``mip_lod_bias``:
+    Mip-map LOD bias.
+
+Parameter ``max_anisotropy``:
+    Maximum anisotropy.
+
+Parameter ``comparison_func``:
+    Comparison function.
+
+Parameter ``border_color``:
+    Border color.
+
+Parameter ``min_lod``:
+    Minimum LOD level.
+
+Parameter ``max_lod``:
+    Maximum LOD level.
+
+Returns:
+    New sampler object.)doc";
 
 static const char *__doc_kali_Device_create_shader_table = R"doc()doc";
 
-static const char *__doc_kali_Device_create_slang_session = R"doc()doc";
+static const char *__doc_kali_Device_create_slang_session =
+R"doc(Create a new slang session.
+
+Parameter ``compiler_options``:
+    Compiler options (see SlangCompilerOptions for details).
+
+Returns:
+    New slang session object.)doc";
 
 static const char *__doc_kali_Device_create_structured_buffer = R"doc()doc";
 
@@ -1518,27 +1610,71 @@ static const char *__doc_kali_Device_create_swapchain =
 R"doc(Create a new swapchain.
 
 Parameter ``format``:
-    The format of the swapchain images.
+    Format of the swapchain images.
 
 Parameter ``width``:
-    The width of the swapchain images.
+    Width of the swapchain images in pixels.
 
 Parameter ``height``:
-    The height of the swapchain images.
+    Height of the swapchain images in pixels.
 
 Parameter ``image_count``:
-    The number of swapchain images.
+    Number of swapchain images.
 
 Parameter ``enable_vsync``:
     Enable/disable vertical synchronization.
 
 Parameter ``window``:
-    The window to create the swapchain for.
+    Window to create the swapchain for.
 
 Returns:
-    The new swapchain.)doc";
+    New swapchain object.)doc";
 
-static const char *__doc_kali_Device_create_texture = R"doc()doc";
+static const char *__doc_kali_Device_create_texture =
+R"doc(Create a new texture.
+
+Parameter ``type``:
+    Resource type (optional. Type is inferred from width, height,
+    depth if not specified.
+
+Parameter ``format``:
+    Texture format.
+
+Parameter ``width``:
+    Width in pixels.
+
+Parameter ``height``:
+    Height in pixels.
+
+Parameter ``depth``:
+    Depth in pixels.
+
+Parameter ``array_size``:
+    Number of array slices (1 for non-array textures).
+
+Parameter ``mip_count``:
+    Number of mip levels (0 for auto-generated mips).
+
+Parameter ``sample_count``:
+    Number of samples per pixel (1 for non-multisampled textures).
+
+Parameter ``quality``:
+    Quality level for multisampled textures.
+
+Parameter ``usage``:
+    Resource usage.
+
+Parameter ``memory_type``:
+    Memory type.
+
+Parameter ``debug_name``:
+    Debug name.
+
+Parameter ``data``:
+    Initial data.
+
+Returns:
+    New texture object.)doc";
 
 static const char *__doc_kali_Device_create_texture_from_resource = R"doc()doc";
 
@@ -1598,9 +1734,35 @@ static const char *__doc_kali_Device_graphics_queue = R"doc()doc";
 
 static const char *__doc_kali_Device_info = R"doc()doc";
 
-static const char *__doc_kali_Device_load_module = R"doc()doc";
+static const char *__doc_kali_Device_load_module =
+R"doc(Helper function for loading a slang module from a file.
 
-static const char *__doc_kali_Device_load_module_from_source = R"doc()doc";
+Parameter ``path``:
+    Path to the shader file.
+
+Parameter ``defines``:
+    Preprocessor defines.
+
+Parameter ``compiler_options``:
+    Compiler options (see SlangCompilerOptions for details).
+
+Returns:
+    New slang module object.)doc";
+
+static const char *__doc_kali_Device_load_module_from_source =
+R"doc(Helper function for loading a slang module from a string.
+
+Parameter ``source``:
+    Shader source.
+
+Parameter ``defines``:
+    Preprocessor defines.
+
+Parameter ``compiler_options``:
+    Compiler options (see SlangCompilerOptions for details).
+
+Returns:
+    New slang module object.)doc";
 
 static const char *__doc_kali_Device_m_current_frame_index = R"doc()doc";
 
@@ -3764,9 +3926,9 @@ static const char *__doc_kali_QueryPool = R"doc()doc";
 
 static const char *__doc_kali_QueryPoolDesc = R"doc()doc";
 
-static const char *__doc_kali_QueryPoolDesc_count = R"doc()doc";
+static const char *__doc_kali_QueryPoolDesc_count = R"doc(Number of queries in the pool.)doc";
 
-static const char *__doc_kali_QueryPoolDesc_type = R"doc()doc";
+static const char *__doc_kali_QueryPoolDesc_type = R"doc(Query type.)doc";
 
 static const char *__doc_kali_QueryPool_QueryPool = R"doc()doc";
 
@@ -5217,13 +5379,13 @@ static const char *__doc_kali_SwapchainDesc = R"doc()doc";
 
 static const char *__doc_kali_SwapchainDesc_enable_vsync = R"doc(Enable/disable vertical synchronization.)doc";
 
-static const char *__doc_kali_SwapchainDesc_format = R"doc(The format of the swapchain images.)doc";
+static const char *__doc_kali_SwapchainDesc_format = R"doc(Format of the swapchain images.)doc";
 
-static const char *__doc_kali_SwapchainDesc_height = R"doc(The height of the swapchain images.)doc";
+static const char *__doc_kali_SwapchainDesc_height = R"doc(Height of the swapchain images in pixels.)doc";
 
-static const char *__doc_kali_SwapchainDesc_image_count = R"doc(The number of swapchain images.)doc";
+static const char *__doc_kali_SwapchainDesc_image_count = R"doc(Number of swapchain images.)doc";
 
-static const char *__doc_kali_SwapchainDesc_width = R"doc(The width of the swapchain images.)doc";
+static const char *__doc_kali_SwapchainDesc_width = R"doc(Width of the swapchain images in pixels.)doc";
 
 static const char *__doc_kali_Swapchain_Swapchain = R"doc()doc";
 
@@ -5366,8 +5528,8 @@ static const char *__doc_kali_TextureDesc_quality = R"doc(Quality level for mult
 static const char *__doc_kali_TextureDesc_sample_count = R"doc(Number of samples per pixel (1 for non-multisampled textures).)doc";
 
 static const char *__doc_kali_TextureDesc_type =
-R"doc(Texture resource type (optional). Type is inferred from width, height,
-depth if not specified.)doc";
+R"doc(Resource type (optional). Type is inferred from width, height, depth
+if not specified.)doc";
 
 static const char *__doc_kali_TextureDesc_usage = R"doc()doc";
 

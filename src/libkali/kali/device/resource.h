@@ -527,7 +527,7 @@ private:
 };
 
 struct TextureDesc {
-    /// Texture resource type (optional). Type is inferred from width, height, depth if not specified.
+    /// Resource type (optional). Type is inferred from width, height, depth if not specified.
     ResourceType type{ResourceType::unknown};
     /// Texture format.
     Format format{Format::unknown};

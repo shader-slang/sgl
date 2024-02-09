@@ -185,15 +185,15 @@ public:
 #endif
 
     /**
-     * Create a new swapchain.
+     * \brief Create a new swapchain.
      *
-     * @param format The format of the swapchain images.
-     * @param width The width of the swapchain images.
-     * @param height The height of the swapchain images.
-     * @param image_count The number of swapchain images.
-     * @param enable_vsync Enable/disable vertical synchronization.
-     * @param window The window to create the swapchain for.
-     * @return The new swapchain.
+     * \param format Format of the swapchain images.
+     * \param width Width of the swapchain images in pixels.
+     * \param height Height of the swapchain images in pixels.
+     * \param image_count Number of swapchain images.
+     * \param enable_vsync Enable/disable vertical synchronization.
+     * \param window Window to create the swapchain for.
+     * \return New swapchain object.
      */
     ref<Swapchain> create_swapchain(SwapchainDesc desc, Window* window);
 
@@ -205,18 +205,82 @@ public:
 
     ref<Buffer> create_typed_buffer(TypedBufferDesc desc);
 
+    /**
+     * \brief Create a new texture.
+     *
+     * \param type Resource type (optional. Type is inferred from width, height, depth if not specified.
+     * \param format Texture format.
+     * \param width Width in pixels.
+     * \param height Height in pixels.
+     * \param depth Depth in pixels.
+     * \param array_size Number of array slices (1 for non-array textures).
+     * \param mip_count Number of mip levels (0 for auto-generated mips).
+     * \param sample_count Number of samples per pixel (1 for non-multisampled textures).
+     * \param quality Quality level for multisampled textures.
+     * \param usage Resource usage.
+     * \param memory_type Memory type.
+     * \param debug_name Debug name.
+     * \param data Initial data.
+     * \return New texture object.
+    */
     ref<Texture> create_texture(TextureDesc desc);
 
     ref<Texture> create_texture_from_resource(TextureDesc desc, gfx::ITextureResource* resource, bool deferred_release);
 
+    /**
+     * \brief Create a new sampler.
+     *
+     * \param min_filter Minification filter.
+     * \param mag_filter Magnification filter.
+     * \param mip_filter Mip-map filter.
+     * \param reduction_op Reduction operation.
+     * \param address_u Texture addressing mode for the U coordinate.
+     * \param address_v Texture addressing mode for the V coordinate.
+     * \param address_w Texture addressing mode for the W coordinate.
+     * \param mip_lod_bias Mip-map LOD bias.
+     * \param max_anisotropy Maximum anisotropy.
+     * \param comparison_func Comparison function.
+     * \param border_color Border color.
+     * \param min_lod Minimum LOD level.
+     * \param max_lod Maximum LOD level.
+     * \return New sampler object.
+    */
     ref<Sampler> create_sampler(SamplerDesc desc);
 
+    /**
+     * \brief Create a new fence.
+     *
+     * \param initial_value Initial fence value.
+     * \param shared Create a shared fence.
+     * \return New fence object.
+     */
     ref<Fence> create_fence(FenceDesc desc);
 
+    /**
+     * \brief Create a new query pool.
+     *
+     * \param type Query type.
+     * \param count Number of queries in the pool.
+     * \return New query pool object.
+    */
     ref<QueryPool> create_query_pool(QueryPoolDesc desc);
 
+    /**
+     * \brief Create a new input layout.
+     *
+     * \param input_elements List of input elements (see \ref InputElementDesc for details).
+     * \param vertex_streams List of vertex streams (see \ref VertexStreamDesc for details).
+     * \return New input layout object.
+    */
     ref<InputLayout> create_input_layout(InputLayoutDesc desc);
 
+    /**
+     * \brief Create a new framebuffer.
+     *
+     * \param render_target List of render targets (see \ref FramebufferAttachmentDesc for details).
+     * \param depth_stencil Optional depth-stencil attachment (see \ref FramebufferAttachmentDesc for details).
+     * \return New framebuffer object.
+    */
     ref<Framebuffer> create_framebuffer(FramebufferDesc desc);
 
     AccelerationStructurePrebuildInfo
@@ -226,14 +290,36 @@ public:
 
     ref<ShaderTable> create_shader_table(ShaderTableDesc desc);
 
+    /**
+     * \brief Create a new slang session.
+     *
+     * \param compiler_options Compiler options (see \ref SlangCompilerOptions for details).
+     * \return New slang session object.
+    */
     ref<SlangSession> create_slang_session(SlangSessionDesc desc);
 
+    /**
+     * \brief Helper function for loading a slang module from a file.
+     *
+     * \param path Path to the shader file.
+     * \param defines Preprocessor defines.
+     * \param compiler_options Compiler options (see \ref SlangCompilerOptions for details).
+     * \return New slang module object.
+     */
     ref<SlangModule> load_module(
         const std::filesystem::path& path,
         std::optional<DefineList> defines = std::nullopt,
         std::optional<SlangCompilerOptions> compiler_options = std::nullopt
     );
 
+    /**
+     * \brief Helper function for loading a slang module from a string.
+     *
+     * \param source Shader source.
+     * \param defines Preprocessor defines.
+     * \param compiler_options Compiler options (see \ref SlangCompilerOptions for details).
+     * \return New slang module object.
+     */
     ref<SlangModule> load_module_from_source(
         const std::string& source,
         std::optional<DefineList> defines = std::nullopt,
