@@ -198,6 +198,9 @@ public:
     /// The number of channels in the bitmap.
     uint32_t channel_count() const { return static_cast<uint32_t>(m_pixel_struct->field_count()); }
 
+    /// The names of the channels in the bitmap.
+    std::vector<std::string> channel_names() const;
+
     /// True if the bitmap is in sRGB gamma space.
     bool srgb_gamma() const { return m_srgb_gamma; }
 

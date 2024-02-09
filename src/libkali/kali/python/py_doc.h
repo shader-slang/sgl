@@ -500,6 +500,8 @@ static const char *__doc_kali_Bitmap_bytes_per_pixel = R"doc(The number of bytes
 
 static const char *__doc_kali_Bitmap_channel_count = R"doc(The number of channels in the bitmap.)doc";
 
+static const char *__doc_kali_Bitmap_channel_names = R"doc()doc";
+
 static const char *__doc_kali_Bitmap_check_required_format = R"doc()doc";
 
 static const char *__doc_kali_Bitmap_class_name = R"doc()doc";

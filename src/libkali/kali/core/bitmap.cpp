@@ -307,6 +307,14 @@ void Bitmap::write_async(const std::filesystem::path& path, FileFormat format, i
     );
 }
 
+std::vector<std::string> Bitmap::channel_names() const
+{
+    std::vector<std::string> names(m_pixel_struct->field_count());
+    for (size_t i = 0; i < names.size(); ++i)
+        names[i] = m_pixel_struct->operator[](i).name;
+    return names;
+}
+
 void Bitmap::set_srgb_gamma(bool srgb_gamma)
 {
     m_srgb_gamma = srgb_gamma;
@@ -344,7 +352,14 @@ void Bitmap::vflip()
 
 ref<Bitmap> Bitmap::convert(PixelFormat pixel_format, ComponentType component_type, bool srgb_gamma) const
 {
-    ref<Bitmap> result = make_ref<Bitmap>(pixel_format, component_type, m_width, m_height);
+    uint32_t channel_count = 0;
+    std::vector<std::string> channel_names;
+    if (m_pixel_format == PixelFormat::multi_channel && pixel_format == PixelFormat::multi_channel) {
+        channel_count = this->channel_count();
+        channel_names = this->channel_names();
+    }
+    ref<Bitmap> result
+        = make_ref<Bitmap>(pixel_format, component_type, m_width, m_height, channel_count, channel_names);
     result->set_srgb_gamma(srgb_gamma);
     convert(result);
     return result;
