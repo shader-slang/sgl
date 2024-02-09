@@ -493,7 +493,8 @@ class Drag : public ValueProperty<T> {
     KALI_OBJECT(Drag)
 public:
     using Base = ValueProperty<T>;
-    using Base::value_type;
+    using typename Base::value_type;
+    using typename Base::Callback;
 
     using Widget::record_event;
     using Widget::m_enabled;
@@ -508,7 +509,7 @@ public:
         Widget* parent,
         std::string_view label = "",
         value_type value = value_type(0),
-        typename Base::Callback callback = {},
+        Callback callback = {},
         float speed = 1.f,
         scalar_type min = scalar_type(0),
         scalar_type max = scalar_type(0),
@@ -580,7 +581,8 @@ class Slider : public ValueProperty<T> {
     KALI_OBJECT(Slider)
 public:
     using Base = ValueProperty<T>;
-    using Base::value_type;
+    using typename Base::value_type;
+    using typename Base::Callback;
 
     using Widget::record_event;
     using Widget::m_enabled;
@@ -595,7 +597,7 @@ public:
         Widget* parent,
         std::string_view label = "",
         value_type value = value_type(0),
-        typename Base::Callback callback = {},
+        Callback callback = {},
         scalar_type min = scalar_type(0),
         scalar_type max = scalar_type(0),
         std::string_view format = default_format,

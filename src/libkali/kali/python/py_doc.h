@@ -500,8 +500,6 @@ static const char *__doc_kali_Bitmap_bytes_per_pixel = R"doc(The number of bytes
 
 static const char *__doc_kali_Bitmap_channel_count = R"doc(The number of channels in the bitmap.)doc";
 
-static const char *__doc_kali_Bitmap_channel_names = R"doc(The names of the channels in the bitmap.)doc";
-
 static const char *__doc_kali_Bitmap_check_required_format = R"doc()doc";
 
 static const char *__doc_kali_Bitmap_class_name = R"doc()doc";
@@ -530,10 +528,6 @@ static const char *__doc_kali_Bitmap_has_alpha = R"doc(Returns true if the bitma
 
 static const char *__doc_kali_Bitmap_height = R"doc(The height of the bitmap in pixels.)doc";
 
-static const char *__doc_kali_Bitmap_m_channel_count = R"doc()doc";
-
-static const char *__doc_kali_Bitmap_m_channel_names = R"doc()doc";
-
 static const char *__doc_kali_Bitmap_m_component_type = R"doc()doc";
 
 static const char *__doc_kali_Bitmap_m_data = R"doc()doc";
@@ -543,6 +537,8 @@ static const char *__doc_kali_Bitmap_m_height = R"doc()doc";
 static const char *__doc_kali_Bitmap_m_owns_data = R"doc()doc";
 
 static const char *__doc_kali_Bitmap_m_pixel_format = R"doc()doc";
+
+static const char *__doc_kali_Bitmap_m_pixel_struct = R"doc()doc";
 
 static const char *__doc_kali_Bitmap_m_srgb_gamma = R"doc()doc";
 
@@ -556,7 +552,7 @@ static const char *__doc_kali_Bitmap_pixel_count = R"doc(The total number of pix
 
 static const char *__doc_kali_Bitmap_pixel_format = R"doc(The pixel format.)doc";
 
-static const char *__doc_kali_Bitmap_pixel_struct = R"doc()doc";
+static const char *__doc_kali_Bitmap_pixel_struct = R"doc(Struct describing the pixel layout.)doc";
 
 static const char *__doc_kali_Bitmap_read = R"doc()doc";
 
@@ -576,9 +572,11 @@ static const char *__doc_kali_Bitmap_read_png = R"doc()doc";
 
 static const char *__doc_kali_Bitmap_read_tga = R"doc()doc";
 
+static const char *__doc_kali_Bitmap_rebuild_pixel_struct = R"doc()doc";
+
 static const char *__doc_kali_Bitmap_set_srgb_gamma =
 R"doc(Set the sRGB gamma flag. Note that this does not convert the pixel
-values, it only sets the flag.)doc";
+values, it only sets the flag and adjusts the pixel struct.)doc";
 
 static const char *__doc_kali_Bitmap_srgb_gamma = R"doc(True if the bitmap is in sRGB gamma space.)doc";
 
@@ -1516,7 +1514,29 @@ static const char *__doc_kali_Device_create_slang_session = R"doc()doc";
 
 static const char *__doc_kali_Device_create_structured_buffer = R"doc()doc";
 
-static const char *__doc_kali_Device_create_swapchain = R"doc()doc";
+static const char *__doc_kali_Device_create_swapchain =
+R"doc(Create a new swapchain.
+
+Parameter ``format``:
+    The format of the swapchain images.
+
+Parameter ``width``:
+    The width of the swapchain images.
+
+Parameter ``height``:
+    The height of the swapchain images.
+
+Parameter ``image_count``:
+    The number of swapchain images.
+
+Parameter ``enable_vsync``:
+    Enable/disable vertical synchronization.
+
+Parameter ``window``:
+    The window to create the swapchain for.
+
+Returns:
+    The new swapchain.)doc";
 
 static const char *__doc_kali_Device_create_texture = R"doc()doc";
 
@@ -1526,7 +1546,7 @@ static const char *__doc_kali_Device_create_typed_buffer = R"doc()doc";
 
 static const char *__doc_kali_Device_debug_printer = R"doc()doc";
 
-static const char *__doc_kali_Device_default_shader_model = R"doc()doc";
+static const char *__doc_kali_Device_default_shader_model = R"doc(The default shader model used when compiling shaders.)doc";
 
 static const char *__doc_kali_Device_deferred_release = R"doc()doc";
 
@@ -1558,7 +1578,7 @@ R"doc(Execute deferred releases.
 
 This function should be called regularly to execute deferred releases.)doc";
 
-static const char *__doc_kali_Device_features = R"doc()doc";
+static const char *__doc_kali_Device_features = R"doc(List of features supported by the device.)doc";
 
 static const char *__doc_kali_Device_flush_print = R"doc(Block and flush all shader side debug print output.)doc";
 
@@ -1624,7 +1644,7 @@ static const char *__doc_kali_Device_report_live_objects =
 R"doc(Report live objects in the slang/gfx layer. This is useful for
 checking clean shutdown with all resources released properly.)doc";
 
-static const char *__doc_kali_Device_supported_shader_model = R"doc()doc";
+static const char *__doc_kali_Device_supported_shader_model = R"doc(The highest shader model supported by the device.)doc";
 
 static const char *__doc_kali_Device_to_string = R"doc()doc";
 
@@ -2237,6 +2257,8 @@ static const char *__doc_kali_GraphicsPipelineDesc_program = R"doc()doc";
 static const char *__doc_kali_GraphicsPipelineDesc_rasterizer = R"doc()doc";
 
 static const char *__doc_kali_GraphicsPipeline_GraphicsPipeline = R"doc()doc";
+
+static const char *__doc_kali_GraphicsPipeline_to_string = R"doc()doc";
 
 static const char *__doc_kali_HitGroupDesc = R"doc()doc";
 
@@ -4000,6 +4022,8 @@ static const char *__doc_kali_RayTracingPipelineFlags_skip_triangles = R"doc()do
 
 static const char *__doc_kali_RayTracingPipeline_RayTracingPipeline = R"doc()doc";
 
+static const char *__doc_kali_RayTracingPipeline_to_string = R"doc()doc";
+
 static const char *__doc_kali_RayTracingTrianglesDesc = R"doc()doc";
 
 static const char *__doc_kali_RayTracingTrianglesDesc_index_count = R"doc()doc";
@@ -5191,15 +5215,15 @@ static const char *__doc_kali_Swapchain = R"doc()doc";
 
 static const char *__doc_kali_SwapchainDesc = R"doc()doc";
 
-static const char *__doc_kali_SwapchainDesc_enable_vsync = R"doc()doc";
+static const char *__doc_kali_SwapchainDesc_enable_vsync = R"doc(Enable/disable vertical synchronization.)doc";
 
-static const char *__doc_kali_SwapchainDesc_format = R"doc()doc";
+static const char *__doc_kali_SwapchainDesc_format = R"doc(The format of the swapchain images.)doc";
 
-static const char *__doc_kali_SwapchainDesc_height = R"doc()doc";
+static const char *__doc_kali_SwapchainDesc_height = R"doc(The height of the swapchain images.)doc";
 
-static const char *__doc_kali_SwapchainDesc_image_count = R"doc()doc";
+static const char *__doc_kali_SwapchainDesc_image_count = R"doc(The number of swapchain images.)doc";
 
-static const char *__doc_kali_SwapchainDesc_width = R"doc()doc";
+static const char *__doc_kali_SwapchainDesc_width = R"doc(The width of the swapchain images.)doc";
 
 static const char *__doc_kali_Swapchain_Swapchain = R"doc()doc";
 
@@ -5214,13 +5238,13 @@ static const char *__doc_kali_Swapchain_class_name = R"doc()doc";
 
 static const char *__doc_kali_Swapchain_desc = R"doc(Returns the swapchain description.)doc";
 
-static const char *__doc_kali_Swapchain_images = R"doc()doc";
-
 static const char *__doc_kali_Swapchain_fullscreen_mode = R"doc()doc";
 
 static const char *__doc_kali_Swapchain_get_image = R"doc(Returns the back buffer image at position `index`.)doc";
 
 static const char *__doc_kali_Swapchain_get_images = R"doc()doc";
+
+static const char *__doc_kali_Swapchain_images = R"doc(Returns the back buffer images.)doc";
 
 static const char *__doc_kali_Swapchain_is_occluded = R"doc(Returns true if the window is occluded.)doc";
 
@@ -5341,7 +5365,9 @@ static const char *__doc_kali_TextureDesc_quality = R"doc(Quality level for mult
 
 static const char *__doc_kali_TextureDesc_sample_count = R"doc(Number of samples per pixel (1 for non-multisampled textures).)doc";
 
-static const char *__doc_kali_TextureDesc_type = R"doc(Texture type.)doc";
+static const char *__doc_kali_TextureDesc_type =
+R"doc(Texture resource type (optional). Type is inferred from width, height,
+depth if not specified.)doc";
 
 static const char *__doc_kali_TextureDesc_usage = R"doc()doc";
 
@@ -5374,24 +5400,6 @@ static const char *__doc_kali_TextureReductionOp_info_name = R"doc()doc";
 static const char *__doc_kali_TextureReductionOp_maximum = R"doc()doc";
 
 static const char *__doc_kali_TextureReductionOp_minimum = R"doc()doc";
-
-static const char *__doc_kali_TextureType = R"doc()doc";
-
-static const char *__doc_kali_TextureType_info = R"doc()doc";
-
-static const char *__doc_kali_TextureType_info_items = R"doc()doc";
-
-static const char *__doc_kali_TextureType_info_name = R"doc()doc";
-
-static const char *__doc_kali_TextureType_texture_1d = R"doc()doc";
-
-static const char *__doc_kali_TextureType_texture_2d = R"doc()doc";
-
-static const char *__doc_kali_TextureType_texture_3d = R"doc()doc";
-
-static const char *__doc_kali_TextureType_texture_cube = R"doc()doc";
-
-static const char *__doc_kali_TextureType_unknown = R"doc()doc";
 
 static const char *__doc_kali_Texture_Texture = R"doc()doc";
 
@@ -6313,8 +6321,6 @@ static const char *__doc_kali_find_enum_info_adl_52 = R"doc()doc";
 static const char *__doc_kali_find_enum_info_adl_53 = R"doc()doc";
 
 static const char *__doc_kali_find_enum_info_adl_54 = R"doc()doc";
-
-static const char *__doc_kali_find_enum_info_adl_55 = R"doc()doc";
 
 static const char *__doc_kali_flags_to_string_list =
 R"doc(Convert an flags enum value to a list of strings. Throws if any of the
@@ -8169,27 +8175,27 @@ static const char *__doc_kali_ui_Button_set_callback = R"doc()doc";
 
 static const char *__doc_kali_ui_Button_set_label = R"doc()doc";
 
-static const char *__doc_kali_ui_Checkbox = R"doc()doc";
+static const char *__doc_kali_ui_CheckBox = R"doc()doc";
 
-static const char *__doc_kali_ui_Checkbox_Checkbox = R"doc()doc";
+static const char *__doc_kali_ui_CheckBox_CheckBox = R"doc()doc";
 
-static const char *__doc_kali_ui_Checkbox_class_name = R"doc()doc";
+static const char *__doc_kali_ui_CheckBox_class_name = R"doc()doc";
 
-static const char *__doc_kali_ui_Checkbox_render = R"doc()doc";
+static const char *__doc_kali_ui_CheckBox_render = R"doc()doc";
 
-static const char *__doc_kali_ui_Combobox = R"doc()doc";
+static const char *__doc_kali_ui_ComboBox = R"doc()doc";
 
-static const char *__doc_kali_ui_Combobox_Combobox = R"doc()doc";
+static const char *__doc_kali_ui_ComboBox_ComboBox = R"doc()doc";
 
-static const char *__doc_kali_ui_Combobox_class_name = R"doc()doc";
+static const char *__doc_kali_ui_ComboBox_class_name = R"doc()doc";
 
-static const char *__doc_kali_ui_Combobox_items = R"doc()doc";
+static const char *__doc_kali_ui_ComboBox_items = R"doc()doc";
 
-static const char *__doc_kali_ui_Combobox_m_items = R"doc()doc";
+static const char *__doc_kali_ui_ComboBox_m_items = R"doc()doc";
 
-static const char *__doc_kali_ui_Combobox_render = R"doc()doc";
+static const char *__doc_kali_ui_ComboBox_render = R"doc()doc";
 
-static const char *__doc_kali_ui_Combobox_set_items = R"doc()doc";
+static const char *__doc_kali_ui_ComboBox_set_items = R"doc()doc";
 
 static const char *__doc_kali_ui_Context = R"doc()doc";
 
@@ -8238,6 +8244,12 @@ static const char *__doc_kali_ui_Context_process_events = R"doc()doc";
 static const char *__doc_kali_ui_Context_render = R"doc()doc";
 
 static const char *__doc_kali_ui_Context_screen = R"doc()doc";
+
+static const char *__doc_kali_ui_DataTypeTraits = R"doc()doc";
+
+static const char *__doc_kali_ui_DataTypeTraits_2 = R"doc()doc";
+
+static const char *__doc_kali_ui_DataTypeTraits_3 = R"doc()doc";
 
 static const char *__doc_kali_ui_Drag = R"doc()doc";
 
@@ -8296,6 +8308,80 @@ static const char *__doc_kali_ui_Group_m_label = R"doc()doc";
 static const char *__doc_kali_ui_Group_render = R"doc()doc";
 
 static const char *__doc_kali_ui_Group_set_label = R"doc()doc";
+
+static const char *__doc_kali_ui_InputText = R"doc()doc";
+
+static const char *__doc_kali_ui_InputTextFlags = R"doc()doc";
+
+static const char *__doc_kali_ui_InputTextFlags_allow_tab_input = R"doc()doc";
+
+static const char *__doc_kali_ui_InputTextFlags_always_overwrite = R"doc()doc";
+
+static const char *__doc_kali_ui_InputTextFlags_auto_select_all = R"doc()doc";
+
+static const char *__doc_kali_ui_InputTextFlags_callback_always = R"doc()doc";
+
+static const char *__doc_kali_ui_InputTextFlags_callback_char_filter = R"doc()doc";
+
+static const char *__doc_kali_ui_InputTextFlags_callback_completion = R"doc()doc";
+
+static const char *__doc_kali_ui_InputTextFlags_callback_history = R"doc()doc";
+
+static const char *__doc_kali_ui_InputTextFlags_chars_decimal = R"doc()doc";
+
+static const char *__doc_kali_ui_InputTextFlags_chars_hexadecimal = R"doc()doc";
+
+static const char *__doc_kali_ui_InputTextFlags_chars_no_blank = R"doc()doc";
+
+static const char *__doc_kali_ui_InputTextFlags_chars_scientific = R"doc()doc";
+
+static const char *__doc_kali_ui_InputTextFlags_chars_uppercase = R"doc()doc";
+
+static const char *__doc_kali_ui_InputTextFlags_ctrl_enter_for_new_line = R"doc()doc";
+
+static const char *__doc_kali_ui_InputTextFlags_enter_returns_true = R"doc()doc";
+
+static const char *__doc_kali_ui_InputTextFlags_escape_clears_all = R"doc()doc";
+
+static const char *__doc_kali_ui_InputTextFlags_no_horizontal_scroll = R"doc()doc";
+
+static const char *__doc_kali_ui_InputTextFlags_no_undo_redo = R"doc()doc";
+
+static const char *__doc_kali_ui_InputTextFlags_none = R"doc()doc";
+
+static const char *__doc_kali_ui_InputTextFlags_password = R"doc()doc";
+
+static const char *__doc_kali_ui_InputTextFlags_read_only = R"doc()doc";
+
+static const char *__doc_kali_ui_InputText_InputText = R"doc()doc";
+
+static const char *__doc_kali_ui_InputText_class_name = R"doc()doc";
+
+static const char *__doc_kali_ui_InputText_m_flags = R"doc()doc";
+
+static const char *__doc_kali_ui_InputText_m_multi_line = R"doc()doc";
+
+static const char *__doc_kali_ui_InputText_render = R"doc()doc";
+
+static const char *__doc_kali_ui_ListBox = R"doc()doc";
+
+static const char *__doc_kali_ui_ListBox_ListBox = R"doc()doc";
+
+static const char *__doc_kali_ui_ListBox_class_name = R"doc()doc";
+
+static const char *__doc_kali_ui_ListBox_height_in_items = R"doc()doc";
+
+static const char *__doc_kali_ui_ListBox_items = R"doc()doc";
+
+static const char *__doc_kali_ui_ListBox_m_height_in_items = R"doc()doc";
+
+static const char *__doc_kali_ui_ListBox_m_items = R"doc()doc";
+
+static const char *__doc_kali_ui_ListBox_render = R"doc()doc";
+
+static const char *__doc_kali_ui_ListBox_set_height_in_items = R"doc()doc";
+
+static const char *__doc_kali_ui_ListBox_set_items = R"doc()doc";
 
 static const char *__doc_kali_ui_ProgressBar = R"doc()doc";
 
@@ -8515,8 +8601,36 @@ static const char *__doc_kali_ui_Window_size = R"doc()doc";
 
 static const char *__doc_kali_ui_Window_title = R"doc()doc";
 
+static const char *__doc_kali_ui_flip_bit = R"doc()doc";
+
+static const char *__doc_kali_ui_flip_bit_2 = R"doc()doc";
+
+static const char *__doc_kali_ui_is_set = R"doc()doc";
+
+static const char *__doc_kali_ui_is_set_2 = R"doc()doc";
+
+static const char *__doc_kali_ui_operator_band = R"doc()doc";
+
+static const char *__doc_kali_ui_operator_band_2 = R"doc()doc";
+
+static const char *__doc_kali_ui_operator_bnot = R"doc()doc";
+
+static const char *__doc_kali_ui_operator_bnot_2 = R"doc()doc";
+
+static const char *__doc_kali_ui_operator_bor = R"doc()doc";
+
+static const char *__doc_kali_ui_operator_bor_2 = R"doc()doc";
+
+static const char *__doc_kali_ui_operator_iand = R"doc()doc";
+
+static const char *__doc_kali_ui_operator_iand_2 = R"doc()doc";
+
+static const char *__doc_kali_ui_operator_ior = R"doc()doc";
+
+static const char *__doc_kali_ui_operator_ior_2 = R"doc()doc";
+
 static const char *__doc_kali_utils_show_in_tev =
-R"doc(Show an image in the tev viewer (https://github.com/Tom94/tev).
+R"doc(Show a bitmap in the tev viewer (https://github.com/Tom94/tev).
 
 This will block until the image is sent over.
 
@@ -8539,11 +8653,73 @@ Parameter ``max_retries``:
 Returns:
     True if successful.)doc";
 
-static const char *__doc_kali_utils_show_in_tev_2 = R"doc()doc";
+static const char *__doc_kali_utils_show_in_tev_2 =
+R"doc(Show texture in the tev viewer (https://github.com/Tom94/tev).
 
-static const char *__doc_kali_utils_show_in_tev_async = R"doc()doc";
+This will block until the image is sent over.
 
-static const char *__doc_kali_utils_show_in_tev_async_2 = R"doc()doc";
+Parameter ``texture``:
+    Texture to show.
+
+Parameter ``name``:
+    Name of the image in tev. If not specified, a unique name will be
+    generated.
+
+Parameter ``host``:
+    Host to connect to.
+
+Parameter ``port``:
+    Port to connect to.
+
+Parameter ``max_retries``:
+    Maximum number of retries.
+
+Returns:
+    True if successful.)doc";
+
+static const char *__doc_kali_utils_show_in_tev_async =
+R"doc(Show a bitmap in the tev viewer (https://github.com/Tom94/tev).
+
+This will return immediately and send the image asynchronously in the
+background.
+
+Parameter ``bitmap``:
+    Bitmap to show.
+
+Parameter ``name``:
+    Name of the image in tev. If not specified, a unique name will be
+    generated.
+
+Parameter ``host``:
+    Host to connect to.
+
+Parameter ``port``:
+    Port to connect to.
+
+Parameter ``max_retries``:
+    Maximum number of retries.)doc";
+
+static const char *__doc_kali_utils_show_in_tev_async_2 =
+R"doc(Show a texture in the tev viewer (https://github.com/Tom94/tev).
+
+This will return immediately and send the image asynchronously in the
+background.
+
+Parameter ``bitmap``:
+    Texture to show.
+
+Parameter ``name``:
+    Name of the image in tev. If not specified, a unique name will be
+    generated.
+
+Parameter ``host``:
+    Host to connect to.
+
+Parameter ``port``:
+    Port to connect to.
+
+Parameter ``max_retries``:
+    Maximum number of retries.)doc";
 
 static const char *__doc_std_hash = R"doc()doc";
 
