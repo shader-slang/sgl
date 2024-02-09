@@ -222,7 +222,7 @@ public:
      * \param debug_name Debug name.
      * \param data Initial data.
      * \return New texture object.
-    */
+     */
     ref<Texture> create_texture(TextureDesc desc);
 
     ref<Texture> create_texture_from_resource(TextureDesc desc, gfx::ITextureResource* resource, bool deferred_release);
@@ -244,7 +244,7 @@ public:
      * \param min_lod Minimum LOD level.
      * \param max_lod Maximum LOD level.
      * \return New sampler object.
-    */
+     */
     ref<Sampler> create_sampler(SamplerDesc desc);
 
     /**
@@ -262,7 +262,7 @@ public:
      * \param type Query type.
      * \param count Number of queries in the pool.
      * \return New query pool object.
-    */
+     */
     ref<QueryPool> create_query_pool(QueryPoolDesc desc);
 
     /**
@@ -271,7 +271,7 @@ public:
      * \param input_elements List of input elements (see \ref InputElementDesc for details).
      * \param vertex_streams List of vertex streams (see \ref VertexStreamDesc for details).
      * \return New input layout object.
-    */
+     */
     ref<InputLayout> create_input_layout(InputLayoutDesc desc);
 
     /**
@@ -280,7 +280,7 @@ public:
      * \param render_target List of render targets (see \ref FramebufferAttachmentDesc for details).
      * \param depth_stencil Optional depth-stencil attachment (see \ref FramebufferAttachmentDesc for details).
      * \return New framebuffer object.
-    */
+     */
     ref<Framebuffer> create_framebuffer(FramebufferDesc desc);
 
     AccelerationStructurePrebuildInfo
@@ -295,7 +295,7 @@ public:
      *
      * \param compiler_options Compiler options (see \ref SlangCompilerOptions for details).
      * \return New slang session object.
-    */
+     */
     ref<SlangSession> create_slang_session(SlangSessionDesc desc);
 
     /**

@@ -33,6 +33,8 @@ def create_test_array(width, height, channels, dtype, type_range):
                 value = (i + j + k) / (width + height + channels)
                 value = type_range[0] + value * (type_range[1] - type_range[0])
                 img[i, j, k] = value
+    if channels == 1:
+        img = img.reshape((height, width))
     return img
 
 
@@ -66,14 +68,10 @@ def write_read_test(
 
     img = create_test_image(width, height, pixel_format, component_type)
 
-    # print(img)
-
     b1 = Bitmap(img)
     b1.write(path, quality=quality if quality else -1)
-    # print(b1)
 
     b2 = Bitmap(path)
-    # print(b2)
 
     assert b1.pixel_format == b2.pixel_format
     assert b1.component_type == b2.component_type
@@ -94,17 +92,60 @@ def write_read_test(
         assert b1 == b2
 
 
-def test_bitmap_creation():
-    pass
+def test_bitmap_empty():
+    b = Bitmap(
+        pixel_format=Bitmap.PixelFormat.y,
+        component_type=Bitmap.ComponentType.uint8,
+        width=0,
+        height=0,
+    )
+    assert b.width == 0
+    assert b.height == 0
+    assert b.pixel_count == 0
+    assert b.buffer_size == 0
+    assert b.empty()
 
 
-exr_layouts = [
-    # (128, 256, Bitmap.PixelFormat.rgb, Bitmap.ComponentType.float16),
-    # (100, 200, Bitmap.PixelFormat.rgba, Bitmap.ComponentType.float32),
+def test_bitmap_clear():
+    img = create_test_image(
+        100, 100, Bitmap.PixelFormat.rgb, Bitmap.ComponentType.float32
+    )
+    b = Bitmap(img)
+    a = np.array(b, copy=False)
+    assert np.any(a == img)
+    b.clear()
+    assert np.all(a == 0)
+
+
+def test_bitmap_vflip():
+    img = create_test_image(50, 100, Bitmap.PixelFormat.y, Bitmap.ComponentType.float32)
+    b = Bitmap(img)
+    a = np.array(b, copy=False)
+    assert np.all(a == img)
+    b.vflip()
+    assert np.all(a == np.flip(img, 0))
+
+
+EXR_LAYOUTS = [
+    (5, 10, Bitmap.PixelFormat.y, Bitmap.ComponentType.float16),
+    (10, 20, Bitmap.PixelFormat.ya, Bitmap.ComponentType.float16),
+    (50, 100, Bitmap.PixelFormat.rgb, Bitmap.ComponentType.float16),
+    (100, 200, Bitmap.PixelFormat.rgba, Bitmap.ComponentType.float16),
+    (50, 50, Bitmap.PixelFormat.multi_channel, Bitmap.ComponentType.float16),
+    (5, 10, Bitmap.PixelFormat.y, Bitmap.ComponentType.float32),
+    (10, 20, Bitmap.PixelFormat.ya, Bitmap.ComponentType.float32),
+    (50, 100, Bitmap.PixelFormat.rgb, Bitmap.ComponentType.float32),
+    (100, 200, Bitmap.PixelFormat.rgba, Bitmap.ComponentType.float32),
+    (50, 50, Bitmap.PixelFormat.multi_channel, Bitmap.ComponentType.float32),
+    (5, 10, Bitmap.PixelFormat.y, Bitmap.ComponentType.uint32),
+    (10, 20, Bitmap.PixelFormat.ya, Bitmap.ComponentType.uint32),
+    (50, 100, Bitmap.PixelFormat.rgb, Bitmap.ComponentType.uint32),
+    (100, 200, Bitmap.PixelFormat.rgba, Bitmap.ComponentType.uint32),
+    (50, 50, Bitmap.PixelFormat.multi_channel, Bitmap.ComponentType.uint32),
 ]
 
 
-@pytest.mark.parametrize("layout", exr_layouts)
+@pytest.mark.parametrize("layout", EXR_LAYOUTS)
 def test_exr_io(tmp_path, layout):
     extra = layout[4] if len(layout) > 4 else {}
     write_read_test(
@@ -112,32 +153,13 @@ def test_exr_io(tmp_path, layout):
     )
 
 
-# @pytest.mark.parametrize("layout", exr_layouts)
-# def test_exr_format(tmp_path, layout):
-#     img = create_test_image(
-#         width=layout[0],
-#         height=layout[1],
-#         pixel_format=layout[2],
-#         component_type=layout[3],
-#     )
-#     b1 = Bitmap(img)
-#     name = f"test_{layout[0]}x{layout[1]}_{layout[2]}_{layout[3]}.exr"
-#     print(tmp_path)
-#     b1.write(tmp_path / name)
-#     print(b1)
-
-#     b2 = Bitmap(tmp_path / name)
-#     print(b2)
-#     assert np.all(np.array(b1, copy=False) == np.array(b2, copy=False))
-
-
-bmp_layouts = [
+BMP_LAYOUTS = [
     (50, 100, Bitmap.PixelFormat.rgb, Bitmap.ComponentType.uint8),
     (100, 200, Bitmap.PixelFormat.rgba, Bitmap.ComponentType.uint8),
 ]
 
 
-@pytest.mark.parametrize("layout", bmp_layouts)
+@pytest.mark.parametrize("layout", BMP_LAYOUTS)
 def test_bmp_io(tmp_path, layout):
     extra = layout[4] if len(layout) > 4 else {}
     write_read_test(
@@ -145,14 +167,14 @@ def test_bmp_io(tmp_path, layout):
     )
 
 
-tga_layouts = [
+TGA_LAYOUTS = [
     (5, 10, Bitmap.PixelFormat.y, Bitmap.ComponentType.uint8),
     (50, 100, Bitmap.PixelFormat.rgb, Bitmap.ComponentType.uint8),
     (100, 200, Bitmap.PixelFormat.rgba, Bitmap.ComponentType.uint8),
 ]
 
 
-@pytest.mark.parametrize("layout", tga_layouts)
+@pytest.mark.parametrize("layout", TGA_LAYOUTS)
 def test_tga_io(tmp_path, layout):
     extra = layout[4] if len(layout) > 4 else {}
     write_read_test(
@@ -160,7 +182,7 @@ def test_tga_io(tmp_path, layout):
     )
 
 
-png_layouts = [
+PNG_LAYOUTS = [
     (1, 2, Bitmap.PixelFormat.y, Bitmap.ComponentType.uint8),
     (5, 10, Bitmap.PixelFormat.ya, Bitmap.ComponentType.uint8),
     (50, 100, Bitmap.PixelFormat.rgb, Bitmap.ComponentType.uint8),
@@ -174,7 +196,7 @@ png_layouts = [
 ]
 
 
-@pytest.mark.parametrize("layout", png_layouts)
+@pytest.mark.parametrize("layout", PNG_LAYOUTS)
 def test_png_io(tmp_path, layout):
     extra = layout[4] if len(layout) > 4 else {}
     write_read_test(
@@ -182,7 +204,7 @@ def test_png_io(tmp_path, layout):
     )
 
 
-jpg_layouts = [
+JPG_LAYOUTS = [
     (1, 2, Bitmap.PixelFormat.y, Bitmap.ComponentType.uint8, {"atol": 5}),
     (50, 100, Bitmap.PixelFormat.rgb, Bitmap.ComponentType.uint8, {"atol": 5}),
     (
@@ -195,7 +217,7 @@ jpg_layouts = [
 ]
 
 
-@pytest.mark.parametrize("layout", jpg_layouts)
+@pytest.mark.parametrize("layout", JPG_LAYOUTS)
 def test_jpg_io(tmp_path, layout):
     extra = layout[4] if len(layout) > 4 else {}
     write_read_test(
@@ -203,12 +225,12 @@ def test_jpg_io(tmp_path, layout):
     )
 
 
-hdr_layouts = [
+HDR_LAYOUTS = [
     (100, 200, Bitmap.PixelFormat.rgb, Bitmap.ComponentType.float32, {"rtol": 1e-2}),
 ]
 
 
-@pytest.mark.parametrize("layout", hdr_layouts)
+@pytest.mark.parametrize("layout", HDR_LAYOUTS)
 def test_hdr_io(tmp_path, layout):
     extra = layout[4] if len(layout) > 4 else {}
     write_read_test(
@@ -217,4 +239,4 @@ def test_hdr_io(tmp_path, layout):
 
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-vs", "-k", "hdr"])
+    pytest.main([__file__, "-vs"])

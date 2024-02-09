@@ -1,7 +1,6 @@
 ### 0.1
 
 - rename project
-- add support for loading EXR files
 - add support for texture init data
 - add more type checking to `ShaderCursor`
 - add rdoc strings
@@ -9,6 +8,7 @@
 
 ### Misc
 
+- cleanup reference cycles in widgets
 - add a simple windowed application base class
 - add support for XYZ images
 

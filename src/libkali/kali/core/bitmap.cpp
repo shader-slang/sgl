@@ -52,6 +52,8 @@ derivative works thereof, in binary and source code form.
 #include "kali/core/string.h"
 #include "kali/core/thread.h"
 
+#include "kali/math/scalar_types.h"
+
 #include "kali/stl/bit.h"
 
 #if KALI_HAS_PNG
@@ -415,7 +417,7 @@ std::string Bitmap::to_string() const
         "Bitmap(\n"
         "  pixel_format = {},\n"
         "  component_type = {},\n"
-        "  pixel_struct = {}\n",
+        "  pixel_struct = {}\n"
         "  width = {},\n"
         "  height = {},\n"
         "  srgb_gamma = {},\n"
@@ -480,9 +482,9 @@ void Bitmap::rebuild_pixel_struct(uint32_t channel_count, const std::vector<std:
     for (const auto& channel : channels) {
         bool is_alpha = m_pixel_format != PixelFormat::multi_channel && channel == "A";
         Struct::Flags flags = Struct::Flags::none;
-        if (Struct::is_integer(m_component_type))
+        if (Struct::is_integer(m_component_type) && Struct::type_size(m_component_type) <= 2)
             flags |= Struct::Flags::normalized;
-        if (m_srgb_gamma && is_alpha)
+        if (m_srgb_gamma && !is_alpha)
             flags |= Struct::Flags::srgb_gamma;
         m_pixel_struct->append(channel, m_component_type, flags);
     }
@@ -1379,7 +1381,7 @@ public:
     void clear() override { }
 
 private:
-    ref<Stream> m_stream;
+    Stream* m_stream;
     size_t m_offset, m_size;
 };
 
@@ -1398,7 +1400,7 @@ public:
     void seekp(uint64_t pos) override { m_stream->seek((size_t)pos); }
 
 private:
-    ref<Stream> m_stream;
+    Stream* m_stream;
 };
 
 void Bitmap::read_exr(Stream* stream)
@@ -1413,7 +1415,7 @@ void Bitmap::read_exr(Stream* stream)
         KALI_THROW("EXR image does not contain any channels!");
 
 #if 0
-    // Load meta data
+    // Load meta data.
     for (auto it = header.begin(); it != header.end(); ++it) {
         std::string name = it.name();
         const Imf::Attribute* attr = &it.attribute();
@@ -1476,7 +1478,7 @@ void Bitmap::read_exr(Stream* stream)
 
     enum { unknown, R, G, B, X, Y, Z, A, RY, BY, CLASS_COUNT };
 
-    // Classification scheme for color channels
+    // Classification scheme for color channels.
     auto channel_class = [](std::string name) -> uint8_t
     {
         auto it = name.rfind(".");
@@ -1504,7 +1506,7 @@ void Bitmap::read_exr(Stream* stream)
         return unknown;
     };
 
-    // Assign a sorting key to color channels
+    // Assign a sorting key to color channels.
     auto channel_key = [&](std::string name) -> std::string
     {
         uint8_t class_ = channel_class(name);
@@ -1519,6 +1521,7 @@ void Bitmap::read_exr(Stream* stream)
         return name;
     };
 
+    // Order channels based on their name and suffix.
     bool found[CLASS_COUNT] = {false};
     std::vector<std::string> channels_sorted;
     for (auto it = channels.begin(); it != channels.end(); ++it) {
@@ -1526,31 +1529,19 @@ void Bitmap::read_exr(Stream* stream)
         found[channel_class(name)] = true;
         channels_sorted.push_back(name);
     }
-
     std::sort(
         channels_sorted.begin(),
         channels_sorted.end(),
         [&](auto const& v0, auto const& v1) { return channel_key(v0) < channel_key(v1); }
     );
 
-#if 0
-    // Order channel names based on RGB/XYZ[A] suffix
-    for (auto const& name : channels_sorted) {
-        uint32_t flags = +Struct::Flags::Empty;
-        // Tag alpha channels to be able to perform operations depending on alpha
-        auto c_class = channel_class(name);
-        if (c_class == A)
-            flags |= +Struct::Flags::Alpha;
-
-        // Currently we don't support alpha transformations for multi-layer images
-        // So it is okay to just set this for all non-alpha channels
-        if (c_class != A)
-            flags |= +Struct::Flags::PremultipliedAlpha;
-        m_struct->append(name, m_component_format, flags);
+    // Create pixel struct.
+    m_pixel_struct = ref(new Struct());
+    for (const auto& name : channels_sorted) {
+        m_pixel_struct->append(name, m_component_type);
     }
-#endif
 
-    // Attempt to detect a standard combination of color channels
+    // Try to detect common pixel formats.
     m_pixel_format = PixelFormat::multi_channel;
     bool luminance_chroma_format = false;
     if (m_pixel_struct->field_count() == 3 && found[R] && found[G] && found[B]) {
@@ -1569,56 +1560,62 @@ void Bitmap::read_exr(Stream* stream)
         m_pixel_format = PixelFormat::ya;
     }
 
-#if 0
-    // Check if there is a chromaticity header entry
+    // Check if there is a chromaticity header entry.
     Imf::Chromaticities file_chroma;
     if (Imf::hasChromaticities(file.header()))
         file_chroma = Imf::chromaticities(file.header());
 
+#if 0
     auto chroma_eq = [](const Imf::Chromaticities& a, const Imf::Chromaticities& b)
     {
         return (a.red - b.red).length2() + (a.green - b.green).length2() + (a.blue - b.blue).length2()
             + (a.white - b.white).length2()
             < 1e-6f;
     };
+#endif
 
-    auto set_suffix = [](std::string name, const std::string& suffix)
+    auto set_suffix = [](std::string& name, const std::string& suffix)
     {
         auto it = name.rfind(".");
         if (it != std::string::npos)
             name = name.substr(0, it) + "." + suffix;
         else
             name = suffix;
-        return name;
     };
 
     Imath::Box2i data_window = file.header().dataWindow();
-    m_size = Vector2u(data_window.max.x - data_window.min.x + 1, data_window.max.y - data_window.min.y + 1);
+    m_width = data_window.max.x - data_window.min.x + 1;
+    m_height = data_window.max.y - data_window.min.y + 1;
 
-    // Compute pixel / row strides
-    size_t pixel_stride = bytes_per_pixel(), row_stride = pixel_stride * m_size.x(), pixel_count = this->pixel_count();
+    size_t pixel_stride = this->bytes_per_pixel();
+    size_t pixel_count = this->pixel_count();
+    size_t row_stride = pixel_stride * m_width;
 
-    // Finally, allocate memory for it
-    m_data = std::unique_ptr<uint8_t[]>(new uint8_t[row_stride * m_size.y()]);
+    m_data = std::unique_ptr<uint8_t[]>(new uint8_t[row_stride * m_height]);
     m_owns_data = true;
 
+#if 0
     using ResampleBuffer = std::pair<std::string, ref<Bitmap>>;
     std::vector<ResampleBuffer> resample_buffers;
+#endif
 
-    uint8_t* ptr = m_data.get() - (data_window.min.x + data_window.min.y * m_size.x()) * pixel_stride;
+    uint8_t* ptr = m_data.get() - (data_window.min.x + data_window.min.y * m_width) * pixel_stride;
 
-    // Tell OpenEXR where the image data should be put
+    // Tell OpenEXR where the image data should be put.
     Imf::FrameBuffer framebuffer;
-    for (auto const& field : *m_struct) {
+    for (const auto& field : *m_pixel_struct) {
         const Imf::Channel& channel = channels[field.name];
-        Vector2i sampling(channel.xSampling, channel.ySampling);
+        int x_sampling = channel.xSampling;
+        int y_sampling = channel.ySampling;
         Imf::Slice slice;
 
-        if (sampling == Vector2i(1)) {
-            // This is a full resolution channel. Load the ordinary way
+        if (x_sampling == 1 && y_sampling == 1) {
+            // Full resolution channel. Load directly.
             slice = Imf::Slice(pixel_type, (char*)(ptr + field.offset), pixel_stride, row_stride);
         } else {
-            // Uh oh, this is a sub-sampled channel. We will need to scale it
+            // Sub-sampled channel. Need to rescale later.
+            KALI_THROW("Sub-sampled channels are not supported!");
+#if 0
             Vector2u channel_size = m_size / sampling;
 
             ref<Bitmap> bitmap = new Bitmap(PixelFormat::Y, m_component_format, channel_size);
@@ -1637,23 +1634,25 @@ void Bitmap::read_exr(Stream* stream)
             );
 
             resample_buffers.emplace_back(field.name, std::move(bitmap));
+#endif
         }
-
         framebuffer.insert(field.name, slice);
     }
 
     auto fs = dynamic_cast<FileStream*>(stream);
-    Log(Debug,
-        "Loading OpenEXR file \"%s\" (%ix%i, %s, %s) ..",
+    log_debug(
+        "Reading OpenEXR file \"{}\" ({}x{}, {}, {}) ...",
         fs ? fs->path().string() : "<stream>",
-        m_size.x(),
-        m_size.y(),
+        m_width,
+        m_height,
         m_pixel_format,
-        m_component_format);
+        m_component_type
+    );
 
     file.setFrameBuffer(framebuffer);
     file.readPixels(data_window.min.y, data_window.max.y);
 
+#if 0
     for (auto& buf : resample_buffers) {
         Log(Debug,
             "Upsampling layer \"%s\" from %ix%i to %ix%i pixels",
@@ -1678,9 +1677,10 @@ void Bitmap::read_exr(Stream* stream)
 
         buf.second = nullptr;
     }
+#endif
 
     if (luminance_chroma_format) {
-        Log(Debug, "Converting from Luminance-Chroma to RGB format ..");
+        log_debug("Converting from Luminance-Chroma to RGB format ..");
         Imath::V3f yw = Imf::RgbaYca::computeYw(file_chroma);
 
         auto convert = [&](auto* data)
@@ -1688,22 +1688,26 @@ void Bitmap::read_exr(Stream* stream)
             using T = std::decay_t<decltype(*data)>;
 
             for (size_t j = 0; j < pixel_count; ++j) {
-                Float Y = (Float)data[0], RY = (Float)data[1], BY = (Float)data[2];
+                double y = double(data[0]);
+                double ry = double(data[1]);
+                double by = double(data[2]);
 
-                if (std::is_integral<T>::value) {
-                    Float scale = Float(1) / Float(std::numeric_limits<T>::max());
-                    Y *= scale;
-                    RY *= scale;
-                    BY *= scale;
+                if constexpr (!math::floating_point<T>) {
+                    double scale = 1.0 / double(std::numeric_limits<T>::max());
+                    y *= scale;
+                    ry *= scale;
+                    by *= scale;
                 }
 
-                Float R = (RY + 1.f) * Y, B = (BY + 1.f) * Y, G = ((Y - R * yw.x - B * yw.z) / yw.y);
+                double r = (ry + 1.0) * y;
+                double b = (by + 1.0) * y;
+                double g = ((y - r * yw.x - b * yw.z) / yw.y);
 
-                if (std::is_integral<T>::value) {
-                    Float scale = Float(std::numeric_limits<T>::max());
-                    R *= R * scale + .5f;
-                    G *= G * scale + .5f;
-                    B *= B * scale + .5f;
+                if constexpr (!math::floating_point<T>) {
+                    double scale = double(std::numeric_limits<T>::max());
+                    r = r * scale + .5f;
+                    g = g * scale + .5f;
+                    b = b * scale + .5f;
                 }
 
                 data[0] = T(R);
@@ -1713,26 +1717,26 @@ void Bitmap::read_exr(Stream* stream)
             }
         };
 
-        switch (m_component_format) {
-        case Struct::Type::Float16:
-            convert((dr::half*)m_data.get());
+        switch (m_component_type) {
+        case ComponentType::float16:
+            convert(reinterpret_cast<math::float16_t*>(m_data.get()));
             break;
-        case Struct::Type::Float32:
-            convert((float*)m_data.get());
+        case ComponentType::float32:
+            convert(reinterpret_cast<float*>(m_data.get()));
             break;
-        case Struct::Type::UInt32:
-            convert((uint32_t*)m_data.get());
+        case ComponentType::uint32:
+            convert(reinterpret_cast<uint32_t*>(m_data.get()));
             break;
         default:
-            Throw("Internal error!");
+            KALI_THROW("Internal error!");
         }
 
-        for (int i = 0; i < 3; ++i) {
-            std::string& name = m_struct->operator[](i).name;
-            name = set_suffix(name, std::string(1, "RGB"[i]));
-        }
+        set_suffix(m_pixel_struct->operator[](0).name, "R");
+        set_suffix(m_pixel_struct->operator[](1).name, "G");
+        set_suffix(m_pixel_struct->operator[](2).name, "B");
     }
 
+#if 0
     if (Imf::hasChromaticities(file.header())
         && (m_pixel_format == PixelFormat::RGB || m_pixel_format == PixelFormat::RGBA)) {
 

@@ -76,7 +76,7 @@ KALI_PY_EXPORT(core_bitmap)
 
                 uint32_t width = narrow_cast<uint32_t>(data.shape(1));
                 uint32_t height = narrow_cast<uint32_t>(data.shape(0));
-                std::vector channel_names = channel_names_.value_or(std::vector<std::string>(channel_count, ""));
+                std::vector channel_names = channel_names_.value_or(std::vector<std::string>{});
 
                 new (self) Bitmap(pixel_format, component_type, width, height, channel_count, channel_names);
 
@@ -109,6 +109,7 @@ KALI_PY_EXPORT(core_bitmap)
         .def("has_alpha", &Bitmap::has_alpha, D(Bitmap, has_alpha))
         .def_prop_ro("bytes_per_pixel", &Bitmap::bytes_per_pixel, D(Bitmap, bytes_per_pixel))
         .def_prop_ro("buffer_size", &Bitmap::buffer_size, D(Bitmap, buffer_size))
+        .def("empty", &Bitmap::empty, D(Bitmap, empty))
         .def("clear", &Bitmap::clear, D(Bitmap, clear))
         .def("vflip", &Bitmap::vflip, D(Bitmap, vflip))
         .def(
