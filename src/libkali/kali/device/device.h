@@ -171,15 +171,30 @@ public:
 
     const DeviceInfo& info() const { return m_info; }
 
+    /// The highest shader model supported by the device.
     ShaderModel supported_shader_model() const { return m_supported_shader_model; }
+
+    /// The default shader model used when compiling shaders.
     ShaderModel default_shader_model() const { return m_default_shader_model; }
 
+    /// List of features supported by the device.
     const std::vector<std::string>& features() const { return m_features; }
 
 #if KALI_HAS_CUDA
     bool supports_cuda_interop() const { return m_supports_cuda_interop; }
 #endif
 
+    /**
+     * Create a new swapchain.
+     *
+     * @param format The format of the swapchain images.
+     * @param width The width of the swapchain images.
+     * @param height The height of the swapchain images.
+     * @param image_count The number of swapchain images.
+     * @param enable_vsync Enable/disable vertical synchronization.
+     * @param window The window to create the swapchain for.
+     * @return The new swapchain.
+     */
     ref<Swapchain> create_swapchain(SwapchainDesc desc, Window* window);
 
     ref<Buffer> create_buffer(BufferDesc desc);
@@ -215,14 +230,14 @@ public:
 
     ref<SlangModule> load_module(
         const std::filesystem::path& path,
-        const DefineList& defines = DefineList{},
-        const SlangCompilerOptions& compiler_options = SlangCompilerOptions{}
+        std::optional<DefineList> defines = std::nullopt,
+        std::optional<SlangCompilerOptions> compiler_options = std::nullopt
     );
 
     ref<SlangModule> load_module_from_source(
         const std::string& source,
-        const DefineList& defines = DefineList{},
-        const SlangCompilerOptions& compiler_options = SlangCompilerOptions{}
+        std::optional<DefineList> defines = std::nullopt,
+        std::optional<SlangCompilerOptions> compiler_options = std::nullopt
     );
 
     ref<MutableShaderObject> create_mutable_shader_object(const ShaderProgram* shader_program);

@@ -203,12 +203,12 @@ public:
     const ref<Device>& device() const { return m_device; }
     const SlangSessionDesc& desc() const { return m_desc; }
 
-    ref<SlangModule> load_module(const std::filesystem::path& path, const DefineList& defines = DefineList{});
+    ref<SlangModule> load_module(const std::filesystem::path& path, std::optional<DefineList> defines = std::nullopt);
     ref<SlangModule> load_module_from_source(
         const std::string& source,
         const std::filesystem::path& path = {},
         const std::string& name = {},
-        const DefineList& defines = DefineList{}
+        std::optional<DefineList> defines = std::nullopt
     );
 
     std::filesystem::path resolve_path(const std::filesystem::path& path);

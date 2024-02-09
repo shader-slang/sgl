@@ -4,6 +4,17 @@
 #include "kali/device/reflection.h"
 #include "kali/device/kernel.h"
 
+namespace kali {
+KALI_DICT_TO_DESC_BEGIN(SlangCompilerOptions)
+KALI_DICT_TO_DESC_FIELD(shader_model, ShaderModel);
+KALI_DICT_TO_DESC_FIELD(compiler_flags, SlangCompilerFlags);
+KALI_DICT_TO_DESC_FIELD(compiler_args, std::vector<std::string>);
+KALI_DICT_TO_DESC_FIELD(search_paths, std::vector<std::filesystem::path>);
+KALI_DICT_TO_DESC_FIELD(add_default_search_paths, bool);
+KALI_DICT_TO_DESC_FIELD(defines, DefineList);
+KALI_DICT_TO_DESC_END()
+} // namespace kali
+
 NB_MAKE_OPAQUE(std::map<kali::TypeConformance, uint32_t>);
 NB_MAKE_OPAQUE(std::map<std::string, std::string, std::less<>>);
 
@@ -60,12 +71,18 @@ KALI_PY_EXPORT(device_shader)
 
     nb::class_<SlangCompilerOptions>(m, "SlangCompilerOptions")
         .def(nb::init<>())
+        .def(
+            "__init__",
+            [](SlangCompilerOptions* self, nb::dict dict)
+            { new (self) SlangCompilerOptions(dict_to_SlangCompilerOptions(dict)); }
+        )
         .def_rw("shader_model", &SlangCompilerOptions::shader_model)
         .def_rw("compiler_flags", &SlangCompilerOptions::compiler_flags)
         .def_rw("compiler_args", &SlangCompilerOptions::compiler_args)
         .def_rw("search_paths", &SlangCompilerOptions::search_paths)
         .def_rw("add_default_search_paths", &SlangCompilerOptions::add_default_search_paths)
         .def_rw("defines", &SlangCompilerOptions::defines);
+    nb::implicitly_convertible<nb::dict, SlangCompilerOptions>();
 
     nb::class_<SlangSessionDesc>(m, "SlangSessionDesc")
         .def(nb::init<>())
@@ -81,16 +98,16 @@ KALI_PY_EXPORT(device_shader)
             "load_module",
             &SlangSession::load_module,
             "path"_a,
-            "defines"_a = DefineList{},
+            "defines"_a.none() = nb::none(),
             D(SlangSession, load_module)
         )
         .def(
             "load_module_from_source",
             &SlangSession::load_module_from_source,
             "source"_a,
-            "path"_a = std::filesystem::path{},
+            "path"_a = "",
             "name"_a = "",
-            "defines"_a = DefineList{},
+            "defines"_a.none() = nb::none(),
             D(SlangSession, load_module_from_source)
         );
 

@@ -89,8 +89,8 @@ KALI_PY_EXPORT(core_bitmap)
                 }
             },
             "data"_a,
-            "pixel_format"_a = std::optional<Bitmap::PixelFormat>{},
-            "channel_names"_a = std::optional<std::vector<std::string>>{}
+            "pixel_format"_a.none() = nb::none(),
+            "channel_names"_a.none() = nb::none()
         )
         .def(
             "__init__",
@@ -119,14 +119,14 @@ KALI_PY_EXPORT(core_bitmap)
                std::optional<bool> srgb_gamma) -> ref<Bitmap>
             {
                 return self.convert(
-                    pixel_format ? *pixel_format : self.pixel_format(),
-                    component_type ? *component_type : self.component_type(),
-                    srgb_gamma ? *srgb_gamma : self.srgb_gamma()
+                    pixel_format.value_or(self.pixel_format()),
+                    component_type.value_or(self.component_type()),
+                    srgb_gamma.value_or(self.srgb_gamma())
                 );
             },
-            "pixel_format"_a = std::optional<Bitmap::PixelFormat>{},
-            "component_type"_a = std::optional<Bitmap::ComponentType>{},
-            "srgb_gamma"_a = std::optional<bool>{},
+            "pixel_format"_a.none() = nb::none(),
+            "component_type"_a.none() = nb::none(),
+            "srgb_gamma"_a.none() = nb::none(),
             D(Bitmap, convert)
         )
         .def(

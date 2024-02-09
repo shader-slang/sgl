@@ -156,11 +156,15 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
 
 SlangSession::~SlangSession() { }
 
-ref<SlangModule> SlangSession::load_module(const std::filesystem::path& path, const DefineList& defines)
+ref<SlangModule> SlangSession::load_module(const std::filesystem::path& path, std::optional<DefineList> defines)
 {
     return make_ref<SlangModule>(
         ref<SlangSession>(this),
-        SlangModuleDesc{.type = SlangModuleDesc::Type::file, .path = path, .defines = defines}
+        SlangModuleDesc{
+            .type = SlangModuleDesc::Type::file,
+            .path = path,
+            .defines = defines.value_or(DefineList{}),
+        }
     );
 }
 
@@ -168,13 +172,18 @@ ref<SlangModule> SlangSession::load_module_from_source(
     const std::string& source,
     const std::filesystem::path& path,
     const std::string& name,
-    const DefineList& defines
+    std::optional<DefineList> defines
 )
 {
     KALI_UNUSED(name);
     return make_ref<SlangModule>(
         ref<SlangSession>(this),
-        SlangModuleDesc{.type = SlangModuleDesc::Type::source, .path = path, .source = source, .defines = defines}
+        SlangModuleDesc{
+            .type = SlangModuleDesc::Type::source,
+            .path = path,
+            .source = source,
+            .defines = defines.value_or(DefineList{}),
+        }
     );
 }
 

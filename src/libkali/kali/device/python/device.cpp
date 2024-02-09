@@ -161,7 +161,7 @@ KALI_PY_EXPORT(device_device)
         "enable_debug_layers"_a = false,
         "enable_cuda_interop"_a = false,
         "enable_print"_a = false,
-        "adapter_luid"_a = std::optional<AdapterLUID>{},
+        "adapter_luid"_a.none() = nb::none(),
         "default_shader_model"_a = ShaderModel::sm_6_6,
         "shader_cache_path"_a = std::string{}
     );
@@ -242,7 +242,7 @@ KALI_PY_EXPORT(device_device)
         "usage"_a = ResourceUsage::none,
         "memory_type"_a = MemoryType::device_local,
         "debug_name"_a = "",
-        "data"_a = std::optional<nb::ndarray<nb::numpy>>{},
+        "data"_a.none() = nb::none(),
         D(Device, create_buffer)
     );
     device.def(
@@ -276,7 +276,7 @@ KALI_PY_EXPORT(device_device)
         "usage"_a = ResourceUsage::none,
         "memory_type"_a = MemoryType::device_local,
         "debug_name"_a = "",
-        "data"_a = std::optional<nb::ndarray<nb::numpy>>{},
+        "data"_a.none() = nb::none(),
         D(Device, create_structured_buffer)
     );
     // Convenience overload that takes a reflection cursor instead of a type layout.
@@ -311,7 +311,7 @@ KALI_PY_EXPORT(device_device)
         "usage"_a = ResourceUsage::none,
         "memory_type"_a = MemoryType::device_local,
         "debug_name"_a = "",
-        "data"_a = std::optional<nb::ndarray<nb::numpy>>{},
+        "data"_a.none() = nb::none(),
         D(Device, create_structured_buffer)
     );
     device.def(
@@ -342,7 +342,7 @@ KALI_PY_EXPORT(device_device)
         "usage"_a = ResourceUsage::none,
         "memory_type"_a = MemoryType::device_local,
         "debug_name"_a = "",
-        "data"_a = std::optional<nb::ndarray<nb::numpy>>{},
+        "data"_a.none() = nb::none(),
         D(Device, create_typed_buffer)
     );
 
@@ -401,7 +401,7 @@ KALI_PY_EXPORT(device_device)
         "usage"_a = ResourceUsage::none,
         "memory_type"_a = MemoryType::device_local,
         "debug_name"_a = "",
-        "data"_a = std::optional<nb::ndarray<nb::numpy>>{},
+        "data"_a.none() = nb::none(),
         D(Device, create_texture)
     );
     device.def("create_sampler", &Device::create_sampler, "desc"_a, D(Device, create_sampler));
@@ -551,23 +551,29 @@ KALI_PY_EXPORT(device_device)
     );
     device.def(
         "create_slang_session",
-        [](Device* self) { return self->create_slang_session(SlangSessionDesc{}); },
+        [](Device* self, std::optional<SlangCompilerOptions> compiler_options)
+        {
+            return self->create_slang_session(SlangSessionDesc{
+                .compiler_options = compiler_options.value_or(SlangCompilerOptions{}),
+            });
+        },
+        "compiler_options"_a.none() = nb::none(),
         D(Device, create_slang_session)
     );
     device.def(
         "load_module",
         &Device::load_module,
         "path"_a,
-        "defines"_a = DefineList(),
-        "compiler_options"_a = SlangCompilerOptions(),
+        "defines"_a.none() = nb::none(),
+        "compiler_options"_a.none() = nb::none(),
         D(Device, load_module)
     );
     device.def(
         "load_module_from_source",
         &Device::load_module_from_source,
         "source"_a,
-        "defines"_a = DefineList(),
-        "compiler_options"_a = SlangCompilerOptions(),
+        "defines"_a.none() = nb::none(),
+        "compiler_options"_a.none() = nb::none(),
         D(Device, load_module_from_source)
     );
 

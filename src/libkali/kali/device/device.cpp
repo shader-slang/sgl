@@ -378,21 +378,25 @@ ref<SlangSession> Device::create_slang_session(SlangSessionDesc desc)
 
 ref<SlangModule> Device::load_module(
     const std::filesystem::path& path,
-    const DefineList& defines,
-    const SlangCompilerOptions& compiler_options
+    std::optional<DefineList> defines,
+    std::optional<SlangCompilerOptions> compiler_options
 )
 {
-    ref<SlangSession> session = create_slang_session({.compiler_options = compiler_options});
+    ref<SlangSession> session = create_slang_session({
+        .compiler_options = compiler_options.value_or(SlangCompilerOptions{}),
+    });
     return session->load_module(path, defines);
 }
 
 ref<SlangModule> Device::load_module_from_source(
     const std::string& source,
-    const DefineList& defines,
-    const SlangCompilerOptions& compiler_options
+    std::optional<DefineList> defines,
+    std::optional<SlangCompilerOptions> compiler_options
 )
 {
-    ref<SlangSession> session = create_slang_session({.compiler_options = compiler_options});
+    ref<SlangSession> session = create_slang_session({
+        .compiler_options = compiler_options.value_or(SlangCompilerOptions{}),
+    });
     return session->load_module_from_source(source, {}, {}, defines);
 }
 

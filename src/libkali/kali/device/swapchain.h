@@ -14,10 +14,15 @@ namespace kali {
 class Window;
 
 struct SwapchainDesc {
+    /// The format of the swapchain images.
     Format format{Format::rgba8_unorm_srgb};
+    /// The width of the swapchain images.
     uint32_t width{0};
+    /// The height of the swapchain images.
     uint32_t height{0};
+    /// The number of swapchain images.
     uint32_t image_count{3};
+    /// Enable/disable vertical synchronization.
     bool enable_vsync{false};
 };
 
