@@ -54,17 +54,18 @@ def dispatch_compute(
     thread_count: list[int],
     buffers: dict,
     defines: dict[str, str] = {},
+    compiler_options: dict = {},
     shader_model: kali.ShaderModel = kali.ShaderModel.sm_6_6,
 ) -> Context:
     if shader_model > device.supported_shader_model:
         pytest.skip(f"Shader model {str(shader_model)} not supported")
 
-    compiler_options = kali.SlangCompilerOptions()
-    compiler_options.shader_model = shader_model
+    compiler_options["shader_model"] = shader_model
 
-    # TODO set shader_model
     kernel = device.load_module(
-        path=path, defines=defines, compiler_options=compiler_options
+        path=path,
+        defines=defines,
+        compiler_options=compiler_options,
     ).create_compute_kernel(entry_point)
 
     ctx = Context()
