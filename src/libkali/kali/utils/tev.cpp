@@ -90,8 +90,8 @@ bool show_in_tev(const Bitmap* bitmap, std::string name, std::string host, uint1
 
     const auto& pixel_struct = *bitmap->pixel_struct();
     std::vector<const char*> channel_names(pixel_struct.field_count());
-    std::vector<size_t> channel_offsets(pixel_struct.field_count());
-    std::vector<size_t> channel_strides(pixel_struct.field_count());
+    std::vector<uint64_t> channel_offsets(pixel_struct.field_count());
+    std::vector<uint64_t> channel_strides(pixel_struct.field_count());
     for (size_t i = 0; i < channel_names.size(); ++i) {
         channel_names[i] = pixel_struct[i].name.c_str();
         channel_offsets[i] = pixel_struct[i].offset / sizeof(float);

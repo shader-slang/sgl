@@ -33,7 +33,7 @@ set(KALI_LOCAL_SLANG OFF CACHE BOOL "Use a local build of slang instead of downl
 set(KALI_LOCAL_SLANG_DIR "${CMAKE_SOURCE_DIR}/../slang" CACHE PATH "Path to a local slang build")
 set(KALI_LOCAL_SLANG_CONFIG "debug" CACHE STRING "Build configuration of the local slang build")
 
-set(SLANG_VERSION "2024.0.0")
+set(SLANG_VERSION "2024.0.4")
 set(SLANG_URL_BASE "https://github.com/shader-slang/slang/releases/download/v${SLANG_VERSION}")
 
 if(KALI_WINDOWS)
@@ -90,7 +90,7 @@ elseif(KALI_MACOS)
         IMPORTED_LOCATION ${SLANG_BIN_DIR}/libslang.dylib
     )
     kali_copy_binary(${SLANG_BIN_DIR}/libslang.dylib .)
-    # kali_copy_binary(${SLANG_BIN_DIR}/libslang-glslang.dylib .)
+    kali_copy_binary(${SLANG_BIN_DIR}/libslang-glslang.dylib .)
 endif()
 
 # slang-gfx

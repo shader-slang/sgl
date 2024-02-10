@@ -167,6 +167,7 @@
             "inherits": "macos-base",
             "generator": "Ninja Multi-Config",
             "cacheVariables": {
+                "CMAKE_MAKE_PROGRAM": "${sourceDir}/tools/host/ninja/ninja",
                 "CMAKE_C_COMPILER": "clang",
                 "CMAKE_CXX_COMPILER": "clang++"
             }

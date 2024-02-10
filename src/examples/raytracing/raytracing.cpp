@@ -20,7 +20,7 @@ int main()
     kali::static_init();
 
     {
-        ref<Device> device = Device::create({.type = DeviceType::d3d12, .enable_debug_layers = true});
+        ref<Device> device = Device::create({.enable_debug_layers = true});
 
         std::vector<float3> vertices{{-1, -1, 0}, {1, -1, 0}, {0, 1, 0}};
         std::vector<uint32_t> indices{0, 1, 2};
