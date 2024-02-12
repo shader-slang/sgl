@@ -121,7 +121,7 @@ endif()
 
 # nvapi
 
-set(NVAPI_COMMIT "89b4365")
+set(NVAPI_COMMIT "fefb094b9011df10e73383b4218f62213378ebb8")
 
 if(KALI_WINDOWS)
     kali_download_package(nvapi "https://github.com/NVIDIA/nvapi/archive/${NVAPI_COMMIT}.zip")
@@ -130,6 +130,9 @@ if(KALI_WINDOWS)
         INTERFACE_INCLUDE_DIRECTORIES ${nvapi_SOURCE_DIR}
         IMPORTED_LOCATION ${nvapi_SOURCE_DIR}/amd64/nvapi64.lib
     )
+    kali_copy_shader_file(${nvapi_SOURCE_DIR}/nvHLSLExtns.h kali/device)
+    kali_copy_shader_file(${nvapi_SOURCE_DIR}/nvHLSLExtnsInternal.h kali/device)
+    kali_copy_shader_file(${nvapi_SOURCE_DIR}/nvShaderExtnEnums.h kali/device)
     set(KALI_HAS_NVAPI ON PARENT_SCOPE)
 else()
     set(KALI_HAS_NVAPI OFF PARENT_SCOPE)

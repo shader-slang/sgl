@@ -214,6 +214,17 @@ endfunction()
 # Shader files
 # -----------------------------------------------------------------------------
 
+set_property(GLOBAL PROPERTY KALI_SHADER_FILES_SRC "")
+set_property(GLOBAL PROPERTY KALI_SHADER_FILES_DST "")
+
+function(kali_copy_shader_file src dst_dir)
+    message(STATUS "Copying shader file ${src} to ${dst_dir}")
+    set(dst ${KALI_SHADER_OUTPUT_DIRECTORY}/${dst_dir})
+    set_property(GLOBAL APPEND PROPERTY KALI_SHADER_FILES_SRC ${src})
+    set_property(GLOBAL APPEND PROPERTY KALI_SHADER_FILES_DST ${dst})
+    install(FILES ${src} DESTINATION ${CMAKE_INSTALL_DATADIR}/shaders/${dst_dir})
+endfunction()
+
 # Regex for matching shader files.
 set(SHADER_EXTENSION_REGEX "\.(slang|slangh|hlsli|hlsl)$")
 

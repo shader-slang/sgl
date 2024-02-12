@@ -85,6 +85,8 @@ target_sources(kali PRIVATE
     kali/device/memory_heap.cpp
     kali/device/memory_heap.h
     kali/device/native_formats.h
+    kali/device/nvapi.slang
+    kali/device/nvapi.slangh
     kali/device/pipeline.cpp
     kali/device/pipeline.h
     kali/device/print.cpp
@@ -339,6 +341,14 @@ get_property(binary_files_src GLOBAL PROPERTY KALI_BINARY_FILES_SRC)
 get_property(binary_files_dst GLOBAL PROPERTY KALI_BINARY_FILES_DST)
 
 foreach(file IN ZIP_LISTS binary_files_src binary_files_dst)
+    # if dst is directory create it
+    add_custom_command(TARGET kali POST_BUILD COMMAND ${CMAKE_COMMAND} -E make_directory ${file_1} COMMAND ${CMAKE_COMMAND} -E copy_if_different ${file_0} ${file_1}/)
+endforeach()
+
+get_property(shader_files_src GLOBAL PROPERTY KALI_SHADER_FILES_SRC)
+get_property(shader_files_dst GLOBAL PROPERTY KALI_SHADER_FILES_DST)
+
+foreach(file IN ZIP_LISTS shader_files_src shader_files_dst)
     # if dst is directory create it
     add_custom_command(TARGET kali POST_BUILD COMMAND ${CMAKE_COMMAND} -E make_directory ${file_1} COMMAND ${CMAKE_COMMAND} -E copy_if_different ${file_0} ${file_1}/)
 endforeach()
