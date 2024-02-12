@@ -1,0 +1,5 @@
+#pragma once
+#if KALI_ENABLE_NVAPI
+#include "nvapi/nvShaderExtnEnums.h"
+#endif
+import kali.device.nvapi;

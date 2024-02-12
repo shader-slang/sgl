@@ -134,8 +134,11 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
     add_macro("__SHADER_TARGET_MAJOR", shader_model_major.c_str());
     add_macro("__SHADER_TARGET_MINOR", shader_model_minor.c_str());
 
+    // Add NVAPI enable flag.
+    add_macro("KALI_ENABLE_NVAPI", (KALI_HAS_NVAPI && m_device->type() == DeviceType::d3d12) ? "1" : "0");
+
     // Add device print enable flag.
-    add_macro("__KALI_DEVICE_PRINT_ENABLED", m_device->desc().enable_print ? "1" : "0");
+    add_macro("KALI_ENABLE_PRINT", m_device->desc().enable_print ? "1" : "0");
 
     session_desc.preprocessorMacros = macros.data();
     session_desc.preprocessorMacroCount = narrow_cast<SlangInt>(macros.size());
@@ -243,10 +246,10 @@ SlangModule::SlangModule(ref<SlangSession> session, SlangModuleDesc desc)
         std::vector<const char*> args;
         for (const auto& arg : m_session->desc().compiler_options.compiler_args)
             args.push_back(arg.c_str());
-#if KALI_NVAPI_AVAILABLE
-        std::string nvapi_include = "-I" + (get_runtime_directory() / "shaders/nvapi").string();
-        if (device_type == DeviceType::d3d12) {
+#if KALI_HAS_NVAPI
+        if (m_session->device()->type() == DeviceType::d3d12) {
             // If NVAPI is available, we need to inform slang/dxc where to find it.
+            std::string nvapi_include = "-I" + (platform::runtime_directory() / "shaders/nvapi").string();
             args.push_back("-Xdxc");
             args.push_back(nvapi_include.c_str());
         }

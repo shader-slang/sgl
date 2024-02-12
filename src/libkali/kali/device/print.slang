@@ -1,5 +1,5 @@
-#ifndef __KALI_DEVICE_PRINT_ENABLED
-#define __KALI_DEVICE_PRINT_ENABLED 0
+#ifndef KALI_ENABLE_PRINT
+#define KALI_ENABLE_PRINT 0
 #endif
 
 namespace detail {
@@ -410,7 +410,7 @@ struct DebugPrinter : IPrintOutput {
 
 } // namespace detail
 
-#if __KALI_DEVICE_PRINT_ENABLED
+#if KALI_ENABLE_PRINT
 
 ParameterBlock<detail::DebugPrinter> g_debug_printer;
 
@@ -426,7 +426,7 @@ ParameterBlock<detail::DebugPrinter> g_debug_printer;
 [ForceInline] void print(String fmt, detail::IPrintable arg0, detail::IPrintable arg1, detail::IPrintable arg2, detail::IPrintable arg3, detail::IPrintable arg4, detail::IPrintable arg5, detail::IPrintable arg6, detail::IPrintable arg7) { detail::print(g_debug_printer, fmt, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7); }
 // clang-format on
 
-#else // __KALI_DEVICE_PRINT_ENABLED
+#else // KALI_ENABLE_PRINT
 
 // clang-format off
 void print(String fmt) { }
@@ -440,4 +440,4 @@ void print(String fmt, detail::IPrintable arg0, detail::IPrintable arg1, detail:
 void print(String fmt, detail::IPrintable arg0, detail::IPrintable arg1, detail::IPrintable arg2, detail::IPrintable arg3, detail::IPrintable arg4, detail::IPrintable arg5, detail::IPrintable arg6, detail::IPrintable arg7) { }
 // clang-format on
 
-#endif // __KALI_DEVICE_PRINT_ENABLED
+#endif // KALI_ENABLE_PRINT

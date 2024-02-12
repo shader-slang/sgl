@@ -130,9 +130,9 @@ if(KALI_WINDOWS)
         INTERFACE_INCLUDE_DIRECTORIES ${nvapi_SOURCE_DIR}
         IMPORTED_LOCATION ${nvapi_SOURCE_DIR}/amd64/nvapi64.lib
     )
-    kali_copy_shader_file(${nvapi_SOURCE_DIR}/nvHLSLExtns.h kali/device)
-    kali_copy_shader_file(${nvapi_SOURCE_DIR}/nvHLSLExtnsInternal.h kali/device)
-    kali_copy_shader_file(${nvapi_SOURCE_DIR}/nvShaderExtnEnums.h kali/device)
+    kali_copy_shader_file(${nvapi_SOURCE_DIR}/nvHLSLExtns.h nvapi)
+    kali_copy_shader_file(${nvapi_SOURCE_DIR}/nvHLSLExtnsInternal.h nvapi)
+    kali_copy_shader_file(${nvapi_SOURCE_DIR}/nvShaderExtnEnums.h nvapi)
     set(KALI_HAS_NVAPI ON PARENT_SCOPE)
 else()
     set(KALI_HAS_NVAPI OFF PARENT_SCOPE)
