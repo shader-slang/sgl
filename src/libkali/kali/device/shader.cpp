@@ -136,6 +136,9 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
 
     // Add NVAPI enable flag.
     add_macro("KALI_ENABLE_NVAPI", (KALI_HAS_NVAPI && m_device->type() == DeviceType::d3d12) ? "1" : "0");
+#if KALI_HAS_NVAPI
+    add_macro("NV_SHADER_EXTN_SLOT", "u999");
+#endif
 
     // Add device print enable flag.
     add_macro("KALI_ENABLE_PRINT", m_device->desc().enable_print ? "1" : "0");

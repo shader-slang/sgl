@@ -30,6 +30,10 @@
 #include <comdef.h>
 #endif
 
+#if KALI_HAS_NVAPI
+#include <nvapi.h>
+#endif
+
 namespace kali {
 
 static constexpr uint32_t IN_FLIGHT_FRAME_COUNT = 3;
@@ -70,15 +74,197 @@ public:
         }
     }
 
+    static DebugLogger& get()
+    {
+        static DebugLogger instance;
+        return instance;
+    }
+
 private:
     ref<Logger> m_logger;
 };
 
-static DebugLogger& get_debug_logger()
-{
-    static DebugLogger debug_logger;
-    return debug_logger;
-}
+#if KALI_HAS_NVAPI
+// In order to use NVAPI, we intercept the pipeline state creation calls in the gfx layer
+// and dispatch into the `NVAPI_Create*PipelineState()` functions.
+// This is done by implementing the `gfx::IPipelineCreationAPIDispatcher` interface,
+// and passing an instance to `gfxCreateDevice`.
+class Device::PipelineCreationAPIDispatcher : public gfx::IPipelineCreationAPIDispatcher {
+public:
+    PipelineCreationAPIDispatcher()
+    {
+        if (NvAPI_Initialize() != NVAPI_OK)
+            KALI_THROW("Failed to initialize NVAPI.");
+    }
+
+    ~PipelineCreationAPIDispatcher()
+    {
+        if (NvAPI_Unload() != NVAPI_OK)
+            KALI_THROW("Failed to unload NVAPI.");
+    }
+
+    virtual SLANG_NO_THROW SlangResult SLANG_MCALL queryInterface(SlangUUID const& uuid, void** outObject) override
+    {
+        if (uuid == SlangUUID SLANG_UUID_IPipelineCreationAPIDispatcher) {
+            *outObject = static_cast<gfx::IPipelineCreationAPIDispatcher*>(this);
+            return SLANG_OK;
+        }
+        return SLANG_E_NO_INTERFACE;
+    }
+
+    virtual SLANG_NO_THROW uint32_t SLANG_MCALL addRef() override
+    {
+        // The lifetime of this object is tied to the device.
+        // Do not perform any reference counting.
+        return 2;
+    }
+
+    virtual SLANG_NO_THROW uint32_t SLANG_MCALL release() override
+    {
+        // Returning 2 is important here, because when releasing a COM pointer, it checks
+        // if the ref count **was 1 before releasing** in order to free the object.
+        return 2;
+    }
+
+    // This method will be called by the gfx layer to create an API object for a compute pipeline state.
+    virtual gfx::Result createComputePipelineState(
+        gfx::IDevice* device,
+        slang::IComponentType* program,
+        void* pipelineDesc,
+        void** outPipelineState
+    )
+    {
+        gfx::IDevice::InteropHandles nativeHandle;
+        SLANG_CALL(device->getNativeDeviceHandles(&nativeHandle));
+        ID3D12Device* pD3D12Device = reinterpret_cast<ID3D12Device*>(nativeHandle.handles[0].handleValue);
+
+        uint32_t uavSpace, uavSlot;
+        if (findNvApiShaderParameter(program, uavSpace, uavSlot)) {
+            auto desc = createShaderExtensionSlotDesc(uavSpace, uavSlot);
+            const NVAPI_D3D12_PSO_EXTENSION_DESC* ppPSOExtensionsDesc[1] = {&desc};
+            auto result = NvAPI_D3D12_CreateComputePipelineState(
+                pD3D12Device,
+                reinterpret_cast<D3D12_COMPUTE_PIPELINE_STATE_DESC*>(pipelineDesc),
+                1,
+                ppPSOExtensionsDesc,
+                (ID3D12PipelineState**)outPipelineState
+            );
+            return (result == NVAPI_OK) ? SLANG_OK : SLANG_FAIL;
+        } else {
+            ID3D12PipelineState* pState = nullptr;
+            SLANG_RETURN_ON_FAIL(pD3D12Device->CreateComputePipelineState(
+                reinterpret_cast<D3D12_COMPUTE_PIPELINE_STATE_DESC*>(pipelineDesc),
+                IID_PPV_ARGS(&pState)
+            ));
+            *outPipelineState = pState;
+        }
+        return SLANG_OK;
+    }
+
+    // This method will be called by the gfx layer to create an API object for a graphics pipeline state.
+    virtual gfx::Result createGraphicsPipelineState(
+        gfx::IDevice* device,
+        slang::IComponentType* program,
+        void* pipelineDesc,
+        void** outPipelineState
+    )
+    {
+        gfx::IDevice::InteropHandles nativeHandle;
+        SLANG_CALL(device->getNativeDeviceHandles(&nativeHandle));
+        ID3D12Device* pD3D12Device = reinterpret_cast<ID3D12Device*>(nativeHandle.handles[0].handleValue);
+
+        uint32_t uavSpace, uavSlot;
+        if (findNvApiShaderParameter(program, uavSpace, uavSlot)) {
+            auto desc = createShaderExtensionSlotDesc(uavSpace, uavSlot);
+            const NVAPI_D3D12_PSO_EXTENSION_DESC* ppPSOExtensionsDesc[1] = {&desc};
+            auto result = NvAPI_D3D12_CreateGraphicsPipelineState(
+                pD3D12Device,
+                reinterpret_cast<D3D12_GRAPHICS_PIPELINE_STATE_DESC*>(pipelineDesc),
+                1,
+                ppPSOExtensionsDesc,
+                (ID3D12PipelineState**)outPipelineState
+            );
+            return (result == NVAPI_OK) ? SLANG_OK : SLANG_FAIL;
+        } else {
+            ID3D12PipelineState* pState = nullptr;
+            SLANG_RETURN_ON_FAIL(pD3D12Device->CreateGraphicsPipelineState(
+                reinterpret_cast<D3D12_GRAPHICS_PIPELINE_STATE_DESC*>(pipelineDesc),
+                IID_PPV_ARGS(&pState)
+            ));
+            *outPipelineState = pState;
+        }
+        return SLANG_OK;
+    }
+
+    virtual gfx::Result createMeshPipelineState(
+        gfx::IDevice* device,
+        slang::IComponentType* program,
+        void* pipelineDesc,
+        void** outPipelineState
+    )
+    {
+        KALI_UNUSED(device, program, pipelineDesc, outPipelineState);
+        KALI_THROW("Mesh pipelines are not supported.");
+    }
+
+    // This method will be called by the gfx layer right before creating a ray tracing state object.
+    virtual gfx::Result beforeCreateRayTracingState(gfx::IDevice* device, slang::IComponentType* program)
+    {
+        gfx::IDevice::InteropHandles nativeHandle;
+        SLANG_CALL(device->getNativeDeviceHandles(&nativeHandle));
+        ID3D12Device* pD3D12Device = reinterpret_cast<ID3D12Device*>(nativeHandle.handles[0].handleValue);
+
+        uint32_t uavSpace, uavSlot;
+        if (findNvApiShaderParameter(program, uavSpace, uavSlot)) {
+            if (NvAPI_D3D12_SetNvShaderExtnSlotSpace(pD3D12Device, uavSlot, uavSpace) != NVAPI_OK) {
+                KALI_THROW("Failed to set NVAPI extension.");
+            }
+        }
+        return SLANG_OK;
+    }
+
+    // This method will be called by the gfx layer right after creating a ray tracing state object.
+    virtual gfx::Result afterCreateRayTracingState(gfx::IDevice* device, slang::IComponentType* program)
+    {
+        gfx::IDevice::InteropHandles nativeHandle;
+        SLANG_CALL(device->getNativeDeviceHandles(&nativeHandle));
+        ID3D12Device* pD3D12Device = reinterpret_cast<ID3D12Device*>(nativeHandle.handles[0].handleValue);
+
+        uint32_t uavSpace, uavSlot;
+        if (findNvApiShaderParameter(program, uavSpace, uavSlot)) {
+            if (NvAPI_D3D12_SetNvShaderExtnSlotSpace(pD3D12Device, 0xFFFFFFFF, 0) != NVAPI_OK) {
+                KALI_THROW("Failed to set NVAPI extension.");
+            }
+        }
+        return SLANG_OK;
+    }
+
+private:
+    bool findNvApiShaderParameter(slang::IComponentType* program, uint32_t& uavSpace, uint32_t& uavSlot)
+    {
+        auto globalTypeLayout = program->getLayout()->getGlobalParamsVarLayout()->getTypeLayout();
+        auto index = globalTypeLayout->findFieldIndexByName("g_NvidiaExt");
+        if (index != -1) {
+            auto field = globalTypeLayout->getFieldByIndex((unsigned int)index);
+            uavSpace = field->getBindingSpace();
+            uavSlot = field->getBindingIndex();
+            return true;
+        }
+        return false;
+    }
+
+    NVAPI_D3D12_PSO_SET_SHADER_EXTENSION_SLOT_DESC createShaderExtensionSlotDesc(uint32_t uavSpace, uint32_t uavSlot)
+    {
+        NVAPI_D3D12_PSO_SET_SHADER_EXTENSION_SLOT_DESC desc = {};
+        desc.psoExtension = NV_PSO_SET_SHADER_EXTNENSION_SLOT_AND_SPACE;
+        desc.version = NV_SET_SHADER_EXTENSION_SLOT_DESC_VER;
+        desc.baseVersion = NV_PSO_EXTENSION_DESC_VER;
+        desc.uavSlot = uavSlot;
+        desc.registerSpace = uavSpace;
+        return desc;
+    }
+};
+#endif // KALI_HAS_NVAPI
 
 inline gfx::DeviceType gfx_device_type(DeviceType device_type)
 {
@@ -109,7 +295,7 @@ Device::Device(const DeviceDesc& desc)
         m_global_session->setDownstreamCompilerPath(pass_through, platform::runtime_directory().string().c_str());
     }
 
-    gfx::gfxSetDebugCallback(&get_debug_logger());
+    gfx::gfxSetDebugCallback(&DebugLogger::get());
     if (m_desc.enable_debug_layers) {
         gfx::gfxEnableDebugLayer();
     }
@@ -122,10 +308,18 @@ Device::Device(const DeviceDesc& desc)
 #endif
     }
 
-    gfx::IDevice::Desc gfx_desc{
+#if KALI_HAS_NVAPI
+    m_api_dispatcher.reset(new PipelineCreationAPIDispatcher());
+#endif
+
+    gfx::IDevice::Desc gfx_desc
+    {
         .deviceType = gfx_device_type(m_desc.type),
         .adapterLUID
-        = m_desc.adapter_luid ? reinterpret_cast<const gfx::AdapterLUID*>(m_desc.adapter_luid->data()) : nullptr,
+            = m_desc.adapter_luid ? reinterpret_cast<const gfx::AdapterLUID*>(m_desc.adapter_luid->data()) : nullptr,
+#if KALI_HAS_NVAPI
+        .apiCommandDispatcher = m_api_dispatcher.get(),
+#endif
         .slang{
             .slangGlobalSession = m_global_session,
         },
@@ -279,11 +473,16 @@ Device::~Device()
     m_upload_heap.reset();
 
     m_graphics_queue.reset();
+    m_frame_data.clear();
     m_frame_fence.reset();
 
     m_deferred_release_queue = {};
 
     m_gfx_device.setNull();
+
+#if KALI_HAS_NVAPI
+    m_api_dispatcher.reset();
+#endif
 }
 
 ref<Swapchain> Device::create_swapchain(SwapchainDesc desc, Window* window)

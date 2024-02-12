@@ -447,6 +447,11 @@ private:
 
     std::queue<DeferredRelease> m_deferred_release_queue;
 
+#if KALI_HAS_NVAPI
+    class PipelineCreationAPIDispatcher;
+    std::unique_ptr<PipelineCreationAPIDispatcher> m_api_dispatcher;
+#endif
+
 #if KALI_HAS_CUDA
     bool m_supports_cuda_interop{false};
     ref<cuda::Device> m_cuda_device;
