@@ -93,6 +93,6 @@ KALI_PY_EXPORT(device_kernel)
             "thread_count"_a,
             "vars"_a = nb::dict(),
             "command_buffer"_a = nullptr,
-            "kwargs"_a = nb::kwargs()
+            "kwargs"_a
         );
 }

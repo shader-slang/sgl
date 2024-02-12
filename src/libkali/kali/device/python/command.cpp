@@ -266,17 +266,17 @@ KALI_PY_EXPORT(device_command)
             "build_acceleration_structure",
             [](RayTracingCommandEncoder* self,
                const AccelerationStructureBuildInputs& inputs,
-               AccelerationStructure* src,
                AccelerationStructure* dst,
-               DeviceAddress scratch_data) {
+               DeviceAddress scratch_data,
+               AccelerationStructure* src) {
                 self->build_acceleration_structure(
                     {.inputs = inputs, .src = src, .dst = dst, .scratch_data = scratch_data}
                 );
             },
             "inputs"_a,
-            "src"_a = nullptr,
             "dst"_a,
-            "scratch_data"_a
+            "scratch_data"_a,
+            "src"_a = nullptr
         )
         .def(
             "copy_acceleration_structure",
