@@ -3,4 +3,8 @@
 Basic Tutorials
 ===============
 
-TBD
+.. toctree::
+    :maxdepth: 2
+
+    tutorials/compute_shader
+
