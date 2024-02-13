@@ -21,6 +21,7 @@ KALI_PY_EXPORT(core_object)
     nb::class_<Object>(
         m,
         "Object",
-        nb::intrusive_ptr<Object>([](Object* o, PyObject* po) noexcept { o->set_self_py(po); })
+        nb::intrusive_ptr<Object>([](Object* o, PyObject* po) noexcept { o->set_self_py(po); }),
+        "Base class for all reference counted objects."
     ).def("__repr__", &Object::to_string);
 }
