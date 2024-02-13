@@ -15,7 +15,7 @@ def test_paths():
     assert platform.project_directory.exists()
     assert platform.runtime_directory.exists()
     assert any(
-        [(platform.runtime_directory / x).exists() for x in ["kali.dll", "libkali.so"]]
+        [(platform.runtime_directory / x).exists() for x in ["kali.dll", "libkali.so", "libkali.dylib"]]
     )
 
 

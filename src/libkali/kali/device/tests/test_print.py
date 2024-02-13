@@ -9,6 +9,9 @@ import helpers
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_print(device_type):
+    if sys.platform == "darwin":
+        pytest.skip("Printing double/float64 not supported on macOS")
+
     device = kali.Device(type=device_type, enable_print=True)
     helpers.dispatch_compute(
         device=device,

@@ -14,6 +14,9 @@ ELEMENT_COUNT = 1024
 @pytest.mark.parametrize("shader_model", helpers.ALL_SHADER_MODELS)
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_float64(device_type, shader_model, view):
+    if sys.platform == "darwin":
+        pytest.skip("Not supported on macOS")
+
     device = helpers.get_device(device_type)
 
     np.random.seed(123)

@@ -1575,6 +1575,8 @@ void Bitmap::read_exr(Stream* stream)
         m_pixel_format = PixelFormat::ya;
     }
 
+    m_srgb_gamma = false;
+
     // Check if there is a chromaticity header entry.
     Imf::Chromaticities file_chroma;
     if (Imf::hasChromaticities(file.header()))
