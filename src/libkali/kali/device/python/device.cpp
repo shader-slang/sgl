@@ -44,13 +44,13 @@ KALI_PY_EXPORT(device_device)
     nb::class_<DeviceDesc>(m, "DeviceDesc")
         .def(nb::init<>())
         .def("__init__", [](DeviceDesc* self, nb::dict dict) { new (self) DeviceDesc(dict_to_DeviceDesc(dict)); })
-        .def_rw("type", &DeviceDesc::type)
-        .def_rw("enable_debug_layers", &DeviceDesc::enable_debug_layers)
-        .def_rw("enable_cuda_interop", &DeviceDesc::enable_cuda_interop)
-        .def_rw("enable_print", &DeviceDesc::enable_print)
-        .def_rw("adapter_luid", &DeviceDesc::adapter_luid)
-        .def_rw("default_shader_model", &DeviceDesc::default_shader_model)
-        .def_rw("shader_cache_path", &DeviceDesc::shader_cache_path);
+        .def_rw("type", &DeviceDesc::type, D(DeviceDesc, type))
+        .def_rw("enable_debug_layers", &DeviceDesc::enable_debug_layers, D(DeviceDesc, enable_debug_layers))
+        .def_rw("enable_cuda_interop", &DeviceDesc::enable_cuda_interop, D(DeviceDesc, enable_cuda_interop))
+        .def_rw("enable_print", &DeviceDesc::enable_print, D(DeviceDesc, enable_print))
+        .def_rw("adapter_luid", &DeviceDesc::adapter_luid, D(DeviceDesc, adapter_luid))
+        .def_rw("default_shader_model", &DeviceDesc::default_shader_model, D(DeviceDesc, default_shader_model))
+        .def_rw("shader_cache_path", &DeviceDesc::shader_cache_path, D(DeviceDesc, shader_cache_path));
     nb::implicitly_convertible<nb::dict, DeviceDesc>();
 
     nb::class_<DeviceLimits>(m, "DeviceLimits")
