@@ -181,28 +181,30 @@ KALI_PY_EXPORT(device_device)
     device.def(
         "create_swapchain",
         [](Device* self,
+           ref<Window> window,
            Format format,
            uint32_t width,
            uint32_t height,
            uint32_t image_count,
-           bool enable_vsync,
-           ref<Window> window)
+           bool enable_vsync)
         {
             return self->create_swapchain(
-                {.format = format,
-                 .width = width,
-                 .height = height,
-                 .image_count = image_count,
-                 .enable_vsync = enable_vsync},
+                {
+                    .format = format,
+                    .width = width,
+                    .height = height,
+                    .image_count = image_count,
+                    .enable_vsync = enable_vsync,
+                },
                 window
             );
         },
+        "window"_a,
         "format"_a = Format::unknown,
         "width"_a = 0,
         "height"_a = 0,
         "image_count"_a = 3,
         "enable_vsync"_a = false,
-        "window"_a,
         D(Device, create_swapchain)
     );
     device.def(
@@ -618,27 +620,27 @@ KALI_PY_EXPORT(device_device)
            const InputLayout* input_layout,
            const Framebuffer* framebuffer,
            PrimitiveType primitive_type,
-           DepthStencilDesc depth_stencil,
-           RasterizerDesc rasterizer,
-           BlendDesc blend)
+           std::optional<DepthStencilDesc> depth_stencil,
+           std::optional<RasterizerDesc> rasterizer,
+           std::optional<BlendDesc> blend)
         {
             return self->create_graphics_pipeline({
                 .program = program,
                 .input_layout = input_layout,
                 .framebuffer = framebuffer,
                 .primitive_type = primitive_type,
-                .depth_stencil = depth_stencil,
-                .rasterizer = rasterizer,
-                .blend = blend,
+                .depth_stencil = depth_stencil.value_or(DepthStencilDesc{}),
+                .rasterizer = rasterizer.value_or(RasterizerDesc{}),
+                .blend = blend.value_or(BlendDesc{}),
             });
         },
         "program"_a,
         "input_layout"_a,
         "framebuffer"_a,
         "primitive_type"_a = PrimitiveType::triangle,
-        "depth_stencil"_a = DepthStencilDesc{},
-        "rasterizer"_a = RasterizerDesc{},
-        "blend"_a = BlendDesc{},
+        "depth_stencil"_a.none() = nb::none(),
+        "rasterizer"_a.none() = nb::none(),
+        "blend"_a.none() = nb::none(),
         D(Device, create_graphics_pipeline)
     );
 
