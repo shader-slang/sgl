@@ -10,6 +10,9 @@ class Device;
 
 namespace kali::testing {
 
+void static_init();
+void static_shutdown();
+
 struct GpuTestContext {
     Device* device;
 };

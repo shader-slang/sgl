@@ -8,8 +8,15 @@
 
 namespace kali::testing {
 
-// TODO remove global
-static std::map<DeviceType, ref<Device>> s_cached_devices;
+// Cached devices.
+static std::map<DeviceType, ref<Device>> g_cached_devices;
+
+void static_init() { }
+
+void static_shutdown()
+{
+    g_cached_devices.clear();
+}
 
 void run_gpu_test(void (*func)(GpuTestContext&))
 {
@@ -28,8 +35,8 @@ void run_gpu_test(void (*func)(GpuTestContext&))
         {
             ref<Device> device;
             if (use_cached_device) {
-                auto it = s_cached_devices.find(device_type);
-                if (it != s_cached_devices.end())
+                auto it = g_cached_devices.find(device_type);
+                if (it != g_cached_devices.end())
                     device = it->second;
             }
 
@@ -39,18 +46,13 @@ void run_gpu_test(void (*func)(GpuTestContext&))
                     .enable_debug_layers = true,
                 };
                 device = Device::create(desc);
-                s_cached_devices[device_type] = device;
+                g_cached_devices[device_type] = device;
             }
 
             GpuTestContext ctx{.device = device};
             func(ctx);
         }
     }
-}
-
-void release_cached_devices()
-{
-    s_cached_devices.clear();
 }
 
 } // namespace kali::testing

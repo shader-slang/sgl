@@ -20,6 +20,8 @@ int main(int argc, char** argv)
 
     int result = 1;
     {
+        kali::testing::static_init();
+
         doctest::Context context(argc, argv);
 
         // Select specific test suite to run
@@ -29,7 +31,7 @@ int main(int argc, char** argv)
 
         result = context.run();
 
-        kali::testing::release_cached_devices();
+        kali::testing::static_shutdown();
     }
 
 #if KALI_ENABLE_OBJECT_TRACKING
