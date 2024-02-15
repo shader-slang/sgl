@@ -99,6 +99,7 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
         break;
     case DeviceType::vulkan:
         target_desc.format = SLANG_SPIRV;
+        target_desc.flags |= SLANG_TARGET_FLAG_GENERATE_SPIRV_DIRECTLY;
         target_define = "__TARGET_VULKAN__";
         break;
     case DeviceType::cpu:
