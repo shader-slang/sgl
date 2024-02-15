@@ -208,7 +208,7 @@ public:
     /**
      * \brief Create a new texture.
      *
-     * \param type Resource type (optional. Type is inferred from width, height, depth if not specified.
+     * \param type Resource type (optional). Type is inferred from width, height, depth if not specified.
      * \param format Texture format.
      * \param width Width in pixels.
      * \param height Height in pixels.

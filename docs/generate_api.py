@@ -1,60 +1,13 @@
 import re
 import importlib
+import json
 from inspect import isclass, ismodule, ismethod, isfunction
 from pathlib import Path
 
+DIR = Path(__file__).parent
 INDENT = "    "
 
-SECTIONS = {
-    "Core": [
-        "kali.Object",
-        "kali.Bitmap",
-        "kali.Struct",
-        "kali.StructConverter",
-        "kali.Timer",
-    ],
-    "Logging": [
-        "kali.LogLevel",
-        "kali.LogFrequency",
-        "kali.Logger",
-        "kali.LoggerOutput",
-        "kali.ConsoleLoggerOutput",
-        "kali.FileLoggerOutput",
-        "kali.DebugConsoleLoggerOutput",
-        r"kali\.log[\w]*",
-    ],
-    "Windowing": [
-        "kali.WindowMode",
-        "kali.Window",
-        "kali.MouseButton",
-        "kali.MouseButton",
-        "kali.KeyModifierFlags",
-        "kali.KeyModifier",
-        "kali.KeyCode",
-        "kali.KeyboardEventType",
-        "kali.KeyboardEvent",
-        "kali.MouseEventType",
-        "kali.MouseEvent",
-        "kali.GamepadEventType",
-        "kali.GamepadButton",
-        "kali.GamepadEvent",
-        "kali.GamepadState",
-    ],
-    "Platform": [r"kali\.platform\.[\w]+"],
-    "Threading": [r"kali\.thread\.[\w]+"],
-    "Device": [],
-    "Math": [
-        r"kali\.math\.float[\d]",
-        r"kali\.math\.int[\d]",
-        r"kali\.math\.uint[\d]",
-        r"kali\.math\.bool[\d]",
-        r"kali\.math\.float16_t[\d]",
-        r"kali\.math\.float[\d]x[\d]",
-        r"kali\.math\.[\w]+",
-    ],
-    "UI": [r"kali\.ui\.[\w]+"],
-    "Utilities": [r"kali\.utils\.[\w]+"],
-}
+API_ORDER = json.load(open(DIR / "api_order.json"))
 
 
 def parse_signature(signature: str):
@@ -111,6 +64,7 @@ def parse_signature(signature: str):
     # print(args)
     # print(f"new signature: {new_signature}")
 
+    return signature
     return new_signature
 
 
@@ -184,8 +138,24 @@ def process_method(obj, name, ctx: Context):
         if not first:
             ctx.write(f"{INDENT}:no-index:")
         ctx.write("")
+        ctx.push(name)
         if doc:
             ctx.write(doc + "\n")
+        ctx.pop()
+        first = False
+
+
+def process_static_method(obj, name, ctx: Context):
+    first = True
+    for signature, doc in split_signature_doc(obj.__doc__):
+        ctx.write(f".. py:staticmethod:: {signature}")
+        if not first:
+            ctx.write(f"{INDENT}:no-index:")
+        ctx.write("")
+        ctx.push(name)
+        if doc:
+            ctx.write(doc + "\n")
+        ctx.pop()
         first = False
 
 
@@ -196,12 +166,37 @@ def process_property(obj, name, ctx: Context):
     type = doc[0].split("->")[1].strip()
     doc = "\n".join(doc[1:]).strip()
     ctx.write(f"{INDENT}:type: {type}\n")
+    ctx.push(name)
     if doc != "":
         ctx.write(doc + "\n")
+    ctx.pop()
+
+
+def process_attribute(obj, name, ctx: Context):
+    ctx.write(f".. py:attribute:: {ctx.prefix}.{name}")
+    ctx.write(f"{INDENT}:type: {type(obj).__name__}")
+    value = f'"{obj}"' if isinstance(obj, str) else str(obj)
+    ctx.write(f"{INDENT}:value: {value}")
+    ctx.write("")
 
 
 def process_class(obj, name, ctx: Context):
-    ctx.write(f".. py:class:: {ctx.prefix}.{name}\n")
+    ctx.write(f".. py:class:: {ctx.prefix}.{name}")
+
+    is_alias = f"{ctx.prefix}.{name}" != f"{obj.__module__}.{obj.__qualname__}"
+    is_enum = hasattr(obj, "@entries")
+
+    # Check if this is a type alias
+    if is_alias:
+        # print(f"CLASS ALIAS: {ctx.prefix}.{name}")
+        ctx.push(name)
+        ctx.write(f":noindex:")
+        ctx.write(f":canonical: {obj.__module__}.{obj.__qualname__}\n")
+        ctx.write(f"Alias class: :py:class:`{obj.__module__}.{obj.__qualname__}`\n")
+        ctx.pop()
+        return
+
+    ctx.write("")
     ctx.push(name)
     base = obj.__base__
     if base.__name__ != "object":
@@ -217,14 +212,23 @@ def process_class(obj, name, ctx: Context):
         # Skip private attributes
         if re.match(r"_[a-zA-Z\_0-9]+", cn) and cn != "__init__":
             continue
+
         co = getattr(obj, cn)
         if "nanobind.nb_method" in str(co):
             process_method(co, cn, ctx)
+        elif "nanobind.nb_func" in str(co):
+            process_static_method(co, cn, ctx)
         elif isinstance(co, property):
             process_property(co, cn, ctx)
+        elif isclass(co):
+            process_class(co, cn, ctx)
+        else:
+            if is_enum or cn == "__init__":
+                continue
+            process_attribute(co, cn, ctx)
 
     # Handle enum values
-    if hasattr(obj, "@entries"):
+    if is_enum:
         entries = getattr(obj, "@entries")
         for value, info in entries.items():
             ctx.write(f".. py:attribute:: {info[0]}")
@@ -243,16 +247,32 @@ def process_function(obj, name, ctx: Context):
         if not first:
             ctx.write(f"{INDENT}:no-index:")
         ctx.write("")
+        ctx.push(name)
         if doc:
             ctx.write(doc + "\n")
+        ctx.pop()
         first = False
+
+
+def process_data(obj, name, ctx: Context):
+    ctx.write(f".. py:data:: {ctx.prefix}.{name}")
+    ctx.write(f"{INDENT}:type: {type(obj).__name__}")
+    value = f'"{obj}"' if isinstance(obj, str) else str(obj)
+    ctx.write(f"{INDENT}:value: {value}")
+    ctx.write("")
 
 
 def process_module(obj, name, ctx: Context):
     ctx.push(name, indent=False)
-    ctx.write(ctx.prefix + "\n\n")
 
     for cn in obj.__dict__:
+        # Skip properties
+        if re.match(r"__[a-zA-Z\_0-9]+__", cn) and cn != "__init__":
+            continue
+        # Skip private attributes
+        if re.match(r"_[a-zA-Z\_0-9]+", cn) and cn != "__init__":
+            continue
+
         co = getattr(obj, cn)
         if ismodule(co):
             process_module(co, cn, ctx)
@@ -264,6 +284,9 @@ def process_module(obj, name, ctx: Context):
         elif "nanobind.nb_func" in str(co):
             ctx.new_entry(cn)
             process_function(co, cn, ctx)
+        else:
+            ctx.new_entry(cn)
+            process_data(co, cn, ctx)
 
     ctx.pop()
 
@@ -277,7 +300,7 @@ def generate_api():
     out = ""
     entries = ctx.entries
     added_entries = set()
-    for section_name, patterns in SECTIONS.items():
+    for section_name, patterns in API_ORDER.items():
         out += f"{section_name}\n"
         out += "-" * len(section_name) + "\n\n"
 
@@ -297,7 +320,8 @@ def generate_api():
             continue
         out += entries[entry] + "\n"
         out += "\n----\n\n"
-        print(f"Unassigned entry: {entry}")
+        print(f"Unassigned entry {entry} with content:")
+        print(entries[entry])
 
     # Write file if it changed.
     api_path = Path(__file__).parent / "generated" / "api.rst"

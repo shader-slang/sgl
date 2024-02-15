@@ -5,7 +5,9 @@ import shutil
 from pathlib import Path
 
 CURRENT_DIR = Path(__file__).parent
-shutil.copytree(CURRENT_DIR / "../tutorials", CURRENT_DIR / "src/tutorials", dirs_exist_ok=True)
+shutil.copytree(
+    CURRENT_DIR / "../tutorials", CURRENT_DIR / "src/tutorials", dirs_exist_ok=True
+)
 
 project = "kali"
 copyright = "2024, Simon Kallweit, NVIDIA"
@@ -25,6 +27,11 @@ html_theme = "furo"
 html_title = "kali"
 html_static_path = ["_static"]
 html_css_files = ["theme_overrides.css"]
+html_theme_options = {
+    "light_css_variables": {
+        "color-api-background": "#f7f7f7",
+    },
+}
 
 # nbsphinx configuration
 nbsphinx_execute = "never"
