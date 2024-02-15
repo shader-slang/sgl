@@ -8,16 +8,17 @@
 
 #include "git_version.h"
 
-
-namespace kali {
-
-const char* git_version()
+static inline const char* git_version()
 {
     static std::string str{
         fmt::format("commit: {} / branch: {}", GIT_VERSION_COMMIT, GIT_VERSION_BRANCH)
         + (GIT_VERSION_DIRTY ? " (local changes)" : "")};
     return str.c_str();
 }
+
+const char* KALI_GIT_VERSION = git_version();
+
+namespace kali {
 
 void static_init()
 {

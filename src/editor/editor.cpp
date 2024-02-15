@@ -17,7 +17,7 @@ int main()
 
     Logger::get().add_file_output("editor.log");
 
-    log_info("kali {} {}", KALI_VERSION, git_version());
+    log_info("kali {} {}", KALI_VERSION, KALI_GIT_VERSION);
 
     log_debug("just a test");
     log_debug("{} {} {}", "hello", 42, "world!");

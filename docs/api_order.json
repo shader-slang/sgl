@@ -11,7 +11,7 @@
         "kali.KALI_VERSION_MAJOR",
         "kali.KALI_VERSION_MINOR",
         "kali.KALI_VERSION_PATCH",
-        "kali.git_version"
+        "kali.KALI_GIT_VERSION"
     ],
     "Logging": [
         "kali.LogLevel",

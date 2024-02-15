@@ -64,7 +64,7 @@ NB_MODULE(kali_ext, m_)
     m.attr("KALI_VERSION_MINOR") = KALI_VERSION_MINOR;
     m.attr("KALI_VERSION_PATCH") = KALI_VERSION_PATCH;
     m.attr("KALI_VERSION") = KALI_VERSION;
-    m.attr("git_version") = kali::git_version();
+    m.attr("KALI_GIT_VERSION") = KALI_GIT_VERSION;
 
     KALI_PY_IMPORT(core_object);
     m.def_submodule("platform", "Platform module");

@@ -7,9 +7,9 @@
 #define KALI_VERSION                                                                                                   \
     KALI_TO_STRING(KALI_VERSION_MAJOR) "." KALI_TO_STRING(KALI_VERSION_MINOR) "." KALI_TO_STRING(KALI_VERSION_PATCH)
 
-namespace kali {
+extern KALI_API const char* KALI_GIT_VERSION;
 
-KALI_API const char* git_version();
+namespace kali {
 
 KALI_API void static_init();
 KALI_API void static_shutdown();
