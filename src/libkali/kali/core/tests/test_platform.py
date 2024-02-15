@@ -3,19 +3,22 @@ from kali import platform
 
 
 def test_platform():
-    assert platform.display_scale_factor > 0
+    assert platform.display_scale_factor() > 0
 
 
 def test_paths():
-    assert platform.executable_path.exists()
-    assert platform.executable_directory == platform.executable_path.parent
-    assert platform.executable_name == platform.executable_path.name
-    assert platform.app_data_directory.parent.exists()
-    assert platform.home_directory.exists()
-    assert platform.project_directory.exists()
-    assert platform.runtime_directory.exists()
+    assert platform.executable_path().exists()
+    assert platform.executable_directory() == platform.executable_path().parent
+    assert platform.executable_name() == platform.executable_path().name
+    assert platform.app_data_directory().parent.exists()
+    assert platform.home_directory().exists()
+    assert platform.project_directory().exists()
+    assert platform.runtime_directory().exists()
     assert any(
-        [(platform.runtime_directory / x).exists() for x in ["kali.dll", "libkali.so", "libkali.dylib"]]
+        [
+            (platform.runtime_directory() / x).exists()
+            for x in ["kali.dll", "libkali.so", "libkali.dylib"]
+        ]
     )
 
 

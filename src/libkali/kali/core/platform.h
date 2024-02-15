@@ -150,7 +150,8 @@ save_file_dialog(std::span<const FileDialogFilter> filters = {});
 /// The project source directory. Note that this is only valid during development.
 [[nodiscard]] KALI_API const std::filesystem::path& project_directory();
 
-/// Thehe runtime directory. This is the path where the kali runtime library (kali.dll or libkali.so) resides.
+/// The runtime directory. This is the path where the kali runtime library
+/// (kali.dll, libkali.so or libkali.dynlib) resides.
 [[nodiscard]] KALI_API const std::filesystem::path& runtime_directory();
 
 // -------------------------------------------------------------------------------------------------

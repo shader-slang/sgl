@@ -29,15 +29,15 @@ KALI_PY_EXPORT(core_platform)
     );
     platform.def("choose_folder_dialog", &choose_folder_dialog, D(platform, choose_folder_dialog));
 
-    platform.attr("display_scale_factor") = display_scale_factor();
+    platform.def("display_scale_factor", &display_scale_factor, D(platform, display_scale_factor));
 
-    platform.attr("executable_path") = executable_path();
-    platform.attr("executable_directory") = executable_directory();
-    platform.attr("executable_name") = executable_name();
-    platform.attr("app_data_directory") = app_data_directory();
-    platform.attr("home_directory") = home_directory();
-    platform.attr("project_directory") = project_directory();
-    platform.attr("runtime_directory") = runtime_directory();
+    platform.def("executable_path", &executable_path, D(platform, executable_path));
+    platform.def("executable_directory", &executable_directory, D(platform, executable_directory));
+    platform.def("executable_name", &executable_name, D(platform, executable_name));
+    platform.def("app_data_directory", &app_data_directory, D(platform, app_data_directory));
+    platform.def("home_directory", &home_directory, D(platform, home_directory));
+    platform.def("project_directory", &project_directory, D(platform, project_directory));
+    platform.def("runtime_directory", &runtime_directory, D(platform, runtime_directory));
 
     platform.attr("page_size") = page_size();
 
