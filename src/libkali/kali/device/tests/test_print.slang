@@ -142,12 +142,9 @@ void compute_main(uint3 tid: SV_DispatchThreadID)
     );
 
     // print supports matrices
-    // TODO glslang backend doesn't support non-floating-point matrices
-#if !defined(__TARGET_VULKAN__)
     print("uint3x4: {}", uint3x4(uint4(1, 2, 3, 4), uint4(5, 6, 7, 8), uint4(9, 10, 11, 12)));
     print("uint4x4: {}", uint4x4(uint4(1, 2, 3, 4), uint4(5, 6, 7, 8), uint4(9, 10, 11, 12), uint4(13, 14, 15, 16)));
     print("uint4x3: {}", uint4x3(uint3(1, 2, 3), uint3(4, 5, 6), uint3(7, 8, 9), uint3(10, 11, 12)));
-#endif
 
     // print supports format specifiers from fmtlib
     print("float3x3: {:+5.2f}", float3x3(float3(-4.0, -3.0, -1.0), float3(0.0, 1.0, 2.0), float3(3.0, 4.0, 5.0)));
