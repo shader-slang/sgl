@@ -73,6 +73,11 @@ KALI_PY_EXPORT(device_shader_cursor)
     def_setter(ref<Sampler>);
     def_setter(ref<AccelerationStructure>);
 
+    def_setter(bool);
+    def_setter(bool2);
+    def_setter(bool3);
+    def_setter(bool4);
+
     def_setter(uint2);
     def_setter(uint3);
     def_setter(uint4);
@@ -80,11 +85,6 @@ KALI_PY_EXPORT(device_shader_cursor)
     def_setter(int2);
     def_setter(int3);
     def_setter(int4);
-
-    def_setter(bool);
-    def_setter(bool2);
-    def_setter(bool3);
-    def_setter(bool4);
 
     def_setter(float2);
     def_setter(float3);

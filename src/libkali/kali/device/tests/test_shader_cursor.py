@@ -310,4 +310,4 @@ def test_shader_cursor(device_type):
 
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-vs"])
+    pytest.main([__file__, "-vvs"])

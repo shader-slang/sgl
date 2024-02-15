@@ -2,7 +2,6 @@
 
 - rename project
 - add support for texture init data
-- add more type checking to `ShaderCursor`
 - add rdoc strings
 - add support for passing entrypoint arguments
 

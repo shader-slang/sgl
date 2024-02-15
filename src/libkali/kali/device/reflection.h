@@ -113,6 +113,9 @@ public:
         uint8 = SLANG_SCALAR_TYPE_UINT8,
         int16 = SLANG_SCALAR_TYPE_INT16,
         uint16 = SLANG_SCALAR_TYPE_UINT16,
+        intptr = SLANG_SCALAR_TYPE_INTPTR,
+        uintptr = SLANG_SCALAR_TYPE_UINTPTR,
+        COUNT,
     };
 
     KALI_ENUM_INFO(

@@ -11,6 +11,47 @@
 
 namespace kali {
 
+// Helper class for checking if implicit conversion between scalar types is allowed.
+// Note that only conversion between types of the same size is allowed.
+struct ScalarConversionTable {
+    static_assert(size_t(TypeReflection::ScalarType::COUNT) < 32, "Not enough bits to represent all scalar types");
+    constexpr ScalarConversionTable()
+    {
+        for (uint32_t i = 0; i < uint32_t(TypeReflection::ScalarType::COUNT); ++i)
+            table[i] = 1 << i;
+
+        auto add_conversion = [&](TypeReflection::ScalarType from, auto... to)
+        {
+            uint32_t flags{0};
+            ((flags |= 1 << uint32_t(to)), ...);
+            table[uint32_t(from)] |= flags;
+        };
+
+        using ST = TypeReflection::ScalarType;
+        add_conversion(ST::int32, ST::uint32, ST::bool_);
+        add_conversion(ST::uint32, ST::int32, ST::bool_);
+        add_conversion(ST::int64, ST::uint64);
+        add_conversion(ST::uint64, ST::int64);
+        add_conversion(ST::int8, ST::uint8);
+        add_conversion(ST::uint8, ST::int8);
+        add_conversion(ST::int16, ST::uint16);
+        add_conversion(ST::uint16, ST::int16);
+    }
+
+    constexpr bool allow_conversion(TypeReflection::ScalarType from, TypeReflection::ScalarType to) const
+    {
+        return (table[uint32_t(from)] & (1 << uint32_t(to))) != 0;
+    }
+
+    uint32_t table[size_t(TypeReflection::ScalarType::COUNT)]{};
+};
+
+inline bool allow_scalar_conversion(TypeReflection::ScalarType from, TypeReflection::ScalarType to)
+{
+    static constexpr ScalarConversionTable table;
+    return table.allow_conversion(from, to);
+}
+
 ShaderCursor::ShaderCursor(ShaderObject* shader_object)
     : m_shader_object(shader_object)
     , m_type_layout(shader_object->element_type_layout())
@@ -443,23 +484,67 @@ void ShaderCursor::set_cuda_tensor_view(const cuda::TensorView& tensor_view) con
 
 void ShaderCursor::set_scalar(const void* data, size_t size, TypeReflection::ScalarType scalar_type) const
 {
-    KALI_UNUSED(scalar_type);
-    // TODO type checking
+    const TypeReflection* type = m_type_layout->unwrap_array()->type();
+
+    KALI_CHECK(type->kind() == TypeReflection::Kind::scalar, "'{}' cannot bind a scalar value", m_type_layout->name());
+    KALI_CHECK(
+        allow_scalar_conversion(scalar_type, type->scalar_type()),
+        "'{}' expects scalar type {} (no implicit conversion from type {})",
+        m_type_layout->name(),
+        type->scalar_type(),
+        scalar_type
+    );
+
     m_shader_object->set_data(m_offset, data, size);
 }
 
 void ShaderCursor::set_vector(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int dimension)
     const
 {
-    KALI_UNUSED(scalar_type, dimension);
-    // TODO type checking
+    const TypeReflection* type = m_type_layout->unwrap_array()->type();
+
+    KALI_CHECK(type->kind() == TypeReflection::Kind::vector, "'{}' cannot bind a vector value", m_type_layout->name());
+    KALI_CHECK(
+        type->col_count() == uint32_t(dimension),
+        "'{}' expects a vector with dimension {} (got dimension {})",
+        m_type_layout->name(),
+        type->col_count(),
+        dimension
+    );
+    KALI_CHECK(
+        allow_scalar_conversion(scalar_type, type->scalar_type()),
+        "'{}' expects a vector with scalar type {} (no implicit conversion from type {})",
+        m_type_layout->name(),
+        type->scalar_type(),
+        scalar_type
+    );
+
     m_shader_object->set_data(m_offset, data, size);
 }
 
 void ShaderCursor::set_matrix(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int rows, int cols)
     const
 {
-    KALI_UNUSED(scalar_type, rows, cols);
+    const TypeReflection* type = m_type_layout->unwrap_array()->type();
+
+    KALI_CHECK(type->kind() == TypeReflection::Kind::matrix, "'{}' cannot bind a matrix value", m_type_layout->name());
+    KALI_CHECK(
+        type->row_count() == uint32_t(rows) && type->col_count() == uint32_t(cols),
+        "'{}' expects a matrix with dimension {}x{} (got dimension {}x{})",
+        m_type_layout->name(),
+        type->row_count(),
+        type->col_count(),
+        rows,
+        cols
+    );
+    KALI_CHECK(
+        allow_scalar_conversion(scalar_type, type->scalar_type()),
+        "'{}' expects a matrix with scalar type {} (no implicit conversion from type {})",
+        m_type_layout->name(),
+        type->scalar_type(),
+        scalar_type
+    );
+
     if (rows > 1) {
         // each row is aligned to 16 bytes
         size_t row_size = size / rows;
@@ -577,28 +662,28 @@ template<>
 KALI_API void ShaderCursor::set(const bool& value) const
 {
     uint v = value ? 1 : 0;
-    set_scalar(&v, sizeof(v), TypeReflection::ScalarType::uint32);
+    set_scalar(&v, sizeof(v), TypeReflection::ScalarType::bool_);
 }
 
 template<>
 KALI_API void ShaderCursor::set(const bool2& value) const
 {
     uint2 v = {value.x ? 1 : 0, value.y ? 1 : 0};
-    set_vector(&v, sizeof(v), TypeReflection::ScalarType::uint32, 2);
+    set_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 2);
 }
 
 template<>
 KALI_API void ShaderCursor::set(const bool3& value) const
 {
     uint3 v = {value.x ? 1 : 0, value.y ? 1 : 0, value.z ? 1 : 0};
-    set_vector(&v, sizeof(v), TypeReflection::ScalarType::uint32, 3);
+    set_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 3);
 }
 
 template<>
 KALI_API void ShaderCursor::set(const bool4& value) const
 {
     uint4 v = {value.x ? 1 : 0, value.y ? 1 : 0, value.z ? 1 : 0, value.w ? 1 : 0};
-    set_vector(&v, sizeof(v), TypeReflection::ScalarType::uint32, 4);
+    set_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 4);
 }
 
 } // namespace kali
