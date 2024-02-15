@@ -62,11 +62,7 @@ TEST_CASE("validate_format_infos")
         CAPTURE(info.name);
         // CHECK_EQ(format_type_to_slang_type(info.type), gfx_info.channelType);
         CHECK_EQ(info.bytes_per_block, gfx_info.blockSizeInBytes);
-
-        // TODO gfx has these incorrect with 4 channels
-        if (info.format != Format::bc1_unorm && info.format != Format::bc1_unorm_srgb)
-            CHECK_EQ(info.channel_count, gfx_info.channelCount);
-
+        CHECK_EQ(info.channel_count, gfx_info.channelCount);
         CHECK_EQ(info.block_width * info.block_height, gfx_info.pixelsPerBlock);
         CHECK_EQ(info.block_width, gfx_info.blockWidth);
         CHECK_EQ(info.block_height, gfx_info.blockHeight);
