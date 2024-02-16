@@ -149,7 +149,7 @@ private:
 #if KALI_ENABLE_REF_TRACKING
     struct RefTracker {
         uint32_t count{1};
-        StackTrace stack_trace;
+        platform::StackTrace stack_trace;
         // RefTracker(StackTrace stack_trace_)
         //     : count(1)
         //     , stack_trace(std::move(stack_trace))

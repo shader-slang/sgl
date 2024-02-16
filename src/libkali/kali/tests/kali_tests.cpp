@@ -35,7 +35,7 @@ int main(int argc, char** argv)
     }
 
 #if KALI_ENABLE_OBJECT_TRACKING
-    kali::Logger::global().add_console_output();
+    kali::Logger::get().add_console_output();
     kali::Object::report_alive_objects();
 #endif
 

@@ -117,18 +117,18 @@ PyObject* Object::self_py() const noexcept
 void Object::report_alive_objects()
 {
     std::lock_guard<std::mutex> lock(s_tracked_objects_mutex);
-    log_info("Alive objects:");
+    fmt::println("Alive objects:");
     for (const Object* object : s_tracked_objects)
         object->report_refs();
 }
 
 void Object::report_refs() const
 {
-    log_info("Object (class={} address={}) has {} reference(s)", class_name(), fmt::ptr(this), ref_count());
+    fmt::println("Object (class={} address={}) has {} reference(s)", class_name(), fmt::ptr(this), ref_count());
 #if KALI_ENABLE_REF_TRACKING
     std::lock_guard<std::mutex> lock(m_ref_trackers_mutex);
     for (const auto& it : m_ref_trackers) {
-        log_info("ref={} count={}\n{}\n", it.first, it.second.count, format_stacktrace(it.second.stack_trace));
+        fmt::println("ref={} count={}\n{}\n", it.first, it.second.count, platform::format_stacktrace(it.second.stack_trace));
     }
 #endif
 }
@@ -145,7 +145,7 @@ void Object::inc_ref_tracked(uint64_t ref_id) const
         if (it != m_ref_trackers.end()) {
             it->second.count++;
         } else {
-            m_ref_trackers.emplace(ref_id, RefTracker{1, backtrace()});
+            m_ref_trackers.emplace(ref_id, RefTracker{1, platform::backtrace()});
         }
     }
 
