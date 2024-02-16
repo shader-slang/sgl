@@ -602,7 +602,8 @@ KALI_PY_EXPORT(device_device)
         .def("create_compute_pipeline", &Device::create_compute_pipeline, "desc"_a, D(Device, create_compute_pipeline));
     device.def(
         "create_compute_pipeline",
-        [](Device* self, const ShaderProgram* program) { return self->create_compute_pipeline({.program = program}); },
+        [](Device* self, ref<ShaderProgram> program)
+        { return self->create_compute_pipeline({.program = std::move(program)}); },
         "program"_a,
         D(Device, create_compute_pipeline)
     );
@@ -616,7 +617,7 @@ KALI_PY_EXPORT(device_device)
     device.def(
         "create_graphics_pipeline",
         [](Device* self,
-           const ShaderProgram* program,
+           ref<ShaderProgram> program,
            const InputLayout* input_layout,
            const Framebuffer* framebuffer,
            PrimitiveType primitive_type,
@@ -625,7 +626,7 @@ KALI_PY_EXPORT(device_device)
            std::optional<BlendDesc> blend)
         {
             return self->create_graphics_pipeline({
-                .program = program,
+                .program = std::move(program),
                 .input_layout = input_layout,
                 .framebuffer = framebuffer,
                 .primitive_type = primitive_type,
@@ -653,7 +654,7 @@ KALI_PY_EXPORT(device_device)
     device.def(
         "create_ray_tracing_pipeline",
         [](Device* self,
-           const ShaderProgram* program,
+           ref<ShaderProgram> program,
            std::vector<HitGroupDesc> hit_groups,
            uint32_t max_recursion,
            uint32_t max_ray_payload_size,
@@ -661,7 +662,7 @@ KALI_PY_EXPORT(device_device)
            RayTracingPipelineFlags flags)
         {
             return self->create_ray_tracing_pipeline({
-                .program = program,
+                .program = std::move(program),
                 .hit_groups = std::move(hit_groups),
                 .max_recursion = max_recursion,
                 .max_ray_payload_size = max_ray_payload_size,

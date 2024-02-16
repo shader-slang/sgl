@@ -7,7 +7,7 @@
 
 namespace kali {
 KALI_DICT_TO_DESC_BEGIN(ComputePipelineDesc)
-KALI_DICT_TO_DESC_FIELD(program, ShaderProgram*)
+KALI_DICT_TO_DESC_FIELD(program, ref<ShaderProgram>)
 KALI_DICT_TO_DESC_END()
 
 KALI_DICT_TO_DESC_BEGIN(DepthStencilDesc)
@@ -43,7 +43,7 @@ KALI_DICT_TO_DESC_FIELD(alpha_to_coverage_enable, bool)
 KALI_DICT_TO_DESC_END()
 
 KALI_DICT_TO_DESC_BEGIN(GraphicsPipelineDesc)
-KALI_DICT_TO_DESC_FIELD(program, ShaderProgram*)
+KALI_DICT_TO_DESC_FIELD(program, ref<ShaderProgram>)
 KALI_DICT_TO_DESC_FIELD(input_layout, InputLayout*)
 KALI_DICT_TO_DESC_FIELD(framebuffer, Framebuffer*)
 KALI_DICT_TO_DESC_FIELD(primitive_type, PrimitiveType)
@@ -60,7 +60,7 @@ KALI_DICT_TO_DESC_FIELD(intersection_entry_point, std::string)
 KALI_DICT_TO_DESC_END()
 
 KALI_DICT_TO_DESC_BEGIN(RayTracingPipelineDesc)
-KALI_DICT_TO_DESC_FIELD(program, ShaderProgram*)
+KALI_DICT_TO_DESC_FIELD(program, ref<ShaderProgram>)
 KALI_DICT_TO_DESC_FIELD_LIST(hit_groups, HitGroupDesc)
 KALI_DICT_TO_DESC_FIELD(max_recursion, uint32_t)
 KALI_DICT_TO_DESC_FIELD(max_ray_payload_size, uint32_t)

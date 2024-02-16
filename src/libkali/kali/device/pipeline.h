@@ -17,6 +17,7 @@
 
 namespace kali {
 
+/// Pipeline base class.
 class KALI_API Pipeline : public DeviceResource {
     KALI_OBJECT(Pipeline)
 public:
@@ -36,23 +37,28 @@ protected:
 };
 
 struct ComputePipelineDesc {
-    const ShaderProgram* program;
+    ref<ShaderProgram> program;
 };
 
+/// Compute pipeline.
 class KALI_API ComputePipeline : public Pipeline {
 public:
     ComputePipeline(ref<Device> device, ComputePipelineDesc desc);
 
+    /// Thread group size.
+    /// Used to determine the number of thread groups to dispatch.
     uint3 thread_group_size() const { return m_thread_group_size; }
 
     std::string to_string() const override;
 
 private:
+    /// Shared reference to shader program to keep reflection data alive.
+    ref<ShaderProgram> m_program;
     uint3 m_thread_group_size;
 };
 
 struct GraphicsPipelineDesc {
-    const ShaderProgram* program;
+    ref<ShaderProgram> program;
     const InputLayout* input_layout;
     const Framebuffer* framebuffer;
     PrimitiveType primitive_type{PrimitiveType::triangle};
@@ -61,6 +67,7 @@ struct GraphicsPipelineDesc {
     BlendDesc blend;
 };
 
+/// Graphics pipeline.
 class KALI_API GraphicsPipeline : public Pipeline {
 public:
     GraphicsPipeline(ref<Device> device, GraphicsPipelineDesc desc);
@@ -68,6 +75,8 @@ public:
     std::string to_string() const override;
 
 private:
+    /// Shared reference to shader program to keep reflection data alive.
+    ref<ShaderProgram> m_program;
 };
 
 struct HitGroupDesc {
@@ -78,7 +87,7 @@ struct HitGroupDesc {
 };
 
 struct RayTracingPipelineDesc {
-    const ShaderProgram* program;
+    ref<ShaderProgram> program;
     std::vector<HitGroupDesc> hit_groups;
     uint32_t max_recursion{0};
     uint32_t max_ray_payload_size{0};
@@ -86,6 +95,7 @@ struct RayTracingPipelineDesc {
     RayTracingPipelineFlags flags{RayTracingPipelineFlags::none};
 };
 
+/// Ray tracing pipeline.
 class KALI_API RayTracingPipeline : public Pipeline {
 public:
     RayTracingPipeline(ref<Device> device, RayTracingPipelineDesc desc);
@@ -93,6 +103,8 @@ public:
     std::string to_string() const override;
 
 private:
+    /// Shared reference to shader program to keep reflection data alive.
+    ref<ShaderProgram> m_program;
 };
 
 } // namespace kali
