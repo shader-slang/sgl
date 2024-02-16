@@ -112,7 +112,7 @@ NB_MODULE(kali_ext, m_)
     m.def_submodule("utils", "Utility module");
     KALI_PY_IMPORT(utils_tev);
 
-    // Register a cleanup callback function.
+    // Wait for all tasks to finish before shutting down.
     auto atexit = nb::module_::import_("atexit");
     atexit.attr("register")(nb::cpp_function(
         []()
@@ -125,7 +125,18 @@ NB_MODULE(kali_ext, m_)
                 nb::gil_scoped_release guard;
                 kali::thread::wait_for_tasks();
             }
-            kali::static_shutdown();
         }
     ));
+
+    // Cleanup when the last kali::Object is garbage collected.
+    nb::weakref(
+        m.attr("Object"),
+        nb::cpp_function(
+            [](nb::handle weakref)
+            {
+                kali::static_shutdown();
+                weakref.dec_ref();
+            }
+        )
+    ).release();
 }
