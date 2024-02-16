@@ -25,7 +25,7 @@ KALI_PY_EXPORT(core_input)
         .def("has_modifier", &KeyboardEvent::has_modifier, D(KeyboardEvent, has_modifier))
         .def("__repr__", &KeyboardEvent::to_string);
 
-    nb::kali_enum<MouseEventType>(m, "MouseEventType");
+    nb::kali_enum<MouseEventType>(m, "MouseEventType", D(MouseEventType));
 
     nb::class_<MouseEvent>(m, "MouseEvent", D(MouseEvent))
         .def_ro("type", &MouseEvent::type, D(MouseEvent, type))
