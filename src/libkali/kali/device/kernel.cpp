@@ -58,8 +58,10 @@ void ComputeKernel::dispatch(uint3 thread_count, BindVarsCallback bind_vars, Com
         command_buffer = temp_command_buffer;
     }
 
-    auto encoder = command_buffer->encode_compute_commands();
-    dispatch(thread_count, bind_vars, encoder);
+    {
+        auto encoder = command_buffer->encode_compute_commands();
+        dispatch(thread_count, bind_vars, encoder);
+    }
 
     if (temp_command_buffer)
         temp_command_buffer->submit();

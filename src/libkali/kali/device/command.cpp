@@ -194,7 +194,7 @@ ComputeCommandEncoder::~ComputeCommandEncoder()
 void ComputeCommandEncoder::end()
 {
     if (m_command_buffer) {
-        m_command_buffer->end_pass();
+        m_command_buffer->end_encoder();
         m_command_buffer = nullptr;
     }
 }
@@ -272,7 +272,7 @@ RenderCommandEncoder::~RenderCommandEncoder()
 void RenderCommandEncoder::end()
 {
     if (m_command_buffer) {
-        m_command_buffer->end_pass();
+        m_command_buffer->end_encoder();
         m_command_buffer = nullptr;
     }
 }
@@ -476,7 +476,7 @@ RayTracingCommandEncoder::~RayTracingCommandEncoder()
 void RayTracingCommandEncoder::end()
 {
     if (m_command_buffer) {
-        m_command_buffer->end_pass();
+        m_command_buffer->end_encoder();
         m_command_buffer = nullptr;
     }
 }
@@ -625,7 +625,10 @@ void CommandBuffer::close()
     if (!m_open)
         return;
 
-    end_current_encoder();
+    if (m_encoder_open)
+        KALI_THROW("Cannot close command buffer with an open encoder.");
+
+    end_current_gfx_encoder();
     m_gfx_command_buffer->close();
     m_open = false;
 }
@@ -1238,21 +1241,21 @@ void CommandBuffer::resolve_subresource(
 
 ComputeCommandEncoder CommandBuffer::encode_compute_commands()
 {
-    KALI_CHECK(!m_pass_open, "CommandBuffer already has an active encoder");
+    KALI_CHECK(!m_encoder_open, "CommandBuffer already has an active encoder");
 
-    if (m_active_encoder != EncoderType::compute) {
-        end_current_encoder();
+    if (m_active_gfx_encoder != EncoderType::compute) {
+        end_current_gfx_encoder();
         m_gfx_command_encoder = m_gfx_command_buffer->encodeComputeCommands();
-        m_active_encoder = EncoderType::compute;
+        m_active_gfx_encoder = EncoderType::compute;
     }
 
-    m_pass_open = true;
+    m_encoder_open = true;
     return ComputeCommandEncoder(this, (static_cast<gfx::IComputeCommandEncoder*>(m_gfx_command_encoder.get())));
 }
 
 RenderCommandEncoder CommandBuffer::encode_render_commands(Framebuffer* framebuffer)
 {
-    KALI_CHECK(!m_pass_open, "CommandBuffer already has an active encoder");
+    KALI_CHECK(!m_encoder_open, "CommandBuffer already has an active encoder");
     KALI_CHECK_NOT_NULL(framebuffer);
 
     // Set the render target and depth-stencil barriers.
@@ -1261,30 +1264,30 @@ RenderCommandEncoder CommandBuffer::encode_render_commands(Framebuffer* framebuf
     if (framebuffer->desc().depth_stencil)
         texture_barrier(framebuffer->desc().depth_stencil->texture, ResourceState::depth_write);
 
-    if (m_active_encoder != EncoderType::render) {
-        end_current_encoder();
+    if (m_active_gfx_encoder != EncoderType::render) {
+        end_current_gfx_encoder();
         m_gfx_command_encoder = m_gfx_command_buffer->encodeRenderCommands(
             framebuffer->gfx_render_pass_layout(),
             framebuffer->gfx_framebuffer()
         );
-        m_active_encoder = EncoderType::render;
+        m_active_gfx_encoder = EncoderType::render;
     }
 
-    m_pass_open = true;
+    m_encoder_open = true;
     return RenderCommandEncoder(this, (static_cast<gfx::IRenderCommandEncoder*>(m_gfx_command_encoder.get())));
 }
 
 RayTracingCommandEncoder CommandBuffer::encode_ray_tracing_commands()
 {
-    KALI_CHECK(!m_pass_open, "CommandBuffer already has an active encoder");
+    KALI_CHECK(!m_encoder_open, "CommandBuffer already has an active encoder");
 
-    if (m_active_encoder != EncoderType::raytracing) {
-        end_current_encoder();
+    if (m_active_gfx_encoder != EncoderType::raytracing) {
+        end_current_gfx_encoder();
         m_gfx_command_encoder = m_gfx_command_buffer->encodeRayTracingCommands();
-        m_active_encoder = EncoderType::raytracing;
+        m_active_gfx_encoder = EncoderType::raytracing;
     }
 
-    m_pass_open = true;
+    m_encoder_open = true;
     return RayTracingCommandEncoder(this, (static_cast<gfx::IRayTracingCommandEncoder*>(m_gfx_command_encoder.get())));
 }
 
@@ -1308,28 +1311,28 @@ std::string CommandBuffer::to_string() const
     );
 }
 
-void CommandBuffer::end_pass()
+void CommandBuffer::end_encoder()
 {
-    KALI_ASSERT(m_pass_open);
-    m_pass_open = false;
-    end_current_encoder();
+    KALI_ASSERT(m_encoder_open);
+    m_encoder_open = false;
+    end_current_gfx_encoder();
 }
 
 gfx::IResourceCommandEncoder* CommandBuffer::get_gfx_resource_command_encoder()
 {
-    if (m_active_encoder == EncoderType::none) {
+    if (m_active_gfx_encoder == EncoderType::none) {
         m_gfx_command_encoder = m_gfx_command_buffer->encodeResourceCommands();
-        m_active_encoder = EncoderType::resource;
+        m_active_gfx_encoder = EncoderType::resource;
     }
     return static_cast<gfx::IResourceCommandEncoder*>(m_gfx_command_encoder.get());
 }
 
-void CommandBuffer::end_current_encoder()
+void CommandBuffer::end_current_gfx_encoder()
 {
-    if (m_active_encoder != EncoderType::none) {
+    if (m_active_gfx_encoder != EncoderType::none) {
         m_gfx_command_encoder->endEncoding();
         m_gfx_command_encoder = nullptr;
-        m_active_encoder = EncoderType::none;
+        m_active_gfx_encoder = EncoderType::none;
     }
 }
 

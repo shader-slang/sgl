@@ -551,16 +551,16 @@ public:
     std::string to_string() const override;
 
 private:
-    /// Called by pass encoders when they are destroyed.
-    void end_pass();
+    /// Called by command encoders when they are destroyed.
+    void end_encoder();
 
     gfx::IResourceCommandEncoder* get_gfx_resource_command_encoder();
-    void end_current_encoder();
+    void end_current_gfx_encoder();
 
     Slang::ComPtr<gfx::ICommandBuffer> m_gfx_command_buffer;
 
     bool m_open{true};
-    bool m_pass_open{false};
+    bool m_encoder_open{false};
 
     enum class EncoderType {
         none,
@@ -570,7 +570,7 @@ private:
         raytracing,
     };
 
-    EncoderType m_active_encoder{EncoderType::none};
+    EncoderType m_active_gfx_encoder{EncoderType::none};
     Slang::ComPtr<gfx::ICommandEncoder> m_gfx_command_encoder;
 
 #if KALI_HAS_CUDA
