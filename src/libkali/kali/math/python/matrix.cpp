@@ -22,6 +22,20 @@ void bind_matrix_type(nb::module_& m, const char* name)
     // Constructors
 
     mat.def(nb::init<>());
+
+    if constexpr (rows == 4 && cols == 4) {
+        mat.def(nb::init<matrix<value_type, 3, 3>>());
+        mat.def(nb::init<matrix<value_type, 3, 4>>());
+    }
+    if constexpr (rows == 3 && cols == 4) {
+        mat.def(nb::init<matrix<value_type, 3, 3>>());
+        mat.def(nb::init<matrix<value_type, 4, 4>>());
+    }
+    if constexpr (rows == 3 && cols == 3) {
+        mat.def(nb::init<matrix<value_type, 4, 4>>());
+        mat.def(nb::init<matrix<value_type, 3, 4>>());
+    }
+
     mat.def(nb::init<std::array<value_type, rows * cols>>());
 
     // Initialization from ndarray.
@@ -36,19 +50,6 @@ void bind_matrix_type(nb::module_& m, const char* name)
         }
     );
     nb::implicitly_convertible<nb::ndarray<value_type, nb::shape<rows, cols>>, T>();
-
-    if constexpr (rows == 4 && cols == 4) {
-        mat.def(nb::init<matrix<value_type, 3, 3>>());
-        mat.def(nb::init<matrix<value_type, 3, 4>>());
-    }
-    if constexpr (rows == 3 && cols == 4) {
-        mat.def(nb::init<matrix<value_type, 3, 3>>());
-        mat.def(nb::init<matrix<value_type, 4, 4>>());
-    }
-    if constexpr (rows == 3 && cols == 3) {
-        mat.def(nb::init<matrix<value_type, 4, 4>>());
-        mat.def(nb::init<matrix<value_type, 3, 4>>());
-    }
 
     mat.def_static("zeros", &T::zeros);
     mat.def_static("identity", &T::identity);
