@@ -188,31 +188,6 @@ std::vector<ref<Bitmap>> Bitmap::read_multiple(const std::vector<std::filesystem
     return bitmaps;
 }
 
-#if 0
-ref<Bitmap> Bitmap::read(Stream* stream, FileFormat format)
-{
-    return make_ref<Bitmap>(stream, format);
-}
-
-ref<Bitmap> Bitmap::read(const std::filesystem::path& path, FileFormat format)
-{
-    return make_ref<Bitmap>(path, format);
-}
-
-std::future<ref<Bitmap>> Bitmap::read_async(ref<Stream> stream, FileFormat format)
-{
-    KALI_UNUSED(stream);
-    KALI_UNUSED(format);
-    return {};
-}
-
-std::future<ref<Bitmap>> Bitmap::read_async(const std::filesystem::path& path, FileFormat format)
-{
-    auto stream = make_ref<FileStream>(path, FileStream::Mode::read);
-    return read_async(stream, format);
-}
-#endif
-
 void Bitmap::write(Stream* stream, FileFormat format, int quality) const
 {
     KALI_UNUSED(quality);
