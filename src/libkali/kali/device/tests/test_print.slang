@@ -34,11 +34,10 @@ void compute_main(uint3 tid: SV_DispatchThreadID)
         int32_t(-12345),
         int32_t(12345)
     );
-    // TODO int64_t.minValue/int64_t.maxValue not reported correctly
     print(
         "int64: min={}, max={}, -12345={}, 12345={}",
-        -9223372036854775808ll, // int64_t.minValue,
-        9223372036854775807ll,  // int64_t.maxValue,
+        int64_t.minValue,
+        int64_t.maxValue,
         int64_t(-12345),
         int64_t(12345)
     );
@@ -78,7 +77,6 @@ void compute_main(uint3 tid: SV_DispatchThreadID)
         float32_t(-123.45),
         float32_t(123.45)
     );
-    // TODO min/max value reported as -inf/inf
     print(
         "float64: min={}, max={}, -123.45={:.5}, 123.45={:.5}",
         float64_t.minValue,
@@ -88,7 +86,7 @@ void compute_main(uint3 tid: SV_DispatchThreadID)
     );
 
     // print supports vectors
-    // TODO crashes when compiling with dxc
+    // no int8 support in HLSL/D3D12
 #if !defined(__TARGET_D3D12__)
     print("int8_tX: {} {} {}", int8_t2(-4, -3), int8_t3(-2, -1, 0), int8_t4(1, 2, 3, 4));
 #endif
@@ -105,7 +103,7 @@ void compute_main(uint3 tid: SV_DispatchThreadID)
         int64_t3(-2, -1, 0) * 10000000000000ll,
         int64_t4(1, 2, 3, 4) * 10000000000000ll
     );
-    // TODO crashes when compiling with dxc
+    // no uint8 support in HLSL/D3D12
 #if !defined(__TARGET_D3D12__)
     print("uint8_tX: {} {} {}", uint8_t2(1, 2), uint8_t3(3, 4, 5), uint8_t4(6, 7, 8, 9));
 #endif
