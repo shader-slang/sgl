@@ -64,7 +64,7 @@ SharedFenceHandle Fence::get_shared_handle() const
     KALI_CHECK(m_desc.shared, "Fence must be created with shared flag.");
     gfx::InteropHandle handle;
     SLANG_CALL(m_gfx_fence->getSharedHandle(&handle));
-    return reinterpret_cast<SharedFenceHandle>(handle.handleValue);
+    return static_cast<SharedFenceHandle>(handle.handleValue);
 }
 
 NativeHandle Fence::get_native_handle() const

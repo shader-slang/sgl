@@ -2,9 +2,11 @@
 
 #pragma once
 
+#include <cstdint>
+
 namespace kali {
 
-using SharedResourceHandle = void*;
-using SharedFenceHandle = void*;
+using SharedResourceHandle = uintptr_t;
+using SharedFenceHandle = uintptr_t;
 
 } // namespace kali

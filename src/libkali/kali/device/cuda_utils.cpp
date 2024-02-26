@@ -71,16 +71,16 @@ cudaExternalMemory_t import_external_memory(const Buffer* buffer)
 #if KALI_WINDOWS
     case DeviceType::d3d12:
         desc.type = cudaExternalMemoryHandleTypeD3D12Resource;
-        desc.handle.win32.handle = shared_handle;
+        desc.handle.win32.handle = (void*)shared_handle;
         break;
     case DeviceType::vulkan:
         desc.type = cudaExternalMemoryHandleTypeOpaqueWin32;
-        desc.handle.win32.handle = shared_handle;
+        desc.handle.win32.handle = (void*)shared_handle;
         break;
 #elif KALI_LINUX
     case DeviceType::vulkan:
         desc.type = cudaExternalMemoryHandleTypeOpaqueFd;
-        desc.handle.fd = shared_handle;
+        desc.handle.fd = (int)(shared_handle);
         break;
 #endif
     default:
@@ -131,7 +131,7 @@ cudaExternalSemaphore_t import_external_semaphore(const Fence* fence)
 #elif KALI_LINUX
     case DeviceType::vulkan:
         desc.type = cudaExternalSemaphoreHandleTypeTimelineSemaphoreFd;
-        desc.handle.fd = shared_handle;
+        desc.handle.fd = (int)shared_handle;
         break;
 #endif
     default:

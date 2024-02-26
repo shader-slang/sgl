@@ -86,7 +86,7 @@ SharedResourceHandle Resource::get_shared_handle() const
 {
     gfx::InteropHandle handle = {};
     SLANG_CALL(gfx_resource()->getSharedHandle(&handle));
-    return reinterpret_cast<SharedResourceHandle>(handle.handleValue);
+    return static_cast<SharedResourceHandle>(handle.handleValue);
 }
 
 NativeHandle Resource::get_native_handle() const
