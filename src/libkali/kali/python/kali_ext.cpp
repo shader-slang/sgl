@@ -54,6 +54,11 @@ KALI_PY_DECLARE(utils_tev);
 NB_MODULE(kali_ext, m_)
 {
     KALI_UNUSED(m_);
+
+#if !KALI_DEBUG
+    nb::set_leak_warnings(false);
+#endif
+
     nb::module_ m = nb::module_::import_("kali");
     m.attr("__doc__") = "kali";
 

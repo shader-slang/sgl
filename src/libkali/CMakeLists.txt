@@ -253,8 +253,9 @@ target_link_options(kali
 
 target_compile_definitions(kali
     PUBLIC
-        # $<$<CONFIG:Release>:NDEBUG>
-        # $<$<CONFIG:Debug>:_DEBUG>
+        KALI_DEBUG=$<BOOL:$<CONFIG:Debug>>
+        # Always enable asserts unless KALI_DISABLE_ASSERTS is set.
+        KALI_ENABLE_ASSERTS=$<NOT:$<BOOL:${KALI_DISABLE_ASSERTS}>>
         # Windows.
         $<$<PLATFORM_ID:Windows>:NOMINMAX>  # do not define min/max macros
         $<$<PLATFORM_ID:Windows>:UNICODE>   # force character map to unicode
@@ -265,8 +266,6 @@ target_compile_definitions(kali
         # $<$<CXX_COMPILER_ID:MSVC>:_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING>
         # Clang.
         $<$<CXX_COMPILER_ID:Clang>:_MSC_EXTENSIONS> # enable MS extensions
-        # Always enable asserts unless KALI_DISABLE_ASSERTS is set.
-        KALI_ENABLE_ASSERTS=$<NOT:$<BOOL:${KALI_DISABLE_ASSERTS}>>
     PRIVATE
         KALI_DLL
         $<$<PLATFORM_ID:Windows>:IMGUI_API=__declspec\(dllexport\)>
