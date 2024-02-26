@@ -250,11 +250,12 @@ SlangModule::SlangModule(ref<SlangSession> session, SlangModuleDesc desc)
         for (const auto& arg : m_session->desc().compiler_options.compiler_args)
             args.push_back(arg.c_str());
 #if KALI_HAS_NVAPI
+        std::string nvapi_path;
         if (m_session->device()->type() == DeviceType::d3d12) {
             // If NVAPI is available, we need to inform slang/dxc where to find it.
-            std::string nvapi_include = "-I" + (platform::runtime_directory() / "shaders/nvapi").string();
+            nvapi_path = "-I" + (platform::runtime_directory() / "shaders/nvapi").string();
             args.push_back("-Xdxc");
-            args.push_back(nvapi_include.c_str());
+            args.push_back(nvapi_path.c_str());
         }
 #endif
         if (!args.empty())
