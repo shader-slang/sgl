@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 #ifndef PRINT_ENABLED
 #define PRINT_ENABLED 0
 #endif

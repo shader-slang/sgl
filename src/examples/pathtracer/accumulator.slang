@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 
 struct Accumulator {
     Texture2D<float4> input;

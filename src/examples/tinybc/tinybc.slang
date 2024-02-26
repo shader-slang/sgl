@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import bctypes;
 
 static bool USE_ADAM = CONFIG_USE_ADAM;

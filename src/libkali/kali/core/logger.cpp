@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 #include "logger.h"
 #include "kali/core/macros.h"
 #include "kali/core/error.h"

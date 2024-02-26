@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 #ifndef KALI_ENABLE_PRINT
 #define KALI_ENABLE_PRINT 0
 #endif

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 /*
 This is a modified version of the struct.cpp file from Mitsuba 3.0 found at
 https://github.com/mitsuba-renderer/mitsuba3/blob/master/src/core/struct.cpp

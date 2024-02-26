@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 
 RaytracingAccelerationStructure tlas;
 RWTexture2D<float4> render_texture;

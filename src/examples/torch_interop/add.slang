@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 StructuredBuffer<float> a;
 StructuredBuffer<float> b;
 RWStructuredBuffer<float> c;

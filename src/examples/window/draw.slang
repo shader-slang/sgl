@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 RWTexture2D g_output;
 uniform uint g_frame;
 uniform float2 g_mouse_pos;

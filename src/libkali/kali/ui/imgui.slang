@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 SamplerState sampler;
 Texture2D texture;
 uniform float2 scale;

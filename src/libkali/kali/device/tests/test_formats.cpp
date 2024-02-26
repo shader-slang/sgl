@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 #include "testing.h"
 #include "kali/device/formats.h"
 #include "kali/device/native_formats.h"

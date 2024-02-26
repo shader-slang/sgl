@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 // This struct holds the BC interpolation weights for a 4x4 texel tile
 struct BCWeights : IDifferentiable {
     float w[16];

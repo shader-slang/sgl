@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 #include "kali/core/macros.h"
 
 #define KALI_VERSION_MAJOR 0

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 
 float3 aces_film(float3 x)
 {

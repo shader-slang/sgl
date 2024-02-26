@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 struct Processor {
     StructuredBuffer<uint> a;
     StructuredBuffer<uint> b;

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 #include "kali/core/memory_mapped_file_stream.h"
 
 #include "kali/core/error.h"

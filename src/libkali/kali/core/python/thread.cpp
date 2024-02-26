@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 #include "nanobind.h"
 
 #include "kali/core/thread.h"

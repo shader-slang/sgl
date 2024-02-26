@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 RWStructuredBuffer<uint> result;
 
 struct S1 {

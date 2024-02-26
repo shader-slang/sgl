@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 #include "sampler.h"
 
 #include "kali/device/device.h"

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 #include "testing.h"
 #include "kali/math/quaternion.h"
 #include "kali/math/matrix.h"

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 RWTexture2D<float4> g_texture;
 uniform uint g_checker_size;
 

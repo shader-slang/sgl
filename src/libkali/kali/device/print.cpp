@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 #include "print.h"
 
 #include "kali/core/format.h"

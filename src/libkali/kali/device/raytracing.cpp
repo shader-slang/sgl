@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 #include "raytracing.h"
 
 #include "kali/device/device.h"

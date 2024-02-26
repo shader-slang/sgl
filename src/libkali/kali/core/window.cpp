@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 #include "window.h"
 #include "kali/core/config.h"
 #include "kali/core/error.h"

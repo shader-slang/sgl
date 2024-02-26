@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 static const float PI = 3.14159265358979323846;
 static const float TWO_PI = 6.28318530717958647692;
 static const float INV_PI = 0.31830988618379067154;

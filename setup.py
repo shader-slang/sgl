@@ -113,7 +113,7 @@ setup(
     author_email="skallweit@nvidia.com",
     description="A research rendering framework",
     url="https://github.com/westlicht/kali",
-    license="MIT",
+    license="Apache-2.0",
     long_description=long_description,
     long_description_content_type="text/markdown",
     ext_modules=[CMakeExtension("kali")],
