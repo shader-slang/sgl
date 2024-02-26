@@ -113,7 +113,7 @@
         },
         {
             "name": "linux-clang-base",
-            "description": "Base Linux/Clang configuration.",
+            "description": "Base Linux/clang configuration.",
             "hidden": true,
             "inherits": "linux-base",
             "generator": "Ninja Multi-Config",
@@ -125,7 +125,7 @@
         },
         {
             "name": "linux-clang",
-            "displayName": "Linux/Clang",
+            "displayName": "Linux/clang",
             "inherits": [
                 "linux-clang-base"
             ]
@@ -154,15 +154,11 @@
             "description": "Base macOS configuration.",
             "hidden": true,
             "inherits": "base",
-            "cacheVariables": {
-                "VCPKG_TARGET_TRIPLET": "arm64-osx",
-                "CMAKE_APPLE_SILICON_PROCESSOR": "arm64"
-            },
             "cmakeExecutable": "${sourceDir}/tools/host/cmake/CMake.app/Contents/bin/cmake"
         },
         {
             "name": "macos-clang-base",
-            "description": "Base macOS/Clang configuration.",
+            "description": "Base macOS/clang configuration.",
             "hidden": true,
             "inherits": "macos-base",
             "generator": "Ninja Multi-Config",
@@ -173,11 +169,22 @@
             }
         },
         {
-            "name": "macos-clang",
-            "displayName": "macOS/Clang",
-            "inherits": [
-                "macos-clang-base"
-            ]
+            "name": "macos-x64-clang",
+            "displayName": "macOS/x64/clang",
+            "inherits": "macos-clang-base",
+            "cacheVariables": {
+                "VCPKG_TARGET_TRIPLET": "x64-osx",
+                "CMAKE_APPLE_SILICON_PROCESSOR": "x86_64"
+            }
+        },
+        {
+            "name": "macos-arm64-clang",
+            "displayName": "macOS/arm64/clang",
+            "inherits": "macos-clang-base",
+            "cacheVariables": {
+                "VCPKG_TARGET_TRIPLET": "arm64-osx",
+                "CMAKE_APPLE_SILICON_PROCESSOR": "arm64"
+            }
         }
     ],
     "buildPresets": [
@@ -230,15 +237,27 @@
             "configuration": "Debug"
         },
         {
-            "name": "macos-clang-release",
+            "name": "macos-x64-clang-release",
             "displayName": "Release",
-            "configurePreset": "macos-clang",
+            "configurePreset": "macos-x64-clang",
             "configuration": "Release"
         },
         {
-            "name": "macos-clang-debug",
+            "name": "macos-x64-clang-debug",
             "displayName": "Debug",
-            "configurePreset": "macos-clang",
+            "configurePreset": "macos-x64-clang",
+            "configuration": "Debug"
+        },
+        {
+            "name": "macos-arm64-clang-release",
+            "displayName": "Release",
+            "configurePreset": "macos-arm64-clang",
+            "configuration": "Release"
+        },
+        {
+            "name": "macos-arm64-clang-debug",
+            "displayName": "Debug",
+            "configurePreset": "macos-arm64-clang",
             "configuration": "Debug"
         }
     ],
