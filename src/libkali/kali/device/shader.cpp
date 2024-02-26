@@ -152,10 +152,7 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
     session_desc.targets = &target_desc;
     session_desc.targetCount = 1;
 
-    // We always use row-major matrix layout in Falcor so by default that's what we pass to Slang
-    // to allow it to compute correct reflection information. Slang then invokes the downstream compiler.
-    // Column major option can be useful when compiling external shader sources that don't depend
-    // on anything Falcor.
+    // Default to row-major matrix layout.
     bool use_column_major = is_set(compiler_flags, SlangCompilerFlags::matrix_layout_column_major);
     session_desc.defaultMatrixLayoutMode
         = use_column_major ? SLANG_MATRIX_LAYOUT_COLUMN_MAJOR : SLANG_MATRIX_LAYOUT_ROW_MAJOR;
