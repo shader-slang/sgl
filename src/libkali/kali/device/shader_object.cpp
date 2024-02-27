@@ -150,7 +150,10 @@ void TransientShaderObject::set_resource(const ShaderOffset& offset, const ref<R
             m_command_buffer->resource_barrier(resource_view->resource(), ResourceState::shader_resource);
             break;
         case ResourceViewType::unordered_access:
-            m_command_buffer->resource_barrier(resource_view->resource(), ResourceState::unordered_access);
+            if (resource_view->resource()->state_tracker().global_state() == ResourceState::unordered_access)
+                m_command_buffer->uav_barrier(resource_view->resource());
+            else
+                m_command_buffer->resource_barrier(resource_view->resource(), ResourceState::unordered_access);
             break;
         }
     }
@@ -232,7 +235,10 @@ void MutableShaderObject::set_resource_states(CommandBuffer* command_buffer)
             command_buffer->resource_barrier(resource_view->resource(), ResourceState::shader_resource);
             break;
         case ResourceViewType::unordered_access:
-            command_buffer->resource_barrier(resource_view->resource(), ResourceState::unordered_access);
+            if (resource_view->resource()->state_tracker().global_state() == ResourceState::unordered_access)
+                command_buffer->uav_barrier(resource_view->resource());
+            else
+                command_buffer->resource_barrier(resource_view->resource(), ResourceState::unordered_access);
             break;
         }
     }
