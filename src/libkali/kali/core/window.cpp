@@ -402,7 +402,7 @@ WindowHandle Window::window_handle() const
     handle.xdisplay = glfwGetX11Display();
     handle.xwindow = glfwGetX11Window(m_window);
 #elif KALI_MACOS
-    handle.nsview = glfwGetCocoaWindow(m_window);
+    handle.nswindow = glfwGetCocoaWindow(m_window);
 #endif
     return handle;
 }

@@ -32,7 +32,7 @@ struct WindowHandle {
 using SharedLibraryHandle = void*;
 #elif KALI_MACOS
 struct WindowHandle {
-    void* nsview;
+    void* nswindow;
 };
 using SharedLibraryHandle = void*;
 #endif
