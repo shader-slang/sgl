@@ -415,21 +415,20 @@ if(KALI_BUILD_PYTHON)
     )
 
     # Generate python stub files.
-    if(KALI_WINDOWS)
-        add_custom_command(
-            TARGET kali_ext POST_BUILD
-            COMMAND ${KALI_OUTPUT_DIRECTORY}/setpath.bat & ${Python_EXECUTABLE} -m nanobind_stubgen --out ${KALI_OUTPUT_DIRECTORY}/python kali
-            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tools/nanobind-stubgen
-            )
-    endif()
-    if(KALI_LINUX OR KALI_MACOS)
-        add_custom_command(
-            TARGET kali_ext POST_BUILD
-            WORKING_DIRECTORY ${KALI_OUTPUT_DIRECTORY}
-            COMMAND /bin/bash -c \"source ${KALI_OUTPUT_DIRECTORY}/setpath.sh && ${Python_EXECUTABLE} -m nanobind_stubgen --out ${KALI_OUTPUT_DIRECTORY}/python kali\"
-            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tools/nanobind-stubgen
+    nanobind_add_stub(
+        kali_stub
+        MODULE kali
+        OUTPUT ${KALI_OUTPUT_DIRECTORY}/python/kali/__init__.pyi
+        DEPENDS kali_ext
+    )
+    foreach(submodule IN ITEMS platform thread math ui utils)
+        nanobind_add_stub(
+            kali_${submodule}_stub
+            MODULE kali.${submodule}
+            OUTPUT ${KALI_OUTPUT_DIRECTORY}/python/kali/${submodule}.pyi
+            DEPENDS kali_ext
         )
-    endif()
+    endforeach()
 
     if(KALI_MASTER_PROJECT)
         set(MKDOC_ARGS "")
