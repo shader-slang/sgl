@@ -418,6 +418,7 @@ if(KALI_BUILD_PYTHON)
     nanobind_add_stub(
         kali_stub
         MODULE kali
+        PYTHON_PATH ${KALI_OUTPUT_DIRECTORY}/python
         OUTPUT ${KALI_OUTPUT_DIRECTORY}/python/kali/__init__.pyi
         DEPENDS kali_ext
     )
@@ -425,6 +426,7 @@ if(KALI_BUILD_PYTHON)
         nanobind_add_stub(
             kali_${submodule}_stub
             MODULE kali.${submodule}
+            PYTHON_PATH ${KALI_OUTPUT_DIRECTORY}/python
             OUTPUT ${KALI_OUTPUT_DIRECTORY}/python/kali/${submodule}.pyi
             DEPENDS kali_ext
         )
