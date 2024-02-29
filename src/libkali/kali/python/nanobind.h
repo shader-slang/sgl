@@ -275,3 +275,4 @@ inline constexpr uint64_t const_hash(std::string_view str)
 
 
 #define D(...) DOC(kali, __VA_ARGS__)
+#define D_NA(...) "N/A"
