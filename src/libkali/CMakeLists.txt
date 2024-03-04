@@ -12,6 +12,8 @@ target_sources(kali PRIVATE
 
     kali/core/bitmap.cpp
     kali/core/bitmap.h
+    kali/core/crypto.cpp
+    kali/core/crypto.h
     kali/core/enum.h
     kali/core/error.cpp
     kali/core/error.h
@@ -360,6 +362,7 @@ if(KALI_BUILD_PYTHON)
     nanobind_add_module(kali_ext NB_STATIC LTO
         kali/python/kali_ext.cpp
         kali/core/python/bitmap.cpp
+        kali/core/python/crypto.cpp
         kali/core/python/input.cpp
         kali/core/python/logger.cpp
         kali/core/python/object.cpp

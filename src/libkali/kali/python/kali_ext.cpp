@@ -10,6 +10,7 @@
 #include <iostream>
 
 KALI_PY_DECLARE(core_bitmap);
+KALI_PY_DECLARE(core_crypto);
 KALI_PY_DECLARE(core_input);
 KALI_PY_DECLARE(core_logger);
 KALI_PY_DECLARE(core_object);
@@ -84,6 +85,7 @@ NB_MODULE(kali_ext, m_)
     KALI_PY_IMPORT(core_window);
     KALI_PY_IMPORT(core_struct);
     KALI_PY_IMPORT(core_bitmap);
+    KALI_PY_IMPORT(core_crypto);
 
     m.def_submodule("math", "Math module");
     KALI_PY_IMPORT(math_scalar);
