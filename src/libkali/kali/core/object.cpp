@@ -130,7 +130,12 @@ void Object::report_refs() const
 #if KALI_ENABLE_REF_TRACKING
     std::lock_guard<std::mutex> lock(m_ref_trackers_mutex);
     for (const auto& it : m_ref_trackers) {
-        fmt::println("ref={} count={}\n{}\n", it.first, it.second.count, platform::format_stacktrace(it.second.stack_trace));
+        fmt::println(
+            "ref={} count={}\n{}\n",
+            it.first,
+            it.second.count,
+            platform::format_stacktrace(it.second.stack_trace)
+        );
     }
 #endif
 }

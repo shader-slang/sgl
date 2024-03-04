@@ -20,13 +20,13 @@
 
 namespace kali {
 KALI_DICT_TO_DESC_BEGIN(DeviceDesc)
-KALI_DICT_TO_DESC_FIELD(type, DeviceType);
-KALI_DICT_TO_DESC_FIELD(enable_debug_layers, bool);
-KALI_DICT_TO_DESC_FIELD(enable_cuda_interop, bool);
-KALI_DICT_TO_DESC_FIELD(enable_print, bool);
-KALI_DICT_TO_DESC_FIELD(adapter_luid, AdapterLUID);
-KALI_DICT_TO_DESC_FIELD(default_shader_model, ShaderModel);
-KALI_DICT_TO_DESC_FIELD(shader_cache_path, std::filesystem::path);
+KALI_DICT_TO_DESC_FIELD(type, DeviceType)
+KALI_DICT_TO_DESC_FIELD(enable_debug_layers, bool)
+KALI_DICT_TO_DESC_FIELD(enable_cuda_interop, bool)
+KALI_DICT_TO_DESC_FIELD(enable_print, bool)
+KALI_DICT_TO_DESC_FIELD(adapter_luid, AdapterLUID)
+KALI_DICT_TO_DESC_FIELD(default_shader_model, ShaderModel)
+KALI_DICT_TO_DESC_FIELD(shader_cache_path, std::filesystem::path)
 KALI_DICT_TO_DESC_END()
 } // namespace kali
 
