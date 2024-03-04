@@ -112,6 +112,7 @@ target_sources(kali PRIVATE
     kali/device/shader.cpp
     kali/device/shader.h
     kali/device/shared_handle.h
+    kali/device/slang_utils.h
     kali/device/swapchain.cpp
     kali/device/swapchain.h
     kali/device/types.h
