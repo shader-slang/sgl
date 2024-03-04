@@ -7,6 +7,7 @@
 #include "kali/device/fence.h"
 #include "kali/device/resource.h"
 #include "kali/device/pipeline.h"
+#include "kali/device/kernel.h"
 #include "kali/device/raytracing.h"
 #include "kali/device/query.h"
 #include "kali/device/input_layout.h"
@@ -679,6 +680,15 @@ KALI_PY_EXPORT(device_device)
         "max_attribute_size"_a = 8,
         "flags"_a = RayTracingPipelineFlags::none,
         D(Device, create_ray_tracing_pipeline)
+    );
+
+    device.def("create_compute_kernel", &Device::create_compute_kernel, "desc"_a, D_NA(Device, create_compute_kernel));
+    device.def(
+        "create_compute_kernel",
+        [](Device* self, ref<ShaderProgram> program)
+        { return self->create_compute_kernel({.program = std::move(program)}); },
+        "program"_a,
+        D_NA(Device, create_compute_kernel)
     );
 
     device.def("create_memory_heap", &Device::create_memory_heap, "desc"_a, D(Device, create_memory_heap));

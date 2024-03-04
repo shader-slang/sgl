@@ -340,6 +340,8 @@ public:
 
     ref<RayTracingPipeline> create_ray_tracing_pipeline(RayTracingPipelineDesc desc);
 
+    ref<ComputeKernel> create_compute_kernel(ComputeKernelDesc desc);
+
     ref<CommandBuffer> create_command_buffer();
 
     ref<MemoryHeap> create_memory_heap(MemoryHeapDesc desc);

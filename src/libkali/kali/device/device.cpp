@@ -12,6 +12,7 @@
 #include "kali/device/shader.h"
 #include "kali/device/shader_object.h"
 #include "kali/device/pipeline.h"
+#include "kali/device/kernel.h"
 #include "kali/device/raytracing.h"
 #include "kali/device/memory_heap.h"
 #include "kali/device/command.h"
@@ -636,6 +637,11 @@ ref<GraphicsPipeline> Device::create_graphics_pipeline(GraphicsPipelineDesc desc
 ref<RayTracingPipeline> Device::create_ray_tracing_pipeline(RayTracingPipelineDesc desc)
 {
     return make_ref<RayTracingPipeline>(ref<Device>(this), std::move(desc));
+}
+
+ref<ComputeKernel> Device::create_compute_kernel(ComputeKernelDesc desc)
+{
+    return make_ref<ComputeKernel>(ref(this), std::move(desc));
 }
 
 ref<CommandBuffer> Device::create_command_buffer()

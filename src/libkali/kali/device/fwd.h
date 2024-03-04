@@ -72,6 +72,7 @@ class EntryPointLayout;
 // kernel.h
 
 class Kernel;
+struct ComputeKernelDesc;
 class ComputeKernel;
 
 // pipeline.h
