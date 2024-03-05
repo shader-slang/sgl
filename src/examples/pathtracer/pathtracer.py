@@ -789,6 +789,8 @@ class App:
 
             frame += 1
 
+        self.device.wait()
+
 
 app = App()
 app.main_loop()

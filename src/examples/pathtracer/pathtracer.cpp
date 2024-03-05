@@ -880,6 +880,8 @@ struct App {
 
             frame++;
         }
+
+        device->wait();
     }
 };
 
@@ -887,8 +889,10 @@ int main()
 {
     kali::static_init();
 
-    App app;
-    app.main_loop();
+    {
+        App app;
+        app.main_loop();
+    }
 
     kali::static_shutdown();
 }
