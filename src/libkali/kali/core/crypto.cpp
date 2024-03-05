@@ -53,7 +53,7 @@ SHA1& SHA1::update(const void* data, size_t len)
 
 SHA1::Digest SHA1::digest() const
 {
-    SHA1 copy = *this;
+    SHA1 copy{*this};
     return copy.finalize();
 }
 
@@ -104,7 +104,7 @@ void SHA1::process_block(const uint8_t* ptr)
 {
     auto rol32 = [](uint32_t x, uint32_t n) { return (x << n) | (x >> (32 - n)); };
 
-    auto makeWord = [](const uint8_t* p)
+    auto make_word = [](const uint8_t* p)
     { return ((uint32_t)p[0] << 24) | ((uint32_t)p[1] << 16) | ((uint32_t)p[2] << 8) | (uint32_t)p[3]; };
 
     const uint32_t c0 = 0x5a827999;
@@ -121,10 +121,10 @@ void SHA1::process_block(const uint8_t* ptr)
     uint32_t w[16];
 
     for (size_t i = 0; i < 16; i++) {
-        w[i] = makeWord(ptr + i * 4);
+        w[i] = make_word(ptr + i * 4);
     }
 
-// clang-format off
+    // clang-format off
 #define SHA1_LOAD(i) w[i&15] = rol32(w[(i + 13) & 15] ^ w[(i + 8) & 15] ^ w[(i + 2) & 15] ^ w[i & 15], 1);
 #define SHA1_ROUND_0(v,u,x,y,z,i)              z += ((u & (x ^ y)) ^ y) + w[i & 15] + c0 + rol32(v, 5); u = rol32(u, 30);
 #define SHA1_ROUND_1(v,u,x,y,z,i) SHA1_LOAD(i) z += ((u & (x ^ y)) ^ y) + w[i & 15] + c0 + rol32(v, 5); u = rol32(u, 30);
