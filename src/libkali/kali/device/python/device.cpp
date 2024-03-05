@@ -52,7 +52,7 @@ KALI_PY_EXPORT(device_device)
         .def_rw("enable_cuda_interop", &DeviceDesc::enable_cuda_interop, D(DeviceDesc, enable_cuda_interop))
         .def_rw("enable_print", &DeviceDesc::enable_print, D(DeviceDesc, enable_print))
         .def_rw("adapter_luid", &DeviceDesc::adapter_luid, D(DeviceDesc, adapter_luid))
-        .def_rw("compiler_options", &DeviceDesc::compiler_options, D_NA(DeviceDesc, compiler_options))
+        .def_rw("compiler_options", &DeviceDesc::compiler_options, D(DeviceDesc, compiler_options))
         .def_rw("shader_cache_path", &DeviceDesc::shader_cache_path, D(DeviceDesc, shader_cache_path));
     nb::implicitly_convertible<nb::dict, DeviceDesc>();
 
@@ -172,7 +172,7 @@ KALI_PY_EXPORT(device_device)
     device.def_prop_ro("info", &Device::info, D(Device, info));
     device.def_prop_ro("supported_shader_model", &Device::supported_shader_model, D(Device, supported_shader_model));
     device.def_prop_ro("features", &Device::features, D(Device, features));
-    device.def_prop_ro("slang_session", &Device::slang_session, D_NA(Device, slang_session));
+    device.def_prop_ro("slang_session", &Device::slang_session, D(Device, slang_session));
     device.def(
         "create_swapchain",
         [](Device* self, const SwapchainDesc& desc, ref<Window> window)
@@ -582,7 +582,7 @@ KALI_PY_EXPORT(device_device)
         "modules"_a,
         "entry_points"_a,
         "link_options"_a.none() = nb::none(),
-        D_NA(Device, link_program)
+        D(Device, link_program)
     );
     device.def(
         "load_program",
@@ -591,7 +591,7 @@ KALI_PY_EXPORT(device_device)
         "entry_point_names"_a,
         "additional_source"_a.none() = nb::none(),
         "link_options"_a.none() = nb::none(),
-        D_NA(Device, load_program)
+        D(Device, load_program)
     );
 
     device.def(
@@ -694,13 +694,13 @@ KALI_PY_EXPORT(device_device)
         D(Device, create_ray_tracing_pipeline)
     );
 
-    device.def("create_compute_kernel", &Device::create_compute_kernel, "desc"_a, D_NA(Device, create_compute_kernel));
+    device.def("create_compute_kernel", &Device::create_compute_kernel, "desc"_a, D(Device, create_compute_kernel));
     device.def(
         "create_compute_kernel",
         [](Device* self, ref<ShaderProgram> program)
         { return self->create_compute_kernel({.program = std::move(program)}); },
         "program"_a,
-        D_NA(Device, create_compute_kernel)
+        D(Device, create_compute_kernel)
     );
 
     device.def("create_memory_heap", &Device::create_memory_heap, "desc"_a, D(Device, create_memory_heap));

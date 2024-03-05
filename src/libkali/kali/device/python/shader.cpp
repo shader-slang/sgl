@@ -146,7 +146,7 @@ KALI_PY_EXPORT(device_shader)
             "modules"_a,
             "entry_points"_a,
             "link_options"_a.none() = nb::none(),
-            D_NA(SlangSession, link_program)
+            D(SlangSession, link_program)
         )
         .def(
             "load_program",
@@ -155,14 +155,14 @@ KALI_PY_EXPORT(device_shader)
             "entry_point_names"_a,
             "additional_source"_a.none() = nb::none(),
             "link_options"_a.none() = nb::none(),
-            D_NA(SlangSession, load_program)
+            D(SlangSession, load_program)
         );
 
     nb::class_<SlangModule, Object>(m, "SlangModule", D(SlangModule))
-        .def_prop_ro("name", &SlangModule::name, D_NA(SlangModule, name))
-        .def_prop_ro("path", &SlangModule::path, D_NA(SlangModule, path))
-        .def_prop_ro("uid", &SlangModule::uid, D_NA(SlangModule, uid))
-        .def_prop_ro("layout", &SlangModule::layout, D_NA(SlangModule, layout))
+        .def_prop_ro("name", &SlangModule::name, D(SlangModule, name))
+        .def_prop_ro("path", &SlangModule::path, D(SlangModule, path))
+        .def_prop_ro("uid", &SlangModule::uid, D(SlangModule, uid))
+        .def_prop_ro("layout", &SlangModule::layout, D(SlangModule, layout))
         .def_prop_ro("entry_points", &SlangModule::entry_points, D(SlangModule, entry_points))
         .def("entry_point", &SlangModule::entry_point, "name"_a, D(SlangModule, entry_point));
 

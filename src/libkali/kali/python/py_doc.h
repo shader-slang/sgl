@@ -500,7 +500,7 @@ static const char *__doc_kali_Bitmap_bytes_per_pixel = R"doc(The number of bytes
 
 static const char *__doc_kali_Bitmap_channel_count = R"doc(The number of channels in the bitmap.)doc";
 
-static const char *__doc_kali_Bitmap_channel_names = R"doc()doc";
+static const char *__doc_kali_Bitmap_channel_names = R"doc(The names of the channels in the bitmap.)doc";
 
 static const char *__doc_kali_Bitmap_check_required_format = R"doc()doc";
 
@@ -953,25 +953,25 @@ The returned ``RenderCommandEncoder`` is used to bind graphics
 pipelines and issue dispatches. The encoding is ended when the
 ``RenderCommandEncoder`` is destroyed.)doc";
 
-static const char *__doc_kali_CommandBuffer_end_current_encoder = R"doc()doc";
+static const char *__doc_kali_CommandBuffer_end_current_gfx_encoder = R"doc()doc";
 
 static const char *__doc_kali_CommandBuffer_end_debug_event = R"doc(End a debug event.)doc";
 
-static const char *__doc_kali_CommandBuffer_end_pass = R"doc(Called by pass encoders when they are destroyed.)doc";
+static const char *__doc_kali_CommandBuffer_end_encoder = R"doc(Called by command encoders when they are destroyed.)doc";
 
 static const char *__doc_kali_CommandBuffer_get_gfx_resource_command_encoder = R"doc()doc";
 
 static const char *__doc_kali_CommandBuffer_gfx_command_buffer = R"doc()doc";
 
-static const char *__doc_kali_CommandBuffer_m_active_encoder = R"doc()doc";
+static const char *__doc_kali_CommandBuffer_m_active_gfx_encoder = R"doc()doc";
+
+static const char *__doc_kali_CommandBuffer_m_encoder_open = R"doc()doc";
 
 static const char *__doc_kali_CommandBuffer_m_gfx_command_buffer = R"doc()doc";
 
 static const char *__doc_kali_CommandBuffer_m_gfx_command_encoder = R"doc()doc";
 
 static const char *__doc_kali_CommandBuffer_m_open = R"doc()doc";
-
-static const char *__doc_kali_CommandBuffer_m_pass_open = R"doc()doc";
 
 static const char *__doc_kali_CommandBuffer_resolve_query =
 R"doc(Resolve a list of queries and write the results to a buffer.
@@ -1189,6 +1189,10 @@ static const char *__doc_kali_ComputeCommandEncoder_operator_assign_2 = R"doc()d
 
 static const char *__doc_kali_ComputeKernel = R"doc()doc";
 
+static const char *__doc_kali_ComputeKernelDesc = R"doc()doc";
+
+static const char *__doc_kali_ComputeKernelDesc_program = R"doc()doc";
+
 static const char *__doc_kali_ComputeKernel_ComputeKernel = R"doc()doc";
 
 static const char *__doc_kali_ComputeKernel_class_name = R"doc()doc";
@@ -1203,7 +1207,7 @@ static const char *__doc_kali_ComputeKernel_m_thread_group_size = R"doc()doc";
 
 static const char *__doc_kali_ComputeKernel_pipeline = R"doc()doc";
 
-static const char *__doc_kali_ComputePipeline = R"doc()doc";
+static const char *__doc_kali_ComputePipeline = R"doc(Compute pipeline.)doc";
 
 static const char *__doc_kali_ComputePipelineDesc = R"doc()doc";
 
@@ -1211,9 +1215,13 @@ static const char *__doc_kali_ComputePipelineDesc_program = R"doc()doc";
 
 static const char *__doc_kali_ComputePipeline_ComputePipeline = R"doc()doc";
 
+static const char *__doc_kali_ComputePipeline_m_program = R"doc(Shared reference to shader program to keep reflection data alive.)doc";
+
 static const char *__doc_kali_ComputePipeline_m_thread_group_size = R"doc()doc";
 
-static const char *__doc_kali_ComputePipeline_thread_group_size = R"doc()doc";
+static const char *__doc_kali_ComputePipeline_thread_group_size =
+R"doc(Thread group size. Used to determine the number of thread groups to
+dispatch.)doc";
 
 static const char *__doc_kali_ComputePipeline_to_string = R"doc()doc";
 
@@ -1281,49 +1289,6 @@ static const char *__doc_kali_DebugPrinter_m_hashed_strings = R"doc()doc";
 
 static const char *__doc_kali_DebugPrinter_m_readback_buffer = R"doc()doc";
 
-static const char *__doc_kali_DefineList = R"doc()doc";
-
-static const char *__doc_kali_DefineList_DefineList = R"doc()doc";
-
-static const char *__doc_kali_DefineList_DefineList_2 = R"doc()doc";
-
-static const char *__doc_kali_DefineList_DefineList_3 = R"doc()doc";
-
-static const char *__doc_kali_DefineList_DefineList_4 = R"doc()doc";
-
-static const char *__doc_kali_DefineList_add =
-R"doc(Adds a macro definition. If the macro already exists, it will be
-replaced.
-
-Parameter ``name``:
-    The name of macro.
-
-Parameter ``value``:
-    Optional. The value of the macro.
-
-Returns:
-    The updated list of macro definitions.)doc";
-
-static const char *__doc_kali_DefineList_add_2 = R"doc(Add a define list to the current list)doc";
-
-static const char *__doc_kali_DefineList_has = R"doc()doc";
-
-static const char *__doc_kali_DefineList_operator_assign = R"doc()doc";
-
-static const char *__doc_kali_DefineList_operator_assign_2 = R"doc()doc";
-
-static const char *__doc_kali_DefineList_remove =
-R"doc(Removes a macro definition. If the macro doesn't exist, the call will
-be silently ignored.
-
-Parameter ``name``:
-    The name of macro.
-
-Returns:
-    The updated list of macro definitions.)doc";
-
-static const char *__doc_kali_DefineList_remove_2 = R"doc(Remove a define list from the current list)doc";
-
 static const char *__doc_kali_DepthStencilDesc = R"doc()doc";
 
 static const char *__doc_kali_DepthStencilDesc_back_face = R"doc()doc";
@@ -1360,7 +1325,7 @@ static const char *__doc_kali_DeviceDesc = R"doc()doc";
 
 static const char *__doc_kali_DeviceDesc_adapter_luid = R"doc(Adapter LUID to select adapeter on which the device will be created.)doc";
 
-static const char *__doc_kali_DeviceDesc_default_shader_model = R"doc(Default shader model to use when compiling shaders.)doc";
+static const char *__doc_kali_DeviceDesc_compiler_options = R"doc(Compiler options (used for default slang session).)doc";
 
 static const char *__doc_kali_DeviceDesc_enable_cuda_interop = R"doc(Enable CUDA interoperability.)doc";
 
@@ -1483,6 +1448,8 @@ static const char *__doc_kali_Device_create_acceleration_structure = R"doc()doc"
 static const char *__doc_kali_Device_create_buffer = R"doc()doc";
 
 static const char *__doc_kali_Device_create_command_buffer = R"doc()doc";
+
+static const char *__doc_kali_Device_create_compute_kernel = R"doc()doc";
 
 static const char *__doc_kali_Device_create_compute_pipeline = R"doc()doc";
 
@@ -1636,7 +1603,7 @@ static const char *__doc_kali_Device_create_texture =
 R"doc(Create a new texture.
 
 Parameter ``type``:
-    Resource type (optional. Type is inferred from width, height,
+    Resource type (optional). Type is inferred from width, height,
     depth if not specified.
 
 Parameter ``format``:
@@ -1683,8 +1650,6 @@ static const char *__doc_kali_Device_create_texture_from_resource = R"doc()doc";
 static const char *__doc_kali_Device_create_typed_buffer = R"doc()doc";
 
 static const char *__doc_kali_Device_debug_printer = R"doc()doc";
-
-static const char *__doc_kali_Device_default_shader_model = R"doc(The default shader model used when compiling shaders.)doc";
 
 static const char *__doc_kali_Device_deferred_release = R"doc()doc";
 
@@ -1736,41 +1701,17 @@ static const char *__doc_kali_Device_graphics_queue = R"doc()doc";
 
 static const char *__doc_kali_Device_info = R"doc()doc";
 
-static const char *__doc_kali_Device_load_module =
-R"doc(Helper function for loading a slang module from a file.
+static const char *__doc_kali_Device_link_program = R"doc()doc";
 
-Parameter ``path``:
-    Path to the shader file.
+static const char *__doc_kali_Device_load_module = R"doc()doc";
 
-Parameter ``defines``:
-    Preprocessor defines.
+static const char *__doc_kali_Device_load_module_from_source = R"doc()doc";
 
-Parameter ``compiler_options``:
-    Compiler options (see SlangCompilerOptions for details).
-
-Returns:
-    New slang module object.)doc";
-
-static const char *__doc_kali_Device_load_module_from_source =
-R"doc(Helper function for loading a slang module from a string.
-
-Parameter ``source``:
-    Shader source.
-
-Parameter ``defines``:
-    Preprocessor defines.
-
-Parameter ``compiler_options``:
-    Compiler options (see SlangCompilerOptions for details).
-
-Returns:
-    New slang module object.)doc";
+static const char *__doc_kali_Device_load_program = R"doc()doc";
 
 static const char *__doc_kali_Device_m_current_frame_index = R"doc()doc";
 
 static const char *__doc_kali_Device_m_debug_printer = R"doc()doc";
-
-static const char *__doc_kali_Device_m_default_shader_model = R"doc()doc";
 
 static const char *__doc_kali_Device_m_deferred_release_queue = R"doc()doc";
 
@@ -1792,6 +1733,8 @@ static const char *__doc_kali_Device_m_info = R"doc()doc";
 
 static const char *__doc_kali_Device_m_read_back_heap = R"doc()doc";
 
+static const char *__doc_kali_Device_m_slang_session = R"doc()doc";
+
 static const char *__doc_kali_Device_m_supported_shader_model = R"doc()doc";
 
 static const char *__doc_kali_Device_m_upload_heap = R"doc()doc";
@@ -1807,6 +1750,8 @@ static const char *__doc_kali_Device_read_texture = R"doc()doc";
 static const char *__doc_kali_Device_report_live_objects =
 R"doc(Report live objects in the slang/gfx layer. This is useful for
 checking clean shutdown with all resources released properly.)doc";
+
+static const char *__doc_kali_Device_slang_session = R"doc(Default slang session.)doc";
 
 static const char *__doc_kali_Device_supported_shader_model = R"doc(The highest shader model supported by the device.)doc";
 
@@ -2402,7 +2347,7 @@ static const char *__doc_kali_GamepadState_right_y = R"doc(Y-axis of the right a
 
 static const char *__doc_kali_GamepadState_to_string = R"doc()doc";
 
-static const char *__doc_kali_GraphicsPipeline = R"doc()doc";
+static const char *__doc_kali_GraphicsPipeline = R"doc(Graphics pipeline.)doc";
 
 static const char *__doc_kali_GraphicsPipelineDesc = R"doc()doc";
 
@@ -2421,6 +2366,8 @@ static const char *__doc_kali_GraphicsPipelineDesc_program = R"doc()doc";
 static const char *__doc_kali_GraphicsPipelineDesc_rasterizer = R"doc()doc";
 
 static const char *__doc_kali_GraphicsPipeline_GraphicsPipeline = R"doc()doc";
+
+static const char *__doc_kali_GraphicsPipeline_m_program = R"doc(Shared reference to shader program to keep reflection data alive.)doc";
 
 static const char *__doc_kali_GraphicsPipeline_to_string = R"doc()doc";
 
@@ -2519,8 +2466,6 @@ static const char *__doc_kali_Kernel = R"doc()doc";
 static const char *__doc_kali_Kernel_Kernel = R"doc()doc";
 
 static const char *__doc_kali_Kernel_class_name = R"doc()doc";
-
-static const char *__doc_kali_Kernel_m_device = R"doc()doc";
 
 static const char *__doc_kali_Kernel_m_program = R"doc()doc";
 
@@ -3606,7 +3551,7 @@ static const char *__doc_kali_Object_to_string =
 R"doc(Return a string representation of this object. This is used for
 debugging purposes.)doc";
 
-static const char *__doc_kali_Pipeline = R"doc()doc";
+static const char *__doc_kali_Pipeline = R"doc(Pipeline base class.)doc";
 
 static const char *__doc_kali_Pipeline_Pipeline = R"doc()doc";
 
@@ -4154,7 +4099,7 @@ static const char *__doc_kali_RayTracingKernel_m_pipeline = R"doc()doc";
 
 static const char *__doc_kali_RayTracingKernel_pipeline = R"doc()doc";
 
-static const char *__doc_kali_RayTracingPipeline = R"doc()doc";
+static const char *__doc_kali_RayTracingPipeline = R"doc(Ray tracing pipeline.)doc";
 
 static const char *__doc_kali_RayTracingPipelineDesc = R"doc()doc";
 
@@ -4185,6 +4130,8 @@ static const char *__doc_kali_RayTracingPipelineFlags_skip_procedurals = R"doc()
 static const char *__doc_kali_RayTracingPipelineFlags_skip_triangles = R"doc()doc";
 
 static const char *__doc_kali_RayTracingPipeline_RayTracingPipeline = R"doc()doc";
+
+static const char *__doc_kali_RayTracingPipeline_m_program = R"doc(Shared reference to shader program to keep reflection data alive.)doc";
 
 static const char *__doc_kali_RayTracingPipeline_to_string = R"doc()doc";
 
@@ -4575,6 +4522,67 @@ static const char *__doc_kali_Resource_state_tracker = R"doc()doc";
 
 static const char *__doc_kali_Resource_type = R"doc()doc";
 
+static const char *__doc_kali_SHA1 = R"doc(Helper to compute SHA-1 hash.)doc";
+
+static const char *__doc_kali_SHA1_SHA1 = R"doc()doc";
+
+static const char *__doc_kali_SHA1_SHA1_2 = R"doc()doc";
+
+static const char *__doc_kali_SHA1_SHA1_3 = R"doc()doc";
+
+static const char *__doc_kali_SHA1_SHA1_4 = R"doc()doc";
+
+static const char *__doc_kali_SHA1_SHA1_5 = R"doc()doc";
+
+static const char *__doc_kali_SHA1_add_byte = R"doc()doc";
+
+static const char *__doc_kali_SHA1_digest = R"doc(Return the message digest.)doc";
+
+static const char *__doc_kali_SHA1_finalize = R"doc()doc";
+
+static const char *__doc_kali_SHA1_hex_digest = R"doc(Return the message digest as a hex string.)doc";
+
+static const char *__doc_kali_SHA1_m_bits = R"doc()doc";
+
+static const char *__doc_kali_SHA1_m_buf = R"doc()doc";
+
+static const char *__doc_kali_SHA1_m_index = R"doc()doc";
+
+static const char *__doc_kali_SHA1_m_state = R"doc()doc";
+
+static const char *__doc_kali_SHA1_operator_assign = R"doc()doc";
+
+static const char *__doc_kali_SHA1_operator_assign_2 = R"doc()doc";
+
+static const char *__doc_kali_SHA1_process_block = R"doc()doc";
+
+static const char *__doc_kali_SHA1_update =
+R"doc(Update hash by adding one byte.
+
+Parameter ``byte``:
+    Byte to hash.)doc";
+
+static const char *__doc_kali_SHA1_update_2 =
+R"doc(Update hash by adding the given data.
+
+Parameter ``data``:
+    Data to hash.
+
+Parameter ``len``:
+    Length of data in bytes.)doc";
+
+static const char *__doc_kali_SHA1_update_3 =
+R"doc(Update hash by adding the given string.
+
+Parameter ``str``:
+    String to hash.)doc";
+
+static const char *__doc_kali_SHA1_update_4 =
+R"doc(Update hash by adding the given basic value.
+
+Parameter ``value``:
+    to hash.)doc";
+
 static const char *__doc_kali_Sampler = R"doc()doc";
 
 static const char *__doc_kali_SamplerDesc = R"doc()doc";
@@ -4812,7 +4820,11 @@ static const char *__doc_kali_ShaderProgram_m_entry_points = R"doc()doc";
 
 static const char *__doc_kali_ShaderProgram_m_gfx_shader_program = R"doc()doc";
 
-static const char *__doc_kali_ShaderProgram_m_global_scope = R"doc()doc";
+static const char *__doc_kali_ShaderProgram_m_linked_program = R"doc()doc";
+
+static const char *__doc_kali_ShaderProgram_m_modules = R"doc()doc";
+
+static const char *__doc_kali_ShaderProgram_m_session = R"doc()doc";
 
 static const char *__doc_kali_ShaderProgram_program_layout = R"doc()doc";
 
@@ -4882,57 +4894,77 @@ static const char *__doc_kali_ShaderTable_m_gfx_shader_table = R"doc()doc";
 
 static const char *__doc_kali_ShaderTable_to_string = R"doc()doc";
 
-static const char *__doc_kali_SlangCompileError = R"doc()doc";
+static const char *__doc_kali_SlangCompileError = R"doc(Exception thrown on compilation errors.)doc";
 
 static const char *__doc_kali_SlangCompileError_SlangCompileError = R"doc()doc";
 
-static const char *__doc_kali_SlangCompilerFlags = R"doc()doc";
+static const char *__doc_kali_SlangCompilerOptions = R"doc(Slang compiler options. Can be set when creating a Slang session.)doc";
 
-static const char *__doc_kali_SlangCompilerFlags_dump_intermediates = R"doc()doc";
+static const char *__doc_kali_SlangCompilerOptions_debug_info =
+R"doc(Specifies the level of debug information to include in the generated
+code.)doc";
 
-static const char *__doc_kali_SlangCompilerFlags_floating_point_mode_fast = R"doc()doc";
+static const char *__doc_kali_SlangCompilerOptions_defines = R"doc(Specifies a list of preprocessor defines.)doc";
 
-static const char *__doc_kali_SlangCompilerFlags_floating_point_mode_precise = R"doc()doc";
+static const char *__doc_kali_SlangCompilerOptions_disable_warnings = R"doc(Specifies a list of warnings to disable (warning codes or names).)doc";
 
-static const char *__doc_kali_SlangCompilerFlags_generate_debug_info = R"doc()doc";
+static const char *__doc_kali_SlangCompilerOptions_downstream_args =
+R"doc(Specifies a list of additional arguments to be passed to the
+downstream compiler.)doc";
 
-static const char *__doc_kali_SlangCompilerFlags_info = R"doc()doc";
+static const char *__doc_kali_SlangCompilerOptions_dump_intermediates = R"doc(When set will dump the intermediate source output.)doc";
 
-static const char *__doc_kali_SlangCompilerFlags_info_items = R"doc()doc";
+static const char *__doc_kali_SlangCompilerOptions_dump_intermediates_prefix = R"doc(The file name prefix for the intermediate source output.)doc";
 
-static const char *__doc_kali_SlangCompilerFlags_info_name = R"doc()doc";
+static const char *__doc_kali_SlangCompilerOptions_enable_warnings = R"doc(Specifies a list of warnings to enable (warning codes or names).)doc";
 
-static const char *__doc_kali_SlangCompilerFlags_matrix_layout_column_major = R"doc()doc";
+static const char *__doc_kali_SlangCompilerOptions_floating_point_mode = R"doc(Specifies the floating point mode.)doc";
 
-static const char *__doc_kali_SlangCompilerFlags_none = R"doc()doc";
+static const char *__doc_kali_SlangCompilerOptions_include_paths =
+R"doc(Specifies a list of include paths to be used when resolving
+module/include paths.)doc";
 
-static const char *__doc_kali_SlangCompilerFlags_treat_warnings_as_errors = R"doc()doc";
+static const char *__doc_kali_SlangCompilerOptions_matrix_layout = R"doc(Specifies the matrix layout. Defaults to row-major.)doc";
 
-static const char *__doc_kali_SlangCompilerOptions = R"doc()doc";
+static const char *__doc_kali_SlangCompilerOptions_optimization = R"doc(Specifies the optimization level.)doc";
 
-static const char *__doc_kali_SlangCompilerOptions_add_default_search_paths = R"doc()doc";
+static const char *__doc_kali_SlangCompilerOptions_report_downstream_time = R"doc(Turn on/off downstream compilation time report.)doc";
 
-static const char *__doc_kali_SlangCompilerOptions_compiler_args = R"doc()doc";
+static const char *__doc_kali_SlangCompilerOptions_report_perf_benchmark =
+R"doc(Turn on/off reporting of time spend in different parts of the
+compiler.)doc";
 
-static const char *__doc_kali_SlangCompilerOptions_compiler_flags = R"doc()doc";
+static const char *__doc_kali_SlangCompilerOptions_shader_model =
+R"doc(Specifies the shader model to use. Defaults to latest available on the
+device.)doc";
 
-static const char *__doc_kali_SlangCompilerOptions_defines = R"doc()doc";
+static const char *__doc_kali_SlangCompilerOptions_skip_spirv_validation =
+R"doc(Specifies whether or not to skip the validation step after emitting
+SPIRV.)doc";
 
-static const char *__doc_kali_SlangCompilerOptions_search_paths = R"doc()doc";
+static const char *__doc_kali_SlangCompilerOptions_warnings_as_errors =
+R"doc(Specifies a list of warnings to be treated as errors (warning codes or
+names, or "all" to indicate all warnings).)doc";
 
-static const char *__doc_kali_SlangCompilerOptions_shader_model = R"doc()doc";
+static const char *__doc_kali_SlangDebugInfoLevel = R"doc(Slang debug info levels.)doc";
 
-static const char *__doc_kali_SlangComponentType = R"doc()doc";
+static const char *__doc_kali_SlangDebugInfoLevel_info = R"doc()doc";
 
-static const char *__doc_kali_SlangComponentType_SlangComponentType = R"doc()doc";
+static const char *__doc_kali_SlangDebugInfoLevel_info_items = R"doc()doc";
 
-static const char *__doc_kali_SlangComponentType_class_name = R"doc()doc";
+static const char *__doc_kali_SlangDebugInfoLevel_info_name = R"doc()doc";
 
-static const char *__doc_kali_SlangComponentType_m_component_type = R"doc()doc";
+static const char *__doc_kali_SlangDebugInfoLevel_maximal = R"doc(Emit as much debug infromation as possible for each target.)doc";
 
-static const char *__doc_kali_SlangComponentType_m_module = R"doc()doc";
+static const char *__doc_kali_SlangDebugInfoLevel_minimal =
+R"doc(Emit as little debug information as possible, while still supporting
+stack trackes.)doc";
 
-static const char *__doc_kali_SlangComponentType_module = R"doc()doc";
+static const char *__doc_kali_SlangDebugInfoLevel_none = R"doc(No debug information.)doc";
+
+static const char *__doc_kali_SlangDebugInfoLevel_standard =
+R"doc(Emit whatever is the standard level of debug information for each
+target.)doc";
 
 static const char *__doc_kali_SlangEntryPoint = R"doc()doc";
 
@@ -4942,81 +4974,141 @@ static const char *__doc_kali_SlangEntryPoint_class_name = R"doc()doc";
 
 static const char *__doc_kali_SlangEntryPoint_layout = R"doc()doc";
 
+static const char *__doc_kali_SlangEntryPoint_m_module = R"doc()doc";
+
 static const char *__doc_kali_SlangEntryPoint_m_name = R"doc()doc";
 
+static const char *__doc_kali_SlangEntryPoint_m_slang_entry_point = R"doc()doc";
+
 static const char *__doc_kali_SlangEntryPoint_m_stage = R"doc()doc";
+
+static const char *__doc_kali_SlangEntryPoint_module = R"doc()doc";
 
 static const char *__doc_kali_SlangEntryPoint_name = R"doc()doc";
 
 static const char *__doc_kali_SlangEntryPoint_rename = R"doc()doc";
 
+static const char *__doc_kali_SlangEntryPoint_slang_entry_point = R"doc()doc";
+
 static const char *__doc_kali_SlangEntryPoint_stage = R"doc()doc";
 
 static const char *__doc_kali_SlangEntryPoint_to_string = R"doc()doc";
 
-static const char *__doc_kali_SlangGlobalScope = R"doc()doc";
+static const char *__doc_kali_SlangEntryPoint_with_name = R"doc(Returns a copy of the entry point with a new name.)doc";
 
-static const char *__doc_kali_SlangGlobalScope_SlangGlobalScope = R"doc()doc";
+static const char *__doc_kali_SlangEntryPoint_with_type_conformances = R"doc(Returns a copy of the entry point with a set of type conformances set.)doc";
 
-static const char *__doc_kali_SlangGlobalScope_class_name = R"doc()doc";
+static const char *__doc_kali_SlangFloatingPointMode = R"doc(Slang floating point modes.)doc";
 
-static const char *__doc_kali_SlangGlobalScope_layout = R"doc()doc";
+static const char *__doc_kali_SlangFloatingPointMode_default = R"doc()doc";
 
-static const char *__doc_kali_SlangGlobalScope_to_string = R"doc()doc";
+static const char *__doc_kali_SlangFloatingPointMode_fast = R"doc()doc";
+
+static const char *__doc_kali_SlangFloatingPointMode_info = R"doc()doc";
+
+static const char *__doc_kali_SlangFloatingPointMode_info_items = R"doc()doc";
+
+static const char *__doc_kali_SlangFloatingPointMode_info_name = R"doc()doc";
+
+static const char *__doc_kali_SlangFloatingPointMode_precise = R"doc()doc";
+
+static const char *__doc_kali_SlangLinkOptions =
+R"doc(Slang link options. These can optionally be set when linking a shader
+program.)doc";
+
+static const char *__doc_kali_SlangLinkOptions_debug_info =
+R"doc(Specifies the level of debug information to include in the generated
+code.)doc";
+
+static const char *__doc_kali_SlangLinkOptions_downstream_args =
+R"doc(Specifies a list of additional arguments to be passed to the
+downstream compiler.)doc";
+
+static const char *__doc_kali_SlangLinkOptions_dump_intermediates = R"doc(When set will dump the intermediate source output.)doc";
+
+static const char *__doc_kali_SlangLinkOptions_dump_intermediates_prefix = R"doc(The file name prefix for the intermediate source output.)doc";
+
+static const char *__doc_kali_SlangLinkOptions_floating_point_mode = R"doc(Specifies the floating point mode.)doc";
+
+static const char *__doc_kali_SlangLinkOptions_optimization = R"doc(Specifies the optimization level.)doc";
+
+static const char *__doc_kali_SlangMatrixLayout = R"doc(Slang matrix layout modes.)doc";
+
+static const char *__doc_kali_SlangMatrixLayout_column_major = R"doc()doc";
+
+static const char *__doc_kali_SlangMatrixLayout_info = R"doc()doc";
+
+static const char *__doc_kali_SlangMatrixLayout_info_items = R"doc()doc";
+
+static const char *__doc_kali_SlangMatrixLayout_info_name = R"doc()doc";
+
+static const char *__doc_kali_SlangMatrixLayout_row_major = R"doc()doc";
 
 static const char *__doc_kali_SlangModule = R"doc()doc";
-
-static const char *__doc_kali_SlangModuleDesc = R"doc()doc";
-
-static const char *__doc_kali_SlangModuleDesc_Type = R"doc()doc";
-
-static const char *__doc_kali_SlangModuleDesc_Type_file = R"doc()doc";
-
-static const char *__doc_kali_SlangModuleDesc_Type_source = R"doc()doc";
-
-static const char *__doc_kali_SlangModuleDesc_defines = R"doc()doc";
-
-static const char *__doc_kali_SlangModuleDesc_path = R"doc()doc";
-
-static const char *__doc_kali_SlangModuleDesc_source = R"doc()doc";
-
-static const char *__doc_kali_SlangModuleDesc_type = R"doc()doc";
 
 static const char *__doc_kali_SlangModule_SlangModule = R"doc()doc";
 
 static const char *__doc_kali_SlangModule_class_name = R"doc()doc";
 
-static const char *__doc_kali_SlangModule_create_compute_kernel = R"doc()doc";
-
-static const char *__doc_kali_SlangModule_create_program = R"doc()doc";
-
-static const char *__doc_kali_SlangModule_create_program_2 = R"doc()doc";
-
-static const char *__doc_kali_SlangModule_create_program_3 = R"doc()doc";
-
-static const char *__doc_kali_SlangModule_desc = R"doc()doc";
-
 static const char *__doc_kali_SlangModule_entry_point = R"doc()doc";
 
 static const char *__doc_kali_SlangModule_entry_points = R"doc()doc";
 
-static const char *__doc_kali_SlangModule_global_scope = R"doc()doc";
+static const char *__doc_kali_SlangModule_has_entry_point = R"doc()doc";
 
-static const char *__doc_kali_SlangModule_m_compile_request = R"doc()doc";
+static const char *__doc_kali_SlangModule_layout = R"doc()doc";
 
-static const char *__doc_kali_SlangModule_m_desc = R"doc()doc";
+static const char *__doc_kali_SlangModule_m_name = R"doc()doc";
 
-static const char *__doc_kali_SlangModule_m_entry_point_count = R"doc()doc";
+static const char *__doc_kali_SlangModule_m_path = R"doc()doc";
 
 static const char *__doc_kali_SlangModule_m_session = R"doc()doc";
+
+static const char *__doc_kali_SlangModule_m_slang_module = R"doc(Slang module (owned by the session).)doc";
+
+static const char *__doc_kali_SlangModule_m_uid = R"doc()doc";
+
+static const char *__doc_kali_SlangModule_name = R"doc()doc";
+
+static const char *__doc_kali_SlangModule_path = R"doc()doc";
+
+static const char *__doc_kali_SlangModule_session = R"doc()doc";
+
+static const char *__doc_kali_SlangModule_slang_module = R"doc()doc";
+
+static const char *__doc_kali_SlangModule_to_string = R"doc()doc";
+
+static const char *__doc_kali_SlangModule_uid = R"doc()doc";
+
+static const char *__doc_kali_SlangOptimizationLevel = R"doc(Slang optimization levels.)doc";
+
+static const char *__doc_kali_SlangOptimizationLevel_default = R"doc(Default optimization level: balance code quality and compilation time.)doc";
+
+static const char *__doc_kali_SlangOptimizationLevel_high = R"doc(Optimize aggressively.)doc";
+
+static const char *__doc_kali_SlangOptimizationLevel_info = R"doc()doc";
+
+static const char *__doc_kali_SlangOptimizationLevel_info_items = R"doc()doc";
+
+static const char *__doc_kali_SlangOptimizationLevel_info_name = R"doc()doc";
+
+static const char *__doc_kali_SlangOptimizationLevel_maximal =
+R"doc(Include optimizations that may take a very long time, or may involve
+severe space-vs-speed tradeoffs.)doc";
+
+static const char *__doc_kali_SlangOptimizationLevel_none = R"doc(No optimizations.)doc";
 
 static const char *__doc_kali_SlangSession = R"doc()doc";
 
 static const char *__doc_kali_SlangSessionDesc = R"doc()doc";
 
+static const char *__doc_kali_SlangSessionDesc_add_default_include_paths = R"doc()doc";
+
 static const char *__doc_kali_SlangSessionDesc_compiler_options = R"doc()doc";
 
 static const char *__doc_kali_SlangSession_SlangSession = R"doc()doc";
+
+static const char *__doc_kali_SlangSession_break_strong_reference_to_device = R"doc()doc";
 
 static const char *__doc_kali_SlangSession_class_name = R"doc()doc";
 
@@ -5026,17 +5118,31 @@ static const char *__doc_kali_SlangSession_device = R"doc()doc";
 
 static const char *__doc_kali_SlangSession_get_slang_session = R"doc()doc";
 
+static const char *__doc_kali_SlangSession_link_program = R"doc()doc";
+
 static const char *__doc_kali_SlangSession_load_module = R"doc()doc";
 
 static const char *__doc_kali_SlangSession_load_module_from_source = R"doc()doc";
+
+static const char *__doc_kali_SlangSession_load_program = R"doc()doc";
 
 static const char *__doc_kali_SlangSession_m_desc = R"doc()doc";
 
 static const char *__doc_kali_SlangSession_m_device = R"doc()doc";
 
+static const char *__doc_kali_SlangSession_m_include_paths = R"doc()doc";
+
 static const char *__doc_kali_SlangSession_m_slang_session = R"doc()doc";
 
-static const char *__doc_kali_SlangSession_resolve_path = R"doc()doc";
+static const char *__doc_kali_SlangSession_m_uid = R"doc()doc";
+
+static const char *__doc_kali_SlangSession_register_with_debug_printer =
+R"doc(Register a module with the debug printer. This extracts all the hashed
+strings of the module.)doc";
+
+static const char *__doc_kali_SlangSession_resolve_module_name = R"doc()doc";
+
+static const char *__doc_kali_SlangSession_to_string = R"doc()doc";
 
 static const char *__doc_kali_StencilOp = R"doc()doc";
 
@@ -5677,7 +5783,7 @@ static const char *__doc_kali_TransientShaderObject_set_resource = R"doc()doc";
 
 static const char *__doc_kali_TypeConformance = R"doc()doc";
 
-static const char *__doc_kali_TypeConformanceList = R"doc()doc";
+static const char *__doc_kali_TypeConformanceList = R"doc(List of type conformances.)doc";
 
 static const char *__doc_kali_TypeConformanceList_TypeConformanceList = R"doc()doc";
 
@@ -5705,7 +5811,7 @@ Parameter ``id``:
 Returns:
     The updated list of type conformances.)doc";
 
-static const char *__doc_kali_TypeConformanceList_add_2 = R"doc(Add a type conformance list to the current list)doc";
+static const char *__doc_kali_TypeConformanceList_add_2 = R"doc(Add a type conformance list to the current list.)doc";
 
 static const char *__doc_kali_TypeConformanceList_operator_assign = R"doc()doc";
 
@@ -5724,7 +5830,7 @@ Parameter ``interface_name``:
 Returns:
     The updated list of type conformances.)doc";
 
-static const char *__doc_kali_TypeConformanceList_remove_2 = R"doc(Remove a type conformance list from the current list)doc";
+static const char *__doc_kali_TypeConformanceList_remove_2 = R"doc(Remove a type conformance list from the current list.)doc";
 
 static const char *__doc_kali_TypeConformance_interface_name = R"doc()doc";
 
@@ -5952,6 +6058,8 @@ static const char *__doc_kali_TypeReflection_ResourceShape_unknown = R"doc()doc"
 
 static const char *__doc_kali_TypeReflection_ScalarType = R"doc()doc";
 
+static const char *__doc_kali_TypeReflection_ScalarType_COUNT = R"doc()doc";
+
 static const char *__doc_kali_TypeReflection_ScalarType_bool = R"doc()doc";
 
 static const char *__doc_kali_TypeReflection_ScalarType_float16 = R"doc()doc";
@@ -5974,6 +6082,8 @@ static const char *__doc_kali_TypeReflection_ScalarType_int64 = R"doc()doc";
 
 static const char *__doc_kali_TypeReflection_ScalarType_int8 = R"doc()doc";
 
+static const char *__doc_kali_TypeReflection_ScalarType_intptr = R"doc()doc";
+
 static const char *__doc_kali_TypeReflection_ScalarType_none = R"doc()doc";
 
 static const char *__doc_kali_TypeReflection_ScalarType_uint16 = R"doc()doc";
@@ -5983,6 +6093,8 @@ static const char *__doc_kali_TypeReflection_ScalarType_uint32 = R"doc()doc";
 static const char *__doc_kali_TypeReflection_ScalarType_uint64 = R"doc()doc";
 
 static const char *__doc_kali_TypeReflection_ScalarType_uint8 = R"doc()doc";
+
+static const char *__doc_kali_TypeReflection_ScalarType_uintptr = R"doc()doc";
 
 static const char *__doc_kali_TypeReflection_ScalarType_void = R"doc()doc";
 
@@ -6043,6 +6155,26 @@ static const char *__doc_kali_TypedBufferDesc_initial_state = R"doc()doc";
 static const char *__doc_kali_TypedBufferDesc_memory_type = R"doc()doc";
 
 static const char *__doc_kali_TypedBufferDesc_usage = R"doc()doc";
+
+static const char *__doc_kali_UnownedSlangBlob =
+R"doc(Implementation of slang's ISlangBlob interface to access an unowned
+blob of data.)doc";
+
+static const char *__doc_kali_UnownedSlangBlob_UnownedSlangBlob = R"doc()doc";
+
+static const char *__doc_kali_UnownedSlangBlob_addRef = R"doc()doc";
+
+static const char *__doc_kali_UnownedSlangBlob_getBufferPointer = R"doc()doc";
+
+static const char *__doc_kali_UnownedSlangBlob_getBufferSize = R"doc()doc";
+
+static const char *__doc_kali_UnownedSlangBlob_m_data = R"doc()doc";
+
+static const char *__doc_kali_UnownedSlangBlob_m_size = R"doc()doc";
+
+static const char *__doc_kali_UnownedSlangBlob_queryInterface = R"doc()doc";
+
+static const char *__doc_kali_UnownedSlangBlob_release = R"doc()doc";
 
 static const char *__doc_kali_VariableLayoutReflection = R"doc()doc";
 
@@ -6486,6 +6618,12 @@ static const char *__doc_kali_find_enum_info_adl_53 = R"doc()doc";
 
 static const char *__doc_kali_find_enum_info_adl_54 = R"doc()doc";
 
+static const char *__doc_kali_find_enum_info_adl_55 = R"doc()doc";
+
+static const char *__doc_kali_find_enum_info_adl_56 = R"doc()doc";
+
+static const char *__doc_kali_find_enum_info_adl_57 = R"doc()doc";
+
 static const char *__doc_kali_flags_to_string_list =
 R"doc(Convert an flags enum value to a list of strings. Throws if any of the
 flags are not found in the registered enum information.)doc";
@@ -6511,8 +6649,6 @@ static const char *__doc_kali_flip_bit_9 = R"doc()doc";
 static const char *__doc_kali_flip_bit_10 = R"doc()doc";
 
 static const char *__doc_kali_flip_bit_11 = R"doc()doc";
-
-static const char *__doc_kali_flip_bit_12 = R"doc()doc";
 
 static const char *__doc_kali_get_dxgi_format = R"doc(Convert from kali to DXGI format.)doc";
 
@@ -6569,8 +6705,6 @@ static const char *__doc_kali_is_set_9 = R"doc()doc";
 static const char *__doc_kali_is_set_10 = R"doc()doc";
 
 static const char *__doc_kali_is_set_11 = R"doc()doc";
-
-static const char *__doc_kali_is_set_12 = R"doc()doc";
 
 static const char *__doc_kali_lerp = R"doc(Linearly interpolate between a and b.)doc";
 
@@ -7632,8 +7766,6 @@ static const char *__doc_kali_operator_band_10 = R"doc()doc";
 
 static const char *__doc_kali_operator_band_11 = R"doc()doc";
 
-static const char *__doc_kali_operator_band_12 = R"doc()doc";
-
 static const char *__doc_kali_operator_bnot = R"doc()doc";
 
 static const char *__doc_kali_operator_bnot_2 = R"doc()doc";
@@ -7655,8 +7787,6 @@ static const char *__doc_kali_operator_bnot_9 = R"doc()doc";
 static const char *__doc_kali_operator_bnot_10 = R"doc()doc";
 
 static const char *__doc_kali_operator_bnot_11 = R"doc()doc";
-
-static const char *__doc_kali_operator_bnot_12 = R"doc()doc";
 
 static const char *__doc_kali_operator_bor = R"doc()doc";
 
@@ -7680,8 +7810,6 @@ static const char *__doc_kali_operator_bor_10 = R"doc()doc";
 
 static const char *__doc_kali_operator_bor_11 = R"doc()doc";
 
-static const char *__doc_kali_operator_bor_12 = R"doc()doc";
-
 static const char *__doc_kali_operator_iand = R"doc()doc";
 
 static const char *__doc_kali_operator_iand_2 = R"doc()doc";
@@ -7704,8 +7832,6 @@ static const char *__doc_kali_operator_iand_10 = R"doc()doc";
 
 static const char *__doc_kali_operator_iand_11 = R"doc()doc";
 
-static const char *__doc_kali_operator_iand_12 = R"doc()doc";
-
 static const char *__doc_kali_operator_ior = R"doc()doc";
 
 static const char *__doc_kali_operator_ior_2 = R"doc()doc";
@@ -7727,8 +7853,6 @@ static const char *__doc_kali_operator_ior_9 = R"doc()doc";
 static const char *__doc_kali_operator_ior_10 = R"doc()doc";
 
 static const char *__doc_kali_operator_ior_11 = R"doc()doc";
-
-static const char *__doc_kali_operator_ior_12 = R"doc()doc";
 
 static const char *__doc_kali_platform_FileDialogFilter = R"doc()doc";
 
@@ -7846,8 +7970,8 @@ static const char *__doc_kali_platform_release_shared_library = R"doc(Release a 
 static const char *__doc_kali_platform_resolve_stacktrace = R"doc(Resolve a stack trace with symbol information.)doc";
 
 static const char *__doc_kali_platform_runtime_directory =
-R"doc(Thehe runtime directory. This is the path where the kali runtime
-library (kali.dll or libkali.so) resides.)doc";
+R"doc(The runtime directory. This is the path where the kali runtime library
+(kali.dll, libkali.so or libkali.dynlib) resides.)doc";
 
 static const char *__doc_kali_platform_save_file_dialog =
 R"doc(Show a file save dialog.

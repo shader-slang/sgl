@@ -8,15 +8,15 @@ KALI_PY_EXPORT(core_crypto)
 {
     using namespace kali;
 
-    nb::class_<SHA1>(m, "SHA1", D_NA(SHA1))
+    nb::class_<SHA1>(m, "SHA1", D(SHA1))
         .def(nb::init<>())
         .def(
             "__init__",
             [](SHA1* self, nb::bytes data) { new (self) SHA1(data.c_str(), data.size()); },
             "data"_a,
-            D_NA(SHA1, SHA1_1)
+            D(SHA1, SHA1_2)
         )
-        .def(nb::init<std::string_view>(), "str"_a, D_NA(SHA1, SHA1_2))
+        .def(nb::init<std::string_view>(), "str"_a, D(SHA1, SHA1_3))
         .def(
             "update",
             [](SHA1& self, nb::bytes data)
@@ -25,7 +25,7 @@ KALI_PY_EXPORT(core_crypto)
                 return self;
             },
             "data"_a,
-            D_NA(SHA1, update_2)
+            D(SHA1, update_2)
         )
         .def(
             "update",
@@ -35,7 +35,7 @@ KALI_PY_EXPORT(core_crypto)
                 return self;
             },
             "str"_a,
-            D_NA(SHA1, update_4)
+            D(SHA1, update_3)
         )
         .def(
             "digest",
@@ -44,7 +44,7 @@ KALI_PY_EXPORT(core_crypto)
                 auto digest = self.digest();
                 return nb::bytes((const char*)(digest.data()), digest.size());
             },
-            D_NA(SHA1, digest)
+            D(SHA1, digest)
         )
-        .def("hex_digest", &SHA1::hex_digest, D_NA(SHA1, hex_digest));
+        .def("hex_digest", &SHA1::hex_digest, D(SHA1, hex_digest));
 }
