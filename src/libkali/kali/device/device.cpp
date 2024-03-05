@@ -315,6 +315,16 @@ Device::Device(const DeviceDesc& desc)
     m_api_dispatcher.reset(new PipelineCreationAPIDispatcher());
 #endif
 
+    // Setup shader cache.
+    if (m_desc.shader_cache_path) {
+        m_shader_cache_enabled = true;
+        m_shader_cache_path = *m_desc.shader_cache_path;
+        if (m_shader_cache_path.is_relative())
+            m_shader_cache_path = platform::app_data_directory() / m_shader_cache_path;
+        std::filesystem::create_directories(m_shader_cache_path);
+    }
+    std::string gfx_shader_cache_path = (m_shader_cache_path / "gfx").string();
+
     gfx::IDevice::Desc gfx_desc
     {
         .deviceType = gfx_device_type(m_desc.type),
@@ -323,6 +333,10 @@ Device::Device(const DeviceDesc& desc)
 #if KALI_HAS_NVAPI
         .apiCommandDispatcher = m_api_dispatcher.get(),
 #endif
+        .shaderCache{
+            .shaderCachePath = m_shader_cache_enabled ? gfx_shader_cache_path.c_str() : nullptr,
+            .maxEntryCount = 4096,
+        },
         .slang{
             .slangGlobalSession = m_global_session,
         },
@@ -482,6 +496,19 @@ Device::~Device()
 #if KALI_HAS_NVAPI
     m_api_dispatcher.reset();
 #endif
+}
+
+ShaderCacheStats Device::shader_cache_stats() const
+{
+    Slang::ComPtr<gfx::IShaderCache> gfx_shader_cache;
+    SLANG_CALL(m_gfx_device->queryInterface(SLANG_UUID_IShaderCache, (void**)gfx_shader_cache.writeRef()));
+    gfx::ShaderCacheStats gfx_stats;
+    SLANG_CALL(gfx_shader_cache->getShaderCacheStats(&gfx_stats));
+    return {
+        .entry_count = static_cast<size_t>(gfx_stats.entryCount),
+        .hit_count = static_cast<size_t>(gfx_stats.hitCount),
+        .miss_count = static_cast<size_t>(gfx_stats.missCount),
+    };
 }
 
 ref<Swapchain> Device::create_swapchain(SwapchainDesc desc, Window* window)
@@ -881,14 +908,16 @@ std::string Device::to_string() const
         "  type = {},\n"
         "  enable_debug_layers = {},\n"
         "  adapter_luid = {},\n"
-        "  shader_cache_path = \"{}\"\n"
         "  supported_shader_model = {}\n"
+        "  shader_cache_enabled = {}\n"
+        "  shader_cache_path = \"{}\"\n"
         ")",
         m_desc.type,
         m_desc.enable_debug_layers,
         m_desc.adapter_luid ? fmt::format("{}", *m_desc.adapter_luid) : "null",
-        m_desc.shader_cache_path,
-        m_supported_shader_model
+        m_supported_shader_model,
+        m_shader_cache_enabled,
+        m_shader_cache_path
     );
 }
 

@@ -94,14 +94,15 @@ struct DeviceDesc {
     /// Enable device side printing (adds performance overhead).
     bool enable_print{false};
 
-    /// Adapter LUID to select adapeter on which the device will be created.
+    /// Adapter LUID to select adapter on which the device will be created.
     std::optional<AdapterLUID> adapter_luid;
 
     /// Compiler options (used for default slang session).
     SlangCompilerOptions compiler_options;
 
-    /// Path to the shader cache directory. Leave empty to disable shader cache.
-    std::filesystem::path shader_cache_path;
+    /// Path to the shader cache directory (optional).
+    /// If a relative path is used, the cache is stored in the application data directory.
+    std::optional<std::filesystem::path> shader_cache_path;
 };
 
 struct DeviceLimits {
@@ -159,6 +160,15 @@ struct DeviceInfo {
     DeviceLimits limits;
 };
 
+struct ShaderCacheStats {
+    /// Number of entries in the cache.
+    size_t entry_count;
+    /// Number of hits in the cache.
+    size_t hit_count;
+    /// Number of misses in the cache.
+    size_t miss_count;
+};
+
 class KALI_API Device : public Object {
     KALI_OBJECT(Device)
 public:
@@ -172,6 +182,8 @@ public:
     DeviceType type() const { return m_desc.type; }
 
     const DeviceInfo& info() const { return m_info; }
+
+    ShaderCacheStats shader_cache_stats() const;
 
     /// The highest shader model supported by the device.
     ShaderModel supported_shader_model() const { return m_supported_shader_model; }
@@ -416,6 +428,10 @@ private:
     DeviceDesc m_desc;
     DeviceInfo m_info;
     ShaderModel m_supported_shader_model{ShaderModel::unknown};
+
+    bool m_shader_cache_enabled{false};
+    std::filesystem::path m_shader_cache_path;
+
     Slang::ComPtr<gfx::IDevice> m_gfx_device;
     Slang::ComPtr<slang::IGlobalSession> m_global_session;
 

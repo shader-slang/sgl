@@ -137,6 +137,11 @@ KALI_PY_EXPORT(device_device)
         .def_ro("timestamp_frequency", &DeviceInfo::timestamp_frequency, D(DeviceInfo, timestamp_frequency))
         .def_ro("limits", &DeviceInfo::limits, D(DeviceInfo, limits));
 
+    nb::class_<ShaderCacheStats>(m, "ShaderCacheStats")
+        .def_ro("entry_count", &ShaderCacheStats::entry_count, D_NA(ShaderCacheStats, entry_count))
+        .def_ro("hit_count", &ShaderCacheStats::hit_count, D_NA(ShaderCacheStats, hit_count))
+        .def_ro("miss_count", &ShaderCacheStats::miss_count, D_NA(ShaderCacheStats, miss_count));
+
     nb::class_<Device, Object> device(m, "Device", D(Device));
     device.def(nb::init<DeviceDesc>(), "desc"_a, D(Device, desc));
     device.def(
@@ -148,7 +153,7 @@ KALI_PY_EXPORT(device_device)
            bool enable_print,
            std::optional<AdapterLUID> adapter_luid,
            std::optional<SlangCompilerOptions> compiler_options,
-           std::filesystem::path shader_cache_path)
+           std::optional<std::filesystem::path> shader_cache_path)
         {
             new (self) Device({
                 .type = type,
@@ -157,7 +162,7 @@ KALI_PY_EXPORT(device_device)
                 .enable_print = enable_print,
                 .adapter_luid = adapter_luid,
                 .compiler_options = compiler_options.value_or(SlangCompilerOptions{}),
-                .shader_cache_path = std::move(shader_cache_path),
+                .shader_cache_path = shader_cache_path,
             });
         },
         "type"_a = DeviceType::automatic,
@@ -166,10 +171,11 @@ KALI_PY_EXPORT(device_device)
         "enable_print"_a = false,
         "adapter_luid"_a.none() = nb::none(),
         "compiler_options"_a.none() = nb::none(),
-        "shader_cache_path"_a = std::filesystem::path{}
+        "shader_cache_path"_a.none() = nb::none()
     );
     device.def_prop_ro("desc", &Device::desc, D(Device, desc));
     device.def_prop_ro("info", &Device::info, D(Device, info));
+    device.def_prop_ro("shader_cache_stats", &Device::shader_cache_stats, D_NA(Device, shader_cache_stats));
     device.def_prop_ro("supported_shader_model", &Device::supported_shader_model, D(Device, supported_shader_model));
     device.def_prop_ro("features", &Device::features, D(Device, features));
     device.def_prop_ro("slang_session", &Device::slang_session, D(Device, slang_session));
