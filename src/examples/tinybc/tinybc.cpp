@@ -106,7 +106,7 @@ int main(int argc, const char* argv[])
         .usage = ResourceUsage::unordered_access,
     });
 
-    std::string constants = std::format(
+    std::string constants = fmt::format(
         "export static const bool USE_ADAM = true;\n"
         "export static const uint OPT_STEPS = {};\n",
         opt_steps
