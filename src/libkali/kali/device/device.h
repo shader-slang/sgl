@@ -97,8 +97,8 @@ struct DeviceDesc {
     /// Adapter LUID to select adapeter on which the device will be created.
     std::optional<AdapterLUID> adapter_luid;
 
-    /// Default shader model to use when compiling shaders.
-    ShaderModel default_shader_model{ShaderModel::sm_6_6};
+    /// Compiler options (used for default slang session).
+    SlangCompilerOptions compiler_options;
 
     /// Path to the shader cache directory. Leave empty to disable shader cache.
     std::filesystem::path shader_cache_path;
@@ -176,15 +176,15 @@ public:
     /// The highest shader model supported by the device.
     ShaderModel supported_shader_model() const { return m_supported_shader_model; }
 
-    /// The default shader model used when compiling shaders.
-    ShaderModel default_shader_model() const { return m_default_shader_model; }
-
     /// List of features supported by the device.
     const std::vector<std::string>& features() const { return m_features; }
 
 #if KALI_HAS_CUDA
     bool supports_cuda_interop() const { return m_supports_cuda_interop; }
 #endif
+
+    /// Default slang session.
+    SlangSession* slang_session() const { return m_slang_session; }
 
     /**
      * \brief Create a new swapchain.
@@ -300,32 +300,25 @@ public:
      */
     ref<SlangSession> create_slang_session(SlangSessionDesc desc);
 
-    /**
-     * \brief Helper function for loading a slang module from a file.
-     *
-     * \param path Path to the shader file.
-     * \param defines Preprocessor defines.
-     * \param compiler_options Compiler options (see \ref SlangCompilerOptions for details).
-     * \return New slang module object.
-     */
-    ref<SlangModule> load_module(
-        const std::filesystem::path& path,
-        std::optional<DefineList> defines = std::nullopt,
-        std::optional<SlangCompilerOptions> compiler_options = std::nullopt
+    ref<SlangModule> load_module(std::string_view module_name);
+
+    ref<SlangModule> load_module_from_source(
+        std::string_view module_name,
+        std::string_view source,
+        std::optional<std::filesystem::path> path = {}
     );
 
-    /**
-     * \brief Helper function for loading a slang module from a string.
-     *
-     * \param source Shader source.
-     * \param defines Preprocessor defines.
-     * \param compiler_options Compiler options (see \ref SlangCompilerOptions for details).
-     * \return New slang module object.
-     */
-    ref<SlangModule> load_module_from_source(
-        const std::string& source,
-        std::optional<DefineList> defines = std::nullopt,
-        std::optional<SlangCompilerOptions> compiler_options = std::nullopt
+    ref<ShaderProgram> link_program(
+        std::vector<ref<SlangModule>> modules,
+        std::vector<ref<SlangEntryPoint>> entry_points,
+        std::optional<SlangLinkOptions> link_options = {}
+    );
+
+    ref<ShaderProgram> load_program(
+        std::string_view module_name,
+        std::vector<std::string_view> entry_point_names,
+        std::optional<std::string_view> additional_source = {},
+        std::optional<SlangLinkOptions> link_options = {}
     );
 
     ref<MutableShaderObject> create_mutable_shader_object(const ShaderProgram* shader_program);
@@ -423,9 +416,10 @@ private:
     DeviceDesc m_desc;
     DeviceInfo m_info;
     ShaderModel m_supported_shader_model{ShaderModel::unknown};
-    ShaderModel m_default_shader_model{ShaderModel::unknown};
     Slang::ComPtr<gfx::IDevice> m_gfx_device;
     Slang::ComPtr<slang::IGlobalSession> m_global_session;
+
+    ref<SlangSession> m_slang_session;
 
     std::vector<std::string> m_features;
 

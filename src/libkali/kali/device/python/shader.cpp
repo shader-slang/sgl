@@ -7,13 +7,33 @@
 #include "kali/device/kernel.h"
 
 namespace kali {
+using DefineList = std::map<std::string, std::string>;
 KALI_DICT_TO_DESC_BEGIN(SlangCompilerOptions)
-KALI_DICT_TO_DESC_FIELD(shader_model, ShaderModel);
-KALI_DICT_TO_DESC_FIELD(compiler_flags, SlangCompilerFlags);
-KALI_DICT_TO_DESC_FIELD(compiler_args, std::vector<std::string>);
-KALI_DICT_TO_DESC_FIELD(search_paths, std::vector<std::filesystem::path>);
-KALI_DICT_TO_DESC_FIELD(add_default_search_paths, bool);
-KALI_DICT_TO_DESC_FIELD(defines, DefineList);
+KALI_DICT_TO_DESC_FIELD(include_paths, std::vector<std::filesystem::path>)
+KALI_DICT_TO_DESC_FIELD(defines, DefineList)
+KALI_DICT_TO_DESC_FIELD(shader_model, ShaderModel)
+KALI_DICT_TO_DESC_FIELD(matrix_layout, SlangMatrixLayout)
+KALI_DICT_TO_DESC_FIELD(enable_warnings, std::vector<std::string>)
+KALI_DICT_TO_DESC_FIELD(disable_warnings, std::vector<std::string>)
+KALI_DICT_TO_DESC_FIELD(warnings_as_errors, std::vector<std::string>)
+KALI_DICT_TO_DESC_FIELD(report_downstream_time, bool)
+KALI_DICT_TO_DESC_FIELD(report_perf_benchmark, bool)
+KALI_DICT_TO_DESC_FIELD(skip_spirv_validation, bool)
+KALI_DICT_TO_DESC_FIELD(floating_point_mode, SlangFloatingPointMode)
+KALI_DICT_TO_DESC_FIELD(debug_info, SlangDebugInfoLevel)
+KALI_DICT_TO_DESC_FIELD(optimization, SlangOptimizationLevel)
+KALI_DICT_TO_DESC_FIELD(downstream_args, std::vector<std::string>)
+KALI_DICT_TO_DESC_FIELD(dump_intermediates, bool)
+KALI_DICT_TO_DESC_FIELD(dump_intermediates_prefix, std::string)
+KALI_DICT_TO_DESC_END()
+
+KALI_DICT_TO_DESC_BEGIN(SlangLinkOptions)
+KALI_DICT_TO_DESC_FIELD(floating_point_mode, std::optional<SlangFloatingPointMode>)
+KALI_DICT_TO_DESC_FIELD(debug_info, std::optional<SlangDebugInfoLevel>)
+KALI_DICT_TO_DESC_FIELD(optimization, std::optional<SlangOptimizationLevel>)
+KALI_DICT_TO_DESC_FIELD(downstream_args, std::optional<std::vector<std::string>>)
+KALI_DICT_TO_DESC_FIELD(dump_intermediates, std::optional<bool>)
+KALI_DICT_TO_DESC_FIELD(dump_intermediates_prefix, std::optional<std::string>)
 KALI_DICT_TO_DESC_END()
 } // namespace kali
 
@@ -57,19 +77,10 @@ KALI_PY_EXPORT(device_shader)
             D(TypeConformanceList, remove_2)
         );
 
-    nb::bind_map<DefineList>(m, "DefineList", D(DefineList))
-        .def(
-            "add",
-            nb::overload_cast<std::string_view, std::string_view>(&DefineList::add),
-            "name"_a,
-            "value"_a = "",
-            D(DefineList, add)
-        )
-        .def("remove", nb::overload_cast<std::string_view>(&DefineList::remove), "name"_a, D(DefineList, remove))
-        .def("add", nb::overload_cast<const DefineList&>(&DefineList::add), "other"_a, D(DefineList, add_2))
-        .def("remove", nb::overload_cast<const DefineList&>(&DefineList::remove), "other"_a, D(DefineList, remove_2));
-
-    nb::kali_enum_flags<SlangCompilerFlags>(m, "SlangCompilerFlags");
+    nb::kali_enum<SlangMatrixLayout>(m, "SlangMatrixLayout");
+    nb::kali_enum<kali::SlangFloatingPointMode>(m, "SlangFloatingPointMode");
+    nb::kali_enum<kali::SlangDebugInfoLevel>(m, "SlangDebugInfoLevel");
+    nb::kali_enum<kali::SlangOptimizationLevel>(m, "SlangOptimizationLevel");
 
     nb::class_<SlangCompilerOptions>(m, "SlangCompilerOptions")
         .def(nb::init<>())
@@ -78,13 +89,37 @@ KALI_PY_EXPORT(device_shader)
             [](SlangCompilerOptions* self, nb::dict dict)
             { new (self) SlangCompilerOptions(dict_to_SlangCompilerOptions(dict)); }
         )
+        .def_rw("include_paths", &SlangCompilerOptions::include_paths)
+        .def_rw("defines", &SlangCompilerOptions::defines)
         .def_rw("shader_model", &SlangCompilerOptions::shader_model)
-        .def_rw("compiler_flags", &SlangCompilerOptions::compiler_flags)
-        .def_rw("compiler_args", &SlangCompilerOptions::compiler_args)
-        .def_rw("search_paths", &SlangCompilerOptions::search_paths)
-        .def_rw("add_default_search_paths", &SlangCompilerOptions::add_default_search_paths)
-        .def_rw("defines", &SlangCompilerOptions::defines);
+        .def_rw("matrix_layout", &SlangCompilerOptions::matrix_layout)
+        .def_rw("enable_warnings", &SlangCompilerOptions::enable_warnings)
+        .def_rw("disable_warnings", &SlangCompilerOptions::disable_warnings)
+        .def_rw("warnings_as_errors", &SlangCompilerOptions::warnings_as_errors)
+        .def_rw("report_downstream_time", &SlangCompilerOptions::report_downstream_time)
+        .def_rw("report_perf_benchmark", &SlangCompilerOptions::report_perf_benchmark)
+        .def_rw("skip_spirv_validation", &SlangCompilerOptions::skip_spirv_validation)
+        .def_rw("floating_point_mode", &SlangCompilerOptions::floating_point_mode)
+        .def_rw("debug_info", &SlangCompilerOptions::debug_info)
+        .def_rw("optimization", &SlangCompilerOptions::optimization)
+        .def_rw("downstream_args", &SlangCompilerOptions::downstream_args)
+        .def_rw("dump_intermediates", &SlangCompilerOptions::dump_intermediates)
+        .def_rw("dump_intermediates_prefix", &SlangCompilerOptions::dump_intermediates_prefix);
     nb::implicitly_convertible<nb::dict, SlangCompilerOptions>();
+
+    nb::class_<SlangLinkOptions>(m, "SlangLinkOptions")
+        .def(nb::init<>())
+        .def(
+            "__init__",
+            [](SlangLinkOptions* self, nb::dict dict) { new (self) SlangLinkOptions(dict_to_SlangLinkOptions(dict)); }
+        )
+        .def_rw("floating_point_mode", &SlangLinkOptions::floating_point_mode, nb::none())
+        .def_rw("debug_info", &SlangLinkOptions::debug_info, nb::none())
+        .def_rw("optimization", &SlangLinkOptions::optimization, nb::none())
+        .def_rw("downstream_args", &SlangLinkOptions::downstream_args)
+        .def_rw("dump_intermediates", &SlangLinkOptions::dump_intermediates, nb::none())
+        .def_rw("dump_intermediates_prefix", &SlangLinkOptions::dump_intermediates_prefix, nb::none());
+    nb::implicitly_convertible<nb::dict, SlangLinkOptions>();
 
     nb::class_<SlangSessionDesc>(m, "SlangSessionDesc")
         .def(nb::init<>())
@@ -96,58 +131,42 @@ KALI_PY_EXPORT(device_shader)
 
     nb::class_<SlangSession, Object>(m, "SlangSession", D(SlangSession))
         .def_prop_ro("desc", &SlangSession::desc, D(SlangSession, desc))
-        .def(
-            "load_module",
-            &SlangSession::load_module,
-            "path"_a,
-            "defines"_a.none() = nb::none(),
-            D(SlangSession, load_module)
-        )
+        .def("load_module", &SlangSession::load_module, "module_name"_a, D(SlangSession, load_module))
         .def(
             "load_module_from_source",
             &SlangSession::load_module_from_source,
+            "module_name"_a,
             "source"_a,
-            "path"_a = "",
-            "name"_a = "",
-            "defines"_a.none() = nb::none(),
+            "path"_a.none() = nb::none(),
             D(SlangSession, load_module_from_source)
+        )
+        .def(
+            "link_program",
+            &SlangSession::link_program,
+            "modules"_a,
+            "entry_points"_a,
+            "link_options"_a.none() = nb::none(),
+            D_NA(SlangSession, link_program)
+        )
+        .def(
+            "load_program",
+            &SlangSession::load_program,
+            "module_name"_a,
+            "entry_point_names"_a,
+            "additional_source"_a.none() = nb::none(),
+            "link_options"_a.none() = nb::none(),
+            D_NA(SlangSession, load_program)
         );
 
     nb::class_<SlangModule, Object>(m, "SlangModule", D(SlangModule))
-        .def_prop_ro("global_scope", &SlangModule::global_scope, D(SlangModule, global_scope))
+        .def_prop_ro("name", &SlangModule::name, D_NA(SlangModule, name))
+        .def_prop_ro("path", &SlangModule::path, D_NA(SlangModule, path))
+        .def_prop_ro("uid", &SlangModule::uid, D_NA(SlangModule, uid))
+        .def_prop_ro("layout", &SlangModule::layout, D_NA(SlangModule, layout))
         .def_prop_ro("entry_points", &SlangModule::entry_points, D(SlangModule, entry_points))
-        .def("entry_point", &SlangModule::entry_point, "name"_a, D(SlangModule, entry_point))
-        .def(
-            "create_program",
-            nb::overload_cast<std::string_view>(&SlangModule::create_program),
-            "entry_point_name"_a,
-            D(SlangModule, create_program)
-        )
-        .def(
-            "create_program",
-            nb::overload_cast<ref<SlangGlobalScope>, ref<SlangEntryPoint>>(&SlangModule::create_program),
-            "global_scope"_a,
-            "entry_point"_a,
-            D(SlangModule, create_program_2)
-        )
-        .def(
-            "create_program",
-            nb::overload_cast<ref<SlangGlobalScope>, std::vector<ref<SlangEntryPoint>>>(&SlangModule::create_program),
-            "global_scope"_a,
-            "entry_points"_a,
-            D(SlangModule, create_program_3)
-        )
-        .def(
-            "create_compute_kernel",
-            &SlangModule::create_compute_kernel,
-            "entry_point_name"_a,
-            D(SlangModule, create_compute_kernel)
-        );
+        .def("entry_point", &SlangModule::entry_point, "name"_a, D(SlangModule, entry_point));
 
-    nb::class_<SlangComponentType, Object>(m, "SlangComponentType", D(SlangComponentType));
-    nb::class_<SlangGlobalScope, SlangComponentType>(m, "SlangGlobalScope", D(SlangGlobalScope));
-
-    nb::class_<SlangEntryPoint, SlangComponentType>(m, "SlangEntryPoint", D(SlangEntryPoint))
+    nb::class_<SlangEntryPoint, Object>(m, "SlangEntryPoint", D(SlangEntryPoint))
         .def_prop_ro("name", &SlangEntryPoint::name, D(SlangEntryPoint, name))
         .def_prop_ro("stage", &SlangEntryPoint::stage, D(SlangEntryPoint, stage))
         .def_prop_ro("layout", &SlangEntryPoint::layout, nb::rv_policy::reference_internal, D(SlangEntryPoint, layout))
@@ -160,7 +179,7 @@ KALI_PY_EXPORT(device_shader)
             nb::rv_policy::reference_internal,
             D(ShaderProgram, program_layout)
         )
-        // .def_prop_ro("entry_point_layouts", &ShaderProgram::entry_point_layouts)
+        .def_prop_ro("entry_point_layouts", &ShaderProgram::entry_point_layouts, D(ShaderProgram, entry_point_layouts))
         .def(
             "entry_point_layout",
             &ShaderProgram::entry_point_layout,

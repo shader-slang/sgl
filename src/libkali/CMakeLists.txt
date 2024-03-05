@@ -504,7 +504,6 @@ if(KALI_BUILD_TESTS)
         kali/core/tests/test_string.cpp
         kali/device/tests/test_device.cpp
         kali/device/tests/test_formats.cpp
-        kali/device/tests/test_shader.cpp
         kali/math/tests/test_float16.cpp
         kali/math/tests/test_matrix.cpp
         kali/math/tests/test_quaternion.cpp

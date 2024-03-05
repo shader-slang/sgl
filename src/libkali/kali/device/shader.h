@@ -14,6 +14,8 @@
 #include <vector>
 #include <string>
 
+#include <slang.h>
+
 namespace kali {
 
 struct TypeConformance {
@@ -30,7 +32,8 @@ struct TypeConformance {
 #endif
 };
 
-class TypeConformanceList : public std::map<TypeConformance, uint32_t> {
+/// List of type conformances.
+class KALI_API TypeConformanceList : public std::map<TypeConformance, uint32_t> {
 public:
     TypeConformanceList() = default;
     TypeConformanceList(std::initializer_list<std::pair<const TypeConformance, uint32_t>> init)
@@ -51,11 +54,7 @@ public:
      * automatically assign a unique Id for the type.
      * \return The updated list of type conformances.
      */
-    TypeConformanceList& add(std::string type_name, std::string interface_name, uint32_t id = -1)
-    {
-        (*this)[TypeConformance{std::move(type_name), std::move(interface_name)}] = id;
-        return *this;
-    }
+    TypeConformanceList& add(std::string type_name, std::string interface_name, uint32_t id = -1);
 
     /**
      * Removes a type conformance. If the type conformance doesn't exist, the call will be silently ignored.
@@ -63,93 +62,20 @@ public:
      * \param interface_name The name of the interface type.
      * \return The updated list of type conformances.
      */
-    TypeConformanceList& remove(std::string type_name, std::string interface_name)
-    {
-        (*this).erase(TypeConformance{std::move(type_name), std::move(interface_name)});
-        return *this;
-    }
+    TypeConformanceList& remove(std::string type_name, std::string interface_name);
 
     /**
-     * Add a type conformance list to the current list
+     * Add a type conformance list to the current list.
      */
-    TypeConformanceList& add(const TypeConformanceList& other)
-    {
-        for (const auto& p : other)
-            add(p.first.type_name, p.first.interface_name, p.second);
-        return *this;
-    }
+    TypeConformanceList& add(const TypeConformanceList& other);
 
     /**
-     * Remove a type conformance list from the current list
+     * Remove a type conformance list from the current list.
      */
-    TypeConformanceList& remove(const TypeConformanceList& other)
-    {
-        for (const auto& p : other)
-            remove(p.first.type_name, p.first.interface_name);
-        return *this;
-    }
+    TypeConformanceList& remove(const TypeConformanceList& other);
 };
 
-class DefineList : public std::map<std::string, std::string, std::less<>> {
-public:
-    DefineList() = default;
-    DefineList(std::initializer_list<std::pair<const std::string, std::string>> il)
-        : std::map<std::string, std::string, std::less<>>(il)
-    {
-    }
-    DefineList(const DefineList& other) = default;
-    DefineList(DefineList&& other) = default;
-
-    DefineList& operator=(const DefineList& other) = default;
-    DefineList& operator=(DefineList&& other) = default;
-
-    /**
-     * Adds a macro definition. If the macro already exists, it will be replaced.
-     * \param name The name of macro.
-     * \param value Optional. The value of the macro.
-     * \return The updated list of macro definitions.
-     */
-    DefineList& add(std::string_view name, std::string_view value = "")
-    {
-        emplace(std::string{name}, value);
-        return *this;
-    }
-
-    /**
-     * Removes a macro definition. If the macro doesn't exist, the call will be silently ignored.
-     * \param name The name of macro.
-     * \return The updated list of macro definitions.
-     */
-    DefineList& remove(std::string_view name)
-    {
-        auto it = find(name);
-        if (it != end())
-            erase(it);
-        return *this;
-    }
-
-    /**
-     * Add a define list to the current list
-     */
-    DefineList& add(const DefineList& other)
-    {
-        for (const auto& p : other)
-            add(p.first, p.second);
-        return *this;
-    }
-
-    /**
-     * Remove a define list from the current list
-     */
-    DefineList& remove(const DefineList& other)
-    {
-        for (const auto& p : other)
-            remove(p.first);
-        return *this;
-    }
-
-    bool has(std::string_view name) const { return find(name) != end(); }
-};
+/// Exception thrown on compilation errors.
 class SlangCompileError : public std::runtime_error {
 public:
     SlangCompileError(const std::string& what)
@@ -158,42 +84,165 @@ public:
     }
 };
 
-enum class SlangCompilerFlags {
-    none = 0x0,
-    treat_warnings_as_errors = 0x1,
-    dump_intermediates = 0x2,
-    floating_point_mode_fast = 0x4,
-    floating_point_mode_precise = 0x8,
-    generate_debug_info = 0x10,
-    matrix_layout_column_major = 0x20,
+/// Slang matrix layout modes.
+enum class SlangMatrixLayout {
+    row_major = SLANG_MATRIX_LAYOUT_ROW_MAJOR,
+    column_major = SLANG_MATRIX_LAYOUT_COLUMN_MAJOR,
 };
-KALI_ENUM_CLASS_OPERATORS(SlangCompilerFlags)
-
 KALI_ENUM_INFO(
-    SlangCompilerFlags,
+    SlangMatrixLayout,
     {
-        {SlangCompilerFlags::none, "none"},
-        {SlangCompilerFlags::treat_warnings_as_errors, "treat_warnings_as_errors"},
-        {SlangCompilerFlags::dump_intermediates, "dump_intermediates"},
-        {SlangCompilerFlags::floating_point_mode_fast, "floating_point_mode_fast"},
-        {SlangCompilerFlags::floating_point_mode_precise, "floating_point_mode_precise"},
-        {SlangCompilerFlags::generate_debug_info, "generate_debug_info"},
-        {SlangCompilerFlags::matrix_layout_column_major, "matrix_layout_column_major"},
+        {SlangMatrixLayout::row_major, "row_major"},
+        {SlangMatrixLayout::column_major, "column_major"},
     }
 );
-KALI_ENUM_REGISTER(SlangCompilerFlags);
+KALI_ENUM_REGISTER(SlangMatrixLayout);
 
+/// Slang floating point modes.
+enum class SlangFloatingPointMode {
+    default_ = SLANG_FLOATING_POINT_MODE_DEFAULT,
+    fast = SLANG_FLOATING_POINT_MODE_FAST,
+    precise = SLANG_FLOATING_POINT_MODE_PRECISE,
+};
+KALI_ENUM_INFO(
+    SlangFloatingPointMode,
+    {
+        {SlangFloatingPointMode::default_, "default"},
+        {SlangFloatingPointMode::fast, "fast"},
+        {SlangFloatingPointMode::precise, "precise"},
+    }
+);
+KALI_ENUM_REGISTER(SlangFloatingPointMode);
+
+/// Slang debug info levels.
+enum class SlangDebugInfoLevel {
+    /// No debug information.
+    none = SLANG_DEBUG_INFO_LEVEL_NONE,
+    /// Emit as little debug information as possible, while still supporting stack trackes.
+    minimal = SLANG_DEBUG_INFO_LEVEL_MINIMAL,
+    /// Emit whatever is the standard level of debug information for each target.
+    standard = SLANG_DEBUG_INFO_LEVEL_STANDARD,
+    /// Emit as much debug infromation as possible for each target.
+    maximal = SLANG_DEBUG_INFO_LEVEL_MAXIMAL,
+};
+KALI_ENUM_INFO(
+    SlangDebugInfoLevel,
+    {
+        {SlangDebugInfoLevel::none, "none"},
+        {SlangDebugInfoLevel::minimal, "minimal"},
+        {SlangDebugInfoLevel::standard, "standard"},
+        {SlangDebugInfoLevel::maximal, "maximal"},
+    }
+);
+KALI_ENUM_REGISTER(SlangDebugInfoLevel);
+
+/// Slang optimization levels.
+enum class SlangOptimizationLevel {
+    /// No optimizations.
+    none = SLANG_OPTIMIZATION_LEVEL_NONE,
+    /// Default optimization level: balance code quality and compilation time.
+    default_ = SLANG_OPTIMIZATION_LEVEL_DEFAULT,
+    /// Optimize aggressively.
+    high = SLANG_OPTIMIZATION_LEVEL_HIGH,
+    /// Include optimizations that may take a very long time, or may involve severe space-vs-speed tradeoffs.
+    maximal = SLANG_OPTIMIZATION_LEVEL_MAXIMAL,
+};
+KALI_ENUM_INFO(
+    SlangOptimizationLevel,
+    {
+        {SlangOptimizationLevel::none, "none"},
+        {SlangOptimizationLevel::default_, "default"},
+        {SlangOptimizationLevel::high, "high"},
+        {SlangOptimizationLevel::maximal, "maximal"},
+    }
+);
+KALI_ENUM_REGISTER(SlangOptimizationLevel);
+
+/// Slang compiler options.
+/// Can be set when creating a Slang session.
 struct SlangCompilerOptions {
+    /// Specifies a list of include paths to be used when resolving module/include paths.
+    std::vector<std::filesystem::path> include_paths;
+
+    /// Specifies a list of preprocessor defines.
+    std::map<std::string, std::string> defines;
+
+    /// Specifies the shader model to use.
+    /// Defaults to latest available on the device.
     ShaderModel shader_model{ShaderModel::unknown};
-    SlangCompilerFlags compiler_flags{SlangCompilerFlags::none};
-    std::vector<std::string> compiler_args;
-    std::vector<std::filesystem::path> search_paths;
-    bool add_default_search_paths{true};
-    DefineList defines;
+
+    /// Specifies the matrix layout.
+    /// Defaults to row-major.
+    SlangMatrixLayout matrix_layout{SlangMatrixLayout::row_major};
+
+    /// Specifies a list of warnings to disable (warning codes or names).
+    std::vector<std::string> disable_warnings;
+
+    /// Specifies a list of warnings to enable (warning codes or names).
+    std::vector<std::string> enable_warnings;
+
+    /// Specifies a list of warnings to be treated as errors
+    /// (warning codes or names, or "all" to indicate all warnings).
+    std::vector<std::string> warnings_as_errors;
+
+    /// Turn on/off downstream compilation time report.
+    bool report_downstream_time{false};
+
+    /// Turn on/off reporting of time spend in different parts of the compiler.
+    bool report_perf_benchmark{false};
+
+    /// Specifies whether or not to skip the validation step after emitting SPIRV.
+    bool skip_spirv_validation{false};
+
+    //
+    // Target options.
+    // These can be extended/overriden at link time.
+    //
+
+    /// Specifies the floating point mode.
+    SlangFloatingPointMode floating_point_mode{SlangFloatingPointMode::default_};
+
+    /// Specifies the level of debug information to include in the generated code.
+    SlangDebugInfoLevel debug_info{SlangDebugInfoLevel::standard};
+
+    /// Specifies the optimization level.
+    SlangOptimizationLevel optimization{SlangOptimizationLevel::default_};
+
+    /// Specifies a list of additional arguments to be passed to the downstream compiler.
+    std::vector<std::string> downstream_args;
+
+    /// When set will dump the intermediate source output.
+    bool dump_intermediates{false};
+
+    /// The file name prefix for the intermediate source output.
+    std::string dump_intermediates_prefix;
+};
+
+/// Slang link options.
+/// These can optionally be set when linking a shader program.
+struct SlangLinkOptions {
+    /// Specifies the floating point mode.
+    std::optional<SlangFloatingPointMode> floating_point_mode;
+
+    /// Specifies the level of debug information to include in the generated code.
+    std::optional<SlangDebugInfoLevel> debug_info;
+
+    /// Specifies the optimization level.
+    std::optional<SlangOptimizationLevel> optimization;
+
+    /// Specifies a list of additional arguments to be passed to the downstream compiler.
+    std::optional<std::vector<std::string>> downstream_args;
+
+    /// When set will dump the intermediate source output.
+    std::optional<bool> dump_intermediates;
+
+    /// The file name prefix for the intermediate source output.
+    std::optional<std::string> dump_intermediates_prefix;
 };
 
 struct SlangSessionDesc {
     SlangCompilerOptions compiler_options;
+    bool add_default_include_paths{true};
 };
 
 class KALI_API SlangSession : public Object {
@@ -202,95 +251,87 @@ public:
     SlangSession(ref<Device> device, SlangSessionDesc desc);
     ~SlangSession();
 
-    const ref<Device>& device() const { return m_device; }
+    Device* device() const { return m_device; }
     const SlangSessionDesc& desc() const { return m_desc; }
 
-    ref<SlangModule> load_module(const std::filesystem::path& path, std::optional<DefineList> defines = std::nullopt);
+    ref<SlangModule> load_module(std::string_view module_name);
+
     ref<SlangModule> load_module_from_source(
-        const std::string& source,
-        const std::filesystem::path& path = {},
-        const std::string& name = {},
-        std::optional<DefineList> defines = std::nullopt
+        std::string_view module_name,
+        std::string_view source,
+        std::optional<std::filesystem::path> path = {}
     );
 
-    std::filesystem::path resolve_path(const std::filesystem::path& path);
+    ref<ShaderProgram> link_program(
+        std::vector<ref<SlangModule>> modules,
+        std::vector<ref<SlangEntryPoint>> entry_points,
+        std::optional<SlangLinkOptions> link_options = {}
+    );
+
+    ref<ShaderProgram> load_program(
+        std::string_view module_name,
+        std::vector<std::string_view> entry_point_names,
+        std::optional<std::string_view> additional_source = {},
+        std::optional<SlangLinkOptions> link_options = {}
+    );
 
     slang::ISession* get_slang_session() const { return m_slang_session; }
 
-private:
-    ref<Device> m_device;
-    SlangSessionDesc m_desc;
-    Slang::ComPtr<slang::ISession> m_slang_session;
-};
+    std::string to_string() const override;
 
-struct SlangModuleDesc {
-    enum class Type {
-        file,
-        source,
-    };
-    Type type;
-    std::filesystem::path path;
-    std::string source;
-    DefineList defines;
+    void break_strong_reference_to_device() { m_device.break_strong_reference(); }
+
+private:
+    std::string resolve_module_name(std::string_view module_name);
+
+    /// Register a module with the debug printer.
+    /// This extracts all the hashed strings of the module.
+    void register_with_debug_printer(SlangModule* module) const;
+
+    breakable_ref<Device> m_device;
+    SlangSessionDesc m_desc;
+    std::vector<std::filesystem::path> m_include_paths;
+    std::string m_uid;
+    Slang::ComPtr<slang::ISession> m_slang_session;
 };
 
 class KALI_API SlangModule : public Object {
     KALI_OBJECT(SlangModule)
 public:
-    SlangModule(ref<SlangSession> session, SlangModuleDesc desc);
+    SlangModule(ref<SlangSession> session, slang::IModule* slang_module);
     ~SlangModule();
 
-    const SlangModuleDesc& desc() const { return m_desc; }
+    SlangSession* session() const { return m_session; }
 
-    ref<SlangGlobalScope> global_scope();
-    ref<SlangEntryPoint> entry_point(std::string_view name);
-    std::vector<ref<SlangEntryPoint>> entry_points();
+    const std::string& name() const { return m_name; }
+    const std::filesystem::path& path() const { return m_path; }
+    const std::string& uid() const { return m_uid; }
+    const ProgramLayout* layout() const { return ProgramLayout::from_slang(m_slang_module->getLayout()); }
 
-    ref<ShaderProgram> create_program(std::string_view entry_point_name);
-    ref<ShaderProgram> create_program(ref<SlangGlobalScope> global_scope, ref<SlangEntryPoint> entry_point);
-    ref<ShaderProgram>
-    create_program(ref<SlangGlobalScope> global_scope, std::vector<ref<SlangEntryPoint>> entry_points);
+    std::vector<ref<SlangEntryPoint>> entry_points() const;
+    ref<SlangEntryPoint> entry_point(std::string_view name) const;
+    bool has_entry_point(std::string_view name) const;
 
-    ref<ComputeKernel> create_compute_kernel(std::string_view entry_point_name);
+    slang::IModule* slang_module() const { return m_slang_module; }
+
+    std::string to_string() const override;
 
 private:
     ref<SlangSession> m_session;
-    SlangModuleDesc m_desc;
-    Slang::ComPtr<slang::ICompileRequest> m_compile_request;
-    size_t m_entry_point_count;
+    /// Slang module (owned by the session).
+    slang::IModule* m_slang_module;
+    std::string m_name;
+    std::filesystem::path m_path;
+    std::string m_uid;
 };
 
-class KALI_API SlangComponentType : public Object {
-    KALI_OBJECT(SlangComponentType)
-public:
-    SlangComponentType(ref<SlangModule> module, Slang::ComPtr<slang::IComponentType> component_type);
-    virtual ~SlangComponentType() = default;
-
-    ref<SlangModule> module() const { return m_module; }
-
-protected:
-    ref<SlangModule> m_module;
-    Slang::ComPtr<slang::IComponentType> m_component_type;
-
-    friend class ShaderProgram;
-};
-
-class KALI_API SlangGlobalScope : public SlangComponentType {
-    KALI_OBJECT(SlangGlobalScope)
-public:
-    SlangGlobalScope(ref<SlangModule> module, Slang::ComPtr<slang::IComponentType> component_type);
-    ~SlangGlobalScope() = default;
-
-    const ProgramLayout* layout() const;
-
-    virtual std::string to_string() const override;
-};
-
-class KALI_API SlangEntryPoint : public SlangComponentType {
+class KALI_API SlangEntryPoint : public Object {
     KALI_OBJECT(SlangEntryPoint)
 public:
-    SlangEntryPoint(ref<SlangModule> module, Slang::ComPtr<slang::IComponentType> component_type);
+    SlangEntryPoint(ref<SlangModule> module, Slang::ComPtr<slang::IComponentType> slang_entry_point);
     ~SlangEntryPoint() = default;
+
+    SlangModule* module() const { return m_module; }
 
     const std::string& name() const { return m_name; }
     ShaderStage stage() const { return m_stage; }
@@ -298,9 +339,19 @@ public:
 
     ref<SlangEntryPoint> rename(const std::string& new_name);
 
+    /// Returns a copy of the entry point with a new name.
+    ref<SlangEntryPoint> with_name(const std::string& name) const;
+
+    /// Returns a copy of the entry point with a set of type conformances set.
+    ref<SlangEntryPoint> with_type_conformances(const TypeConformanceList& type_conformances) const;
+
+    slang::IComponentType* slang_entry_point() const { return m_slang_entry_point.get(); }
+
     virtual std::string to_string() const override;
 
 private:
+    ref<SlangModule> m_module;
+    Slang::ComPtr<slang::IComponentType> m_slang_entry_point;
     std::string m_name;
     ShaderStage m_stage;
 };
@@ -310,14 +361,16 @@ class KALI_API ShaderProgram : public Object {
 public:
     ShaderProgram(
         ref<Device> device,
-        ref<SlangGlobalScope> global_scope,
-        std::vector<ref<SlangEntryPoint>> entry_points
+        ref<SlangSession> session,
+        std::vector<ref<SlangModule>> modules,
+        std::vector<ref<SlangEntryPoint>> entry_points,
+        Slang::ComPtr<slang::IComponentType> linked_program
     );
     ~ShaderProgram() = default;
 
     const ref<Device>& device() const { return m_device; }
 
-    const ProgramLayout* program_layout() const { return m_global_scope->layout(); }
+    const ProgramLayout* program_layout() const { return ProgramLayout::from_slang(m_linked_program->getLayout()); }
     std::vector<const EntryPointLayout*> entry_point_layouts() const;
     const EntryPointLayout* entry_point_layout(uint32_t index) const { return m_entry_points[index]->layout(); }
 
@@ -329,8 +382,10 @@ public:
 
 private:
     ref<Device> m_device;
-    ref<SlangGlobalScope> m_global_scope;
+    ref<SlangSession> m_session;
+    std::vector<ref<SlangModule>> m_modules;
     std::vector<ref<SlangEntryPoint>> m_entry_points;
+    Slang::ComPtr<slang::IComponentType> m_linked_program;
     Slang::ComPtr<gfx::IShaderProgram> m_gfx_shader_program;
 };
 

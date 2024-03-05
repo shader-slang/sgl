@@ -29,8 +29,7 @@ protected:
     ref<ShaderProgram> m_program;
 };
 
-struct ComputeKernelDesc
-{
+struct ComputeKernelDesc {
     ref<ShaderProgram> program;
 };
 

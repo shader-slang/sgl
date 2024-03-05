@@ -389,23 +389,19 @@ Device::Device(const DeviceDesc& desc)
         log_warn("No supported shader model found, pretending to support {}.", m_supported_shader_model);
     }
 
-    // Set default shader model.
-    m_default_shader_model = m_desc.default_shader_model;
-    if (m_default_shader_model > m_supported_shader_model) {
-        log_warn(
-            "Shader model {} is not supported, falling back to {}.",
-            m_default_shader_model,
-            m_supported_shader_model
-        );
-        m_default_shader_model = m_supported_shader_model;
-    }
-
     // Get features.
     const char* features[256];
     gfx::GfxCount feature_count = 0;
     SLANG_CALL(m_gfx_device->getFeatures(features, std::size(features), &feature_count));
     for (gfx::GfxCount i = 0; i < feature_count; ++i)
         m_features.push_back(features[i]);
+
+    // Create default slang session.
+    m_slang_session = create_slang_session({
+        .compiler_options = m_desc.compiler_options,
+        .add_default_include_paths = true,
+    });
+    m_slang_session->break_strong_reference_to_device();
 
     // Create per-frame data.
     m_frame_data.resize(IN_FLIGHT_FRAME_COUNT);
@@ -578,28 +574,37 @@ ref<SlangSession> Device::create_slang_session(SlangSessionDesc desc)
     return make_ref<SlangSession>(ref<Device>(this), std::move(desc));
 }
 
-ref<SlangModule> Device::load_module(
-    const std::filesystem::path& path,
-    std::optional<DefineList> defines,
-    std::optional<SlangCompilerOptions> compiler_options
-)
+ref<SlangModule> Device::load_module(std::string_view module_name)
 {
-    ref<SlangSession> session = create_slang_session({
-        .compiler_options = compiler_options.value_or(SlangCompilerOptions{}),
-    });
-    return session->load_module(path, defines);
+    return m_slang_session->load_module(module_name);
 }
 
 ref<SlangModule> Device::load_module_from_source(
-    const std::string& source,
-    std::optional<DefineList> defines,
-    std::optional<SlangCompilerOptions> compiler_options
+    std::string_view module_name,
+    std::string_view source,
+    std::optional<std::filesystem::path> path
 )
 {
-    ref<SlangSession> session = create_slang_session({
-        .compiler_options = compiler_options.value_or(SlangCompilerOptions{}),
-    });
-    return session->load_module_from_source(source, {}, {}, defines);
+    return m_slang_session->load_module_from_source(module_name, source, path);
+}
+
+ref<ShaderProgram> Device::link_program(
+    std::vector<ref<SlangModule>> modules,
+    std::vector<ref<SlangEntryPoint>> entry_points,
+    std::optional<SlangLinkOptions> link_options
+)
+{
+    return m_slang_session->link_program(std::move(modules), std::move(entry_points), link_options);
+}
+
+ref<ShaderProgram> Device::load_program(
+    std::string_view module_name,
+    std::vector<std::string_view> entry_point_names,
+    std::optional<std::string_view> additional_source,
+    std::optional<SlangLinkOptions> link_options
+)
+{
+    return m_slang_session->load_program(module_name, entry_point_names, additional_source, link_options);
 }
 
 ref<MutableShaderObject> Device::create_mutable_shader_object(const ShaderProgram* shader_program)
@@ -877,14 +882,12 @@ std::string Device::to_string() const
         "  enable_debug_layers = {},\n"
         "  adapter_luid = {},\n"
         "  shader_cache_path = \"{}\"\n"
-        "  default_shader_model = {},\n"
         "  supported_shader_model = {}\n"
         ")",
         m_desc.type,
         m_desc.enable_debug_layers,
         m_desc.adapter_luid ? fmt::format("{}", *m_desc.adapter_luid) : "null",
         m_desc.shader_cache_path,
-        m_default_shader_model,
         m_supported_shader_model
     );
 }

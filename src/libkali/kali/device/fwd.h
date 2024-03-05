@@ -52,7 +52,6 @@ class Framebuffer;
 struct SlangSessionDesc;
 class SlangSession;
 
-class DefineList;
 class SlangModule;
 class SlangComponentType;
 class SlangGlobalScope;
