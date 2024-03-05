@@ -23,7 +23,10 @@ int main()
     kali::static_init();
 
     {
-        ref<Device> device = Device::create({.type = DeviceType::d3d12, .enable_debug_layers = true});
+        ref<Device> device = Device::create({
+            .enable_debug_layers = true,
+            .compiler_options = {.include_paths = {EXAMPLE_DIR}},
+        });
 
         std::vector<float3> vertices{{-1, -1, 0}, {1, -1, 0}, {0, 1, 0}};
         std::vector<uint32_t> indices{0, 1, 2};
@@ -95,12 +98,14 @@ int main()
 
         {
             ref<CommandBuffer> command_buffer = device->create_command_buffer();
-            auto encoder = command_buffer->encode_ray_tracing_commands();
-            encoder.build_acceleration_structure({
-                .inputs = blas_build_inputs,
-                .dst = blas,
-                .scratch_data = blas_scratch_buffer->device_address(),
-            });
+            {
+                auto encoder = command_buffer->encode_ray_tracing_commands();
+                encoder.build_acceleration_structure({
+                    .inputs = blas_build_inputs,
+                    .dst = blas,
+                    .scratch_data = blas_scratch_buffer->device_address(),
+                });
+            }
             command_buffer->submit();
         }
 
@@ -153,12 +158,14 @@ int main()
 
         {
             ref<CommandBuffer> command_buffer = device->create_command_buffer();
-            auto encoder = command_buffer->encode_ray_tracing_commands();
-            encoder.build_acceleration_structure({
-                .inputs = tlas_build_inputs,
-                .dst = tlas,
-                .scratch_data = tlas_scratch_buffer->device_address(),
-            });
+            {
+                auto encoder = command_buffer->encode_ray_tracing_commands();
+                encoder.build_acceleration_structure({
+                    .inputs = tlas_build_inputs,
+                    .dst = tlas,
+                    .scratch_data = tlas_scratch_buffer->device_address(),
+                });
+            }
             command_buffer->submit();
         }
 
@@ -170,11 +177,8 @@ int main()
             .debug_name = "render_texture",
         });
 
-        ref<SlangModule> module = device->load_module(EXAMPLE_DIR / "raytracing_pipeline.slang");
-        ref<kali::SlangEntryPoint> ray_gen = module->entry_point("ray_gen");
-        ref<kali::SlangEntryPoint> miss = module->entry_point("miss");
-        ref<kali::SlangEntryPoint> closest_hit = module->entry_point("closest_hit");
-        ref<ShaderProgram> program = module->create_program(module->global_scope(), {ray_gen, miss, closest_hit});
+        ref<ShaderProgram> program
+            = device->load_program("raytracing_pipeline.slang", {"ray_gen", "miss", "closest_hit"});
         ref<RayTracingPipeline> pipeline = device->create_ray_tracing_pipeline({
             .program = program,
             .hit_groups = {{
@@ -194,12 +198,14 @@ int main()
 
         {
             ref<CommandBuffer> command_buffer = device->create_command_buffer();
-            auto encoder = command_buffer->encode_ray_tracing_commands();
-            auto shader_object = encoder.bind_pipeline(pipeline);
-            auto cursor = ShaderCursor(shader_object);
-            cursor["tlas"] = tlas;
-            cursor["render_texture"] = render_texture;
-            encoder.dispatch_rays(0, shader_table, uint3{1024, 1024, 1});
+            {
+                auto encoder = command_buffer->encode_ray_tracing_commands();
+                auto shader_object = encoder.bind_pipeline(pipeline);
+                auto cursor = ShaderCursor(shader_object);
+                cursor["tlas"] = tlas;
+                cursor["render_texture"] = render_texture;
+                encoder.dispatch_rays(0, shader_table, uint3{1024, 1024, 1});
+            }
             command_buffer->submit();
         }
 

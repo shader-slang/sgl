@@ -22,7 +22,10 @@ int main()
     kali::static_init();
 
     {
-        ref<Device> device = Device::create({.enable_debug_layers = true});
+        ref<Device> device = Device::create({
+            .enable_debug_layers = true,
+            .compiler_options = {.include_paths = {EXAMPLE_DIR}},
+        });
 
         std::vector<float3> vertices{{-1, -1, 0}, {1, -1, 0}, {0, 1, 0}};
         std::vector<uint32_t> indices{0, 1, 2};
@@ -94,12 +97,14 @@ int main()
 
         {
             ref<CommandBuffer> command_buffer = device->create_command_buffer();
-            auto encoder = command_buffer->encode_ray_tracing_commands();
-            encoder.build_acceleration_structure({
-                .inputs = blas_build_inputs,
-                .dst = blas,
-                .scratch_data = blas_scratch_buffer->device_address(),
-            });
+            {
+                auto encoder = command_buffer->encode_ray_tracing_commands();
+                encoder.build_acceleration_structure({
+                    .inputs = blas_build_inputs,
+                    .dst = blas,
+                    .scratch_data = blas_scratch_buffer->device_address(),
+                });
+            }
             command_buffer->submit();
         }
 
@@ -152,12 +157,14 @@ int main()
 
         {
             ref<CommandBuffer> command_buffer = device->create_command_buffer();
-            auto encoder = command_buffer->encode_ray_tracing_commands();
-            encoder.build_acceleration_structure({
-                .inputs = tlas_build_inputs,
-                .dst = tlas,
-                .scratch_data = tlas_scratch_buffer->device_address(),
-            });
+            {
+                auto encoder = command_buffer->encode_ray_tracing_commands();
+                encoder.build_acceleration_structure({
+                    .inputs = tlas_build_inputs,
+                    .dst = tlas,
+                    .scratch_data = tlas_scratch_buffer->device_address(),
+                });
+            }
             command_buffer->submit();
         }
 
@@ -169,8 +176,8 @@ int main()
             .debug_name = "render_texture",
         });
 
-        ref<ComputeKernel> kernel
-            = device->load_module(EXAMPLE_DIR / "raytracing.slang")->create_compute_kernel("main");
+        ref<ShaderProgram> program = device->load_program("raytracing.slang", {"main"});
+        ref<ComputeKernel> kernel = device->create_compute_kernel({.program = program});
 
         kernel->dispatch(
             uint3{1024, 1024, 1},

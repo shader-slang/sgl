@@ -4,6 +4,9 @@ import kali
 import sys
 import pytest
 from dataclasses import dataclass
+from pathlib import Path
+
+SHADER_DIR = Path(__file__).parent
 
 if sys.platform == "win32":
     DEFAULT_DEVICE_TYPES = [kali.DeviceType.d3d12, kali.DeviceType.vulkan]
@@ -33,13 +36,17 @@ def all_shader_models_from(shader_model: kali.ShaderModel) -> list[kali.ShaderMo
 DEVICE_CACHE = {}
 
 
-def get_device(type: kali.DeviceType, cached: bool = True) -> kali.Device:
-    if cached:
-        if not type in DEVICE_CACHE:
-            DEVICE_CACHE[type] = kali.Device(type=type, enable_debug_layers=True)
+def get_device(type: kali.DeviceType, use_cache: bool = True) -> kali.Device:
+    if use_cache and type in DEVICE_CACHE:
         return DEVICE_CACHE[type]
-    else:
-        return kali.Device(type=type, enable_debug_layers=True)
+    device = kali.Device(
+        type=type,
+        enable_debug_layers=True,
+        compiler_options={"include_paths": [SHADER_DIR]},
+    )
+    if use_cache:
+        DEVICE_CACHE[type] = device
+    return device
 
 
 class Context:
@@ -63,12 +70,13 @@ def dispatch_compute(
         pytest.skip(f"Shader model {str(shader_model)} not supported")
 
     compiler_options["shader_model"] = shader_model
+    compiler_options["defines"] = defines
 
-    kernel = device.load_module(
-        path=path,
-        defines=defines,
-        compiler_options=compiler_options,
-    ).create_compute_kernel(entry_point)
+    session = device.create_slang_session(compiler_options)
+    program = session.load_program(
+        module_name=str(path), entry_point_names=[entry_point]
+    )
+    kernel = device.create_compute_kernel(program)
 
     ctx = Context()
     vars = {}

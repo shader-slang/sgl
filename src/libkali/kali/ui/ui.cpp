@@ -299,14 +299,7 @@ Context::Context(ref<Device> device)
     });
 
     // Setup program.
-    ref<SlangModule> module = m_device->load_module(platform::runtime_directory() / "shaders/kali/ui/imgui.slang");
-    m_program = module->create_program(
-        module->global_scope(),
-        {
-            module->entry_point("vs_main"),
-            module->entry_point("fs_main"),
-        }
-    );
+    m_program = m_device->load_program("kali/ui/imgui.slang", {"vs_main", "fs_main"});
 
     // Setup font texture.
     {

@@ -226,9 +226,8 @@ TEST_VARS = {
 def test_shader_cursor(device_type):
     device = helpers.get_device(type=device_type)
 
-    kernel = device.load_module(
-        Path(__file__).parent / "test_shader_cursor.slang"
-    ).create_compute_kernel("main")
+    program = device.load_program("test_shader_cursor.slang", ["main"])
+    kernel = device.create_compute_kernel(program)
 
     result_buffer = device.create_buffer(
         size=4096,

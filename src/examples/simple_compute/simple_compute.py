@@ -6,11 +6,13 @@ from pathlib import Path
 
 EXAMPLE_DIR = Path(__file__).parent
 
-device = kali.Device(enable_debug_layers=False)
-
-kernel = device.load_module(EXAMPLE_DIR / "simple_compute.slang").create_compute_kernel(
-    "main"
+device = kali.Device(
+    enable_debug_layers=False,
+    compiler_options={"include_paths": [EXAMPLE_DIR]},
 )
+
+program = device.load_program("simple_compute.slang", ["main"])
+kernel = device.create_compute_kernel(program)
 
 N = 1024
 

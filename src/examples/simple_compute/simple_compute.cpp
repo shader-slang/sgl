@@ -21,10 +21,13 @@ int main()
     kali::static_init();
 
     {
-        ref<Device> device = Device::create({.enable_debug_layers = true});
+        ref<Device> device = Device::create({
+            .enable_debug_layers = true,
+            .compiler_options = {.include_paths = {EXAMPLE_DIR}},
+        });
 
-        ref<ComputeKernel> kernel
-            = device->load_module(EXAMPLE_DIR / "simple_compute.slang")->create_compute_kernel("main");
+        ref<ShaderProgram> program = device->load_program("simple_compute.slang", {"main"});
+        ref<ComputeKernel> kernel = device->create_compute_kernel({.program = program});
 
         const uint32_t N = 1024;
 

@@ -18,8 +18,17 @@ parser.add_argument("-b", "--benchmark", action="store_true", help="Run in bench
 parser.add_argument("-t", "--tev", action="store_true", help="Show images in tev image viewer.")
 parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose logging.")
 # fmt: on
-args = parser.parse_args()
-# args = parser.parse_args(["monalisa.jpg", "-o", "monalisa_bc7.jpg", "-t", "-b", "-v"])
+# args = parser.parse_args()
+args = parser.parse_args(
+    [
+        "C:/projects/kali/data/test_images/monalisa.jpg",
+        "-o",
+        "monalisa_bc7.jpg",
+        "-t",
+        "-b",
+        "-v",
+    ]
+)
 
 # Load input image
 try:
@@ -35,7 +44,9 @@ except Exception as e:
     sys.exit(1)
 
 # Create device
-device = kali.Device(enable_debug_layers=args.verbose)
+device = kali.Device(
+    enable_debug_layers=args.verbose, compiler_options={"include_paths": [EXAMPLE_DIR]}
+)
 
 # Create input texture
 input_tex = device.create_texture(
@@ -61,13 +72,9 @@ decoded_tex = device.create_texture(
 )
 
 # Load shader module
-encoder = device.load_module(
-    EXAMPLE_DIR / "tinybc.slang",
-    defines={
-        "CONFIG_USE_ADAM": "true",
-        "CONFIG_OPT_STEPS": str(args.opt_steps),
-    },
-).create_compute_kernel("main")
+constants = f"export static const bool USE_ADAM = true;\nexport static const uint OPT_STEPS = {args.opt_steps};\n"
+program = device.load_program("tinybc.slang", ["main"], constants)
+encoder = device.create_compute_kernel(program)
 
 t = kali.Timer()
 

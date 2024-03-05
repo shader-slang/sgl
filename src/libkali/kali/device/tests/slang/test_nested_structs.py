@@ -14,9 +14,8 @@ import helpers
 def test_cast_float16(device_type):
     device = helpers.get_device(device_type)
 
-    kernel = device.load_module(
-        Path(__file__).parent / "test_nested_structs.slang"
-    ).create_compute_kernel("main")
+    program = device.load_program("slang/test_nested_structs.slang", ["main"])
+    kernel = device.create_compute_kernel(program)
 
     result_buffer = device.create_structured_buffer(
         struct_type=kernel.reflection.result,
