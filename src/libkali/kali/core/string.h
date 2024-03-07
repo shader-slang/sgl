@@ -188,6 +188,20 @@ remove_leading_trailing_whitespace(std::string_view str, std::string_view whites
 [[nodiscard]] KALI_API std::string format_byte_size(size_t size);
 
 /**
+ * Convert a duration in seconds to a human readable string:
+ * - prints nanoseconds (ns) if duration < 1 microsecond
+ * - prints microseconds (us) if duration < 1 millisecond
+ * - prints milliseconds (ms) if duration < 1 second
+ * - prints seconds (s) if duration < 60 seconds
+ * - prints minutes (m) if duration < 60 minutes
+ * - prints hours (h) if duration < 24 hours
+ * - otherwise prints days (d)
+ * \param seconds Duration in seconds.
+ * \return Duration as a human readable string.
+ */
+[[nodiscard]] KALI_API std::string format_duration(double seconds);
+
+/**
  * Convert data to a hexadecimal string.
  * \param data Input data.
  * \param len Length of input data.

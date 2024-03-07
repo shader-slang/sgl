@@ -118,6 +118,24 @@ std::string format_byte_size(size_t size)
         return fmt::format("{:.2f} TB", size / 1099511627776.0);
 }
 
+std::string format_duration(double seconds)
+{
+    if (seconds < 1e-6)
+        return fmt::format("{:.2f} ns", seconds * 1e9);
+    else if (seconds < 1e-3)
+        return fmt::format("{:.2f} us", seconds * 1e6);
+    else if (seconds < 1.0)
+        return fmt::format("{:.2f} ms", seconds * 1e3);
+    else if (seconds < 60.0)
+        return fmt::format("{:.2f} s", seconds);
+    else if (seconds < 3600.0)
+        return fmt::format("{:.2f} m", seconds / 60);
+    else if (seconds < 86400.0)
+        return fmt::format("{:.2f} h", seconds / 3600);
+    else
+        return fmt::format("{:.2f} d", seconds / 86400);
+}
+
 std::string hexlify(const void* data, size_t len)
 {
     static const char* HEX_CHARS = "0123456789abcdef";
