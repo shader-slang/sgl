@@ -84,6 +84,8 @@ KALI_PY_EXPORT(device_shader)
             D(TypeConformanceList, remove_2)
         );
 
+    nb::exception<SlangCompileError>(m, "SlangCompileError");
+
     nb::kali_enum<SlangMatrixLayout>(m, "SlangMatrixLayout");
     nb::kali_enum<kali::SlangFloatingPointMode>(m, "SlangFloatingPointMode");
     nb::kali_enum<kali::SlangDebugInfoLevel>(m, "SlangDebugInfoLevel");
