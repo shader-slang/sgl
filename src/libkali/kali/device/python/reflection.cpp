@@ -50,7 +50,12 @@ KALI_PY_EXPORT(device_reflection)
         .def_prop_ro("variable", &VariableLayoutReflection::variable)
         .def_prop_ro("type_layout", &VariableLayoutReflection::type_layout);
 
-    nb::class_<EntryPointLayout>(m, "EntryPointLayout").def("__repr__", &EntryPointLayout::to_string);
+    nb::class_<EntryPointLayout>(m, "EntryPointLayout")
+        .def_prop_ro("name", &EntryPointLayout::name)
+        .def_prop_ro("name_override", &EntryPointLayout::name_override)
+        .def_prop_ro("stage", &EntryPointLayout::stage)
+        .def_prop_ro("compute_thread_group_size", &EntryPointLayout::compute_thread_group_size)
+        .def("__repr__", &EntryPointLayout::to_string);
 
     nb::class_<ProgramLayout> program_layout(m, "ProgramLayout");
 
