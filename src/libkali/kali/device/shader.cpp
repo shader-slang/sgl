@@ -13,9 +13,12 @@
 #include "kali/core/platform.h"
 #include "kali/core/string.h"
 #include "kali/core/crypto.h"
+#include "kali/core/timer.h"
 
 #include <slang.h>
 #include <slang-tag-version.h>
+
+#include <random>
 
 namespace kali {
 
@@ -97,22 +100,17 @@ public:
 
     void add_include(const std::filesystem::path& path) { add(slang::CompilerOptionName::Include, path.string()); }
 
-    void hash(SHA1& hash) const
+    void insert_cache_include(const std::filesystem::path& path, size_t index)
     {
-        for (const auto& entry : m_entries) {
-            hash.update(entry.name);
-            hash.update(entry.value.kind);
-            switch (entry.value.kind) {
-            case slang::CompilerOptionValueKind::Int:
-                hash.update(entry.value.int0);
-                hash.update(entry.value.int1);
-                break;
-            case slang::CompilerOptionValueKind::String:
-                hash.update(entry.value.string0);
-                hash.update(entry.value.string1);
-                break;
-            }
-        }
+        KALI_ASSERT(index <= m_entries.size());
+        m_entries.insert(m_entries.begin() + index,
+            {
+            .name = slang::CompilerOptionName::Include,
+            .value = {
+                .kind = slang::CompilerOptionValueKind::String,
+                .string0 = path.string(),
+            },
+        });
     }
 
     std::vector<slang::CompilerOptionEntry> slang_entries() const
@@ -217,14 +215,17 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
     session_options.add(slang::CompilerOptionName::ReportPerfBenchmark, options.report_perf_benchmark);
     session_options.add(slang::CompilerOptionName::SkipSPIRVValidation, options.skip_spirv_validation);
 
+    // Only use up to date binary modules (required for caching to work properly).
+    session_options.add(slang::CompilerOptionName::UseUpToDateBinaryModule, true);
+
     DeviceType device_type = m_device->type();
 
     slang::SessionDesc session_desc{};
 
-    // Set search paths.
+    // Set include paths.
     // Slang will search for files in the order they are specified.
-    // Use provided search paths first, followed by default search paths.
-    // Keep a copy of the search paths for local resolution of module names.
+    // Use provided include paths first, followed by default include paths.
+    // Keep a copy of the include paths for local resolution of module names.
     m_include_paths = options.include_paths;
     if (m_desc.add_default_include_paths)
         m_include_paths.push_back(platform::runtime_directory() / "shaders");
@@ -313,12 +314,34 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
     session_desc.compilerOptionEntries = slang_session_option_entries.data();
     session_desc.compilerOptionEntryCount = narrow_cast<uint32_t>(slang_session_option_entries.size());
 
-    // Create session uid.
-    SHA1 hash;
-    hash.update(SLANG_TAG_VERSION);
-    session_options.hash(hash);
-    target_options.hash(hash);
-    m_uid = hash.hex_digest();
+    // Use the session descriptor to generate a hash that uniquely identifies the session.
+    Slang::ComPtr<ISlangBlob> session_digest;
+    SLANG_CALL(m_device->global_session()->getSessionDescDigest(&session_desc, session_digest.writeRef()));
+    m_uid = string::hexlify(session_digest->getBufferPointer(), session_digest->getBufferSize());
+
+    // Setup session cache.
+    // The session cache relies on Slang's ability to serialize shader modules.
+    // We use the session digest to create a unique cache directory for the session.
+    // When loading a shader module, we store a serialized version ('.slang-module' file) to the cache.
+    // Next time the module is loaded, Slang can detect the cached file and load it directly.
+    // Cached modules are stored in a directory structure that mirrors the include paths.
+    if (m_desc.cache_path) {
+        m_cache_enabled = true;
+        m_cache_path = *m_desc.cache_path;
+        KALI_CHECK(m_cache_path.is_absolute(), "Cache path must be an absolute path");
+        m_cache_path /= m_uid;
+        m_cache_include_paths.resize(m_include_paths.size());
+        for (size_t i = 0; i < m_include_paths.size(); ++i) {
+            m_cache_include_paths[i] = m_cache_path / fmt::format("{}", i);
+            std::filesystem::create_directories(m_cache_include_paths[i]);
+            session_options.insert_cache_include(m_cache_include_paths[i], i);
+        }
+
+        // Update session descriptor with the patched include paths.
+        slang_session_option_entries = session_options.slang_entries();
+        session_desc.compilerOptionEntries = slang_session_option_entries.data();
+        session_desc.compilerOptionEntryCount = narrow_cast<uint32_t>(slang_session_option_entries.size());
+    }
 
     SLANG_CALL(m_device->global_session()->createSession(session_desc, m_slang_session.writeRef()));
 }
@@ -327,6 +350,7 @@ SlangSession::~SlangSession() { }
 
 ref<SlangModule> SlangSession::load_module(std::string_view module_name)
 {
+    Timer timer;
     Slang::ComPtr<ISlangBlob> diagnostics;
     std::string resolved_name = resolve_module_name(module_name);
     slang::IModule* slang_module = m_slang_session->loadModule(resolved_name.c_str(), diagnostics.writeRef());
@@ -337,6 +361,9 @@ ref<SlangModule> SlangSession::load_module(std::string_view module_name)
     report_diagnostics(diagnostics);
     ref<SlangModule> module = make_ref<SlangModule>(ref(this), slang_module);
     register_with_debug_printer(module);
+    log_debug("Loading slang module \"{}\" took {}", module_name, string::format_duration(timer.elapsed_s()));
+    if (m_cache_enabled)
+        write_module_to_cache(module);
     return module;
 }
 
@@ -479,6 +506,71 @@ std::string SlangSession::to_string() const
     );
 }
 
+bool SlangSession::write_module_to_cache(SlangModule* module)
+{
+    // Do not cache module if it was loaded from the cache.
+    if (module->path().extension() == ".slang-module")
+        return false;
+
+    // Check if target path is within the specified root path.
+    auto is_sub_path = [](const std::filesystem::path root, const std::filesystem::path& target)
+    {
+        std::string relative = std::filesystem::relative(target, root).string();
+        return relative.size() == 1 || (relative.size() > 1 && relative[0] != '.' && relative[1] != '.');
+    };
+
+    // Find the include path that contains the module.
+    KALI_ASSERT(m_include_paths.size() == m_cache_include_paths.size());
+    size_t include_index = size_t(-1);
+    for (size_t i = 0; i < m_include_paths.size(); ++i) {
+        if (is_sub_path(m_include_paths[i], module->path())) {
+            include_index = i;
+            break;
+        }
+    }
+    if (include_index == size_t(-1))
+        return false;
+
+    // Determine path of the cached module.
+    std::filesystem::path relative = std::filesystem::relative(module->path(), m_include_paths[include_index]);
+    std::filesystem::path cache_path = m_cache_include_paths[include_index] / relative;
+    cache_path.replace_extension(".slang-module");
+
+    // Create directories to cache path.
+    std::error_code ec;
+    std::filesystem::create_directories(cache_path.parent_path(), ec);
+    if (ec) {
+        log_warn(
+            "Failed to create directory \"{}\" for slang module cache ({})",
+            cache_path.parent_path(),
+            ec.message()
+        );
+        return false;
+    }
+
+    // Write module to a temporary file.
+    std::filesystem::path tmp_path = cache_path;
+    std::random_device rd;
+    uint64_t uid = rd();
+    tmp_path.replace_extension(".slang-module-" + string::hexlify(&uid, sizeof(uid)));
+    if (std::filesystem::exists(tmp_path))
+        return false;
+    if (!SLANG_SUCCEEDED(module->slang_module()->writeToFile(tmp_path.string().c_str()))) {
+        log_warn("Failed to write cached slang module \"{}\" to \"{}\"", module->name(), cache_path);
+        return false;
+    }
+
+    // Rename temporary file to cache path.
+    std::filesystem::rename(tmp_path, cache_path, ec);
+    if (ec) {
+        log_warn("Failed to rename cached slang module \"{}\" to \"{}\" ({})", tmp_path, cache_path, ec.message());
+        std::filesystem::remove(tmp_path, ec);
+        return false;
+    }
+
+    return true;
+}
+
 std::string SlangSession::resolve_module_name(std::string_view module_name)
 {
     // Return if module name is an absolute file path.
@@ -486,11 +578,11 @@ std::string SlangSession::resolve_module_name(std::string_view module_name)
     if (path.is_absolute())
         return path.string();
 
-    // Return absolute path if module name is a relative path within the search paths.
-    for (const std::filesystem::path& search_path : m_include_paths) {
-        std::filesystem::path full_path = search_path / path;
+    // Return relative path if module name is a relative path within the include paths.
+    for (const std::filesystem::path& include_path : m_include_paths) {
+        std::filesystem::path full_path = include_path / path;
         if (std::filesystem::exists(full_path))
-            return full_path.string();
+            return path.string();
     }
 
     // Assume we have a module name in the form "a.b.c" which we interpret as "a/b/c.slang".
@@ -498,13 +590,13 @@ std::string SlangSession::resolve_module_name(std::string_view module_name)
     std::replace(str.begin(), str.end(), '.', '/');
     str += ".slang";
     path = str;
-    for (const std::filesystem::path& search_path : m_include_paths) {
-        std::filesystem::path full_path = search_path / path;
+    for (const std::filesystem::path& include_path : m_include_paths) {
+        std::filesystem::path full_path = include_path / path;
         if (std::filesystem::exists(full_path))
-            return full_path.string();
+            return path.string();
     }
 
-    // Failed to resolve, return the module name.
+    // Failed to resolve, return the module name as is.
     return std::string{module_name};
 }
 

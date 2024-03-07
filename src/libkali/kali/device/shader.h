@@ -283,6 +283,8 @@ public:
     void break_strong_reference_to_device() { m_device.break_strong_reference(); }
 
 private:
+    bool write_module_to_cache(SlangModule* module);
+
     std::string resolve_module_name(std::string_view module_name);
 
     /// Register a module with the debug printer.
@@ -291,9 +293,17 @@ private:
 
     breakable_ref<Device> m_device;
     SlangSessionDesc m_desc;
-    std::vector<std::filesystem::path> m_include_paths;
     std::string m_uid;
     Slang::ComPtr<slang::ISession> m_slang_session;
+
+    /// List of include paths used for resolving module/include paths.
+    std::vector<std::filesystem::path> m_include_paths;
+    /// True if session cache is enabled.
+    bool m_cache_enabled{false};
+    /// Cache root path.
+    std::filesystem::path m_cache_path;
+    /// One cache path for each include path under the root cache path.
+    std::vector<std::filesystem::path> m_cache_include_paths;
 };
 
 class KALI_API SlangModule : public Object {
