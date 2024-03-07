@@ -562,15 +562,20 @@ KALI_PY_EXPORT(device_device)
     );
     device.def(
         "create_slang_session",
-        [](Device* self, std::optional<SlangCompilerOptions> compiler_options, bool add_default_include_paths)
+        [](Device* self,
+           std::optional<SlangCompilerOptions> compiler_options,
+           bool add_default_include_paths,
+           std::optional<std::filesystem::path> cache_path)
         {
             return self->create_slang_session(SlangSessionDesc{
                 .compiler_options = compiler_options.value_or(SlangCompilerOptions{}),
                 .add_default_include_paths = add_default_include_paths,
+                .cache_path = cache_path,
             });
         },
         "compiler_options"_a.none() = nb::none(),
         "add_default_include_paths"_a = true,
+        "cache_path"_a.none() = nb::none(),
         D(Device, create_slang_session)
     );
     device.def("load_module", &Device::load_module, "module_name"_a, D(Device, load_module));

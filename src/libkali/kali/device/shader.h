@@ -243,6 +243,7 @@ struct SlangLinkOptions {
 struct SlangSessionDesc {
     SlangCompilerOptions compiler_options;
     bool add_default_include_paths{true};
+    std::optional<std::filesystem::path> cache_path;
 };
 
 class KALI_API SlangSession : public Object {

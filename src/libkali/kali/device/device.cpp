@@ -414,6 +414,7 @@ Device::Device(const DeviceDesc& desc)
     m_slang_session = create_slang_session({
         .compiler_options = m_desc.compiler_options,
         .add_default_include_paths = true,
+        .cache_path = m_shader_cache_enabled ? std::optional(m_shader_cache_path) : std::nullopt,
     });
     m_slang_session->break_strong_reference_to_device();
 

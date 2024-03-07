@@ -28,13 +28,20 @@ KALI_DICT_TO_DESC_FIELD(dump_intermediates_prefix, std::string)
 KALI_DICT_TO_DESC_END()
 
 KALI_DICT_TO_DESC_BEGIN(SlangLinkOptions)
-KALI_DICT_TO_DESC_FIELD(floating_point_mode, std::optional<SlangFloatingPointMode>)
-KALI_DICT_TO_DESC_FIELD(debug_info, std::optional<SlangDebugInfoLevel>)
-KALI_DICT_TO_DESC_FIELD(optimization, std::optional<SlangOptimizationLevel>)
-KALI_DICT_TO_DESC_FIELD(downstream_args, std::optional<std::vector<std::string>>)
-KALI_DICT_TO_DESC_FIELD(dump_intermediates, std::optional<bool>)
-KALI_DICT_TO_DESC_FIELD(dump_intermediates_prefix, std::optional<std::string>)
+KALI_DICT_TO_DESC_FIELD(floating_point_mode, SlangFloatingPointMode)
+KALI_DICT_TO_DESC_FIELD(debug_info, SlangDebugInfoLevel)
+KALI_DICT_TO_DESC_FIELD(optimization, SlangOptimizationLevel)
+KALI_DICT_TO_DESC_FIELD(downstream_args, std::vector<std::string>)
+KALI_DICT_TO_DESC_FIELD(dump_intermediates, bool)
+KALI_DICT_TO_DESC_FIELD(dump_intermediates_prefix, std::string)
 KALI_DICT_TO_DESC_END()
+
+KALI_DICT_TO_DESC_BEGIN(SlangSessionDesc)
+KALI_DICT_TO_DESC_FIELD_DICT(compiler_options, SlangCompilerOptions)
+KALI_DICT_TO_DESC_FIELD(add_default_include_paths, bool)
+KALI_DICT_TO_DESC_FIELD(cache_path, std::filesystem::path)
+KALI_DICT_TO_DESC_END()
+
 } // namespace kali
 
 NB_MAKE_OPAQUE(std::map<kali::TypeConformance, uint32_t>);
@@ -123,7 +130,14 @@ KALI_PY_EXPORT(device_shader)
 
     nb::class_<SlangSessionDesc>(m, "SlangSessionDesc")
         .def(nb::init<>())
-        .def_rw("compiler_options", &SlangSessionDesc::compiler_options);
+        .def(
+            "__init__",
+            [](SlangSessionDesc* self, nb::dict dict) { new (self) SlangSessionDesc(dict_to_SlangSessionDesc(dict)); }
+        )
+        .def_rw("compiler_options", &SlangSessionDesc::compiler_options)
+        .def_rw("add_default_include_paths", &SlangSessionDesc::add_default_include_paths)
+        .def_rw("cache_path", &SlangSessionDesc::cache_path, nb::none());
+    nb::implicitly_convertible<nb::dict, SlangSessionDesc>();
 
     // Disambiguate from the types in slang.h
     using kali::SlangSession;
