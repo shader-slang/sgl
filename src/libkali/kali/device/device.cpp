@@ -12,6 +12,7 @@
 #include "kali/device/shader.h"
 #include "kali/device/shader_object.h"
 #include "kali/device/pipeline.h"
+#include "kali/device/kernel.h"
 #include "kali/device/raytracing.h"
 #include "kali/device/memory_heap.h"
 #include "kali/device/command.h"
@@ -314,6 +315,16 @@ Device::Device(const DeviceDesc& desc)
     m_api_dispatcher.reset(new PipelineCreationAPIDispatcher());
 #endif
 
+    // Setup shader cache.
+    if (m_desc.shader_cache_path) {
+        m_shader_cache_enabled = true;
+        m_shader_cache_path = *m_desc.shader_cache_path;
+        if (m_shader_cache_path.is_relative())
+            m_shader_cache_path = platform::app_data_directory() / m_shader_cache_path;
+        std::filesystem::create_directories(m_shader_cache_path);
+    }
+    std::string gfx_shader_cache_path = (m_shader_cache_path / "gfx").string();
+
     gfx::IDevice::Desc gfx_desc
     {
         .deviceType = gfx_device_type(m_desc.type),
@@ -322,6 +333,10 @@ Device::Device(const DeviceDesc& desc)
 #if KALI_HAS_NVAPI
         .apiCommandDispatcher = m_api_dispatcher.get(),
 #endif
+        .shaderCache{
+            .shaderCachePath = m_shader_cache_enabled ? gfx_shader_cache_path.c_str() : nullptr,
+            .maxEntryCount = 4096,
+        },
         .slang{
             .slangGlobalSession = m_global_session,
         },
@@ -388,23 +403,20 @@ Device::Device(const DeviceDesc& desc)
         log_warn("No supported shader model found, pretending to support {}.", m_supported_shader_model);
     }
 
-    // Set default shader model.
-    m_default_shader_model = m_desc.default_shader_model;
-    if (m_default_shader_model > m_supported_shader_model) {
-        log_warn(
-            "Shader model {} is not supported, falling back to {}.",
-            m_default_shader_model,
-            m_supported_shader_model
-        );
-        m_default_shader_model = m_supported_shader_model;
-    }
-
     // Get features.
     const char* features[256];
     gfx::GfxCount feature_count = 0;
     SLANG_CALL(m_gfx_device->getFeatures(features, std::size(features), &feature_count));
     for (gfx::GfxCount i = 0; i < feature_count; ++i)
         m_features.push_back(features[i]);
+
+    // Create default slang session.
+    m_slang_session = create_slang_session({
+        .compiler_options = m_desc.compiler_options,
+        .add_default_include_paths = true,
+        .cache_path = m_shader_cache_enabled ? std::optional(m_shader_cache_path) : std::nullopt,
+    });
+    m_slang_session->break_strong_reference_to_device();
 
     // Create per-frame data.
     m_frame_data.resize(IN_FLIGHT_FRAME_COUNT);
@@ -485,6 +497,19 @@ Device::~Device()
 #if KALI_HAS_NVAPI
     m_api_dispatcher.reset();
 #endif
+}
+
+ShaderCacheStats Device::shader_cache_stats() const
+{
+    Slang::ComPtr<gfx::IShaderCache> gfx_shader_cache;
+    SLANG_CALL(m_gfx_device->queryInterface(SLANG_UUID_IShaderCache, (void**)gfx_shader_cache.writeRef()));
+    gfx::ShaderCacheStats gfx_stats;
+    SLANG_CALL(gfx_shader_cache->getShaderCacheStats(&gfx_stats));
+    return {
+        .entry_count = static_cast<size_t>(gfx_stats.entryCount),
+        .hit_count = static_cast<size_t>(gfx_stats.hitCount),
+        .miss_count = static_cast<size_t>(gfx_stats.missCount),
+    };
 }
 
 ref<Swapchain> Device::create_swapchain(SwapchainDesc desc, Window* window)
@@ -577,28 +602,37 @@ ref<SlangSession> Device::create_slang_session(SlangSessionDesc desc)
     return make_ref<SlangSession>(ref<Device>(this), std::move(desc));
 }
 
-ref<SlangModule> Device::load_module(
-    const std::filesystem::path& path,
-    std::optional<DefineList> defines,
-    std::optional<SlangCompilerOptions> compiler_options
-)
+ref<SlangModule> Device::load_module(std::string_view module_name)
 {
-    ref<SlangSession> session = create_slang_session({
-        .compiler_options = compiler_options.value_or(SlangCompilerOptions{}),
-    });
-    return session->load_module(path, defines);
+    return m_slang_session->load_module(module_name);
 }
 
 ref<SlangModule> Device::load_module_from_source(
-    const std::string& source,
-    std::optional<DefineList> defines,
-    std::optional<SlangCompilerOptions> compiler_options
+    std::string_view module_name,
+    std::string_view source,
+    std::optional<std::filesystem::path> path
 )
 {
-    ref<SlangSession> session = create_slang_session({
-        .compiler_options = compiler_options.value_or(SlangCompilerOptions{}),
-    });
-    return session->load_module_from_source(source, {}, {}, defines);
+    return m_slang_session->load_module_from_source(module_name, source, path);
+}
+
+ref<ShaderProgram> Device::link_program(
+    std::vector<ref<SlangModule>> modules,
+    std::vector<ref<SlangEntryPoint>> entry_points,
+    std::optional<SlangLinkOptions> link_options
+)
+{
+    return m_slang_session->link_program(std::move(modules), std::move(entry_points), link_options);
+}
+
+ref<ShaderProgram> Device::load_program(
+    std::string_view module_name,
+    std::vector<std::string_view> entry_point_names,
+    std::optional<std::string_view> additional_source,
+    std::optional<SlangLinkOptions> link_options
+)
+{
+    return m_slang_session->load_program(module_name, entry_point_names, additional_source, link_options);
 }
 
 ref<MutableShaderObject> Device::create_mutable_shader_object(const ShaderProgram* shader_program)
@@ -636,6 +670,11 @@ ref<GraphicsPipeline> Device::create_graphics_pipeline(GraphicsPipelineDesc desc
 ref<RayTracingPipeline> Device::create_ray_tracing_pipeline(RayTracingPipelineDesc desc)
 {
     return make_ref<RayTracingPipeline>(ref<Device>(this), std::move(desc));
+}
+
+ref<ComputeKernel> Device::create_compute_kernel(ComputeKernelDesc desc)
+{
+    return make_ref<ComputeKernel>(ref(this), std::move(desc));
 }
 
 ref<CommandBuffer> Device::create_command_buffer()
@@ -870,16 +909,16 @@ std::string Device::to_string() const
         "  type = {},\n"
         "  enable_debug_layers = {},\n"
         "  adapter_luid = {},\n"
-        "  shader_cache_path = \"{}\"\n"
-        "  default_shader_model = {},\n"
         "  supported_shader_model = {}\n"
+        "  shader_cache_enabled = {}\n"
+        "  shader_cache_path = \"{}\"\n"
         ")",
         m_desc.type,
         m_desc.enable_debug_layers,
         m_desc.adapter_luid ? fmt::format("{}", *m_desc.adapter_luid) : "null",
-        m_desc.shader_cache_path,
-        m_default_shader_model,
-        m_supported_shader_model
+        m_supported_shader_model,
+        m_shader_cache_enabled,
+        m_shader_cache_path
     );
 }
 

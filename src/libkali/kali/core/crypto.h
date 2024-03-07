@@ -60,12 +60,12 @@ public:
     SHA1& update(std::string_view str) { return update(str.data(), str.size()); }
 
     /**
-     * Update hash by adding one value of fundamental type T.
+     * Update hash by adding the given basic value.
      * \param value to hash.
      */
     template<typename T>
     SHA1& update(const T& value)
-        requires std::is_fundamental_v<T>
+        requires std::is_fundamental_v<T> || std::is_enum_v<T>
     {
         return update(&value, sizeof(value));
     }

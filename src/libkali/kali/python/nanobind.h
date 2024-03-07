@@ -222,7 +222,7 @@ inline constexpr uint64_t const_hash(std::string_view str)
 } // namespace kali::detail
 
 #define KALI_DICT_TO_DESC_BEGIN(type)                                                                                  \
-    inline type dict_to_##type(nb::dict dict)                                                                          \
+    type dict_to_##type(nb::dict dict)                                                                                 \
     {                                                                                                                  \
         type desc = {};                                                                                                \
         for (const auto& [k, v] : dict) {                                                                              \
@@ -237,6 +237,7 @@ inline constexpr uint64_t const_hash(std::string_view str)
 
 #define KALI_DICT_TO_DESC_FIELD_DICT(name, type)                                                                       \
     case ::kali::detail::const_hash(#name):                                                                            \
+        extern type dict_to_##type(nb::dict dict);                                                                     \
         desc.name = dict_to_##type(nb::cast<nb::dict>(v));                                                             \
         break;
 
@@ -253,10 +254,12 @@ inline constexpr uint64_t const_hash(std::string_view str)
         break;
 
 #define KALI_DICT_TO_DESC_END()                                                                                        \
-    }                                                                                                                  \
-    }                                                                                                                  \
-    return desc;                                                                                                       \
-    }
+    default:                                                                                                           \
+        KALI_THROW("Unknown key {}", key);                                                                             \
+        }                                                                                                              \
+        }                                                                                                              \
+        return desc;                                                                                                   \
+        }
 
 
 #define KALI_PY_DECLARE(name) extern void kali_python_export_##name(nb::module_& m)

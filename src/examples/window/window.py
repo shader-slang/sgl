@@ -12,7 +12,10 @@ class App:
         self.window = kali.Window(
             width=1920, height=1280, title="Example", resizable=True
         )
-        self.device = kali.Device(enable_debug_layers=True)
+        self.device = kali.Device(
+            enable_debug_layers=True,
+            compiler_options={"include_paths": [EXAMPLE_DIR]},
+        )
         self.swapchain = self.device.create_swapchain(
             format=kali.Format.rgba8_unorm_srgb,
             image_count=3,
@@ -29,9 +32,8 @@ class App:
 
         self.output_texture = None
 
-        self.kernel = self.device.load_module(
-            EXAMPLE_DIR / "draw.slang"
-        ).create_compute_kernel("main")
+        program = self.device.load_program("draw", ["main"])
+        self.kernel = self.device.create_compute_kernel(program)
 
         self.mouse_pos = kali.float2()
         self.mouse_down = False

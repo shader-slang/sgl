@@ -576,9 +576,9 @@ class Scene:
         cursor["vertices"] = self.vertex_buffer
         cursor["indices"] = self.index_buffer
         cursor["transforms"] = self.transform_buffer
-        cursor[
-            "inverse_transpose_transforms"
-        ] = self.inverse_transpose_transforms_buffer
+        cursor["inverse_transpose_transforms"] = (
+            self.inverse_transpose_transforms_buffer
+        )
         self.camera.bind(cursor["camera"])
 
 
@@ -587,10 +587,7 @@ class PathTracer:
         self.device = device
         self.scene = scene
 
-        self.program = self.device.load_module(
-            EXAMPLE_DIR / "pathtracer.slang"
-        ).create_program("main")
-
+        self.program = self.device.load_program("pathtracer.slang", ["main"])
         self.pipeline = self.device.create_compute_pipeline(self.program)
 
     def execute(self, output: kali.Texture, frame: int):
@@ -615,9 +612,8 @@ class PathTracer:
 class Accumulator:
     def __init__(self, device: kali.Device):
         self.device = device
-        self.kernel = self.device.load_module(
-            EXAMPLE_DIR / "accumulator.slang"
-        ).create_compute_kernel("main")
+        self.program = self.device.load_program("accumulator.slang", ["main"])
+        self.kernel = self.device.create_compute_kernel(self.program)
         self.accumulator: kali.Texture = None
 
     def execute(self, input: kali.Texture, output: kali.Texture, reset=False):
@@ -651,9 +647,8 @@ class Accumulator:
 class ToneMapper:
     def __init__(self, device: kali.Device):
         self.device = device
-        self.kernel = self.device.load_module(
-            EXAMPLE_DIR / "tone_mapper.slang"
-        ).create_compute_kernel("main")
+        self.program = self.device.load_program("tone_mapper.slang", ["main"])
+        self.kernel = self.device.create_compute_kernel(self.program)
 
     def execute(self, input: kali.Texture, output: kali.Texture):
         self.kernel.dispatch(
@@ -672,7 +667,10 @@ class App:
         self.window = kali.Window(
             width=1920, height=1080, title="PathTracer", resizable=True
         )
-        self.device = kali.Device(enable_debug_layers=False)
+        self.device = kali.Device(
+            enable_debug_layers=False,
+            compiler_options={"include_paths": [EXAMPLE_DIR]},
+        )
         self.swapchain = self.device.create_swapchain(
             format=kali.Format.rgba8_unorm,
             width=self.window.width,
@@ -790,6 +788,8 @@ class App:
             self.device.end_frame()
 
             frame += 1
+
+        self.device.wait()
 
 
 app = App()

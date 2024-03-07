@@ -6,7 +6,9 @@ from pathlib import Path
 
 EXAMPLE_DIR = Path(__file__).parent
 
-device = kali.Device(enable_debug_layers=True)
+device = kali.Device(
+    enable_debug_layers=True, compiler_options={"include_paths": [EXAMPLE_DIR]}
+)
 
 vertices = np.array([-1, -1, 0, 1, -1, 0, 0, 1, 0], dtype=np.float32)
 indices = np.array([0, 1, 2], dtype=np.uint32)
@@ -132,9 +134,8 @@ render_texture = device.create_texture(
     debug_name="render_texture",
 )
 
-kernel = device.load_module(EXAMPLE_DIR / "raytracing.slang").create_compute_kernel(
-    "main"
-)
+program = device.load_program("raytracing.slang", ["main"])
+kernel = device.create_compute_kernel(program)
 
 kernel.dispatch(
     thread_count=[1024, 1024, 1],

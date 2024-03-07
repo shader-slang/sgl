@@ -3,11 +3,13 @@
 import kali
 from pathlib import Path
 
+EXAMPLE_DIR = Path(__file__).parent
+
 IMAGE_WIDTH = 512
 IMAGE_HEIGHT = 512
 COUNT = 100
 
-device = kali.Device()
+device = kali.Device(compiler_options={"include_paths": [EXAMPLE_DIR]})
 
 tex = device.create_texture(
     format=kali.Format.rgba32_float,
@@ -17,9 +19,8 @@ tex = device.create_texture(
     usage=kali.ResourceUsage.unordered_access,
 )
 
-kernel = device.load_module(
-    Path(__file__).parent / "checkerboard.slang"
-).create_compute_kernel("main")
+program = device.load_program("checkerboard.slang", ["main"])
+kernel = device.create_compute_kernel(program)
 
 for i in range(COUNT):
     kernel.dispatch(

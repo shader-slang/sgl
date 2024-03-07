@@ -648,14 +648,13 @@ struct Scene {
 struct PathTracer {
     ref<Device> device;
     const Scene& scene;
-    ref<ShaderProgram> program;
     ref<ComputePipeline> pipeline;
 
     PathTracer(ref<Device> device, const Scene& scene)
         : device(device)
         , scene(scene)
     {
-        program = device->load_module(EXAMPLE_DIR / "pathtracer.slang")->create_program("main");
+        ref<ShaderProgram> program = device->load_program("pathtracer.slang", {"main"});
         pipeline = device->create_compute_pipeline({.program = program});
     }
 
@@ -683,7 +682,8 @@ struct Accumulator {
     Accumulator(ref<Device> device)
         : device(device)
     {
-        kernel = device->load_module(EXAMPLE_DIR / "accumulator.slang")->create_compute_kernel("main");
+        ref<ShaderProgram> program = device->load_program("accumulator.slang", {"main"});
+        kernel = device->create_compute_kernel({.program = program});
     }
 
     void execute(ref<Texture> input, ref<Texture> output, bool reset = false)
@@ -719,7 +719,8 @@ struct ToneMapper {
     ToneMapper(ref<Device> device)
         : device(device)
     {
-        kernel = device->load_module(EXAMPLE_DIR / "tone_mapper.slang")->create_compute_kernel("main");
+        ref<ShaderProgram> program = device->load_program("tone_mapper.slang", {"main"});
+        kernel = device->create_compute_kernel({.program = program});
     }
 
     void execute(ref<Texture> input, ref<Texture> output)
@@ -759,8 +760,8 @@ struct App {
             .resizable = true,
         });
         device = Device::create({
-            .type = DeviceType::d3d12,
             .enable_debug_layers = true,
+            .compiler_options = {.include_paths = {EXAMPLE_DIR}},
         });
         swapchain = device->create_swapchain(
             {
@@ -879,6 +880,8 @@ struct App {
 
             frame++;
         }
+
+        device->wait();
     }
 };
 
@@ -886,8 +889,10 @@ int main()
 {
     kali::static_init();
 
-    App app;
-    app.main_loop();
+    {
+        App app;
+        app.main_loop();
+    }
 
     kali::static_shutdown();
 }

@@ -72,7 +72,7 @@ KALI_PY_EXPORT(device_kernel)
 {
     using namespace kali;
 
-    nb::class_<Kernel, Object>(m, "Kernel") //
+    nb::class_<Kernel, DeviceResource>(m, "Kernel") //
         .def_prop_ro("program", &Kernel::program)
         .def_prop_ro("reflection", &Kernel::reflection);
 

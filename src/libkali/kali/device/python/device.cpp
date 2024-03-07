@@ -7,6 +7,7 @@
 #include "kali/device/fence.h"
 #include "kali/device/resource.h"
 #include "kali/device/pipeline.h"
+#include "kali/device/kernel.h"
 #include "kali/device/raytracing.h"
 #include "kali/device/query.h"
 #include "kali/device/input_layout.h"
@@ -25,7 +26,7 @@ KALI_DICT_TO_DESC_FIELD(enable_debug_layers, bool)
 KALI_DICT_TO_DESC_FIELD(enable_cuda_interop, bool)
 KALI_DICT_TO_DESC_FIELD(enable_print, bool)
 KALI_DICT_TO_DESC_FIELD(adapter_luid, AdapterLUID)
-KALI_DICT_TO_DESC_FIELD(default_shader_model, ShaderModel)
+KALI_DICT_TO_DESC_FIELD_DICT(compiler_options, SlangCompilerOptions)
 KALI_DICT_TO_DESC_FIELD(shader_cache_path, std::filesystem::path)
 KALI_DICT_TO_DESC_END()
 } // namespace kali
@@ -51,7 +52,7 @@ KALI_PY_EXPORT(device_device)
         .def_rw("enable_cuda_interop", &DeviceDesc::enable_cuda_interop, D(DeviceDesc, enable_cuda_interop))
         .def_rw("enable_print", &DeviceDesc::enable_print, D(DeviceDesc, enable_print))
         .def_rw("adapter_luid", &DeviceDesc::adapter_luid, D(DeviceDesc, adapter_luid))
-        .def_rw("default_shader_model", &DeviceDesc::default_shader_model, D(DeviceDesc, default_shader_model))
+        .def_rw("compiler_options", &DeviceDesc::compiler_options, D(DeviceDesc, compiler_options))
         .def_rw("shader_cache_path", &DeviceDesc::shader_cache_path, D(DeviceDesc, shader_cache_path));
     nb::implicitly_convertible<nb::dict, DeviceDesc>();
 
@@ -136,6 +137,11 @@ KALI_PY_EXPORT(device_device)
         .def_ro("timestamp_frequency", &DeviceInfo::timestamp_frequency, D(DeviceInfo, timestamp_frequency))
         .def_ro("limits", &DeviceInfo::limits, D(DeviceInfo, limits));
 
+    nb::class_<ShaderCacheStats>(m, "ShaderCacheStats")
+        .def_ro("entry_count", &ShaderCacheStats::entry_count, D_NA(ShaderCacheStats, entry_count))
+        .def_ro("hit_count", &ShaderCacheStats::hit_count, D_NA(ShaderCacheStats, hit_count))
+        .def_ro("miss_count", &ShaderCacheStats::miss_count, D_NA(ShaderCacheStats, miss_count));
+
     nb::class_<Device, Object> device(m, "Device", D(Device));
     device.def(nb::init<DeviceDesc>(), "desc"_a, D(Device, desc));
     device.def(
@@ -146,8 +152,8 @@ KALI_PY_EXPORT(device_device)
            bool enable_cuda_interop,
            bool enable_print,
            std::optional<AdapterLUID> adapter_luid,
-           ShaderModel default_shader_model,
-           std::string shader_cache_path)
+           std::optional<SlangCompilerOptions> compiler_options,
+           std::optional<std::filesystem::path> shader_cache_path)
         {
             new (self) Device({
                 .type = type,
@@ -155,8 +161,8 @@ KALI_PY_EXPORT(device_device)
                 .enable_cuda_interop = enable_cuda_interop,
                 .enable_print = enable_print,
                 .adapter_luid = adapter_luid,
-                .default_shader_model = default_shader_model,
-                .shader_cache_path = std::move(shader_cache_path),
+                .compiler_options = compiler_options.value_or(SlangCompilerOptions{}),
+                .shader_cache_path = shader_cache_path,
             });
         },
         "type"_a = DeviceType::automatic,
@@ -164,14 +170,15 @@ KALI_PY_EXPORT(device_device)
         "enable_cuda_interop"_a = false,
         "enable_print"_a = false,
         "adapter_luid"_a.none() = nb::none(),
-        "default_shader_model"_a = ShaderModel::sm_6_6,
-        "shader_cache_path"_a = std::string{}
+        "compiler_options"_a.none() = nb::none(),
+        "shader_cache_path"_a.none() = nb::none()
     );
     device.def_prop_ro("desc", &Device::desc, D(Device, desc));
     device.def_prop_ro("info", &Device::info, D(Device, info));
+    device.def_prop_ro("shader_cache_stats", &Device::shader_cache_stats, D_NA(Device, shader_cache_stats));
     device.def_prop_ro("supported_shader_model", &Device::supported_shader_model, D(Device, supported_shader_model));
-    device.def_prop_ro("default_shader_model", &Device::default_shader_model, D(Device, default_shader_model));
     device.def_prop_ro("features", &Device::features, D(Device, features));
+    device.def_prop_ro("slang_session", &Device::slang_session, D(Device, slang_session));
     device.def(
         "create_swapchain",
         [](Device* self, const SwapchainDesc& desc, ref<Window> window)
@@ -555,30 +562,47 @@ KALI_PY_EXPORT(device_device)
     );
     device.def(
         "create_slang_session",
-        [](Device* self, std::optional<SlangCompilerOptions> compiler_options)
+        [](Device* self,
+           std::optional<SlangCompilerOptions> compiler_options,
+           bool add_default_include_paths,
+           std::optional<std::filesystem::path> cache_path)
         {
             return self->create_slang_session(SlangSessionDesc{
                 .compiler_options = compiler_options.value_or(SlangCompilerOptions{}),
+                .add_default_include_paths = add_default_include_paths,
+                .cache_path = cache_path,
             });
         },
         "compiler_options"_a.none() = nb::none(),
+        "add_default_include_paths"_a = true,
+        "cache_path"_a.none() = nb::none(),
         D(Device, create_slang_session)
     );
-    device.def(
-        "load_module",
-        &Device::load_module,
-        "path"_a,
-        "defines"_a.none() = nb::none(),
-        "compiler_options"_a.none() = nb::none(),
-        D(Device, load_module)
-    );
+    device.def("load_module", &Device::load_module, "module_name"_a, D(Device, load_module));
     device.def(
         "load_module_from_source",
         &Device::load_module_from_source,
+        "module_name"_a,
         "source"_a,
-        "defines"_a.none() = nb::none(),
-        "compiler_options"_a.none() = nb::none(),
+        "path"_a.none() = nb::none(),
         D(Device, load_module_from_source)
+    );
+    device.def(
+        "link_program",
+        &Device::link_program,
+        "modules"_a,
+        "entry_points"_a,
+        "link_options"_a.none() = nb::none(),
+        D(Device, link_program)
+    );
+    device.def(
+        "load_program",
+        &Device::load_program,
+        "module_name"_a,
+        "entry_point_names"_a,
+        "additional_source"_a.none() = nb::none(),
+        "link_options"_a.none() = nb::none(),
+        D(Device, load_program)
     );
 
     device.def(
@@ -679,6 +703,15 @@ KALI_PY_EXPORT(device_device)
         "max_attribute_size"_a = 8,
         "flags"_a = RayTracingPipelineFlags::none,
         D(Device, create_ray_tracing_pipeline)
+    );
+
+    device.def("create_compute_kernel", &Device::create_compute_kernel, "desc"_a, D(Device, create_compute_kernel));
+    device.def(
+        "create_compute_kernel",
+        [](Device* self, ref<ShaderProgram> program)
+        { return self->create_compute_kernel({.program = std::move(program)}); },
+        "program"_a,
+        D(Device, create_compute_kernel)
     );
 
     device.def("create_memory_heap", &Device::create_memory_heap, "desc"_a, D(Device, create_memory_heap));

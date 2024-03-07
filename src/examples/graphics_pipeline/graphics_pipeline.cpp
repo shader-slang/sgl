@@ -25,7 +25,10 @@ int main()
     kali::static_init();
 
     {
-        ref<Device> device = Device::create({.enable_debug_layers = true});
+        ref<Device> device = Device::create({
+            .enable_debug_layers = true,
+            .compiler_options = {.include_paths = {EXAMPLE_DIR}},
+        });
 
         std::vector<float2> vertices{{-1.f, -1.f}, {1.f, -1.f}, {0.f, 1.f}};
         std::vector<uint32_t> indices{0, 1, 2};
@@ -69,10 +72,7 @@ int main()
             {.texture = render_texture},
         }});
 
-        ref<SlangModule> module_ = device->load_module(EXAMPLE_DIR / "graphics_pipeline.slang");
-        auto vs = module_->entry_point("vertex_main");
-        auto fs = module_->entry_point("fragment_main");
-        ref<ShaderProgram> program = module_->create_program(module_->global_scope(), {vs, fs});
+        ref<ShaderProgram> program = device->load_program("graphics_pipeline.slang", {"vertex_main", "fragment_main"});
         ref<GraphicsPipeline> pipeline = device->create_graphics_pipeline({
             .program = program,
             .input_layout = input_layout,
@@ -80,15 +80,17 @@ int main()
         });
 
         ref<CommandBuffer> command_buffer = device->create_command_buffer();
-        auto encoder = command_buffer->encode_render_commands(framebuffer);
-        encoder.bind_pipeline(pipeline);
-        encoder.set_vertex_buffer(0, vertex_buffer);
-        encoder.set_primitive_topology(kali::PrimitiveTopology::triangle_list);
-        encoder.set_viewport_and_scissor_rect({
-            .width = float(render_texture->width()),
-            .height = float(render_texture->height()),
-        });
-        encoder.draw(3);
+        {
+            auto encoder = command_buffer->encode_render_commands(framebuffer);
+            encoder.bind_pipeline(pipeline);
+            encoder.set_vertex_buffer(0, vertex_buffer);
+            encoder.set_primitive_topology(kali::PrimitiveTopology::triangle_list);
+            encoder.set_viewport_and_scissor_rect({
+                .width = float(render_texture->width()),
+                .height = float(render_texture->height()),
+            });
+            encoder.draw(3);
+        }
         command_buffer->submit();
 
         utils::show_in_tev(render_texture, "graphics_pipeline");

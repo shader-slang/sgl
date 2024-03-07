@@ -7,15 +7,165 @@
 #include "kali/device/reflection.h"
 #include "kali/device/kernel.h"
 #include "kali/device/print.h"
+#include "kali/device/slang_utils.h"
 
 #include "kali/core/type_utils.h"
 #include "kali/core/platform.h"
 #include "kali/core/string.h"
+#include "kali/core/crypto.h"
+#include "kali/core/timer.h"
 
 #include <slang.h>
+#include <slang-tag-version.h>
+
+#include <random>
 
 namespace kali {
 
+// ----------------------------------------------------------------------------
+// TypeConformanceList
+// ----------------------------------------------------------------------------
+
+TypeConformanceList& TypeConformanceList::add(std::string type_name, std::string interface_name, uint32_t id)
+{
+    (*this)[TypeConformance{std::move(type_name), std::move(interface_name)}] = id;
+    return *this;
+}
+
+TypeConformanceList& TypeConformanceList::remove(std::string type_name, std::string interface_name)
+{
+    (*this).erase(TypeConformance{std::move(type_name), std::move(interface_name)});
+    return *this;
+}
+
+TypeConformanceList& TypeConformanceList::add(const TypeConformanceList& other)
+{
+    for (const auto& p : other)
+        add(p.first.type_name, p.first.interface_name, p.second);
+    return *this;
+}
+
+TypeConformanceList& TypeConformanceList::remove(const TypeConformanceList& other)
+{
+    for (const auto& p : other)
+        remove(p.first.type_name, p.first.interface_name);
+    return *this;
+}
+
+// ----------------------------------------------------------------------------
+// CompilerOptionEntries
+// ----------------------------------------------------------------------------
+
+/// Helper class for creating slang::CompilerOptionEntry entries.
+class CompilerOptionEntries {
+public:
+    void add(slang::CompilerOptionName name, bool value)
+    {
+        m_entries.push_back({
+            .name = name,
+            .value = {
+                .kind = slang::CompilerOptionValueKind::Int,
+                .int0 = value ? 1 : 0,
+            },
+        });
+    }
+
+    void add(slang::CompilerOptionName name, std::string_view value)
+    {
+        m_entries.push_back({
+            .name = name,
+            .value = {
+                .kind = slang::CompilerOptionValueKind::String,
+                .string0 = std::string{value},
+            },
+        });
+    }
+
+    void add(slang::CompilerOptionName name, std::string_view value0, std::string_view value1)
+    {
+        m_entries.push_back({
+            .name = name,
+            .value = {
+                .kind = slang::CompilerOptionValueKind::String,
+                .string0 = std::string{value0},
+                .string1 = std::string{value1},
+            },
+        });
+    }
+
+    void add_macro_define(std::string_view name, std::string_view value)
+    {
+        add(slang::CompilerOptionName::MacroDefine, name, value);
+    }
+
+    void add_include(const std::filesystem::path& path) { add(slang::CompilerOptionName::Include, path.string()); }
+
+    void insert_cache_include(const std::filesystem::path& path, size_t index)
+    {
+        KALI_ASSERT(index <= m_entries.size());
+        m_entries.insert(m_entries.begin() + index,
+            {
+            .name = slang::CompilerOptionName::Include,
+            .value = {
+                .kind = slang::CompilerOptionValueKind::String,
+                .string0 = path.string(),
+            },
+        });
+    }
+
+    std::vector<slang::CompilerOptionEntry> slang_entries() const
+    {
+        std::vector<slang::CompilerOptionEntry> result{m_entries.size()};
+        for (size_t i = 0; i < m_entries.size(); ++i) {
+            result[i].name = m_entries[i].name;
+            result[i].value.kind = m_entries[i].value.kind;
+            switch (m_entries[i].value.kind) {
+            case slang::CompilerOptionValueKind::Int:
+                result[i].value.intValue0 = m_entries[i].value.int0;
+                result[i].value.intValue1 = m_entries[i].value.int1;
+                break;
+            case slang::CompilerOptionValueKind::String:
+                result[i].value.stringValue0 = m_entries[i].value.string0.c_str();
+                result[i].value.stringValue1 = m_entries[i].value.string1.c_str();
+                break;
+            }
+        }
+        return result;
+    }
+
+private:
+    struct Entry {
+        slang::CompilerOptionName name;
+        struct {
+            slang::CompilerOptionValueKind kind;
+            int int0{0};
+            int int1{0};
+            std::string string0;
+            std::string string1;
+        } value;
+    };
+
+    std::vector<Entry> m_entries;
+};
+
+// ----------------------------------------------------------------------------
+// SlangSession
+// ----------------------------------------------------------------------------
+
+/// Append slang diagnostics to a string if not null.
+inline std::string append_diagnostics(std::string msg, ISlangBlob* diagnostics)
+{
+    if (diagnostics)
+        msg += fmt::format("\n{}", static_cast<const char*>(diagnostics->getBufferPointer()));
+    return msg;
+}
+
+/// Report slang diagnostics to log if not null.
+inline void report_diagnostics(ISlangBlob* diagnostics)
+{
+    if (diagnostics)
+        log_warn("Slang compiler warnings:\n{}", static_cast<const char*>(diagnostics->getBufferPointer()));
+}
 
 SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
     : m_device(std::move(device))
@@ -23,74 +173,86 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
 {
     KALI_CHECK_NOT_NULL(m_device);
 
+    CompilerOptionEntries session_options;
+    CompilerOptionEntries target_options;
+
     SlangCompilerOptions& options = m_desc.compiler_options;
 
-    // If no shader model is selected, use the default shader model.
+    // Use device's highest supported shader model if none is provided explicitly.
+    ShaderModel supported_shader_model = m_device->supported_shader_model();
+    ShaderModel default_shader_model = supported_shader_model;
+    // TODO: Slang generates invalid HLSL for SM 6.7 when using ray payloads.
+    if (default_shader_model == ShaderModel::sm_6_7)
+        default_shader_model = ShaderModel::sm_6_6;
+    ShaderModel shader_model = options.shader_model;
     if (options.shader_model == ShaderModel::unknown)
-        options.shader_model = m_device->default_shader_model();
+        shader_model = default_shader_model;
 
     // Check that requested shader model is supported.
-    ShaderModel supported_shader_model = m_device->supported_shader_model();
     KALI_CHECK(
-        options.shader_model <= supported_shader_model,
+        shader_model <= supported_shader_model,
         "Shader model {} is not supported (max shader model is {})",
-        options.shader_model,
+        shader_model,
         supported_shader_model
     );
+
+    // Set matrix layout.
+    if (options.matrix_layout == SlangMatrixLayout::row_major)
+        session_options.add(slang::CompilerOptionName::MatrixLayoutRow, true);
+    else if (options.matrix_layout == SlangMatrixLayout::column_major)
+        session_options.add(slang::CompilerOptionName::MatrixLayoutColumn, true);
+
+    // Set warnings.
+    for (const auto& warning : options.enable_warnings)
+        session_options.add(slang::CompilerOptionName::EnableWarning, warning);
+    for (const auto& warning : options.disable_warnings)
+        session_options.add(slang::CompilerOptionName::DisableWarning, warning);
+    for (const auto& warning : options.warnings_as_errors)
+        session_options.add(slang::CompilerOptionName::WarningsAsErrors, warning);
+
+    // Set diagnostic options.
+    session_options.add(slang::CompilerOptionName::ReportDownstreamTime, options.report_downstream_time);
+    session_options.add(slang::CompilerOptionName::ReportPerfBenchmark, options.report_perf_benchmark);
+    session_options.add(slang::CompilerOptionName::SkipSPIRVValidation, options.skip_spirv_validation);
+
+    // Only use up to date binary modules (required for caching to work properly).
+    session_options.add(slang::CompilerOptionName::UseUpToDateBinaryModule, true);
 
     DeviceType device_type = m_device->type();
 
     slang::SessionDesc session_desc{};
 
-    // Setup search paths.
+    // Set include paths.
     // Slang will search for files in the order they are specified.
-    // Use module local search paths first, followed by global search paths.
-    std::vector<std::filesystem::path> search_paths(options.search_paths);
-    if (options.add_default_search_paths) {
-        search_paths.push_back(platform::runtime_directory() / "shaders");
-    }
-    std::vector<std::string> search_path_strings(search_paths.size());
-    std::vector<const char*> search_path_cstrings(search_paths.size());
-    for (size_t i = 0; i < search_paths.size(); ++i) {
-        search_path_strings[i] = search_paths[i].string();
-        search_path_cstrings[i] = search_path_strings[i].c_str();
-    }
+    // Use provided include paths first, followed by default include paths.
+    // Keep a copy of the include paths for local resolution of module names.
+    m_include_paths = options.include_paths;
+    if (m_desc.add_default_include_paths)
+        m_include_paths.push_back(platform::runtime_directory() / "shaders");
+    for (const auto& path : m_include_paths)
+        session_options.add_include(path);
 
-    session_desc.searchPaths = search_path_cstrings.data();
-    session_desc.searchPathCount = narrow_cast<SlangInt>(search_path_cstrings.size());
+    // Set macro defines.
+    for (const auto& define : options.defines)
+        session_options.add_macro_define(define.first, define.second);
 
     // Select target profile.
     slang::TargetDesc target_desc;
     target_desc.format = SLANG_TARGET_UNKNOWN;
-    std::string profile_str = fmt::format(
-        "sm_{}_{}",
-        get_shader_model_major_version(options.shader_model),
-        get_shader_model_minor_version(options.shader_model)
-    );
+    uint32_t shader_model_major = get_shader_model_major_version(shader_model);
+    uint32_t shader_model_minor = get_shader_model_minor_version(shader_model);
+    std::string profile_str = fmt::format("sm_{}_{}", shader_model_major, shader_model_minor);
+
     target_desc.profile = m_device->global_session()->findProfile(profile_str.c_str());
     KALI_CHECK(target_desc.profile != SLANG_PROFILE_UNKNOWN, "Unsupported target profile: {}", profile_str);
 
-    // Get compiler flags and override with global enabled/disabled flags.
-    SlangCompilerFlags compiler_flags = options.compiler_flags;
-    // TODO handle global flags
-    // compiler_flags &= ~m_program_manager->get_global_disabled_compiler_flags();
-    // compiler_flags |= m_program_manager->get_global_enabled_compiler_flags();
+    // Set floating point mode.
+    target_desc.floatingPointMode = static_cast<::SlangFloatingPointMode>(options.floating_point_mode);
+    target_options.add(slang::CompilerOptionName::FloatingPointMode, int(options.floating_point_mode));
 
-    // Set floating point mode. If no shader compiler flags for this were set, we use Slang's default mode.
-    bool flag_fast = is_set(compiler_flags, SlangCompilerFlags::floating_point_mode_fast);
-    bool flag_precise = is_set(compiler_flags, SlangCompilerFlags::floating_point_mode_precise);
-    if (flag_fast && flag_precise) {
-        log_warn("Shader compiler flags 'floating_point_mode_fast' and 'floating_point_mode_precise' can't be used "
-                 "simultaneously. Ignoring 'floating_point_mode_fast'.");
-        flag_fast = false;
-    }
-    target_desc.floatingPointMode = SLANG_FLOATING_POINT_MODE_DEFAULT;
-    if (flag_fast)
-        target_desc.floatingPointMode = SLANG_FLOATING_POINT_MODE_FAST;
-    else if (flag_precise)
-        target_desc.floatingPointMode = SLANG_FLOATING_POINT_MODE_PRECISE;
-
+    // Force GLSL scalar buffer layout.
     target_desc.forceGLSLScalarBufferLayout = true;
+    target_options.add(slang::CompilerOptionName::GLSLForceScalarLayout, true);
 
     // Select target format based on device type.
     const char* target_define{nullptr};
@@ -117,264 +279,397 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
     }
     KALI_ASSERT(target_define);
 
-    // Add preprocessor macros.
-    std::vector<slang::PreprocessorMacroDesc> macros;
-    const auto add_macro = [&macros](const char* name, const char* value) { macros.push_back({name, value}); };
-
-    // Add module local defines first, followed by global defines.
-    for (const auto& d : options.defines)
-        add_macro(d.first.c_str(), d.second.c_str());
-    // TODO handle global defines
-    // for (const auto& d : m_program_manager->get_global_defines())
-    //     add_macro(d.first.c_str(), d.second.c_str());
-
     // Add target define.
-    add_macro(target_define, "1");
+    session_options.add_macro_define(target_define, "1");
 
     // Add shader model defines.
-    std::string shader_model_major = std::to_string(get_shader_model_major_version(options.shader_model));
-    std::string shader_model_minor = std::to_string(get_shader_model_minor_version(options.shader_model));
-    add_macro("__SHADER_TARGET_MAJOR", shader_model_major.c_str());
-    add_macro("__SHADER_TARGET_MINOR", shader_model_minor.c_str());
+    session_options.add_macro_define("__SHADER_TARGET_MAJOR", fmt::format("{}", shader_model_major));
+    session_options.add_macro_define("__SHADER_TARGET_MINOR", fmt::format("{}", shader_model_minor));
 
-    // Add NVAPI enable flag.
-    add_macro("KALI_ENABLE_NVAPI", (KALI_HAS_NVAPI && m_device->type() == DeviceType::d3d12) ? "1" : "0");
+    // Add NVAPI defines.
+    session_options.add_macro_define(
+        "KALI_ENABLE_NVAPI",
+        (KALI_HAS_NVAPI && m_device->type() == DeviceType::d3d12) ? "1" : "0"
+    );
 #if KALI_HAS_NVAPI
-    add_macro("NV_SHADER_EXTN_SLOT", "u999");
+    session_options.add_macro_define("NV_SHADER_EXTN_SLOT", "u999");
+    session_options.add(
+        slang::CompilerOptionName::DownstreamArgs,
+        "dxc",
+        fmt::format("-I{}", (platform::runtime_directory() / "shaders/nvapi").string())
+    );
 #endif
 
     // Add device print enable flag.
-    add_macro("KALI_ENABLE_PRINT", m_device->desc().enable_print ? "1" : "0");
+    session_options.add_macro_define("KALI_ENABLE_PRINT", m_device->desc().enable_print ? "1" : "0");
 
-    session_desc.preprocessorMacros = macros.data();
-    session_desc.preprocessorMacroCount = narrow_cast<SlangInt>(macros.size());
+    auto slang_target_option_entries = target_options.slang_entries();
+    target_desc.compilerOptionEntries = slang_target_option_entries.data();
+    target_desc.compilerOptionEntryCount = narrow_cast<uint32_t>(slang_target_option_entries.size());
 
     session_desc.targets = &target_desc;
     session_desc.targetCount = 1;
 
-    // Default to row-major matrix layout.
-    bool use_column_major = is_set(compiler_flags, SlangCompilerFlags::matrix_layout_column_major);
-    session_desc.defaultMatrixLayoutMode
-        = use_column_major ? SLANG_MATRIX_LAYOUT_COLUMN_MAJOR : SLANG_MATRIX_LAYOUT_ROW_MAJOR;
+    auto slang_session_option_entries = session_options.slang_entries();
+    session_desc.compilerOptionEntries = slang_session_option_entries.data();
+    session_desc.compilerOptionEntryCount = narrow_cast<uint32_t>(slang_session_option_entries.size());
+
+    // Use the session descriptor to generate a hash that uniquely identifies the session.
+    Slang::ComPtr<ISlangBlob> session_digest;
+    SLANG_CALL(m_device->global_session()->getSessionDescDigest(&session_desc, session_digest.writeRef()));
+    m_uid = string::hexlify(session_digest->getBufferPointer(), session_digest->getBufferSize());
+
+    // Setup session cache.
+    // The session cache relies on Slang's ability to serialize shader modules.
+    // We use the session digest to create a unique cache directory for the session.
+    // When loading a shader module, we store a serialized version ('.slang-module' file) to the cache.
+    // Next time the module is loaded, Slang can detect the cached file and load it directly.
+    // Cached modules are stored in a directory structure that mirrors the include paths.
+    if (m_desc.cache_path) {
+        m_cache_enabled = true;
+        m_cache_path = *m_desc.cache_path;
+        KALI_CHECK(m_cache_path.is_absolute(), "Cache path must be an absolute path");
+        m_cache_path /= m_uid;
+        m_cache_include_paths.resize(m_include_paths.size());
+        for (size_t i = 0; i < m_include_paths.size(); ++i) {
+            m_cache_include_paths[i] = m_cache_path / fmt::format("{}", i);
+            std::filesystem::create_directories(m_cache_include_paths[i]);
+            session_options.insert_cache_include(m_cache_include_paths[i], i);
+        }
+
+        // Update session descriptor with the patched include paths.
+        slang_session_option_entries = session_options.slang_entries();
+        session_desc.compilerOptionEntries = slang_session_option_entries.data();
+        session_desc.compilerOptionEntryCount = narrow_cast<uint32_t>(slang_session_option_entries.size());
+    }
 
     SLANG_CALL(m_device->global_session()->createSession(session_desc, m_slang_session.writeRef()));
 }
 
 SlangSession::~SlangSession() { }
 
-ref<SlangModule> SlangSession::load_module(const std::filesystem::path& path, std::optional<DefineList> defines)
+ref<SlangModule> SlangSession::load_module(std::string_view module_name)
 {
-    return make_ref<SlangModule>(
-        ref<SlangSession>(this),
-        SlangModuleDesc{
-            .type = SlangModuleDesc::Type::file,
-            .path = path,
-            .defines = defines.value_or(DefineList{}),
-        }
-    );
+    Timer timer;
+    Slang::ComPtr<ISlangBlob> diagnostics;
+    std::string resolved_name = resolve_module_name(module_name);
+    slang::IModule* slang_module = m_slang_session->loadModule(resolved_name.c_str(), diagnostics.writeRef());
+    if (!slang_module) {
+        std::string msg = append_diagnostics(fmt::format("Failed to load module '{}'", module_name), diagnostics);
+        throw SlangCompileError(msg);
+    }
+    report_diagnostics(diagnostics);
+    ref<SlangModule> module = make_ref<SlangModule>(ref(this), slang_module);
+    register_with_debug_printer(module);
+    log_debug("Loading slang module \"{}\" took {}", module_name, string::format_duration(timer.elapsed_s()));
+    if (m_cache_enabled)
+        write_module_to_cache(module);
+    return module;
 }
 
 ref<SlangModule> SlangSession::load_module_from_source(
-    const std::string& source,
-    const std::filesystem::path& path,
-    const std::string& name,
-    std::optional<DefineList> defines
+    std::string_view module_name,
+    std::string_view source,
+    std::optional<std::filesystem::path> path
 )
 {
-    KALI_UNUSED(name);
-    return make_ref<SlangModule>(
-        ref<SlangSession>(this),
-        SlangModuleDesc{
-            .type = SlangModuleDesc::Type::source,
-            .path = path,
-            .source = source,
-            .defines = defines.value_or(DefineList{}),
+    UnownedSlangBlob source_blob(source.data(), source.size());
+    Slang::ComPtr<ISlangBlob> diagnostics;
+    slang::IModule* slang_module = m_slang_session->loadModuleFromSource(
+        std::string{module_name}.c_str(),
+        path ? path->string().c_str() : nullptr,
+        &source_blob,
+        diagnostics.writeRef()
+    );
+    if (!slang_module) {
+        std::string msg
+            = append_diagnostics(fmt::format("Failed to load module '{}' from source'", module_name), diagnostics);
+        throw SlangCompileError(msg);
+    }
+    report_diagnostics(diagnostics);
+    ref<SlangModule> module = make_ref<SlangModule>(ref(this), slang_module);
+    register_with_debug_printer(module);
+    return module;
+}
+
+ref<ShaderProgram> SlangSession::link_program(
+    std::vector<ref<SlangModule>> modules,
+    std::vector<ref<SlangEntryPoint>> entry_points,
+    std::optional<SlangLinkOptions> link_options
+)
+{
+    for (const auto& module : modules)
+        KALI_CHECK(module->session() == this, "All modules must to belong to this session.");
+    for (const auto& entry_point : entry_points)
+        KALI_CHECK(entry_point->module()->session() == this, "All entry points must to belong to this session.");
+
+    // Compose the program from it's components.
+    Slang::ComPtr<slang::IComponentType> composed_program;
+    {
+        std::vector<slang::IComponentType*> component_types;
+        for (const auto& module : modules)
+            component_types.push_back(module->slang_module());
+        for (const auto& entry_point : entry_points)
+            component_types.push_back(entry_point->slang_entry_point());
+        Slang::ComPtr<ISlangBlob> diagnostics;
+        m_slang_session->createCompositeComponentType(
+            component_types.data(),
+            component_types.size(),
+            composed_program.writeRef(),
+            diagnostics.writeRef()
+        );
+        if (!composed_program) {
+            std::string msg = append_diagnostics("Failed to compose program", diagnostics);
+            throw SlangCompileError(msg);
         }
+        report_diagnostics(diagnostics);
+    }
+
+    // Setup link options.
+    CompilerOptionEntries link_option_entries;
+    std::string downstream_args;
+    if (link_options) {
+        if (link_options->floating_point_mode)
+            link_option_entries.add(
+                slang::CompilerOptionName::FloatingPointMode,
+                int(*link_options->floating_point_mode)
+            );
+        if (link_options->debug_info)
+            link_option_entries.add(slang::CompilerOptionName::DebugInformation, int(*link_options->debug_info));
+        if (link_options->optimization)
+            link_option_entries.add(slang::CompilerOptionName::Optimization, int(*link_options->optimization));
+        if (link_options->downstream_args)
+            for (const auto& arg : *link_options->downstream_args)
+                link_option_entries.add(slang::CompilerOptionName::DownstreamArgs, arg);
+        if (link_options->dump_intermediates)
+            link_option_entries.add(slang::CompilerOptionName::DumpIntermediates, *link_options->dump_intermediates);
+        if (link_options->dump_intermediates_prefix)
+            link_option_entries.add(
+                slang::CompilerOptionName::DumpIntermediatePrefix,
+                *link_options->dump_intermediates_prefix
+            );
+    }
+
+    // Link the composed program.
+    Slang::ComPtr<slang::IComponentType> linked_program;
+    {
+        Slang::ComPtr<ISlangBlob> diagnostics;
+        auto slang_link_option_entries = link_option_entries.slang_entries();
+        composed_program->linkWithOptions(
+            linked_program.writeRef(),
+            narrow_cast<uint32_t>(slang_link_option_entries.size()),
+            slang_link_option_entries.data(),
+            diagnostics.writeRef()
+        );
+        if (!composed_program) {
+            std::string msg = append_diagnostics("Failed to link program", diagnostics);
+            throw SlangCompileError(msg);
+        }
+        report_diagnostics(diagnostics);
+    }
+
+    return make_ref<ShaderProgram>(
+        ref(device()),
+        ref(this),
+        std::move(modules),
+        std::move(entry_points),
+        std::move(linked_program)
     );
 }
 
-std::filesystem::path SlangSession::resolve_path(const std::filesystem::path& path)
+ref<ShaderProgram> SlangSession::load_program(
+    std::string_view module_name,
+    std::vector<std::string_view> entry_point_names,
+    std::optional<std::string_view> additional_source,
+    std::optional<SlangLinkOptions> link_options
+)
 {
-    if (path.is_absolute())
-        return path;
-
-    for (const std::filesystem::path& search_path : m_desc.compiler_options.search_paths) {
-        std::filesystem::path full_path = search_path / path;
-        if (std::filesystem::exists(full_path))
-            return full_path;
-    }
-
-    return path;
+    ref<SlangModule> module = load_module(module_name);
+    std::vector<ref<SlangModule>> modules{module};
+    if (additional_source)
+        modules.push_back(load_module_from_source("", *additional_source));
+    std::vector<ref<SlangEntryPoint>> entry_points;
+    for (const auto& entry_point_name : entry_point_names)
+        entry_points.push_back(module->entry_point(entry_point_name));
+    return link_program(std::move(modules), std::move(entry_points), link_options);
 }
 
-SlangModule::SlangModule(ref<SlangSession> session, SlangModuleDesc desc)
-    : m_session(std::move(session))
-    , m_desc(std::move(desc))
+std::string SlangSession::to_string() const
 {
-    // Create compile request.
-    SLANG_CALL(m_session->get_slang_session()->createCompileRequest(m_compile_request.writeRef()));
+    return fmt::format(
+        "SlangSession(\n"
+        "  device = {},\n"
+        "  uid = {},\n"
+        ")",
+        m_device,
+        m_uid
+    );
+}
 
-    // Add preprocessor macros.
-    for (const auto& d : m_desc.defines)
-        m_compile_request->addPreprocessorDefine(d.first.c_str(), d.second.c_str());
+bool SlangSession::write_module_to_cache(SlangModule* module)
+{
+    // Do not cache module if it was loaded from the cache.
+    if (module->path().extension() == ".slang-module")
+        return false;
 
-    // Disable warnings.
-    // for (int warning : m_disabled_warnings)
-    //     m_compile_request->overrideDiagnosticSeverity(warning, SLANG_SEVERITY_DISABLED);
-
-    SlangCompilerFlags compiler_flags = m_session->desc().compiler_options.compiler_flags;
-
-    // Enable/disable intermediates dump.
-    bool dump_intermediates = is_set(compiler_flags, SlangCompilerFlags::dump_intermediates);
-    m_compile_request->setDumpIntermediates(dump_intermediates);
-    // TODO(@skallweit): set dump prefix
-
-    // Set debug level.
-    bool generate_debug_info = is_set(compiler_flags, SlangCompilerFlags::generate_debug_info);
-    if (generate_debug_info)
-        m_compile_request->setDebugInfoLevel(SLANG_DEBUG_INFO_LEVEL_STANDARD);
-
-    // Set additional flags.
-    SlangCompileFlags flags = 0;
-
-    // When we invoke the Slang compiler front-end, skip code generation step
-    // so that the compiler does not complain about missing arguments for
-    // specialization parameters.
-    flags |= SLANG_COMPILE_FLAG_NO_CODEGEN;
-
-    m_compile_request->setCompileFlags(flags);
-
-    // Set compiler arguments.
+    // Check if target path is within the specified root path.
+    auto is_sub_path = [](const std::filesystem::path root, const std::filesystem::path& target)
     {
-        std::vector<const char*> args;
-        for (const auto& arg : m_session->desc().compiler_options.compiler_args)
-            args.push_back(arg.c_str());
-#if KALI_HAS_NVAPI
-        std::string nvapi_path;
-        if (m_session->device()->type() == DeviceType::d3d12) {
-            // If NVAPI is available, we need to inform slang/dxc where to find it.
-            nvapi_path = "-I" + (platform::runtime_directory() / "shaders/nvapi").string();
-            args.push_back("-Xdxc");
-            args.push_back(nvapi_path.c_str());
+        std::string relative = std::filesystem::relative(target, root).string();
+        return relative.size() == 1 || (relative.size() > 1 && relative[0] != '.' && relative[1] != '.');
+    };
+
+    // Find the include path that contains the module.
+    KALI_ASSERT(m_include_paths.size() == m_cache_include_paths.size());
+    size_t include_index = size_t(-1);
+    for (size_t i = 0; i < m_include_paths.size(); ++i) {
+        if (is_sub_path(m_include_paths[i], module->path())) {
+            include_index = i;
+            break;
         }
-#endif
-        if (!args.empty())
-            SLANG_CALL(m_compile_request->processCommandLineArguments(args.data(), narrow_cast<int>(args.size())));
+    }
+    if (include_index == size_t(-1))
+        return false;
+
+    // Determine path of the cached module.
+    std::filesystem::path relative = std::filesystem::relative(module->path(), m_include_paths[include_index]);
+    std::filesystem::path cache_path = m_cache_include_paths[include_index] / relative;
+    cache_path.replace_extension(".slang-module");
+
+    // Create directories to cache path.
+    std::error_code ec;
+    std::filesystem::create_directories(cache_path.parent_path(), ec);
+    if (ec) {
+        log_warn(
+            "Failed to create directory \"{}\" for slang module cache ({})",
+            cache_path.parent_path(),
+            ec.message()
+        );
+        return false;
     }
 
-    // Add source.
-    m_compile_request->addTranslationUnit(SLANG_SOURCE_LANGUAGE_SLANG, nullptr);
-    switch (m_desc.type) {
-    case SlangModuleDesc::Type::file:
-        m_compile_request->addTranslationUnitSourceFile(0, m_session->resolve_path(m_desc.path).string().c_str());
-        break;
-    case SlangModuleDesc::Type::source:
-        m_compile_request->addTranslationUnitSourceString(0, m_desc.path.string().c_str(), m_desc.source.c_str());
-        break;
+    // Write module to a temporary file.
+    std::filesystem::path tmp_path = cache_path;
+    std::random_device rd;
+    uint64_t uid = rd();
+    tmp_path.replace_extension(".slang-module-" + string::hexlify(&uid, sizeof(uid)));
+    if (std::filesystem::exists(tmp_path))
+        return false;
+    if (!SLANG_SUCCEEDED(module->slang_module()->writeToFile(tmp_path.string().c_str()))) {
+        log_warn("Failed to write cached slang module \"{}\" to \"{}\"", module->name(), cache_path);
+        return false;
     }
 
-    // Compile.
-    SlangResult result = m_compile_request->compile();
-    std::string log = m_compile_request->getDiagnosticOutput();
-    if (result != SLANG_OK) {
-        throw SlangCompileError(fmt::format("Failed to compile shader module:\n{}", log));
-    } else if (!log.empty()) {
-        log_warn("Slang compiler warnings:\n{}", log);
+    // Rename temporary file to cache path.
+    std::filesystem::rename(tmp_path, cache_path, ec);
+    if (ec) {
+        log_warn("Failed to rename cached slang module \"{}\" to \"{}\" ({})", tmp_path, cache_path, ec.message());
+        std::filesystem::remove(tmp_path, ec);
+        return false;
     }
 
-    // Query number of entry points.
-    slang::ProgramLayout* layout = slang::ProgramLayout::get(m_compile_request);
-    m_entry_point_count = layout->getEntryPointCount();
+    return true;
+}
 
-    // Register string hashes with the debug printer.
-    // TODO: inc_ref/dec_ref is needed here because global_scope() returns an object that has
-    // holds a shared reference to this module. The returned object is destroyed within this
-    // function, decreasing the reference count of this module to zero, leading to the object
-    // being destroyed.
-    inc_ref();
-    if (m_session->device()->debug_printer())
-        m_session->device()->debug_printer()->add_hashed_strings(global_scope()->layout()->hashed_strings_map());
-    dec_ref(false);
+std::string SlangSession::resolve_module_name(std::string_view module_name)
+{
+    // Return if module name is an absolute file path.
+    std::filesystem::path path = module_name;
+    if (path.is_absolute())
+        return path.string();
+
+    // Return relative path if module name is a relative path within the include paths.
+    for (const std::filesystem::path& include_path : m_include_paths) {
+        std::filesystem::path full_path = include_path / path;
+        if (std::filesystem::exists(full_path))
+            return path.string();
+    }
+
+    // Assume we have a module name in the form "a.b.c" which we interpret as "a/b/c.slang".
+    std::string str{module_name};
+    std::replace(str.begin(), str.end(), '.', '/');
+    str += ".slang";
+    path = str;
+    for (const std::filesystem::path& include_path : m_include_paths) {
+        std::filesystem::path full_path = include_path / path;
+        if (std::filesystem::exists(full_path))
+            return path.string();
+    }
+
+    // Failed to resolve, return the module name as is.
+    return std::string{module_name};
+}
+
+void SlangSession::register_with_debug_printer(SlangModule* module) const
+{
+    KALI_ASSERT(module);
+    if (m_device->debug_printer())
+        m_device->debug_printer()->add_hashed_strings(module->layout()->hashed_strings_map());
+}
+
+
+SlangModule::SlangModule(ref<SlangSession> session, slang::IModule* slang_module)
+    : m_session(std::move(session))
+    , m_slang_module(slang_module)
+{
+    m_name = m_slang_module->getName();
+    m_path = m_slang_module->getFilePath() ? m_slang_module->getFilePath() : "";
 }
 
 SlangModule::~SlangModule() { }
 
-ref<SlangGlobalScope> SlangModule::global_scope()
-{
-    Slang::ComPtr<slang::IComponentType> component_type;
-    SLANG_CALL(m_compile_request->getProgram(component_type.writeRef()));
-    return make_ref<SlangGlobalScope>(ref<SlangModule>(this), component_type);
-}
-
-ref<SlangEntryPoint> SlangModule::entry_point(std::string_view name)
-{
-    for (const auto& entry_point : entry_points()) {
-        if (entry_point->name() == name)
-            return entry_point;
-    }
-    KALI_THROW("Entry point '{}' not found", name);
-}
-
-std::vector<ref<SlangEntryPoint>> SlangModule::entry_points()
+std::vector<ref<SlangEntryPoint>> SlangModule::entry_points() const
 {
     std::vector<ref<SlangEntryPoint>> entry_points;
-    for (size_t i = 0; i < m_entry_point_count; i++) {
-        Slang::ComPtr<slang::IComponentType> component_type;
-        if (m_compile_request->getEntryPoint(i, component_type.writeRef()) != SLANG_OK || !component_type)
-            break;
-        entry_points.push_back(make_ref<SlangEntryPoint>(ref<SlangModule>(this), component_type));
+    for (SlangInt32 i = 0; i < m_slang_module->getDefinedEntryPointCount(); ++i) {
+        Slang::ComPtr<slang::IEntryPoint> slang_entry_point;
+        m_slang_module->getDefinedEntryPoint(i, slang_entry_point.writeRef());
+        entry_points.push_back(make_ref<SlangEntryPoint>(
+            ref(const_cast<SlangModule*>(this)),
+            Slang::ComPtr<slang::IComponentType>(slang_entry_point)
+        ));
     }
     return entry_points;
 }
 
-ref<ShaderProgram> SlangModule::create_program(std::string_view entry_point_name)
+ref<SlangEntryPoint> SlangModule::entry_point(std::string_view name) const
 {
-    return create_program(global_scope(), entry_point(entry_point_name));
+    Slang::ComPtr<slang::IEntryPoint> slang_entry_point;
+    m_slang_module->findEntryPointByName(std::string{name}.c_str(), slang_entry_point.writeRef());
+    if (!slang_entry_point)
+        KALI_THROW("Entry point '{}' not found", name);
+    return make_ref<SlangEntryPoint>(
+        ref(const_cast<SlangModule*>(this)),
+        Slang::ComPtr<slang::IComponentType>(slang_entry_point)
+    );
 }
 
-ref<ShaderProgram> SlangModule::create_program(ref<SlangGlobalScope> global_scope, ref<SlangEntryPoint> entry_point)
+bool SlangModule::has_entry_point(std::string_view name) const
 {
-    std::vector<ref<SlangEntryPoint>> entry_points(1);
-    entry_points[0] = std::move(entry_point);
-    return make_ref<ShaderProgram>(m_session->device(), std::move(global_scope), std::move(entry_points));
+    Slang::ComPtr<slang::IEntryPoint> slang_entry_point;
+    m_slang_module->findEntryPointByName(std::string{name}.c_str(), slang_entry_point.writeRef());
+    return slang_entry_point != nullptr;
 }
 
-ref<ShaderProgram>
-SlangModule::create_program(ref<SlangGlobalScope> global_scope, std::vector<ref<SlangEntryPoint>> entry_points)
+std::string SlangModule::to_string() const
 {
-    return make_ref<ShaderProgram>(m_session->device(), std::move(global_scope), std::move(entry_points));
+    return fmt::format(
+        "SlangModule(\n"
+        "  name = {},\n"
+        "  path = {},\n"
+        "  entry_points = {}\n"
+        ")",
+        m_name,
+        m_path,
+        string::indent(string::list_to_string(entry_points()))
+    );
 }
 
-ref<ComputeKernel> SlangModule::create_compute_kernel(std::string_view entry_point_name)
-{
-    return make_ref<ComputeKernel>(m_session->device(), create_program(entry_point_name));
-}
-
-SlangComponentType::SlangComponentType(ref<SlangModule> module, Slang::ComPtr<slang::IComponentType> component_type)
+SlangEntryPoint::SlangEntryPoint(ref<SlangModule> module, Slang::ComPtr<slang::IComponentType> slang_entry_point)
     : m_module(std::move(module))
-    , m_component_type(std::move(component_type))
+    , m_slang_entry_point(std::move(slang_entry_point))
 {
-}
-
-SlangGlobalScope::SlangGlobalScope(ref<SlangModule> module, Slang::ComPtr<slang::IComponentType> component_type)
-    : SlangComponentType(std::move(module), std::move(component_type))
-{
-}
-
-const ProgramLayout* SlangGlobalScope::layout() const
-{
-    return ProgramLayout::from_slang(m_component_type->getLayout());
-}
-
-std::string SlangGlobalScope::to_string() const
-{
-    return fmt::format("SlangGlobalScope()");
-}
-
-SlangEntryPoint::SlangEntryPoint(ref<SlangModule> module, Slang::ComPtr<slang::IComponentType> component_type)
-    : SlangComponentType(std::move(module), std::move(component_type))
-{
-    slang::EntryPointLayout* layout = m_component_type->getLayout()->getEntryPointByIndex(0);
+    slang::EntryPointLayout* layout = m_slang_entry_point->getLayout()->getEntryPointByIndex(0);
     m_name = layout->getNameOverride() ? layout->getNameOverride() : layout->getName();
     m_stage = static_cast<ShaderStage>(layout->getStage());
 }
@@ -382,13 +677,29 @@ SlangEntryPoint::SlangEntryPoint(ref<SlangModule> module, Slang::ComPtr<slang::I
 ref<SlangEntryPoint> SlangEntryPoint::rename(const std::string& new_name)
 {
     Slang::ComPtr<slang::IComponentType> renamed_entry_point;
-    SLANG_CALL(m_component_type->renameEntryPoint(new_name.c_str(), renamed_entry_point.writeRef()));
+    SLANG_CALL(m_slang_entry_point->renameEntryPoint(new_name.c_str(), renamed_entry_point.writeRef()));
     return make_ref<SlangEntryPoint>(m_module, renamed_entry_point);
+}
+
+ref<SlangEntryPoint> SlangEntryPoint::with_name(const std::string& name) const
+{
+    Slang::ComPtr<slang::IComponentType> new_entry_point;
+    SLANG_CALL(m_slang_entry_point->renameEntryPoint(name.c_str(), new_entry_point.writeRef()));
+    return make_ref<SlangEntryPoint>(m_module, new_entry_point);
+}
+
+ref<SlangEntryPoint> SlangEntryPoint::with_type_conformances(const TypeConformanceList& type_conformances) const
+{
+    KALI_UNUSED(type_conformances);
+    Slang::ComPtr<slang::IComponentType> new_entry_point;
+    // TODO
+    // m_module->m_session->get_slang_session()->createTypeConformanceComponentType
+    return make_ref<SlangEntryPoint>(m_module, new_entry_point);
 }
 
 const EntryPointLayout* SlangEntryPoint::layout() const
 {
-    return EntryPointLayout::from_slang(m_component_type->getLayout()->getEntryPointByIndex(0));
+    return EntryPointLayout::from_slang(m_slang_entry_point->getLayout()->getEntryPointByIndex(0));
 }
 
 std::string SlangEntryPoint::to_string() const
@@ -398,51 +709,28 @@ std::string SlangEntryPoint::to_string() const
 
 ShaderProgram::ShaderProgram(
     ref<Device> device,
-    ref<SlangGlobalScope> global_scope,
-    std::vector<ref<SlangEntryPoint>> entry_points
+    ref<SlangSession> session,
+    std::vector<ref<SlangModule>> modules,
+    std::vector<ref<SlangEntryPoint>> entry_points,
+    Slang::ComPtr<slang::IComponentType> linked_program
 )
     : m_device(std::move(device))
-    , m_global_scope(std::move(global_scope))
+    , m_session(std::move(session))
+    , m_modules(std::move(modules))
     , m_entry_points(std::move(entry_points))
+    , m_linked_program(std::move(linked_program))
 {
-    slang::IComponentType* global_scope_component = m_global_scope->m_component_type;
-    std::vector<slang::IComponentType*> entry_point_components(m_entry_points.size());
-    for (size_t i = 0; i < m_entry_points.size(); ++i) {
-        entry_point_components[i] = m_entry_points[i]->m_component_type;
-    }
-
-    // std::vector<Slang::ComPtr<slang::IComponentType>> linked_entry_points(m_entry_points.size());
-    // std::vector<slang::IComponentType*> entry_point_components(m_entry_points.size());
-    // for (size_t i = 0; i < entry_points.size(); ++i) {
-    //     slang::IComponentType* components[2] = {global_scope_component, m_entry_points[i]->m_component_type};
-    //     // TODO handle diagnostics
-    //     SLANG_CALL(global_scope_component->getSession()->createCompositeComponentType(
-    //         components,
-    //         std::size(components),
-    //         linked_entry_points[i].writeRef(),
-    //         nullptr
-    //     ));
-    //     entry_point_components[i] = linked_entry_points[i];
-    // }
-
     gfx::IShaderProgram::Desc gfx_desc{
-        .linkingStyle = gfx::IShaderProgram::LinkingStyle::SeparateEntryPointCompilation,
-        .slangGlobalScope = global_scope_component,
-        .entryPointCount = narrow_cast<gfx::GfxCount>(entry_point_components.size()),
-        .slangEntryPoints = entry_point_components.data(),
+        .slangGlobalScope = m_linked_program,
     };
 
     Slang::ComPtr<ISlangBlob> diagnostics;
     if (m_device->gfx_device()->createProgram(gfx_desc, m_gfx_shader_program.writeRef(), diagnostics.writeRef())
         != SLANG_OK) {
-        KALI_THROW(
-            "Failed to create shader program:\n{}",
-            diagnostics ? (const char*)diagnostics->getBufferPointer() : ""
-        );
+        std::string msg = append_diagnostics("Failed to create shader program", diagnostics);
+        KALI_THROW(msg);
     }
-    if (diagnostics) {
-        log_warn("Slang compiler warnings:\n{}", (const char*)diagnostics->getBufferPointer());
-    }
+    report_diagnostics(diagnostics);
 }
 
 std::vector<const EntryPointLayout*> ShaderProgram::entry_point_layouts() const
@@ -458,10 +746,10 @@ std::string ShaderProgram::to_string() const
 {
     return fmt::format(
         "ShaderProgram(\n"
-        "  global_scope = {},\n"
+        "  modules = {},\n"
         "  entry_points = {}\n"
         ")",
-        m_global_scope->to_string(),
+        string::indent(string::list_to_string(m_modules)),
         string::indent(string::list_to_string(m_entry_points))
     );
 }

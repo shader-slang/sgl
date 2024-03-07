@@ -16,8 +16,8 @@ namespace kali {
 // Kernel
 // ----------------------------------------------------------------------------
 
-Kernel::Kernel(Device* device, ref<ShaderProgram> program)
-    : m_device(device)
+Kernel::Kernel(ref<Device> device, ref<ShaderProgram> program)
+    : DeviceResource(std::move(device))
     , m_program(std::move(program))
 {
 }
@@ -26,8 +26,8 @@ Kernel::Kernel(Device* device, ref<ShaderProgram> program)
 // ComputeKernel
 // ----------------------------------------------------------------------------
 
-ComputeKernel::ComputeKernel(Device* device, ref<ShaderProgram> program)
-    : Kernel(device, program)
+ComputeKernel::ComputeKernel(ref<Device> device, ComputeKernelDesc desc)
+    : Kernel(std::move(device), std::move(desc.program))
 {
     m_thread_group_size = m_program->entry_point_layout(0)->compute_thread_group_size();
 }
@@ -73,8 +73,8 @@ void ComputeKernel::dispatch(uint3 thread_count, BindVarsCallback bind_vars, Com
 // RayTracingKernel
 // ----------------------------------------------------------------------------
 
-RayTracingKernel::RayTracingKernel(Device* device, ref<ShaderProgram> program)
-    : Kernel(device, program)
+RayTracingKernel::RayTracingKernel(ref<Device> device, ref<ShaderProgram> program)
+    : Kernel(std::move(device), std::move(program))
 {
 }
 

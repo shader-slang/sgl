@@ -6,7 +6,10 @@ from pathlib import Path
 
 EXAMPLE_DIR = Path(__file__).parent
 
-device = kali.Device(enable_debug_layers=True)
+device = kali.Device(
+    enable_debug_layers=True,
+    compiler_options={"include_paths": [EXAMPLE_DIR]},
+)
 
 vertices = np.array([-1, -1, 0, 1, -1, 0, 0, 1, 0], dtype=np.float32)
 indices = np.array([0, 1, 2], dtype=np.uint32)
@@ -132,11 +135,9 @@ render_texture = device.create_texture(
     debug_name="render_texture",
 )
 
-module = device.load_module(EXAMPLE_DIR / "raytracing_pipeline.slang")
-ray_gen = module.entry_point("ray_gen")
-miss = module.entry_point("miss")
-closest_hit = module.entry_point("closest_hit")
-program = module.create_program(module.global_scope, [ray_gen, miss, closest_hit])
+program = device.load_program(
+    "raytracing_pipeline.slang", ["ray_gen", "miss", "closest_hit"]
+)
 pipeline = device.create_ray_tracing_pipeline(
     program=program,
     hit_groups=[

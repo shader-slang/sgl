@@ -40,7 +40,12 @@ int main(int argc, const char* argv[])
         // args.parse_args(argc, argv);
         KALI_UNUSED(argc, argv);
         args.parse_args(
-            {"tinybc", "C:/projects/kali/monalisa.jpg", "-o", "C:/projects/kali/monalisa_bc7.jpg", "-b", "-v"}
+            {"tinybc",
+             "C:/projects/kali/data/test_images/monalisa.jpg",
+             "-o",
+             "C:/projects/kali/monalisa_bc7.jpg",
+             "-b",
+             "-v"}
         );
     } catch (const std::runtime_error& err) {
         std::cerr << err.what() << std::endl;
@@ -68,7 +73,10 @@ int main(int argc, const char* argv[])
     uint32_t w = input->width();
     uint32_t h = input->height();
 
-    ref<Device> device = Device::create({.enable_debug_layers = verbose});
+    ref<Device> device = Device::create({
+        .enable_debug_layers = verbose,
+        .compiler_options = {.include_paths = {EXAMPLE_DIR}},
+    });
 
     // Create input texture
     ref<Texture> input_tex = device->create_texture({
@@ -98,15 +106,13 @@ int main(int argc, const char* argv[])
         .usage = ResourceUsage::unordered_access,
     });
 
-    ref<ComputeKernel> encoder = device
-                                     ->load_module(
-                                         EXAMPLE_DIR / "tinybc.slang",
-                                         DefineList({
-                                             {"CONFIG_USE_ADAM", "true"},
-                                             {"CONFIG_OPT_STEPS", std::to_string(opt_steps)},
-                                         })
-                                     )
-                                     ->create_compute_kernel("main");
+    std::string constants = fmt::format(
+        "export static const bool USE_ADAM = true;\n"
+        "export static const uint OPT_STEPS = {};\n",
+        opt_steps
+    );
+    ref<ShaderProgram> program = device->load_program("tinybc.slang", {"main"}, constants);
+    ref<ComputeKernel> encoder = device->create_compute_kernel({.program = program});
 
     uint32_t num_iters = benchmark ? 1000 : 1;
 

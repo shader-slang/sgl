@@ -2,8 +2,8 @@
 
 import bctypes;
 
-static bool USE_ADAM = CONFIG_USE_ADAM;
-static uint OPT_STEPS = CONFIG_OPT_STEPS;
+extern static const bool USE_ADAM;
+extern static const uint OPT_STEPS;
 
 uniform float lr;
 uniform float adam_beta_1;

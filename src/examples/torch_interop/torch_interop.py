@@ -8,9 +8,13 @@ EXAMPLE_DIR = Path(__file__).parent
 
 # Create a D3D12 device and load a slang compute kernel
 device = kali.Device(
-    type=kali.DeviceType.d3d12, enable_debug_layers=True, enable_cuda_interop=True
+    type=kali.DeviceType.d3d12,
+    enable_debug_layers=True,
+    enable_cuda_interop=True,
+    compiler_options={"include_paths": [EXAMPLE_DIR]},
 )
-kernel = device.load_module(EXAMPLE_DIR / "add.slang").create_compute_kernel("main")
+program = device.load_program("add.slang", ["main"])
+kernel = device.create_compute_kernel(program)
 
 # Create a pytorch CUDA device
 td = torch.device("cuda:0")

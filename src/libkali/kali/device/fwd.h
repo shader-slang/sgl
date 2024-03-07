@@ -52,7 +52,6 @@ class Framebuffer;
 struct SlangSessionDesc;
 class SlangSession;
 
-class DefineList;
 class SlangModule;
 class SlangComponentType;
 class SlangGlobalScope;
@@ -72,6 +71,7 @@ class EntryPointLayout;
 // kernel.h
 
 class Kernel;
+struct ComputeKernelDesc;
 class ComputeKernel;
 
 // pipeline.h
