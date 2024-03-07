@@ -501,6 +501,8 @@ Device::~Device()
 
     m_deferred_release_queue = {};
 
+    m_slang_session.reset();
+
     m_gfx_device.setNull();
 
 #if KALI_HAS_NVAPI
