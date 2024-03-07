@@ -89,7 +89,7 @@ ShaderCursor ShaderCursor::operator[](std::string_view name) const
 {
     KALI_CHECK(is_valid(), "Invalid cursor");
     ShaderCursor result = find_field(name);
-    KALI_CHECK(result.is_valid(), "Field '{}' not found.", name);
+    KALI_CHECK(result.is_valid(), "Field \"{}\" not found.", name);
     return result;
 }
 
@@ -97,7 +97,7 @@ ShaderCursor ShaderCursor::operator[](uint32_t index) const
 {
     KALI_CHECK(is_valid(), "Invalid cursor");
     ShaderCursor result = find_element(index);
-    KALI_CHECK(result.is_valid(), "Element '{}' not found.", index);
+    KALI_CHECK(result.is_valid(), "Element {} not found.", index);
     return result;
 }
 
@@ -368,23 +368,23 @@ void ShaderCursor::set_resource(const ref<ResourceView>& resource_view) const
 {
     const TypeReflection* type = m_type_layout->unwrap_array()->type();
 
-    KALI_CHECK(is_resource_type(type), "'{}' cannot bind a resource", m_type_layout->name());
+    KALI_CHECK(is_resource_type(type), "\"{}\" cannot bind a resource", m_type_layout->name());
 
     if (resource_view) {
         if (is_shader_resource_type(type)) {
             KALI_CHECK(
                 resource_view->type() == ResourceViewType::shader_resource,
-                "'{}' expects a shader resource view",
+                "\"{}\" expects a shader resource view",
                 m_type_layout->name()
             );
         } else if (is_unordered_access_type(type)) {
             KALI_CHECK(
                 resource_view->type() == ResourceViewType::unordered_access,
-                "'{}' expects an unordered access view",
+                "\"{}\" expects an unordered access view",
                 m_type_layout->name()
             );
         } else {
-            KALI_THROW("'{}' expects a valid resource view", m_type_layout->name());
+            KALI_THROW("\"{}\" expects a valid resource view", m_type_layout->name());
         }
     }
 
@@ -395,7 +395,7 @@ void ShaderCursor::set_buffer(const ref<Buffer>& buffer) const
 {
     const TypeReflection* type = m_type_layout->unwrap_array()->type();
 
-    KALI_CHECK(is_buffer_resource_type(type), "'{}' cannot bind a buffer", m_type_layout->name());
+    KALI_CHECK(is_buffer_resource_type(type), "\"{}\" cannot bind a buffer", m_type_layout->name());
 
     if (buffer) {
         if (is_shader_resource_type(type)) {
@@ -403,7 +403,7 @@ void ShaderCursor::set_buffer(const ref<Buffer>& buffer) const
         } else if (is_unordered_access_type(type)) {
             set_resource(buffer->get_uav());
         } else {
-            KALI_THROW("'{}' expects a valid buffer", m_type_layout->name());
+            KALI_THROW("\"{}\" expects a valid buffer", m_type_layout->name());
         }
     } else {
         set_resource(nullptr);
@@ -414,7 +414,7 @@ void ShaderCursor::set_texture(const ref<Texture>& texture) const
 {
     const TypeReflection* type = m_type_layout->unwrap_array()->type();
 
-    KALI_CHECK(is_texture_resource_type(type), "'{}' cannot bind a texture", m_type_layout->name());
+    KALI_CHECK(is_texture_resource_type(type), "\"{}\" cannot bind a texture", m_type_layout->name());
 
     if (texture) {
         if (is_shader_resource_type(type)) {
@@ -422,7 +422,7 @@ void ShaderCursor::set_texture(const ref<Texture>& texture) const
         } else if (is_unordered_access_type(type)) {
             set_resource(texture->get_uav());
         } else {
-            KALI_THROW("'{}' expects a valid texture", m_type_layout->name());
+            KALI_THROW("\"{}\" expects a valid texture", m_type_layout->name());
         }
     } else {
         set_resource(nullptr);
@@ -433,7 +433,7 @@ void ShaderCursor::set_sampler(const ref<Sampler>& sampler) const
 {
     const TypeReflection* type = m_type_layout->unwrap_array()->type();
 
-    KALI_CHECK(is_sampler_type(type), "'{}' cannot bind a sampler", m_type_layout->name());
+    KALI_CHECK(is_sampler_type(type), "\"{}\" cannot bind a sampler", m_type_layout->name());
 
     m_shader_object->set_sampler(m_offset, sampler);
 }
@@ -444,7 +444,7 @@ void ShaderCursor::set_acceleration_structure(const ref<AccelerationStructure>& 
 
     KALI_CHECK(
         is_acceleration_structure_resource_type(type),
-        "'{}' cannot bind an acceleration structure",
+        "\"{}\" cannot bind an acceleration structure",
         m_type_layout->name()
     );
 
@@ -454,7 +454,7 @@ void ShaderCursor::set_acceleration_structure(const ref<AccelerationStructure>& 
 void ShaderCursor::set_data(const void* data, size_t size) const
 {
     if (m_type_layout->parameter_category() != TypeReflection::ParameterCategory::uniform)
-        KALI_THROW("'{}' cannot bind data", m_type_layout->name());
+        KALI_THROW("\"{}\" cannot bind data", m_type_layout->name());
     m_shader_object->set_data(m_offset, data, size);
 }
 
@@ -462,7 +462,7 @@ void ShaderCursor::set_object(const ref<MutableShaderObject>& object) const
 {
     const TypeReflection* type = m_type_layout->type();
 
-    KALI_CHECK(is_parameter_block(type), "'{}' cannot bind an object", m_type_layout->name());
+    KALI_CHECK(is_parameter_block(type), "\"{}\" cannot bind an object", m_type_layout->name());
 
     m_shader_object->set_object(m_offset, object);
 }
@@ -472,14 +472,14 @@ void ShaderCursor::set_cuda_tensor_view(const cuda::TensorView& tensor_view) con
 {
     const TypeReflection* type = m_type_layout->unwrap_array()->type();
 
-    KALI_CHECK(is_buffer_resource_type(type), "'{}' cannot bind a CUDA tensor view", m_type_layout->name());
+    KALI_CHECK(is_buffer_resource_type(type), "\"{}\" cannot bind a CUDA tensor view", m_type_layout->name());
 
     if (is_shader_resource_type(type)) {
         m_shader_object->set_cuda_tensor_view(m_offset, tensor_view, false);
     } else if (is_unordered_access_type(type)) {
         m_shader_object->set_cuda_tensor_view(m_offset, tensor_view, true);
     } else {
-        KALI_THROW("'{}' expects a valid buffer", m_type_layout->name());
+        KALI_THROW("\"{}\" expects a valid buffer", m_type_layout->name());
     }
 }
 #endif
@@ -488,10 +488,14 @@ void ShaderCursor::set_scalar(const void* data, size_t size, TypeReflection::Sca
 {
     const TypeReflection* type = m_type_layout->unwrap_array()->type();
 
-    KALI_CHECK(type->kind() == TypeReflection::Kind::scalar, "'{}' cannot bind a scalar value", m_type_layout->name());
+    KALI_CHECK(
+        type->kind() == TypeReflection::Kind::scalar,
+        "\"{}\" cannot bind a scalar value",
+        m_type_layout->name()
+    );
     KALI_CHECK(
         allow_scalar_conversion(scalar_type, type->scalar_type()),
-        "'{}' expects scalar type {} (no implicit conversion from type {})",
+        "\"{}\" expects scalar type {} (no implicit conversion from type {})",
         m_type_layout->name(),
         type->scalar_type(),
         scalar_type
@@ -505,17 +509,21 @@ void ShaderCursor::set_vector(const void* data, size_t size, TypeReflection::Sca
 {
     const TypeReflection* type = m_type_layout->unwrap_array()->type();
 
-    KALI_CHECK(type->kind() == TypeReflection::Kind::vector, "'{}' cannot bind a vector value", m_type_layout->name());
+    KALI_CHECK(
+        type->kind() == TypeReflection::Kind::vector,
+        "\"{}\" cannot bind a vector value",
+        m_type_layout->name()
+    );
     KALI_CHECK(
         type->col_count() == uint32_t(dimension),
-        "'{}' expects a vector with dimension {} (got dimension {})",
+        "\"{}\" expects a vector with dimension {} (got dimension {})",
         m_type_layout->name(),
         type->col_count(),
         dimension
     );
     KALI_CHECK(
         allow_scalar_conversion(scalar_type, type->scalar_type()),
-        "'{}' expects a vector with scalar type {} (no implicit conversion from type {})",
+        "\"{}\" expects a vector with scalar type {} (no implicit conversion from type {})",
         m_type_layout->name(),
         type->scalar_type(),
         scalar_type
@@ -529,10 +537,14 @@ void ShaderCursor::set_matrix(const void* data, size_t size, TypeReflection::Sca
 {
     const TypeReflection* type = m_type_layout->unwrap_array()->type();
 
-    KALI_CHECK(type->kind() == TypeReflection::Kind::matrix, "'{}' cannot bind a matrix value", m_type_layout->name());
+    KALI_CHECK(
+        type->kind() == TypeReflection::Kind::matrix,
+        "\"{}\" cannot bind a matrix value",
+        m_type_layout->name()
+    );
     KALI_CHECK(
         type->row_count() == uint32_t(rows) && type->col_count() == uint32_t(cols),
-        "'{}' expects a matrix with dimension {}x{} (got dimension {}x{})",
+        "\"{}\" expects a matrix with dimension {}x{} (got dimension {}x{})",
         m_type_layout->name(),
         type->row_count(),
         type->col_count(),
@@ -541,7 +553,7 @@ void ShaderCursor::set_matrix(const void* data, size_t size, TypeReflection::Sca
     );
     KALI_CHECK(
         allow_scalar_conversion(scalar_type, type->scalar_type()),
-        "'{}' expects a matrix with scalar type {} (no implicit conversion from type {})",
+        "\"{}\" expects a matrix with scalar type {} (no implicit conversion from type {})",
         m_type_layout->name(),
         type->scalar_type(),
         scalar_type

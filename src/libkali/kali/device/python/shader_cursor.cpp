@@ -111,7 +111,7 @@ KALI_PY_EXPORT(device_shader_cursor)
     auto set_int_field = [](ShaderCursor& self, std::string_view name, nb::int_ value)
     {
         const TypeReflection* type = self[name].type();
-        KALI_CHECK(type->kind() == TypeReflection::Kind::scalar, "Field '{}' is not a scalar type.", name);
+        KALI_CHECK(type->kind() == TypeReflection::Kind::scalar, "Field \"{}\" is not a scalar type.", name);
         switch (type->scalar_type()) {
         case TypeReflection::ScalarType::int16:
         case TypeReflection::ScalarType::int32:
@@ -128,7 +128,7 @@ KALI_PY_EXPORT(device_shader_cursor)
             self[name] = nb::cast<uint64_t>(value);
             break;
         default:
-            KALI_THROW("Field '{}' is not an integer type.");
+            KALI_THROW("Field \"{}\" is not an integer type.");
             break;
         }
     };
@@ -165,7 +165,7 @@ KALI_PY_EXPORT(device_shader_cursor)
     auto set_float_field = [](ShaderCursor& self, std::string_view name, nb::float_ value)
     {
         const TypeReflection* type = self[name].type();
-        KALI_CHECK(type->kind() == TypeReflection::Kind::scalar, "Field '{}' is not a scalar type.", name);
+        KALI_CHECK(type->kind() == TypeReflection::Kind::scalar, "Field \"{}\" is not a scalar type.", name);
         switch (type->scalar_type()) {
         case TypeReflection::ScalarType::float16:
             self[name] = float16_t(nb::cast<float>(value));
@@ -177,7 +177,7 @@ KALI_PY_EXPORT(device_shader_cursor)
             self[name] = nb::cast<double>(value);
             break;
         default:
-            KALI_THROW("Field '{}' is not a floating point type.");
+            KALI_THROW("Field \"{}\" is not a floating point type.");
             break;
         }
     };

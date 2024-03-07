@@ -300,6 +300,7 @@ Device::Device(const DeviceDesc& desc)
 
     gfx::gfxSetDebugCallback(&DebugLogger::get());
     if (m_desc.enable_debug_layers) {
+        log_debug("Enabling GFX debug layers.");
         gfx::gfxEnableDebugLayer();
     }
 
@@ -341,6 +342,12 @@ Device::Device(const DeviceDesc& desc)
             .slangGlobalSession = m_global_session,
         },
     };
+    log_debug(
+        "Creating graphics device (type: {}, luid: {}, shader_cache_path: {}).",
+        m_desc.type,
+        m_desc.adapter_luid,
+        m_shader_cache_path
+    );
     if (SLANG_FAILED(gfx::gfxCreateDevice(&gfx_desc, m_gfx_device.writeRef())))
         KALI_THROW("Failed to create device!");
 
@@ -402,6 +409,7 @@ Device::Device(const DeviceDesc& desc)
         m_supported_shader_model = ShaderModel::sm_6_0;
         log_warn("No supported shader model found, pretending to support {}.", m_supported_shader_model);
     }
+    log_debug("Supported shader model: {}", m_supported_shader_model);
 
     // Get features.
     const char* features[256];
@@ -409,6 +417,7 @@ Device::Device(const DeviceDesc& desc)
     SLANG_CALL(m_gfx_device->getFeatures(features, std::size(features), &feature_count));
     for (gfx::GfxCount i = 0; i < feature_count; ++i)
         m_features.push_back(features[i]);
+    log_debug("Supported features: {}", string::join(m_features, ", "));
 
     // Create default slang session.
     m_slang_session = create_slang_session({
@@ -854,7 +863,7 @@ bool Device::enable_agility_sdk()
     if (std::tolower(exe_dir.string()[0]) != std::tolower(sdk_dir.string()[0])) {
         log_warn(
             "Cannot enable D3D12 Agility SDK: "
-            "Executable directory '{}' is not on the same drive as the SDK directory '{}'.",
+            "Executable directory \"{}\" is not on the same drive as the SDK directory \"{}\".",
             exe_dir,
             sdk_dir
         );

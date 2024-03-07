@@ -1674,7 +1674,7 @@ void Bitmap::read_exr(Stream* stream)
 #endif
 
     if (luminance_chroma_format) {
-        log_debug("Converting from Luminance-Chroma to RGB format ..");
+        log_debug("Converting from Luminance-Chroma to RGB format ...");
         Imath::V3f yw = Imf::RgbaYca::computeYw(file_chroma);
 
         auto convert = [&](auto* data)

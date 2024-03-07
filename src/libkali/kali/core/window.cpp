@@ -474,7 +474,7 @@ void Window::poll_gamepad_input()
         for (int id = GLFW_JOYSTICK_1; id <= GLFW_JOYSTICK_LAST; ++id) {
             if (glfwJoystickPresent(id) && glfwJoystickIsGamepad(id)) {
                 std::string name(glfwGetJoystickName(id));
-                log_info("Gamepad '{}' connected.", name);
+                log_debug("Gamepad \"{}\" connected.", name);
                 m_gamepad_id = id;
                 m_gamepad_prev_state = {};
 
@@ -488,7 +488,7 @@ void Window::poll_gamepad_input()
     // Check if gamepad is disconnected.
     if (m_gamepad_id != INVALID_GAMEPAD_ID) {
         if (!(glfwJoystickPresent(m_gamepad_id) && glfwJoystickIsGamepad(m_gamepad_id))) {
-            log_info("Gamepad disconnected.");
+            log_debug("Gamepad disconnected.");
             m_gamepad_id = INVALID_GAMEPAD_ID;
 
             GamepadEvent event{.type = GamepadEventType::disconnect};

@@ -214,7 +214,7 @@ private:
 
         if (find_class_desc<BaseT>(type) != nullptr)
             KALI_THROW(
-                "A plugin class with type name '{}' (base class type '{}') has already been registered.",
+                "A plugin class with type name \"{}\" (base class type \"{}\") has already been registered.",
                 type,
                 BaseT::get_plugin_base_type()
             );

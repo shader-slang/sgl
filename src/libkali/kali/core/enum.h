@@ -53,7 +53,7 @@ inline T string_to_enum(std::string_view name)
     const auto& items = EnumInfo<T>::items();
     auto it = std::find_if(items.begin(), items.end(), [name](const auto& item) { return item.second == name; });
     if (it == items.end())
-        KALI_THROW("Invalid enum name '{}'", name);
+        KALI_THROW("Invalid enum name \"{}\"", name);
     return it->first;
 }
 

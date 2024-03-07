@@ -170,7 +170,7 @@ ReflectionCursor ReflectionCursor::operator[](std::string_view name) const
 {
     KALI_CHECK(is_valid(), "Invalid cursor");
     ReflectionCursor result = find_field(name);
-    KALI_CHECK(result.is_valid(), "Field '{}' not found.", name);
+    KALI_CHECK(result.is_valid(), "Field \"{}\" not found.", name);
     return result;
 }
 
@@ -178,7 +178,7 @@ ReflectionCursor ReflectionCursor::operator[](uint32_t index) const
 {
     KALI_CHECK(is_valid(), "Invalid cursor");
     ReflectionCursor result = find_element(index);
-    KALI_CHECK(result.is_valid(), "Element '{}' not found.", index);
+    KALI_CHECK(result.is_valid(), "Element {} not found.", index);
     return result;
 }
 

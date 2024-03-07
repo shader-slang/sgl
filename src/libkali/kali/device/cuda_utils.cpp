@@ -229,7 +229,7 @@ Device::Device(const kali::Device* device)
     KALI_CU_CHECK(cuStreamCreate(&m_stream, CU_STREAM_DEFAULT));
 
     const auto& props = cuda_devices[selected_device];
-    log_info("Created CUDA device '{}' (architecture {}.{}).", props.name, props.major, props.minor);
+    log_info("Created CUDA device \"{}\" (architecture {}.{}).", props.name, props.major, props.minor);
 }
 
 Device::~Device()

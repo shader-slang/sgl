@@ -355,7 +355,8 @@ ref<SlangModule> SlangSession::load_module(std::string_view module_name)
     std::string resolved_name = resolve_module_name(module_name);
     slang::IModule* slang_module = m_slang_session->loadModule(resolved_name.c_str(), diagnostics.writeRef());
     if (!slang_module) {
-        std::string msg = append_diagnostics(fmt::format("Failed to load module '{}'", module_name), diagnostics);
+        std::string msg
+            = append_diagnostics(fmt::format("Failed to load slang module \"{}\"", module_name), diagnostics);
         throw SlangCompileError(msg);
     }
     report_diagnostics(diagnostics);
@@ -382,8 +383,10 @@ ref<SlangModule> SlangSession::load_module_from_source(
         diagnostics.writeRef()
     );
     if (!slang_module) {
-        std::string msg
-            = append_diagnostics(fmt::format("Failed to load module '{}' from source'", module_name), diagnostics);
+        std::string msg = append_diagnostics(
+            fmt::format("Failed to load slang module \"{}\" from source", module_name),
+            diagnostics
+        );
         throw SlangCompileError(msg);
     }
     report_diagnostics(diagnostics);
@@ -637,7 +640,7 @@ ref<SlangEntryPoint> SlangModule::entry_point(std::string_view name) const
     Slang::ComPtr<slang::IEntryPoint> slang_entry_point;
     m_slang_module->findEntryPointByName(std::string{name}.c_str(), slang_entry_point.writeRef());
     if (!slang_entry_point)
-        KALI_THROW("Entry point '{}' not found", name);
+        KALI_THROW("Entry point \"{}\" not found", name);
     return make_ref<SlangEntryPoint>(
         ref(const_cast<SlangModule*>(this)),
         Slang::ComPtr<slang::IComponentType>(slang_entry_point)
