@@ -522,7 +522,6 @@ SlangModule::SlangModule(ref<SlangSession> session, slang::IModule* slang_module
 {
     m_name = m_slang_module->getName();
     m_path = m_slang_module->getFilePath() ? m_slang_module->getFilePath() : "";
-    m_uid = m_slang_module->getUniqueIdentity() ? m_slang_module->getUniqueIdentity() : "";
 }
 
 SlangModule::~SlangModule() { }
@@ -566,12 +565,10 @@ std::string SlangModule::to_string() const
         "SlangModule(\n"
         "  name = {},\n"
         "  path = {},\n"
-        "  uid = {},\n"
         "  entry_points = {}\n"
         ")",
         m_name,
         m_path,
-        m_uid,
         string::indent(string::list_to_string(entry_points()))
     );
 }

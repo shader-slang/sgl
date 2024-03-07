@@ -305,7 +305,6 @@ public:
 
     const std::string& name() const { return m_name; }
     const std::filesystem::path& path() const { return m_path; }
-    const std::string& uid() const { return m_uid; }
     const ProgramLayout* layout() const { return ProgramLayout::from_slang(m_slang_module->getLayout()); }
 
     std::vector<ref<SlangEntryPoint>> entry_points() const;
@@ -322,7 +321,6 @@ private:
     slang::IModule* m_slang_module;
     std::string m_name;
     std::filesystem::path m_path;
-    std::string m_uid;
 };
 
 class KALI_API SlangEntryPoint : public Object {

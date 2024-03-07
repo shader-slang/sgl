@@ -161,7 +161,6 @@ KALI_PY_EXPORT(device_shader)
     nb::class_<SlangModule, Object>(m, "SlangModule", D(SlangModule))
         .def_prop_ro("name", &SlangModule::name, D(SlangModule, name))
         .def_prop_ro("path", &SlangModule::path, D(SlangModule, path))
-        .def_prop_ro("uid", &SlangModule::uid, D(SlangModule, uid))
         .def_prop_ro("layout", &SlangModule::layout, D(SlangModule, layout))
         .def_prop_ro("entry_points", &SlangModule::entry_points, D(SlangModule, entry_points))
         .def("entry_point", &SlangModule::entry_point, "name"_a, D(SlangModule, entry_point));
