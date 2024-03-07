@@ -188,6 +188,24 @@ remove_leading_trailing_whitespace(std::string_view str, std::string_view whites
 [[nodiscard]] KALI_API std::string format_byte_size(size_t size);
 
 /**
+ * Convert data to a hexadecimal string.
+ * \param data Input data.
+ * \param len Length of input data.
+ * \return Hexadecimal string.
+ */
+[[nodiscard]] KALI_API std::string hexlify(const void* data, size_t len);
+
+/**
+ * Convert data to a hexadecimal string.
+ * \param data Input data.
+ * \return Hexadecimal string.
+ */
+[[nodiscard]] inline std::string hexlify(std::span<const uint8_t> data)
+{
+    return hexlify(data.data(), data.size());
+}
+
+/**
  * Encode data into base 64 encoding.
  * \param data Input data.
  * \param len Length of input data.

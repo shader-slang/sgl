@@ -118,6 +118,18 @@ std::string format_byte_size(size_t size)
         return fmt::format("{:.2f} TB", size / 1099511627776.0);
 }
 
+std::string hexlify(const void* data, size_t len)
+{
+    static const char* HEX_CHARS = "0123456789abcdef";
+    std::string result(len * 2, 0);
+    for (size_t i = 0; i < len; ++i) {
+        uint8_t b = reinterpret_cast<const uint8_t*>(data)[i];
+        result[i * 2] = HEX_CHARS[b >> 4];
+        result[i * 2 + 1] = HEX_CHARS[b & 0xf];
+    }
+    return result;
+}
+
 std::string encode_base64(const void* data, size_t len)
 {
     // based on https://gist.github.com/tomykaira/f0fd86b6c73063283afe550bc5d77594
