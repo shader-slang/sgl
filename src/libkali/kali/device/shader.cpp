@@ -16,7 +16,6 @@
 #include "kali/core/timer.h"
 
 #include <slang.h>
-#include <slang-tag-version.h>
 
 #include <random>
 
@@ -378,7 +377,8 @@ ref<SlangModule> SlangSession::load_module_from_source(
     Slang::ComPtr<ISlangBlob> diagnostics;
     slang::IModule* slang_module = m_slang_session->loadModuleFromSource(
         std::string{module_name}.c_str(),
-        path ? path->string().c_str() : nullptr,
+        // slang requires a non-empty path
+        path && !path->empty() ? path->string().c_str() : "path",
         &source_blob,
         diagnostics.writeRef()
     );
@@ -402,9 +402,9 @@ ref<ShaderProgram> SlangSession::link_program(
 )
 {
     for (const auto& module : modules)
-        KALI_CHECK(module->session() == this, "All modules must to belong to this session.");
+        KALI_CHECK(module->session() == this, "All modules must belong to this session.");
     for (const auto& entry_point : entry_points)
-        KALI_CHECK(entry_point->module()->session() == this, "All entry points must to belong to this session.");
+        KALI_CHECK(entry_point->module()->session() == this, "All entry points must belong to this session.");
 
     // Compose the program from it's components.
     Slang::ComPtr<slang::IComponentType> composed_program;
