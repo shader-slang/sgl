@@ -63,9 +63,9 @@ target_sources(kali PRIVATE
     kali/device/agility_sdk.h
     kali/device/command.cpp
     kali/device/command.h
+    kali/device/cuda_api.h
     kali/device/cuda_interop.cpp
     kali/device/cuda_interop.h
-    kali/device/cuda_runtime_wrapper.h
     kali/device/cuda_utils.cpp
     kali/device/cuda_utils.h
     kali/device/device_resource.cpp

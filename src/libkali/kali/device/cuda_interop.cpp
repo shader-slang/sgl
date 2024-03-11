@@ -33,23 +33,21 @@ ref<ResourceView> InteropBuffer::get_resource_view() const
 
 void InteropBuffer::copy_from_cuda(void* cuda_stream)
 {
-    KALI_CUDA_CHECK(cudaMemcpyAsync(
-        m_external_memory->mapped_data(),
-        m_tensor_view.data,
+    KALI_CU_CHECK(cuMemcpyAsync(
+        reinterpret_cast<CUdeviceptr>(m_external_memory->mapped_data()),
+        reinterpret_cast<CUdeviceptr>(m_tensor_view.data),
         m_tensor_view.size,
-        cudaMemcpyDeviceToDevice,
-        static_cast<cudaStream_t>(cuda_stream)
+        static_cast<CUstream>(cuda_stream)
     ));
 }
 
 void InteropBuffer::copy_to_cuda(void* cuda_stream)
 {
-    KALI_CUDA_CHECK(cudaMemcpyAsync(
-        m_tensor_view.data,
-        m_external_memory->mapped_data(),
+    KALI_CU_CHECK(cuMemcpyAsync(
+        reinterpret_cast<CUdeviceptr>(m_tensor_view.data),
+        reinterpret_cast<CUdeviceptr>(m_external_memory->mapped_data()),
         m_tensor_view.size,
-        cudaMemcpyDeviceToDevice,
-        static_cast<cudaStream_t>(cuda_stream)
+        static_cast<CUstream>(cuda_stream)
     ));
 }
 

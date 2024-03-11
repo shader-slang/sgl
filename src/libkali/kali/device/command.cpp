@@ -118,13 +118,13 @@ void CommandQueue::wait(const Fence* fence, uint64_t value)
 void CommandQueue::wait_for_cuda(void* cuda_stream)
 {
     KALI_CHECK(m_device->supports_cuda_interop(), "Device does not support CUDA interop");
-    m_cuda_semaphore->wait_for_cuda(this, static_cast<cudaStream_t>(cuda_stream));
+    m_cuda_semaphore->wait_for_cuda(this, static_cast<CUstream>(cuda_stream));
 }
 
 void CommandQueue::wait_for_device(void* cuda_stream)
 {
     KALI_CHECK(m_device->supports_cuda_interop(), "Device does not support CUDA interop");
-    m_cuda_semaphore->wait_for_device(this, static_cast<cudaStream_t>(cuda_stream));
+    m_cuda_semaphore->wait_for_device(this, static_cast<CUstream>(cuda_stream));
 }
 #endif // KALI_HAS_CUDA
 
