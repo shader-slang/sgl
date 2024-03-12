@@ -31,7 +31,7 @@ static void bind_drag(nb::module_ m, const char* name)
                 typename T::scalar_type,
                 std::string_view,
                 SliderFlags>(),
-            "parent"_a,
+            "parent"_a.none(),
             "label"_a = "",
             "value"_a = typename T::value_type(0),
             "callback"_a = typename T::Callback{},
@@ -62,7 +62,7 @@ static void bind_slider(nb::module_ m, const char* name)
                 typename T::scalar_type,
                 std::string_view,
                 SliderFlags>(),
-            "parent"_a,
+            "parent"_a.none(),
             "label"_a = "",
             "value"_a = typename T::value_type(0),
             "callback"_a = typename T::Callback{},
@@ -135,50 +135,75 @@ KALI_PY_EXPORT(ui_widgets)
 
     nb::module_ ui = m.attr("ui");
 
-    nb::class_<Widget, kali::Object> widget(ui, "Widget", nb::type_slots(widget_type_slots));
+    nb::class_<Widget, kali::Object> widget(ui, "Widget", nb::type_slots(widget_type_slots), D_NA(Widget));
 
-    widget.def_prop_rw("parent", (Widget * (Widget::*)(void)) & Widget::parent, &Widget::set_parent)
-        .def_prop_ro("children", &Widget::children)
-        .def_prop_rw("visible", &Widget::visible, &Widget::set_visible)
-        .def_prop_rw("enabled", &Widget::enabled, &Widget::set_enabled);
+    widget
+        .def_prop_rw("parent", (Widget * (Widget::*)(void)) & Widget::parent, &Widget::set_parent, D_NA(Widget, parent))
+        .def_prop_ro("children", &Widget::children, D_NA(Widget, children))
+        .def_prop_rw("visible", &Widget::visible, &Widget::set_visible, D_NA(Widget, visible))
+        .def_prop_rw("enabled", &Widget::enabled, &Widget::set_enabled, D_NA(Widget, enabled))
+        .def("child_index", &Widget::child_index, "child"_a, D_NA(Widget, child_index))
+        .def("add_child", &Widget::add_child, "child"_a, D_NA(Widget, add_child))
+        .def("add_child_at", &Widget::add_child_at, "child"_a, "index"_a, D_NA(Widget, add_child_at))
+        .def("remove_child", &Widget::remove_child, "child"_a, D_NA(Widget, remove_child))
+        .def("remove_child_at", &Widget::remove_child_at, "index"_a, D_NA(Widget, remove_child_at))
+        .def("remove_all_children", &Widget::remove_all_children, D_NA(Widget, remove_all_children))
+        .def("__len__", &Widget::child_count, D_NA(Widget, child_count))
+        .def(
+            "__iter__",
+            [](const Widget& self) {
+                return nb::make_iterator(
+                    nb::type<Widget>(),
+                    "iterator",
+                    self.children().begin(),
+                    self.children().end()
+                );
+            },
+            nb::keep_alive<0, 1>()
+        )
+        .def("__getitem__", &Widget::child_at, D_NA(Widget, child_at))
+        .def("__delitem__", &Widget::remove_child_at, D_NA(Widget, remove_child_at));
 
-    nb::class_<Screen, Widget>(ui, "Screen").def("dispatch_events", &Screen::dispatch_events);
+    nb::class_<Screen, Widget>(ui, "Screen", D_NA(Screen))
+        .def("dispatch_events", &Screen::dispatch_events, D_NA(Screen, dispatch_events));
 
-    nb::class_<Window, Widget>(ui, "Window")
+    nb::class_<Window, Widget>(ui, "Window", D_NA(Window))
         .def(
             nb::init<Widget*, std::string_view, float2, float2>(),
-            "parent"_a,
+            "parent"_a.none(),
             "title"_a = "",
             "position"_a = float2(10.f, 10.f),
-            "size"_a = float2(400.f, 400.f)
+            "size"_a = float2(400.f, 400.f),
+            D_NA(Window, Window)
         )
-        .def("show", &Window::show)
-        .def("close", &Window::close)
-        .def_prop_rw("title", &Window::title, &Window::set_title)
-        .def_prop_rw("position", &Window::position, &Window::set_position)
-        .def_prop_rw("size", &Window::size, &Window::set_size);
+        .def("show", &Window::show, D_NA(Window, show))
+        .def("close", &Window::close, D_NA(Window, close))
+        .def_prop_rw("title", &Window::title, &Window::set_title, D_NA(Window, title))
+        .def_prop_rw("position", &Window::position, &Window::set_position, D_NA(Window, position))
+        .def_prop_rw("size", &Window::size, &Window::set_size, D_NA(Window, size));
 
     nb::class_<Group, Widget>(ui, "Group")
-        .def(nb::init<Widget*, std::string_view>(), "parent"_a, "label"_a = "")
-        .def_prop_rw("label", &Group::label, &Group::set_label);
+        .def(nb::init<Widget*, std::string_view>(), "parent"_a.none(), "label"_a = "", D_NA(Group, Group))
+        .def_prop_rw("label", &Group::label, &Group::set_label, D_NA(Group, label));
 
     nb::class_<Text, Widget>(ui, "Text")
-        .def(nb::init<Widget*, std::string_view>(), "parent"_a, "text"_a = "")
-        .def_prop_rw("text", &Text::text, &Text::set_text);
+        .def(nb::init<Widget*, std::string_view>(), "parent"_a.none(), "text"_a = "", D_NA(Text, Text))
+        .def_prop_rw("text", &Text::text, &Text::set_text, D_NA(Text, text));
 
-    nb::class_<ProgressBar, Widget>(ui, "ProgressBar")
-        .def(nb::init<Widget*, float>(), "parent"_a, "fraction"_a = 0.f)
-        .def_prop_rw("fraction", &ProgressBar::fraction, &ProgressBar::set_fraction);
+    nb::class_<ProgressBar, Widget>(ui, "ProgressBar", D_NA(ProgressBar))
+        .def(nb::init<Widget*, float>(), "parent"_a.none(), "fraction"_a = 0.f, D_NA(ProgressBar, ProgressBar))
+        .def_prop_rw("fraction", &ProgressBar::fraction, &ProgressBar::set_fraction, D_NA(ProgressBar, fraction));
 
-    nb::class_<Button, Widget>(ui, "Button")
+    nb::class_<Button, Widget>(ui, "Button", D_NA(Button))
         .def(
             nb::init<Widget*, std::string_view, Button::Callback>(),
-            "parent"_a,
+            "parent"_a.none(),
             "label"_a = "",
-            "callback"_a = Button::Callback{}
+            "callback"_a = Button::Callback{},
+            D_NA(Button, Button)
         )
-        .def_prop_rw("label", &Button::label, &Button::set_label)
-        .def_prop_rw("callback", &Button::callback, &Button::set_callback)
+        .def_prop_rw("label", &Button::label, &Button::set_label, D_NA(Button, label))
+        .def_prop_rw("callback", &Button::callback, &Button::set_callback, D_NA(Button, callback))
         .def("_get_callback", &Button::callback);
 
     bind_value_property<ValueProperty<bool>>(ui, "ValuePropertyBool");
@@ -192,40 +217,48 @@ KALI_PY_EXPORT(ui_widgets)
     bind_value_property<ValueProperty<float4>>(ui, "ValuePropertyFloat4");
     bind_value_property<ValueProperty<std::string>>(ui, "ValuePropertyString");
 
-    nb::class_<CheckBox, ValueProperty<bool>>(ui, "CheckBox")
+    nb::class_<CheckBox, ValueProperty<bool>>(ui, "CheckBox", D_NA(CheckBox))
         .def(
             nb::init<Widget*, std::string_view, bool, CheckBox::Callback>(),
-            "parent"_a,
+            "parent"_a.none(),
             "label"_a = "",
             "value"_a = false,
-            "callback"_a = CheckBox::Callback{}
+            "callback"_a = CheckBox::Callback{},
+            D_NA(CheckBox, CheckBox)
         );
 
-    nb::class_<ComboBox, ValueProperty<int>>(ui, "ComboBox")
+    nb::class_<ComboBox, ValueProperty<int>>(ui, "ComboBox", D_NA(ComboBox))
         .def(
             nb::init<Widget*, std::string_view, int, ComboBox::Callback, std::vector<std::string>>(),
-            "parent"_a,
+            "parent"_a.none(),
             "label"_a = "",
             "value"_a = 0,
             "callback"_a = ComboBox::Callback{},
-            "items"_a = std::vector<std::string>{}
+            "items"_a = std::vector<std::string>{},
+            D_NA(ComboBox, ComboBox)
         )
-        .def_prop_rw("items", &ComboBox::items, &ComboBox::set_items);
+        .def_prop_rw("items", &ComboBox::items, &ComboBox::set_items, D_NA(ComboBox, items));
 
     nb::class_<ListBox, ValueProperty<int>>(ui, "ListBox")
         .def(
             nb::init<Widget*, std::string_view, int, ListBox::Callback, std::vector<std::string>, int>(),
-            "parent"_a,
+            "parent"_a.none(),
             "label"_a = "",
             "value"_a = 0,
             "callback"_a = ListBox::Callback{},
             "items"_a = std::vector<std::string>{},
-            "height_in_items"_a = -1
+            "height_in_items"_a = -1,
+            D_NA(ListBox, ListBox)
         )
-        .def_prop_rw("items", &ListBox::items, &ListBox::set_items)
-        .def_prop_rw("height_in_items", &ListBox::height_in_items, &ListBox::set_height_in_items);
+        .def_prop_rw("items", &ListBox::items, &ListBox::set_items, D_NA(ListBox, items))
+        .def_prop_rw(
+            "height_in_items",
+            &ListBox::height_in_items,
+            &ListBox::set_height_in_items,
+            D_NA(ListBox, height_in_items)
+        );
 
-    nb::enum_<SliderFlags>(ui, "SliderFlags")
+    nb::enum_<SliderFlags>(ui, "SliderFlags", D_NA(SliderFlags))
         .value("none", SliderFlags::none)
         .value("always_clamp", SliderFlags::always_clamp)
         .value("logarithmic", SliderFlags::logarithmic)
@@ -251,7 +284,7 @@ KALI_PY_EXPORT(ui_widgets)
     bind_slider<SliderInt3>(ui, "SliderInt3");
     bind_slider<SliderInt4>(ui, "SliderInt4");
 
-    nb::enum_<InputTextFlags>(ui, "InputTextFlags")
+    nb::enum_<InputTextFlags>(ui, "InputTextFlags", D_NA(InputTextFlags))
         .value("none", InputTextFlags::none)
         .value("chars_decimal", InputTextFlags::chars_decimal)
         .value("chars_hexadecimal", InputTextFlags::chars_hexadecimal)
@@ -274,14 +307,15 @@ KALI_PY_EXPORT(ui_widgets)
         .value("escape_clears_all", InputTextFlags::escape_clears_all)
         .def_enum_operators();
 
-    nb::class_<InputText, ValueProperty<std::string>>(ui, "InputText")
+    nb::class_<InputText, ValueProperty<std::string>>(ui, "InputText", D_NA(InputText))
         .def(
             nb::init<Widget*, std::string_view, std::string, InputText::Callback, bool, InputTextFlags>(),
-            "parent"_a,
+            "parent"_a.none(),
             "label"_a = "",
             "value"_a = false,
             "callback"_a = InputText::Callback{},
             "multi_line"_a = false,
-            "flags"_a = InputTextFlags::none
+            "flags"_a = InputTextFlags::none,
+            D_NA(InputText, InputText)
         );
 }

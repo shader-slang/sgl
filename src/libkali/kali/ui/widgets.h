@@ -39,7 +39,58 @@ public:
     void set_parent(Widget* parent) { m_parent = parent; }
 
     const std::vector<ref<Widget>>& children() const { return m_children; }
+    size_t child_count() const { return m_children.size(); }
     void clear_children() { m_children.clear(); }
+
+    int child_index(const Widget* child) const
+    {
+        auto it = std::find(m_children.begin(), m_children.end(), child);
+        return it != m_children.end() ? int(std::distance(m_children.begin(), it)) : -1;
+    }
+
+    ref<Widget> child_at(size_t index) const
+    {
+        KALI_CHECK(index < m_children.size(), "index out of bounds");
+        return m_children[index];
+    }
+
+    void add_child(ref<Widget> child)
+    {
+        KALI_CHECK_NOT_NULL(child);
+        m_children.push_back(child);
+        child->set_parent(this);
+    }
+
+    void add_child_at(ref<Widget> child, size_t index)
+    {
+        KALI_CHECK_NOT_NULL(child);
+        KALI_CHECK(index == 0 || index < m_children.size(), "index out of bounds");
+        m_children.insert(m_children.begin() + index, child);
+        child->set_parent(this);
+    }
+
+    void remove_child(ref<Widget> child)
+    {
+        auto it = std::find(m_children.begin(), m_children.end(), child);
+        KALI_CHECK(it != m_children.end(), "child widget not found");
+        m_children.erase(it);
+        child->set_parent(nullptr);
+    }
+
+    void remove_child_at(size_t index)
+    {
+        KALI_CHECK(index < m_children.size(), "index out of bounds");
+        auto child = m_children[index];
+        m_children.erase(m_children.begin() + index);
+        child->set_parent(nullptr);
+    }
+
+    void remove_all_children()
+    {
+        for (auto& child : m_children)
+            child->set_parent(nullptr);
+        m_children.clear();
+    }
 
     bool visible() const { return m_visible; }
     void set_visible(bool visible) { m_visible = visible; }
