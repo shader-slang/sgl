@@ -49,9 +49,11 @@ public:
 
     virtual void render()
     {
-        if (m_visible)
-            for (const auto& child : m_children)
-                child->render();
+        if (!m_visible)
+            return;
+
+        for (const auto& child : m_children)
+            child->render();
     }
 
     virtual void record_event(const Event& event)
@@ -206,6 +208,9 @@ public:
 
     virtual void render() override
     {
+        if (!m_visible)
+            return;
+
         // Check if this is a nested group
         bool nested = false;
         for (Widget* p = parent(); p != nullptr; p = p->parent())
@@ -241,6 +246,9 @@ public:
 
     virtual void render() override
     {
+        if (!m_visible)
+            return;
+
         ScopedID id(this);
         ScopedDisable disable(!m_enabled);
         ImGui::TextUnformatted(m_text.c_str());
@@ -264,6 +272,9 @@ public:
 
     virtual void render() override
     {
+        if (!m_visible)
+            return;
+
         ScopedID id(this);
         ScopedDisable disable(!m_enabled);
         ImGui::ProgressBar(m_fraction);
@@ -293,6 +304,9 @@ public:
 
     virtual void render() override
     {
+        if (!m_visible)
+            return;
+
         ScopedID id(this);
         ScopedDisable disable(!m_enabled);
         if (ImGui::Button(m_label.c_str()))
@@ -359,6 +373,9 @@ public:
 
     virtual void render() override
     {
+        if (!m_visible)
+            return;
+
         ScopedID id(this);
         ScopedDisable disable(!m_enabled);
         if (ImGui::Checkbox(m_label.c_str(), &m_value))
@@ -388,6 +405,9 @@ public:
 
     virtual void render() override
     {
+        if (!m_visible)
+            return;
+
         ScopedID id(this);
         ScopedDisable disable(!m_enabled);
         if (ImGui::Combo(
@@ -439,6 +459,9 @@ public:
 
     virtual void render() override
     {
+        if (!m_visible)
+            return;
+
         ScopedID id(this);
         ScopedDisable disable(!m_enabled);
         if (ImGui::ListBox(
@@ -500,6 +523,7 @@ public:
 
     using Widget::record_event;
     using Widget::m_enabled;
+    using Widget::m_visible;
     using Base::m_label;
     using Base::m_value;
 
@@ -544,6 +568,9 @@ public:
 
     virtual void render() override
     {
+        if (!m_visible)
+            return;
+
         ScopedID id(this);
         ScopedDisable disable(!m_enabled);
         bool changed = ImGui::DragScalarN(
@@ -588,6 +615,7 @@ public:
 
     using Widget::record_event;
     using Widget::m_enabled;
+    using Widget::m_visible;
     using Base::m_label;
     using Base::m_value;
 
@@ -627,6 +655,9 @@ public:
 
     virtual void render() override
     {
+        if (!m_visible)
+            return;
+
         ScopedID id(this);
         ScopedDisable disable(!m_enabled);
         bool changed = ImGui::SliderScalarN(
@@ -704,6 +735,9 @@ public:
 
     virtual void render() override
     {
+        if (!m_visible)
+            return;
+
         auto text_callback = [](ImGuiInputTextCallbackData* data)
         {
             auto self = static_cast<InputText*>(data->UserData);
