@@ -29,7 +29,7 @@ Kernel::Kernel(ref<Device> device, ref<ShaderProgram> program)
 ComputeKernel::ComputeKernel(ref<Device> device, ComputeKernelDesc desc)
     : Kernel(std::move(device), std::move(desc.program))
 {
-    m_thread_group_size = m_program->entry_point_layout(0)->compute_thread_group_size();
+    m_thread_group_size = m_program->program_layout()->get_entry_point_by_index(0)->compute_thread_group_size();
 }
 
 ComputePipeline* ComputeKernel::pipeline() const

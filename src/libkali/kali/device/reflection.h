@@ -924,6 +924,12 @@ public:
         return nullptr;
     }
 
+    const EntryPointLayout* find_entry_point_by_name(std::string_view name) const
+    {
+        std::string name_str(name);
+        return find_entry_point_by_name(name_str.c_str());
+    }
+
     std::vector<const EntryPointLayout*> entry_points() const
     {
         std::vector<const EntryPointLayout*> result;

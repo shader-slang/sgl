@@ -59,7 +59,7 @@ ComputePipeline::ComputePipeline(ref<Device> device, ComputePipelineDesc desc)
 
     gfx::ComputePipelineStateDesc gfx_desc{.program = m_program->gfx_shader_program()};
     SLANG_CALL(m_device->gfx_device()->createComputePipelineState(gfx_desc, m_gfx_pipeline_state.writeRef()));
-    m_thread_group_size = m_program->entry_point_layout(0)->compute_thread_group_size();
+    m_thread_group_size = m_program->program_layout()->get_entry_point_by_index(0)->compute_thread_group_size();
 }
 
 std::string ComputePipeline::to_string() const

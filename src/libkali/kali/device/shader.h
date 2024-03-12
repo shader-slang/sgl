@@ -380,8 +380,6 @@ public:
     const ref<Device>& device() const { return m_device; }
 
     const ProgramLayout* program_layout() const { return ProgramLayout::from_slang(m_linked_program->getLayout()); }
-    std::vector<const EntryPointLayout*> entry_point_layouts() const;
-    const EntryPointLayout* entry_point_layout(uint32_t index) const { return m_entry_points[index]->layout(); }
 
     ReflectionCursor reflection() const { return ReflectionCursor(this); }
 
