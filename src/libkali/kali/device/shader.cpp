@@ -373,13 +373,15 @@ ref<SlangModule> SlangSession::load_module_from_source(
     std::optional<std::filesystem::path> path
 )
 {
-    UnownedSlangBlob source_blob(source.data(), source.size());
+    // TODO workaround: slang doesn't like loading the same source twice
+    static uint32_t id = 0;
+    std::string source_str = fmt::format("// {}\n{}", id++, source);
+
     Slang::ComPtr<ISlangBlob> diagnostics;
-    slang::IModule* slang_module = m_slang_session->loadModuleFromSource(
+    slang::IModule* slang_module = m_slang_session->loadModuleFromSourceString(
         std::string{module_name}.c_str(),
-        // slang requires a non-empty path
-        path && !path->empty() ? path->string().c_str() : "path",
-        &source_blob,
+        path ? path->string().c_str() : nullptr,
+        source_str.c_str(),
         diagnostics.writeRef()
     );
     if (!slang_module) {
@@ -489,8 +491,10 @@ ref<ShaderProgram> SlangSession::load_program(
 {
     ref<SlangModule> module = load_module(module_name);
     std::vector<ref<SlangModule>> modules{module};
+    // TODO improve the way we generate unique names for additional sources
+    static uint32_t id = 0;
     if (additional_source)
-        modules.push_back(load_module_from_source("", *additional_source));
+        modules.push_back(load_module_from_source(fmt::format("additional_source_{}", id++), *additional_source));
     std::vector<ref<SlangEntryPoint>> entry_points;
     for (const auto& entry_point_name : entry_point_names)
         entry_points.push_back(module->entry_point(entry_point_name));
