@@ -28,7 +28,6 @@ KALI_PY_EXPORT(device_command)
         .def("wait", nb::overload_cast<>(&CommandQueue::wait))
         .def("signal", &CommandQueue::signal, "fence"_a, "value"_a = Fence::AUTO)
         .def("wait", nb::overload_cast<const Fence*, uint64_t>(&CommandQueue::wait), "fence"_a, "value"_a = Fence::AUTO)
-#if KALI_HAS_CUDA
         .def(
             "wait_for_cuda",
             [](CommandQueue* self, uint64_t cuda_stream) { self->wait_for_cuda(reinterpret_cast<void*>(cuda_stream)); },
@@ -39,9 +38,7 @@ KALI_PY_EXPORT(device_command)
             [](CommandQueue* self, uint64_t cuda_stream)
             { self->wait_for_device(reinterpret_cast<void*>(cuda_stream)); },
             "cuda_stream"_a = 0
-        )
-#endif
-        ;
+        );
 
     nb::class_<CommandBuffer, DeviceResource>(m, "CommandBuffer")
         .def("close", &CommandBuffer::close)

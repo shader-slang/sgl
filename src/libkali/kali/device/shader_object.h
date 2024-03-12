@@ -37,20 +37,15 @@ public:
     set_acceleration_structure(const ShaderOffset& offset, const ref<AccelerationStructure>& acceleration_structure);
     virtual void set_data(const ShaderOffset& offset, void const* data, size_t size);
 
-#if KALI_HAS_CUDA
     virtual void set_cuda_tensor_view(const ShaderOffset& offset, const cuda::TensorView& tensor_view, bool is_uav);
     virtual void get_cuda_interop_buffers(std::vector<ref<cuda::InteropBuffer>>& cuda_interop_buffers) const;
-#endif
 
     gfx::IShaderObject* gfx_shader_object() const { return m_shader_object; }
 
 protected:
     ref<Device> m_device;
     gfx::IShaderObject* m_shader_object;
-
-#if KALI_HAS_CUDA
     std::vector<ref<cuda::InteropBuffer>> m_cuda_interop_buffers;
-#endif
 };
 
 class KALI_API TransientShaderObject : public ShaderObject {
@@ -65,9 +60,7 @@ public:
 
     virtual void set_resource(const ShaderOffset& offset, const ref<ResourceView>& resource_view) override;
 
-#if KALI_HAS_CUDA
     virtual void get_cuda_interop_buffers(std::vector<ref<cuda::InteropBuffer>>& cuda_interop_buffers) const override;
-#endif
 
 private:
     CommandBuffer* m_command_buffer;
@@ -90,9 +83,7 @@ public:
 
     void set_resource_states(CommandBuffer* command_buffer);
 
-#if KALI_HAS_CUDA
     virtual void get_cuda_interop_buffers(std::vector<ref<cuda::InteropBuffer>>& cuda_interop_buffers) const override;
-#endif
 
 private:
     std::map<ShaderOffset, ref<ResourceView>> m_resource_views;

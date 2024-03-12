@@ -57,10 +57,8 @@ inline void bind_python_var(ShaderCursor cursor, nb::handle var)
     } else if (nb::isinstance<nb::dict>(var)) {
         for (const auto& [key, value] : nb::cast<nb::dict>(var))
             bind_python_var(cursor[nb::cast<std::string_view>(key)], value);
-#if KALI_HAS_CUDA
     } else if (nb::isinstance<nb::ndarray<nb::device::cuda>>(var)) {
         cursor.set_cuda_tensor_view(ndarray_to_cuda_tensor_view(nb::cast<nb::ndarray<nb::device::cuda>>(var)));
-#endif
     } else {
         KALI_THROW("Unsupported variable type!");
     }

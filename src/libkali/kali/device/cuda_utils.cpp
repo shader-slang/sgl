@@ -2,8 +2,6 @@
 
 #include "cuda_utils.h"
 
-#if KALI_HAS_CUDA
-
 #include "kali/core/error.h"
 
 #include "kali/device/device.h"
@@ -203,6 +201,7 @@ inline int get_device_attribute(CUdevice device, CUdevice_attribute attribute)
 Device::Device(const kali::Device* device)
 {
     KALI_CHECK_NOT_NULL(device);
+    KALI_CHECK(kali_cuda_api_init(), "Failed to load CUDA driver API.");
     KALI_CU_CHECK(cuInit(0));
 
     // Get number of available CUDA devices.
@@ -302,5 +301,3 @@ void ExternalSemaphore::wait_for_device(CommandQueue* command_queue, CUstream cu
 }
 
 } // namespace kali::cuda
-
-#endif // KALI_HAS_CUDA

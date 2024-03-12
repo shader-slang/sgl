@@ -6,8 +6,6 @@
 #include "kali/device/command.h"
 #include "kali/device/cuda_utils.h"
 
-#if KALI_HAS_CUDA
-
 namespace kali::cuda {
 
 InteropBuffer::InteropBuffer(kali::Device* device, const TensorView tensor_view, bool is_uav)
@@ -52,5 +50,3 @@ void InteropBuffer::copy_to_cuda(void* cuda_stream)
 }
 
 } // namespace kali::cuda
-
-#endif // KALI_HAS_CUDA

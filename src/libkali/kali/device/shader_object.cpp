@@ -77,7 +77,6 @@ void ShaderObject::set_data(const ShaderOffset& offset, void const* data, size_t
     SLANG_CALL(m_shader_object->setData(gfx_shader_offset(offset), data, size));
 }
 
-#if KALI_HAS_CUDA
 void ShaderObject::set_cuda_tensor_view(const ShaderOffset& offset, const cuda::TensorView& tensor_view, bool is_uav)
 {
     KALI_CHECK(m_device->supports_cuda_interop(), "Device does not support CUDA interop");
@@ -91,7 +90,6 @@ void ShaderObject::get_cuda_interop_buffers(std::vector<ref<cuda::InteropBuffer>
     cuda_interop_buffers
         .insert(cuda_interop_buffers.end(), m_cuda_interop_buffers.begin(), m_cuda_interop_buffers.end());
 }
-#endif // KALI_HAS_CUDA
 
 //
 // TransientShaderObject
@@ -161,14 +159,12 @@ void TransientShaderObject::set_resource(const ShaderOffset& offset, const ref<R
     ShaderObject::set_resource(offset, resource_view);
 }
 
-#if KALI_HAS_CUDA
 void TransientShaderObject::get_cuda_interop_buffers(std::vector<ref<cuda::InteropBuffer>>& cuda_interop_buffers) const
 {
     ShaderObject::get_cuda_interop_buffers(cuda_interop_buffers);
     for (const auto& sub_object : m_sub_objects)
         sub_object->get_cuda_interop_buffers(cuda_interop_buffers);
 }
-#endif // KALI_HAS_CUDA
 
 //
 // MutableShaderObject
@@ -244,13 +240,11 @@ void MutableShaderObject::set_resource_states(CommandBuffer* command_buffer)
     }
 }
 
-#if KALI_HAS_CUDA
 void MutableShaderObject::get_cuda_interop_buffers(std::vector<ref<cuda::InteropBuffer>>& cuda_interop_buffers) const
 {
     ShaderObject::get_cuda_interop_buffers(cuda_interop_buffers);
     for (const auto& sub_object : m_sub_objects)
         sub_object->get_cuda_interop_buffers(cuda_interop_buffers);
 }
-#endif // KALI_HAS_CUDA
 
 } // namespace kali

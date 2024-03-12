@@ -206,7 +206,6 @@ KALI_PY_EXPORT(device_shader_cursor)
     shader_cursor.def("__setitem__", set_float_element);
     shader_cursor.def("__setattr__", set_float_field);
 
-#if KALI_HAS_CUDA
     auto set_cuda_tensor_field = [](ShaderCursor& self, std::string_view name, nb::ndarray<nb::device::cuda> ndarray)
     { self[name].set_cuda_tensor_view(ndarray_to_cuda_tensor_view(ndarray)); };
 
@@ -216,5 +215,4 @@ KALI_PY_EXPORT(device_shader_cursor)
     shader_cursor.def("__setitem__", set_cuda_tensor_field);
     shader_cursor.def("__setitem__", set_cuda_tensor_element);
     shader_cursor.def("__setattr__", set_cuda_tensor_field);
-#endif
 }

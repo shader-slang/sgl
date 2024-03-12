@@ -40,6 +40,10 @@ set(KALI_BUILD_EXAMPLES ON CACHE BOOL "Build kali example applications")
 set(KALI_BUILD_TESTS ON CACHE BOOL "Build kali tests")
 set(KALI_BUILD_DOC OFF CACHE BOOL "Build kali documentation")
 
+# Enable linking CUDA driver API dynamically.
+# This allows to build CUDA support without having CUDA SDK installed.
+set(KALI_USE_DYNAMIC_CUDA ON CACHE BOOL "Load CUDA driver API dynamically")
+
 # Disable asserts.
 # By default, asserts are enabled in both debug and release builds.
 # This option can be used to override the default behavior.
@@ -89,8 +93,9 @@ find_package(Python 3.8 COMPONENTS Interpreter Development.Module REQUIRED)
 # CUDA
 # -----------------------------------------------------------------------------
 
-find_package(CUDAToolkit)
-ternary(KALI_HAS_CUDA ${CUDAToolkit_FOUND} ON OFF)
+if(NOT KALI_USE_DYNAMIC_CUDA)
+    find_package(CUDAToolkit REQUIRED)
+endif()
 
 # -----------------------------------------------------------------------------
 # Global setup
@@ -320,7 +325,6 @@ cmrc_add_resource_library(kali_data
 add_subdirectory(external)
 
 message(STATUS "Feature flags:")
-message(STATUS "KALI_HAS_CUDA: ${KALI_HAS_CUDA}")
 message(STATUS "KALI_HAS_D3D12: ${KALI_HAS_D3D12}")
 message(STATUS "KALI_HAS_VULKAN: ${KALI_HAS_VULKAN}")
 message(STATUS "KALI_HAS_NVAPI: ${KALI_HAS_NVAPI}")

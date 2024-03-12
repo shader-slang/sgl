@@ -153,7 +153,6 @@ size_t is_ndarray_contiguous(const nb::ndarray<Args...>& array)
     return true;
 }
 
-#if KALI_HAS_CUDA
 inline cuda::TensorView ndarray_to_cuda_tensor_view(nb::ndarray<nb::device::cuda> array)
 {
     return cuda::TensorView{
@@ -162,7 +161,6 @@ inline cuda::TensorView ndarray_to_cuda_tensor_view(nb::ndarray<nb::device::cuda
         .stride = 0, // TODO
     };
 }
-#endif
 
 inline std::optional<Struct::Type> dtype_to_struct_type(nb::dlpack::dtype dtype)
 {

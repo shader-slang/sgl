@@ -64,7 +64,6 @@ public:
      */
     void wait(const Fence* fence, uint64_t value = Fence::AUTO);
 
-#if KALI_HAS_CUDA
     /**
      * \brief Synchronize CUDA -> device.
      *
@@ -84,7 +83,6 @@ public:
      * \param cuda_stream CUDA stream
      */
     void wait_for_device(void* cuda_stream = 0);
-#endif
 
     /// Returns the native API handle for the command queue:
     /// - D3D12: ID3D12CommandQueue*
@@ -96,18 +94,14 @@ public:
     std::string to_string() const override;
 
 private:
-#if KALI_HAS_CUDA
     void handle_copy_from_cuda(const CommandBuffer* command_buffer);
     void handle_copy_to_cuda(const CommandBuffer* command_buffer);
-#endif
 
     CommandQueueDesc m_desc;
     Slang::ComPtr<gfx::ICommandQueue> m_gfx_command_queue;
 
-#if KALI_HAS_CUDA
     ref<Fence> m_cuda_fence;
     ref<cuda::ExternalSemaphore> m_cuda_semaphore;
-#endif
 };
 
 class KALI_API ComputeCommandEncoder {
@@ -575,9 +569,7 @@ private:
     EncoderType m_active_gfx_encoder{EncoderType::none};
     Slang::ComPtr<gfx::ICommandEncoder> m_gfx_command_encoder;
 
-#if KALI_HAS_CUDA
     std::vector<ref<cuda::InteropBuffer>> m_cuda_interop_buffers;
-#endif
 
     friend class CommandQueue;
     friend class ComputeCommandEncoder;

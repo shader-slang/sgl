@@ -467,7 +467,6 @@ void ShaderCursor::set_object(const ref<MutableShaderObject>& object) const
     m_shader_object->set_object(m_offset, object);
 }
 
-#if KALI_HAS_CUDA
 void ShaderCursor::set_cuda_tensor_view(const cuda::TensorView& tensor_view) const
 {
     const TypeReflection* type = m_type_layout->unwrap_array()->type();
@@ -482,7 +481,6 @@ void ShaderCursor::set_cuda_tensor_view(const cuda::TensorView& tensor_view) con
         KALI_THROW("\"{}\" expects a valid buffer", m_type_layout->name());
     }
 }
-#endif
 
 void ShaderCursor::set_scalar(const void* data, size_t size, TypeReflection::ScalarType scalar_type) const
 {

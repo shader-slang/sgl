@@ -2,12 +2,9 @@
 
 #pragma once
 
-#include "kali/core/config.h"
 #include "kali/core/object.h"
 
 #include "kali/device/fwd.h"
-
-#if KALI_HAS_CUDA
 
 namespace kali::cuda {
 
@@ -40,5 +37,3 @@ private:
 };
 
 } // namespace kali::cuda
-
-#endif // KALI_HAS_CUDA

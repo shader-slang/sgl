@@ -191,9 +191,8 @@ public:
     /// List of features supported by the device.
     const std::vector<std::string>& features() const { return m_features; }
 
-#if KALI_HAS_CUDA
+    /// True if the device supports CUDA interoperability.
     bool supports_cuda_interop() const { return m_supports_cuda_interop; }
-#endif
 
     /// Default slang session.
     SlangSession* slang_session() const { return m_slang_session; }
@@ -466,10 +465,8 @@ private:
     std::unique_ptr<PipelineCreationAPIDispatcher> m_api_dispatcher;
 #endif
 
-#if KALI_HAS_CUDA
     bool m_supports_cuda_interop{false};
     ref<cuda::Device> m_cuda_device;
-#endif
 };
 
 } // namespace kali

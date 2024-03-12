@@ -446,17 +446,12 @@ Device::Device(const DeviceDesc& desc)
 
     // Create CUDA device before creating the graphics queue, which internally
     // allocates a shared semaphore for synchronization.
-#if KALI_HAS_CUDA
     if (m_desc.enable_cuda_interop) {
         KALI_CHECK(m_desc.type == DeviceType::d3d12, "CUDA interop is only supported on D3D12 devices");
+        KALI_CHECK(kali_cuda_api_init(), "Failed to initialize CUDA driver API.");
         m_cuda_device = make_ref<cuda::Device>(this);
         m_supports_cuda_interop = true;
     }
-#else
-    if (m_desc.enable_cuda_interop) {
-        KALI_THROW("CUDA interop is not supported");
-    }
-#endif
 
     m_frame_fence = create_fence({});
     m_frame_fence->break_strong_reference_to_device();

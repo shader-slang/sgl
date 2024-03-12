@@ -2,10 +2,6 @@
 
 #pragma once
 
-#include "kali/core/config.h"
-
-#if KALI_HAS_CUDA
-
 #include "kali/core/macros.h"
 
 #include "kali/device/fwd.h"
@@ -102,5 +98,3 @@ private:
 };
 
 } // namespace kali::cuda
-
-#endif // KALI_HAS_CUDA

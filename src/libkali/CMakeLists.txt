@@ -63,6 +63,7 @@ target_sources(kali PRIVATE
     kali/device/agility_sdk.h
     kali/device/command.cpp
     kali/device/command.h
+    kali/device/cuda_api.cpp
     kali/device/cuda_api.h
     kali/device/cuda_interop.cpp
     kali/device/cuda_interop.h
@@ -284,9 +285,10 @@ target_compile_definitions(kali
 file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/include/kali/core/config.h CONTENT
 "#pragma once
 
+#define KALI_USE_DYNAMIC_CUDA $<BOOL:${KALI_USE_DYNAMIC_CUDA}>
+
 #define KALI_HAS_D3D12 $<BOOL:${KALI_HAS_D3D12}>
 #define KALI_HAS_VULKAN $<BOOL:${KALI_HAS_VULKAN}>
-#define KALI_HAS_CUDA $<BOOL:${KALI_HAS_CUDA}>
 
 #define KALI_HAS_NVAPI $<BOOL:${KALI_HAS_NVAPI}>
 #define KALI_HAS_AGILITY_SDK $<BOOL:${KALI_HAS_AGILITY_SDK}>
@@ -305,8 +307,7 @@ target_link_libraries(kali
         fmt::fmt
         slang::slang slang::gfx
         Vulkan::Headers
-        $<$<BOOL:${KALI_HAS_CUDA}>:CUDA::cuda_driver>
-        $<$<BOOL:${KALI_HAS_CUDA}>:CUDA::cudart_static>
+        $<$<NOT:$<BOOL:${KALI_USE_DYNAMIC_CUDA}>>:CUDA::cuda_driver>
         kali_data
     PRIVATE
         git_version
