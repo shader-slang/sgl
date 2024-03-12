@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 interface IBinaryOp : IDifferentiable {
     [Differentiable]
     static float apply(float a, float b);

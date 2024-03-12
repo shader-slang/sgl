@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 import test_link_time_type_binary_op;
 
 extern struct BINARY_OP : IBinaryOp;

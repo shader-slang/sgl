@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 extern static const uint NUM_THREADS;
 extern static const float VALUE;
 
