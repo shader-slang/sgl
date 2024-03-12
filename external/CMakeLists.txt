@@ -33,7 +33,7 @@ set(KALI_LOCAL_SLANG OFF CACHE BOOL "Use a local build of slang instead of downl
 set(KALI_LOCAL_SLANG_DIR "${CMAKE_SOURCE_DIR}/../slang" CACHE PATH "Path to a local slang build")
 set(KALI_LOCAL_SLANG_CONFIG "debug" CACHE STRING "Build configuration of the local slang build")
 
-set(SLANG_VERSION "2024.0.15")
+set(SLANG_VERSION "2024.1.1")
 set(SLANG_URL_BASE "https://github.com/shader-slang/slang/releases/download/v${SLANG_VERSION}")
 
 if(KALI_WINDOWS)
