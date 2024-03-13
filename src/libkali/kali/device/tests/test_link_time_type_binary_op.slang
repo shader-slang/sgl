@@ -7,21 +7,15 @@ interface IBinaryOp : IDifferentiable {
 
 struct AddOp : IBinaryOp {
     [Differentiable]
-    static float apply(float a, float b) {
-        return a + b;
-    }
+    static float apply(float a, float b) { return a + b; }
 }
 
 struct SubOp : IBinaryOp {
     [Differentiable]
-    static float apply(float a, float b) {
-        return a - b;
-    }
+    static float apply(float a, float b) { return a - b; }
 }
 
 struct MulOp : IBinaryOp {
     [Differentiable]
-    static float apply(float a, float b) {
-        return a * b;
-    }
+    static float apply(float a, float b) { return a * b; }
 }
