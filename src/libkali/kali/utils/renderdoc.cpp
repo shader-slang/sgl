@@ -65,7 +65,7 @@ public:
         }
 
         RENDERDOC_DevicePointer device_handle;
-        RENDERDOC_WindowHandle window_handle = window ? window->window_handle() : nullptr;
+        RENDERDOC_WindowHandle window_handle;
 
         switch (device->type()) {
 #if KALI_HAS_D3D12
@@ -82,6 +82,14 @@ public:
             log_warn("RenderDoc is not supported on device type {}.", device->type());
             return false;
         }
+
+#if KALI_WINDOWS
+        window_handle = window ? window->window_handle() : nullptr;
+#elif KALI_LINUX
+        window_handle = window ? (void *)uintptr_t(window->window_handle().xwindow) : nullptr;
+#else
+        return false;
+#endif
 
         m_frame_capture.reset(new FrameCapture{
             .device = device,
