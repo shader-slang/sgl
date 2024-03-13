@@ -144,6 +144,8 @@ target_sources(kali PRIVATE
     kali/ui/widgets.cpp
     kali/ui/widgets.h
 
+    kali/utils/renderdoc.cpp
+    kali/utils/renderdoc.h
     kali/utils/tev.cpp
     kali/utils/tev.h
 
@@ -398,6 +400,7 @@ if(KALI_BUILD_PYTHON)
         kali/math/python/vector.cpp
         kali/ui/python/ui.cpp
         kali/ui/python/widgets.cpp
+        kali/utils/python/renderdoc.cpp
         kali/utils/python/tev.cpp
     )
 

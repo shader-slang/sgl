@@ -49,6 +49,7 @@ KALI_PY_DECLARE(math_quaternion);
 KALI_PY_DECLARE(ui);
 KALI_PY_DECLARE(ui_widgets);
 
+KALI_PY_DECLARE(utils_renderdoc);
 KALI_PY_DECLARE(utils_tev);
 
 
@@ -119,6 +120,7 @@ NB_MODULE(kali_ext, m_)
     KALI_PY_IMPORT(ui_widgets);
 
     m.def_submodule("utils", "Utility module");
+    KALI_PY_IMPORT(utils_renderdoc);
     KALI_PY_IMPORT(utils_tev);
 
     // Wait for all tasks to finish before shutting down.
