@@ -13,7 +13,7 @@
 
 #include <vector>
 
-namespace kali::renderdoc {
+namespace kali::utils::renderdoc {
 
 class API {
 public:
@@ -86,7 +86,7 @@ public:
 #if KALI_WINDOWS
         window_handle = window ? window->window_handle() : nullptr;
 #elif KALI_LINUX
-        window_handle = window ? (void *)uintptr_t(window->window_handle().xwindow) : nullptr;
+        window_handle = window ? (void*)uintptr_t(window->window_handle().xwindow) : nullptr;
 #else
         return false;
 #endif
@@ -167,4 +167,4 @@ bool is_frame_capturing()
     return API::get().is_frame_capturing();
 }
 
-} // namespace kali::renderdoc
+} // namespace kali::utils::renderdoc

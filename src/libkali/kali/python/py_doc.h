@@ -1323,7 +1323,7 @@ static const char *__doc_kali_Device = R"doc()doc";
 
 static const char *__doc_kali_DeviceDesc = R"doc()doc";
 
-static const char *__doc_kali_DeviceDesc_adapter_luid = R"doc(Adapter LUID to select adapeter on which the device will be created.)doc";
+static const char *__doc_kali_DeviceDesc_adapter_luid = R"doc(Adapter LUID to select adapter on which the device will be created.)doc";
 
 static const char *__doc_kali_DeviceDesc_compiler_options = R"doc(Compiler options (used for default slang session).)doc";
 
@@ -1334,8 +1334,8 @@ static const char *__doc_kali_DeviceDesc_enable_debug_layers = R"doc(Enable debu
 static const char *__doc_kali_DeviceDesc_enable_print = R"doc(Enable device side printing (adds performance overhead).)doc";
 
 static const char *__doc_kali_DeviceDesc_shader_cache_path =
-R"doc(Path to the shader cache directory. Leave empty to disable shader
-cache.)doc";
+R"doc(Path to the shader cache directory (optional). If a relative path is
+used, the cache is stored in the application data directory.)doc";
 
 static const char *__doc_kali_DeviceDesc_type = R"doc(The type of the device.)doc";
 
@@ -1733,6 +1733,10 @@ static const char *__doc_kali_Device_m_info = R"doc()doc";
 
 static const char *__doc_kali_Device_m_read_back_heap = R"doc()doc";
 
+static const char *__doc_kali_Device_m_shader_cache_enabled = R"doc()doc";
+
+static const char *__doc_kali_Device_m_shader_cache_path = R"doc()doc";
+
 static const char *__doc_kali_Device_m_slang_session = R"doc()doc";
 
 static const char *__doc_kali_Device_m_supported_shader_model = R"doc()doc";
@@ -1750,6 +1754,8 @@ static const char *__doc_kali_Device_read_texture = R"doc()doc";
 static const char *__doc_kali_Device_report_live_objects =
 R"doc(Report live objects in the slang/gfx layer. This is useful for
 checking clean shutdown with all resources released properly.)doc";
+
+static const char *__doc_kali_Device_shader_cache_stats = R"doc()doc";
 
 static const char *__doc_kali_Device_slang_session = R"doc(Default slang session.)doc";
 
@@ -3839,6 +3845,8 @@ static const char *__doc_kali_ProgramLayout_entry_points = R"doc()doc";
 
 static const char *__doc_kali_ProgramLayout_find_entry_point_by_name = R"doc()doc";
 
+static const char *__doc_kali_ProgramLayout_find_entry_point_by_name_2 = R"doc()doc";
+
 static const char *__doc_kali_ProgramLayout_from_slang = R"doc()doc";
 
 static const char *__doc_kali_ProgramLayout_get_entry_point_by_index = R"doc()doc";
@@ -4649,6 +4657,14 @@ static const char *__doc_kali_SearchPathsResolver_m_search_paths = R"doc()doc";
 
 static const char *__doc_kali_SearchPathsResolver_resolve = R"doc()doc";
 
+static const char *__doc_kali_ShaderCacheStats = R"doc()doc";
+
+static const char *__doc_kali_ShaderCacheStats_entry_count = R"doc(Number of entries in the cache.)doc";
+
+static const char *__doc_kali_ShaderCacheStats_hit_count = R"doc(Number of hits in the cache.)doc";
+
+static const char *__doc_kali_ShaderCacheStats_miss_count = R"doc(Number of misses in the cache.)doc";
+
 static const char *__doc_kali_ShaderCursor = R"doc()doc";
 
 static const char *__doc_kali_ShaderCursor_ShaderCursor = R"doc()doc";
@@ -4807,10 +4823,6 @@ static const char *__doc_kali_ShaderProgram_ShaderProgram = R"doc()doc";
 static const char *__doc_kali_ShaderProgram_class_name = R"doc()doc";
 
 static const char *__doc_kali_ShaderProgram_device = R"doc()doc";
-
-static const char *__doc_kali_ShaderProgram_entry_point_layout = R"doc()doc";
-
-static const char *__doc_kali_ShaderProgram_entry_point_layouts = R"doc()doc";
 
 static const char *__doc_kali_ShaderProgram_gfx_shader_program = R"doc()doc";
 
@@ -5066,8 +5078,6 @@ static const char *__doc_kali_SlangModule_m_session = R"doc()doc";
 
 static const char *__doc_kali_SlangModule_m_slang_module = R"doc(Slang module (owned by the session).)doc";
 
-static const char *__doc_kali_SlangModule_m_uid = R"doc()doc";
-
 static const char *__doc_kali_SlangModule_name = R"doc()doc";
 
 static const char *__doc_kali_SlangModule_path = R"doc()doc";
@@ -5077,8 +5087,6 @@ static const char *__doc_kali_SlangModule_session = R"doc()doc";
 static const char *__doc_kali_SlangModule_slang_module = R"doc()doc";
 
 static const char *__doc_kali_SlangModule_to_string = R"doc()doc";
-
-static const char *__doc_kali_SlangModule_uid = R"doc()doc";
 
 static const char *__doc_kali_SlangOptimizationLevel = R"doc(Slang optimization levels.)doc";
 
@@ -5104,6 +5112,8 @@ static const char *__doc_kali_SlangSessionDesc = R"doc()doc";
 
 static const char *__doc_kali_SlangSessionDesc_add_default_include_paths = R"doc()doc";
 
+static const char *__doc_kali_SlangSessionDesc_cache_path = R"doc()doc";
+
 static const char *__doc_kali_SlangSessionDesc_compiler_options = R"doc()doc";
 
 static const char *__doc_kali_SlangSession_SlangSession = R"doc()doc";
@@ -5126,11 +5136,17 @@ static const char *__doc_kali_SlangSession_load_module_from_source = R"doc()doc"
 
 static const char *__doc_kali_SlangSession_load_program = R"doc()doc";
 
+static const char *__doc_kali_SlangSession_m_cache_enabled = R"doc(True if session cache is enabled.)doc";
+
+static const char *__doc_kali_SlangSession_m_cache_include_paths = R"doc(One cache path for each include path under the root cache path.)doc";
+
+static const char *__doc_kali_SlangSession_m_cache_path = R"doc(Cache root path.)doc";
+
 static const char *__doc_kali_SlangSession_m_desc = R"doc()doc";
 
 static const char *__doc_kali_SlangSession_m_device = R"doc()doc";
 
-static const char *__doc_kali_SlangSession_m_include_paths = R"doc()doc";
+static const char *__doc_kali_SlangSession_m_include_paths = R"doc(List of include paths used for resolving module/include paths.)doc";
 
 static const char *__doc_kali_SlangSession_m_slang_session = R"doc()doc";
 
@@ -5143,6 +5159,8 @@ strings of the module.)doc";
 static const char *__doc_kali_SlangSession_resolve_module_name = R"doc()doc";
 
 static const char *__doc_kali_SlangSession_to_string = R"doc()doc";
+
+static const char *__doc_kali_SlangSession_write_module_to_cache = R"doc()doc";
 
 static const char *__doc_kali_StencilOp = R"doc()doc";
 
@@ -8264,6 +8282,20 @@ Parameter ``size``:
 Returns:
     Size as a human readable string.)doc";
 
+static const char *__doc_kali_string_format_duration =
+R"doc(Convert a duration in seconds to a human readable string: - prints
+nanoseconds (ns) if duration < 1 microsecond - prints microseconds
+(us) if duration < 1 millisecond - prints milliseconds (ms) if
+duration < 1 second - prints seconds (s) if duration < 60 seconds -
+prints minutes (m) if duration < 60 minutes - prints hours (h) if
+duration < 24 hours - otherwise prints days (d)
+
+Parameter ``seconds``:
+    Duration in seconds.
+
+Returns:
+    Duration as a human readable string.)doc";
+
 static const char *__doc_kali_string_has_prefix =
 R"doc(Check is a string has the specified prefix.
 
@@ -8293,6 +8325,27 @@ Parameter ``case_sensitive``:
 
 Returns:
     True if the input string has the specified suffix.)doc";
+
+static const char *__doc_kali_string_hexlify =
+R"doc(Convert data to a hexadecimal string.
+
+Parameter ``data``:
+    Input data.
+
+Parameter ``len``:
+    Length of input data.
+
+Returns:
+    Hexadecimal string.)doc";
+
+static const char *__doc_kali_string_hexlify_2 =
+R"doc(Convert data to a hexadecimal string.
+
+Parameter ``data``:
+    Input data.
+
+Returns:
+    Hexadecimal string.)doc";
 
 static const char *__doc_kali_string_indent =
 R"doc(Replace every newline with the specified indentation.
@@ -8821,6 +8874,16 @@ static const char *__doc_kali_ui_Widget_2 = R"doc(Base class for Python UI widge
 
 static const char *__doc_kali_ui_Widget_Widget = R"doc()doc";
 
+static const char *__doc_kali_ui_Widget_add_child = R"doc()doc";
+
+static const char *__doc_kali_ui_Widget_add_child_at = R"doc()doc";
+
+static const char *__doc_kali_ui_Widget_child_at = R"doc()doc";
+
+static const char *__doc_kali_ui_Widget_child_count = R"doc()doc";
+
+static const char *__doc_kali_ui_Widget_child_index = R"doc()doc";
+
 static const char *__doc_kali_ui_Widget_children = R"doc()doc";
 
 static const char *__doc_kali_ui_Widget_class_name = R"doc()doc";
@@ -8844,6 +8907,12 @@ static const char *__doc_kali_ui_Widget_parent = R"doc()doc";
 static const char *__doc_kali_ui_Widget_parent_2 = R"doc()doc";
 
 static const char *__doc_kali_ui_Widget_record_event = R"doc()doc";
+
+static const char *__doc_kali_ui_Widget_remove_all_children = R"doc()doc";
+
+static const char *__doc_kali_ui_Widget_remove_child = R"doc()doc";
+
+static const char *__doc_kali_ui_Widget_remove_child_at = R"doc()doc";
 
 static const char *__doc_kali_ui_Widget_render = R"doc()doc";
 
@@ -8916,6 +8985,47 @@ static const char *__doc_kali_ui_operator_iand_2 = R"doc()doc";
 static const char *__doc_kali_ui_operator_ior = R"doc()doc";
 
 static const char *__doc_kali_ui_operator_ior_2 = R"doc()doc";
+
+static const char *__doc_kali_utils_renderdoc_end_frame_capture =
+R"doc(End capturing a frame in RenderDoc.
+
+This function will end capturing a frame (or some partial
+compute/graphics workload) in RenderDoc.
+
+Returns:
+    True if the frame capture was ended successfully.)doc";
+
+static const char *__doc_kali_utils_renderdoc_is_available =
+R"doc(Check if RenderDoc is available.
+
+This is typically the case when the application is running under the
+RenderDoc.
+
+Returns:
+    True if RenderDoc is available.)doc";
+
+static const char *__doc_kali_utils_renderdoc_is_frame_capturing =
+R"doc(Check if a frame is currently being captured in RenderDoc.
+
+Returns:
+    True if a frame is currently being captured.)doc";
+
+static const char *__doc_kali_utils_renderdoc_start_frame_capture =
+R"doc(Start capturing a frame in RenderDoc.
+
+This function will start capturing a frame (or some partial
+compute/graphics workload) in RenderDoc.
+
+To end the frame capture, call ``end_frame_capture``().
+
+Parameter ``device``:
+    The device to capture the frame for.
+
+Parameter ``window``:
+    The window to capture the frame for (optional).
+
+Returns:
+    True if the frame capture was started successfully.)doc";
 
 static const char *__doc_kali_utils_show_in_tev =
 R"doc(Show a bitmap in the tev viewer (https://github.com/Tom94/tev).

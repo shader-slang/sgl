@@ -138,9 +138,9 @@ KALI_PY_EXPORT(device_device)
         .def_ro("limits", &DeviceInfo::limits, D(DeviceInfo, limits));
 
     nb::class_<ShaderCacheStats>(m, "ShaderCacheStats")
-        .def_ro("entry_count", &ShaderCacheStats::entry_count, D_NA(ShaderCacheStats, entry_count))
-        .def_ro("hit_count", &ShaderCacheStats::hit_count, D_NA(ShaderCacheStats, hit_count))
-        .def_ro("miss_count", &ShaderCacheStats::miss_count, D_NA(ShaderCacheStats, miss_count));
+        .def_ro("entry_count", &ShaderCacheStats::entry_count, D(ShaderCacheStats, entry_count))
+        .def_ro("hit_count", &ShaderCacheStats::hit_count, D(ShaderCacheStats, hit_count))
+        .def_ro("miss_count", &ShaderCacheStats::miss_count, D(ShaderCacheStats, miss_count));
 
     nb::class_<Device, Object> device(m, "Device", D(Device));
     device.def(nb::init<DeviceDesc>(), "desc"_a, D(Device, desc));
@@ -175,7 +175,7 @@ KALI_PY_EXPORT(device_device)
     );
     device.def_prop_ro("desc", &Device::desc, D(Device, desc));
     device.def_prop_ro("info", &Device::info, D(Device, info));
-    device.def_prop_ro("shader_cache_stats", &Device::shader_cache_stats, D_NA(Device, shader_cache_stats));
+    device.def_prop_ro("shader_cache_stats", &Device::shader_cache_stats, D(Device, shader_cache_stats));
     device.def_prop_ro("supported_shader_model", &Device::supported_shader_model, D(Device, supported_shader_model));
     device.def_prop_ro("features", &Device::features, D(Device, features));
     device.def_prop_ro("slang_session", &Device::slang_session, D(Device, slang_session));

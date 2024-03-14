@@ -6,7 +6,7 @@
 #include "kali/core/fwd.h"
 #include "kali/device/fwd.h"
 
-namespace kali::renderdoc {
+namespace kali::utils::renderdoc {
 
 /**
  * \brief Check if RenderDoc is available.
@@ -47,4 +47,4 @@ KALI_API bool end_frame_capture();
  */
 KALI_API bool is_frame_capturing();
 
-} // namespace kali::renderdoc
+} // namespace kali::utils::renderdoc
