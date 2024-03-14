@@ -23,6 +23,7 @@ inline void bind_float16(nb::module_& m)
     nb::class_<float16_t> float16(m, "float16_t");
     float16.def(nb::init<float>(), "value"_a);
     float16.def(nb::init_implicit<float>(), "value"_a);
+    float16.def("__float__", &float16_t::operator float);
 }
 
 inline void bind_scalar(nb::module_& m)
