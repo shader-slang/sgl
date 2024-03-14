@@ -429,12 +429,13 @@ if(KALI_BUILD_PYTHON)
         OUTPUT ${KALI_OUTPUT_DIRECTORY}/python/kali/__init__.pyi
         DEPENDS kali_ext
     )
-    foreach(submodule IN ITEMS platform thread math ui utils)
+    foreach(submodule IN ITEMS platform thread math ui utils utils.renderdoc)
+        string(REPLACE "." "/" submodule_path ${submodule})
         nanobind_add_stub(
             kali_${submodule}_stub
             MODULE kali.${submodule}
             PYTHON_PATH ${KALI_OUTPUT_DIRECTORY}/python
-            OUTPUT ${KALI_OUTPUT_DIRECTORY}/python/kali/${submodule}.pyi
+            OUTPUT ${KALI_OUTPUT_DIRECTORY}/python/kali/${submodule_path}/__init__.pyi
             DEPENDS kali_ext
         )
     endforeach()
