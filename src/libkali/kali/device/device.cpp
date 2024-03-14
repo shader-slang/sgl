@@ -733,6 +733,21 @@ void Device::wait()
 
 void Device::read_buffer(const Buffer* buffer, size_t offset, size_t size, void* out_data)
 {
+#if 1
+    KALI_CHECK_NOT_NULL(buffer);
+    KALI_CHECK(offset + size <= buffer->size(), "Buffer read is out of bounds");
+    KALI_CHECK_NOT_NULL(out_data);
+
+    auto alloc = m_read_back_heap->allocate(size);
+
+    ref<CommandBuffer> command_buffer = create_command_buffer();
+    command_buffer->buffer_barrier(buffer, ResourceState::copy_source);
+    command_buffer->copy_buffer_region(alloc->buffer, alloc->offset, buffer, offset, size);
+    command_buffer->submit();
+    m_graphics_queue->wait();
+
+    std::memcpy(out_data, alloc->data, size);
+#else
     // TODO move this to CommandBuffer
     ref<CommandBuffer> command_buffer = create_command_buffer();
     command_buffer->buffer_barrier(buffer, ResourceState::copy_source);
@@ -743,6 +758,7 @@ void Device::read_buffer(const Buffer* buffer, size_t offset, size_t size, void*
         KALI_THROW("Buffer read out of bounds");
     SLANG_CALL(m_gfx_device->readBufferResource(buffer->gfx_buffer_resource(), offset, size, blob.writeRef()));
     std::memcpy(out_data, blob->getBufferPointer(), size);
+#endif
 }
 
 void Device::read_texture(
