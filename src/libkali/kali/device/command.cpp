@@ -77,6 +77,7 @@ void CommandQueue::submit(const CommandBuffer* command_buffer)
 void CommandQueue::submit(std::span<const CommandBuffer*> command_buffers)
 {
     KALI_UNUSED(command_buffers);
+    KALI_UNIMPLEMENTED();
     // m_gfx_command_queue->executeCommandBuffers(
     //     narrow_cast<gfx::GfxCount>(command_buffers.size()),
     //     reinterpret_cast<gfx::ICommandBuffer*>(command_buffers.data())
