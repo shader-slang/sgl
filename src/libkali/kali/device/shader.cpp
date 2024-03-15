@@ -343,6 +343,11 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
     }
 
     SLANG_CALL(m_device->global_session()->createSession(session_desc, m_slang_session.writeRef()));
+
+    // Load NVAPI module if available.
+    // We link this to all programs because slang uses NVAPI features while not including NVAPI itself.
+    if (KALI_HAS_NVAPI && m_device->type() == DeviceType::d3d12)
+        m_nvapi_module = load_module("kali.device.nvapi");
 }
 
 SlangSession::~SlangSession() { }
@@ -407,6 +412,10 @@ ref<ShaderProgram> SlangSession::link_program(
         KALI_CHECK(module->session() == this, "All modules must belong to this session.");
     for (const auto& entry_point : entry_points)
         KALI_CHECK(entry_point->module()->session() == this, "All entry points must belong to this session.");
+
+    // Link NVAPI module if available.
+    if (KALI_HAS_NVAPI && m_device->type() == DeviceType::d3d12)
+        modules.push_back(m_nvapi_module);
 
     // Compose the program from it's components.
     Slang::ComPtr<slang::IComponentType> composed_program;
