@@ -379,7 +379,7 @@ public:
 
     const ref<Device>& device() const { return m_device; }
 
-    const ProgramLayout* program_layout() const { return ProgramLayout::from_slang(m_linked_program->getLayout()); }
+    const ProgramLayout* layout() const { return ProgramLayout::from_slang(m_linked_program->getLayout()); }
 
     ReflectionCursor reflection() const { return ReflectionCursor(this); }
 

@@ -4838,7 +4838,7 @@ static const char *__doc_kali_ShaderProgram_m_modules = R"doc()doc";
 
 static const char *__doc_kali_ShaderProgram_m_session = R"doc()doc";
 
-static const char *__doc_kali_ShaderProgram_program_layout = R"doc()doc";
+static const char *__doc_kali_ShaderProgram_layout = R"doc()doc";
 
 static const char *__doc_kali_ShaderProgram_reflection = R"doc()doc";
 

@@ -186,13 +186,11 @@ ReflectionCursor ReflectionCursor::find_field(std::string_view name) const
 {
     if (m_shader_program) {
         // Try to find field in global variables.
-        if (auto global_field
-            = ReflectionCursor(m_shader_program->program_layout()->globals_type_layout()).find_field(name);
+        if (auto global_field = ReflectionCursor(m_shader_program->layout()->globals_type_layout()).find_field(name);
             global_field.is_valid())
             return global_field;
         // Try to find an entry point.
-        if (const EntryPointLayout* entry_point_layout
-            = m_shader_program->program_layout()->find_entry_point_by_name(name)) {
+        if (const EntryPointLayout* entry_point_layout = m_shader_program->layout()->find_entry_point_by_name(name)) {
             return ReflectionCursor(entry_point_layout);
         }
     } else if (m_entry_point_layout) {

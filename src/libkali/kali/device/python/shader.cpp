@@ -188,11 +188,6 @@ KALI_PY_EXPORT(device_shader)
         .def("rename", &SlangEntryPoint::rename, "new_name"_a, D(SlangEntryPoint, rename));
 
     nb::class_<ShaderProgram, Object>(m, "ShaderProgram", D(ShaderProgram))
-        .def_prop_ro(
-            "program_layout",
-            &ShaderProgram::program_layout,
-            nb::rv_policy::reference_internal,
-            D(ShaderProgram, program_layout)
-        )
+        .def_prop_ro("layout", &ShaderProgram::layout, nb::rv_policy::reference_internal, D(ShaderProgram, layout))
         .def_prop_ro("reflection", &ShaderProgram::reflection, D(ShaderProgram, reflection));
 }

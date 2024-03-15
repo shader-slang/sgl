@@ -43,7 +43,7 @@ class PrintOutput:
 
     def flush(self, program: kali.ShaderProgram):
         strings = {}
-        for s in program.program_layout.hashed_strings:
+        for s in program.layout.hashed_strings:
             strings[s.hash] = s.string
         # print(strings)
 

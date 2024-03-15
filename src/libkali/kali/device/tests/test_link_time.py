@@ -28,7 +28,7 @@ def test_link_time_constants(device_type, value):
         additional_source=constants,
     )
 
-    assert program.program_layout.entry_points[0].compute_thread_group_size == [16, 1, 1]
+    assert program.layout.entry_points[0].compute_thread_group_size == [16, 1, 1]
 
     kernel = device.create_compute_kernel(program)
 
