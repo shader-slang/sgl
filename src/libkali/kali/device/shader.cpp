@@ -403,6 +403,8 @@ ref<ShaderProgram> SlangSession::link_program(
     std::optional<SlangLinkOptions> link_options
 )
 {
+    Timer timer;
+
     for (const auto& module : modules)
         KALI_CHECK(module->session() == this, "All modules must belong to this session.");
     for (const auto& entry_point : entry_points)
@@ -473,12 +475,35 @@ ref<ShaderProgram> SlangSession::link_program(
         report_diagnostics(diagnostics);
     }
 
+    // Create shader program.
+    Slang::ComPtr<gfx::IShaderProgram> gfx_shader_program;
+    {
+        gfx::IShaderProgram::Desc gfx_desc{
+            .slangGlobalScope = linked_program,
+        };
+
+        Slang::ComPtr<ISlangBlob> diagnostics;
+        if (m_device->gfx_device()->createProgram(gfx_desc, gfx_shader_program.writeRef(), diagnostics.writeRef())
+            != SLANG_OK) {
+            std::string msg = append_diagnostics("Failed to create shader program", diagnostics);
+            KALI_THROW(msg);
+        }
+        report_diagnostics(diagnostics);
+    }
+
+    // Report link time.
+    std::string name;
+    for (const auto& entry_point : entry_points)
+        name += (name.empty() ? "" : ", ") + entry_point->module()->name() + ":" + entry_point->name();
+    log_debug("Linking shader program \"{}\" took {}", name, string::format_duration(timer.elapsed_s()));
+
     return make_ref<ShaderProgram>(
         ref(device()),
         ref(this),
         std::move(modules),
         std::move(entry_points),
-        std::move(linked_program)
+        std::move(linked_program),
+        std::move(gfx_shader_program)
     );
 }
 
@@ -719,25 +744,16 @@ ShaderProgram::ShaderProgram(
     ref<SlangSession> session,
     std::vector<ref<SlangModule>> modules,
     std::vector<ref<SlangEntryPoint>> entry_points,
-    Slang::ComPtr<slang::IComponentType> linked_program
+    Slang::ComPtr<slang::IComponentType> linked_program,
+    Slang::ComPtr<gfx::IShaderProgram> gfx_shader_program
 )
     : m_device(std::move(device))
     , m_session(std::move(session))
     , m_modules(std::move(modules))
     , m_entry_points(std::move(entry_points))
     , m_linked_program(std::move(linked_program))
+    , m_gfx_shader_program(std::move(gfx_shader_program))
 {
-    gfx::IShaderProgram::Desc gfx_desc{
-        .slangGlobalScope = m_linked_program,
-    };
-
-    Slang::ComPtr<ISlangBlob> diagnostics;
-    if (m_device->gfx_device()->createProgram(gfx_desc, m_gfx_shader_program.writeRef(), diagnostics.writeRef())
-        != SLANG_OK) {
-        std::string msg = append_diagnostics("Failed to create shader program", diagnostics);
-        KALI_THROW(msg);
-    }
-    report_diagnostics(diagnostics);
 }
 
 std::string ShaderProgram::to_string() const

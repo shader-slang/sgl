@@ -373,7 +373,8 @@ public:
         ref<SlangSession> session,
         std::vector<ref<SlangModule>> modules,
         std::vector<ref<SlangEntryPoint>> entry_points,
-        Slang::ComPtr<slang::IComponentType> linked_program
+        Slang::ComPtr<slang::IComponentType> linked_program,
+        Slang::ComPtr<gfx::IShaderProgram> gfx_shader_program
     );
     ~ShaderProgram() = default;
 
