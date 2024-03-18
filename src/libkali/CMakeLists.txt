@@ -340,16 +340,6 @@ kali_header_validation(kali)
 
 target_copy_shaders(kali .)
 
-# TODO: Move this to the main CMakeLists.txt, requires to not be based on kali target.
-# Copy binary files.
-get_property(binary_files_src GLOBAL PROPERTY KALI_BINARY_FILES_SRC)
-get_property(binary_files_dst GLOBAL PROPERTY KALI_BINARY_FILES_DST)
-
-foreach(file IN ZIP_LISTS binary_files_src binary_files_dst)
-    # if dst is directory create it
-    add_custom_command(TARGET kali POST_BUILD COMMAND ${CMAKE_COMMAND} -E make_directory ${file_1} COMMAND ${CMAKE_COMMAND} -E copy_if_different ${file_0} ${file_1}/)
-endforeach()
-
 get_property(shader_files_src GLOBAL PROPERTY KALI_SHADER_FILES_SRC)
 get_property(shader_files_dst GLOBAL PROPERTY KALI_SHADER_FILES_DST)
 

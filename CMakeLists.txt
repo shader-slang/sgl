@@ -274,8 +274,8 @@ set_property(GLOBAL PROPERTY KALI_BINARY_FILES_SRC "")
 set_property(GLOBAL PROPERTY KALI_BINARY_FILES_DST "")
 
 function(kali_copy_binary src dst_dir)
-    message(STATUS "Copying binary file ${src} to ${dst_dir}")
-    set(dst ${KALI_OUTPUT_DIRECTORY}/${dst_dir})
+    get_filename_component(filename ${src} NAME)
+    set(dst ${KALI_OUTPUT_DIRECTORY}/${dst_dir}/${filename})
     set_property(GLOBAL APPEND PROPERTY KALI_BINARY_FILES_SRC ${src})
     set_property(GLOBAL APPEND PROPERTY KALI_BINARY_FILES_DST ${dst})
     install(FILES ${src} DESTINATION ${CMAKE_INSTALL_BINDIR}/${dst_dir})
@@ -345,6 +345,25 @@ endif()
 if(KALI_BUILD_DOC)
     add_subdirectory(docs)
 endif()
+
+# -----------------------------------------------------------------------------
+# copy binary files
+# -----------------------------------------------------------------------------
+
+get_property(binary_files_src GLOBAL PROPERTY KALI_BINARY_FILES_SRC)
+get_property(binary_files_dst GLOBAL PROPERTY KALI_BINARY_FILES_DST)
+foreach(file IN ZIP_LISTS binary_files_src binary_files_dst)
+    get_filename_component(filename ${file_0} NAME)
+    add_custom_command(
+        OUTPUT ${file_1}
+        DEPENDS ${file_0}
+        COMMAND ${CMAKE_COMMAND} -E copy ${file_0} ${file_1}
+        COMMENT "Copying binary file ${filename}"
+    )
+endforeach()
+
+add_custom_target(copy_binary_files ALL DEPENDS ${binary_files_dst})
+add_dependencies(kali copy_binary_files)
 
 # -----------------------------------------------------------------------------
 # misc
