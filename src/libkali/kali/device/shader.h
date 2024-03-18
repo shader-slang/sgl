@@ -11,8 +11,9 @@
 
 #include <exception>
 #include <map>
-#include <vector>
+#include <set>
 #include <string>
+#include <vector>
 
 #include <slang.h>
 
@@ -283,7 +284,8 @@ public:
     void break_strong_reference_to_device() { m_device.break_strong_reference(); }
 
 private:
-    bool write_module_to_cache(SlangModule* module);
+    void update_module_cache();
+    bool write_module_to_cache(slang::IModule* module);
 
     std::string resolve_module_name(std::string_view module_name);
 
@@ -305,7 +307,12 @@ private:
     /// One cache path for each include path under the root cache path.
     std::vector<std::filesystem::path> m_cache_include_paths;
 
+    /// Global NVAPI module linked to all programs.
     ref<SlangModule> m_nvapi_module;
+
+    /// Set of all currently loaded slang modules.
+    std::set<slang::IModule*> m_loaded_modules;
+
 };
 
 class KALI_API SlangModule : public Object {

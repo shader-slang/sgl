@@ -347,7 +347,7 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
     // Load NVAPI module if available.
     // We link this to all programs because slang uses NVAPI features while not including NVAPI itself.
     if (KALI_HAS_NVAPI && m_device->type() == DeviceType::d3d12)
-        m_nvapi_module = load_module("kali.device.nvapi");
+        m_nvapi_module = load_module("kali/device/nvapi.slang");
 }
 
 SlangSession::~SlangSession() { }
@@ -365,10 +365,9 @@ ref<SlangModule> SlangSession::load_module(std::string_view module_name)
     }
     report_diagnostics(diagnostics);
     ref<SlangModule> module = make_ref<SlangModule>(ref(this), slang_module);
-    register_with_debug_printer(module);
     log_debug("Loading slang module \"{}\" took {}", module_name, string::format_duration(timer.elapsed_s()));
-    if (m_cache_enabled)
-        write_module_to_cache(module);
+    register_with_debug_printer(module);
+    update_module_cache();
     return module;
 }
 
@@ -399,6 +398,7 @@ ref<SlangModule> SlangSession::load_module_from_source(
     report_diagnostics(diagnostics);
     ref<SlangModule> module = make_ref<SlangModule>(ref(this), slang_module);
     register_with_debug_printer(module);
+    update_module_cache();
     return module;
 }
 
@@ -547,10 +547,27 @@ std::string SlangSession::to_string() const
     );
 }
 
-bool SlangSession::write_module_to_cache(SlangModule* module)
+void SlangSession::update_module_cache()
 {
+    if (!m_cache_enabled)
+        return;
+
+    // Cache newly loaded modules.
+    for (int i = 0; i < m_slang_session->getLoadedModuleCount(); ++i) {
+        slang::IModule* slang_module = m_slang_session->getLoadedModule(i);
+        if (m_loaded_modules.contains(slang_module))
+            continue;
+        write_module_to_cache(slang_module);
+        m_loaded_modules.insert(slang_module);
+    }
+}
+
+bool SlangSession::write_module_to_cache(slang::IModule* module)
+{
+    std::filesystem::path path{module->getFilePath()};
+
     // Do not cache module if it was loaded from the cache.
-    if (module->path().extension() == ".slang-module")
+    if (path.extension() == ".slang-module")
         return false;
 
     // Check if target path is within the specified root path.
@@ -564,7 +581,7 @@ bool SlangSession::write_module_to_cache(SlangModule* module)
     KALI_ASSERT(m_include_paths.size() == m_cache_include_paths.size());
     size_t include_index = size_t(-1);
     for (size_t i = 0; i < m_include_paths.size(); ++i) {
-        if (is_sub_path(m_include_paths[i], module->path())) {
+        if (is_sub_path(m_include_paths[i], path)) {
             include_index = i;
             break;
         }
@@ -573,7 +590,7 @@ bool SlangSession::write_module_to_cache(SlangModule* module)
         return false;
 
     // Determine path of the cached module.
-    std::filesystem::path relative = std::filesystem::relative(module->path(), m_include_paths[include_index]);
+    std::filesystem::path relative = std::filesystem::relative(path, m_include_paths[include_index]);
     std::filesystem::path cache_path = m_cache_include_paths[include_index] / relative;
     cache_path.replace_extension(".slang-module");
 
@@ -596,8 +613,8 @@ bool SlangSession::write_module_to_cache(SlangModule* module)
     tmp_path.replace_extension(".slang-module-" + string::hexlify(&uid, sizeof(uid)));
     if (std::filesystem::exists(tmp_path))
         return false;
-    if (!SLANG_SUCCEEDED(module->slang_module()->writeToFile(tmp_path.string().c_str()))) {
-        log_warn("Failed to write cached slang module \"{}\" to \"{}\"", module->name(), cache_path);
+    if (!SLANG_SUCCEEDED(module->writeToFile(tmp_path.string().c_str()))) {
+        log_warn("Failed to write cached slang module \"{}\" to \"{}\"", module->getName(), cache_path);
         return false;
     }
 
@@ -608,6 +625,8 @@ bool SlangSession::write_module_to_cache(SlangModule* module)
         std::filesystem::remove(tmp_path, ec);
         return false;
     }
+
+    log_debug("Cached slang module \"{}\" to \"{}\"", module->getName(), cache_path);
 
     return true;
 }
