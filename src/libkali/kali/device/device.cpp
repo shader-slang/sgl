@@ -718,6 +718,8 @@ void Device::end_frame()
 
     m_graphics_queue->signal(m_frame_fence);
 
+    execute_deferred_releases();
+
     flush_print();
 }
 
