@@ -304,6 +304,8 @@ private:
     std::filesystem::path m_cache_path;
     /// One cache path for each include path under the root cache path.
     std::vector<std::filesystem::path> m_cache_include_paths;
+
+    ref<SlangModule> m_nvapi_module;
 };
 
 class KALI_API SlangModule : public Object {
