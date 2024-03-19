@@ -6,11 +6,11 @@ struct Foo {
 
 [shader("compute")]
 [numthreads(1, 1, 1)]
-void main_a(uint3 tid: SV_DispatchThreadID, Foo foo) { }
+void main_a(uint3 tid: SV_DispatchThreadID, uniform Foo foo) { }
 
 [shader("compute")]
 [numthreads(16, 8, 1)]
-void main_b(uint3 tid: SV_DispatchThreadID, Foo foo) { }
+void main_b(uint3 tid: SV_DispatchThreadID, uniform Foo foo) { }
 
 [shader("vertex")]
 void main_vs() { }
