@@ -165,7 +165,7 @@ private:
 };
 
 /// Macro to declare the object class name.
-#define SGL_OBJECT(class_)                                                                                            \
+#define SGL_OBJECT(class_)                                                                                             \
 public:                                                                                                                \
     const char* class_name() const override                                                                            \
     {                                                                                                                  \

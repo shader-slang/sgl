@@ -94,7 +94,7 @@ public:
 /// - name_once(msg)
 /// - name_once(fmt, ...)
 /// The once variants only log the message once per program run.
-#define SGL_LOG_FUNC_FAMILY(name, level, log_func)                                                                    \
+#define SGL_LOG_FUNC_FAMILY(name, level, log_func)                                                                     \
     inline void name(const std::string_view msg)                                                                       \
     {                                                                                                                  \
         log_func(level, msg, LogFrequency::always);                                                                    \

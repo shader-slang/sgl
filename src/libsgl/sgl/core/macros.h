@@ -109,16 +109,16 @@
 #define SGL_INLINE __attribute__((always_inline))
 #endif
 
-#define SGL_NON_COPYABLE(cls)                                                                                         \
+#define SGL_NON_COPYABLE(cls)                                                                                          \
     cls(const cls&) = delete;                                                                                          \
     cls& operator=(const cls&) = delete
 
-#define SGL_NON_MOVABLE(cls)                                                                                          \
+#define SGL_NON_MOVABLE(cls)                                                                                           \
     cls(cls&&) = delete;                                                                                               \
     cls& operator=(cls&&) = delete
 
-#define SGL_NON_COPYABLE_AND_MOVABLE(cls)                                                                             \
-    SGL_NON_COPYABLE(cls);                                                                                            \
+#define SGL_NON_COPYABLE_AND_MOVABLE(cls)                                                                              \
+    SGL_NON_COPYABLE(cls);                                                                                             \
     SGL_NON_MOVABLE(cls)
 
 // clang-format off

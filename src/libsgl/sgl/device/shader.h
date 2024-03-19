@@ -312,7 +312,6 @@ private:
 
     /// Set of all currently loaded slang modules.
     std::set<slang::IModule*> m_loaded_modules;
-
 };
 
 class SGL_API SlangModule : public Object {

@@ -295,7 +295,7 @@ private:
  * It assumes that both a public PluginInfo struct type and a PluginCreate typedef
  * are defined when invoked.
  */
-#define SGL_PLUGIN_BASE_CLASS(cls)                                                                                    \
+#define SGL_PLUGIN_BASE_CLASS(cls)                                                                                     \
 public:                                                                                                                \
     static_assert(std::is_class_v<cls> == true);                                                                       \
     /* TODO: check for existance of cls::PluginCreate */                                                               \
@@ -313,7 +313,7 @@ public:                                                                         
  *
  * This macro must be applied in the class declaration of the plugin class.
  */
-#define SGL_PLUGIN_CLASS(cls, type, info)                                                                             \
+#define SGL_PLUGIN_CLASS(cls, type, info)                                                                              \
 public:                                                                                                                \
     static_assert(std::is_class_v<cls> == true);                                                                       \
     /* TODO: check inheritance of base plugin class */                                                                 \

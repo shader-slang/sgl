@@ -386,10 +386,7 @@ void Bitmap::convert(Bitmap* target) const
             field.flags |= Struct::Flags::default_;
             continue;
         }
-        SGL_THROW(
-            "Unable to convert bitmap: cannot determine how to derive field \"{}\" in target image!",
-            field.name
-        );
+        SGL_THROW("Unable to convert bitmap: cannot determine how to derive field \"{}\" in target image!", field.name);
     }
 
     ref<StructConverter> converter = make_ref<StructConverter>(src_struct, dst_struct);

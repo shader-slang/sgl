@@ -93,10 +93,10 @@ namespace detail {
 
 /// Helper for checking conditions and throwing exceptions.
 /// Logs the exception and a stack trace before throwing.
-#define SGL_CHECK(cond, ...)                                                                                          \
+#define SGL_CHECK(cond, ...)                                                                                           \
     do {                                                                                                               \
         if (!(cond))                                                                                                   \
-            SGL_THROW(__VA_ARGS__);                                                                                   \
+            SGL_THROW(__VA_ARGS__);                                                                                    \
     } while (0)
 
 /// Helper for throwing an exception if a pointer is null.
@@ -106,7 +106,7 @@ namespace detail {
 #define SGL_CHECK_LE(arg, value) SGL_CHECK(arg <= value, "\"{}\" must be less than or equal {}", #arg, value)
 #define SGL_CHECK_GT(arg, value) SGL_CHECK(arg > value, "\"{}\" must be greater than {}", #arg, value)
 #define SGL_CHECK_GE(arg, value) SGL_CHECK(arg >= value, "\"{}\" must be greater than or equal {}", #arg, value)
-#define SGL_CHECK_BOUNDS(arg, min, max)                                                                               \
+#define SGL_CHECK_BOUNDS(arg, min, max)                                                                                \
     SGL_CHECK(arg >= min && arg < max, "\"{}\" must be in range [{}, {}]", #arg, min, max)
 
 /// Helper for marking unimplemented functions.
@@ -128,14 +128,14 @@ namespace sgl {
 
 #if SGL_ENABLE_ASSERTS
 
-#define SGL_ASSERT(cond)                                                                                              \
+#define SGL_ASSERT(cond)                                                                                               \
     if (!(cond)) {                                                                                                     \
-        ::sgl::report_assertion(SourceLocation::current(), #cond);                                                    \
+        ::sgl::report_assertion(SourceLocation::current(), #cond);                                                     \
     }
 
-#define SGL_ASSERT_OP(a, b, op)                                                                                       \
+#define SGL_ASSERT_OP(a, b, op)                                                                                        \
     if (!((a)op(b))) {                                                                                                 \
-        ::sgl::report_assertion(                                                                                      \
+        ::sgl::report_assertion(                                                                                       \
             SourceLocation::current(),                                                                                 \
             fmt::format("{} {} {} ({} {} {})", #a, #op, #b, a, #op, b)                                                 \
         );                                                                                                             \
@@ -143,10 +143,10 @@ namespace sgl {
 
 #else // SGL_ENABLE_ASSERTS
 
-#define SGL_ASSERT(a)                                                                                                 \
+#define SGL_ASSERT(a)                                                                                                  \
     {                                                                                                                  \
     }
-#define SGL_ASSERT_OP(a, b, op)                                                                                       \
+#define SGL_ASSERT_OP(a, b, op)                                                                                        \
     {                                                                                                                  \
     }
 

@@ -21,7 +21,7 @@ namespace sgl {
 template<typename T>
 struct NativeHandleTrait { };
 
-#define SGL_NATIVE_HANDLE(T, TYPE)                                                                                    \
+#define SGL_NATIVE_HANDLE(T, TYPE)                                                                                     \
     template<>                                                                                                         \
     struct NativeHandleTrait<T> {                                                                                      \
         static const NativeHandleType type = TYPE;                                                                     \

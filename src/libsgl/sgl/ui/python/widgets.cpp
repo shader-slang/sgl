@@ -12,7 +12,7 @@ namespace sgl::ui {
 template<typename T>
 static void bind_value_property(nb::module_ m, const char* name)
 {
-nb::class_<T, Widget>(m, name)
+    nb::class_<T, Widget>(m, name)
         .def_prop_rw("label", &T::label, &T::set_label)
         .def_prop_rw("value", &T::value, &T::set_value)
         .def_prop_rw("callback", &T::callback, &T::set_callback)

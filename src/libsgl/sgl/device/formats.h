@@ -230,7 +230,7 @@ namespace detail {
         static constexpr Format value = Format::unknown;
     };
 
-#define SGL_HOST_TYPE_TO_FORMAT(type, format)                                                                         \
+#define SGL_HOST_TYPE_TO_FORMAT(type, format)                                                                          \
     template<>                                                                                                         \
     struct HostTypeToFormat<type> {                                                                                    \
         static constexpr Format value = format;                                                                        \

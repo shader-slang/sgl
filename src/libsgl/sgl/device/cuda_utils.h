@@ -8,7 +8,7 @@
 #include "sgl/device/fence.h"
 #include "sgl/device/cuda_api.h"
 
-#define SGL_CU_CHECK(call)                                                                                            \
+#define SGL_CU_CHECK(call)                                                                                             \
     do {                                                                                                               \
         CUresult result = call;                                                                                        \
         if (result != CUDA_SUCCESS) {                                                                                  \
@@ -16,7 +16,7 @@
             cuGetErrorName(result, &errorName);                                                                        \
             const char* errorString;                                                                                   \
             cuGetErrorString(result, &errorString);                                                                    \
-            SGL_THROW("CUDA call {} failed with error {} ({}).", #call, errorName, errorString);                      \
+            SGL_THROW("CUDA call {} failed with error {} ({}).", #call, errorName, errorString);                       \
         }                                                                                                              \
     } while (0)
 

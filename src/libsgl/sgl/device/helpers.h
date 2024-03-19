@@ -10,5 +10,5 @@
     {                                                                                                                  \
         SlangResult result_ = call;                                                                                    \
         if (SLANG_FAILED(result_))                                                                                     \
-            SGL_THROW("Slang call {} failed with error: {}", #call, result_);                                         \
+            SGL_THROW("Slang call {} failed with error: {}", #call, result_);                                          \
     }

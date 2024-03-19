@@ -486,11 +486,7 @@ void ShaderCursor::set_scalar(const void* data, size_t size, TypeReflection::Sca
 {
     const TypeReflection* type = m_type_layout->unwrap_array()->type();
 
-    SGL_CHECK(
-        type->kind() == TypeReflection::Kind::scalar,
-        "\"{}\" cannot bind a scalar value",
-        m_type_layout->name()
-    );
+    SGL_CHECK(type->kind() == TypeReflection::Kind::scalar, "\"{}\" cannot bind a scalar value", m_type_layout->name());
     SGL_CHECK(
         allow_scalar_conversion(scalar_type, type->scalar_type()),
         "\"{}\" expects scalar type {} (no implicit conversion from type {})",
@@ -507,11 +503,7 @@ void ShaderCursor::set_vector(const void* data, size_t size, TypeReflection::Sca
 {
     const TypeReflection* type = m_type_layout->unwrap_array()->type();
 
-    SGL_CHECK(
-        type->kind() == TypeReflection::Kind::vector,
-        "\"{}\" cannot bind a vector value",
-        m_type_layout->name()
-    );
+    SGL_CHECK(type->kind() == TypeReflection::Kind::vector, "\"{}\" cannot bind a vector value", m_type_layout->name());
     SGL_CHECK(
         type->col_count() == uint32_t(dimension),
         "\"{}\" expects a vector with dimension {} (got dimension {})",
@@ -535,11 +527,7 @@ void ShaderCursor::set_matrix(const void* data, size_t size, TypeReflection::Sca
 {
     const TypeReflection* type = m_type_layout->unwrap_array()->type();
 
-    SGL_CHECK(
-        type->kind() == TypeReflection::Kind::matrix,
-        "\"{}\" cannot bind a matrix value",
-        m_type_layout->name()
-    );
+    SGL_CHECK(type->kind() == TypeReflection::Kind::matrix, "\"{}\" cannot bind a matrix value", m_type_layout->name());
     SGL_CHECK(
         type->row_count() == uint32_t(rows) && type->col_count() == uint32_t(cols),
         "\"{}\" expects a matrix with dimension {}x{} (got dimension {}x{})",
@@ -612,21 +600,21 @@ SGL_API void ShaderCursor::set(const ref<AccelerationStructure>& value) const
 
 #define SET_SCALAR(type, scalar_type)                                                                                  \
     template<>                                                                                                         \
-    SGL_API void ShaderCursor::set(const type& value) const                                                           \
+    SGL_API void ShaderCursor::set(const type& value) const                                                            \
     {                                                                                                                  \
         set_scalar(&value, sizeof(value), TypeReflection::ScalarType::scalar_type);                                    \
     }
 
 #define SET_VECTOR(type, scalar_type)                                                                                  \
     template<>                                                                                                         \
-    SGL_API void ShaderCursor::set(const type& value) const                                                           \
+    SGL_API void ShaderCursor::set(const type& value) const                                                            \
     {                                                                                                                  \
         set_vector(&value, sizeof(value), TypeReflection::ScalarType::scalar_type, type::dimension);                   \
     }
 
 #define SET_MATRIX(type, scalar_type)                                                                                  \
     template<>                                                                                                         \
-    SGL_API void ShaderCursor::set(const type& value) const                                                           \
+    SGL_API void ShaderCursor::set(const type& value) const                                                            \
     {                                                                                                                  \
         set_matrix(&value, sizeof(value), TypeReflection::ScalarType::scalar_type, type::rows, type::cols);            \
     }

@@ -27,10 +27,10 @@ void release_cached_devices();
 
 
 #define DOCTEST_TEST_CASE_GPU(f, name)                                                                                 \
-    static void f(::sgl::testing::GpuTestContext& ctx);                                                               \
+    static void f(::sgl::testing::GpuTestContext& ctx);                                                                \
     TEST_CASE(name)                                                                                                    \
     {                                                                                                                  \
-        ::sgl::testing::run_gpu_test(f);                                                                              \
+        ::sgl::testing::run_gpu_test(f);                                                                               \
     }                                                                                                                  \
     static void f(::sgl::testing::GpuTestContext& ctx)
 

@@ -44,7 +44,7 @@ bool sgl_cuda_api_init()
 
 #define LOAD(name, ...)                                                                                                \
     symbol = strlen(__VA_ARGS__ "") > 0 ? (#name "_" __VA_ARGS__) : #name;                                             \
-    name = decltype(name)(sgl::platform::get_proc_address(sgl_cuda_api_handle, symbol));                             \
+    name = decltype(name)(sgl::platform::get_proc_address(sgl_cuda_api_handle, symbol));                               \
     if (!name)                                                                                                         \
         break;                                                                                                         \
     symbol = nullptr

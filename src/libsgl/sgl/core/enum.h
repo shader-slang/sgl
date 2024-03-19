@@ -150,7 +150,7 @@ namespace detail {
  *     { Foo::C, "C" },
  * })
  */
-#define SGL_ENUM_INFO(T, ...)                                                                                         \
+#define SGL_ENUM_INFO(T, ...)                                                                                          \
     struct T##_info {                                                                                                  \
         static const std::string& name()                                                                               \
         {                                                                                                              \
@@ -184,7 +184,7 @@ namespace detail {
  * - enum_to_string<Enum>(Enum value)
  * - string_to_enum<Enum>(std::string_view name)
  */
-#define SGL_ENUM_REGISTER(T)                                                                                          \
+#define SGL_ENUM_REGISTER(T)                                                                                           \
     constexpr T##_info find_enum_info_adl [[maybe_unused]] (T) noexcept                                                \
     {                                                                                                                  \
         return T##_info{};                                                                                             \

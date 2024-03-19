@@ -27,7 +27,7 @@
     {                                                                                                                  \
         auto result_ = a;                                                                                              \
         if (FAILED(result_))                                                                                           \
-            SGL_THROW("Windows API call failed: {} (result={})", #a, int(result_));                                   \
+            SGL_THROW("Windows API call failed: {} (result={})", #a, int(result_));                                    \
     }
 
 namespace sgl::platform {

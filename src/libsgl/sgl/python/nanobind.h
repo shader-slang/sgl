@@ -219,41 +219,41 @@ inline constexpr uint64_t const_hash(std::string_view str)
 }
 } // namespace sgl::detail
 
-#define SGL_DICT_TO_DESC_BEGIN(type)                                                                                  \
+#define SGL_DICT_TO_DESC_BEGIN(type)                                                                                   \
     type dict_to_##type(nb::dict dict)                                                                                 \
     {                                                                                                                  \
         type desc = {};                                                                                                \
         for (const auto& [k, v] : dict) {                                                                              \
             std::string_view key = nb::cast<std::string_view>(k);                                                      \
-            uint64_t hash = ::sgl::detail::const_hash(key);                                                           \
+            uint64_t hash = ::sgl::detail::const_hash(key);                                                            \
             switch (hash) {
 
-#define SGL_DICT_TO_DESC_FIELD(name, type)                                                                            \
-    case ::sgl::detail::const_hash(#name):                                                                            \
+#define SGL_DICT_TO_DESC_FIELD(name, type)                                                                             \
+    case ::sgl::detail::const_hash(#name):                                                                             \
         desc.name = nb::cast<type>(v);                                                                                 \
         break;
 
-#define SGL_DICT_TO_DESC_FIELD_DICT(name, type)                                                                       \
-    case ::sgl::detail::const_hash(#name):                                                                            \
+#define SGL_DICT_TO_DESC_FIELD_DICT(name, type)                                                                        \
+    case ::sgl::detail::const_hash(#name):                                                                             \
         extern type dict_to_##type(nb::dict dict);                                                                     \
         desc.name = dict_to_##type(nb::cast<nb::dict>(v));                                                             \
         break;
 
-#define SGL_DICT_TO_DESC_FIELD_LIST(name, type)                                                                       \
-    case ::sgl::detail::const_hash(#name):                                                                            \
+#define SGL_DICT_TO_DESC_FIELD_LIST(name, type)                                                                        \
+    case ::sgl::detail::const_hash(#name):                                                                             \
         desc.name = {};                                                                                                \
         for (const auto& item : v)                                                                                     \
             desc.name.push_back(dict_to_##type(nb::cast<nb::dict>(item)));                                             \
         break;
 
-#define SGL_DICT_TO_DESC_FIELD_CUSTOM(name, code)                                                                     \
-    case ::sgl::detail::const_hash(#name):                                                                            \
+#define SGL_DICT_TO_DESC_FIELD_CUSTOM(name, code)                                                                      \
+    case ::sgl::detail::const_hash(#name):                                                                             \
         desc.name = code;                                                                                              \
         break;
 
-#define SGL_DICT_TO_DESC_END()                                                                                        \
+#define SGL_DICT_TO_DESC_END()                                                                                         \
     default:                                                                                                           \
-        SGL_THROW("Unknown key {}", key);                                                                             \
+        SGL_THROW("Unknown key {}", key);                                                                              \
         }                                                                                                              \
         }                                                                                                              \
         return desc;                                                                                                   \
