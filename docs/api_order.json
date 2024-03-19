@@ -140,16 +140,20 @@
         "sgl.TypeConformance",
         "sgl.TypeConformanceList",
         "sgl.DefineList",
-        "sgl.SlangCompilerFlags",
+        "sgl.SlangCompileError",
+        "sgl.SlangMatrixLayout",
+        "sgl.SlangFloatingPointMode",
+        "sgl.SlangDebugInfoLevel",
+        "sgl.SlangOptimizationLevel",
         "sgl.SlangCompilerOptions",
+        "sgl.SlangLinkOptions",
         "sgl.SlangSessionDesc",
         "sgl.SlangSession",
         "sgl.SlangModule",
-        "sgl.SlangComponentType",
-        "sgl.SlangGlobalScope",
         "sgl.SlangEntryPoint",
         "sgl.ShaderProgram",
         "sgl.ShaderObject",
+        "sgl.ShaderCacheStats",
         "sgl.TransientShaderObject",
         "sgl.MutableShaderObject",
         "sgl.ShaderOffset",
@@ -195,6 +199,7 @@
         "sgl\\.ui\\.[\\w]+"
     ],
     "Utilities": [
-        "sgl\\.utils\\.[\\w]+"
+        "sgl\\.utils\\.[\\w]+",
+        "sgl\\.utils\\.renderdoc\\.[\\w]+"
     ]
 }

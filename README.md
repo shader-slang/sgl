@@ -1,4 +1,4 @@
-# sgl
+# Slang Graphics Library
 
 |  Documentation  |      CI       |      PyPI       |
 | :-------------: | :-----------: | :-------------: |
@@ -6,7 +6,7 @@
 
 [1]: https://readthedocs.org/projects/sgl/badge/?version=stable
 [2]: https://sgl.readthedocs.io/en/stable/
-[3]: https://github.com/westlicht/sgl/workflows/CI/badge.svg
+[3]: https://github.com/westlicht/sgl/actions/workflows/build.yml/badge.svg
 [4]: https://github.com/westlicht/sgl/actions
 [5]: https://img.shields.io/pypi/v/sgl.svg?color=green
 [6]: https://pypi.org/pypi/sgl
@@ -14,7 +14,7 @@
 
 ## Introduction
 
-TBD
+Slang Graphics Library (sgl) is a modern, cross-platform graphics library written in C++ and Python.
 
 ## Features
 
