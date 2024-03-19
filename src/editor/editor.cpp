@@ -2,24 +2,24 @@
 
 #include "renderer.h"
 
-#include "kali/kali.h"
-#include "kali/core/window.h"
-#include "kali/core/error.h"
-#include "kali/core/logger.h"
-#include "kali/core/platform.h"
-#include "kali/math/vector.h"
+#include "sgl/sgl.h"
+#include "sgl/core/window.h"
+#include "sgl/core/error.h"
+#include "sgl/core/logger.h"
+#include "sgl/core/platform.h"
+#include "sgl/math/vector.h"
 
 #include <iostream>
 
-using namespace kali;
+using namespace sgl;
 
 int main()
 {
-    kali::static_init();
+    sgl::static_init();
 
     Logger::get().add_file_output("editor.log");
 
-    log_info("kali {} {}", KALI_VERSION, KALI_GIT_VERSION);
+    log_info("sgl {} {}", SGL_VERSION, SGL_GIT_VERSION);
 
     log_debug("just a test");
     log_debug("{} {} {}", "hello", 42, "world!");
@@ -30,7 +30,7 @@ int main()
 
     log_info("{}", uint4(1, 2, 3, 4));
 
-    ref<Window> window = Window::create({.width = 1024, .height = 1024, .title = "Kali Editor"});
+    ref<Window> window = Window::create({.width = 1024, .height = 1024, .title = "SGL Editor"});
 
     window->set_on_resize([](uint32_t width, uint32_t height) { log_info("Window resized to {}x{}", width, height); });
 
@@ -65,7 +65,7 @@ int main()
 
     Renderer renderer(window);
 
-    kali::static_shutdown();
+    sgl::static_shutdown();
 
     return 0;
 }

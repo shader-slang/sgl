@@ -293,8 +293,8 @@ def process_module(obj, name, ctx: Context):
 
 def generate_api():
     ctx = Context()
-    module = importlib.import_module("kali")
-    process_module(module, "kali", ctx)
+    module = importlib.import_module("sgl")
+    process_module(module, "sgl", ctx)
     # print(ctx.output)
 
     out = ""

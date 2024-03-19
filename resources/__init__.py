@@ -3,7 +3,7 @@ from importlib import import_module as _import
 
 if os.name == "nt":
     if not os.path.exists(
-        os.path.normpath(os.path.join(os.path.dirname(__file__), "kali.dll"))
+        os.path.normpath(os.path.join(os.path.dirname(__file__), "sgl.dll"))
     ):
         os.add_dll_directory(
             os.path.normpath(os.path.join(os.path.dirname(__file__), "../../"))
@@ -11,5 +11,5 @@ if os.name == "nt":
 
 del os
 
-_import("kali.kali_ext")
+_import("sgl.sgl_ext")
 del _import

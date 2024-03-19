@@ -9,7 +9,7 @@ shutil.copytree(
     CURRENT_DIR / "../tutorials", CURRENT_DIR / "src/tutorials", dirs_exist_ok=True
 )
 
-project = "kali"
+project = "sgl"
 copyright = "2024, Simon Kallweit, NVIDIA"
 author = "Simon Kallweit"
 
@@ -24,7 +24,7 @@ exclude_patterns = ["CMakeLists.txt", "generated/*"]
 
 # html configuration
 html_theme = "furo"
-html_title = "kali"
+html_title = "sgl"
 html_static_path = ["_static"]
 html_css_files = ["theme_overrides.css"]
 html_theme_options = {

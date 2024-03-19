@@ -1,5 +1,5 @@
 {
-    "name": "kali",
+    "name": "sgl",
     "version-string": "0.0.1",
     "dependencies": [
         "doctest",

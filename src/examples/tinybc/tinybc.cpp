@@ -1,26 +1,26 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "kali/kali.h"
-#include "kali/core/platform.h"
-#include "kali/core/bitmap.h"
-#include "kali/core/timer.h"
-#include "kali/device/device.h"
-#include "kali/device/shader.h"
-#include "kali/device/command.h"
-#include "kali/device/shader_cursor.h"
-#include "kali/device/shader_object.h"
-#include "kali/device/kernel.h"
-#include "kali/device/query.h"
-#include "kali/device/agility_sdk.h"
-#include "kali/utils/tev.h"
+#include "sgl/sgl.h"
+#include "sgl/core/platform.h"
+#include "sgl/core/bitmap.h"
+#include "sgl/core/timer.h"
+#include "sgl/device/device.h"
+#include "sgl/device/shader.h"
+#include "sgl/device/command.h"
+#include "sgl/device/shader_cursor.h"
+#include "sgl/device/shader_object.h"
+#include "sgl/device/kernel.h"
+#include "sgl/device/query.h"
+#include "sgl/device/agility_sdk.h"
+#include "sgl/utils/tev.h"
 
 #include <argparse/argparse.hpp>
 
-KALI_EXPORT_AGILITY_SDK
+SGL_EXPORT_AGILITY_SDK
 
-static const std::filesystem::path EXAMPLE_DIR(KALI_EXAMPLE_DIR);
+static const std::filesystem::path EXAMPLE_DIR(SGL_EXAMPLE_DIR);
 
-using namespace kali;
+using namespace sgl;
 
 int main(int argc, const char* argv[])
 {
@@ -38,12 +38,12 @@ int main(int argc, const char* argv[])
 
     try {
         // args.parse_args(argc, argv);
-        KALI_UNUSED(argc, argv);
+        SGL_UNUSED(argc, argv);
         args.parse_args(
             {"tinybc",
-             "C:/projects/kali/data/test_images/monalisa.jpg",
+             "C:/projects/sgl/data/test_images/monalisa.jpg",
              "-o",
-             "C:/projects/kali/monalisa_bc7.jpg",
+             "C:/projects/sgl/monalisa_bc7.jpg",
              "-b",
              "-v"}
         );
@@ -59,7 +59,7 @@ int main(int argc, const char* argv[])
     bool tev = args.get<bool>("tev");
     bool verbose = args.get<bool>("verbose");
 
-    kali::static_init();
+    sgl::static_init();
 
     ref<Bitmap> input;
 
@@ -184,7 +184,7 @@ int main(int argc, const char* argv[])
             ->write_async(*output_path);
     }
 
-    kali::static_shutdown();
+    sgl::static_shutdown();
 
     return 0;
 }

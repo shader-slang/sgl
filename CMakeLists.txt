@@ -6,7 +6,7 @@ include(utils)
 
 set(VCPKG_INSTALL_OPTIONS "--no-print-usage" "--allow-unsupported")
 
-project(kali)
+project(sgl)
 
 set(CTEST_OUTPUT_ON_FAILURE TRUE)
 enable_testing()
@@ -17,71 +17,71 @@ include(CMakeRC)
 set(CMAKE_OSX_DEPLOYMENT_TARGET "13.0")
 
 if (APPLE)
-  set(KALI_ORIGIN "@loader_path")
+  set(SGL_ORIGIN "@loader_path")
 elseif(UNIX)
-  set(KALI_ORIGIN "$ORIGIN")
+  set(SGL_ORIGIN "$ORIGIN")
 endif()
 
 # TODO we should probably set install RPATH on individual targets instead
-set(CMAKE_INSTALL_RPATH "${KALI_ORIGIN};${KALI_ORIGIN}/../lib")
+set(CMAKE_INSTALL_RPATH "${SGL_ORIGIN};${SGL_ORIGIN}/../lib")
 
 # Check if this project is the master cmake project (i.e. not included via add_subdirectory).
-set(KALI_MASTER_PROJECT OFF)
+set(SGL_MASTER_PROJECT OFF)
 if (${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${CMAKE_SOURCE_DIR})
-  set(KALI_MASTER_PROJECT ON)
+  set(SGL_MASTER_PROJECT ON)
 endif()
 
 # -----------------------------------------------------------------------------
 # Configuration
 # -----------------------------------------------------------------------------
 
-set(KALI_BUILD_PYTHON ON CACHE BOOL "Build kali python extension")
-set(KALI_BUILD_EXAMPLES ON CACHE BOOL "Build kali example applications")
-set(KALI_BUILD_TESTS ON CACHE BOOL "Build kali tests")
-set(KALI_BUILD_DOC OFF CACHE BOOL "Build kali documentation")
+set(SGL_BUILD_PYTHON ON CACHE BOOL "Build sgl python extension")
+set(SGL_BUILD_EXAMPLES ON CACHE BOOL "Build sgl example applications")
+set(SGL_BUILD_TESTS ON CACHE BOOL "Build sgl tests")
+set(SGL_BUILD_DOC OFF CACHE BOOL "Build sgl documentation")
 
 # Enable linking CUDA driver API dynamically.
 # This allows to build CUDA support without having CUDA SDK installed.
-set(KALI_USE_DYNAMIC_CUDA ON CACHE BOOL "Load CUDA driver API dynamically")
+set(SGL_USE_DYNAMIC_CUDA ON CACHE BOOL "Load CUDA driver API dynamically")
 
 # Disable asserts.
 # By default, asserts are enabled in both debug and release builds.
 # This option can be used to override the default behavior.
-set(KALI_DISABLE_ASSERTS OFF CACHE BOOL "Disable asserts")
+set(SGL_DISABLE_ASSERTS OFF CACHE BOOL "Disable asserts")
 
 # Enable/disable precompiled headers.
-set(KALI_ENABLE_PCH OFF CACHE BOOL "Enable precompiled headers")
+set(SGL_ENABLE_PCH OFF CACHE BOOL "Enable precompiled headers")
 
 # Enable/disable address sanitizer.
-set(KALI_ENABLE_ASAN OFF CACHE BOOL "Enable address sanitizer")
+set(SGL_ENABLE_ASAN OFF CACHE BOOL "Enable address sanitizer")
 
 # Enable/disable header validation.
 # If enabled, additional targets are generated to validate that headers are self sufficient.
-set(KALI_ENABLE_HEADER_VALIDATION OFF CACHE BOOL "Enable header validation")
+set(SGL_ENABLE_HEADER_VALIDATION OFF CACHE BOOL "Enable header validation")
 
 # -----------------------------------------------------------------------------
 # Check platform
 # -----------------------------------------------------------------------------
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Window")
-    set(KALI_PLATFORM "Windows")
-    set(KALI_WINDOWS TRUE)
-    set(KALI_HAS_D3D12 ON)
-    set(KALI_HAS_VULKAN ON)
+    set(SGL_PLATFORM "Windows")
+    set(SGL_WINDOWS TRUE)
+    set(SGL_HAS_D3D12 ON)
+    set(SGL_HAS_VULKAN ON)
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    set(KALI_PLATFORM "Linux")
-    set(KALI_LINUX TRUE)
-    set(KALI_HAS_D3D12 OFF)
-    set(KALI_HAS_VULKAN ON)
+    set(SGL_PLATFORM "Linux")
+    set(SGL_LINUX TRUE)
+    set(SGL_HAS_D3D12 OFF)
+    set(SGL_HAS_VULKAN ON)
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    set(KALI_PLATFORM "macOS")
-    set(KALI_MACOS TRUE)
-    set(KALI_HAS_D3D12 OFF)
-    set(KALI_HAS_VULKAN ON)
+    set(SGL_PLATFORM "macOS")
+    set(SGL_MACOS TRUE)
+    set(SGL_HAS_D3D12 OFF)
+    set(SGL_HAS_VULKAN ON)
 else()
     message(FATAL_ERROR "Unsupported platform!")
 endif()
-message(STATUS "Platform: ${KALI_PLATFORM}")
+message(STATUS "Platform: ${SGL_PLATFORM}")
 
 # -----------------------------------------------------------------------------
 # Python
@@ -93,7 +93,7 @@ find_package(Python 3.8 COMPONENTS Interpreter Development.Module REQUIRED)
 # CUDA
 # -----------------------------------------------------------------------------
 
-if(NOT KALI_USE_DYNAMIC_CUDA)
+if(NOT SGL_USE_DYNAMIC_CUDA)
     find_package(CUDAToolkit REQUIRED)
 endif()
 
@@ -126,17 +126,17 @@ if(NOT SETUP_CONFIGURATION_TYPES)
     endif()
 endif()
 
-set(KALI_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-set(KALI_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(SGL_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(SGL_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 if(CMAKE_CONFIGURATION_TYPES)
-    set(KALI_OUTPUT_DIRECTORY ${KALI_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>)
+    set(SGL_OUTPUT_DIRECTORY ${SGL_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>)
 else()
-    set(KALI_OUTPUT_DIRECTORY ${KALI_RUNTIME_OUTPUT_DIRECTORY})
+    set(SGL_OUTPUT_DIRECTORY ${SGL_RUNTIME_OUTPUT_DIRECTORY})
 endif()
 
-set(KALI_SHADER_OUTPUT_DIRECTORY ${KALI_OUTPUT_DIRECTORY}/shaders)
-# set(KALI_PLUGIN_OUTPUT_DIRECTORY ${KALI_OUTPUT_DIRECTORY}/plugins)
+set(SGL_SHADER_OUTPUT_DIRECTORY ${SGL_OUTPUT_DIRECTORY}/shaders)
+# set(SGL_PLUGIN_OUTPUT_DIRECTORY ${SGL_OUTPUT_DIRECTORY}/plugins)
 
 # -----------------------------------------------------------------------------
 # Version
@@ -150,11 +150,11 @@ git_version_setup()
 # Macros
 # -----------------------------------------------------------------------------
 
-macro(kali_add_example target)
+macro(sgl_add_example target)
     add_executable(${target})
-    target_link_libraries(${target} PRIVATE kali)
-    target_compile_definitions(${target} PRIVATE KALI_EXAMPLE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
-    set_target_properties(${target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${KALI_RUNTIME_OUTPUT_DIRECTORY})
+    target_link_libraries(${target} PRIVATE sgl)
+    target_compile_definitions(${target} PRIVATE SGL_EXAMPLE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+    set_target_properties(${target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${SGL_RUNTIME_OUTPUT_DIRECTORY})
     set_target_properties(${target} PROPERTIES FOLDER "examples")
 endmacro()
 
@@ -165,8 +165,8 @@ endmacro()
 # Helper function to validate header files of a target to be self sufficient.
 # This creates a new target with "_hv" suffix that compiles one
 # translation unit for each header file found in the supplied targets sources list.
-function(kali_header_validation target)
-    if(NOT KALI_ENABLE_HEADER_VALIDATION)
+function(sgl_header_validation target)
+    if(NOT SGL_ENABLE_HEADER_VALIDATION)
         return()
     endif()
 
@@ -209,7 +209,7 @@ function(kali_header_validation target)
     endforeach()
 
     target_compile_options(${validate_target} PRIVATE $<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/bigobj>)
-    target_compile_definitions(${validate_target} PRIVATE KALI_HEADER_VALIDATION)
+    target_compile_definitions(${validate_target} PRIVATE SGL_HEADER_VALIDATION)
 
     target_sources(${validate_target} PRIVATE ${validate_sources})
     set_target_properties(${validate_target} PROPERTIES FOLDER "Validation")
@@ -219,14 +219,14 @@ endfunction()
 # Shader files
 # -----------------------------------------------------------------------------
 
-set_property(GLOBAL PROPERTY KALI_SHADER_FILES_SRC "")
-set_property(GLOBAL PROPERTY KALI_SHADER_FILES_DST "")
+set_property(GLOBAL PROPERTY SGL_SHADER_FILES_SRC "")
+set_property(GLOBAL PROPERTY SGL_SHADER_FILES_DST "")
 
-function(kali_copy_shader_file src dst_dir)
+function(sgl_copy_shader_file src dst_dir)
     message(STATUS "Copying shader file ${src} to ${dst_dir}")
-    set(dst ${KALI_SHADER_OUTPUT_DIRECTORY}/${dst_dir})
-    set_property(GLOBAL APPEND PROPERTY KALI_SHADER_FILES_SRC ${src})
-    set_property(GLOBAL APPEND PROPERTY KALI_SHADER_FILES_DST ${dst})
+    set(dst ${SGL_SHADER_OUTPUT_DIRECTORY}/${dst_dir})
+    set_property(GLOBAL APPEND PROPERTY SGL_SHADER_FILES_SRC ${src})
+    set_property(GLOBAL APPEND PROPERTY SGL_SHADER_FILES_DST ${dst})
     install(FILES ${src} DESTINATION ${CMAKE_INSTALL_DATADIR}/shaders/${dst_dir})
 endfunction()
 
@@ -234,10 +234,10 @@ endfunction()
 set(SHADER_EXTENSION_REGEX "\.(slang|slangh|hlsli|hlsl)$")
 
 # Setup build rules to copy all shaders of a target to the output directory.
-# The specified output_dir is relative to the global shader output directory (KALI_SHADER_OUTPUT_DIRECTORY).
+# The specified output_dir is relative to the global shader output directory (SGL_SHADER_OUTPUT_DIRECTORY).
 function(target_copy_shaders target output_dir)
     get_target_property(target_source_dir ${target} SOURCE_DIR)
-    set(shader_output_dir ${KALI_SHADER_OUTPUT_DIRECTORY}/${output_dir})
+    set(shader_output_dir ${SGL_SHADER_OUTPUT_DIRECTORY}/${output_dir})
     set(shader_install_dir ${CMAKE_INSTALL_DATADIR}/shaders/${output_dir})
 
     # Get list of all target sources.
@@ -270,20 +270,20 @@ endfunction()
 # Binary files
 # -----------------------------------------------------------------------------
 
-set_property(GLOBAL PROPERTY KALI_BINARY_FILES_SRC "")
-set_property(GLOBAL PROPERTY KALI_BINARY_FILES_DST "")
+set_property(GLOBAL PROPERTY SGL_BINARY_FILES_SRC "")
+set_property(GLOBAL PROPERTY SGL_BINARY_FILES_DST "")
 
-function(kali_copy_binary src dst_dir)
+function(sgl_copy_binary src dst_dir)
     get_filename_component(filename ${src} NAME)
-    set(dst ${KALI_OUTPUT_DIRECTORY}/${dst_dir}/${filename})
-    set_property(GLOBAL APPEND PROPERTY KALI_BINARY_FILES_SRC ${src})
-    set_property(GLOBAL APPEND PROPERTY KALI_BINARY_FILES_DST ${dst})
+    set(dst ${SGL_OUTPUT_DIRECTORY}/${dst_dir}/${filename})
+    set_property(GLOBAL APPEND PROPERTY SGL_BINARY_FILES_SRC ${src})
+    set_property(GLOBAL APPEND PROPERTY SGL_BINARY_FILES_DST ${dst})
     install(FILES ${src} DESTINATION ${CMAKE_INSTALL_BINDIR}/${dst_dir})
 endfunction()
 
-function(kali_copy_library target)
+function(sgl_copy_library target)
     get_property(src TARGET ${target} PROPERTY IMPORTED_LOCATION)
-    kali_copy_binary(${src} .)
+    sgl_copy_binary(${src} .)
 endfunction()
 
 # -----------------------------------------------------------------------------
@@ -294,26 +294,26 @@ find_package(doctest REQUIRED)
 find_package(fmt REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(JPEG)
-ternary(KALI_HAS_JPEG ${JPEG_FOUND} ON OFF)
+ternary(SGL_HAS_JPEG ${JPEG_FOUND} ON OFF)
 find_package(PNG)
-ternary(KALI_HAS_PNG ${PNG_FOUND} ON OFF)
+ternary(SGL_HAS_PNG ${PNG_FOUND} ON OFF)
 find_package(OpenEXR CONFIG)
-ternary(KALI_HAS_OPENEXR ${OpenEXR_FOUND} ON OFF)
+ternary(SGL_HAS_OPENEXR ${OpenEXR_FOUND} ON OFF)
 find_package(pugixml CONFIG REQUIRED)
 find_package(Stb REQUIRED)
 find_package(asmjit)
-ternary(KALI_HAS_ASMJIT ${asmjit_FOUND} ON OFF)
+ternary(SGL_HAS_ASMJIT ${asmjit_FOUND} ON OFF)
 add_library(stb INTERFACE)
 target_include_directories(stb INTERFACE ${Stb_INCLUDE_DIR})
 find_package(VulkanHeaders CONFIG REQUIRED)
 find_package(tevclient)
-ternary(KALI_HAS_TEVCLIENT ${tevclient_FOUND} ON OFF)
+ternary(SGL_HAS_TEVCLIENT ${tevclient_FOUND} ON OFF)
 
 # -----------------------------------------------------------------------------
 # Embedded resources
 # -----------------------------------------------------------------------------
 
-cmrc_add_resource_library(kali_data
+cmrc_add_resource_library(sgl_data
     ${CMAKE_CURRENT_SOURCE_DIR}/data/fonts/Montserrat-Regular.ttf
     ${CMAKE_CURRENT_SOURCE_DIR}/data/fonts/Inconsolata-Regular.ttf
 )
@@ -325,24 +325,24 @@ cmrc_add_resource_library(kali_data
 add_subdirectory(external)
 
 message(STATUS "Feature flags:")
-message(STATUS "KALI_HAS_D3D12: ${KALI_HAS_D3D12}")
-message(STATUS "KALI_HAS_VULKAN: ${KALI_HAS_VULKAN}")
-message(STATUS "KALI_HAS_NVAPI: ${KALI_HAS_NVAPI}")
-message(STATUS "KALI_HAS_AGILITY_SDK: ${KALI_HAS_AGILITY_SDK}")
-message(STATUS "KALI_HAS_JPEG: ${KALI_HAS_JPEG}")
-message(STATUS "KALI_HAS_PNG: ${KALI_HAS_PNG}")
-message(STATUS "KALI_HAS_OPENEXR: ${KALI_HAS_OPENEXR}")
-message(STATUS "KALI_HAS_ASMJIT: ${KALI_HAS_ASMJIT}")
-message(STATUS "KALI_HAS_TEVCLIENT: ${KALI_HAS_TEVCLIENT}")
+message(STATUS "SGL_HAS_D3D12: ${SGL_HAS_D3D12}")
+message(STATUS "SGL_HAS_VULKAN: ${SGL_HAS_VULKAN}")
+message(STATUS "SGL_HAS_NVAPI: ${SGL_HAS_NVAPI}")
+message(STATUS "SGL_HAS_AGILITY_SDK: ${SGL_HAS_AGILITY_SDK}")
+message(STATUS "SGL_HAS_JPEG: ${SGL_HAS_JPEG}")
+message(STATUS "SGL_HAS_PNG: ${SGL_HAS_PNG}")
+message(STATUS "SGL_HAS_OPENEXR: ${SGL_HAS_OPENEXR}")
+message(STATUS "SGL_HAS_ASMJIT: ${SGL_HAS_ASMJIT}")
+message(STATUS "SGL_HAS_TEVCLIENT: ${SGL_HAS_TEVCLIENT}")
 
-add_subdirectory(src/libkali)
+add_subdirectory(src/libsgl)
 
-if (KALI_BUILD_EXAMPLES)
+if (SGL_BUILD_EXAMPLES)
     add_subdirectory(src/editor)
     add_subdirectory(src/examples)
 endif()
 
-if(KALI_BUILD_DOC)
+if(SGL_BUILD_DOC)
     add_subdirectory(docs)
 endif()
 
@@ -350,8 +350,8 @@ endif()
 # copy binary files
 # -----------------------------------------------------------------------------
 
-get_property(binary_files_src GLOBAL PROPERTY KALI_BINARY_FILES_SRC)
-get_property(binary_files_dst GLOBAL PROPERTY KALI_BINARY_FILES_DST)
+get_property(binary_files_src GLOBAL PROPERTY SGL_BINARY_FILES_SRC)
+get_property(binary_files_dst GLOBAL PROPERTY SGL_BINARY_FILES_DST)
 foreach(file IN ZIP_LISTS binary_files_src binary_files_dst)
     get_filename_component(filename ${file_0} NAME)
     add_custom_command(
@@ -363,23 +363,23 @@ foreach(file IN ZIP_LISTS binary_files_src binary_files_dst)
 endforeach()
 
 add_custom_target(copy_binary_files ALL DEPENDS ${binary_files_dst})
-add_dependencies(kali copy_binary_files)
+add_dependencies(sgl copy_binary_files)
 
 # -----------------------------------------------------------------------------
 # misc
 # -----------------------------------------------------------------------------
 
 # Generate setpath scripts.
-if(KALI_WINDOWS)
-    file(GENERATE OUTPUT ${KALI_OUTPUT_DIRECTORY}/setpath.bat INPUT ${CMAKE_SOURCE_DIR}/resources/setpath.bat.in)
-    file(GENERATE OUTPUT ${KALI_OUTPUT_DIRECTORY}/setpath.ps1 INPUT ${CMAKE_SOURCE_DIR}/resources/setpath.ps1.in)
+if(SGL_WINDOWS)
+    file(GENERATE OUTPUT ${SGL_OUTPUT_DIRECTORY}/setpath.bat INPUT ${CMAKE_SOURCE_DIR}/resources/setpath.bat.in)
+    file(GENERATE OUTPUT ${SGL_OUTPUT_DIRECTORY}/setpath.ps1 INPUT ${CMAKE_SOURCE_DIR}/resources/setpath.ps1.in)
 endif()
 
-if(KALI_LINUX OR KALI_MACOS)
-    file(GENERATE OUTPUT ${KALI_OUTPUT_DIRECTORY}/setpath.sh INPUT ${CMAKE_SOURCE_DIR}/resources/setpath.sh.in)
+if(SGL_LINUX OR SGL_MACOS)
+    file(GENERATE OUTPUT ${SGL_OUTPUT_DIRECTORY}/setpath.sh INPUT ${CMAKE_SOURCE_DIR}/resources/setpath.sh.in)
 endif()
 
-file(GENERATE OUTPUT ${KALI_OUTPUT_DIRECTORY}/python/kali/__init__.py INPUT ${CMAKE_SOURCE_DIR}/resources/__init__.py)
+file(GENERATE OUTPUT ${SGL_OUTPUT_DIRECTORY}/python/sgl/__init__.py INPUT ${CMAKE_SOURCE_DIR}/resources/__init__.py)
 
 # -----------------------------------------------------------------------------
 # install
@@ -387,18 +387,18 @@ file(GENERATE OUTPUT ${KALI_OUTPUT_DIRECTORY}/python/kali/__init__.py INPUT ${CM
 
 # Install binaries.
 install(
-    TARGETS kali
+    TARGETS sgl
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
 # Install header files.
 install(
-    DIRECTORY src/libkali/kali
+    DIRECTORY src/libsgl/sgl
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     FILES_MATCHING PATTERN "*.h"
 )
 
 # Install python extension.
-install(TARGETS kali_ext LIBRARY DESTINATION kali)
-install(DIRECTORY ${KALI_OUTPUT_DIRECTORY}/python/kali/ DESTINATION kali FILES_MATCHING PATTERN "*.py" PATTERN "*.pyi")
+install(TARGETS sgl_ext LIBRARY DESTINATION sgl)
+install(DIRECTORY ${SGL_OUTPUT_DIRECTORY}/python/sgl/ DESTINATION sgl FILES_MATCHING PATTERN "*.py" PATTERN "*.pyi")

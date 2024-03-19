@@ -77,12 +77,12 @@ class CMakeBuild(build_ext):
             build_dir,
             "-DCMAKE_DEFAULT_BUILD_TYPE=Release",
             f"-DCMAKE_INSTALL_PREFIX={extdir}",
-            f"-DCMAKE_INSTALL_LIBDIR=kali",
-            f"-DCMAKE_INSTALL_BINDIR=kali",
-            f"-DCMAKE_INSTALL_INCLUDEDIR=kali/include",
-            f"-DCMAKE_INSTALL_DATAROOTDIR=kali",
-            "-DKALI_BUILD_EXAMPLES=OFF",
-            "-DKALI_BUILD_TESTS=OFF",
+            f"-DCMAKE_INSTALL_LIBDIR=sgl",
+            f"-DCMAKE_INSTALL_BINDIR=sgl",
+            f"-DCMAKE_INSTALL_INCLUDEDIR=sgl/include",
+            f"-DCMAKE_INSTALL_DATAROOTDIR=sgl",
+            "-DSGL_BUILD_EXAMPLES=OFF",
+            "-DSGL_BUILD_TESTS=OFF",
         ]
 
         # Adding CMake arguments set as environment variable
@@ -96,27 +96,27 @@ class CMakeBuild(build_ext):
 
 
 VERSION_REGEX = re.compile(
-    r"^\s*#\s*define\s+KALI_VERSION_([A-Z]+)\s+(.*)$", re.MULTILINE
+    r"^\s*#\s*define\s+SGL_VERSION_([A-Z]+)\s+(.*)$", re.MULTILINE
 )
 
-with open("src/libkali/kali/kali.h") as f:
+with open("src/libsgl/sgl/sgl.h") as f:
     matches = dict(VERSION_REGEX.findall(f.read()))
     version = "{MAJOR}.{MINOR}.{PATCH}".format(**matches)
     print(f"version={version}")
 
-long_description = """kali."""
+long_description = """sgl."""
 
 setup(
-    name="kali",
+    name="sgl",
     version=version,
     author="Simon Kallweit",
     author_email="skallweit@nvidia.com",
     description="A research rendering framework",
-    url="https://github.com/westlicht/kali",
+    url="https://github.com/westlicht/sgl",
     license="Apache-2.0",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    ext_modules=[CMakeExtension("kali")],
+    ext_modules=[CMakeExtension("sgl")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
     python_requires=">=3.8",

@@ -1,14 +1,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
-import kali
+import sgl
 import torch
 from pathlib import Path
 
 EXAMPLE_DIR = Path(__file__).parent
 
 # Create a D3D12 device and load a slang compute kernel
-device = kali.Device(
-    type=kali.DeviceType.d3d12,
+device = sgl.Device(
+    type=sgl.DeviceType.d3d12,
     enable_debug_layers=True,
     enable_cuda_interop=True,
     compiler_options={"include_paths": [EXAMPLE_DIR]},

@@ -18,9 +18,9 @@ INCLUDE_PATHS = [
 ]
 
 EXCLUDE_PATHS = [
-    "src/libkali/kali/stl/",
-    "src/libkali/kali/python/py_doc.h",
-    "src/libkali/kali/utils/renderdoc_app.h",
+    "src/libsgl/sgl/stl/",
+    "src/libsgl/sgl/python/py_doc.h",
+    "src/libsgl/sgl/utils/renderdoc_app.h",
 ]
 
 EXTENSIONS = "h,cpp,slang,slangh,py"

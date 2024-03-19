@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
-import kali
+import sgl
 import numpy as np
 from pathlib import Path
 
 EXAMPLE_DIR = Path(__file__).parent
 
-device = kali.Device(
+device = sgl.Device(
     enable_debug_layers=True, compiler_options={"include_paths": [EXAMPLE_DIR]}
 )
 
@@ -14,22 +14,22 @@ vertices = np.array([-1, -1, 1, -1, 0, 1], dtype=np.float32)
 indices = np.array([0, 1, 2], dtype=np.uint32)
 
 vertex_buffer = device.create_buffer(
-    usage=kali.ResourceUsage.shader_resource,
+    usage=sgl.ResourceUsage.shader_resource,
     debug_name="vertex_buffer",
     data=vertices,
 )
 
 index_buffer = device.create_buffer(
-    usage=kali.ResourceUsage.shader_resource,
+    usage=sgl.ResourceUsage.shader_resource,
     debug_name="index_buffer",
     data=indices,
 )
 
 render_texture = device.create_texture(
-    format=kali.Format.rgba32_float,
+    format=sgl.Format.rgba32_float,
     width=1024,
     height=1024,
-    usage=kali.ResourceUsage.render_target,
+    usage=sgl.ResourceUsage.render_target,
     debug_name="render_texture",
 )
 
@@ -38,7 +38,7 @@ input_layout = device.create_input_layout(
         {
             "semantic_name": "POSITION",
             "semantic_index": 0,
-            "format": kali.Format.rg32_float,
+            "format": sgl.Format.rg32_float,
         }
     ],
     vertex_streams=[{"stride": 8}],
@@ -59,7 +59,7 @@ command_buffer = device.create_command_buffer()
 with command_buffer.encode_render_commands(framebuffer) as encoder:
     shader_object = encoder.bind_pipeline(pipeline)
     encoder.set_vertex_buffer(0, vertex_buffer)
-    encoder.set_primitive_topology(kali.PrimitiveTopology.triangle_list)
+    encoder.set_primitive_topology(sgl.PrimitiveTopology.triangle_list)
     encoder.set_viewport_and_scissor_rect(
         {"width": render_texture.width, "height": render_texture.height}
     )
@@ -67,4 +67,4 @@ with command_buffer.encode_render_commands(framebuffer) as encoder:
 command_buffer.submit()
 
 
-kali.utils.show_in_tev(render_texture, "graphics_pipeline")
+sgl.utils.show_in_tev(render_texture, "graphics_pipeline")

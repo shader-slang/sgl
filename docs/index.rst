@@ -4,11 +4,11 @@ Getting Started
 Installation
 ------------
 
-`kali` can be installed from `pypi`:
+`sgl` can be installed from `pypi`:
 
 .. code-block:: bash
 
-    pip install kali
+    pip install sgl
 
 See :ref:`developer guide <sec-compiling>` for instructions on how to compile from source.
 

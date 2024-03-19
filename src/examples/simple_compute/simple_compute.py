@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
-import kali
+import sgl
 import numpy as np
 from pathlib import Path
 
 EXAMPLE_DIR = Path(__file__).parent
 
-device = kali.Device(
+device = sgl.Device(
     enable_debug_layers=False,
     compiler_options={"include_paths": [EXAMPLE_DIR]},
 )
@@ -19,21 +19,21 @@ N = 1024
 buffer_a = device.create_structured_buffer(
     element_count=N,
     struct_type=kernel.reflection.processor.a,
-    usage=kali.ResourceUsage.shader_resource,
+    usage=sgl.ResourceUsage.shader_resource,
     data=np.linspace(0, N - 1, N, dtype=np.uint32),
 )
 
 buffer_b = device.create_structured_buffer(
     element_count=N,
     struct_type=kernel.reflection.processor.b,
-    usage=kali.ResourceUsage.shader_resource,
+    usage=sgl.ResourceUsage.shader_resource,
     data=np.linspace(N, 1, N, dtype=np.uint32),
 )
 
 buffer_c = device.create_structured_buffer(
     element_count=N,
     struct_type=kernel.reflection.processor.c,
-    usage=kali.ResourceUsage.unordered_access,
+    usage=sgl.ResourceUsage.unordered_access,
 )
 
 if True:
@@ -41,7 +41,7 @@ if True:
     command_buffer = device.create_command_buffer()
     with command_buffer.encode_compute_commands() as encoder:
         shader_object = encoder.bind_pipeline(kernel.pipeline)
-        processor = kali.ShaderCursor(shader_object)["processor"]
+        processor = sgl.ShaderCursor(shader_object)["processor"]
         processor["a"] = buffer_a
         processor["b"] = buffer_b
         processor["c"] = buffer_c
@@ -66,7 +66,7 @@ if True:
     processor_object = device.create_mutable_shader_object(
         kernel.reflection["processor"]
     )
-    processor = kali.ShaderCursor(processor_object)
+    processor = sgl.ShaderCursor(processor_object)
     processor.a = buffer_a
     processor.b = buffer_b
     processor.c = buffer_c

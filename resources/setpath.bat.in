@@ -1,9 +1,9 @@
 @echo off
 
 REM ***************************************************************
-REM * This script adds kali to the current path on Windows.
+REM * This script adds sgl to the current path on Windows.
 REM ***************************************************************
 
-set KALI_DIR=%~dp0
-set PATH=%KALI_DIR%;%PATH%
-set PYTHONPATH=%KALI_DIR%python;%PYTHONPATH%
+set SGL_DIR=%~dp0
+set PATH=%SGL_DIR%;%PATH%
+set PYTHONPATH=%SGL_DIR%python;%PYTHONPATH%

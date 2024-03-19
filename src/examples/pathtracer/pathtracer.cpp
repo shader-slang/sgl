@@ -1,36 +1,36 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "kali/kali.h"
+#include "sgl/sgl.h"
 
-#include "kali/core/window.h"
-#include "kali/core/input.h"
-#include "kali/core/bitmap.h"
-#include "kali/core/timer.h"
+#include "sgl/core/window.h"
+#include "sgl/core/input.h"
+#include "sgl/core/bitmap.h"
+#include "sgl/core/timer.h"
 
-#include "kali/math/vector.h"
-#include "kali/math/matrix.h"
+#include "sgl/math/vector.h"
+#include "sgl/math/matrix.h"
 
-#include "kali/device/device.h"
-#include "kali/device/resource.h"
-#include "kali/device/raytracing.h"
-#include "kali/device/command.h"
-#include "kali/device/shader.h"
-#include "kali/device/pipeline.h"
-#include "kali/device/kernel.h"
-#include "kali/device/shader_cursor.h"
-#include "kali/device/swapchain.h"
-#include "kali/device/agility_sdk.h"
+#include "sgl/device/device.h"
+#include "sgl/device/resource.h"
+#include "sgl/device/raytracing.h"
+#include "sgl/device/command.h"
+#include "sgl/device/shader.h"
+#include "sgl/device/pipeline.h"
+#include "sgl/device/kernel.h"
+#include "sgl/device/shader_cursor.h"
+#include "sgl/device/swapchain.h"
+#include "sgl/device/agility_sdk.h"
 
-#include "kali/utils/tev.h"
+#include "sgl/utils/tev.h"
 
 #include <map>
 #include <memory>
 
-KALI_EXPORT_AGILITY_SDK
+SGL_EXPORT_AGILITY_SDK
 
-static const std::filesystem::path EXAMPLE_DIR(KALI_EXAMPLE_DIR);
+static const std::filesystem::path EXAMPLE_DIR(SGL_EXAMPLE_DIR);
 
-using namespace kali;
+using namespace sgl;
 
 inline float3 random_float3()
 {
@@ -887,12 +887,12 @@ struct App {
 
 int main()
 {
-    kali::static_init();
+    sgl::static_init();
 
     {
         App app;
         app.main_loop();
     }
 
-    kali::static_shutdown();
+    sgl::static_shutdown();
 }

@@ -29,8 +29,8 @@ Project structure
       - Text resources.
     * - ``src``
       - Source code.
-    * - ``src/libkali``
-      - ``kali`` library.
+    * - ``src/libsgl``
+      - ``sgl`` library.
     * - ``src/examples``
       - Example applications.
     * - ``tools``

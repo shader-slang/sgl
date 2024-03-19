@@ -1,28 +1,28 @@
 # SPDX-License-Identifier: Apache-2.0
 
-import kali
+import sgl
 from pathlib import Path
 import numpy as np
 import struct
 
 EXAMPLE_DIR = Path(__file__).parent
 
-device = kali.Device()
+device = sgl.Device()
 
 
 class PrintOutput:
-    def __init__(self, device: kali.Device):
+    def __init__(self, device: sgl.Device):
         self.device = device
 
         self.counter_buffer = device.create_buffer(
             size=4,
-            usage=kali.ResourceUsage.unordered_access,
+            usage=sgl.ResourceUsage.unordered_access,
             data=np.zeros(1, dtype=np.uint32),
         )
 
         self.output_buffer = device.create_buffer(
             size=1024 * 1024,
-            usage=kali.ResourceUsage.unordered_access,
+            usage=sgl.ResourceUsage.unordered_access,
             struct_size=4,
         )
 
@@ -37,11 +37,11 @@ class PrintOutput:
                 "counter_buffer": self.counter_buffer,
                 "output_buffer": self.output_buffer,
                 "output_buffer_capacity": self.output_buffer.element_count,
-                "selected_tid": kali.uint3(0xFFFFFFFF),
+                "selected_tid": sgl.uint3(0xFFFFFFFF),
             }
         }
 
-    def flush(self, program: kali.ShaderProgram):
+    def flush(self, program: sgl.ShaderProgram):
         strings = {}
         for s in program.layout.hashed_strings:
             strings[s.hash] = s.string

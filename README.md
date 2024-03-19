@@ -1,15 +1,15 @@
-# kali
+# sgl
 
 |  Documentation  |      CI       |      PyPI       |
 | :-------------: | :-----------: | :-------------: |
 | [![docs][1]][2] | [![ci][3]][4] | [![pypi][5]][6] |
 
-[1]: https://readthedocs.org/projects/kali/badge/?version=stable
-[2]: https://kali.readthedocs.io/en/stable/
-[3]: https://github.com/westlicht/kali/workflows/CI/badge.svg
-[4]: https://github.com/westlicht/kali/actions
-[5]: https://img.shields.io/pypi/v/kali.svg?color=green
-[6]: https://pypi.org/pypi/kali
+[1]: https://readthedocs.org/projects/sgl/badge/?version=stable
+[2]: https://sgl.readthedocs.io/en/stable/
+[3]: https://github.com/westlicht/sgl/workflows/CI/badge.svg
+[4]: https://github.com/westlicht/sgl/actions
+[5]: https://img.shields.io/pypi/v/sgl.svg?color=green
+[6]: https://pypi.org/pypi/sgl
 
 
 ## Introduction
@@ -22,10 +22,10 @@ TBD
 
 ## Installation
 
-kali is available as a pre-compiled wheels via PyPI. Installing kali is as simple as running
+sgl is available as a pre-compiled wheels via PyPI. Installing sgl is as simple as running
 
 ```bash
-pip install kali
+pip install sgl
 ```
 
 ### Requirements
@@ -38,9 +38,9 @@ The documentation is available on [readthedocs][2].
 
 ## License
 
-kali source code is licensed under the Apache-2.0 License - see the [LICENSE.txt](LICENSE.txt) file for details.
+sgl source code is licensed under the Apache-2.0 License - see the [LICENSE.txt](LICENSE.txt) file for details.
 
-kali depends on the following third-party libraries, which have their own license:
+sgl depends on the following third-party libraries, which have their own license:
 
 - [argparse](https://github.com/p-ranav/argparse) (MIT)
 - [AsmJit](https://github.com/asmjit/asmjit) (Zlib)
@@ -61,21 +61,21 @@ kali depends on the following third-party libraries, which have their own licens
 - [vcpkg](https://vcpkg.io/en/) (MIT)
 - [Vulkan-Headers](https://github.com/KhronosGroup/Vulkan-Headers) (MIT)
 
-kali releases additionally include pre-built binaries of the following third-party components, which have their own license:
+sgl releases additionally include pre-built binaries of the following third-party components, which have their own license:
 
 - [DirectXShaderCompiler](https://github.com/microsoft/DirectXShaderCompiler) (LLVM Release License)
 - [Agility SDK](https://devblogs.microsoft.com/directx/directx12agility) (MICROSOFT DIRECTX License)
 
 ## Citation
 
-If you use kali in a research project leading to a publication, please cite the project. The BibTex entry is:
+If you use sgl in a research project leading to a publication, please cite the project. The BibTex entry is:
 
 ```bibtex
-@software{kali,
-    title = {kali},
+@software{sgl,
+    title = {sgl},
     author = {Simon Kallweit},
-    url = {https://github.com/westlicht/kali},
-    note = {\url{https://github.com/westlicht/kali}},
+    url = {https://github.com/westlicht/sgl},
+    note = {\url{https://github.com/westlicht/sgl}},
     version = {0.0.1},
     year = {2024}
 }

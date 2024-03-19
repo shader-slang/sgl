@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
-import kali
+import sgl
 import numpy as np
 from pathlib import Path
 
@@ -9,15 +9,15 @@ EXAMPLE_DIR = Path(__file__).parent
 
 class App:
     def __init__(self):
-        self.window = kali.Window(
+        self.window = sgl.Window(
             width=1920, height=1280, title="Example", resizable=True
         )
-        self.device = kali.Device(
+        self.device = sgl.Device(
             enable_debug_layers=True,
             compiler_options={"include_paths": [EXAMPLE_DIR]},
         )
         self.swapchain = self.device.create_swapchain(
-            format=kali.Format.rgba8_unorm_srgb,
+            format=sgl.Format.rgba8_unorm_srgb,
             image_count=3,
             width=self.window.width,
             height=self.window.height,
@@ -28,14 +28,14 @@ class App:
         self.framebuffers = []
         self.create_framebuffers()
 
-        self.ui = kali.ui.Context(self.device)
+        self.ui = sgl.ui.Context(self.device)
 
         self.output_texture = None
 
         program = self.device.load_program("draw", ["main"])
         self.kernel = self.device.create_compute_kernel(program)
 
-        self.mouse_pos = kali.float2()
+        self.mouse_pos = sgl.float2()
         self.mouse_down = False
 
         self.playing = True
@@ -49,60 +49,60 @@ class App:
 
     def setup_ui(self):
         screen = self.ui.screen
-        window = kali.ui.Window(screen, "Settings", size=(500, 300))
+        window = sgl.ui.Window(screen, "Settings", size=(500, 300))
 
-        self.fps_text = kali.ui.Text(window, "FPS: 0")
+        self.fps_text = sgl.ui.Text(window, "FPS: 0")
 
         def start():
             self.playing = True
 
-        kali.ui.Button(window, "Start", callback=start)
+        sgl.ui.Button(window, "Start", callback=start)
 
         def stop():
             self.playing = False
 
-        kali.ui.Button(window, "Stop", callback=stop)
+        sgl.ui.Button(window, "Stop", callback=stop)
 
-        self.noise_scale = kali.ui.SliderFloat(
+        self.noise_scale = sgl.ui.SliderFloat(
             window, "Noise Scale", value=0.5, min=0, max=1
         )
-        self.noise_amount = kali.ui.SliderFloat(
+        self.noise_amount = sgl.ui.SliderFloat(
             window, "Noise Amount", value=0.5, min=0, max=1
         )
-        self.mouse_radius = kali.ui.SliderFloat(
+        self.mouse_radius = sgl.ui.SliderFloat(
             window, "Radius", value=100, min=0, max=1000
         )
 
-    def on_keyboard_event(self, event: kali.KeyboardEvent):
+    def on_keyboard_event(self, event: sgl.KeyboardEvent):
         if self.ui.handle_keyboard_event(event):
             return
 
-        if event.type == kali.KeyboardEventType.key_press:
-            if event.key == kali.KeyCode.escape:
+        if event.type == sgl.KeyboardEventType.key_press:
+            if event.key == sgl.KeyCode.escape:
                 self.window.close()
-            elif event.key == kali.KeyCode.f1:
+            elif event.key == sgl.KeyCode.f1:
                 if self.output_texture:
-                    kali.utils.show_in_tev_async(self.output_texture)
-            elif event.key == kali.KeyCode.f2:
+                    sgl.utils.show_in_tev_async(self.output_texture)
+            elif event.key == sgl.KeyCode.f2:
                 if self.output_texture:
                     bitmap = self.output_texture.to_bitmap()
                     bitmap.convert(
-                        kali.Bitmap.PixelFormat.rgb,
-                        kali.Bitmap.ComponentType.uint8,
+                        sgl.Bitmap.PixelFormat.rgb,
+                        sgl.Bitmap.ComponentType.uint8,
                         srgb_gamma=True,
                     ).write_async("screenshot.png")
 
-    def on_mouse_event(self, event: kali.MouseEvent):
+    def on_mouse_event(self, event: sgl.MouseEvent):
         if self.ui.handle_mouse_event(event):
             return
 
-        if event.type == kali.MouseEventType.move:
+        if event.type == sgl.MouseEventType.move:
             self.mouse_pos = event.pos
-        elif event.type == kali.MouseEventType.button_down:
-            if event.button == kali.MouseButton.left:
+        elif event.type == sgl.MouseEventType.button_down:
+            if event.button == sgl.MouseButton.left:
                 self.mouse_down = True
-        elif event.type == kali.MouseEventType.button_up:
-            if event.button == kali.MouseButton.left:
+        elif event.type == sgl.MouseEventType.button_up:
+            if event.button == sgl.MouseButton.left:
                 self.mouse_down = False
 
     def on_resize(self, width, height):
@@ -121,7 +121,7 @@ class App:
     def run(self):
         frame = 0
         time = 0.0
-        timer = kali.Timer()
+        timer = sgl.Timer()
 
         while not self.window.should_close():
             self.window.process_events()
@@ -147,12 +147,12 @@ class App:
                 or self.output_texture.height != image.height
             ):
                 self.output_texture = self.device.create_texture(
-                    format=kali.Format.rgba8_unorm,
+                    format=sgl.Format.rgba8_unorm,
                     width=image.width,
                     height=image.height,
                     mip_count=1,
-                    usage=kali.ResourceUsage.shader_resource
-                    | kali.ResourceUsage.unordered_access,
+                    usage=sgl.ResourceUsage.shader_resource
+                    | sgl.ResourceUsage.unordered_access,
                     debug_name="output_texture",
                 )
 
@@ -176,7 +176,7 @@ class App:
             self.ui.new_frame(image.width, image.height)
             self.ui.render(self.framebuffers[image_index], command_buffer)
 
-            command_buffer.texture_barrier(image, kali.ResourceState.present)
+            command_buffer.texture_barrier(image, sgl.ResourceState.present)
             command_buffer.submit()
             del image
 

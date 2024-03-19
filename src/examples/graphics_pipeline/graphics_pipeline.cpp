@@ -1,28 +1,28 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "kali/kali.h"
-#include "kali/core/platform.h"
-#include "kali/device/device.h"
-#include "kali/device/shader.h"
-#include "kali/device/command.h"
-#include "kali/device/shader_cursor.h"
-#include "kali/device/shader_object.h"
-#include "kali/device/kernel.h"
-#include "kali/device/agility_sdk.h"
-#include "kali/device/input_layout.h"
-#include "kali/device/framebuffer.h"
-#include "kali/device/pipeline.h"
-#include "kali/utils/tev.h"
+#include "sgl/sgl.h"
+#include "sgl/core/platform.h"
+#include "sgl/device/device.h"
+#include "sgl/device/shader.h"
+#include "sgl/device/command.h"
+#include "sgl/device/shader_cursor.h"
+#include "sgl/device/shader_object.h"
+#include "sgl/device/kernel.h"
+#include "sgl/device/agility_sdk.h"
+#include "sgl/device/input_layout.h"
+#include "sgl/device/framebuffer.h"
+#include "sgl/device/pipeline.h"
+#include "sgl/utils/tev.h"
 
-KALI_EXPORT_AGILITY_SDK
+SGL_EXPORT_AGILITY_SDK
 
-static const std::filesystem::path EXAMPLE_DIR(KALI_EXAMPLE_DIR);
+static const std::filesystem::path EXAMPLE_DIR(SGL_EXAMPLE_DIR);
 
-using namespace kali;
+using namespace sgl;
 
 int main()
 {
-    kali::static_init();
+    sgl::static_init();
 
     {
         ref<Device> device = Device::create({
@@ -84,7 +84,7 @@ int main()
             auto encoder = command_buffer->encode_render_commands(framebuffer);
             encoder.bind_pipeline(pipeline);
             encoder.set_vertex_buffer(0, vertex_buffer);
-            encoder.set_primitive_topology(kali::PrimitiveTopology::triangle_list);
+            encoder.set_primitive_topology(sgl::PrimitiveTopology::triangle_list);
             encoder.set_viewport_and_scissor_rect({
                 .width = float(render_texture->width()),
                 .height = float(render_texture->height()),
@@ -96,6 +96,6 @@ int main()
         utils::show_in_tev(render_texture, "graphics_pipeline");
     }
 
-    kali::static_shutdown();
+    sgl::static_shutdown();
     return 0;
 }

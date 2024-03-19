@@ -2,12 +2,12 @@
 
 #pragma once
 
-#include "kali/core/object.h"
-#include "kali/core/window.h"
-#include "kali/device/device.h"
-#include "kali/device/swapchain.h"
+#include "sgl/core/object.h"
+#include "sgl/core/window.h"
+#include "sgl/device/device.h"
+#include "sgl/device/swapchain.h"
 
-namespace kali {
+namespace sgl {
 
 class Renderer {
 public:
@@ -29,4 +29,4 @@ private:
     ref<Swapchain> m_swapchain;
 };
 
-} // namespace kali
+} // namespace sgl

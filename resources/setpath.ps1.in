@@ -1,7 +1,7 @@
 # ***************************************************************
-# * This script adds kali to the current path on Windows.
+# * This script adds sgl to the current path on Windows.
 # ***************************************************************
 
-$env:KALI_DIR = Get-Location
-$env:PATH = $env:KALI_DIR + ";" + $env:PATH
-$env:PYTHONPATH = $env:KALI_DIR + "\python" + ";" + $env:PYTHONPATH
+$env:SGL_DIR = Get-Location
+$env:PATH = $env:SGL_DIR + ";" + $env:PATH
+$env:PYTHONPATH = $env:SGL_DIR + "\python" + ";" + $env:PYTHONPATH
