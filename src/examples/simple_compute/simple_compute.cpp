@@ -70,6 +70,7 @@ int main()
             processor["b"] = buffer_b;
             processor["c"] = buffer_c;
             encoder.dispatch_thread_groups(uint3{N / 16, 1, 1});
+            encoder.end();
             command_buffer->submit();
 
             std::vector<uint32_t> data_c = device->read_buffer<uint32_t>(buffer_c, 0, N);
