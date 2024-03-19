@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 #pragma once
 
 // ImGui configuration file. See imconfig.h for more details.
