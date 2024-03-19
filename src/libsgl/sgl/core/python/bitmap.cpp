@@ -3,6 +3,8 @@
 #include "nanobind.h"
 
 #include "sgl/core/bitmap.h"
+#include "sgl/core/memory_stream.h"
+#include "sgl/core/string.h"
 
 #include "sgl/stl/bit.h" // Replace with <bit> when available on all platforms.
 
@@ -183,6 +185,42 @@ SGL_PY_EXPORT(core_bitmap)
                 result["version"] = 3;
 
                 return nb::object(result);
+            }
+        )
+        .def(
+            "_repr_html_",
+            [](const Bitmap& self) -> nb::object
+            {
+                if (self.pixel_format() == Bitmap::PixelFormat::multi_channel)
+                    return nb::none();
+
+                // Check if bitmap needs conversion to be saved as PNG for display in Jupyter.
+                bool needs_conversion = !self.srgb_gamma();
+                needs_conversion
+                    |= (self.pixel_format() != Bitmap::PixelFormat::y && self.pixel_format() != Bitmap::PixelFormat::rgb
+                        && self.pixel_format() != Bitmap::PixelFormat::rgba);
+                needs_conversion
+                    |= (self.component_type() != Bitmap::ComponentType::uint8
+                        && self.component_type() != Bitmap::ComponentType::uint16);
+
+                // Write bitmap to PNG in memory.
+                ref<MemoryStream> stream = ref(new MemoryStream());
+                if (needs_conversion) {
+                    self.convert(
+                            self.has_alpha() ? Bitmap::PixelFormat::rgba : Bitmap::PixelFormat::rgb,
+                            Bitmap::ComponentType::uint16,
+                            true
+                    )
+                        ->write(stream, Bitmap::FileFormat::png);
+                } else {
+                    self.write(stream, Bitmap::FileFormat::png);
+                }
+
+                std::string html = "<img src=\"data:image/png;base64, ";
+                html += string::encode_base64(stream->data(), stream->size());
+                html += "\" width=\"400vm\" />";
+
+                return nb::str(html.c_str());
             }
         );
 }
