@@ -1,10 +1,11 @@
 name: build
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
+  # push:
+  #   branches: [main]
+  # pull_request:
+  #   branches: [main]
 
 jobs:
   job:
@@ -37,16 +38,6 @@ jobs:
       # Install MSVC.
       - name: Install MSVC
         uses: ilammy/msvc-dev-cmd@v1
-
-      # Install CUDA.
-      # - name: Install CUDA
-      #   if: ${{ ! startsWith(matrix.os, 'macos') }}
-      #   uses: Jimver/cuda-toolkit@v0.2.14
-      #   id: cuda-toolkit
-      #   with:
-      #     cuda: '12.3.2'
-      #     sub-packages: '["nvcc", "cudart"]'
-      #     method: 'network'
 
       # Setup for Windows.
       - name: Setup (Windows)
