@@ -6,4 +6,4 @@
 	url = https://github.com/microsoft/vcpkg.git
 [submodule "data"]
 	path = data
-	url = https://github.com/westlicht/kali-data.git
+	url = https://github.com/westlicht/sgl-data.git
