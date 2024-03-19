@@ -23,6 +23,1038 @@
 #endif
 
 
+static const char *__doc_CUDA_ARRAY3D_DESCRIPTOR = R"doc()doc";
+
+static const char *__doc_CUDA_ARRAY3D_DESCRIPTOR_Depth = R"doc()doc";
+
+static const char *__doc_CUDA_ARRAY3D_DESCRIPTOR_Flags = R"doc()doc";
+
+static const char *__doc_CUDA_ARRAY3D_DESCRIPTOR_Format = R"doc()doc";
+
+static const char *__doc_CUDA_ARRAY3D_DESCRIPTOR_Height = R"doc()doc";
+
+static const char *__doc_CUDA_ARRAY3D_DESCRIPTOR_NumChannels = R"doc()doc";
+
+static const char *__doc_CUDA_ARRAY3D_DESCRIPTOR_Width = R"doc()doc";
+
+static const char *__doc_CUDA_ARRAY_DESCRIPTOR = R"doc()doc";
+
+static const char *__doc_CUDA_ARRAY_DESCRIPTOR_Format = R"doc()doc";
+
+static const char *__doc_CUDA_ARRAY_DESCRIPTOR_Height = R"doc()doc";
+
+static const char *__doc_CUDA_ARRAY_DESCRIPTOR_NumChannels = R"doc()doc";
+
+static const char *__doc_CUDA_ARRAY_DESCRIPTOR_Width = R"doc()doc";
+
+static const char *__doc_CUDA_ARRAY_MEMORY_REQUIREMENTS = R"doc()doc";
+
+static const char *__doc_CUDA_ARRAY_MEMORY_REQUIREMENTS_alignment = R"doc()doc";
+
+static const char *__doc_CUDA_ARRAY_MEMORY_REQUIREMENTS_reserved = R"doc()doc";
+
+static const char *__doc_CUDA_ARRAY_MEMORY_REQUIREMENTS_size = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_MEMORY_BUFFER_DESC = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_MEMORY_BUFFER_DESC_flags = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_MEMORY_BUFFER_DESC_offset = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_MEMORY_BUFFER_DESC_reserved = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_MEMORY_BUFFER_DESC_size = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_MEMORY_HANDLE_DESC = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_MEMORY_HANDLE_DESC_flags = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_MEMORY_HANDLE_DESC_handle = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_MEMORY_HANDLE_DESC_reserved = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_MEMORY_HANDLE_DESC_size = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_MEMORY_HANDLE_DESC_type = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_MEMORY_MIPMAPPED_ARRAY_DESC = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_MEMORY_MIPMAPPED_ARRAY_DESC_arrayDesc = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_MEMORY_MIPMAPPED_ARRAY_DESC_numLevels = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_MEMORY_MIPMAPPED_ARRAY_DESC_offset = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_MEMORY_MIPMAPPED_ARRAY_DESC_reserved = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_HANDLE_DESC = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_HANDLE_DESC_flags = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_HANDLE_DESC_handle = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_HANDLE_DESC_reserved = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_HANDLE_DESC_type = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_flags = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_params = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_reserved = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_623_5 = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_623_5_fence = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_623_5_keyedMutex = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_623_5_nvSciSync = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_623_5_reserved = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_623_5_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_624_9 = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_623_5_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_624_9_value = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_623_5_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_631_9 = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_623_5_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_631_9_key = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_flags = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_params = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_reserved = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_641_5 = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_641_5_fence = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_641_5_keyedMutex = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_641_5_nvSciSync = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_641_5_reserved = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_641_5_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_642_9 = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_641_5_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_642_9_value = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_641_5_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_649_9 = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_641_5_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_649_9_key = R"doc()doc";
+
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_641_5_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_649_9_timeoutMs = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY2D = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY2D_Height = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY2D_WidthInBytes = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY2D_dstArray = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY2D_dstDevice = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY2D_dstHost = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY2D_dstMemoryType = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY2D_dstPitch = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY2D_dstXInBytes = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY2D_dstY = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY2D_srcArray = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY2D_srcDevice = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY2D_srcHost = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY2D_srcMemoryType = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY2D_srcPitch = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY2D_srcXInBytes = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY2D_srcY = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY3D = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY3D_Depth = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY3D_Height = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY3D_WidthInBytes = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY3D_dstArray = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY3D_dstDevice = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY3D_dstHeight = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY3D_dstHost = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY3D_dstLOD = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY3D_dstMemoryType = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY3D_dstPitch = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY3D_dstXInBytes = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY3D_dstY = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY3D_dstZ = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY3D_reserved0 = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY3D_reserved1 = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY3D_srcArray = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY3D_srcDevice = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY3D_srcHeight = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY3D_srcHost = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY3D_srcLOD = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY3D_srcMemoryType = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY3D_srcPitch = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY3D_srcXInBytes = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY3D_srcY = R"doc()doc";
+
+static const char *__doc_CUDA_MEMCPY3D_srcZ = R"doc()doc";
+
+static const char *__doc_CUDA_RESOURCE_DESC = R"doc()doc";
+
+static const char *__doc_CUDA_RESOURCE_DESC_flags = R"doc()doc";
+
+static const char *__doc_CUDA_RESOURCE_DESC_res = R"doc()doc";
+
+static const char *__doc_CUDA_RESOURCE_DESC_resType = R"doc()doc";
+
+static const char *__doc_CUDA_RESOURCE_VIEW_DESC = R"doc()doc";
+
+static const char *__doc_CUDA_RESOURCE_VIEW_DESC_depth = R"doc()doc";
+
+static const char *__doc_CUDA_RESOURCE_VIEW_DESC_firstLayer = R"doc()doc";
+
+static const char *__doc_CUDA_RESOURCE_VIEW_DESC_firstMipmapLevel = R"doc()doc";
+
+static const char *__doc_CUDA_RESOURCE_VIEW_DESC_format = R"doc()doc";
+
+static const char *__doc_CUDA_RESOURCE_VIEW_DESC_height = R"doc()doc";
+
+static const char *__doc_CUDA_RESOURCE_VIEW_DESC_lastLayer = R"doc()doc";
+
+static const char *__doc_CUDA_RESOURCE_VIEW_DESC_lastMipmapLevel = R"doc()doc";
+
+static const char *__doc_CUDA_RESOURCE_VIEW_DESC_reserved = R"doc()doc";
+
+static const char *__doc_CUDA_RESOURCE_VIEW_DESC_width = R"doc()doc";
+
+static const char *__doc_CUDA_TEXTURE_DESC = R"doc()doc";
+
+static const char *__doc_CUDA_TEXTURE_DESC_addressMode = R"doc()doc";
+
+static const char *__doc_CUDA_TEXTURE_DESC_borderColor = R"doc()doc";
+
+static const char *__doc_CUDA_TEXTURE_DESC_filterMode = R"doc()doc";
+
+static const char *__doc_CUDA_TEXTURE_DESC_flags = R"doc()doc";
+
+static const char *__doc_CUDA_TEXTURE_DESC_maxAnisotropy = R"doc()doc";
+
+static const char *__doc_CUDA_TEXTURE_DESC_maxMipmapLevelClamp = R"doc()doc";
+
+static const char *__doc_CUDA_TEXTURE_DESC_minMipmapLevelClamp = R"doc()doc";
+
+static const char *__doc_CUDA_TEXTURE_DESC_mipmapFilterMode = R"doc()doc";
+
+static const char *__doc_CUDA_TEXTURE_DESC_mipmapLevelBias = R"doc()doc";
+
+static const char *__doc_CUDA_TEXTURE_DESC_reserved = R"doc()doc";
+
+static const char *__doc_CUaddress_mode = R"doc()doc";
+
+static const char *__doc_CUaddress_mode_CU_TR_ADDRESS_MODE_BORDER = R"doc()doc";
+
+static const char *__doc_CUaddress_mode_CU_TR_ADDRESS_MODE_CLAMP = R"doc()doc";
+
+static const char *__doc_CUaddress_mode_CU_TR_ADDRESS_MODE_MIRROR = R"doc()doc";
+
+static const char *__doc_CUaddress_mode_CU_TR_ADDRESS_MODE_WRAP = R"doc()doc";
+
+static const char *__doc_CUarray_cubemap_face = R"doc()doc";
+
+static const char *__doc_CUarray_cubemap_face_CU_CUBEMAP_FACE_NEGATIVE_X = R"doc()doc";
+
+static const char *__doc_CUarray_cubemap_face_CU_CUBEMAP_FACE_NEGATIVE_Y = R"doc()doc";
+
+static const char *__doc_CUarray_cubemap_face_CU_CUBEMAP_FACE_NEGATIVE_Z = R"doc()doc";
+
+static const char *__doc_CUarray_cubemap_face_CU_CUBEMAP_FACE_POSITIVE_X = R"doc()doc";
+
+static const char *__doc_CUarray_cubemap_face_CU_CUBEMAP_FACE_POSITIVE_Y = R"doc()doc";
+
+static const char *__doc_CUarray_cubemap_face_CU_CUBEMAP_FACE_POSITIVE_Z = R"doc()doc";
+
+static const char *__doc_CUarray_format = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_BC1_UNORM = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_BC1_UNORM_SRGB = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_BC2_UNORM = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_BC2_UNORM_SRGB = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_BC3_UNORM = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_BC3_UNORM_SRGB = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_BC4_SNORM = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_BC4_UNORM = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_BC5_SNORM = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_BC5_UNORM = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_BC6H_SF16 = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_BC6H_UF16 = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_BC7_UNORM = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_BC7_UNORM_SRGB = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_FLOAT = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_HALF = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_NV12 = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_SIGNED_INT16 = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_SIGNED_INT32 = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_SIGNED_INT8 = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_SNORM_INT16X1 = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_SNORM_INT16X2 = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_SNORM_INT16X4 = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_SNORM_INT8X1 = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_SNORM_INT8X2 = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_SNORM_INT8X4 = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_UNORM_INT16X1 = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_UNORM_INT16X2 = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_UNORM_INT16X4 = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_UNORM_INT8X1 = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_UNORM_INT8X2 = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_UNORM_INT8X4 = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_UNSIGNED_INT16 = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_UNSIGNED_INT32 = R"doc()doc";
+
+static const char *__doc_CUarray_format_CU_AD_FORMAT_UNSIGNED_INT8 = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_ASYNC_ENGINE_COUNT = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_CAN_FLUSH_REMOTE_WRITES = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_CAN_MAP_HOST_MEMORY = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_CAN_TEX2D_GATHER = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_CAN_USE_64_BIT_STREAM_MEM_OPS = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_CAN_USE_64_BIT_STREAM_MEM_OPS_V1 = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_CAN_USE_HOST_POINTER_FOR_REGISTERED_MEM = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_MEM_OPS_V1 = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_WAIT_VALUE_NOR = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_WAIT_VALUE_NOR_V1 = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_CLOCK_RATE = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_CLUSTER_LAUNCH = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_COMPUTE_MODE = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_COMPUTE_PREEMPTION_SUPPORTED = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_CONCURRENT_KERNELS = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_CONCURRENT_MANAGED_ACCESS = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_COOPERATIVE_LAUNCH = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_COOPERATIVE_MULTI_DEVICE_LAUNCH = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_DEFERRED_MAPPING_CUDA_ARRAY_SUPPORTED = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_DIRECT_MANAGED_MEM_ACCESS_FROM_HOST = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_DMA_BUF_SUPPORTED = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_ECC_ENABLED = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_GENERIC_COMPRESSION_SUPPORTED = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_GLOBAL_L1_CACHE_SUPPORTED = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_GLOBAL_MEMORY_BUS_WIDTH = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_GPU_DIRECT_RDMA_FLUSH_WRITES_OPTIONS = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_GPU_DIRECT_RDMA_SUPPORTED = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_GPU_DIRECT_RDMA_WITH_CUDA_VMM_SUPPORTED = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_GPU_DIRECT_RDMA_WRITES_ORDERING = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_GPU_OVERLAP = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_FABRIC_SUPPORTED = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR_SUPPORTED = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_WIN32_HANDLE_SUPPORTED = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_WIN32_KMT_HANDLE_SUPPORTED = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_HOST_NATIVE_ATOMIC_SUPPORTED = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_HOST_NUMA_ID = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_HOST_REGISTER_SUPPORTED = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_INTEGRATED = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_IPC_EVENT_SUPPORTED = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_KERNEL_EXEC_TIMEOUT = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_L2_CACHE_SIZE = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_LOCAL_L1_CACHE_SUPPORTED = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MANAGED_MEMORY = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAX = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE1D_LAYERED_LAYERS = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE1D_LAYERED_WIDTH = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE1D_WIDTH = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_HEIGHT = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_LAYERED_HEIGHT = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_LAYERED_LAYERS = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_LAYERED_WIDTH = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_WIDTH = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE3D_DEPTH = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE3D_HEIGHT = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE3D_WIDTH = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACECUBEMAP_LAYERED_LAYERS = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACECUBEMAP_LAYERED_WIDTH = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACECUBEMAP_WIDTH = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_LAYERED_LAYERS = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_LAYERED_WIDTH = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_LINEAR_WIDTH = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_MIPMAPPED_WIDTH = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_WIDTH = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_ARRAY_HEIGHT = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_ARRAY_NUMSLICES = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_ARRAY_WIDTH = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_GATHER_HEIGHT = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_GATHER_WIDTH = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_HEIGHT = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LAYERED_HEIGHT = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LAYERED_LAYERS = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LAYERED_WIDTH = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LINEAR_HEIGHT = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LINEAR_PITCH = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LINEAR_WIDTH = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_MIPMAPPED_HEIGHT = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_MIPMAPPED_WIDTH = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_WIDTH = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_DEPTH = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_DEPTH_ALTERNATE = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_HEIGHT = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_HEIGHT_ALTERNATE = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_WIDTH = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_WIDTH_ALTERNATE = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURECUBEMAP_LAYERED_LAYERS = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURECUBEMAP_LAYERED_WIDTH = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURECUBEMAP_WIDTH = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAX_ACCESS_POLICY_WINDOW_SIZE = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAX_BLOCKS_PER_MULTIPROCESSOR = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_X = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_Y = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_Z = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_X = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Y = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Z = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAX_PERSISTING_L2_CACHE_SIZE = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAX_PITCH = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_BLOCK = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_MULTIPROCESSOR = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK_OPTIN = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_MULTIPROCESSOR = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_BLOCK = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_MULTIPROCESSOR = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MEMORY_CLOCK_RATE = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MEMORY_POOLS_SUPPORTED = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MEMPOOL_SUPPORTED_HANDLE_TYPES = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MEM_SYNC_DOMAIN_COUNT = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MPS_ENABLED = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MULTICAST_SUPPORTED = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MULTIPROCESSOR_COUNT = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD_GROUP_ID = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_NUMA_CONFIG = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_NUMA_ID = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_PAGEABLE_MEMORY_ACCESS = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_PAGEABLE_MEMORY_ACCESS_USES_HOST_PAGE_TABLES = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_PCI_BUS_ID = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_PCI_DEVICE_ID = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_PCI_DOMAIN_ID = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_READ_ONLY_HOST_REGISTER_SUPPORTED = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_REGISTERS_PER_BLOCK = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_RESERVED_SHARED_MEMORY_PER_BLOCK = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_SHARED_MEMORY_PER_BLOCK = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_SINGLE_TO_DOUBLE_PRECISION_PERF_RATIO = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_SPARSE_CUDA_ARRAY_SUPPORTED = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_STREAM_PRIORITIES_SUPPORTED = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_SURFACE_ALIGNMENT = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_TCC_DRIVER = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_TENSOR_MAP_ACCESS_SUPPORTED = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_TEXTURE_ALIGNMENT = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_TEXTURE_PITCH_ALIGNMENT = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_TIMELINE_SEMAPHORE_INTEROP_SUPPORTED = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_TOTAL_CONSTANT_MEMORY = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_UNIFIED_ADDRESSING = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_UNIFIED_FUNCTION_POINTERS = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_VIRTUAL_ADDRESS_MANAGEMENT_SUPPORTED = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_VIRTUAL_MEMORY_MANAGEMENT_SUPPORTED = R"doc()doc";
+
+static const char *__doc_CUdevice_attribute_CU_DEVICE_ATTRIBUTE_WARP_SIZE = R"doc()doc";
+
+static const char *__doc_CUevent_flags = R"doc()doc";
+
+static const char *__doc_CUevent_flags_CU_EVENT_BLOCKING_SYNC = R"doc()doc";
+
+static const char *__doc_CUevent_flags_CU_EVENT_DEFAULT = R"doc()doc";
+
+static const char *__doc_CUevent_flags_CU_EVENT_DISABLE_TIMING = R"doc()doc";
+
+static const char *__doc_CUevent_flags_CU_EVENT_INTERPROCESS = R"doc()doc";
+
+static const char *__doc_CUevent_wait_flags = R"doc()doc";
+
+static const char *__doc_CUevent_wait_flags_CU_EVENT_WAIT_DEFAULT = R"doc()doc";
+
+static const char *__doc_CUevent_wait_flags_CU_EVENT_WAIT_EXTERNAL = R"doc()doc";
+
+static const char *__doc_CUexternalMemoryHandleType = R"doc()doc";
+
+static const char *__doc_CUexternalMemoryHandleType_CU_EXTERNAL_MEMORY_HANDLE_TYPE_D3D11_RESOURCE = R"doc()doc";
+
+static const char *__doc_CUexternalMemoryHandleType_CU_EXTERNAL_MEMORY_HANDLE_TYPE_D3D11_RESOURCE_KMT = R"doc()doc";
+
+static const char *__doc_CUexternalMemoryHandleType_CU_EXTERNAL_MEMORY_HANDLE_TYPE_D3D12_HEAP = R"doc()doc";
+
+static const char *__doc_CUexternalMemoryHandleType_CU_EXTERNAL_MEMORY_HANDLE_TYPE_D3D12_RESOURCE = R"doc()doc";
+
+static const char *__doc_CUexternalMemoryHandleType_CU_EXTERNAL_MEMORY_HANDLE_TYPE_NVSCIBUF = R"doc()doc";
+
+static const char *__doc_CUexternalMemoryHandleType_CU_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD = R"doc()doc";
+
+static const char *__doc_CUexternalMemoryHandleType_CU_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32 = R"doc()doc";
+
+static const char *__doc_CUexternalMemoryHandleType_CU_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_KMT = R"doc()doc";
+
+static const char *__doc_CUexternalSemaphoreHandleType = R"doc()doc";
+
+static const char *__doc_CUexternalSemaphoreHandleType_CU_EXTERNAL_SEMAPHORE_HANDLE_TYPE_D3D11_FENCE = R"doc()doc";
+
+static const char *__doc_CUexternalSemaphoreHandleType_CU_EXTERNAL_SEMAPHORE_HANDLE_TYPE_D3D11_KEYED_MUTEX = R"doc()doc";
+
+static const char *__doc_CUexternalSemaphoreHandleType_CU_EXTERNAL_SEMAPHORE_HANDLE_TYPE_D3D11_KEYED_MUTEX_KMT = R"doc()doc";
+
+static const char *__doc_CUexternalSemaphoreHandleType_CU_EXTERNAL_SEMAPHORE_HANDLE_TYPE_D3D12_FENCE = R"doc()doc";
+
+static const char *__doc_CUexternalSemaphoreHandleType_CU_EXTERNAL_SEMAPHORE_HANDLE_TYPE_NVSCISYNC = R"doc()doc";
+
+static const char *__doc_CUexternalSemaphoreHandleType_CU_EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_FD = R"doc()doc";
+
+static const char *__doc_CUexternalSemaphoreHandleType_CU_EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_WIN32 = R"doc()doc";
+
+static const char *__doc_CUexternalSemaphoreHandleType_CU_EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_WIN32_KMT = R"doc()doc";
+
+static const char *__doc_CUexternalSemaphoreHandleType_CU_EXTERNAL_SEMAPHORE_HANDLE_TYPE_TIMELINE_SEMAPHORE_FD = R"doc()doc";
+
+static const char *__doc_CUexternalSemaphoreHandleType_CU_EXTERNAL_SEMAPHORE_HANDLE_TYPE_TIMELINE_SEMAPHORE_WIN32 = R"doc()doc";
+
+static const char *__doc_CUfilter_mode = R"doc()doc";
+
+static const char *__doc_CUfilter_mode_CU_TR_FILTER_MODE_LINEAR = R"doc()doc";
+
+static const char *__doc_CUfilter_mode_CU_TR_FILTER_MODE_POINT = R"doc()doc";
+
+static const char *__doc_CUmemLocation = R"doc()doc";
+
+static const char *__doc_CUmemLocationType = R"doc()doc";
+
+static const char *__doc_CUmemLocationType_CU_MEM_LOCATION_TYPE_DEVICE = R"doc()doc";
+
+static const char *__doc_CUmemLocationType_CU_MEM_LOCATION_TYPE_HOST = R"doc()doc";
+
+static const char *__doc_CUmemLocationType_CU_MEM_LOCATION_TYPE_HOST_NUMA = R"doc()doc";
+
+static const char *__doc_CUmemLocationType_CU_MEM_LOCATION_TYPE_HOST_NUMA_CURRENT = R"doc()doc";
+
+static const char *__doc_CUmemLocationType_CU_MEM_LOCATION_TYPE_INVALID = R"doc()doc";
+
+static const char *__doc_CUmemLocationType_CU_MEM_LOCATION_TYPE_MAX = R"doc()doc";
+
+static const char *__doc_CUmemLocation_id = R"doc()doc";
+
+static const char *__doc_CUmemLocation_type = R"doc()doc";
+
+static const char *__doc_CUmem_advise = R"doc()doc";
+
+static const char *__doc_CUmem_advise_CU_MEM_ADVISE_SET_ACCESSED_BY = R"doc()doc";
+
+static const char *__doc_CUmem_advise_CU_MEM_ADVISE_SET_PREFERRED_LOCATION = R"doc()doc";
+
+static const char *__doc_CUmem_advise_CU_MEM_ADVISE_SET_READ_MOSTLY = R"doc()doc";
+
+static const char *__doc_CUmem_advise_CU_MEM_ADVISE_UNSET_ACCESSED_BY = R"doc()doc";
+
+static const char *__doc_CUmem_advise_CU_MEM_ADVISE_UNSET_PREFERRED_LOCATION = R"doc()doc";
+
+static const char *__doc_CUmem_advise_CU_MEM_ADVISE_UNSET_READ_MOSTLY = R"doc()doc";
+
+static const char *__doc_CUmemorytype = R"doc()doc";
+
+static const char *__doc_CUmemorytype_CU_MEMORYTYPE_ARRAY = R"doc()doc";
+
+static const char *__doc_CUmemorytype_CU_MEMORYTYPE_DEVICE = R"doc()doc";
+
+static const char *__doc_CUmemorytype_CU_MEMORYTYPE_HOST = R"doc()doc";
+
+static const char *__doc_CUmemorytype_CU_MEMORYTYPE_UNIFIED = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_FLOAT_1X16 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_FLOAT_1X32 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_FLOAT_2X16 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_FLOAT_2X32 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_FLOAT_4X16 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_FLOAT_4X32 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_NONE = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_SIGNED_BC4 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_SIGNED_BC5 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_SIGNED_BC6H = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_SINT_1X16 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_SINT_1X32 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_SINT_1X8 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_SINT_2X16 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_SINT_2X32 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_SINT_2X8 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_SINT_4X16 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_SINT_4X32 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_SINT_4X8 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_UINT_1X16 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_UINT_1X32 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_UINT_1X8 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_UINT_2X16 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_UINT_2X32 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_UINT_2X8 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_UINT_4X16 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_UINT_4X32 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_UINT_4X8 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_UNSIGNED_BC1 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_UNSIGNED_BC2 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_UNSIGNED_BC3 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_UNSIGNED_BC4 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_UNSIGNED_BC5 = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_UNSIGNED_BC6H = R"doc()doc";
+
+static const char *__doc_CUresourceViewFormat_CU_RES_VIEW_FORMAT_UNSIGNED_BC7 = R"doc()doc";
+
+static const char *__doc_CUresourcetype = R"doc()doc";
+
+static const char *__doc_CUresourcetype_CU_RESOURCE_TYPE_ARRAY = R"doc()doc";
+
+static const char *__doc_CUresourcetype_CU_RESOURCE_TYPE_LINEAR = R"doc()doc";
+
+static const char *__doc_CUresourcetype_CU_RESOURCE_TYPE_MIPMAPPED_ARRAY = R"doc()doc";
+
+static const char *__doc_CUresourcetype_CU_RESOURCE_TYPE_PITCH2D = R"doc()doc";
+
+static const char *__doc_CUresult = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_ALREADY_ACQUIRED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_ALREADY_MAPPED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_ARRAY_IS_MAPPED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_ASSERT = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_CAPTURED_EVENT = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_CDP_NOT_SUPPORTED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_CDP_VERSION_MISMATCH = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_COMPAT_NOT_SUPPORTED_ON_DEVICE = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_CONTEXT_ALREADY_CURRENT = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_CONTEXT_ALREADY_IN_USE = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_CONTEXT_IS_DESTROYED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_COOPERATIVE_LAUNCH_TOO_LARGE = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_DEINITIALIZED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_DEVICE_NOT_LICENSED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_DEVICE_UNAVAILABLE = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_ECC_UNCORRECTABLE = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_EXTERNAL_DEVICE = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_FILE_NOT_FOUND = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_GRAPH_EXEC_UPDATE_FAILURE = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_HARDWARE_STACK_ERROR = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_HOST_MEMORY_ALREADY_REGISTERED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_HOST_MEMORY_NOT_REGISTERED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_ILLEGAL_ADDRESS = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_ILLEGAL_INSTRUCTION = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_ILLEGAL_STATE = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_INVALID_ADDRESS_SPACE = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_INVALID_CLUSTER_SIZE = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_INVALID_CONTEXT = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_INVALID_DEVICE = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_INVALID_GRAPHICS_CONTEXT = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_INVALID_HANDLE = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_INVALID_IMAGE = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_INVALID_PC = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_INVALID_PTX = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_INVALID_SOURCE = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_INVALID_VALUE = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_JIT_COMPILATION_DISABLED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_JIT_COMPILER_NOT_FOUND = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_LAUNCH_FAILED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_LAUNCH_INCOMPATIBLE_TEXTURING = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_LAUNCH_OUT_OF_RESOURCES = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_LAUNCH_TIMEOUT = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_LOSSY_QUERY = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_MAP_FAILED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_MISALIGNED_ADDRESS = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_MPS_CLIENT_TERMINATED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_MPS_CONNECTION_FAILED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_MPS_MAX_CLIENTS_REACHED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_MPS_MAX_CONNECTIONS_REACHED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_MPS_RPC_FAILURE = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_MPS_SERVER_NOT_READY = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_NOT_FOUND = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_NOT_INITIALIZED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_NOT_MAPPED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_NOT_MAPPED_AS_ARRAY = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_NOT_MAPPED_AS_POINTER = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_NOT_PERMITTED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_NOT_READY = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_NOT_SUPPORTED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_NO_BINARY_FOR_GPU = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_NO_DEVICE = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_NVLINK_UNCORRECTABLE = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_OPERATING_SYSTEM = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_OUT_OF_MEMORY = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_PEER_ACCESS_ALREADY_ENABLED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_PEER_ACCESS_NOT_ENABLED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_PEER_ACCESS_UNSUPPORTED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_PRIMARY_CONTEXT_ACTIVE = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_PROFILER_ALREADY_STARTED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_PROFILER_ALREADY_STOPPED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_PROFILER_DISABLED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_PROFILER_NOT_INITIALIZED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_SHARED_OBJECT_INIT_FAILED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_SHARED_OBJECT_SYMBOL_NOT_FOUND = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_STREAM_CAPTURE_IMPLICIT = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_STREAM_CAPTURE_INVALIDATED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_STREAM_CAPTURE_ISOLATION = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_STREAM_CAPTURE_MERGE = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_STREAM_CAPTURE_UNJOINED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_STREAM_CAPTURE_UNMATCHED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_STREAM_CAPTURE_UNSUPPORTED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_STREAM_CAPTURE_WRONG_THREAD = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_STUB_LIBRARY = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_SYSTEM_DRIVER_MISMATCH = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_SYSTEM_NOT_READY = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_TIMEOUT = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_TOO_MANY_PEERS = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_UNKNOWN = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_UNMAP_FAILED = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_UNSUPPORTED_DEVSIDE_SYNC = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_UNSUPPORTED_EXEC_AFFINITY = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_UNSUPPORTED_LIMIT = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_ERROR_UNSUPPORTED_PTX_VERSION = R"doc()doc";
+
+static const char *__doc_CUresult_CUDA_SUCCESS = R"doc()doc";
+
+static const char *__doc_CUstream_flags = R"doc()doc";
+
+static const char *__doc_CUstream_flags_CU_STREAM_DEFAULT = R"doc()doc";
+
+static const char *__doc_CUstream_flags_CU_STREAM_NON_BLOCKING = R"doc()doc";
+
+static const char *__doc_CUuuid_st = R"doc()doc";
+
+static const char *__doc_CUuuid_st_bytes = R"doc()doc";
+
 static const char *__doc_DXGI_FORMAT = R"doc()doc";
 
 static const char *__doc_DXGI_FORMAT_DXGI_FORMAT_420_OPAQUE = R"doc()doc";
@@ -965,6 +1997,8 @@ static const char *__doc_sgl_CommandBuffer_gfx_command_buffer = R"doc()doc";
 
 static const char *__doc_sgl_CommandBuffer_m_active_gfx_encoder = R"doc()doc";
 
+static const char *__doc_sgl_CommandBuffer_m_cuda_interop_buffers = R"doc()doc";
+
 static const char *__doc_sgl_CommandBuffer_m_encoder_open = R"doc()doc";
 
 static const char *__doc_sgl_CommandBuffer_m_gfx_command_buffer = R"doc()doc";
@@ -1092,6 +2126,14 @@ ID3D12CommandQueue* - Vulkan: VkQueue (Vulkan))doc";
 
 static const char *__doc_sgl_CommandQueue_gfx_command_queue = R"doc()doc";
 
+static const char *__doc_sgl_CommandQueue_handle_copy_from_cuda = R"doc()doc";
+
+static const char *__doc_sgl_CommandQueue_handle_copy_to_cuda = R"doc()doc";
+
+static const char *__doc_sgl_CommandQueue_m_cuda_fence = R"doc()doc";
+
+static const char *__doc_sgl_CommandQueue_m_cuda_semaphore = R"doc()doc";
+
 static const char *__doc_sgl_CommandQueue_m_desc = R"doc()doc";
 
 static const char *__doc_sgl_CommandQueue_m_gfx_command_queue = R"doc()doc";
@@ -1130,6 +2172,24 @@ Parameter ``pFence``:
 Parameter ``value``:
     The value to wait for. If ``Fence::AUTO``, wait for the last
     signaled value.)doc";
+
+static const char *__doc_sgl_CommandQueue_wait_for_cuda =
+R"doc(Synchronize CUDA -> device.
+
+This first signals a shared CUDA semaphore in the CUDA stream. Then it
+adds a wait for the shared CUDA semaphore on the command queue.
+
+Parameter ``cuda_stream``:
+    CUDA stream)doc";
+
+static const char *__doc_sgl_CommandQueue_wait_for_device =
+R"doc(Synchronize device -> CUDA.
+
+This first signals a shared CUDA semaphore on the command queue. Then
+it adds a wait for the shared CUDA semaphore in the CUDA stream.
+
+Parameter ``cuda_stream``:
+    CUDA stream)doc";
 
 static const char *__doc_sgl_ComparisonFunc = R"doc()doc";
 
@@ -1709,6 +2769,8 @@ static const char *__doc_sgl_Device_load_module_from_source = R"doc()doc";
 
 static const char *__doc_sgl_Device_load_program = R"doc()doc";
 
+static const char *__doc_sgl_Device_m_cuda_device = R"doc()doc";
+
 static const char *__doc_sgl_Device_m_current_frame_index = R"doc()doc";
 
 static const char *__doc_sgl_Device_m_debug_printer = R"doc()doc";
@@ -1741,6 +2803,8 @@ static const char *__doc_sgl_Device_m_slang_session = R"doc()doc";
 
 static const char *__doc_sgl_Device_m_supported_shader_model = R"doc()doc";
 
+static const char *__doc_sgl_Device_m_supports_cuda_interop = R"doc()doc";
+
 static const char *__doc_sgl_Device_m_upload_heap = R"doc()doc";
 
 static const char *__doc_sgl_Device_read_back_heap = R"doc()doc";
@@ -1760,6 +2824,8 @@ static const char *__doc_sgl_Device_shader_cache_stats = R"doc()doc";
 static const char *__doc_sgl_Device_slang_session = R"doc(Default slang session.)doc";
 
 static const char *__doc_sgl_Device_supported_shader_model = R"doc(The highest shader model supported by the device.)doc";
+
+static const char *__doc_sgl_Device_supports_cuda_interop = R"doc(True if the device supports CUDA interoperability.)doc";
 
 static const char *__doc_sgl_Device_to_string = R"doc()doc";
 
@@ -3327,6 +4393,8 @@ static const char *__doc_sgl_MutableShaderObject_MutableShaderObject_3 = R"doc()
 
 static const char *__doc_sgl_MutableShaderObject_class_name = R"doc()doc";
 
+static const char *__doc_sgl_MutableShaderObject_get_cuda_interop_buffers = R"doc()doc";
+
 static const char *__doc_sgl_MutableShaderObject_get_entry_point = R"doc()doc";
 
 static const char *__doc_sgl_MutableShaderObject_get_object = R"doc()doc";
@@ -4705,6 +5773,8 @@ static const char *__doc_sgl_ShaderCursor_set_acceleration_structure = R"doc()do
 
 static const char *__doc_sgl_ShaderCursor_set_buffer = R"doc()doc";
 
+static const char *__doc_sgl_ShaderCursor_set_cuda_tensor_view = R"doc()doc";
+
 static const char *__doc_sgl_ShaderCursor_set_data = R"doc()doc";
 
 static const char *__doc_sgl_ShaderCursor_set_matrix = R"doc()doc";
@@ -4761,6 +5831,8 @@ static const char *__doc_sgl_ShaderObject_class_name = R"doc()doc";
 
 static const char *__doc_sgl_ShaderObject_element_type_layout = R"doc()doc";
 
+static const char *__doc_sgl_ShaderObject_get_cuda_interop_buffers = R"doc()doc";
+
 static const char *__doc_sgl_ShaderObject_get_entry_point = R"doc()doc";
 
 static const char *__doc_sgl_ShaderObject_get_entry_point_count = R"doc()doc";
@@ -4769,11 +5841,15 @@ static const char *__doc_sgl_ShaderObject_get_object = R"doc()doc";
 
 static const char *__doc_sgl_ShaderObject_gfx_shader_object = R"doc()doc";
 
+static const char *__doc_sgl_ShaderObject_m_cuda_interop_buffers = R"doc()doc";
+
 static const char *__doc_sgl_ShaderObject_m_device = R"doc()doc";
 
 static const char *__doc_sgl_ShaderObject_m_shader_object = R"doc()doc";
 
 static const char *__doc_sgl_ShaderObject_set_acceleration_structure = R"doc()doc";
+
+static const char *__doc_sgl_ShaderObject_set_cuda_tensor_view = R"doc()doc";
 
 static const char *__doc_sgl_ShaderObject_set_data = R"doc()doc";
 
@@ -4826,6 +5902,8 @@ static const char *__doc_sgl_ShaderProgram_device = R"doc()doc";
 
 static const char *__doc_sgl_ShaderProgram_gfx_shader_program = R"doc()doc";
 
+static const char *__doc_sgl_ShaderProgram_layout = R"doc()doc";
+
 static const char *__doc_sgl_ShaderProgram_m_device = R"doc()doc";
 
 static const char *__doc_sgl_ShaderProgram_m_entry_points = R"doc()doc";
@@ -4837,8 +5915,6 @@ static const char *__doc_sgl_ShaderProgram_m_linked_program = R"doc()doc";
 static const char *__doc_sgl_ShaderProgram_m_modules = R"doc()doc";
 
 static const char *__doc_sgl_ShaderProgram_m_session = R"doc()doc";
-
-static const char *__doc_sgl_ShaderProgram_layout = R"doc()doc";
 
 static const char *__doc_sgl_ShaderProgram_reflection = R"doc()doc";
 
@@ -5148,6 +6224,10 @@ static const char *__doc_sgl_SlangSession_m_device = R"doc()doc";
 
 static const char *__doc_sgl_SlangSession_m_include_paths = R"doc(List of include paths used for resolving module/include paths.)doc";
 
+static const char *__doc_sgl_SlangSession_m_loaded_modules = R"doc(Set of all currently loaded slang modules.)doc";
+
+static const char *__doc_sgl_SlangSession_m_nvapi_module = R"doc(Global NVAPI module linked to all programs.)doc";
+
 static const char *__doc_sgl_SlangSession_m_slang_session = R"doc()doc";
 
 static const char *__doc_sgl_SlangSession_m_uid = R"doc()doc";
@@ -5159,6 +6239,8 @@ strings of the module.)doc";
 static const char *__doc_sgl_SlangSession_resolve_module_name = R"doc()doc";
 
 static const char *__doc_sgl_SlangSession_to_string = R"doc()doc";
+
+static const char *__doc_sgl_SlangSession_update_module_cache = R"doc()doc";
 
 static const char *__doc_sgl_SlangSession_write_module_to_cache = R"doc()doc";
 
@@ -5786,6 +6868,8 @@ static const char *__doc_sgl_TransientShaderObject = R"doc()doc";
 static const char *__doc_sgl_TransientShaderObject_TransientShaderObject = R"doc()doc";
 
 static const char *__doc_sgl_TransientShaderObject_class_name = R"doc()doc";
+
+static const char *__doc_sgl_TransientShaderObject_get_cuda_interop_buffers = R"doc()doc";
 
 static const char *__doc_sgl_TransientShaderObject_get_entry_point = R"doc()doc";
 
@@ -6457,6 +7541,128 @@ static const char *__doc_sgl_clamp = R"doc(Clamp x to [lo..hi] range.)doc";
 static const char *__doc_sgl_comparator = R"doc()doc";
 
 static const char *__doc_sgl_comparator_operator_call = R"doc()doc";
+
+static const char *__doc_sgl_cuda_Device = R"doc(Wraps a CUDA device, context and stream.)doc";
+
+static const char *__doc_sgl_cuda_Device_Device =
+R"doc(Constructor. Creates a CUDA device on the same adapter as the sgl
+device.)doc";
+
+static const char *__doc_sgl_cuda_Device_class_name = R"doc()doc";
+
+static const char *__doc_sgl_cuda_Device_context = R"doc()doc";
+
+static const char *__doc_sgl_cuda_Device_device = R"doc()doc";
+
+static const char *__doc_sgl_cuda_Device_m_context = R"doc()doc";
+
+static const char *__doc_sgl_cuda_Device_m_device = R"doc()doc";
+
+static const char *__doc_sgl_cuda_Device_m_stream = R"doc()doc";
+
+static const char *__doc_sgl_cuda_Device_stream = R"doc()doc";
+
+static const char *__doc_sgl_cuda_ExternalMemory = R"doc(Wraps an external memory resource.)doc";
+
+static const char *__doc_sgl_cuda_ExternalMemory_ExternalMemory = R"doc()doc";
+
+static const char *__doc_sgl_cuda_ExternalMemory_class_name = R"doc()doc";
+
+static const char *__doc_sgl_cuda_ExternalMemory_m_external_memory = R"doc()doc";
+
+static const char *__doc_sgl_cuda_ExternalMemory_m_mapped_data = R"doc()doc";
+
+static const char *__doc_sgl_cuda_ExternalMemory_m_resource = R"doc(Non-owning pointer to the resource.)doc";
+
+static const char *__doc_sgl_cuda_ExternalMemory_m_size = R"doc()doc";
+
+static const char *__doc_sgl_cuda_ExternalMemory_mapped_data = R"doc()doc";
+
+static const char *__doc_sgl_cuda_ExternalMemory_size = R"doc()doc";
+
+static const char *__doc_sgl_cuda_ExternalSemaphore = R"doc(Wraps an external semaphore.)doc";
+
+static const char *__doc_sgl_cuda_ExternalSemaphore_ExternalSemaphore = R"doc()doc";
+
+static const char *__doc_sgl_cuda_ExternalSemaphore_class_name = R"doc()doc";
+
+static const char *__doc_sgl_cuda_ExternalSemaphore_m_external_semaphore = R"doc()doc";
+
+static const char *__doc_sgl_cuda_ExternalSemaphore_m_fence = R"doc(Non-owning pointer to the fence.)doc";
+
+static const char *__doc_sgl_cuda_ExternalSemaphore_signal = R"doc()doc";
+
+static const char *__doc_sgl_cuda_ExternalSemaphore_wait = R"doc()doc";
+
+static const char *__doc_sgl_cuda_ExternalSemaphore_wait_for_cuda = R"doc()doc";
+
+static const char *__doc_sgl_cuda_ExternalSemaphore_wait_for_device = R"doc()doc";
+
+static const char *__doc_sgl_cuda_InteropBuffer = R"doc()doc";
+
+static const char *__doc_sgl_cuda_InteropBuffer_InteropBuffer = R"doc()doc";
+
+static const char *__doc_sgl_cuda_InteropBuffer_buffer = R"doc()doc";
+
+static const char *__doc_sgl_cuda_InteropBuffer_copy_from_cuda = R"doc()doc";
+
+static const char *__doc_sgl_cuda_InteropBuffer_copy_to_cuda = R"doc()doc";
+
+static const char *__doc_sgl_cuda_InteropBuffer_get_resource_view = R"doc()doc";
+
+static const char *__doc_sgl_cuda_InteropBuffer_is_uav = R"doc()doc";
+
+static const char *__doc_sgl_cuda_InteropBuffer_m_buffer = R"doc()doc";
+
+static const char *__doc_sgl_cuda_InteropBuffer_m_device = R"doc()doc";
+
+static const char *__doc_sgl_cuda_InteropBuffer_m_external_memory = R"doc()doc";
+
+static const char *__doc_sgl_cuda_InteropBuffer_m_is_uav = R"doc()doc";
+
+static const char *__doc_sgl_cuda_InteropBuffer_m_srv = R"doc()doc";
+
+static const char *__doc_sgl_cuda_InteropBuffer_m_tensor_view = R"doc()doc";
+
+static const char *__doc_sgl_cuda_InteropBuffer_m_uav = R"doc()doc";
+
+static const char *__doc_sgl_cuda_TensorView = R"doc()doc";
+
+static const char *__doc_sgl_cuda_TensorView_data = R"doc()doc";
+
+static const char *__doc_sgl_cuda_TensorView_size = R"doc()doc";
+
+static const char *__doc_sgl_cuda_TensorView_stride = R"doc()doc";
+
+static const char *__doc_sgl_cuda_api_init = R"doc()doc";
+
+static const char *__doc_sgl_cuda_api_shutdown = R"doc()doc";
+
+static const char *__doc_sgl_cuda_destroy_external_memory = R"doc()doc";
+
+static const char *__doc_sgl_cuda_destroy_external_semaphore = R"doc()doc";
+
+static const char *__doc_sgl_cuda_external_memory_get_mapped_buffer = R"doc()doc";
+
+static const char *__doc_sgl_cuda_free_device = R"doc()doc";
+
+static const char *__doc_sgl_cuda_import_external_memory = R"doc()doc";
+
+static const char *__doc_sgl_cuda_import_external_semaphore = R"doc()doc";
+
+static const char *__doc_sgl_cuda_malloc_device = R"doc()doc";
+
+static const char *__doc_sgl_cuda_memcpy_device_to_device = R"doc()doc";
+
+static const char *__doc_sgl_cuda_memcpy_device_to_host = R"doc()doc";
+
+static const char *__doc_sgl_cuda_memcpy_host_to_device = R"doc()doc";
+
+static const char *__doc_sgl_cuda_memset_device = R"doc()doc";
+
+static const char *__doc_sgl_cuda_signal_external_semaphore = R"doc()doc";
+
+static const char *__doc_sgl_cuda_wait_external_semaphore = R"doc()doc";
 
 static const char *__doc_sgl_detail_HostTypeToFormat = R"doc()doc";
 
@@ -8650,6 +9856,8 @@ static const char *__doc_sgl_ui_Group_render = R"doc()doc";
 
 static const char *__doc_sgl_ui_Group_set_label = R"doc()doc";
 
+static const char *__doc_sgl_ui_Input = R"doc()doc";
+
 static const char *__doc_sgl_ui_InputText = R"doc()doc";
 
 static const char *__doc_sgl_ui_InputTextFlags = R"doc()doc";
@@ -8703,6 +9911,36 @@ static const char *__doc_sgl_ui_InputText_m_flags = R"doc()doc";
 static const char *__doc_sgl_ui_InputText_m_multi_line = R"doc()doc";
 
 static const char *__doc_sgl_ui_InputText_render = R"doc()doc";
+
+static const char *__doc_sgl_ui_Input_Input = R"doc()doc";
+
+static const char *__doc_sgl_ui_Input_class_name = R"doc()doc";
+
+static const char *__doc_sgl_ui_Input_flags = R"doc()doc";
+
+static const char *__doc_sgl_ui_Input_format = R"doc()doc";
+
+static const char *__doc_sgl_ui_Input_m_flags = R"doc()doc";
+
+static const char *__doc_sgl_ui_Input_m_format = R"doc()doc";
+
+static const char *__doc_sgl_ui_Input_m_step = R"doc()doc";
+
+static const char *__doc_sgl_ui_Input_m_step_fast = R"doc()doc";
+
+static const char *__doc_sgl_ui_Input_render = R"doc()doc";
+
+static const char *__doc_sgl_ui_Input_set_flags = R"doc()doc";
+
+static const char *__doc_sgl_ui_Input_set_format = R"doc()doc";
+
+static const char *__doc_sgl_ui_Input_set_step = R"doc()doc";
+
+static const char *__doc_sgl_ui_Input_set_step_fast = R"doc()doc";
+
+static const char *__doc_sgl_ui_Input_step = R"doc()doc";
+
+static const char *__doc_sgl_ui_Input_step_fast = R"doc()doc";
 
 static const char *__doc_sgl_ui_ListBox = R"doc()doc";
 
@@ -8782,24 +10020,6 @@ static const char *__doc_sgl_ui_SliderFlags_no_round_to_format = R"doc()doc";
 
 static const char *__doc_sgl_ui_SliderFlags_none = R"doc()doc";
 
-static const char *__doc_sgl_ui_SliderTraits = R"doc()doc";
-
-static const char *__doc_sgl_ui_SliderTraits_2 = R"doc()doc";
-
-static const char *__doc_sgl_ui_SliderTraits_3 = R"doc()doc";
-
-static const char *__doc_sgl_ui_SliderTraits_4 = R"doc()doc";
-
-static const char *__doc_sgl_ui_SliderTraits_5 = R"doc()doc";
-
-static const char *__doc_sgl_ui_SliderTraits_6 = R"doc()doc";
-
-static const char *__doc_sgl_ui_SliderTraits_7 = R"doc()doc";
-
-static const char *__doc_sgl_ui_SliderTraits_8 = R"doc()doc";
-
-static const char *__doc_sgl_ui_SliderTraits_9 = R"doc()doc";
-
 static const char *__doc_sgl_ui_Slider_Slider = R"doc()doc";
 
 static const char *__doc_sgl_ui_Slider_class_name = R"doc()doc";
@@ -8867,6 +10087,24 @@ static const char *__doc_sgl_ui_ValueProperty_set_label = R"doc()doc";
 static const char *__doc_sgl_ui_ValueProperty_set_value = R"doc()doc";
 
 static const char *__doc_sgl_ui_ValueProperty_value = R"doc()doc";
+
+static const char *__doc_sgl_ui_VectorTraits = R"doc()doc";
+
+static const char *__doc_sgl_ui_VectorTraits_2 = R"doc()doc";
+
+static const char *__doc_sgl_ui_VectorTraits_3 = R"doc()doc";
+
+static const char *__doc_sgl_ui_VectorTraits_4 = R"doc()doc";
+
+static const char *__doc_sgl_ui_VectorTraits_5 = R"doc()doc";
+
+static const char *__doc_sgl_ui_VectorTraits_6 = R"doc()doc";
+
+static const char *__doc_sgl_ui_VectorTraits_7 = R"doc()doc";
+
+static const char *__doc_sgl_ui_VectorTraits_8 = R"doc()doc";
+
+static const char *__doc_sgl_ui_VectorTraits_9 = R"doc()doc";
 
 static const char *__doc_sgl_ui_Widget = R"doc(Base class for Python UI widgets. Widgets own their children.)doc";
 
