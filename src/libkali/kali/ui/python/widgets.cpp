@@ -80,6 +80,34 @@ static void bind_slider(nb::module_ m, const char* name)
         .def_prop_rw("flags", &T::flags, &T::set_flags);
 }
 
+template<typename T>
+static void bind_input(nb::module_ m, const char* name)
+{
+    nb::class_<T, ValueProperty<typename T::value_type>>(m, name)
+        .def(
+            nb::init<
+                Widget*,
+                std::string_view,
+                typename T::value_type,
+                typename T::Callback,
+                typename T::scalar_type,
+                typename T::scalar_type,
+                std::string_view,
+                InputTextFlags>(),
+            "parent"_a.none(),
+            "label"_a = "",
+            "value"_a = typename T::value_type(0),
+            "callback"_a = typename T::Callback{},
+            "step"_a = typename T::scalar_type(1),
+            "step_fast"_a = typename T::scalar_type(100),
+            "format"_a = T::default_format,
+            "flags"_a = InputTextFlags::none
+        )
+        .def_prop_rw("step", &T::step, &T::set_step)
+        .def_prop_rw("step_fast", &T::step_fast, &T::set_step_fast)
+        .def_prop_rw("format", &T::format, &T::set_format)
+        .def_prop_rw("flags", &T::flags, &T::set_flags);
+}
 } // namespace kali::ui
 
 using Widget = kali::ui::Widget;
@@ -308,6 +336,15 @@ KALI_PY_EXPORT(ui_widgets)
         .value("chars_scientific", InputTextFlags::chars_scientific)
         .value("escape_clears_all", InputTextFlags::escape_clears_all)
         .def_enum_operators();
+
+    bind_input<InputFloat>(ui, "InputFloat");
+    bind_input<InputFloat2>(ui, "InputFloat2");
+    bind_input<InputFloat3>(ui, "InputFloat3");
+    bind_input<InputFloat4>(ui, "InputFloat4");
+    bind_input<InputInt>(ui, "InputInt");
+    bind_input<InputInt2>(ui, "InputInt2");
+    bind_input<InputInt3>(ui, "InputInt3");
+    bind_input<InputInt4>(ui, "InputInt4");
 
     nb::class_<InputText, ValueProperty<std::string>>(ui, "InputText", D(InputText))
         .def(

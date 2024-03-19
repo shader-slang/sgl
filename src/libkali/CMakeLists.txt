@@ -272,6 +272,7 @@ target_compile_definitions(kali
         # $<$<CXX_COMPILER_ID:MSVC>:_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING>
         # Clang.
         $<$<CXX_COMPILER_ID:Clang>:_MSC_EXTENSIONS> # enable MS extensions
+        IMGUI_USER_CONFIG="kali/ui/imgui_config.h"
     PRIVATE
         KALI_DLL
         $<$<PLATFORM_ID:Windows>:IMGUI_API=__declspec\(dllexport\)>

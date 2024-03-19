@@ -551,17 +551,17 @@ template<> struct DataTypeTraits<int> { static constexpr ImGuiDataType data_type
 
 
 template<typename T>
-struct SliderTraits { };
+struct VectorTraits { };
 
 // clang-format off
-template<> struct SliderTraits<float> { using scalar_type = float; static constexpr int N = 1; };
-template<> struct SliderTraits<float2> { using scalar_type = float; static constexpr int N = 2; };
-template<> struct SliderTraits<float3> { using scalar_type = float; static constexpr int N = 3; };
-template<> struct SliderTraits<float4> { using scalar_type = float; static constexpr int N = 4; };
-template<> struct SliderTraits<int> { using scalar_type = int; static constexpr int N = 1; };
-template<> struct SliderTraits<int2> { using scalar_type = int; static constexpr int N = 2; };
-template<> struct SliderTraits<int3> { using scalar_type = int; static constexpr int N = 3; };
-template<> struct SliderTraits<int4> { using scalar_type = int; static constexpr int N = 4; };
+template<> struct VectorTraits<float> { using scalar_type = float; static constexpr int N = 1; };
+template<> struct VectorTraits<float2> { using scalar_type = float; static constexpr int N = 2; };
+template<> struct VectorTraits<float3> { using scalar_type = float; static constexpr int N = 3; };
+template<> struct VectorTraits<float4> { using scalar_type = float; static constexpr int N = 4; };
+template<> struct VectorTraits<int> { using scalar_type = int; static constexpr int N = 1; };
+template<> struct VectorTraits<int2> { using scalar_type = int; static constexpr int N = 2; };
+template<> struct VectorTraits<int3> { using scalar_type = int; static constexpr int N = 3; };
+template<> struct VectorTraits<int4> { using scalar_type = int; static constexpr int N = 4; };
 // clang-format on
 
 template<typename T>
@@ -578,8 +578,8 @@ public:
     using Base::m_label;
     using Base::m_value;
 
-    using scalar_type = typename SliderTraits<T>::scalar_type;
-    static constexpr int N = SliderTraits<T>::N;
+    using scalar_type = typename VectorTraits<T>::scalar_type;
+    static constexpr int N = VectorTraits<T>::N;
     static constexpr const char* default_format = DataTypeTraits<scalar_type>::default_format;
 
     Drag(
@@ -670,8 +670,8 @@ public:
     using Base::m_label;
     using Base::m_value;
 
-    using scalar_type = typename SliderTraits<T>::scalar_type;
-    static constexpr int N = SliderTraits<T>::N;
+    using scalar_type = typename VectorTraits<T>::scalar_type;
+    static constexpr int N = VectorTraits<T>::N;
     static constexpr const char* default_format = DataTypeTraits<scalar_type>::default_format;
 
     Slider(
@@ -764,6 +764,91 @@ enum class InputTextFlags {
     escape_clears_all = ImGuiInputTextFlags_EscapeClearsAll,
 };
 KALI_ENUM_CLASS_OPERATORS(InputTextFlags);
+
+template<typename T>
+class Input : public ValueProperty<T> {
+    KALI_OBJECT(Input)
+public:
+    using Base = ValueProperty<T>;
+    using typename Base::value_type;
+    using typename Base::Callback;
+
+    using Widget::record_event;
+    using Widget::m_enabled;
+    using Widget::m_visible;
+    using Base::m_label;
+    using Base::m_value;
+
+    using scalar_type = typename VectorTraits<T>::scalar_type;
+    static constexpr int N = VectorTraits<T>::N;
+    static constexpr const char* default_format = DataTypeTraits<scalar_type>::default_format;
+
+    Input(
+        Widget* parent,
+        std::string_view label = "",
+        value_type value = value_type(0),
+        Callback callback = {},
+        scalar_type step = scalar_type(1),
+        scalar_type step_fast = scalar_type(100),
+        std::string_view format = default_format,
+        InputTextFlags flags = InputTextFlags::none
+    )
+        : Base(parent, label, value, callback)
+        , m_step(step)
+        , m_step_fast(step_fast)
+        , m_format(format)
+        , m_flags(flags)
+    {
+    }
+
+    scalar_type step() const { return m_step; }
+    void set_step(scalar_type step) { m_step = step; }
+
+    scalar_type step_fast() const { return m_step_fast; }
+    void set_step_fast(scalar_type step_fast) { m_step_fast = step_fast; }
+
+    const std::string& format() const { return m_format; }
+    void set_format(std::string_view format) { m_format = format; }
+
+    InputTextFlags flags() const { return m_flags; }
+    void set_flags(InputTextFlags flags) { m_flags = flags; }
+
+    virtual void render() override
+    {
+        if (!m_visible)
+            return;
+
+        ScopedID id(this);
+        ScopedDisable disable(!m_enabled);
+        bool changed = ImGui::InputScalarN(
+            m_label.c_str(),
+            DataTypeTraits<scalar_type>::data_type,
+            &m_value,
+            N,
+            &m_step,
+            &m_step_fast,
+            m_format.c_str(),
+            ImGuiInputTextFlags(m_flags)
+        );
+        if (changed)
+            record_event({this});
+    }
+
+private:
+    scalar_type m_step;
+    scalar_type m_step_fast;
+    std::string m_format;
+    InputTextFlags m_flags;
+};
+
+using InputFloat = Input<float>;
+using InputFloat2 = Input<float2>;
+using InputFloat3 = Input<float3>;
+using InputFloat4 = Input<float4>;
+using InputInt = Input<int>;
+using InputInt2 = Input<int2>;
+using InputInt3 = Input<int3>;
+using InputInt4 = Input<int4>;
 
 class InputText : public ValueProperty<std::string> {
     KALI_OBJECT(InputText)
