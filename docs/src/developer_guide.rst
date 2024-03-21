@@ -1,6 +1,6 @@
 .. _sec-developer-guide:
 
-Developer's Guide
+Developer Guide
 =================
 
 Overview

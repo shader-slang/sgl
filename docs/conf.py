@@ -4,11 +4,6 @@ import sys
 import shutil
 from pathlib import Path
 
-CURRENT_DIR = Path(__file__).parent
-shutil.copytree(
-    CURRENT_DIR / "../tutorials", CURRENT_DIR / "src/tutorials", dirs_exist_ok=True
-)
-
 project = "sgl"
 copyright = "2024, Simon Kallweit, NVIDIA"
 author = "Simon Kallweit"
@@ -40,12 +35,24 @@ html_theme_options = {
 nbsphinx_execute = "never"
 
 
-def generate_api(app):
-    sys.path.append(str(Path(__file__).parent))
-    from generate_api import generate_api
+def initialize(app):
+    # Copy tutorials to src directory.
+    print("Copying tutorials to src directory...")
+    CURRENT_DIR = Path(__file__).parent
+    shutil.copytree(
+        CURRENT_DIR / "../tutorials", CURRENT_DIR / "src/tutorials", dirs_exist_ok=True
+    )
 
-    generate_api()
+    # Generate API documentation if sgl module is available.
+    try:
+        print("Generating API documentation...")
+        sys.path.append(str(Path(__file__).parent))
+        from generate_api import generate_api
+
+        generate_api()
+    except ImportError:
+        print("sgl module not available, skipping API documentation generation.")
 
 
 def setup(app):
-    app.connect("builder-inited", generate_api)
+    app.connect("builder-inited", initialize)
