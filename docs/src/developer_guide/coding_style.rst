@@ -30,20 +30,20 @@ To exclude files from formatting, add them to the ``.clang-format-ignore`` file.
 Naming conventions
 ------------------
 
-- Class and struct names are written in ``PascalCase``.
-- Function and member function names are written in ``snake_case``.
-- Constant names are written in ``UPPER_SNAKE_CASE``.
-- Variable names are written in ``snake_case``.
-- Enum type names are written in ``PascalCase``, and enum values are written in ``snake_case``.
-- Private member variables are prefixed with ``m_``.
+* Class and struct names are written in ``PascalCase``.
+* Function and member function names are written in ``snake_case``.
+* Constant names are written in ``UPPER_SNAKE_CASE``.
+* Variable names are written in ``snake_case``.
+* Enum type names are written in ``PascalCase``, and enum values are written in ``snake_case``.
+* Private member variables are prefixed with ``m_``.
 
 Properties
 ----------
 
 In C++, we use getter and setter functions to access class properties.
 
-- Getter functions are written as ``const T& property() const;``.
-- Setter functions are written as ``void set_property(const T& property);``.
+* Getter functions are written as ``const T& property() const;``.
+* Setter functions are written as ``void set_property(const T& property);``.
 
 In Python, we expose these getters/setters as properties.
 

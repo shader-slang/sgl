@@ -6,9 +6,9 @@ Compiling
 In order to compile ``sgl`` from source, the following prerequisites are
 required:
 
-- A C++20 compliant compiler (tested with Visual Studio 2022, GCC 11 and Clang 14)
-- Python ``>= 3.8``
-- git
+* A C++20 compliant compiler (tested with Visual Studio 2022, GCC 11 and Clang 14)
+* Python ``>= 3.8``
+* git
 
 
 Cloning the repository
@@ -28,8 +28,6 @@ Setup
 To make it easy to build ``sgl`` reliably, an additional setup step is required:
 
 .. code-block:: bash
-
-    cd sgl
 
     # On Windows
     setup.bat
@@ -186,9 +184,10 @@ can be specified on the command line when running CMake, for example:
 
 The following table lists the available configuration options:
 
-.. list-table:: Configuration options
+.. list-table::
     :widths: 35 10 35
     :header-rows: 1
+    :align: left
 
     * - Option
       - Default
