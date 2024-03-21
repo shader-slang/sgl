@@ -47,7 +47,6 @@
         },
         {
             "name": "windows-vs2022",
-            "displayName": "Windows VS2022",
             "inherits": [
                 "windows-vs2022-base"
             ]
@@ -81,7 +80,6 @@
         },
         {
             "name": "windows-msvc",
-            "displayName": "Windows/MSVC",
             "inherits": [
                 "windows-msvc-base"
             ]
@@ -100,7 +98,6 @@
         },
         {
             "name": "windows-clang",
-            "displayName": "Windows/clang",
             "inherits": [
                 "windows-clang-base"
             ]
@@ -125,7 +122,6 @@
         },
         {
             "name": "linux-clang",
-            "displayName": "Linux/clang",
             "inherits": [
                 "linux-clang-base"
             ]
@@ -144,7 +140,6 @@
         },
         {
             "name": "linux-gcc",
-            "displayName": "Linux/GCC",
             "inherits": [
                 "linux-gcc-base"
             ]
@@ -170,7 +165,6 @@
         },
         {
             "name": "macos-x64-clang",
-            "displayName": "macOS/x64/clang",
             "inherits": "macos-clang-base",
             "cacheVariables": {
                 "VCPKG_TARGET_TRIPLET": "x64-osx",
@@ -179,7 +173,6 @@
         },
         {
             "name": "macos-arm64-clang",
-            "displayName": "macOS/arm64/clang",
             "inherits": "macos-clang-base",
             "cacheVariables": {
                 "VCPKG_TARGET_TRIPLET": "arm64-osx",

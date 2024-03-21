@@ -35,7 +35,7 @@ endif()
 # Configuration
 # -----------------------------------------------------------------------------
 
-set(SGL_BUILD_PYTHON ON CACHE BOOL "Build sgl python extension")
+set(SGL_BUILD_PYTHON ON CACHE BOOL "Build sgl Python extension")
 set(SGL_BUILD_EXAMPLES ON CACHE BOOL "Build sgl example applications")
 set(SGL_BUILD_TESTS ON CACHE BOOL "Build sgl tests")
 set(SGL_BUILD_DOC OFF CACHE BOOL "Build sgl documentation")
