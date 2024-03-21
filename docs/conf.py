@@ -31,6 +31,9 @@ html_theme_options = {
     "light_css_variables": {
         "color-api-background": "#f7f7f7",
     },
+    "dark_css_variables": {
+        "color-api-background": "#1e1e1e",
+    },
 }
 
 # nbsphinx configuration
