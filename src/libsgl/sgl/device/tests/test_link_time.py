@@ -80,4 +80,4 @@ def test_link_time_type(device_type, op):
 
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-vvs"])
+    pytest.main([__file__, "-v"])

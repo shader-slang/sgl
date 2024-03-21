@@ -241,4 +241,4 @@ def test_hdr_io(tmp_path, layout):
 
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-vs"])
+    pytest.main([__file__, "-v"])

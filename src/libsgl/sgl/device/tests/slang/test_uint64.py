@@ -39,4 +39,4 @@ def test_float64(device_type, shader_model, view):
 
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-vs"])
+    pytest.main([__file__, "-v"])

@@ -65,4 +65,4 @@ def test_allocation(device_type: sgl.DeviceType, memory_type: sgl.MemoryType):
 #     pass
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-vs"])
+    pytest.main([__file__, "-v"])
