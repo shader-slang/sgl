@@ -7,3 +7,6 @@
 [submodule "data"]
 	path = data
 	url = https://github.com/westlicht/sgl-data.git
+[submodule "tutorials"]
+	path = tutorials
+	url = https://github.com/westlicht/sgl-tutorials.git
