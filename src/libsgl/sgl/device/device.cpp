@@ -931,15 +931,17 @@ std::string Device::to_string() const
     return fmt::format(
         "Device(\n"
         "  type = {},\n"
-        "  enable_debug_layers = {},\n"
+        "  adapter_name = \"{}\",\n"
         "  adapter_luid = {},\n"
-        "  supported_shader_model = {}\n"
-        "  shader_cache_enabled = {}\n"
-        "  shader_cache_path = \"{}\"\n"
+        "  enable_debug_layers = {},\n"
+        "  supported_shader_model = {},\n"
+        "  shader_cache_enabled = {},\n"
+        "  shader_cache_path = \"{}\",\n"
         ")",
-        m_desc.type,
+        m_info.type,
+        m_info.adapter_name,
+        string::hexlify(m_info.adapter_luid),
         m_desc.enable_debug_layers,
-        m_desc.adapter_luid ? fmt::format("{}", *m_desc.adapter_luid) : "null",
         m_supported_shader_model,
         m_shader_cache_enabled,
         m_shader_cache_path
