@@ -728,34 +728,39 @@ void Device::wait()
     m_graphics_queue->wait();
 }
 
-void Device::read_buffer(const Buffer* buffer, size_t offset, size_t size, void* out_data)
+void Device::write_buffer(Buffer* buffer, const void* data, size_t size, size_t offset)
 {
-#if 1
+    SGL_CHECK_NOT_NULL(buffer);
+    SGL_CHECK(offset + size <= buffer->size(), "Buffer write is out of bounds");
+    SGL_CHECK_NOT_NULL(data);
+
+    auto alloc = m_upload_heap->allocate(size);
+
+    std::memcpy(alloc->data, data, size);
+
+    // TODO we want to use existing command buffer.
+    ref<CommandBuffer> command_buffer = create_command_buffer();
+    command_buffer->buffer_barrier(buffer, ResourceState::copy_destination);
+    command_buffer->copy_buffer_region(buffer, offset, alloc->buffer, alloc->offset, size);
+    command_buffer->submit();
+}
+
+void Device::read_buffer(const Buffer* buffer, void* data, size_t size, size_t offset)
+{
     SGL_CHECK_NOT_NULL(buffer);
     SGL_CHECK(offset + size <= buffer->size(), "Buffer read is out of bounds");
-    SGL_CHECK_NOT_NULL(out_data);
+    SGL_CHECK_NOT_NULL(data);
 
     auto alloc = m_read_back_heap->allocate(size);
 
+    // TODO we want to use existing command buffer.
     ref<CommandBuffer> command_buffer = create_command_buffer();
     command_buffer->buffer_barrier(buffer, ResourceState::copy_source);
     command_buffer->copy_buffer_region(alloc->buffer, alloc->offset, buffer, offset, size);
     command_buffer->submit();
     m_graphics_queue->wait();
 
-    std::memcpy(out_data, alloc->data, size);
-#else
-    // TODO move this to CommandBuffer
-    ref<CommandBuffer> command_buffer = create_command_buffer();
-    command_buffer->buffer_barrier(buffer, ResourceState::copy_source);
-    command_buffer->submit();
-
-    Slang::ComPtr<ISlangBlob> blob;
-    if (offset + size > buffer->size())
-        SGL_THROW("Buffer read out of bounds");
-    SLANG_CALL(m_gfx_device->readBufferResource(buffer->gfx_buffer_resource(), offset, size, blob.writeRef()));
-    std::memcpy(out_data, blob->getBufferPointer(), size);
-#endif
+    std::memcpy(data, alloc->data, size);
 }
 
 void Device::read_texture(

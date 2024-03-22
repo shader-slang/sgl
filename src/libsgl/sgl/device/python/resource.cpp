@@ -71,26 +71,25 @@ static const char* __doc_sgl_buffer_to_numpy = R"doc()doc";
 
 inline nb::ndarray<nb::numpy> buffer_to_numpy(Buffer* self)
 {
-    size_t buffer_size = self->size();
-    void* cpu_data = new uint8_t[buffer_size];
+    size_t data_size = self->size();
+    void* data = new uint8_t[data_size];
 
-    // TODO should we do this on the command stream instead?
-    self->device()->read_buffer(self, 0, buffer_size, cpu_data);
+    self->read_data(data, data_size);
 
-    nb::capsule owner(cpu_data, [](void* p) noexcept { delete[] reinterpret_cast<uint8_t*>(p); });
+    nb::capsule owner(data, [](void* p) noexcept { delete[] reinterpret_cast<uint8_t*>(p); });
 
     if (auto dtype = resource_format_to_dtype(self->format())) {
         uint32_t channel_count = get_format_info(self->format()).channel_count;
         if (channel_count == 1) {
             size_t shape[1] = {self->element_count()};
-            return nb::ndarray<nb::numpy>(cpu_data, 1, shape, owner, nullptr, *dtype, nb::device::cpu::value);
+            return nb::ndarray<nb::numpy>(data, 1, shape, owner, nullptr, *dtype, nb::device::cpu::value);
         } else {
             size_t shape[2] = {self->element_count(), channel_count};
-            return nb::ndarray<nb::numpy>(cpu_data, 2, shape, owner, nullptr, *dtype, nb::device::cpu::value);
+            return nb::ndarray<nb::numpy>(data, 2, shape, owner, nullptr, *dtype, nb::device::cpu::value);
         }
     } else {
-        size_t shape[1] = {buffer_size};
-        return nb::ndarray<nb::numpy>(cpu_data, 1, shape, owner, nullptr, nb::dtype<uint8_t>(), nb::device::cpu::value);
+        size_t shape[1] = {data_size};
+        return nb::ndarray<nb::numpy>(data, 1, shape, owner, nullptr, nb::dtype<uint8_t>(), nb::device::cpu::value);
     }
 }
 
@@ -104,10 +103,7 @@ inline void buffer_from_numpy(Buffer* self, nb::ndarray<nb::numpy> data)
     size_t data_size = data.nbytes();
     SGL_CHECK(data_size <= buffer_size, "numpy array is larger than the buffer ({} > {})", data_size, buffer_size);
 
-    // TODO use convenience function on buffer when available
-    ref<CommandBuffer> command_buffer = self->device()->create_command_buffer();
-    command_buffer->upload_buffer_data(self, 0, data_size, data.data());
-    command_buffer->submit();
+    self->write_data(data.data(), data_size);
 }
 
 static const char* __doc_sgl_texture_to_numpy = R"doc()doc";

@@ -73,7 +73,7 @@ int main()
             encoder.end();
             command_buffer->submit();
 
-            std::vector<uint32_t> data_c = device->read_buffer<uint32_t>(buffer_c, 0, N);
+            std::vector<uint32_t> data_c = buffer_c->get_elements<uint>();
             log_info("{}", data_c);
         }
 
@@ -90,7 +90,7 @@ int main()
                 }
             );
 
-            std::vector<uint32_t> data_c = device->read_buffer<uint32_t>(buffer_c, 0, N);
+            std::vector<uint32_t> data_c = buffer_c->get_elements<uint>();
             log_info("{}", data_c);
         }
 
@@ -107,7 +107,7 @@ int main()
 
             kernel->dispatch(uint3{N, 1, 1}, [&](ShaderCursor cursor) { cursor["processor"] = processor_object; });
 
-            std::vector<uint32_t> data_c = device->read_buffer<uint32_t>(buffer_c, 0, N);
+            std::vector<uint32_t> data_c = buffer_c->get_elements<uint>();
             log_info("{}", data_c);
         }
     }
