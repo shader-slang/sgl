@@ -483,7 +483,7 @@ public:
 
     /// Map a range of the buffer.
     /// Only available for buffers created with \c MemoryType::upload or \c MemoryType::read_back.
-    void* map(DeviceOffset offset, DeviceSize size_in_bytes) const;
+    void* map(DeviceOffset offset, DeviceSize size) const;
 
     template<typename T>
     T* map(size_t offset, size_t count) const

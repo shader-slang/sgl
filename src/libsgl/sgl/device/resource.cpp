@@ -377,13 +377,13 @@ void* Buffer::map() const
     return m_mapped_ptr;
 }
 
-void* Buffer::map(DeviceAddress offset, DeviceSize size_in_bytes) const
+void* Buffer::map(DeviceAddress offset, DeviceSize size) const
 {
     SGL_ASSERT(m_desc.memory_type != MemoryType::device_local);
     SGL_ASSERT(m_mapped_ptr == nullptr);
     gfx::MemoryRange gfx_read_range{
         .offset = offset,
-        .size = size_in_bytes,
+        .size = size,
     };
     SLANG_CALL(m_gfx_buffer->map(&gfx_read_range, &m_mapped_ptr));
     return m_mapped_ptr;
