@@ -324,7 +324,7 @@ void DebugPrinter::flush_device(bool wait)
     ref<CommandBuffer> command_buffer = m_device->create_command_buffer();
     command_buffer->break_strong_reference_to_device();
     command_buffer->copy_resource(m_readback_buffer, m_buffer);
-    command_buffer->clear_resource_view(m_buffer->get_uav(0, 4), uint4(0));
+    command_buffer->clear_resource_view(m_buffer->get_uav({.first_element = 0, .element_count = 4}), uint4(0));
     command_buffer->submit();
     m_device->graphics_queue()->signal(m_fence);
     if (wait)

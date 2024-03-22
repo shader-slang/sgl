@@ -475,34 +475,24 @@ ref<ResourceView> Buffer::get_view(ResourceViewDesc desc) const
     return view;
 }
 
-ref<ResourceView> Buffer::get_srv(uint64_t first_element, uint64_t element_count) const
+ref<ResourceView> Buffer::get_srv(BufferRange range) const
 {
     return get_view({
         .type = ResourceViewType::shader_resource,
         .format = m_desc.format,
-        .buffer_range{.first_element = first_element, .element_count = element_count},
+        .buffer_range = range,
         .buffer_element_size = m_desc.struct_size,
     });
 }
 
-ref<ResourceView> Buffer::get_uav(uint64_t first_element, uint64_t element_count) const
+ref<ResourceView> Buffer::get_uav(BufferRange range) const
 {
     return get_view({
         .type = ResourceViewType::unordered_access,
         .format = m_desc.format,
-        .buffer_range{.first_element = first_element, .element_count = element_count},
+        .buffer_range = range,
         .buffer_element_size = m_desc.struct_size,
     });
-}
-
-ref<ResourceView> Buffer::get_srv() const
-{
-    return get_srv(0);
-}
-
-ref<ResourceView> Buffer::get_uav() const
-{
-    return get_uav(0);
 }
 
 DeviceResource::MemoryUsage Buffer::memory_usage() const
@@ -690,75 +680,40 @@ ref<ResourceView> Texture::get_view(ResourceViewDesc desc) const
     return view;
 }
 
-ref<ResourceView>
-Texture::get_srv(uint32_t mip_level, uint32_t mip_count, uint32_t base_array_layer, uint32_t layer_count) const
+ref<ResourceView> Texture::get_srv(SubresourceRange range)
 {
     return get_view({
         .type = ResourceViewType::shader_resource,
         .format = m_desc.format,
-        .subresource_range = {
-            .texture_aspect = TextureAspect::color,
-            .mip_level = mip_level,
-            .mip_count = mip_count,
-            .base_array_layer = base_array_layer,
-            .layer_count = layer_count,
-        },
+        .subresource_range = range,
     });
 }
 
-ref<ResourceView> Texture::get_uav(uint32_t mip_level, uint32_t base_array_layer, uint32_t layer_count) const
+ref<ResourceView> Texture::get_uav(SubresourceRange range)
 {
     return get_view({
         .type = ResourceViewType::unordered_access,
         .format = m_desc.format,
-        .subresource_range = {
-            .texture_aspect = TextureAspect::color,
-            .mip_level = mip_level,
-            .mip_count = 1,
-            .base_array_layer = base_array_layer,
-            .layer_count = layer_count,
-        },
+        .subresource_range = range,
     });
 }
 
-ref<ResourceView> Texture::get_dsv(uint32_t mip_level, uint32_t base_array_layer, uint32_t layer_count) const
+ref<ResourceView> Texture::get_dsv(SubresourceRange range)
 {
     return get_view({
         .type = ResourceViewType::depth_stencil,
         .format = m_desc.format,
-        .subresource_range = {
-            .texture_aspect = TextureAspect::depth_stencil,
-            .mip_level = mip_level,
-            .mip_count = 1,
-            .base_array_layer = base_array_layer,
-            .layer_count = layer_count,
-        },
+        .subresource_range = range,
     });
 }
 
-ref<ResourceView> Texture::get_rtv(uint32_t mip_level, uint32_t base_array_layer, uint32_t layer_count) const
+ref<ResourceView> Texture::get_rtv(SubresourceRange range)
 {
     return get_view({
         .type = ResourceViewType::render_target,
         .format = m_desc.format,
-        .subresource_range = {
-            .texture_aspect = TextureAspect::color,
-            .mip_level = mip_level,
-            .mip_count = 1,
-            .base_array_layer = base_array_layer,
-            .layer_count = layer_count,
-        },
+        .subresource_range = range,
     });
-}
-
-ref<ResourceView> Texture::get_srv() const
-{
-    return get_srv(0);
-}
-
-ref<ResourceView> Texture::get_uav() const
-{
-    return get_uav(0);
 }
 
 DeviceResource::MemoryUsage Texture::memory_usage() const

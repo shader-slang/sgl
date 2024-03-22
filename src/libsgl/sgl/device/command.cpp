@@ -919,9 +919,9 @@ void CommandBuffer::clear_texture(Texture* texture, float4 clear_value)
     );
 
     if (is_set(texture->desc().usage, ResourceUsage::unordered_access)) {
-        clear_resource_view(texture->get_uav(0), clear_value);
+        clear_resource_view(texture->get_uav(), clear_value);
     } else if (is_set(texture->desc().usage, ResourceUsage::render_target)) {
-        clear_resource_view(texture->get_rtv(0), clear_value);
+        clear_resource_view(texture->get_rtv(), clear_value);
     } else {
         SGL_THROW("Texture must be either unordered access or render target");
     }
@@ -937,9 +937,9 @@ void CommandBuffer::clear_texture(Texture* texture, uint4 clear_value)
     );
 
     if (is_set(texture->desc().usage, ResourceUsage::unordered_access)) {
-        clear_resource_view(texture->get_uav(0), clear_value);
+        clear_resource_view(texture->get_uav(), clear_value);
     } else if (is_set(texture->desc().usage, ResourceUsage::render_target)) {
-        clear_resource_view(texture->get_rtv(0), clear_value);
+        clear_resource_view(texture->get_rtv(), clear_value);
     } else {
         SGL_THROW("Texture must be either unordered access or render target");
     }
