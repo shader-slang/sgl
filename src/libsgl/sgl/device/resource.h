@@ -337,15 +337,6 @@ public:
 
     ResourceStateTracker& state_tracker() const { return m_state_tracker; }
 
-    // virtual ref<ResourceView> get_rtv() const;
-    // virtual ref<ResourceView> get_dsv() const;
-
-    /// Get a shader resource view for the entire resource.
-    virtual ref<ResourceView> get_srv() const = 0;
-
-    /// Get a unordered access view for the entire resource.
-    virtual ref<ResourceView> get_uav() const = 0;
-
     virtual gfx::IResource* gfx_resource() const = 0;
 
     /// Get the shared resource handle.
@@ -551,16 +542,10 @@ public:
     ref<ResourceView> get_view(ResourceViewDesc desc) const;
 
     /// Get a shader resource view for a range of the buffer.
-    ref<ResourceView> get_srv(uint64_t first_element, uint64_t element_count = BufferRange::ALL) const;
+    ref<ResourceView> get_srv(BufferRange range = BufferRange()) const;
 
     /// Get a unordered access view for a range of the buffer.
-    ref<ResourceView> get_uav(uint64_t first_element, uint64_t element_count = BufferRange::ALL) const;
-
-    /// Get a shader resource view for the entire buffer.
-    virtual ref<ResourceView> get_srv() const override;
-
-    /// Get a unordered access view for the entire buffer.
-    virtual ref<ResourceView> get_uav() const override;
+    ref<ResourceView> get_uav(BufferRange range = BufferRange()) const;
 
     virtual gfx::IResource* gfx_resource() const override { return m_gfx_buffer; }
     gfx::IBufferResource* gfx_buffer_resource() const { return m_gfx_buffer; }
@@ -681,27 +666,20 @@ public:
     /// Get a resource view. Views are cached and reused.
     ref<ResourceView> get_view(ResourceViewDesc desc) const;
 
-    ref<ResourceView> get_srv(
-        uint32_t mip_level,
-        uint32_t mip_count = SubresourceRange::ALL,
-        uint32_t base_array_layer = 0,
-        uint32_t layer_count = SubresourceRange::ALL
-    ) const;
+    /// Get a shader resource view for a subresource range of the texture.
+    ref<ResourceView> get_srv(SubresourceRange range = SubresourceRange());
 
-    ref<ResourceView>
-    get_uav(uint32_t mip_level, uint32_t base_array_layer = 0, uint32_t layer_count = SubresourceRange::ALL) const;
+    /// Get a unordered access view for a subresource range of the texture.
+    /// \note Only a single mip level can be bound.
+    ref<ResourceView> get_uav(SubresourceRange range = SubresourceRange());
 
-    ref<ResourceView>
-    get_dsv(uint32_t mip_level, uint32_t base_array_layer = 0, uint32_t layer_count = SubresourceRange::ALL) const;
+    /// Get a depth stencil view for a subresource range of the texture.
+    /// \note Only a single mip level can be bound.
+    ref<ResourceView> get_dsv(SubresourceRange range = SubresourceRange());
 
-    ref<ResourceView>
-    get_rtv(uint32_t mip_level, uint32_t base_array_layer = 0, uint32_t layer_count = SubresourceRange::ALL) const;
-
-    /// Get a shader resource view for the entire texture.
-    virtual ref<ResourceView> get_srv() const override;
-
-    /// Get a unordered access view for the entire texture.
-    virtual ref<ResourceView> get_uav() const override;
+    /// Get a render target view for a subresource range of the texture.
+    /// \note Only a single mip level can be bound.
+    ref<ResourceView> get_rtv(SubresourceRange range = SubresourceRange());
 
     virtual gfx::IResource* gfx_resource() const override { return m_gfx_texture; }
     gfx::ITextureResource* gfx_texture_resource() const { return m_gfx_texture; }

@@ -185,9 +185,7 @@ SGL_PY_EXPORT(device_resource)
 
     nb::sgl_enum<MemoryType>(m, "MemoryType");
 
-    nb::class_<Resource, DeviceResource>(m, "Resource")
-        .def("get_srv", &Resource::get_srv)
-        .def("get_uav", &Resource::get_uav);
+    nb::class_<Resource, DeviceResource>(m, "Resource");
 
     nb::sgl_enum<ResourceViewType>(m, "ResourceViewType");
 
@@ -217,14 +215,26 @@ SGL_PY_EXPORT(device_resource)
         .def_prop_ro("device_address", &Buffer::device_address, D(Buffer, device_address))
         .def(
             "get_srv",
-            nb::overload_cast<uint64_t, uint64_t>(&Buffer::get_srv, nb::const_),
+            [](Buffer* self, uint64_t first_element, uint64_t element_count)
+            {
+                return self->get_srv({
+                    .first_element = first_element,
+                    .element_count = element_count,
+                });
+            },
             "first_element"_a = 0,
             "element_count"_a = BufferRange::ALL,
             D(Buffer, get_srv)
         )
         .def(
             "get_uav",
-            nb::overload_cast<uint64_t, uint64_t>(&Buffer::get_uav, nb::const_),
+            [](Buffer* self, uint64_t first_element, uint64_t element_count)
+            {
+                return self->get_uav({
+                    .first_element = first_element,
+                    .element_count = element_count,
+                });
+            },
             "first_element"_a = 0,
             "element_count"_a = BufferRange::ALL,
             D(Buffer, get_uav)
@@ -298,7 +308,15 @@ SGL_PY_EXPORT(device_resource)
         )
         .def(
             "get_srv",
-            nb::overload_cast<uint32_t, uint32_t, uint32_t, uint32_t>(&Texture::get_srv, nb::const_),
+            [](Texture* self, uint32_t mip_level, uint32_t mip_count, uint32_t base_array_layer, uint32_t layer_count)
+            {
+                return self->get_srv({
+                    .mip_level = mip_level,
+                    .mip_count = mip_count,
+                    .base_array_layer = base_array_layer,
+                    .layer_count = layer_count,
+                });
+            },
             "mip_level"_a = 0,
             "mip_count"_a = SubresourceRange::ALL,
             "base_array_layer"_a = 0,
@@ -307,7 +325,14 @@ SGL_PY_EXPORT(device_resource)
         )
         .def(
             "get_uav",
-            nb::overload_cast<uint32_t, uint32_t, uint32_t>(&Texture::get_uav, nb::const_),
+            [](Texture* self, uint32_t mip_level, uint32_t base_array_layer, uint32_t layer_count)
+            {
+                return self->get_uav({
+                    .mip_level = mip_level,
+                    .base_array_layer = base_array_layer,
+                    .layer_count = layer_count,
+                });
+            },
             "mip_level"_a = 0,
             "base_array_layer"_a = 0,
             "layer_count"_a = SubresourceRange::ALL,
@@ -315,7 +340,14 @@ SGL_PY_EXPORT(device_resource)
         )
         .def(
             "get_dsv",
-            &Texture::get_dsv,
+            [](Texture* self, uint32_t mip_level, uint32_t base_array_layer, uint32_t layer_count)
+            {
+                return self->get_dsv({
+                    .mip_level = mip_level,
+                    .base_array_layer = base_array_layer,
+                    .layer_count = layer_count,
+                });
+            },
             "mip_level"_a = 0,
             "base_array_layer"_a = 0,
             "layer_count"_a = SubresourceRange::ALL,
@@ -323,7 +355,14 @@ SGL_PY_EXPORT(device_resource)
         )
         .def(
             "get_rtv",
-            &Texture::get_rtv,
+            [](Texture* self, uint32_t mip_level, uint32_t base_array_layer, uint32_t layer_count)
+            {
+                return self->get_rtv({
+                    .mip_level = mip_level,
+                    .base_array_layer = base_array_layer,
+                    .layer_count = layer_count,
+                });
+            },
             "mip_level"_a = 0,
             "base_array_layer"_a = 0,
             "layer_count"_a = SubresourceRange::ALL,

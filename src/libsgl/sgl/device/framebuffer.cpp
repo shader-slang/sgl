@@ -29,10 +29,13 @@ Framebuffer::Framebuffer(ref<Device> device, FramebufferDesc desc)
             .format = static_cast<gfx::Format>(attachment.texture->format()),
             .sampleCount = narrow_cast<gfx::GfxCount>(attachment.texture->desc().sample_count),
         });
-        gfx_render_target_views.push_back(
-            attachment.texture->get_rtv(attachment.mip_level, attachment.base_array_layer, attachment.layer_count)
-                ->gfx_resource_view()
-        );
+        gfx_render_target_views.push_back(attachment.texture
+                                              ->get_rtv({
+                                                  .mip_level = attachment.mip_level,
+                                                  .base_array_layer = attachment.base_array_layer,
+                                                  .layer_count = attachment.layer_count,
+                                              })
+                                              ->gfx_resource_view());
         gfx_render_target_access.push_back({
             .loadOp = gfx::IRenderPassLayout::TargetLoadOp::Load,
             .stencilLoadOp = gfx::IRenderPassLayout::TargetLoadOp::DontCare,
@@ -64,9 +67,13 @@ Framebuffer::Framebuffer(ref<Device> device, FramebufferDesc desc)
             .format = static_cast<gfx::Format>(attachment.texture->format()),
             .sampleCount = narrow_cast<gfx::GfxCount>(attachment.texture->desc().sample_count),
         };
-        gfx_depth_stencil_view
-            = attachment.texture->get_dsv(attachment.mip_level, attachment.base_array_layer, attachment.layer_count)
-                  ->gfx_resource_view();
+        gfx_depth_stencil_view = attachment.texture
+                                     ->get_dsv({
+                                         .mip_level = attachment.mip_level,
+                                         .base_array_layer = attachment.base_array_layer,
+                                         .layer_count = attachment.layer_count,
+                                     })
+                                     ->gfx_resource_view();
     }
 
     // Create framebuffer layout
