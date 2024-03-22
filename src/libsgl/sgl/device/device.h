@@ -367,15 +367,25 @@ public:
 
     void wait();
 
-    void read_buffer(const Buffer* buffer, size_t offset, size_t size, void* out_data);
+    /**
+     * Write host memory to a buffer.
+     *
+     * \param buffer Buffer to write to.
+     * \param data Host data to write.
+     * \param size Size of the data in bytes.
+     * \param offset Offset in the buffer to write to.
+     */
+    void write_buffer(Buffer* buffer, const void* data, size_t size, size_t offset = 0);
 
-    template<typename T>
-    std::vector<T> read_buffer(const Buffer* buffer, size_t index, size_t count)
-    {
-        std::vector<T> data(count);
-        read_buffer(buffer, index * sizeof(T), count * sizeof(T), data.data());
-        return data;
-    }
+    /**
+     * Read buffer data to host memory.
+     *
+     * \param buffer Buffer to read from.
+     * \param data Host data to read to.
+     * \param size Size of the data in bytes.
+     * \param offset Offset in the buffer to read from.
+     */
+    void read_buffer(const Buffer* buffer, void* data, size_t size, size_t offset = 0);
 
     void
     read_texture(const Texture* texture, size_t size, void* out_data, size_t* out_row_pitch, size_t* out_pixel_size);

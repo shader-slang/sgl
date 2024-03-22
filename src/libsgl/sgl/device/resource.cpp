@@ -3,6 +3,7 @@
 #include "resource.h"
 
 #include "sgl/device/device.h"
+#include "sgl/device/command.h"
 #include "sgl/device/helpers.h"
 #include "sgl/device/native_handle_traits.h"
 
@@ -395,6 +396,61 @@ void Buffer::unmap() const
     SGL_ASSERT(m_mapped_ptr != nullptr);
     SLANG_CALL(m_gfx_buffer->unmap(nullptr));
     m_mapped_ptr = nullptr;
+}
+
+void Buffer::write_data(const void* data, size_t size, DeviceOffset offset)
+{
+    SGL_CHECK(
+        offset + size <= m_desc.size,
+        "'offset' ({}) and 'size' ({}) don't fit the buffer size {}.",
+        offset,
+        size,
+        m_desc.size
+    );
+
+    switch (m_desc.memory_type) {
+    case MemoryType::device_local:
+        m_device->write_buffer(this, data, size, offset);
+        break;
+    case MemoryType::upload: {
+        bool was_mapped = is_mapped();
+        uint8_t* dst = map<uint8_t>() + offset;
+        std::memcpy(dst, data, size);
+        if (!was_mapped)
+            unmap();
+        // TODO invalidate views
+        break;
+    }
+    case MemoryType::read_back:
+        SGL_THROW("Cannot write data to buffer with memory type 'read_back'.");
+    }
+}
+
+void Buffer::read_data(void* data, size_t size, DeviceOffset offset)
+{
+    SGL_CHECK(
+        offset + size <= m_desc.size,
+        "'offset' ({}) and 'size' ({}) don't fit the buffer size {}.",
+        offset,
+        size,
+        m_desc.size
+    );
+
+    switch (m_desc.memory_type) {
+    case MemoryType::device_local:
+        m_device->read_buffer(this, data, size, offset);
+        break;
+    case MemoryType::upload:
+        SGL_THROW("Cannot read data from buffer with memory type 'upload'.");
+    case MemoryType::read_back: {
+        bool was_mapped = is_mapped();
+        const uint8_t* src = map<uint8_t>() + offset;
+        std::memcpy(data, src, size);
+        if (!was_mapped)
+            unmap();
+        break;
+    }
+    }
 }
 
 ref<ResourceView> Buffer::get_view(ResourceViewDesc desc) const

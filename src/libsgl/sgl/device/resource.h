@@ -497,6 +497,54 @@ public:
     /// Returns true if buffer is currently mapped.
     bool is_mapped() const { return m_mapped_ptr != nullptr; }
 
+    /**
+     * Write host memory to the buffer.
+     *
+     * \param data Host memory to write.
+     * \param size Size of the data in bytes.
+     * \param offset Offset in the buffer to write to.
+     */
+    void write_data(const void* data, size_t size, DeviceOffset offset = 0);
+
+    template<typename T>
+    void set_element(size_t index, const T& value)
+    {
+        write_data(&value, sizeof(T), index * sizeof(T));
+    }
+
+    template<typename T>
+    void set_elements(size_t index, std::span<const T> values)
+    {
+        write_data(values.data(), values.size() * sizeof(T), index * sizeof(T));
+    }
+
+    /**
+     * Read buffer to host memory.
+     *
+     * \param data Host memory to read to.
+     * \param size Size of the data in bytes.
+     * \param offset Offset in the buffer to read from.
+     */
+    void read_data(void* data, size_t size, DeviceOffset offset = 0);
+
+    template<typename T>
+    void get_element(size_t index)
+    {
+        T value;
+        read_data(&value, sizeof(T), index * sizeof(T));
+        return value;
+    }
+
+    template<typename T>
+    std::vector<T> get_elements(size_t index = 0, size_t count = 0)
+    {
+        if (count == 0)
+            count = (m_desc.size / sizeof(T)) - index;
+        std::vector<T> values(count);
+        read_data(values.data(), values.size() * sizeof(T), index * sizeof(T));
+        return values;
+    }
+
     DeviceAddress device_address() const { return m_gfx_buffer->getDeviceAddress(); }
 
     /// Get a resource view. Views are cached and reused.
