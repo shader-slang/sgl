@@ -368,24 +368,25 @@ public:
     void wait();
 
     /**
-     * Write host memory to a buffer.
+     * Upload host memory to buffer.
      *
      * \param buffer Buffer to write to.
-     * \param data Host data to write.
+     * \param data Data to write.
      * \param size Size of the data in bytes.
      * \param offset Offset in the buffer to write to.
      */
-    void write_buffer(Buffer* buffer, const void* data, size_t size, size_t offset = 0);
+    void upload_buffer_data(Buffer* buffer, const void* data, size_t size, size_t offset = 0);
 
     /**
      * Read buffer data to host memory.
+     * \note This will wait until the data is copied back to host memory.
      *
      * \param buffer Buffer to read from.
-     * \param data Host data to read to.
+     * \param data Data to buffer to read to.
      * \param size Size of the data in bytes.
      * \param offset Offset in the buffer to read from.
      */
-    void read_buffer(const Buffer* buffer, void* data, size_t size, size_t offset = 0);
+    void read_buffer_data(const Buffer* buffer, void* data, size_t size, size_t offset = 0);
 
     void
     read_texture(const Texture* texture, size_t size, void* out_data, size_t* out_row_pitch, size_t* out_pixel_size);

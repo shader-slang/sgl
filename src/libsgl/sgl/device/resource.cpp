@@ -398,7 +398,7 @@ void Buffer::unmap() const
     m_mapped_ptr = nullptr;
 }
 
-void Buffer::write_data(const void* data, size_t size, DeviceOffset offset)
+void Buffer::set_data(const void* data, size_t size, DeviceOffset offset)
 {
     SGL_CHECK(
         offset + size <= m_desc.size,
@@ -410,7 +410,7 @@ void Buffer::write_data(const void* data, size_t size, DeviceOffset offset)
 
     switch (m_desc.memory_type) {
     case MemoryType::device_local:
-        m_device->write_buffer(this, data, size, offset);
+        m_device->upload_buffer_data(this, data, size, offset);
         break;
     case MemoryType::upload: {
         bool was_mapped = is_mapped();
@@ -426,7 +426,7 @@ void Buffer::write_data(const void* data, size_t size, DeviceOffset offset)
     }
 }
 
-void Buffer::read_data(void* data, size_t size, DeviceOffset offset)
+void Buffer::get_data(void* data, size_t size, DeviceOffset offset)
 {
     SGL_CHECK(
         offset + size <= m_desc.size,
@@ -438,7 +438,7 @@ void Buffer::read_data(void* data, size_t size, DeviceOffset offset)
 
     switch (m_desc.memory_type) {
     case MemoryType::device_local:
-        m_device->read_buffer(this, data, size, offset);
+        m_device->read_buffer_data(this, data, size, offset);
         break;
     case MemoryType::upload:
         SGL_THROW("Cannot read data from buffer with memory type 'upload'.");
