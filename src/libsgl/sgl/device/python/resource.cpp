@@ -74,7 +74,7 @@ inline nb::ndarray<nb::numpy> buffer_to_numpy(Buffer* self)
     size_t data_size = self->size();
     void* data = new uint8_t[data_size];
 
-    self->read_data(data, data_size);
+    self->get_data(data, data_size);
 
     nb::capsule owner(data, [](void* p) noexcept { delete[] reinterpret_cast<uint8_t*>(p); });
 
@@ -103,7 +103,7 @@ inline void buffer_from_numpy(Buffer* self, nb::ndarray<nb::numpy> data)
     size_t data_size = data.nbytes();
     SGL_CHECK(data_size <= buffer_size, "numpy array is larger than the buffer ({} > {})", data_size, buffer_size);
 
-    self->write_data(data.data(), data_size);
+    self->set_data(data.data(), data_size);
 }
 
 static const char* __doc_sgl_texture_to_numpy = R"doc()doc";

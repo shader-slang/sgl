@@ -728,7 +728,7 @@ void Device::wait()
     m_graphics_queue->wait();
 }
 
-void Device::write_buffer(Buffer* buffer, const void* data, size_t size, size_t offset)
+void Device::upload_buffer_data(Buffer* buffer, const void* data, size_t size, size_t offset)
 {
     SGL_CHECK_NOT_NULL(buffer);
     SGL_CHECK(offset + size <= buffer->size(), "Buffer write is out of bounds");
@@ -745,7 +745,7 @@ void Device::write_buffer(Buffer* buffer, const void* data, size_t size, size_t 
     command_buffer->submit();
 }
 
-void Device::read_buffer(const Buffer* buffer, void* data, size_t size, size_t offset)
+void Device::read_buffer_data(const Buffer* buffer, void* data, size_t size, size_t offset)
 {
     SGL_CHECK_NOT_NULL(buffer);
     SGL_CHECK(offset + size <= buffer->size(), "Buffer read is out of bounds");
