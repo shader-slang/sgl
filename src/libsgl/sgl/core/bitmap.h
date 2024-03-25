@@ -55,6 +55,7 @@ derivative works thereof, in binary and source code form.
 #include <filesystem>
 #include <future>
 #include <memory>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -145,7 +146,7 @@ public:
 
     /// Load a list of bitmaps from multiple paths. Uses multi-threading to load bitmaps in parallel.
     static std::vector<ref<Bitmap>>
-    read_multiple(const std::vector<std::filesystem::path>& paths, FileFormat format = FileFormat::auto_);
+    read_multiple(std::span<std::filesystem::path> paths, FileFormat format = FileFormat::auto_);
 
     void write(Stream* stream, FileFormat format = FileFormat::auto_, int quality = -1) const;
     void write(const std::filesystem::path& path, FileFormat format = FileFormat::auto_, int quality = -1) const;

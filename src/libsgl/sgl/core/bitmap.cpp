@@ -171,7 +171,7 @@ Bitmap::~Bitmap()
         m_data.release();
 }
 
-std::vector<ref<Bitmap>> Bitmap::read_multiple(const std::vector<std::filesystem::path>& paths, FileFormat format)
+std::vector<ref<Bitmap>> Bitmap::read_multiple(std::span<std::filesystem::path> paths, FileFormat format)
 {
     std::vector<std::future<ref<Bitmap>>> futures;
     futures.reserve(paths.size());
