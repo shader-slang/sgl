@@ -60,13 +60,43 @@ struct type_caster<sgl::ref<T>> {
 /// Type caster for std::span<T>
 template<typename T>
 struct type_caster<std::span<T>> {
+    NB_TYPE_CASTER(
+        std::span<T>,
+        io_name("Sequence", NB_TYPING_LIST) + const_name("[") + make_caster<T>::Name + const_name("]")
+    )
+
     using Caster = make_caster<T>;
-    NB_TYPE_CASTER(std::span<T>, const_name(NB_TYPING_LIST "[") + make_caster<T>::Name + const_name("]"))
+
+    std::vector<T> vec;
 
     bool from_python(handle src, uint8_t flags, cleanup_list* cleanup) noexcept
     {
-        SGL_UNUSED(src, flags, cleanup);
-        return false;
+        size_t size;
+        PyObject* temp;
+        PyObject** o = seq_get(src.ptr(), &size, &temp);
+
+        vec.clear();
+        vec.reserve(size);
+
+        Caster caster;
+        bool success = o != nullptr;
+
+        if constexpr (is_base_caster_v<Caster> && !std::is_pointer_v<T>)
+            flags |= (uint8_t)cast_flags::none_disallowed;
+
+        for (size_t i = 0; i < size; ++i) {
+            if (!caster.from_python(o[i], flags, cleanup)) {
+                success = false;
+                break;
+            }
+            vec.push_back(caster.operator cast_t<T>());
+        }
+
+        Py_XDECREF(temp);
+
+        value = std::span{vec};
+
+        return success;
     }
 
     static handle from_cpp(const std::span<T>& src, rv_policy policy, cleanup_list* cleanup) noexcept
@@ -78,12 +108,10 @@ struct type_caster<std::span<T>> {
 
             for (auto& value : src) {
                 handle h = Caster::from_cpp(forward_like<T>(value), policy, cleanup);
-
                 if (!h.is_valid()) {
                     ret.reset();
                     break;
                 }
-
                 NB_LIST_SET_ITEM(ret.ptr(), index++, h.ptr());
             }
         }
