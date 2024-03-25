@@ -16,7 +16,7 @@
 
 #include <slang-gfx.h>
 
-#include <unordered_map>
+#include <map>
 #include <limits>
 
 namespace sgl {
@@ -235,22 +235,6 @@ struct ResourceViewDesc {
     auto operator<=>(const ResourceViewDesc&) const = default;
 };
 
-} // namespace sgl
-
-namespace std {
-template<>
-struct hash<::sgl::ResourceViewDesc> {
-    size_t operator()(const ::sgl::ResourceViewDesc& desc) const noexcept
-    {
-        SGL_UNUSED(desc);
-        return 0;
-        // return hash<uint32_t>()(uint32_t(resource_type));
-    }
-};
-} // namespace std
-
-namespace sgl {
-
 class SGL_API ResourceView : public Object {
     SGL_OBJECT(ResourceView)
 public:
@@ -354,7 +338,7 @@ protected:
     ResourceType m_type;
     mutable ResourceStateTracker m_state_tracker;
 
-    std::unordered_map<ResourceViewDesc, ref<ResourceView>> m_views;
+    std::map<ResourceViewDesc, ref<ResourceView>> m_views;
 
     bool m_deferred_release{true};
 
