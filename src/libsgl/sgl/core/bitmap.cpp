@@ -382,7 +382,7 @@ void Bitmap::convert(Bitmap* target) const
             }
         }
         if (field.name == "A") {
-            field.default_value = 1.0;
+            field.default_value = Struct::type_range(field.type).second;;
             field.flags |= Struct::Flags::default_;
             continue;
         }
