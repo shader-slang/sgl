@@ -254,8 +254,8 @@ namespace sgl {
 class SGL_API ResourceView : public Object {
     SGL_OBJECT(ResourceView)
 public:
-    ResourceView(const ResourceViewDesc& desc, const Buffer* buffer);
-    ResourceView(const ResourceViewDesc& desc, const Texture* texture);
+    ResourceView(const ResourceViewDesc& desc, Buffer* buffer);
+    ResourceView(const ResourceViewDesc& desc, Texture* texture);
 
     ~ResourceView();
 
@@ -265,7 +265,7 @@ public:
 
     ResourceViewType type() const { return m_desc.type; }
 
-    const Resource* resource() const { return m_resource; }
+    Resource* resource() { return m_resource; }
 
     gfx::IResourceView* gfx_resource_view() const { return m_gfx_resource_view; }
 
@@ -278,7 +278,7 @@ public:
 
 private:
     ResourceViewDesc m_desc;
-    const Resource* m_resource{nullptr};
+    Resource* m_resource{nullptr};
     Slang::ComPtr<gfx::IResourceView> m_gfx_resource_view;
 };
 
@@ -352,7 +352,7 @@ protected:
     ResourceType m_type;
     mutable ResourceStateTracker m_state_tracker;
 
-    mutable std::unordered_map<ResourceViewDesc, ref<ResourceView>> m_views;
+    std::unordered_map<ResourceViewDesc, ref<ResourceView>> m_views;
 
     bool m_deferred_release{true};
 
@@ -538,13 +538,13 @@ public:
     DeviceAddress device_address() const { return m_gfx_buffer->getDeviceAddress(); }
 
     /// Get a resource view. Views are cached and reused.
-    ref<ResourceView> get_view(ResourceViewDesc desc) const;
+    ref<ResourceView> get_view(ResourceViewDesc desc);
 
     /// Get a shader resource view for a range of the buffer.
-    ref<ResourceView> get_srv(BufferRange range = BufferRange()) const;
+    ref<ResourceView> get_srv(BufferRange range = BufferRange());
 
     /// Get a unordered access view for a range of the buffer.
-    ref<ResourceView> get_uav(BufferRange range = BufferRange()) const;
+    ref<ResourceView> get_uav(BufferRange range = BufferRange());
 
     virtual gfx::IResource* gfx_resource() const override { return m_gfx_buffer; }
     gfx::IBufferResource* gfx_buffer_resource() const { return m_gfx_buffer; }
@@ -663,7 +663,7 @@ public:
     SubresourceLayout get_subresource_layout(uint32_t subresource) const;
 
     /// Get a resource view. Views are cached and reused.
-    ref<ResourceView> get_view(ResourceViewDesc desc) const;
+    ref<ResourceView> get_view(ResourceViewDesc desc);
 
     /// Get a shader resource view for a subresource range of the texture.
     ref<ResourceView> get_srv(SubresourceRange range = SubresourceRange());
