@@ -187,6 +187,8 @@ struct BufferRange {
     static constexpr uint64_t ALL = std::numeric_limits<uint64_t>::max();
     uint64_t first_element{0};
     uint64_t element_count{ALL};
+
+    auto operator<=>(const BufferRange&) const = default;
 };
 
 enum class TextureAspect : uint32_t {
@@ -213,6 +215,8 @@ struct SubresourceRange {
     uint32_t base_array_layer{0}; // For Texture3D, this is WSlice.
     /// Number of array layers.
     uint32_t layer_count{ALL}; // For cube maps, this is a multiple of 6.
+
+    auto operator<=>(const SubresourceRange&) const = default;
 };
 
 struct ResourceViewDesc {
@@ -228,13 +232,7 @@ struct ResourceViewDesc {
     // For texture views.
     SubresourceRange subresource_range;
 
-    bool operator==(const ResourceViewDesc& other) const
-    {
-        return (type == other.type) && (format == other.format)
-            && (buffer_range.first_element == other.buffer_range.first_element)
-            && (buffer_range.element_count == other.buffer_range.element_count)
-            && (buffer_element_size == other.buffer_element_size);
-    }
+    auto operator<=>(const ResourceViewDesc&) const = default;
 };
 
 } // namespace sgl
