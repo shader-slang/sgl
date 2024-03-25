@@ -67,6 +67,22 @@ inline gfx::ResourceState gfx_initial_state(ResourceUsage usage)
     return gfx::ResourceState::General;
 }
 
+inline ResourceUsage get_required_resource_usage(ResourceViewType type)
+{
+    switch (type) {
+    case ResourceViewType::shader_resource:
+        return ResourceUsage::shader_resource;
+    case ResourceViewType::unordered_access:
+        return ResourceUsage::unordered_access;
+    case ResourceViewType::render_target:
+        return ResourceUsage::render_target;
+    case ResourceViewType::depth_stencil:
+        return ResourceUsage::depth_stencil;
+    default:
+        return ResourceUsage::none;
+    }
+}
+
 // ----------------------------------------------------------------------------
 // Resource
 // ----------------------------------------------------------------------------
@@ -455,6 +471,11 @@ void Buffer::get_data(void* data, size_t size, DeviceOffset offset)
 
 ref<ResourceView> Buffer::get_view(ResourceViewDesc desc) const
 {
+    SGL_CHECK(
+        is_set(m_desc.usage, get_required_resource_usage(desc.type)),
+        "Buffer does not support view type {}",
+        desc.type
+    );
     size_t element_count = this->element_count();
     SGL_CHECK(desc.buffer_range.first_element < element_count, "'first_element' out of range");
     SGL_CHECK(
@@ -651,6 +672,11 @@ SubresourceLayout Texture::get_subresource_layout(uint32_t subresource) const
 
 ref<ResourceView> Texture::get_view(ResourceViewDesc desc) const
 {
+    SGL_CHECK(
+        is_set(m_desc.usage, get_required_resource_usage(desc.type)),
+        "Texture does not support view type {}",
+        desc.type
+    );
     uint32_t mip_count = this->mip_count();
     SGL_CHECK(desc.subresource_range.mip_level < mip_count, "'mip_level' out of range");
     SGL_CHECK(
