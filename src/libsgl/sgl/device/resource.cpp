@@ -129,7 +129,7 @@ NativeHandle Resource::get_native_handle() const
 // ResourceView
 // ----------------------------------------------------------------------------
 
-ResourceView::ResourceView(const ResourceViewDesc& desc, const Buffer* buffer)
+ResourceView::ResourceView(const ResourceViewDesc& desc, Buffer* buffer)
     : m_desc(desc)
     , m_resource(buffer)
 {
@@ -152,7 +152,7 @@ ResourceView::ResourceView(const ResourceViewDesc& desc, const Buffer* buffer)
     );
 }
 
-ResourceView::ResourceView(const ResourceViewDesc& desc, const Texture* texture)
+ResourceView::ResourceView(const ResourceViewDesc& desc, Texture* texture)
     : m_desc(desc)
     , m_resource(texture)
 {
@@ -469,7 +469,7 @@ void Buffer::get_data(void* data, size_t size, DeviceOffset offset)
     }
 }
 
-ref<ResourceView> Buffer::get_view(ResourceViewDesc desc) const
+ref<ResourceView> Buffer::get_view(ResourceViewDesc desc)
 {
     SGL_CHECK(
         is_set(m_desc.usage, get_required_resource_usage(desc.type)),
@@ -496,7 +496,7 @@ ref<ResourceView> Buffer::get_view(ResourceViewDesc desc) const
     return view;
 }
 
-ref<ResourceView> Buffer::get_srv(BufferRange range) const
+ref<ResourceView> Buffer::get_srv(BufferRange range)
 {
     return get_view({
         .type = ResourceViewType::shader_resource,
@@ -506,7 +506,7 @@ ref<ResourceView> Buffer::get_srv(BufferRange range) const
     });
 }
 
-ref<ResourceView> Buffer::get_uav(BufferRange range) const
+ref<ResourceView> Buffer::get_uav(BufferRange range)
 {
     return get_view({
         .type = ResourceViewType::unordered_access,
@@ -670,7 +670,7 @@ SubresourceLayout Texture::get_subresource_layout(uint32_t subresource) const
     return layout;
 }
 
-ref<ResourceView> Texture::get_view(ResourceViewDesc desc) const
+ref<ResourceView> Texture::get_view(ResourceViewDesc desc)
 {
     SGL_CHECK(
         is_set(m_desc.usage, get_required_resource_usage(desc.type)),
