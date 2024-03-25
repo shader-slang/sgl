@@ -335,6 +335,8 @@ public:
 
     ResourceStateTracker& state_tracker() const { return m_state_tracker; }
 
+    void invalidate_views();
+
     virtual gfx::IResource* gfx_resource() const = 0;
 
     /// Get the shared resource handle.

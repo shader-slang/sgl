@@ -95,8 +95,14 @@ Resource::Resource(ref<Device> device, ResourceType type)
 
 Resource::~Resource()
 {
+    invalidate_views();
+}
+
+void Resource::invalidate_views()
+{
     for (auto& [desc, view] : m_views)
         view->invalidate(m_deferred_release);
+    m_views.clear();
 }
 
 SharedResourceHandle Resource::get_shared_handle() const
