@@ -132,6 +132,26 @@ SGL_PY_EXPORT(device_command)
             "clear_value"_a
         )
         .def("copy_resource", &CommandBuffer::copy_resource, "dst"_a, "src"_a)
+        .def(
+            "copy_buffer_region",
+            &CommandBuffer::copy_buffer_region,
+            "dst"_a,
+            "dst_offset"_a,
+            "src"_a,
+            "src_offset"_a,
+            "size"_a
+        )
+        .def(
+            "copy_texture_region",
+            &CommandBuffer::copy_texture_region,
+            "dst"_a,
+            "dst_subresource"_a,
+            "dst_offset"_a,
+            "src"_a,
+            "src_subresource"_a,
+            "src_offset"_a,
+            "extent"_a = uint3(-1)
+        )
         .def("encode_compute_commands", &CommandBuffer::encode_compute_commands, nb::rv_policy::reference_internal)
         .def("encode_render_commands", &CommandBuffer::encode_render_commands, nb::rv_policy::reference_internal)
         .def(
