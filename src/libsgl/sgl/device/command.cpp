@@ -1009,9 +1009,9 @@ void CommandBuffer::copy_buffer_region(
 void CommandBuffer::copy_texture_region(
     Texture* dst,
     uint32_t dst_subresource,
+    uint3 dst_offset,
     const Texture* src,
     uint32_t src_subresource,
-    uint3 dst_offset,
     uint3 src_offset,
     uint3 extent
 )

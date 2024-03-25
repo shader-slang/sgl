@@ -430,19 +430,19 @@ public:
      *
      * \param dst Destination texture.
      * \param dst_subresource Destination subresource index.
+     * \param dst_offset Destination offset in texels.
      * \param src Source texture.
      * \param src_subresource Source subresource index.
-     * \param dst_offset Destination offset in texels.
      * \param src_offset Source offset in texels.
      * \param extent Size in texels (-1 for maximum possible size).
      */
     void copy_texture_region(
         Texture* dst,
         uint32_t dst_subresource,
+        uint3 dst_offset,
         const Texture* src,
         uint32_t src_subresource,
-        uint3 dst_offset = uint3(0),
-        uint3 src_offset = uint3(0),
+        uint3 src_offset,
         uint3 extent = uint3(-1)
     );
 
