@@ -550,6 +550,12 @@ private:
     mutable void* m_mapped_ptr{nullptr};
 };
 
+struct SubresourceData {
+    const void* data{nullptr};
+    size_t row_pitch{0};
+    size_t slice_pitch{0};
+};
+
 struct TextureDesc {
     /// Resource type (optional). Type is inferred from width, height, depth if not specified.
     ResourceType type{ResourceType::unknown};

@@ -488,19 +488,24 @@ public:
     );
 
     /**
-     * \brief Copy data from one buffer to another.
+     * \brief Upload host memory to a buffer.
      *
-     * \param dst Destination buffer.
-     * \param dst_offset Offset into the destination buffer.
-     * \param src Source buffer.
-     * \param src_offset Offset into the source buffer.
-     * \param size Number of bytes to copy.
+     * \param buffer Buffer to write to.
+     * \param offset Buffer offset in bytes.
+     * \param size Number of bytes to write.
+     * \param data Host memory to write.
      */
-    void copy_buffer(Buffer* dst, DeviceOffset dst_offset, const Buffer* src, DeviceOffset src_offset, DeviceSize size);
-
     void upload_buffer_data(Buffer* buffer, size_t offset, size_t size, const void* data);
 
     void upload_texture_data(Texture* texture, uint32_t subresource, const void* data);
+
+    void upload_texture_data(
+        Texture* texture,
+        SubresourceRange subresource_range,
+        std::span<SubresourceData> subresource_data,
+        uint3 offset = uint3(0),
+        uint3 extent = uint3(-1)
+    );
 
     /**
      * \brief Resolve a multi-sampled texture.
