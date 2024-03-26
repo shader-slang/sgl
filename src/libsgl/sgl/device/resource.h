@@ -290,7 +290,7 @@ public:
             return m_global_state;
         SGL_ASSERT(m_subresource_states);
         if (subresource >= m_subresource_states->size())
-            return ResourceState::undefined;
+            return m_global_state;
         return m_subresource_states->operator[](subresource);
     }
 
@@ -300,9 +300,9 @@ public:
             return;
         m_has_global_state = false;
         if (!m_subresource_states)
-            m_subresource_states = std::make_unique<std::vector<ResourceState>>();
+            m_subresource_states = std::make_unique<std::vector<ResourceState>>(subresource + 1, m_global_state);
         if (subresource >= m_subresource_states->size())
-            m_subresource_states->resize(subresource + 1, ResourceState::undefined);
+            m_subresource_states->resize(subresource + 1, m_global_state);
         m_subresource_states->operator[](subresource) = state;
     }
 
