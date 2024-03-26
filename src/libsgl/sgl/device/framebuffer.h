@@ -29,7 +29,7 @@ class SGL_API Framebuffer : public DeviceResource {
     SGL_OBJECT(Framebuffer)
 public:
     Framebuffer(ref<Device> device, FramebufferDesc desc);
-    virtual ~Framebuffer() = default;
+    virtual ~Framebuffer();
 
     const FramebufferDesc& desc() const { return m_desc; }
 
