@@ -779,7 +779,7 @@ class App:
 
             command_buffer = self.device.create_command_buffer()
             command_buffer.copy_resource(dst=image, src=self.output_texture)
-            command_buffer.texture_barrier(image, sgl.ResourceState.present)
+            command_buffer.set_texture_state(image, sgl.ResourceState.present)
             command_buffer.submit()
             del image
 

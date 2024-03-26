@@ -640,13 +640,24 @@ void CommandBuffer::resolve_query(
     SGL_CHECK_LE(index + count, query_pool->desc().count);
     SGL_CHECK_LE(offset + count * sizeof(uint64_t), buffer->size());
 
-    buffer_barrier(buffer, ResourceState::resolve_destination);
+    set_buffer_state(buffer, ResourceState::resolve_destination);
 
     get_gfx_resource_command_encoder()
         ->resolveQuery(query_pool->gfx_query_pool(), index, count, buffer->gfx_buffer_resource(), offset);
 }
 
-bool CommandBuffer::buffer_barrier(const Buffer* buffer, ResourceState new_state)
+bool CommandBuffer::set_resource_state(const Resource* resource, ResourceState new_state)
+{
+    SGL_CHECK_NOT_NULL(resource);
+
+    if (resource->type() == ResourceType::buffer) {
+        return set_buffer_state(static_cast<const Buffer*>(resource), new_state);
+    } else {
+        return set_texture_state(static_cast<const Texture*>(resource), new_state);
+    }
+}
+
+bool CommandBuffer::set_buffer_state(const Buffer* buffer, ResourceState new_state)
 {
     SGL_CHECK_NOT_NULL(buffer);
 
@@ -659,7 +670,7 @@ bool CommandBuffer::buffer_barrier(const Buffer* buffer, ResourceState new_state
     return true;
 }
 
-bool CommandBuffer::texture_barrier(const Texture* texture, ResourceState new_state)
+bool CommandBuffer::set_texture_state(const Texture* texture, ResourceState new_state)
 {
     SGL_CHECK_NOT_NULL(texture);
 
@@ -672,52 +683,63 @@ bool CommandBuffer::texture_barrier(const Texture* texture, ResourceState new_st
     return true;
 }
 
-bool CommandBuffer::texture_subresource_barrier(
+bool CommandBuffer::set_texture_subresource_state(
     const Texture* texture,
-    uint32_t array_slice,
-    uint32_t mip_level,
+    SubresourceRange range,
     ResourceState new_state
 )
 {
     SGL_CHECK_NOT_NULL(texture);
-    SGL_CHECK_LT(array_slice, texture->array_size());
-    SGL_CHECK_LT(mip_level, texture->mip_count());
 
-    uint32_t subresource_index = texture->get_subresource_index(mip_level, array_slice);
-    ResourceState current_state = texture->state_tracker().subresource_state(subresource_index);
-    if (new_state == current_state)
-        return false;
+    uint32_t mip_count = range.mip_count;
+    if (mip_count == SubresourceRange::ALL)
+        mip_count = texture->mip_count() - range.mip_level;
+    uint32_t layer_count = range.layer_count;
+    if (layer_count == SubresourceRange::ALL)
+        layer_count = texture->array_size() - range.base_array_layer;
 
-    texture_subresource_barrier(
-        texture,
-        SubresourceRange{
-            .texture_aspect = TextureAspect::color,
-            .mip_level = mip_level,
-            .mip_count = 1,
-            .base_array_layer = array_slice,
-            .layer_count = 1,
-        },
-        current_state,
-        new_state
-    );
-    texture->state_tracker().set_subresource_state(subresource_index, new_state);
-    return true;
-}
+    // Set state on the entire resource if possible.
+    bool entire_resource = (range.mip_level == 0) && (mip_count == texture->mip_count())
+        && (range.base_array_layer == 0) && (layer_count == texture->array_size());
+    if (entire_resource)
+        return set_texture_state(texture, new_state);
 
-bool CommandBuffer::resource_barrier(const Resource* resource, ResourceState new_state)
-{
-    SGL_CHECK_NOT_NULL(resource);
+    SGL_CHECK(range.mip_level + mip_count <= texture->mip_count(), "Invalid mip level range");
+    SGL_CHECK(range.base_array_layer + layer_count <= texture->array_size(), "Invalid array layer range");
 
-    if (resource->type() == ResourceType::buffer) {
-        return buffer_barrier(static_cast<const Buffer*>(resource), new_state);
-    } else {
-        return texture_barrier(static_cast<const Texture*>(resource), new_state);
+    // Change state on each subresource.
+    auto& state_tracker = texture->state_tracker();
+    bool changed = false;
+    for (uint32_t m = range.mip_level; m < range.mip_level + mip_count; ++m) {
+        for (uint32_t a = range.base_array_layer; a < range.base_array_layer + layer_count; ++a) {
+            uint32_t subresource = texture->get_subresource_index(m, a);
+            ResourceState old_state = state_tracker.subresource_state(subresource);
+            if (old_state != new_state) {
+                texture_subresource_barrier(
+                    texture,
+                    {
+                        .mip_level = m,
+                        .mip_count = 1,
+                        .base_array_layer = a,
+                        .layer_count = 1,
+                    },
+                    old_state,
+                    new_state
+                );
+                state_tracker.set_subresource_state(subresource, new_state);
+                changed = true;
+            }
+        }
     }
+    return changed;
 }
 
 void CommandBuffer::uav_barrier(const Resource* resource)
 {
     SGL_CHECK_NOT_NULL(resource);
+
+    if (set_resource_state(resource, ResourceState::unordered_access))
+        return;
 
     if (resource->type() == ResourceType::buffer) {
         buffer_barrier(
@@ -823,15 +845,16 @@ void CommandBuffer::clear_resource_view(ResourceView* resource_view, float4 clea
 {
     SGL_CHECK_NOT_NULL(resource_view);
 
+    // TODO: set subresource state instead
     switch (resource_view->type()) {
     case ResourceViewType::render_target:
-        resource_barrier(resource_view->resource(), ResourceState::render_target);
+        set_resource_state(resource_view->resource(), ResourceState::render_target);
         break;
     case ResourceViewType::shader_resource:
-        resource_barrier(resource_view->resource(), ResourceState::shader_resource);
+        set_resource_state(resource_view->resource(), ResourceState::shader_resource);
         break;
     case ResourceViewType::unordered_access:
-        resource_barrier(resource_view->resource(), ResourceState::unordered_access);
+        set_resource_state(resource_view->resource(), ResourceState::unordered_access);
         break;
     default:
         SGL_THROW("Invalid resource view type");
@@ -853,15 +876,16 @@ void CommandBuffer::clear_resource_view(ResourceView* resource_view, uint4 clear
 {
     SGL_CHECK_NOT_NULL(resource_view);
 
+    // TODO: set subresource state instead
     switch (resource_view->type()) {
     case ResourceViewType::render_target:
-        resource_barrier(resource_view->resource(), ResourceState::render_target);
+        set_resource_state(resource_view->resource(), ResourceState::render_target);
         break;
     case ResourceViewType::shader_resource:
-        resource_barrier(resource_view->resource(), ResourceState::shader_resource);
+        set_resource_state(resource_view->resource(), ResourceState::shader_resource);
         break;
     case ResourceViewType::unordered_access:
-        resource_barrier(resource_view->resource(), ResourceState::unordered_access);
+        set_resource_state(resource_view->resource(), ResourceState::unordered_access);
         break;
     default:
         SGL_THROW("Invalid resource view type");
@@ -886,9 +910,10 @@ void CommandBuffer::clear_resource_view(
 {
     SGL_CHECK_NOT_NULL(resource_view);
 
+    // TODO: set subresource state instead
     switch (resource_view->type()) {
     case ResourceViewType::depth_stencil:
-        resource_barrier(resource_view->resource(), ResourceState::depth_write);
+        set_resource_state(resource_view->resource(), ResourceState::depth_write);
         break;
     default:
         SGL_THROW("Invalid resource view type");
@@ -951,8 +976,8 @@ void CommandBuffer::copy_resource(Resource* dst, const Resource* src)
     SGL_CHECK_NOT_NULL(src);
     SGL_CHECK(dst->type() == src->type(), "Resources must be of the same type");
 
-    resource_barrier(dst, ResourceState::copy_destination);
-    resource_barrier(src, ResourceState::copy_source);
+    set_resource_state(dst, ResourceState::copy_destination);
+    set_resource_state(src, ResourceState::copy_source);
 
     if (dst->type() == ResourceType::buffer) {
         const Buffer* dst_buffer = static_cast<const Buffer*>(dst);
@@ -999,8 +1024,8 @@ void CommandBuffer::copy_buffer_region(
     SGL_CHECK_LE(dst_offset + size, dst->size());
     SGL_CHECK_LE(src_offset + size, src->size());
 
-    buffer_barrier(dst, ResourceState::copy_destination);
-    buffer_barrier(src, ResourceState::copy_source);
+    set_buffer_state(dst, ResourceState::copy_destination);
+    set_buffer_state(src, ResourceState::copy_source);
 
     get_gfx_resource_command_encoder()
         ->copyBuffer(dst->gfx_buffer_resource(), dst_offset, src->gfx_buffer_resource(), src_offset, size);
@@ -1021,8 +1046,9 @@ void CommandBuffer::copy_texture_region(
     SGL_CHECK_LT(dst_subresource, dst->subresource_count());
     SGL_CHECK_LT(src_subresource, src->subresource_count());
 
-    texture_barrier(dst, ResourceState::copy_destination);
-    texture_barrier(src, ResourceState::copy_source);
+    // TODO: set subresource state instead
+    set_texture_state(dst, ResourceState::copy_destination);
+    set_texture_state(src, ResourceState::copy_source);
 
     gfx::SubresourceRange dst_sr = detail::gfx_subresource_range(dst, dst_subresource);
     gfx::SubresourceRange src_sr = detail::gfx_subresource_range(src, src_subresource);
@@ -1064,8 +1090,9 @@ void CommandBuffer::copy_texture_to_buffer(
     SGL_CHECK_NOT_NULL(src);
     SGL_CHECK_LT(src_subresource, src->subresource_count());
 
-    texture_barrier(src, ResourceState::copy_source);
-    buffer_barrier(dst, ResourceState::copy_destination);
+    // TODO: set subresource state instead
+    set_texture_state(src, ResourceState::copy_source);
+    set_buffer_state(dst, ResourceState::copy_destination);
 
     gfx::SubresourceRange src_sr = detail::gfx_subresource_range(src, src_subresource);
     get_gfx_resource_command_encoder()->copyTextureToBuffer(
@@ -1090,7 +1117,7 @@ void CommandBuffer::upload_buffer_data(Buffer* buffer, size_t offset, size_t siz
     SGL_CHECK(offset + size <= buffer->size(), "Buffer upload is out of bounds");
     SGL_CHECK_NOT_NULL(data);
 
-    buffer_barrier(buffer, ResourceState::copy_destination);
+    set_buffer_state(buffer, ResourceState::copy_destination);
 
     get_gfx_resource_command_encoder()
         ->uploadBufferData(buffer->gfx_buffer_resource(), offset, size, const_cast<void*>(data));
@@ -1102,7 +1129,8 @@ void CommandBuffer::upload_texture_data(Texture* texture, uint32_t subresource, 
     SGL_CHECK_LT(subresource, texture->subresource_count());
     SGL_CHECK_NOT_NULL(data);
 
-    texture_barrier(texture, ResourceState::copy_destination);
+    // TODO: set subresource state instead
+    set_texture_state(texture, ResourceState::copy_destination);
 
     uint3 dimensions = texture->get_mip_dimensions(texture->get_subresource_mip_level(subresource));
     SubresourceLayout layout = texture->get_subresource_layout(subresource);
@@ -1148,8 +1176,8 @@ void CommandBuffer::resolve_texture(Texture* dst, const Texture* src)
         "Source and destination textures must have the same mip count."
     );
 
-    texture_barrier(dst, ResourceState::resolve_destination);
-    texture_barrier(src, ResourceState::resolve_source);
+    set_texture_state(dst, ResourceState::resolve_destination);
+    set_texture_state(src, ResourceState::resolve_source);
 
     gfx::SubresourceRange dst_sr = {};
     dst_sr.layerCount = dst->array_size();
@@ -1191,9 +1219,9 @@ void CommandBuffer::resolve_subresource(
         "Source and destination textures must have the same dimensions."
     );
 
-    // TODO it would be better to just use barriers on the subresources.
-    texture_barrier(dst, ResourceState::resolve_destination);
-    texture_barrier(src, ResourceState::resolve_source);
+    // TODO: set subresource state instead
+    set_texture_state(dst, ResourceState::resolve_destination);
+    set_texture_state(src, ResourceState::resolve_source);
 
     gfx::SubresourceRange dst_sr = {
         .mipLevel = narrow_cast<gfx::GfxIndex>(dst_mip_level),
@@ -1238,10 +1266,11 @@ RenderCommandEncoder CommandBuffer::encode_render_commands(Framebuffer* framebuf
     SGL_CHECK_NOT_NULL(framebuffer);
 
     // Set the render target and depth-stencil barriers.
+    // TODO: set subresource state instead
     for (const auto& render_target : framebuffer->desc().render_targets)
-        texture_barrier(render_target.texture, ResourceState::render_target);
+        set_texture_state(render_target.texture, ResourceState::render_target);
     if (framebuffer->desc().depth_stencil)
-        texture_barrier(framebuffer->desc().depth_stencil->texture, ResourceState::depth_write);
+        set_texture_state(framebuffer->desc().depth_stencil->texture, ResourceState::depth_write);
 
     if (m_active_gfx_encoder != EncoderType::render) {
         end_current_gfx_encoder();

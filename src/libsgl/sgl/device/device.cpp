@@ -741,7 +741,6 @@ void Device::upload_buffer_data(Buffer* buffer, const void* data, size_t size, s
 
     // TODO we want to use existing command buffer.
     ref<CommandBuffer> command_buffer = create_command_buffer();
-    command_buffer->buffer_barrier(buffer, ResourceState::copy_destination);
     command_buffer->copy_buffer_region(buffer, offset, alloc->buffer, alloc->offset, size);
     command_buffer->submit();
 }
@@ -756,7 +755,6 @@ void Device::read_buffer_data(const Buffer* buffer, void* data, size_t size, siz
 
     // TODO we want to use existing command buffer.
     ref<CommandBuffer> command_buffer = create_command_buffer();
-    command_buffer->buffer_barrier(buffer, ResourceState::copy_source);
     command_buffer->copy_buffer_region(alloc->buffer, alloc->offset, buffer, offset, size);
     command_buffer->submit();
     m_graphics_queue->wait();
@@ -774,7 +772,7 @@ void Device::read_texture(
 {
     // TODO move this to CommandBuffer
     ref<CommandBuffer> command_buffer = create_command_buffer();
-    command_buffer->texture_barrier(texture, ResourceState::copy_source);
+    command_buffer->set_texture_state(texture, ResourceState::copy_source);
     command_buffer->submit();
 
     Slang::ComPtr<ISlangBlob> blob;
