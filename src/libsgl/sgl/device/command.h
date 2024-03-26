@@ -337,6 +337,16 @@ public:
     bool set_resource_state(const Resource* resource, ResourceState new_state);
 
     /**
+     * Transition resource state of a resource and add a barrier if state has changed.
+     * For buffer views, this will set the resource state of the entire buffer.
+     * For texture views, this will set the resource state of all its sub-resources.
+     * \param resource_view Resource view
+     * \param new_state New state
+     * \return True if barrier was recorded (i.e. state has changed).
+     */
+    bool set_resource_state(const ResourceView* resource_view, ResourceState new_state);
+
+    /**
      * Transition resource state of a buffer and add a barrier if state has changed.
      * \param buffer Buffer
      * \param new_state New state

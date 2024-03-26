@@ -249,7 +249,10 @@ public:
 
     ResourceViewType type() const { return m_desc.type; }
 
-    Resource* resource() { return m_resource; }
+    Resource* resource() const { return m_resource; }
+
+    /// True if the view covers all subresources.
+    bool all_subresources() const { return m_all_subresources; }
 
     gfx::IResourceView* gfx_resource_view() const { return m_gfx_resource_view; }
 
@@ -263,6 +266,7 @@ public:
 private:
     ResourceViewDesc m_desc;
     Resource* m_resource{nullptr};
+    bool m_all_subresources{false};
     Slang::ComPtr<gfx::IResourceView> m_gfx_resource_view;
 };
 
