@@ -106,6 +106,13 @@ Framebuffer::Framebuffer(ref<Device> device, FramebufferDesc desc)
     );
 }
 
+Framebuffer::~Framebuffer()
+{
+    m_device->deferred_release(std::move(m_gfx_framebuffer));
+    m_device->deferred_release(std::move(m_gfx_framebuffer_layout));
+    m_device->deferred_release(std::move(m_gfx_render_pass_layout));
+}
+
 inline std::string to_string(const FramebufferAttachmentDesc& desc)
 {
     return fmt::format(
