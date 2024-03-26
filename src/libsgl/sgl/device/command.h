@@ -329,12 +329,20 @@ public:
     // ------------------------------------------------------------------------
 
     /**
+     * Transition resource state of a resource and add a barrier if state has changed.
+     * \param resource Resource
+     * \param new_state New state
+     * \return True if barrier was recorded (i.e. state has changed).
+     */
+    bool set_resource_state(const Resource* resource, ResourceState new_state);
+
+    /**
      * Transition resource state of a buffer and add a barrier if state has changed.
      * \param buffer Buffer
      * \param new_state New state
      * \return True if barrier was recorded (i.e. state has changed).
      */
-    bool buffer_barrier(const Buffer* buffer, ResourceState new_state);
+    bool set_buffer_state(const Buffer* buffer, ResourceState new_state);
 
     /**
      * Transition resource state of a texture and add a barrier if state has changed.
@@ -342,16 +350,20 @@ public:
      * \param new_state New state
      * \return True if barrier was recorded (i.e. state has changed).
      */
-    bool texture_barrier(const Texture* texture, ResourceState new_state);
+    bool set_texture_state(const Texture* texture, ResourceState new_state);
 
-    bool texture_subresource_barrier(
+    /**
+     * Transition resource state of texture sub-resources and add a barrier if state has changed.
+     * \param texture Texture
+     * \param range Subresource range
+     * \param new_state New state
+     * \return True if barrier was recorded (i.e. state has changed).
+     */
+    bool set_texture_subresource_state(
         const Texture* texture,
-        uint32_t array_slice,
-        uint32_t mip_level,
+        SubresourceRange range,
         ResourceState new_state
     );
-
-    bool resource_barrier(const Resource* resource, ResourceState new_state);
 
     /**
      * Insert a UAV barrier

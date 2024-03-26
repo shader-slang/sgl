@@ -870,7 +870,7 @@ struct App {
 
             ref<CommandBuffer> command_buffer = device->create_command_buffer();
             command_buffer->copy_resource(image, output_texture);
-            command_buffer->texture_barrier(image, ResourceState::present);
+            command_buffer->set_texture_state(image, ResourceState::present);
             command_buffer->submit();
             image.reset();
 

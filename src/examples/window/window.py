@@ -176,7 +176,7 @@ class App:
             self.ui.new_frame(image.width, image.height)
             self.ui.render(self.framebuffers[image_index], command_buffer)
 
-            command_buffer.texture_barrier(image, sgl.ResourceState.present)
+            command_buffer.set_texture_state(image, sgl.ResourceState.present)
             command_buffer.submit()
             del image
 
