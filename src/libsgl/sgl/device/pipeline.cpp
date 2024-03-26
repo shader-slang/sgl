@@ -88,7 +88,7 @@ GraphicsPipeline::GraphicsPipeline(ref<Device> device, GraphicsPipelineDesc desc
 
     gfx::GraphicsPipelineStateDesc gfx_desc{
         .program = m_program->gfx_shader_program(),
-        .inputLayout = desc.input_layout->gfx_input_layout(),
+        .inputLayout = desc.input_layout ? desc.input_layout->gfx_input_layout() : nullptr,
         .framebufferLayout = desc.framebuffer->gfx_framebuffer_layout(),
         .primitiveType = static_cast<gfx::PrimitiveType>(desc.primitive_type),
         .depthStencil = {
