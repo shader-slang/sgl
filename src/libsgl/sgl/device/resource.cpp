@@ -288,6 +288,8 @@ Buffer::Buffer(ref<Device> device, BufferDesc desc)
         }
     }
 
+    m_state_tracker.set_global_state(m_desc.initial_state);
+
     gfx::IBufferResource::Desc gfx_desc{};
     gfx_desc.type = gfx::IResource::Type::Buffer;
     gfx_desc.defaultState = static_cast<gfx::ResourceState>(m_desc.initial_state);
@@ -613,6 +615,8 @@ Texture::Texture(ref<Device> device, TextureDesc desc)
 {
     process_texture_desc(m_desc);
     m_type = m_desc.type;
+
+    m_state_tracker.set_global_state(m_desc.initial_state);
 
     gfx::ITextureResource::Desc gfx_desc{};
     gfx_desc.type = static_cast<gfx::IResource::Type>(m_desc.type);

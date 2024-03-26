@@ -679,12 +679,14 @@ bool CommandBuffer::set_buffer_state(const Buffer* buffer, ResourceState new_sta
 {
     SGL_CHECK_NOT_NULL(buffer);
 
-    ResourceState current_state = buffer->state_tracker().global_state();
+    ResourceStateTracker& state_tracker = buffer->state_tracker();
+    SGL_ASSERT(state_tracker.has_global_state());
+    ResourceState current_state = state_tracker.global_state();
     if (new_state == current_state)
         return false;
 
     buffer_barrier(buffer, current_state, new_state);
-    buffer->state_tracker().set_global_state(new_state);
+    state_tracker.set_global_state(new_state);
     return true;
 }
 
@@ -692,13 +694,39 @@ bool CommandBuffer::set_texture_state(const Texture* texture, ResourceState new_
 {
     SGL_CHECK_NOT_NULL(texture);
 
-    ResourceState current_state = texture->state_tracker().global_state();
-    if (new_state == current_state)
-        return false;
-
-    texture_barrier(texture, current_state, new_state);
-    texture->state_tracker().set_global_state(new_state);
-    return true;
+    ResourceStateTracker& state_tracker = texture->state_tracker();
+    if (state_tracker.has_global_state()) {
+        ResourceState current_state = state_tracker.global_state();
+        if (new_state == current_state)
+            return false;
+        texture_barrier(texture, current_state, new_state);
+        state_tracker.set_global_state(new_state);
+        return true;
+    } else {
+        bool changed = false;
+        for (uint32_t a = 0; a < texture->array_size(); ++a) {
+            for (uint32_t m = 0; m < texture->mip_count(); ++m) {
+                uint32_t subresource = texture->get_subresource_index(m, a);
+                ResourceState old_state = state_tracker.subresource_state(subresource);
+                if (old_state != new_state) {
+                    texture_subresource_barrier(
+                        texture,
+                        {
+                            .mip_level = m,
+                            .mip_count = 1,
+                            .base_array_layer = a,
+                            .layer_count = 1,
+                        },
+                        old_state,
+                        new_state
+                    );
+                    changed = true;
+                }
+            }
+        }
+        state_tracker.set_global_state(new_state);
+        return changed;
+    }
 }
 
 bool CommandBuffer::set_texture_subresource_state(
@@ -726,7 +754,7 @@ bool CommandBuffer::set_texture_subresource_state(
     SGL_CHECK(range.base_array_layer + layer_count <= texture->array_size(), "Invalid array layer range");
 
     // Change state on each subresource.
-    auto& state_tracker = texture->state_tracker();
+    ResourceStateTracker& state_tracker = texture->state_tracker();
     bool changed = false;
     for (uint32_t m = range.mip_level; m < range.mip_level + mip_count; ++m) {
         for (uint32_t a = range.base_array_layer; a < range.base_array_layer + layer_count; ++a) {
@@ -863,16 +891,15 @@ void CommandBuffer::clear_resource_view(ResourceView* resource_view, float4 clea
 {
     SGL_CHECK_NOT_NULL(resource_view);
 
-    // TODO: set subresource state instead
     switch (resource_view->type()) {
     case ResourceViewType::render_target:
-        set_resource_state(resource_view->resource(), ResourceState::render_target);
+        set_resource_state(resource_view, ResourceState::render_target);
         break;
     case ResourceViewType::shader_resource:
-        set_resource_state(resource_view->resource(), ResourceState::shader_resource);
+        set_resource_state(resource_view, ResourceState::shader_resource);
         break;
     case ResourceViewType::unordered_access:
-        set_resource_state(resource_view->resource(), ResourceState::unordered_access);
+        set_resource_state(resource_view, ResourceState::unordered_access);
         break;
     default:
         SGL_THROW("Invalid resource view type");
@@ -894,16 +921,15 @@ void CommandBuffer::clear_resource_view(ResourceView* resource_view, uint4 clear
 {
     SGL_CHECK_NOT_NULL(resource_view);
 
-    // TODO: set subresource state instead
     switch (resource_view->type()) {
     case ResourceViewType::render_target:
-        set_resource_state(resource_view->resource(), ResourceState::render_target);
+        set_resource_state(resource_view, ResourceState::render_target);
         break;
     case ResourceViewType::shader_resource:
-        set_resource_state(resource_view->resource(), ResourceState::shader_resource);
+        set_resource_state(resource_view, ResourceState::shader_resource);
         break;
     case ResourceViewType::unordered_access:
-        set_resource_state(resource_view->resource(), ResourceState::unordered_access);
+        set_resource_state(resource_view, ResourceState::unordered_access);
         break;
     default:
         SGL_THROW("Invalid resource view type");
@@ -928,10 +954,9 @@ void CommandBuffer::clear_resource_view(
 {
     SGL_CHECK_NOT_NULL(resource_view);
 
-    // TODO: set subresource state instead
     switch (resource_view->type()) {
     case ResourceViewType::depth_stencil:
-        set_resource_state(resource_view->resource(), ResourceState::depth_write);
+        set_resource_state(resource_view, ResourceState::depth_write);
         break;
     default:
         SGL_THROW("Invalid resource view type");
@@ -1147,8 +1172,16 @@ void CommandBuffer::upload_texture_data(Texture* texture, uint32_t subresource, 
     SGL_CHECK_LT(subresource, texture->subresource_count());
     SGL_CHECK_NOT_NULL(data);
 
-    // TODO: set subresource state instead
-    set_texture_state(texture, ResourceState::copy_destination);
+    set_texture_subresource_state(
+        texture,
+        {
+            .mip_level = texture->get_subresource_mip_level(subresource),
+            .mip_count = 1,
+            .base_array_layer = texture->get_subresource_array_slice(subresource),
+            .layer_count = 1,
+        },
+        ResourceState::copy_destination
+    );
 
     uint3 dimensions = texture->get_mip_dimensions(texture->get_subresource_mip_level(subresource));
     SubresourceLayout layout = texture->get_subresource_layout(subresource);
@@ -1284,11 +1317,31 @@ RenderCommandEncoder CommandBuffer::encode_render_commands(Framebuffer* framebuf
     SGL_CHECK_NOT_NULL(framebuffer);
 
     // Set the render target and depth-stencil barriers.
-    // TODO: set subresource state instead
-    for (const auto& render_target : framebuffer->desc().render_targets)
-        set_texture_state(render_target.texture, ResourceState::render_target);
-    if (framebuffer->desc().depth_stencil)
-        set_texture_state(framebuffer->desc().depth_stencil->texture, ResourceState::depth_write);
+    for (const auto& render_target : framebuffer->desc().render_targets) {
+        set_texture_subresource_state(
+            render_target.texture,
+            {
+                .mip_level = render_target.mip_level,
+                .mip_count = 1,
+                .base_array_layer = render_target.base_array_layer,
+                .layer_count = render_target.layer_count,
+            },
+            ResourceState::render_target
+        );
+    }
+    if (framebuffer->desc().depth_stencil) {
+        const auto& depth_stencil = framebuffer->desc().depth_stencil.value();
+        set_texture_subresource_state(
+            depth_stencil.texture,
+            {
+                .mip_level = depth_stencil.mip_level,
+                .mip_count = 1,
+                .base_array_layer = depth_stencil.base_array_layer,
+                .layer_count = depth_stencil.layer_count,
+            },
+            ResourceState::depth_write
+        );
+    }
 
     if (m_active_gfx_encoder != EncoderType::render) {
         end_current_gfx_encoder();

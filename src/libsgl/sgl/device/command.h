@@ -369,11 +369,7 @@ public:
      * \param new_state New state
      * \return True if barrier was recorded (i.e. state has changed).
      */
-    bool set_texture_subresource_state(
-        const Texture* texture,
-        SubresourceRange range,
-        ResourceState new_state
-    );
+    bool set_texture_subresource_state(const Texture* texture, SubresourceRange range, ResourceState new_state);
 
     /**
      * Insert a UAV barrier

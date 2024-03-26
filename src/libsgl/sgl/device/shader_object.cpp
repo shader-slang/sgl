@@ -136,23 +136,17 @@ void TransientShaderObject::set_resource(const ShaderOffset& offset, const ref<R
 {
     if (resource_view) {
         switch (resource_view->type()) {
-        case ResourceViewType::unknown:
-            break;
-        case ResourceViewType::render_target:
-            m_command_buffer->set_resource_state(resource_view->resource(), ResourceState::render_target);
-            break;
-        case ResourceViewType::depth_stencil:
-            m_command_buffer->set_resource_state(resource_view->resource(), ResourceState::render_target);
-            break;
         case ResourceViewType::shader_resource:
-            m_command_buffer->set_resource_state(resource_view->resource(), ResourceState::shader_resource);
+            m_command_buffer->set_resource_state(resource_view, ResourceState::shader_resource);
             break;
         case ResourceViewType::unordered_access:
             if (resource_view->resource()->state_tracker().global_state() == ResourceState::unordered_access)
                 m_command_buffer->uav_barrier(resource_view->resource());
             else
-                m_command_buffer->set_resource_state(resource_view->resource(), ResourceState::unordered_access);
+                m_command_buffer->set_resource_state(resource_view, ResourceState::unordered_access);
             break;
+        default:
+            SGL_THROW("Invalid resource view type");
         }
     }
 
@@ -219,23 +213,17 @@ void MutableShaderObject::set_resource_states(CommandBuffer* command_buffer)
 {
     for (auto& [offset, resource_view] : m_resource_views) {
         switch (resource_view->type()) {
-        case ResourceViewType::unknown:
-            break;
-        case ResourceViewType::render_target:
-            command_buffer->set_resource_state(resource_view->resource(), ResourceState::render_target);
-            break;
-        case ResourceViewType::depth_stencil:
-            command_buffer->set_resource_state(resource_view->resource(), ResourceState::render_target);
-            break;
         case ResourceViewType::shader_resource:
-            command_buffer->set_resource_state(resource_view->resource(), ResourceState::shader_resource);
+            command_buffer->set_resource_state(resource_view, ResourceState::shader_resource);
             break;
         case ResourceViewType::unordered_access:
             if (resource_view->resource()->state_tracker().global_state() == ResourceState::unordered_access)
                 command_buffer->uav_barrier(resource_view->resource());
             else
-                command_buffer->set_resource_state(resource_view->resource(), ResourceState::unordered_access);
+                command_buffer->set_resource_state(resource_view, ResourceState::unordered_access);
             break;
+        default:
+            SGL_THROW("Invalid resource view type");
         }
     }
 }
