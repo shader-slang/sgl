@@ -657,6 +657,24 @@ bool CommandBuffer::set_resource_state(const Resource* resource, ResourceState n
     }
 }
 
+bool CommandBuffer::set_resource_state(const ResourceView* resource_view, ResourceState new_state)
+{
+    SGL_CHECK_NOT_NULL(resource_view);
+
+    if (resource_view->resource()->type() == ResourceType::buffer) {
+        return set_buffer_state(static_cast<const Buffer*>(resource_view->resource()), new_state);
+    } else {
+        if (resource_view->all_subresources())
+            return set_texture_state(static_cast<const Texture*>(resource_view->resource()), new_state);
+        else
+            return set_texture_subresource_state(
+                static_cast<const Texture*>(resource_view->resource()),
+                resource_view->desc().subresource_range,
+                new_state
+            );
+    }
+}
+
 bool CommandBuffer::set_buffer_state(const Buffer* buffer, ResourceState new_state)
 {
     SGL_CHECK_NOT_NULL(buffer);

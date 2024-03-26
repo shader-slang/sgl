@@ -169,6 +169,11 @@ ResourceView::ResourceView(const ResourceViewDesc& desc, Texture* texture)
         || m_desc.type == ResourceViewType::render_target || m_desc.type == ResourceViewType::depth_stencil
     );
 
+    // Check if view covers all subresources.
+    m_all_subresources = m_desc.subresource_range.mip_level == 0
+        && m_desc.subresource_range.mip_count == texture->mip_count() && m_desc.subresource_range.base_array_layer == 0
+        && m_desc.subresource_range.layer_count == texture->array_size();
+
     gfx::IResourceView::Desc gfx_desc{
         .type = static_cast<gfx::IResourceView::Type>(m_desc.type),
         .format = static_cast<gfx::Format>(m_desc.format),
