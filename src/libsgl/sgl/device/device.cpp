@@ -726,6 +726,7 @@ void Device::end_frame()
 void Device::wait()
 {
     m_graphics_queue->wait();
+    end_frame();
 }
 
 void Device::upload_buffer_data(Buffer* buffer, const void* data, size_t size, size_t offset)
@@ -878,8 +879,8 @@ bool Device::enable_agility_sdk()
     std::filesystem::path exe_dir = platform::executable_directory();
     std::filesystem::path sdk_dir = platform::runtime_directory() / SGL_AGILITY_SDK_PATH;
 
-    // Agility SDK can only be loaded from a relative path to the executable. Make sure both paths use the same driver
-    // letter.
+    // Agility SDK can only be loaded from a relative path to the executable.
+    // Make sure both paths use the same drive letter.
     if (std::tolower(exe_dir.string()[0]) != std::tolower(sdk_dir.string()[0])) {
         log_warn(
             "Cannot enable D3D12 Agility SDK: "
