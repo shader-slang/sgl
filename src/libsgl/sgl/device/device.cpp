@@ -709,6 +709,8 @@ std::string Device::flush_print_to_string()
 
 void Device::end_frame()
 {
+    flush_print();
+
     if (m_frame_fence->signaled_value() > IN_FLIGHT_FRAME_COUNT)
         m_frame_fence->wait(m_frame_fence->signaled_value() - IN_FLIGHT_FRAME_COUNT);
 
@@ -719,8 +721,6 @@ void Device::end_frame()
     m_graphics_queue->signal(m_frame_fence);
 
     execute_deferred_releases();
-
-    flush_print();
 }
 
 void Device::wait()

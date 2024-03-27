@@ -581,6 +581,7 @@ inline void process_texture_desc(TextureDesc& desc)
     } else {
         switch (desc.type) {
         case ResourceType::unknown:
+        case ResourceType::buffer:
             SGL_THROW("Invalid texture type.");
             break;
         case ResourceType::texture_1d:

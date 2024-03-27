@@ -609,6 +609,7 @@ void CommandBuffer::close()
 
     end_current_gfx_encoder();
     m_gfx_command_buffer->close();
+    m_device->deferred_release(m_gfx_command_buffer);
     m_open = false;
 }
 
