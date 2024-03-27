@@ -277,6 +277,8 @@ public:
         std::optional<SlangLinkOptions> link_options = {}
     );
 
+    std::string load_source(std::string_view module_name);
+
     slang::ISession* get_slang_session() const { return m_slang_session; }
 
     std::string to_string() const override;

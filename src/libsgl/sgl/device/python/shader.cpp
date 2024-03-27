@@ -172,7 +172,8 @@ SGL_PY_EXPORT(device_shader)
             "additional_source"_a.none() = nb::none(),
             "link_options"_a.none() = nb::none(),
             D(SlangSession, load_program)
-        );
+        )
+        .def("load_source", &SlangSession::load_source, "module_name"_a, D_NA(SlangSession, load_source));
 
     nb::class_<SlangModule, Object>(m, "SlangModule", D(SlangModule))
         .def_prop_ro("name", &SlangModule::name, D(SlangModule, name))
