@@ -14,6 +14,7 @@
 #include "sgl/core/string.h"
 #include "sgl/core/crypto.h"
 #include "sgl/core/timer.h"
+#include "sgl/core/file_stream.h"
 
 #include <slang.h>
 
@@ -533,6 +534,23 @@ ref<ShaderProgram> SlangSession::load_program(
     for (const auto& entry_point_name : entry_point_names)
         entry_points.push_back(module->entry_point(entry_point_name));
     return link_program(std::move(modules), std::move(entry_points), link_options);
+}
+
+std::string SlangSession::load_source(std::string_view module_name)
+{
+    std::string resolved_name = resolve_module_name(module_name);
+
+    for (const std::filesystem::path& include_path : m_include_paths) {
+        std::filesystem::path full_path = include_path / resolved_name;
+        if (std::filesystem::exists(full_path)) {
+            FileStream stream(full_path, FileStream::Mode::read);
+            std::string result;
+            result.resize(stream.size());
+            stream.read(result.data(), result.size());
+            return result;
+        }
+    }
+    SGL_THROW("Failed to load source for module \"{}\"", module_name);
 }
 
 std::string SlangSession::to_string() const
