@@ -106,6 +106,8 @@ public:
         multi_channel,
     };
 
+    static constexpr uint32_t PIXEL_FORMAT_COUNT = uint32_t(PixelFormat::multi_channel) + 1;
+
     SGL_ENUM_INFO(
         PixelFormat,
         {

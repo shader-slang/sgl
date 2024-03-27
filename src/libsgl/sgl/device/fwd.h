@@ -122,6 +122,14 @@ class InputLayout;
 struct MemoryHeapDesc;
 class MemoryHeap;
 
+// blit.h
+
+class Blitter;
+
+// texture_loader.h
+
+class TextureLoader;
+
 // cuda_interop.h
 
 namespace cuda {

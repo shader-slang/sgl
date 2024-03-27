@@ -61,6 +61,9 @@ target_sources(sgl PRIVATE
     sgl/core/window.h
 
     sgl/device/agility_sdk.h
+    sgl/device/blit.cpp
+    sgl/device/blit.h
+    sgl/device/blit.slang
     sgl/device/command.cpp
     sgl/device/command.h
     sgl/device/cuda_api.cpp
@@ -116,6 +119,8 @@ target_sources(sgl PRIVATE
     sgl/device/slang_utils.h
     sgl/device/swapchain.cpp
     sgl/device/swapchain.h
+    sgl/device/texture_loader.cpp
+    sgl/device/texture_loader.h
     sgl/device/types.h
 
     sgl/math/constants.h
@@ -385,6 +390,7 @@ if(SGL_BUILD_PYTHON)
         sgl/device/python/shader_object.cpp
         sgl/device/python/shader.cpp
         sgl/device/python/swapchain.cpp
+        sgl/device/python/texture_loader.cpp
         sgl/device/python/types.cpp
         sgl/math/python/matrix.cpp
         sgl/math/python/quaternion.cpp
