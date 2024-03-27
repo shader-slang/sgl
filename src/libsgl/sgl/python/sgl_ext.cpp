@@ -39,6 +39,7 @@ SGL_PY_DECLARE(device_shader_cursor);
 SGL_PY_DECLARE(device_shader_object);
 SGL_PY_DECLARE(device_shader);
 SGL_PY_DECLARE(device_swapchain);
+SGL_PY_DECLARE(device_texture_loader);
 SGL_PY_DECLARE(device_types);
 
 SGL_PY_DECLARE(math_scalar);
@@ -114,6 +115,7 @@ NB_MODULE(sgl_ext, m_)
     SGL_PY_IMPORT(device_kernel);
     SGL_PY_IMPORT(device_memory_heap);
     SGL_PY_IMPORT(device_device);
+    SGL_PY_IMPORT(device_texture_loader);
 
     m.def_submodule("ui", "UI module");
     SGL_PY_IMPORT(ui);

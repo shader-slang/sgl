@@ -78,6 +78,8 @@ public:
         float64,
     };
 
+    static constexpr uint32_t TYPE_COUNT = uint32_t(Type::float64) + 1;
+
     SGL_ENUM_INFO(
         Type,
         {
