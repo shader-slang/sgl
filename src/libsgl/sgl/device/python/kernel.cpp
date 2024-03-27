@@ -74,8 +74,12 @@ SGL_PY_EXPORT(device_kernel)
         .def_prop_ro("program", &Kernel::program)
         .def_prop_ro("reflection", &Kernel::reflection);
 
+    nb::class_<ComputeKernelDesc>(m, "ComputeKernelDesc")
+        .def(nb::init<>())
+        .def_rw("program", &ComputeKernelDesc::program, D(ComputeKernelDesc, program));
+
     nb::class_<ComputeKernel, Kernel>(m, "ComputeKernel")
-        .def_prop_ro("pipeline", &ComputeKernel::pipeline)
+        .def_prop_ro("pipeline", &ComputeKernel::pipeline, D(ComputeKernel, pipeline))
         .def(
             "dispatch",
             [](ComputeKernel* self, uint3 thread_count, nb::dict vars, CommandBuffer* command_buffer, nb::kwargs kwargs)
@@ -93,6 +97,7 @@ SGL_PY_EXPORT(device_kernel)
             "thread_count"_a,
             "vars"_a = nb::dict(),
             "command_buffer"_a = nullptr,
-            "kwargs"_a
+            "kwargs"_a,
+            D(ComputeKernel, dispatch)
         );
 }
