@@ -58,6 +58,11 @@ derivative works thereof, in binary and source code form.
 #include "sgl/stl/bit.h" // Replace with <bit> when available on all platforms.
 
 #include <asmjit/asmjit.h>
+#if SGL_MACOS
+#include <asmjit/arm.h>
+#include <asmjit/arm/a64assembler.h>
+#include <asmjit/arm/a64compiler.h>
+#endif
 
 #include <limits>
 #include <unordered_map>
@@ -1411,10 +1416,546 @@ struct ARMProgram : public Program {
 
     static std::unique_ptr<Program> compile(const Struct& src_struct, const Struct& dst_struct)
     {
-        // TODO: Implement ARM JIT.
-        log_warn_once("StructConverter JIT not implemented for ARM. Using VM instead.");
-        SGL_UNUSED(src_struct, dst_struct);
-        return {};
+        // TODO: check cpu features, but for some reason these are all false
+        bool supported = true;
+        // supported &= runtime().cpuFeatures().arm().hasSVE();
+        // supported &= runtime().cpuFeatures().arm().hasSVE_F32MM();
+        // supported &= runtime().cpuFeatures().arm().hasSVE_F64MM();
+        // supported &= runtime().cpuFeatures().arm().hasFRINT();
+        // supported &= runtime().cpuFeatures().arm().hasFP16CONV();
+        if (!supported) {
+            log_warn_once("Struct converter cannot use AArch64 JIT: unsupported CPU features");
+            return nullptr;
+        }
+
+        asmjit::CodeHolder code;
+        code.init(runtime().environment(), runtime().cpuFeatures());
+
+#if SGL_LOG_JIT_ASSEMBLY
+        log_info(
+            "Compiling Aarch64 program for converting from {} to {}",
+            src_struct.to_string(),
+            dst_struct.to_string()
+        );
+        asmjit::StringLogger logger;
+        logger.setFlags(asmjit::FormatFlags::kMachineCode);
+        code.setLogger(&logger);
+#endif
+        asmjit::a64::Compiler c(&code);
+
+        Builder builder(c);
+        builder.build(src_struct, dst_struct);
+
+        asmjit::Error err = c.finalize();
+        if (err != asmjit::kErrorOk) {
+            SGL_THROW("AsmJit failed: {}", asmjit::DebugUtils::errorAsString(err));
+        }
+
+#if SGL_LOG_JIT_ASSEMBLY
+        log_info(logger.content().data());
+#endif
+
+        ConvertFunc func;
+        runtime().add(&func, &code);
+
+        auto program = std::make_unique<X86Program>();
+        program->func = func;
+        return program;
+    }
+
+private:
+    /// Helper class to build X86 code.
+    struct Builder {
+        asmjit::a64::Compiler& c;
+
+        // Each register can hold either a 64-bit integer or a 64-bit floating point value.
+        struct Register {
+            uint32_t index;
+            asmjit::a64::Gp gp;
+            asmjit::a64::Vec vec;
+        };
+
+        std::map<uint32_t, Register> registers;
+
+        Builder(asmjit::a64::Compiler& c)
+            : c(c)
+        {
+        }
+
+        Register& get_register(uint32_t reg)
+        {
+            auto it = registers.find(reg);
+            if (it != registers.end())
+                return it->second;
+            auto [it2, inserted] = registers.emplace(reg, Register{.index = reg});
+            return it2->second;
+        }
+
+        /// Load a constant value.
+        asmjit::a64::Mem const_(double value) { return c.newDoubleConst(asmjit::ConstPoolScope::kGlobal, value); }
+
+        void build(const Struct& src_struct, const Struct& dst_struct)
+        {
+            std::vector<Op> ops = generate_code(src_struct, dst_struct);
+
+            auto comment = [this](std::string text)
+            {
+                text = "### " + text;
+                c.comment(text.c_str());
+            };
+
+            auto node = c.addFunc(asmjit::FuncSignatureT<void, const void*, void*, size_t>(asmjit::CallConvId::kHost));
+            auto src = c.newIntPtr("src");
+            auto dst = c.newIntPtr("dst");
+            auto count = c.newInt64("count");
+            auto idx = c.newInt64("idx");
+
+            node->setArg(0, src);
+            node->setArg(1, dst);
+            node->setArg(2, count);
+
+            asmjit::Label loop_start = c.newLabel();
+            asmjit::Label loop_end = c.newLabel();
+
+            c.cmp(count, asmjit::a64::xzr);
+            c.b_eq(loop_end);
+            c.mov(idx, asmjit::a64::xzr);
+
+            c.bind(loop_start);
+
+            for (const Op& op : ops) {
+                using namespace asmjit;
+
+                switch (op.type) {
+                case Op::Type::load_mem: {
+                    Register& reg = get_register(op.reg);
+                    comment(fmt::format(
+                        "load_mem (reg={}, type={}, offset={}, swap={})",
+                        reg.index,
+                        op.load_mem.type,
+                        op.load_mem.offset,
+                        op.load_mem.swap
+                    ));
+                    load(reg, src, static_cast<int32_t>(op.load_mem.offset), op.load_mem.type, op.load_mem.swap);
+                    break;
+                }
+                case Op::Type::load_imm: {
+                    Register& reg = get_register(op.reg);
+                    comment(fmt::format("load_imm (reg={}, value={})", reg.index, op.load_imm.value));
+                    reg.vec = c.newVecD();
+                    c.ldr(reg.vec, const_(op.load_imm.value));
+                    break;
+                }
+                case Op::Type::save_mem: {
+                    const Register& reg = get_register(op.reg);
+                    comment(fmt::format(
+                        "save_mem (reg={}, type={}, offset={}, swap={})",
+                        reg.index,
+                        op.save_mem.type,
+                        op.save_mem.offset,
+                        op.save_mem.swap
+                    ));
+                    save(reg, dst, static_cast<int32_t>(op.save_mem.offset), op.save_mem.type, op.save_mem.swap);
+                    break;
+                }
+                case Op::Type::cast: {
+                    Register& reg = get_register(op.reg);
+                    comment(fmt::format("cast (reg={}, from={}, to={})", reg.index, op.cast.from, op.cast.to));
+                    cast(reg, op.cast.from, op.cast.to);
+                    break;
+                }
+                case Op::Type::linear_to_srgb: {
+                    Register& reg = get_register(op.reg);
+                    comment(fmt::format("linear_to_srgb (reg={})", op.reg));
+                    reg.vec = gamma(reg.vec, true);
+                    break;
+                }
+                case Op::Type::srgb_to_linear: {
+                    Register& reg = get_register(op.reg);
+                    comment(fmt::format("srgb_to_linear (reg={})", op.reg));
+                    reg.vec = gamma(reg.vec, false);
+                    break;
+                }
+                case Op::Type::multiply: {
+                    const Register& reg = get_register(op.reg);
+                    comment(fmt::format("multiply (reg={}, value={})", reg.index, op.multiply.value));
+                    auto tmp = c.newVecD();
+                    c.ldr(tmp, const_(op.multiply.value));
+                    c.fmul(reg.vec, reg.vec, tmp);
+                    break;
+                }
+                case Op::Type::multiply_add: {
+                    const Register& reg1 = get_register(op.reg);
+                    const Register& reg2 = get_register(op.multiply_add.reg);
+                    comment(fmt::format(
+                        "multiply_add (reg1={}, reg2={}, factor={})",
+                        reg1.index,
+                        reg2.index,
+                        op.multiply_add.factor
+                    ));
+                    auto tmp = c.newVecD();
+                    c.ldr(tmp, const_(op.multiply_add.factor));
+                    c.fmadd(reg1.vec, reg2.vec, tmp, reg1.vec);
+                    break;
+                }
+                case Op::Type::round: {
+                    const Register& reg = get_register(op.reg);
+                    comment(fmt::format("round (reg={})", reg.index));
+                    c.frinta(reg.vec.d(), reg.vec.d());
+                    break;
+                }
+                case Op::Type::clamp: {
+                    const Register& reg = get_register(op.reg);
+                    comment(fmt::format("clamp (reg={}, min={}, max={})", reg.index, op.clamp.min, op.clamp.max));
+                    auto tmin = c.newVecD();
+                    c.ldr(tmin, const_(op.clamp.min));
+                    c.fmax(reg.vec, reg.vec, tmin);
+                    auto tmax = c.newVecD();
+                    c.ldr(tmax, const_(op.clamp.max));
+                    c.fmin(reg.vec, reg.vec, tmax);
+                    break;
+                }
+                }
+            }
+
+            c.add(idx, idx, asmjit::Imm(1));
+            c.add(src, src, asmjit::Imm(src_struct.size()));
+            c.add(dst, dst, asmjit::Imm(dst_struct.size()));
+            c.cmp(idx, count);
+            c.b_ne(loop_start);
+
+            c.bind(loop_end);
+
+            c.ret();
+            c.endFunc();
+        };
+
+        /// Load a value from memory (base + offset) to a register.
+        /// Optionally swaps the endianess of the value.
+        /// Integer values are stored in a general purpose register.
+        /// Floating point values are stored in a XMM register.
+        /// Half precision floating point values are converted to single precision,
+        /// either using the F16C instruction set or a software implementation.
+        void load(Register& reg, const asmjit::a64::Gp& base, int32_t offset, Struct::Type type, bool swap)
+        {
+            using namespace asmjit;
+
+            if (Struct::is_integer(type))
+                reg.gp = c.newGpx();
+            else
+                reg.vec = c.newVecD();
+
+            switch (type) {
+            case Struct::Type::int8:
+                c.ldrsb(reg.gp.x(), a64::ptr(base, offset));
+                break;
+            case Struct::Type::int16:
+                if (swap) {
+                    auto tmp = c.newGpw();
+                    c.ldrh(tmp, a64::ptr(base, offset));
+                    c.rev16(tmp, tmp);
+                    c.sxth(reg.gp.x(), tmp);
+                } else {
+                    c.ldrsh(reg.gp.x(), a64::ptr(base, offset));
+                }
+                break;
+            case Struct::Type::int32:
+                if (swap) {
+                    auto tmp = c.newGpw();
+                    c.ldr(tmp, a64::ptr(base, offset));
+                    c.rev32(tmp, tmp);
+                    c.sxtw(reg.gp.x(), tmp.w());
+                } else {
+                    c.ldrsw(reg.gp.x(), a64::ptr(base, offset));
+                }
+                break;
+            case Struct::Type::int64:
+                c.ldr(reg.gp.x(), a64::ptr(base, offset));
+                if (swap)
+                    c.rev64(reg.gp.x(), reg.gp.x());
+                break;
+            case Struct::Type::uint8:
+                c.ldrb(reg.gp.w(), a64::ptr(base, offset));
+                break;
+            case Struct::Type::uint16:
+                c.ldrh(reg.gp.w(), a64::ptr(base, offset));
+                if (swap)
+                    c.rev16(reg.gp.w(), reg.gp.w());
+                break;
+            case Struct::Type::uint32:
+                c.ldr(reg.gp.w(), a64::ptr(base, offset));
+                if (swap)
+                    c.rev32(reg.gp.w(), reg.gp.w());
+                break;
+            case Struct::Type::uint64:
+                c.ldr(reg.gp.x(), a64::ptr(base, offset));
+                if (swap)
+                    c.rev64(reg.gp.x(), reg.gp.x());
+                break;
+            case Struct::Type::float16: {
+                if (swap) {
+                    auto tmp = c.newGpw();
+                    c.ldrh(tmp, a64::ptr(base, offset));
+                    c.rev16(tmp, tmp);
+                    c.fmov(reg.vec.h(), tmp);
+                } else {
+                    c.ldr(reg.vec.h(), a64::ptr(base, offset));
+                }
+                break;
+            }
+            case Struct::Type::float32:
+                if (swap) {
+                    auto tmp = c.newGpw();
+                    c.ldr(tmp, a64::ptr(base, offset));
+                    c.rev32(tmp, tmp);
+                    c.fmov(reg.vec.s(), tmp);
+                } else {
+                    c.ldr(reg.vec.s(), a64::ptr(base, offset));
+                }
+                break;
+            case Struct::Type::float64:
+                if (swap) {
+                    auto tmp = c.newGpx();
+                    c.ldr(tmp, a64::ptr(base, offset));
+                    c.rev64(tmp, tmp);
+                    c.fmov(reg.vec.d(), tmp);
+                } else {
+                    c.ldr(reg.vec.d(), a64::ptr(base, offset));
+                }
+                break;
+            }
+        }
+
+        /// Save a value from a register to memory (base + offset).
+        /// Optionally swaps the endianess of the value.
+        void save(const Register& reg, const asmjit::a64::Gp& base, int32_t offset, Struct::Type type, bool swap)
+        {
+            using namespace asmjit;
+
+            switch (type) {
+            case Struct::Type::int8:
+            case Struct::Type::uint8:
+                c.strb(reg.gp.w(), a64::ptr(base, offset));
+                break;
+            case Struct::Type::int16:
+            case Struct::Type::uint16:
+                if (swap) {
+                    auto tmp = c.newGpw();
+                    c.mov(tmp, reg.gp.w());
+                    c.rev16(tmp, tmp);
+                    c.strh(tmp, a64::ptr(base, offset));
+                } else {
+                    c.strh(reg.gp.w(), a64::ptr(base, offset));
+                }
+                break;
+            case Struct::Type::int32:
+            case Struct::Type::uint32:
+                if (swap) {
+                    auto tmp = c.newGpw();
+                    c.mov(tmp, reg.gp.w());
+                    c.rev32(tmp, tmp);
+                    c.str(tmp, a64::ptr(base, offset));
+                } else {
+                    c.str(reg.gp.w(), a64::ptr(base, offset));
+                }
+                break;
+            case Struct::Type::int64:
+            case Struct::Type::uint64:
+                if (swap) {
+                    auto tmp = c.newGpx();
+                    c.mov(tmp, reg.gp.x());
+                    c.rev64(tmp, tmp);
+                    c.str(tmp, a64::ptr(base, offset));
+                } else {
+                    c.str(reg.gp, a64::ptr(base, offset));
+                }
+                break;
+            case Struct::Type::float16: {
+                if (swap) {
+                    auto tmp = c.newGpw();
+                    c.fmov(tmp, reg.vec.h());
+                    c.rev16(tmp, tmp);
+                    c.strh(tmp, a64::ptr(base, offset));
+                } else {
+                    c.str(reg.vec.h(), a64::ptr(base, offset));
+                }
+                break;
+            }
+            case Struct::Type::float32:
+                if (swap) {
+                    auto tmp = c.newGpw();
+                    c.fmov(tmp, reg.vec.s());
+                    c.rev32(tmp, tmp);
+                    c.str(tmp, a64::ptr(base, offset));
+                } else {
+                    c.str(reg.vec.s(), a64::ptr(base, offset));
+                }
+                break;
+            case Struct::Type::float64:
+                if (swap) {
+                    auto tmp = c.newGpx();
+                    c.fmov(tmp, reg.vec.d());
+                    c.rev64(tmp, tmp);
+                    c.str(tmp, a64::ptr(base, offset));
+                } else {
+                    c.str(reg.vec.d(), a64::ptr(base, offset));
+                }
+                break;
+            }
+        }
+
+        /// Convert a register from one type to another.
+        void cast(Register& reg, Struct::Type from, Struct::Type to)
+        {
+            using namespace asmjit;
+
+            a64::Vec dbl = c.newVecD();
+            if (Struct::is_integer(from)) {
+                if (Struct::is_signed(from)) {
+                    c.scvtf(dbl, reg.gp.x());
+                } else {
+                    c.ucvtf(dbl, reg.gp.x());
+                }
+            } else {
+                if (from == Struct::Type::float16) {
+                    c.fcvt(dbl, reg.vec.h());
+                } else if (from == Struct::Type::float32) {
+                    c.fcvt(dbl, reg.vec.s());
+                } else {
+                    c.fmov(dbl, reg.vec.d());
+                }
+            }
+            if (Struct::is_integer(to)) {
+                reg.gp = c.newGpx();
+                if (Struct::is_signed(to)) {
+                    c.fcvtzs(reg.gp.x(), dbl);
+                } else {
+                    c.fcvtzu(reg.gp.x(), dbl);
+                }
+            } else {
+                reg.vec = c.newVecD();
+                if (to == Struct::Type::float16) {
+                    c.fcvt(reg.vec.h(), dbl);
+                } else if (to == Struct::Type::float32) {
+                    c.fcvt(reg.vec.s(), dbl);
+                } else {
+                    c.fmov(reg.vec.d(), dbl);
+                }
+            }
+        }
+
+        /// Forward/inverse gamma correction using the sRGB profile
+        asmjit::a64::Vec gamma(asmjit::a64::Vec x, bool to_srgb)
+        {
+            using namespace asmjit;
+
+            a64::Vec a = c.newVecD();
+            a64::Vec b = c.newVecD();
+
+            c.ldr(a, const_(to_srgb ? 12.92 : (1.0 / 12.92)));
+            a64::Vec tmp = c.newVecD();
+            c.ldr(tmp, const_(to_srgb ? 0.0031308 : 0.04045));
+            c.fcmp(x, tmp);
+
+            Label low_value = c.newLabel();
+            // c.jb(low_value);
+            c.b_lt(low_value);
+
+            a64::Vec y;
+            if (to_srgb) {
+                y = c.newVecD();
+                c.fsqrt(y, x);
+            } else {
+                y = x;
+            }
+
+            // Rational polynomial fit, rel.err = 8*10^-15
+            double to_srgb_coeffs[2][11] = {
+                {
+                    -0.0031151377052754843,
+                    0.5838023820686707,
+                    8.450947414259522,
+                    27.901125077137042,
+                    32.44669922192121,
+                    15.374469584296442,
+                    3.0477578489880823,
+                    0.2263810267005674,
+                    0.002531335520959116,
+                    -0.00021805827098915798,
+                    -3.7113872202050023e-6,
+                },
+                {
+                    1.,
+                    10.723011300050162,
+                    29.70548706952188,
+                    30.50364355650628,
+                    13.297981743005433,
+                    2.575446652731678,
+                    0.21749170309546628,
+                    0.007244514696840552,
+                    0.00007045228641004039,
+                    -8.387527630781522e-9,
+                    2.2380622409188757e-11,
+                },
+            };
+
+            // Rational polynomial fit, rel.err = 1.5*10^-15
+            double from_srgb_coeffs[2][10] = {
+                {
+                    -342.62884098034357,
+                    -3483.4445569178347,
+                    -9735.250875334352,
+                    -10782.158977031822,
+                    -5548.704065887224,
+                    -1446.951694673217,
+                    -200.19589605282445,
+                    -14.786385491859248,
+                    -0.5489744177844188,
+                    -0.008042950896814532,
+                },
+                {
+                    1.,
+                    -84.8098437770271,
+                    -1884.7738197074218,
+                    -8059.219012060384,
+                    -11916.470977597566,
+                    -7349.477378676199,
+                    -2013.8039726540235,
+                    -237.47722999429413,
+                    -9.646075249097724,
+                    -2.2132610916769585e-8,
+                },
+            };
+
+            size_t ncoeffs
+                = to_srgb ? std::extent_v<decltype(to_srgb_coeffs), 1> : std::extent_v<decltype(from_srgb_coeffs), 1>;
+
+            for (size_t i = 0; i < ncoeffs; ++i) {
+                for (int j = 0; j < 2; ++j) {
+                    a64::Vec& v = (j == 0) ? a : b;
+                    a64::Mem coeff = const_(to_srgb ? to_srgb_coeffs[j][i] : from_srgb_coeffs[j][i]);
+                    if (i == 0) {
+                        c.ldr(v, coeff);
+                    } else {
+                        auto tmp = c.newVecD();
+                        c.ldr(tmp, coeff);
+                        c.fmadd(v, v, y, tmp);
+                    }
+                }
+            }
+
+            c.fdiv(a, a, b);
+            c.bind(low_value);
+            c.fmul(a, a, x);
+
+            return a;
+        }
+    };
+
+    static asmjit::JitRuntime& runtime()
+    {
+        static asmjit::JitRuntime instance;
+        return instance;
     }
 };
 
