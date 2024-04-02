@@ -118,7 +118,7 @@ void bind_matrix_type(nb::module_& m, const char* name)
         [](const T& self)
         {
             size_t shape[2] = {rows, cols};
-            return nb::ndarray<nb::numpy, const value_type, nb::shape<rows, cols>>(&self, 2, shape);
+            return nb::ndarray<nb::numpy, const value_type, nb::shape<rows, cols>>(&self, 2, shape, nb::handle());
         }
     );
 

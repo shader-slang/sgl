@@ -106,8 +106,8 @@ struct type_caster<std::span<T>> {
         if (ret.is_valid()) {
             Py_ssize_t index = 0;
 
-            for (auto& value : src) {
-                handle h = Caster::from_cpp(forward_like<T>(value), policy, cleanup);
+            for (auto&& value : src) {
+                handle h = Caster::from_cpp(forward_like_<T>(value), policy, cleanup);
                 if (!h.is_valid()) {
                     ret.reset();
                     break;
