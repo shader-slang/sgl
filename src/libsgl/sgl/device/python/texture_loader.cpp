@@ -23,10 +23,10 @@ SGL_PY_EXPORT(device_texture_loader)
 {
     using namespace sgl;
 
-    nb::class_<TextureLoader, Object> texture_loader(m, "TextureLoader", D_NA(TextureLoader));
+    nb::class_<TextureLoader, Object> texture_loader(m, "TextureLoader", D(TextureLoader));
 
-    nb::class_<TextureLoader::Options>(texture_loader, "Options", D_NA(TextureLoader, Options))
-        .def(nb::init<>(), D_NA(TextureLoader, Options))
+    nb::class_<TextureLoader::Options>(texture_loader, "Options", D(TextureLoader, Options))
+        .def(nb::init<>(), D(TextureLoader, Options))
         .def(
             "__init__",
             [](TextureLoader::Options* self, nb::dict dict)
@@ -42,13 +42,13 @@ SGL_PY_EXPORT(device_texture_loader)
     nb::implicitly_convertible<nb::dict, TextureLoader::Options>();
 
     texture_loader //
-        .def(nb::init<ref<Device>>(), "device"_a, D_NA(TextureLoader, TextureLoader))
+        .def(nb::init<ref<Device>>(), "device"_a, D(TextureLoader, TextureLoader))
         .def(
             "load_texture",
             nb::overload_cast<const Bitmap*, const TextureLoader::Options&>(&TextureLoader::load_texture),
             "bitmap"_a,
             "options"_a = TextureLoader::Options(),
-            D_NA(TextureLoader, load_texture)
+            D(TextureLoader, load_texture)
         )
         .def(
             "load_texture",
@@ -56,14 +56,14 @@ SGL_PY_EXPORT(device_texture_loader)
             ),
             "path"_a,
             "options"_a = TextureLoader::Options(),
-            D_NA(TextureLoader, load_texture, 2)
+            D(TextureLoader, load_texture, 2)
         )
         .def(
             "load_textures",
             nb::overload_cast<std::span<const Bitmap*>, const TextureLoader::Options&>(&TextureLoader::load_textures),
             "bitmaps"_a,
             "options"_a = TextureLoader::Options(),
-            D_NA(TextureLoader, load_textures)
+            D(TextureLoader, load_textures)
         )
         .def(
             "load_textures",
@@ -72,7 +72,7 @@ SGL_PY_EXPORT(device_texture_loader)
             ),
             "paths"_a,
             "options"_a = TextureLoader::Options(),
-            D_NA(TextureLoader, load_textures, 2)
+            D(TextureLoader, load_textures, 2)
         )
         .def(
             "load_texture_array",
@@ -81,7 +81,7 @@ SGL_PY_EXPORT(device_texture_loader)
             ),
             "bitmaps"_a,
             "options"_a = TextureLoader::Options(),
-            D_NA(TextureLoader, load_texture_array)
+            D(TextureLoader, load_texture_array)
         )
         .def(
             "load_texture_array",
@@ -90,6 +90,6 @@ SGL_PY_EXPORT(device_texture_loader)
             ),
             "paths"_a,
             "options"_a = TextureLoader::Options(),
-            D_NA(TextureLoader, load_texture_array, 2)
+            D(TextureLoader, load_texture_array, 2)
         );
 }
