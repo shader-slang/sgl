@@ -1712,6 +1712,84 @@ static const char *__doc_sgl_BlendOp_reverse_subtract = R"doc()doc";
 
 static const char *__doc_sgl_BlendOp_subtract = R"doc()doc";
 
+static const char *__doc_sgl_Blitter =
+R"doc(Utility class for blitting textures and generating mipmaps.
+
+Because compute shaders have limited support for UAV texture formats,
+this class uses a graphics pipeline to blit a texture to a render
+target.)doc";
+
+static const char *__doc_sgl_Blitter_Blitter = R"doc()doc";
+
+static const char *__doc_sgl_Blitter_ProgramKey = R"doc()doc";
+
+static const char *__doc_sgl_Blitter_ProgramKey_dst_type = R"doc()doc";
+
+static const char *__doc_sgl_Blitter_ProgramKey_operator_le = R"doc()doc";
+
+static const char *__doc_sgl_Blitter_ProgramKey_src_layout = R"doc()doc";
+
+static const char *__doc_sgl_Blitter_ProgramKey_src_type = R"doc()doc";
+
+static const char *__doc_sgl_Blitter_TextureLayout = R"doc()doc";
+
+static const char *__doc_sgl_Blitter_TextureLayout_texture_2d = R"doc()doc";
+
+static const char *__doc_sgl_Blitter_TextureLayout_texture_2d_array = R"doc()doc";
+
+static const char *__doc_sgl_Blitter_TextureType = R"doc()doc";
+
+static const char *__doc_sgl_Blitter_TextureType_float = R"doc()doc";
+
+static const char *__doc_sgl_Blitter_TextureType_int = R"doc()doc";
+
+static const char *__doc_sgl_Blitter_blit =
+R"doc(Blit a texture (SRV) to another texture (RTV).
+
+Blits the full extent of the source texture to the destination
+texture.
+
+Parameter ``command_buffer``:
+    Command buffer.
+
+Parameter ``src``:
+    SRV of the source texture.
+
+Parameter ``dst``:
+    RTV of the destination texture.
+
+Parameter ``filter``:
+    Filtering mode to use.)doc";
+
+static const char *__doc_sgl_Blitter_class_name = R"doc()doc";
+
+static const char *__doc_sgl_Blitter_generate_mips =
+R"doc(Generate mipmaps for a texture.
+
+Repetatively blits the texture to a smaller mip level until the
+smallest mip level is reached. The texture needs to have mip levels
+pre-allocated and have usage flags for SRV and RTV. Supports both 2D
+and 2D array textures.
+
+Parameter ``command_buffer``:
+    Command buffer.
+
+Parameter ``texture``:
+    Texture to generate mipmaps for.
+
+Parameter ``array_layer``:
+    Array layer to generate mipmaps for.)doc";
+
+static const char *__doc_sgl_Blitter_get_program = R"doc()doc";
+
+static const char *__doc_sgl_Blitter_m_device = R"doc()doc";
+
+static const char *__doc_sgl_Blitter_m_linear_sampler = R"doc()doc";
+
+static const char *__doc_sgl_Blitter_m_point_sampler = R"doc()doc";
+
+static const char *__doc_sgl_Blitter_m_program_cache = R"doc()doc";
+
 static const char *__doc_sgl_Buffer = R"doc()doc";
 
 static const char *__doc_sgl_BufferDesc = R"doc()doc";
@@ -1740,6 +1818,8 @@ static const char *__doc_sgl_BufferRange_element_count = R"doc()doc";
 
 static const char *__doc_sgl_BufferRange_first_element = R"doc()doc";
 
+static const char *__doc_sgl_BufferRange_operator_le = R"doc()doc";
+
 static const char *__doc_sgl_Buffer_Buffer = R"doc()doc";
 
 static const char *__doc_sgl_Buffer_Buffer_2 = R"doc()doc";
@@ -1760,13 +1840,26 @@ static const char *__doc_sgl_Buffer_element_size = R"doc()doc";
 
 static const char *__doc_sgl_Buffer_format = R"doc()doc";
 
+static const char *__doc_sgl_Buffer_get_data =
+R"doc(Get buffer data to host memory. \note If the buffer is in device local
+memory, this will wait until the data is copied back to host memory.
+
+Parameter ``data``:
+    Data buffer to read to.
+
+Parameter ``size``:
+    Size of the data in bytes.
+
+Parameter ``offset``:
+    Offset in the buffer to read from.)doc";
+
+static const char *__doc_sgl_Buffer_get_element = R"doc()doc";
+
+static const char *__doc_sgl_Buffer_get_elements = R"doc()doc";
+
 static const char *__doc_sgl_Buffer_get_srv = R"doc(Get a shader resource view for a range of the buffer.)doc";
 
-static const char *__doc_sgl_Buffer_get_srv_2 = R"doc(Get a shader resource view for the entire buffer.)doc";
-
 static const char *__doc_sgl_Buffer_get_uav = R"doc(Get a unordered access view for a range of the buffer.)doc";
-
-static const char *__doc_sgl_Buffer_get_uav_2 = R"doc(Get a unordered access view for the entire buffer.)doc";
 
 static const char *__doc_sgl_Buffer_get_view = R"doc(Get a resource view. Views are cached and reused.)doc";
 
@@ -1800,6 +1893,22 @@ static const char *__doc_sgl_Buffer_map_4 = R"doc()doc";
 
 static const char *__doc_sgl_Buffer_memory_usage = R"doc()doc";
 
+static const char *__doc_sgl_Buffer_set_data =
+R"doc(Set buffer data from host memory.
+
+Parameter ``data``:
+    Data to write.
+
+Parameter ``size``:
+    Size of the data in bytes.
+
+Parameter ``offset``:
+    Offset in the buffer to write to.)doc";
+
+static const char *__doc_sgl_Buffer_set_element = R"doc()doc";
+
+static const char *__doc_sgl_Buffer_set_elements = R"doc()doc";
+
 static const char *__doc_sgl_Buffer_size = R"doc()doc";
 
 static const char *__doc_sgl_Buffer_struct_size = R"doc()doc";
@@ -1827,19 +1936,6 @@ static const char *__doc_sgl_CommandBuffer_EncoderType_resource = R"doc()doc";
 static const char *__doc_sgl_CommandBuffer_begin_debug_event = R"doc(Begin a debug event.)doc";
 
 static const char *__doc_sgl_CommandBuffer_buffer_barrier =
-R"doc(Transition resource state of a buffer and add a barrier if state has
-changed.
-
-Parameter ``buffer``:
-    Buffer
-
-Parameter ``new_state``:
-    New state
-
-Returns:
-    True if barrier was recorded (i.e. state has changed).)doc";
-
-static const char *__doc_sgl_CommandBuffer_buffer_barrier_2 =
 R"doc(Insert a barrier for a set of buffers.
 
 Parameter ``buffers``:
@@ -1851,7 +1947,7 @@ Parameter ``old_state``:
 Parameter ``new_state``:
     The state the buffers must be in after the barrier.)doc";
 
-static const char *__doc_sgl_CommandBuffer_buffer_barrier_3 = R"doc()doc";
+static const char *__doc_sgl_CommandBuffer_buffer_barrier_2 = R"doc()doc";
 
 static const char *__doc_sgl_CommandBuffer_class_name = R"doc()doc";
 
@@ -1866,24 +1962,6 @@ static const char *__doc_sgl_CommandBuffer_clear_texture = R"doc()doc";
 static const char *__doc_sgl_CommandBuffer_clear_texture_2 = R"doc()doc";
 
 static const char *__doc_sgl_CommandBuffer_close = R"doc()doc";
-
-static const char *__doc_sgl_CommandBuffer_copy_buffer =
-R"doc(Copy data from one buffer to another.
-
-Parameter ``dst``:
-    Destination buffer.
-
-Parameter ``dst_offset``:
-    Offset into the destination buffer.
-
-Parameter ``src``:
-    Source buffer.
-
-Parameter ``src_offset``:
-    Offset into the source buffer.
-
-Parameter ``size``:
-    Number of bytes to copy.)doc";
 
 static const char *__doc_sgl_CommandBuffer_copy_buffer_region =
 R"doc(Copy a buffer region.
@@ -1921,14 +1999,14 @@ Parameter ``dst``:
 Parameter ``dst_subresource``:
     Destination subresource index.
 
+Parameter ``dst_offset``:
+    Destination offset in texels.
+
 Parameter ``src``:
     Source texture.
 
 Parameter ``src_subresource``:
     Source subresource index.
-
-Parameter ``dst_offset``:
-    Destination offset in texels.
 
 Parameter ``src_offset``:
     Source offset in texels.
@@ -2056,11 +2134,48 @@ Parameter ``dst``:
 Parameter ``src``:
     Source texture.)doc";
 
-static const char *__doc_sgl_CommandBuffer_resource_barrier = R"doc()doc";
+static const char *__doc_sgl_CommandBuffer_set_buffer_state =
+R"doc(Transition resource state of a buffer and add a barrier if state has
+changed.
 
-static const char *__doc_sgl_CommandBuffer_submit = R"doc(Submit all recorded commands to the command queue.)doc";
+Parameter ``buffer``:
+    Buffer
 
-static const char *__doc_sgl_CommandBuffer_texture_barrier =
+Parameter ``new_state``:
+    New state
+
+Returns:
+    True if barrier was recorded (i.e. state has changed).)doc";
+
+static const char *__doc_sgl_CommandBuffer_set_resource_state =
+R"doc(Transition resource state of a resource and add a barrier if state has
+changed.
+
+Parameter ``resource``:
+    Resource
+
+Parameter ``new_state``:
+    New state
+
+Returns:
+    True if barrier was recorded (i.e. state has changed).)doc";
+
+static const char *__doc_sgl_CommandBuffer_set_resource_state_2 =
+R"doc(Transition resource state of a resource and add a barrier if state has
+changed. For buffer views, this will set the resource state of the
+entire buffer. For texture views, this will set the resource state of
+all its sub-resources.
+
+Parameter ``resource_view``:
+    Resource view
+
+Parameter ``new_state``:
+    New state
+
+Returns:
+    True if barrier was recorded (i.e. state has changed).)doc";
+
+static const char *__doc_sgl_CommandBuffer_set_texture_state =
 R"doc(Transition resource state of a texture and add a barrier if state has
 changed.
 
@@ -2073,21 +2188,52 @@ Parameter ``new_state``:
 Returns:
     True if barrier was recorded (i.e. state has changed).)doc";
 
+static const char *__doc_sgl_CommandBuffer_set_texture_subresource_state =
+R"doc(Transition resource state of texture sub-resources and add a barrier
+if state has changed.
+
+Parameter ``texture``:
+    Texture
+
+Parameter ``range``:
+    Subresource range
+
+Parameter ``new_state``:
+    New state
+
+Returns:
+    True if barrier was recorded (i.e. state has changed).)doc";
+
+static const char *__doc_sgl_CommandBuffer_submit = R"doc(Submit all recorded commands to the command queue.)doc";
+
+static const char *__doc_sgl_CommandBuffer_texture_barrier = R"doc()doc";
+
 static const char *__doc_sgl_CommandBuffer_texture_barrier_2 = R"doc()doc";
 
-static const char *__doc_sgl_CommandBuffer_texture_barrier_3 = R"doc()doc";
-
 static const char *__doc_sgl_CommandBuffer_texture_subresource_barrier = R"doc()doc";
-
-static const char *__doc_sgl_CommandBuffer_texture_subresource_barrier_2 = R"doc()doc";
 
 static const char *__doc_sgl_CommandBuffer_to_string = R"doc()doc";
 
 static const char *__doc_sgl_CommandBuffer_uav_barrier = R"doc(Insert a UAV barrier)doc";
 
-static const char *__doc_sgl_CommandBuffer_upload_buffer_data = R"doc()doc";
+static const char *__doc_sgl_CommandBuffer_upload_buffer_data =
+R"doc(Upload host memory to a buffer.
+
+Parameter ``buffer``:
+    Buffer to write to.
+
+Parameter ``offset``:
+    Buffer offset in bytes.
+
+Parameter ``size``:
+    Number of bytes to write.
+
+Parameter ``data``:
+    Host memory to write.)doc";
 
 static const char *__doc_sgl_CommandBuffer_upload_texture_data = R"doc()doc";
+
+static const char *__doc_sgl_CommandBuffer_upload_texture_data_2 = R"doc()doc";
 
 static const char *__doc_sgl_CommandBuffer_write_timestamp =
 R"doc(Write a timestamp.
@@ -2809,9 +2955,21 @@ static const char *__doc_sgl_Device_m_upload_heap = R"doc()doc";
 
 static const char *__doc_sgl_Device_read_back_heap = R"doc()doc";
 
-static const char *__doc_sgl_Device_read_buffer = R"doc()doc";
+static const char *__doc_sgl_Device_read_buffer_data =
+R"doc(Read buffer data to host memory. \note This will wait until the data
+is copied back to host memory.
 
-static const char *__doc_sgl_Device_read_buffer_2 = R"doc()doc";
+Parameter ``buffer``:
+    Buffer to read from.
+
+Parameter ``data``:
+    Data to buffer to read to.
+
+Parameter ``size``:
+    Size of the data in bytes.
+
+Parameter ``offset``:
+    Offset in the buffer to read from.)doc";
 
 static const char *__doc_sgl_Device_read_texture = R"doc()doc";
 
@@ -2830,6 +2988,21 @@ static const char *__doc_sgl_Device_supports_cuda_interop = R"doc(True if the de
 static const char *__doc_sgl_Device_to_string = R"doc()doc";
 
 static const char *__doc_sgl_Device_type = R"doc()doc";
+
+static const char *__doc_sgl_Device_upload_buffer_data =
+R"doc(Upload host memory to buffer.
+
+Parameter ``buffer``:
+    Buffer to write to.
+
+Parameter ``data``:
+    Data to write.
+
+Parameter ``size``:
+    Size of the data in bytes.
+
+Parameter ``offset``:
+    Offset in the buffer to write to.)doc";
 
 static const char *__doc_sgl_Device_upload_heap = R"doc()doc";
 
@@ -5513,7 +5686,7 @@ static const char *__doc_sgl_ResourceViewDesc_buffer_range = R"doc()doc";
 
 static const char *__doc_sgl_ResourceViewDesc_format = R"doc()doc";
 
-static const char *__doc_sgl_ResourceViewDesc_operator_eq = R"doc()doc";
+static const char *__doc_sgl_ResourceViewDesc_operator_le = R"doc()doc";
 
 static const char *__doc_sgl_ResourceViewDesc_subresource_range = R"doc()doc";
 
@@ -5541,6 +5714,8 @@ static const char *__doc_sgl_ResourceView_ResourceView = R"doc()doc";
 
 static const char *__doc_sgl_ResourceView_ResourceView_2 = R"doc()doc";
 
+static const char *__doc_sgl_ResourceView_all_subresources = R"doc(True if the view covers all subresources.)doc";
+
 static const char *__doc_sgl_ResourceView_class_name = R"doc()doc";
 
 static const char *__doc_sgl_ResourceView_desc = R"doc()doc";
@@ -5553,6 +5728,8 @@ views, VkBuffer for untyped buffer views)doc";
 static const char *__doc_sgl_ResourceView_gfx_resource_view = R"doc()doc";
 
 static const char *__doc_sgl_ResourceView_invalidate = R"doc()doc";
+
+static const char *__doc_sgl_ResourceView_m_all_subresources = R"doc()doc";
 
 static const char *__doc_sgl_ResourceView_m_desc = R"doc()doc";
 
@@ -5580,11 +5757,9 @@ VkBuffer or VkImage)doc";
 
 static const char *__doc_sgl_Resource_get_shared_handle = R"doc(Get the shared resource handle.)doc";
 
-static const char *__doc_sgl_Resource_get_srv = R"doc(Get a shader resource view for the entire resource.)doc";
-
-static const char *__doc_sgl_Resource_get_uav = R"doc(Get a unordered access view for the entire resource.)doc";
-
 static const char *__doc_sgl_Resource_gfx_resource = R"doc()doc";
+
+static const char *__doc_sgl_Resource_invalidate_views = R"doc()doc";
 
 static const char *__doc_sgl_Resource_m_deferred_release = R"doc()doc";
 
@@ -6212,6 +6387,8 @@ static const char *__doc_sgl_SlangSession_load_module_from_source = R"doc()doc";
 
 static const char *__doc_sgl_SlangSession_load_program = R"doc()doc";
 
+static const char *__doc_sgl_SlangSession_load_source = R"doc()doc";
+
 static const char *__doc_sgl_SlangSession_m_cache_enabled = R"doc(True if session cache is enabled.)doc";
 
 static const char *__doc_sgl_SlangSession_m_cache_include_paths = R"doc(One cache path for each include path under the root cache path.)doc";
@@ -6553,6 +6730,14 @@ can be set, but not both.)doc";
 
 static const char *__doc_sgl_StructuredBufferDesc_usage = R"doc()doc";
 
+static const char *__doc_sgl_SubresourceData = R"doc()doc";
+
+static const char *__doc_sgl_SubresourceData_data = R"doc()doc";
+
+static const char *__doc_sgl_SubresourceData_row_pitch = R"doc()doc";
+
+static const char *__doc_sgl_SubresourceData_slice_pitch = R"doc()doc";
+
 static const char *__doc_sgl_SubresourceLayout = R"doc()doc";
 
 static const char *__doc_sgl_SubresourceLayout_depth = R"doc(Number of depth slices.)doc";
@@ -6578,6 +6763,8 @@ static const char *__doc_sgl_SubresourceRange_layer_count = R"doc(Number of arra
 static const char *__doc_sgl_SubresourceRange_mip_count = R"doc(Number of mip levels.)doc";
 
 static const char *__doc_sgl_SubresourceRange_mip_level = R"doc(Most detailed mip level.)doc";
+
+static const char *__doc_sgl_SubresourceRange_operator_le = R"doc()doc";
 
 static const char *__doc_sgl_SubresourceRange_texture_aspect = R"doc(Texture aspect.)doc";
 
@@ -6755,6 +6942,118 @@ static const char *__doc_sgl_TextureFilteringMode_linear = R"doc()doc";
 
 static const char *__doc_sgl_TextureFilteringMode_point = R"doc()doc";
 
+static const char *__doc_sgl_TextureLoader = R"doc(Utility class for loading textures from bitmaps and image files.)doc";
+
+static const char *__doc_sgl_TextureLoader_Options = R"doc()doc";
+
+static const char *__doc_sgl_TextureLoader_Options_Options = R"doc()doc";
+
+static const char *__doc_sgl_TextureLoader_Options_allocate_mips = R"doc(Allocate mip levels for the texture.)doc";
+
+static const char *__doc_sgl_TextureLoader_Options_extend_alpha = R"doc(Extend RGB to RGBA if RGB texture format is not available.)doc";
+
+static const char *__doc_sgl_TextureLoader_Options_generate_mips = R"doc(Generate mip levels for the texture.)doc";
+
+static const char *__doc_sgl_TextureLoader_Options_load_as_normalized = R"doc(Load 8/16-bit integer data as normalized resource format.)doc";
+
+static const char *__doc_sgl_TextureLoader_Options_load_as_srgb =
+R"doc(Use ``Format::rgba8_unorm_srgb`` format if bitmap is 8-bit RGBA with
+sRGB gamma.)doc";
+
+static const char *__doc_sgl_TextureLoader_Options_usage =
+R"doc(Resource usage flags for the texture. ``ResourceUsage::render_target``
+will be added automatically if ``generate_mips`` is true.)doc";
+
+static const char *__doc_sgl_TextureLoader_TextureLoader = R"doc()doc";
+
+static const char *__doc_sgl_TextureLoader_class_name = R"doc()doc";
+
+static const char *__doc_sgl_TextureLoader_determine_texture_format = R"doc()doc";
+
+static const char *__doc_sgl_TextureLoader_load_array_from_bitmaps = R"doc()doc";
+
+static const char *__doc_sgl_TextureLoader_load_from_bitmap = R"doc()doc";
+
+static const char *__doc_sgl_TextureLoader_load_texture =
+R"doc(Load a texture from a bitmap.
+
+Parameter ``bitmap``:
+    Bitmap to load.
+
+Parameter ``options``:
+    Texture loading options.
+
+Returns:
+    New texture object.)doc";
+
+static const char *__doc_sgl_TextureLoader_load_texture_2 =
+R"doc(Load a texture from an image file.
+
+Parameter ``path``:
+    Image file path.
+
+Parameter ``options``:
+    Texture loading options.
+
+Returns:
+    New texture object.)doc";
+
+static const char *__doc_sgl_TextureLoader_load_texture_array =
+R"doc(Load a texture array from a list of bitmaps.
+
+All bitmaps need to have the same format and dimensions.
+
+Parameter ``bitmaps``:
+    Bitmaps to load.
+
+Parameter ``options``:
+    Texture loading options.
+
+Returns:
+    New texture array object.)doc";
+
+static const char *__doc_sgl_TextureLoader_load_texture_array_2 =
+R"doc(Load a texture array from a list of image files.
+
+All images need to have the same format and dimensions.
+
+Parameter ``paths``:
+    Image file paths.
+
+Parameter ``options``:
+    Texture loading options.
+
+Returns:
+    New texture array object.)doc";
+
+static const char *__doc_sgl_TextureLoader_load_textures =
+R"doc(Load textures from a list of bitmaps.
+
+Parameter ``bitmaps``:
+    Bitmaps to load.
+
+Parameter ``options``:
+    Texture loading options.
+
+Returns:
+    List of new of texture objects.)doc";
+
+static const char *__doc_sgl_TextureLoader_load_textures_2 =
+R"doc(Load textures from a list of image files.
+
+Parameter ``paths``:
+    Image file paths.
+
+Parameter ``options``:
+    Texture loading options.
+
+Returns:
+    List of new texture objects.)doc";
+
+static const char *__doc_sgl_TextureLoader_m_blitter = R"doc()doc";
+
+static const char *__doc_sgl_TextureLoader_m_device = R"doc()doc";
+
 static const char *__doc_sgl_TextureReductionOp = R"doc()doc";
 
 static const char *__doc_sgl_TextureReductionOp_average = R"doc()doc";
@@ -6785,7 +7084,9 @@ static const char *__doc_sgl_Texture_desc = R"doc()doc";
 
 static const char *__doc_sgl_Texture_format = R"doc()doc";
 
-static const char *__doc_sgl_Texture_get_dsv = R"doc()doc";
+static const char *__doc_sgl_Texture_get_dsv =
+R"doc(Get a depth stencil view for a subresource range of the texture. \note
+Only a single mip level can be bound.)doc";
 
 static const char *__doc_sgl_Texture_get_mip_depth = R"doc()doc";
 
@@ -6795,11 +7096,11 @@ static const char *__doc_sgl_Texture_get_mip_height = R"doc()doc";
 
 static const char *__doc_sgl_Texture_get_mip_width = R"doc()doc";
 
-static const char *__doc_sgl_Texture_get_rtv = R"doc()doc";
+static const char *__doc_sgl_Texture_get_rtv =
+R"doc(Get a render target view for a subresource range of the texture. \note
+Only a single mip level can be bound.)doc";
 
-static const char *__doc_sgl_Texture_get_srv = R"doc()doc";
-
-static const char *__doc_sgl_Texture_get_srv_2 = R"doc(Get a shader resource view for the entire texture.)doc";
+static const char *__doc_sgl_Texture_get_srv = R"doc(Get a shader resource view for a subresource range of the texture.)doc";
 
 static const char *__doc_sgl_Texture_get_subresource_array_slice = R"doc()doc";
 
@@ -6809,9 +7110,9 @@ static const char *__doc_sgl_Texture_get_subresource_layout = R"doc()doc";
 
 static const char *__doc_sgl_Texture_get_subresource_mip_level = R"doc()doc";
 
-static const char *__doc_sgl_Texture_get_uav = R"doc()doc";
-
-static const char *__doc_sgl_Texture_get_uav_2 = R"doc(Get a unordered access view for the entire texture.)doc";
+static const char *__doc_sgl_Texture_get_uav =
+R"doc(Get a unordered access view for a subresource range of the texture.
+\note Only a single mip level can be bound.)doc";
 
 static const char *__doc_sgl_Texture_get_view = R"doc(Get a resource view. Views are cached and reused.)doc";
 
@@ -10356,10 +10657,6 @@ Parameter ``port``:
 
 Parameter ``max_retries``:
     Maximum number of retries.)doc";
-
-static const char *__doc_std_hash = R"doc()doc";
-
-static const char *__doc_std_hash_operator_call = R"doc()doc";
 
 static const char *__doc_std_numeric_limits = R"doc()doc";
 

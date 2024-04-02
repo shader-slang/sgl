@@ -58,30 +58,30 @@ SGL_PY_EXPORT(device_command)
             nb::overload_cast<const Resource*, ResourceState>(&CommandBuffer::set_resource_state),
             "resource"_a,
             "new_state"_a,
-            D_NA(CommandBuffer, set_resource_state)
+            D(CommandBuffer, set_resource_state)
         )
         .def(
             "set_resource_state",
             nb::overload_cast<const ResourceView*, ResourceState>(&CommandBuffer::set_resource_state),
             "resource_view"_a,
             "new_state"_a,
-            D_NA(CommandBuffer, set_resource_state, 2)
+            D(CommandBuffer, set_resource_state, 2)
         )
         .def(
             "set_buffer_state",
             &CommandBuffer::set_buffer_state,
             "buffer"_a,
             "new_state"_a,
-            D_NA(CommandBuffer, set_buffer_state)
+            D(CommandBuffer, set_buffer_state)
         )
         .def(
             "set_texture_state",
             &CommandBuffer::set_texture_state,
             "texture"_a,
             "new_state"_a,
-            D_NA(CommandBuffer, set_texture_state)
+            D(CommandBuffer, set_texture_state)
         )
-        .def("uav_barrier", &CommandBuffer::uav_barrier, "resource"_a, D_NA(CommandBuffer, uav_barrier))
+        .def("uav_barrier", &CommandBuffer::uav_barrier, "resource"_a, D(CommandBuffer, uav_barrier))
         // .def(
         //     "buffer_barrier",
         //     nb::overload_cast<std::span<Buffer*>, ResourceState,
