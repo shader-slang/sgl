@@ -58,7 +58,7 @@ derivative works thereof, in binary and source code form.
 #include "sgl/stl/bit.h" // Replace with <bit> when available on all platforms.
 
 #include <asmjit/asmjit.h>
-#if SGL_MACOS
+#if SGL_ARM64
 #include <asmjit/arm.h>
 #include <asmjit/arm/a64assembler.h>
 #include <asmjit/arm/a64compiler.h>
@@ -1406,6 +1406,8 @@ private:
     }
 };
 
+#if SGL_ARM64
+
 /// Conversion program running just-in-time compiled ARM code.
 struct ARMProgram : public Program {
     using ConvertFunc = void (*)(const void* src, void* dst, size_t count);
@@ -1958,6 +1960,8 @@ private:
         return instance;
     }
 };
+
+#endif // SGL_ARM64
 
 #endif // SGL_HAS_ASMJIT
 
