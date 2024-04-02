@@ -32,11 +32,15 @@ SGL_PY_EXPORT(device_texture_loader)
             [](TextureLoader::Options* self, nb::dict dict)
             { new (self) TextureLoader::Options(dict_to_TextureLoaderOptions(dict)); }
         )
-        .def_rw("load_as_normalized", &TextureLoader::Options::load_as_normalized)
-        .def_rw("load_as_srgb", &TextureLoader::Options::load_as_srgb)
-        .def_rw("extend_alpha", &TextureLoader::Options::extend_alpha)
-        .def_rw("allocate_mips", &TextureLoader::Options::allocate_mips)
-        .def_rw("generate_mips", &TextureLoader::Options::generate_mips)
+        .def_rw(
+            "load_as_normalized",
+            &TextureLoader::Options::load_as_normalized,
+            D(TextureLoader, Options, load_as_normalized)
+        )
+        .def_rw("load_as_srgb", &TextureLoader::Options::load_as_srgb, D(TextureLoader, Options, load_as_srgb))
+        .def_rw("extend_alpha", &TextureLoader::Options::extend_alpha, D(TextureLoader, Options, extend_alpha))
+        .def_rw("allocate_mips", &TextureLoader::Options::allocate_mips, D(TextureLoader, Options, allocate_mips))
+        .def_rw("generate_mips", &TextureLoader::Options::generate_mips, D(TextureLoader, Options, generate_mips))
         .def_rw("usage", &TextureLoader::Options::usage);
 
     nb::implicitly_convertible<nb::dict, TextureLoader::Options>();
