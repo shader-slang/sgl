@@ -289,7 +289,7 @@ inline gfx::DeviceType gfx_device_type(DeviceType device_type)
 Device::Device(const DeviceDesc& desc)
     : m_desc(desc)
 {
-    inc_ref();
+    ConstructorRefGuard ref_guard(this);
 
     SLANG_CALL(slang::createGlobalSession(m_global_session.writeRef()));
 
@@ -477,8 +477,6 @@ Device::Device(const DeviceDesc& desc)
 
     if (m_desc.enable_print)
         m_debug_printer = std::make_unique<DebugPrinter>(this);
-
-    dec_ref(false);
 }
 
 Device::~Device()
