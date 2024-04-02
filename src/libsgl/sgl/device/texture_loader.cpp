@@ -173,7 +173,7 @@ std::pair<Format, bool> TextureLoader::determine_texture_format(const Bitmap* bi
         format_flags = FormatFlags::normalized;
 
     // Check if bitmap is RGB and we can convert to RGBA.
-    bool convert_to_rgba;
+    bool convert_to_rgba = false;
     if (options.extend_alpha && pixel_format == PixelFormat::rgb) {
         bool rgb_format_supported
             = FORMAT_TABLE.find(make_key(PixelFormat::rgb, component_type, format_flags)) != FORMAT_TABLE.end();
