@@ -231,7 +231,7 @@ SGL_PY_EXPORT(device_types)
             [](RayTracingInstanceDesc& self)
             {
                 size_t shape[1] = {64};
-                return nb::ndarray<nb::numpy, const uint8_t, nb::shape<64>>(&self, 1, shape);
+                return nb::ndarray<nb::numpy, const uint8_t, nb::shape<64>>(&self, 1, shape, nb::handle());
             }
         );
 
