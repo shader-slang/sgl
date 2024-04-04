@@ -44,6 +44,7 @@ int main(int argc, const char* argv[])
              "C:/projects/sgl/data/test_images/monalisa.jpg",
              "-o",
              "C:/projects/sgl/monalisa_bc7.jpg",
+             "-t",
              "-b",
              "-v"}
         );
@@ -85,13 +86,9 @@ int main(int argc, const char* argv[])
         .height = h,
         .mip_count = 1,
         .usage = ResourceUsage::shader_resource,
+        .data = input->data(),
+        .data_size = input->buffer_size(),
     });
-    // TODO use convenience function (or init data) when available
-    {
-        ref<CommandBuffer> command_buffer = device->create_command_buffer();
-        command_buffer->upload_texture_data(input_tex, 0, input->data());
-        command_buffer->submit();
-    }
 
     // Show input texture in tev
     if (tev)

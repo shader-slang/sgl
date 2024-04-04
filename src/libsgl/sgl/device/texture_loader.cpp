@@ -225,18 +225,12 @@ TextureLoader::load_from_bitmap(CommandBuffer* command_buffer, const Bitmap* bit
         .usage = usage,
     });
 
-    SubresourceRange subresource_range{
-        .mip_level = 0,
-        .mip_count = 1,
-        .base_array_layer = 0,
-        .layer_count = 1,
-    };
     SubresourceData subresource_data{
         .data = bitmap->data(),
         .row_pitch = bitmap->width() * bitmap->bytes_per_pixel(),
     };
 
-    command_buffer->upload_texture_data(texture, subresource_range, std::span(&subresource_data, 1));
+    command_buffer->upload_texture_data(texture, 0, subresource_data);
     if (options.generate_mips) {
         m_blitter->generate_mips(command_buffer, texture);
         texture->invalidate_views();
@@ -291,17 +285,12 @@ ref<Texture> TextureLoader::load_array_from_bitmaps(std::span<const Bitmap*> bit
             command_buffer = m_device->create_command_buffer();
         }
 
-        SubresourceRange subresource_range{
-            .mip_level = 0,
-            .mip_count = 1,
-            .base_array_layer = narrow_cast<uint32_t>(i),
-            .layer_count = 1,
-        };
+        uint32_t subresource = texture->get_subresource_index(0, narrow_cast<uint32_t>(i));
         SubresourceData subresource_data{
             .data = bitmaps[i]->data(),
             .row_pitch = bitmaps[i]->width() * bitmaps[i]->bytes_per_pixel(),
         };
-        command_buffer->upload_texture_data(texture, subresource_range, std::span(&subresource_data, 1));
+        command_buffer->upload_texture_data(texture, subresource, subresource_data);
 
         if (options.generate_mips)
             m_blitter->generate_mips(command_buffer, texture, narrow_cast<uint32_t>(i));

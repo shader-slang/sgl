@@ -1138,6 +1138,9 @@ void CommandBuffer::copy_texture_to_buffer(
     set_texture_state(src, ResourceState::copy_source);
     set_buffer_state(dst, ResourceState::copy_destination);
 
+    if (all(extent == uint3(-1)))
+        extent = src->get_mip_dimensions(src->get_subresource_mip_level(src_subresource)) - src_offset;
+
     gfx::SubresourceRange src_sr = detail::gfx_subresource_range(src, src_subresource);
     get_gfx_resource_command_encoder()->copyTextureToBuffer(
         dst->gfx_buffer_resource(),
@@ -1167,11 +1170,10 @@ void CommandBuffer::upload_buffer_data(Buffer* buffer, size_t offset, size_t siz
         ->uploadBufferData(buffer->gfx_buffer_resource(), offset, size, const_cast<void*>(data));
 }
 
-void CommandBuffer::upload_texture_data(Texture* texture, uint32_t subresource, const void* data)
+void CommandBuffer::upload_texture_data(Texture* texture, uint32_t subresource, SubresourceData subresource_data)
 {
     SGL_CHECK_NOT_NULL(texture);
     SGL_CHECK_LT(subresource, texture->subresource_count());
-    SGL_CHECK_NOT_NULL(data);
 
     set_texture_subresource_state(
         texture,
@@ -1184,13 +1186,10 @@ void CommandBuffer::upload_texture_data(Texture* texture, uint32_t subresource, 
         ResourceState::copy_destination
     );
 
-    uint3 dimensions = texture->get_mip_dimensions(texture->get_subresource_mip_level(subresource));
-    SubresourceLayout layout = texture->get_subresource_layout(subresource);
-
     gfx::ITextureResource::SubresourceData gfx_subresource_data = {
-        .data = const_cast<void*>(data),
-        .strideY = layout.row_size_aligned,
-        .strideZ = layout.row_size_aligned * layout.row_count,
+        .data = const_cast<void*>(subresource_data.data),
+        .strideY = subresource_data.row_pitch,
+        .strideZ = subresource_data.slice_pitch,
     };
 
     gfx::SubresourceRange sr = detail::gfx_subresource_range(texture, subresource);
@@ -1198,69 +1197,11 @@ void CommandBuffer::upload_texture_data(Texture* texture, uint32_t subresource, 
         texture->gfx_texture_resource(),
         sr,
         gfx::ITextureResource::Offset3D(0, 0, 0),
-        gfx::ITextureResource::Extents{
-            narrow_cast<gfx::GfxCount>(dimensions.x),
-            narrow_cast<gfx::GfxCount>(dimensions.y),
-            narrow_cast<gfx::GfxCount>(dimensions.z),
-        },
+        gfx::ITextureResource::Extents(-1, -1, -1),
         &gfx_subresource_data,
         1
     );
 }
-
-void CommandBuffer::upload_texture_data(
-    Texture* texture,
-    SubresourceRange subresource_range,
-    std::span<SubresourceData> data,
-    uint3 offset,
-    uint3 extent
-)
-{
-    SGL_CHECK_NOT_NULL(texture);
-    SGL_CHECK_LT(subresource_range.mip_level, texture->mip_count());
-    SGL_CHECK_LE(subresource_range.mip_level + subresource_range.mip_count, texture->mip_count());
-    SGL_CHECK_LT(subresource_range.base_array_layer, texture->array_size());
-    SGL_CHECK_LE(subresource_range.base_array_layer + subresource_range.layer_count, texture->array_size());
-    SGL_CHECK_NOT_NULL(data.data());
-    SGL_CHECK_LE(data.size(), texture->subresource_count());
-
-    set_texture_subresource_state(texture, subresource_range, ResourceState::copy_destination);
-
-    gfx::SubresourceRange sr = {
-        .aspectMask = static_cast<gfx::TextureAspect>(subresource_range.texture_aspect),
-        .mipLevel = narrow_cast<gfx::GfxIndex>(subresource_range.mip_level),
-        .mipLevelCount = narrow_cast<gfx::GfxCount>(subresource_range.mip_count),
-        .baseArrayLayer = narrow_cast<gfx::GfxIndex>(subresource_range.base_array_layer),
-        .layerCount = narrow_cast<gfx::GfxCount>(subresource_range.layer_count),
-    };
-
-    short_vector<gfx::ITextureResource::SubresourceData, 16> gfx_subresource_data(data.size(), {});
-    for (size_t i = 0; i < data.size(); i++) {
-        gfx_subresource_data[i] = {
-            .data = data[i].data,
-            .strideY = data[i].row_pitch,
-            .strideZ = data[i].slice_pitch,
-        };
-    }
-
-    if (all(extent == uint3(-1))) {
-        extent = texture->get_mip_dimensions(subresource_range.mip_level) - offset;
-    }
-
-    get_gfx_resource_command_encoder()->uploadTextureData(
-        texture->gfx_texture_resource(),
-        sr,
-        gfx::ITextureResource::Offset3D(offset.x, offset.y, offset.z),
-        gfx::ITextureResource::Extents{
-            narrow_cast<gfx::GfxCount>(extent.x),
-            narrow_cast<gfx::GfxCount>(extent.y),
-            narrow_cast<gfx::GfxCount>(extent.z),
-        },
-        gfx_subresource_data.data(),
-        narrow_cast<gfx::GfxCount>(gfx_subresource_data.size())
-    );
-}
-
 
 void CommandBuffer::resolve_texture(Texture* dst, const Texture* src)
 {

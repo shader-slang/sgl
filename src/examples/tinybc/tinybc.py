@@ -38,7 +38,7 @@ try:
         srgb_gamma=False,
     )
     w, h = image.width, image.height
-    input = np.asarray(image).clip(0, 1)
+    input = np.asarray(image)
 except Exception as e:
     print(f"Failed to load input image from {args.input_path}:\n{e}")
     sys.exit(1)
@@ -55,8 +55,8 @@ input_tex = device.create_texture(
     height=h,
     mip_count=1,
     usage=sgl.ResourceUsage.shader_resource,
+    data=input,
 )
-input_tex.from_numpy(input)
 
 # Show input texture in tev
 if args.tev:

@@ -302,10 +302,14 @@ Buffer::Buffer(ref<Device> device, BufferDesc desc)
     gfx_desc.elementSize = static_cast<gfx::Size>(m_desc.struct_size);
     gfx_desc.format = static_cast<gfx::Format>(m_desc.format);
 
-    SLANG_CALL(m_device->gfx_device()->createBufferResource(gfx_desc, m_desc.data, m_gfx_buffer.writeRef()));
+    SLANG_CALL(m_device->gfx_device()->createBufferResource(gfx_desc, nullptr, m_gfx_buffer.writeRef()));
 
     if (!m_desc.debug_name.empty())
         m_gfx_buffer->setDebugName(m_desc.debug_name.c_str());
+
+    // Upload init data.
+    if (m_desc.data)
+        set_data(m_desc.data, m_desc.data_size);
 
     // Clear initial data fields in desc.
     m_desc.data = nullptr;
@@ -636,13 +640,35 @@ Texture::Texture(ref<Device> device, TextureDesc desc)
     gfx_desc.sampleDesc.numSamples = static_cast<gfx::GfxCount>(m_desc.sample_count);
     gfx_desc.sampleDesc.quality = m_desc.quality;
 
-    // TODO(@skallweit): add support for init data
-    gfx::ITextureResource::SubresourceData* gfx_init_data{nullptr};
-
-    SLANG_CALL(m_device->gfx_device()->createTextureResource(gfx_desc, gfx_init_data, m_gfx_texture.writeRef()));
+    SLANG_CALL(m_device->gfx_device()->createTextureResource(gfx_desc, nullptr, m_gfx_texture.writeRef()));
 
     if (!m_desc.debug_name.empty())
         m_gfx_texture->setDebugName(m_desc.debug_name.c_str());
+
+    // Upload init data.
+    if (m_desc.data) {
+        uint32_t subresource = 0;
+        const uint8_t* data = reinterpret_cast<const uint8_t*>(m_desc.data);
+        size_t data_size = m_desc.data_size;
+        while (true) {
+            SubresourceLayout subresource_layout = get_subresource_layout(subresource);
+            size_t subresource_size = subresource_layout.total_size();
+            if (data_size < subresource_size)
+                break;
+            SubresourceData subresource_data{
+                .data = data,
+                .size = subresource_size,
+                .row_pitch = subresource_layout.row_pitch,
+                .slice_pitch = subresource_layout.row_count * subresource_layout.row_pitch,
+            };
+            set_subresource_data(subresource, subresource_data);
+            data += subresource_size;
+            data_size -= subresource_size;
+        }
+        if (m_desc.mip_count > 1) {
+            // TODO generate mip maps
+        }
+    }
 
     // Clear initial data fields in desc.
     m_desc.data = nullptr;
@@ -678,12 +704,26 @@ SubresourceLayout Texture::get_subresource_layout(uint32_t subresource) const
     uint3 mip_dimensions = get_mip_dimensions(mip_level);
 
     SubresourceLayout layout;
-    layout.row_size
+    layout.row_pitch
         = div_round_up(mip_dimensions.x, uint32_t(gfx_format_info.blockWidth)) * gfx_format_info.blockSizeInBytes;
-    layout.row_size_aligned = align_to(alignment, layout.row_size);
+    layout.row_pitch_aligned = align_to(alignment, layout.row_pitch);
     layout.row_count = div_round_up(mip_dimensions.y, uint32_t(gfx_format_info.blockHeight));
     layout.depth = mip_dimensions.z;
     return layout;
+}
+
+void Texture::set_subresource_data(uint32_t subresource, SubresourceData subresource_data)
+{
+    SGL_CHECK_LT(subresource, subresource_count());
+
+    m_device->upload_texture_data(this, subresource, subresource_data);
+}
+
+OwnedSubresourceData Texture::get_subresource_data(uint32_t subresource) const
+{
+    SGL_CHECK_LT(subresource, subresource_count());
+
+    return m_device->read_texture_data(this, subresource);
 }
 
 ref<ResourceView> Texture::get_view(ResourceViewDesc desc)
@@ -769,6 +809,7 @@ ref<Bitmap> Texture::to_bitmap(uint32_t mip_level, uint32_t array_slice) const
 {
     SGL_CHECK_LT(mip_level, mip_count());
     SGL_CHECK_LT(array_slice, array_size());
+    SGL_CHECK(m_desc.type == ResourceType::texture_2d, "Cannot convert non-2D texture to bitmap.");
 
     const FormatInfo& info = get_format_info(m_desc.format);
     if (info.is_compressed)
@@ -848,31 +889,16 @@ ref<Bitmap> Texture::to_bitmap(uint32_t mip_level, uint32_t array_slice) const
     Bitmap::ComponentType component_type = it2->second;
 
     uint32_t subresource = get_subresource_index(mip_level, array_slice);
-    SubresourceLayout layout = get_subresource_layout(subresource);
+    OwnedSubresourceData subresource_data = get_subresource_data(subresource);
 
     uint32_t width = get_mip_width(mip_level);
     uint32_t height = get_mip_height(mip_level);
 
     ref<Bitmap> bitmap = ref<Bitmap>(new Bitmap(pixel_format, component_type, width, height));
 
-    size_t row_pitch, pixel_size;
-    if (bitmap->buffer_size() == layout.total_size_aligned()) {
-        // Fast path: read directly into bitmap buffer
-        m_device->read_texture(this, bitmap->buffer_size(), bitmap->data(), &row_pitch, &pixel_size);
-        SGL_ASSERT(row_pitch == layout.row_size_aligned);
-        SGL_ASSERT(pixel_size == bitmap->bytes_per_pixel());
-    } else {
-        // Slow path: read into temporary buffer and copy row by row
-        std::unique_ptr<uint8_t[]> data(new uint8_t[layout.total_size_aligned()]);
-        m_device->read_texture(this, layout.total_size_aligned(), data.get(), &row_pitch, &pixel_size);
-        SGL_ASSERT(row_pitch == layout.row_size_aligned);
-        SGL_ASSERT(pixel_size == bitmap->bytes_per_pixel());
-        size_t row_size = layout.row_size;
-        size_t row_size_aligned = layout.row_size_aligned;
-        size_t row_count = layout.row_count;
-        for (size_t i = 0; i < row_count; ++i)
-            std::memcpy(bitmap->uint8_data() + i * row_size, data.get() + i * row_size_aligned, row_size);
-    }
+    // TODO would be better to avoid this extra copy
+    SGL_ASSERT(bitmap->buffer_size() == subresource_data.size);
+    std::memcpy(bitmap->data(), subresource_data.data, subresource_data.size);
 
     return bitmap;
 }
