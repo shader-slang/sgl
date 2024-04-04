@@ -299,7 +299,7 @@ void Bitmap::set_srgb_gamma(bool srgb_gamma)
     // Adjust pixel struct flags.
     if (m_pixel_format != PixelFormat::multi_channel) {
         for (Struct::Field& field : *m_pixel_struct) {
-            if (field.name == "A") {
+            if (field.name != "A") {
                 if (m_srgb_gamma)
                     field.flags |= Struct::Flags::srgb_gamma;
                 else
@@ -408,9 +408,6 @@ std::vector<std::pair<std::string, ref<Bitmap>>> Bitmap::split() const
         it = range.second;
     }
 
-    // Sort by prefix name.
-    std::sort(result.begin(), result.end(), [](const auto& a, const auto& b) { return a.first < b.first; });
-
     return result;
 }
 
@@ -449,6 +446,15 @@ void Bitmap::convert(Bitmap* target) const
     for (Struct::Field& field : *dst_struct) {
         if (src_struct->has_field(field.name)) {
             continue;
+        }
+        if (field.name == "Y") {
+            if (src_is_y) {
+                field.name = "Y";
+                continue;
+            } else if (src_is_rgb) {
+                field.blend = {{0.2126, "R"}, {0.7152, "G"}, {0.0722, "B"}};
+                continue;
+            }
         }
         if (field.name == "R") {
             if (src_is_y) {
