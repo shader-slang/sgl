@@ -672,7 +672,7 @@ std::string DDSFile::to_string() const
         "  height = {},\n"
         "  depth = {},\n"
         "  mip_count = {},\n"
-        "  array_size = {},\n"
+        "  array_size = {}\n"
         ")",
         m_dxgi_format,
         m_type,

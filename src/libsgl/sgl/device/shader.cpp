@@ -558,7 +558,7 @@ std::string SlangSession::to_string() const
     return fmt::format(
         "SlangSession(\n"
         "  device = {},\n"
-        "  uid = {},\n"
+        "  uid = {}\n"
         ")",
         m_device,
         m_uid

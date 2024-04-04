@@ -938,7 +938,7 @@ std::string Device::to_string() const
         "  enable_debug_layers = {},\n"
         "  supported_shader_model = {},\n"
         "  shader_cache_enabled = {},\n"
-        "  shader_cache_path = \"{}\",\n"
+        "  shader_cache_path = \"{}\"\n"
         ")",
         m_info.type,
         m_info.adapter_name,
