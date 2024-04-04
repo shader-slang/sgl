@@ -59,8 +59,11 @@ inline std::optional<nb::dlpack::dtype> resource_format_to_dtype(Format format)
     case FormatType::float_:
         return nb::dlpack::dtype{(uint8_t)nb::dlpack::dtype_code::Float, (uint8_t)channel_bit_count, 1};
     case FormatType::uint:
+    case FormatType::unorm:
+    case FormatType::unorm_srgb:
         return nb::dlpack::dtype{(uint8_t)nb::dlpack::dtype_code::UInt, (uint8_t)channel_bit_count, 1};
     case FormatType::sint:
+    case FormatType::snorm:
         return nb::dlpack::dtype{(uint8_t)nb::dlpack::dtype_code::Int, (uint8_t)channel_bit_count, 1};
     default:
         return {};
@@ -116,16 +119,12 @@ inline nb::ndarray<nb::numpy> texture_to_numpy(Texture* self, uint32_t mip_level
     SGL_CHECK_LT(mip_level, self->mip_count());
     SGL_CHECK_LT(array_slice, self->array_size());
 
-    // Get image dimensions.
     uint3 dimensions = self->get_mip_dimensions(mip_level);
-
     uint32_t subresource = self->get_subresource_index(array_slice, mip_level);
-    SubresourceLayout layout = self->get_subresource_layout(subresource);
+    OwnedSubresourceData subresource_data = self->get_subresource_data(subresource);
 
-    size_t size = layout.total_size_aligned();
-    void* data = new uint8_t[size];
-    size_t row_pitch, pixel_size;
-    self->device()->read_texture(self, size, data, &row_pitch, &pixel_size);
+    size_t size = subresource_data.size;
+    void* data = subresource_data.owned_data.release();
 
     nb::capsule owner(data, [](void* p) noexcept { delete[] reinterpret_cast<uint8_t*>(p); });
 
@@ -154,22 +153,47 @@ inline void texture_from_numpy(Texture* self, nb::ndarray<nb::numpy> data, uint3
     SGL_CHECK_LT(mip_level, self->mip_count());
     SGL_CHECK_LT(array_slice, self->array_size());
 
+    uint3 dimensions = self->get_mip_dimensions(mip_level);
     uint32_t subresource = self->get_subresource_index(array_slice, mip_level);
-    SubresourceLayout layout = self->get_subresource_layout(subresource);
+    SubresourceLayout subresource_layout = self->get_subresource_layout(subresource);
+    SubresourceData subresource_data{
+        .data = data.data(),
+        .size = data.nbytes(),
+        .row_pitch = subresource_layout.row_pitch,
+        .slice_pitch = subresource_layout.row_count * subresource_layout.row_pitch,
+    };
 
-    size_t subresource_size = layout.total_size_aligned();
-    size_t data_size = data.nbytes();
-    SGL_CHECK(
-        data_size == subresource_size,
-        "numpy array is doesn't match the subresource size ({} != {})",
-        data_size,
-        subresource_size
-    );
+    if (auto dtype = resource_format_to_dtype(self->format())) {
+        std::vector<size_t> expected_shape;
+        switch (self->type()) {
+        case ResourceType::texture_1d:
+            expected_shape = {size_t(dimensions.x)};
+            break;
+        case ResourceType::texture_2d:
+            expected_shape = {size_t(dimensions.y), size_t(dimensions.x)};
+            break;
+        case ResourceType::texture_3d:
+            expected_shape = {size_t(dimensions.z), size_t(dimensions.y), size_t(dimensions.x)};
+            break;
+        case ResourceType::texture_cube:
+            expected_shape = {size_t(dimensions.y), size_t(dimensions.x)};
+            break;
+        }
+        uint32_t channel_count = get_format_info(self->format()).channel_count;
+        if (channel_count > 1)
+            expected_shape.push_back(channel_count);
 
-    // TODO use convenience function on texture when available
-    ref<CommandBuffer> command_buffer = self->device()->create_command_buffer();
-    command_buffer->upload_texture_data(self, subresource, data.data());
-    command_buffer->submit();
+        SGL_CHECK(
+            data.ndim() == expected_shape.size(),
+            "numpy array has wrong number of dimensions (expected {})",
+            expected_shape.size()
+        );
+        for (size_t i = 0; i < expected_shape.size(); ++i)
+            SGL_CHECK(data.shape(i) == expected_shape[i], "numpy array has wrong shape (expected {})", expected_shape);
+    }
+
+    SGL_CHECK(data.nbytes() == subresource_layout.total_size(), "numpy array doesn't match the subresource size");
+    self->set_subresource_data(subresource, subresource_data);
 }
 
 } // namespace sgl
@@ -261,8 +285,8 @@ SGL_PY_EXPORT(device_resource)
     nb::implicitly_convertible<nb::dict, TextureDesc>();
 
     nb::class_<SubresourceLayout>(m, "SubresourceLayout")
-        .def_ro("row_size", &SubresourceLayout::row_size)
-        .def_ro("row_size_aligned", &SubresourceLayout::row_size_aligned)
+        .def_ro("row_pitch", &SubresourceLayout::row_pitch)
+        .def_ro("row_pitch_aligned", &SubresourceLayout::row_pitch_aligned)
         .def_ro("row_count", &SubresourceLayout::row_count)
         .def_ro("depth", &SubresourceLayout::depth)
         .def_prop_ro("total_size", &SubresourceLayout::total_size)

@@ -497,15 +497,14 @@ public:
      */
     void upload_buffer_data(Buffer* buffer, size_t offset, size_t size, const void* data);
 
-    void upload_texture_data(Texture* texture, uint32_t subresource, const void* data);
-
-    void upload_texture_data(
-        Texture* texture,
-        SubresourceRange subresource_range,
-        std::span<SubresourceData> subresource_data,
-        uint3 offset = uint3(0),
-        uint3 extent = uint3(-1)
-    );
+    /**
+     * \brief Upload host memory to a texture.
+     *
+     * \param texture Texture to write to.
+     * \param subresource Subresource index.
+     * \param subresource_data Subresource data.
+     */
+    void upload_texture_data(Texture* texture, uint32_t subresource, SubresourceData subresource_data);
 
     /**
      * \brief Resolve a multi-sampled texture.

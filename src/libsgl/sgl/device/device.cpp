@@ -760,30 +760,58 @@ void Device::read_buffer_data(const Buffer* buffer, void* data, size_t size, siz
     std::memcpy(data, alloc->data, size);
 }
 
-void Device::read_texture(
-    const Texture* texture,
-    size_t size,
-    void* out_data,
-    size_t* out_row_pitch,
-    size_t* out_pixel_size
-)
+void Device::upload_texture_data(Texture* texture, uint32_t subresource, SubresourceData subresource_data)
 {
-    // TODO move this to CommandBuffer
-    ref<CommandBuffer> command_buffer = create_command_buffer();
-    command_buffer->set_texture_state(texture, ResourceState::copy_source);
-    command_buffer->submit();
+    SGL_CHECK_NOT_NULL(texture);
+    SGL_CHECK_LT(subresource, texture->subresource_count());
 
-    Slang::ComPtr<ISlangBlob> blob;
-    SLANG_CALL(m_gfx_device->readTextureResource(
-        texture->gfx_texture_resource(),
-        gfx::ResourceState::CopySource,
-        blob.writeRef(),
-        out_row_pitch,
-        out_pixel_size
-    ));
-    if (size > blob->getBufferSize())
-        SGL_THROW("Texture read out of bounds");
-    std::memcpy(out_data, blob->getBufferPointer(), size);
+    // TODO we want to use existing command buffer.
+    ref<CommandBuffer> command_buffer = create_command_buffer();
+    command_buffer->upload_texture_data(texture, subresource, subresource_data);
+    command_buffer->submit();
+}
+
+OwnedSubresourceData Device::read_texture_data(const Texture* texture, uint32_t subresource)
+{
+    SGL_CHECK_NOT_NULL(texture);
+    SGL_CHECK_LT(subresource, texture->subresource_count());
+
+    SubresourceLayout layout = texture->get_subresource_layout(subresource);
+
+    size_t size = layout.total_size_aligned();
+    auto alloc = m_read_back_heap->allocate(size);
+
+    // TODO we want to use existing command buffer.
+    ref<CommandBuffer> command_buffer = create_command_buffer();
+    command_buffer->copy_texture_to_buffer(
+        alloc->buffer,
+        alloc->offset,
+        alloc->size,
+        layout.row_pitch_aligned,
+        texture,
+        subresource
+    );
+    command_buffer->submit();
+    m_graphics_queue->wait();
+
+    OwnedSubresourceData subresource_data;
+    subresource_data.size = layout.total_size();
+    subresource_data.owned_data = std::make_unique<uint8_t[]>(subresource_data.size);
+    subresource_data.data = subresource_data.owned_data.get();
+    subresource_data.row_pitch = layout.row_pitch;
+    subresource_data.slice_pitch = layout.row_count * layout.row_pitch;
+
+    const uint8_t* src = alloc->data;
+    uint8_t* dst = subresource_data.owned_data.get();
+    for (uint32_t depth = 0; depth < layout.depth; ++depth) {
+        for (uint32_t row = 0; row < layout.row_count; ++row) {
+            std::memcpy(dst, src, layout.row_pitch);
+            src += layout.row_pitch_aligned;
+            dst += layout.row_pitch;
+        }
+    }
+
+    return subresource_data;
 }
 
 void Device::deferred_release(ISlangUnknown* object)

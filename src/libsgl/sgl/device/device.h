@@ -388,8 +388,24 @@ public:
      */
     void read_buffer_data(const Buffer* buffer, void* data, size_t size, size_t offset = 0);
 
-    void
-    read_texture(const Texture* texture, size_t size, void* out_data, size_t* out_row_pitch, size_t* out_pixel_size);
+    /**
+     * Upload host memory to texture.
+     *
+     * \param texture Texture to write to.
+     * \param subresource Subresource index.
+     * \param subresource_data Subresource data.
+     */
+    void upload_texture_data(Texture* texture, uint32_t subresource, SubresourceData subresource_data);
+
+    /**
+     * Read texture data to host memory.
+     * \note This will wait until the data is copied back to host memory.
+     *
+     * \param texture Texture to read from.
+     * \param subresource Subresource index.
+     * \return Subresource data in host memory.
+     */
+    OwnedSubresourceData read_texture_data(const Texture* texture, uint32_t subresource);
 
     void deferred_release(ISlangUnknown* object);
 

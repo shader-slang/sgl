@@ -313,13 +313,9 @@ Context::Context(ref<Device> device)
             .height = narrow_cast<uint32_t>(height),
             .mip_count = 1,
             .usage = ResourceUsage::shader_resource,
-            // TODO use this once supported
-            // .data = pixels,
-            // .data_size = size_t(width * height),
+            .data = pixels,
+            .data_size = size_t(width * height * 4),
         });
-        ref<CommandBuffer> command_buffer = m_device->create_command_buffer();
-        command_buffer->upload_texture_data(m_font_texture, 0, pixels);
-        command_buffer->submit();
 
         io.Fonts->SetTexID(static_cast<ImTextureID>(m_font_texture.get()));
     }

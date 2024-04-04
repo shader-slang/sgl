@@ -552,8 +552,13 @@ private:
 
 struct SubresourceData {
     const void* data{nullptr};
+    size_t size{0};
     size_t row_pitch{0};
     size_t slice_pitch{0};
+};
+
+struct OwnedSubresourceData : SubresourceData {
+    std::unique_ptr<uint8_t[]> owned_data;
 };
 
 struct TextureDesc {
@@ -590,19 +595,19 @@ struct TextureDesc {
 
 struct SubresourceLayout {
     /// Size of a single row in bytes (unaligned).
-    size_t row_size;
+    size_t row_pitch;
     /// Size of a single row in bytes (aligned to device texture alignment).
-    size_t row_size_aligned;
+    size_t row_pitch_aligned;
     /// Number of rows.
     size_t row_count;
     /// Number of depth slices.
     size_t depth;
 
     /// Get the total size of the subresource in bytes (unaligned).
-    size_t total_size() const { return row_size * row_count * depth; }
+    size_t total_size() const { return row_pitch * row_count * depth; }
 
     /// Get the total size of the subresource in bytes (aligned to device texture alignment).
-    size_t total_size_aligned() const { return row_size_aligned * row_count * depth; }
+    size_t total_size_aligned() const { return row_pitch_aligned * row_count * depth; }
 };
 
 class SGL_API Texture : public Resource {
@@ -657,6 +662,23 @@ public:
     }
 
     SubresourceLayout get_subresource_layout(uint32_t subresource) const;
+
+    /**
+     * Set subresource data from host memory.
+     *
+     * \param subresource Subresource index.
+     * \param subresource_data Subresource data.
+     */
+    void set_subresource_data(uint32_t subresource, SubresourceData subresource_data);
+
+    /**
+     * Get subresource data to host memory.
+     * \note This will wait until the data is copied back to host memory.
+     *
+     * \param subresource Subresource index.
+     * \return Subresource data.
+     */
+    OwnedSubresourceData get_subresource_data(uint32_t subresource) const;
 
     /// Get a resource view. Views are cached and reused.
     ref<ResourceView> get_view(ResourceViewDesc desc);
