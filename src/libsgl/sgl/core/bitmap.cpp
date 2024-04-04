@@ -53,6 +53,7 @@ derivative works thereof, in binary and source code form.
 #include "sgl/core/file_stream.h"
 #include "sgl/core/string.h"
 #include "sgl/core/thread.h"
+#include "sgl/core/type_utils.h"
 
 #include "sgl/math/scalar_types.h"
 
@@ -327,6 +328,92 @@ void Bitmap::vflip()
     }
 }
 
+std::vector<std::pair<std::string, ref<Bitmap>>> Bitmap::split() const
+{
+    if (m_pixel_format != PixelFormat::multi_channel)
+        return {{"", ref(const_cast<Bitmap*>(this))}};
+
+    // Split fields by prefix.
+    std::multimap<std::string, std::pair<std::string, Struct::Field*>> split_fields;
+    for (Struct::Field& field : *m_pixel_struct) {
+        size_t pos = field.name.find_last_of(".");
+        std::string prefix;
+        std::string suffix;
+        if (pos == std::string::npos) {
+            suffix = field.name;
+        } else {
+            prefix = field.name.substr(0, pos);
+            suffix = field.name.substr(pos + 1);
+        }
+        split_fields.emplace(prefix, std::make_pair(suffix, &field));
+    }
+
+    std::vector<std::pair<std::string, ref<Bitmap>>> result;
+
+    for (auto it = split_fields.begin(); it != split_fields.end();) {
+        std::string prefix = it->first;
+        auto range = split_fields.equal_range(prefix);
+
+        std::vector<std::string> field_names;
+        std::string field_format;
+        for (auto it2 = range.first; it2 != range.second; ++it2) {
+            field_names.push_back(it2->second.first);
+            if (!field_format.empty())
+                field_format += "|";
+            field_format += string::to_lower(it2->second.first);
+        }
+
+        // Determine common pixel formats.
+        PixelFormat pixel_format = PixelFormat::multi_channel;
+        if (field_format == "y")
+            pixel_format = PixelFormat::y;
+        else if (field_format == "y|a")
+            pixel_format = PixelFormat::ya;
+        else if (field_format == "r")
+            pixel_format = PixelFormat::r;
+        else if (field_format == "r|g")
+            pixel_format = PixelFormat::rg;
+        else if (field_format == "r|g|b")
+            pixel_format = PixelFormat::rgb;
+        else if (field_format == "r|g|b|a")
+            pixel_format = PixelFormat::rgba;
+
+        ref<Bitmap> target;
+        if (pixel_format == PixelFormat::multi_channel) {
+            target = ref(new Bitmap(
+                pixel_format,
+                m_component_type,
+                m_width,
+                m_height,
+                narrow_cast<uint32_t>(field_names.size()),
+                field_names
+            ));
+        } else {
+            target = ref(new Bitmap(pixel_format, m_component_type, m_width, m_height));
+        }
+
+        target->set_srgb_gamma(m_srgb_gamma);
+
+        ref<Struct> target_struct = ref(new Struct(*target->pixel_struct()));
+        for (auto it2 = range.first; it2 != range.second; ++it2) {
+            std::string field_name
+                = pixel_format == PixelFormat::multi_channel ? it2->second.first : string::to_upper(it2->second.first);
+            target_struct->field(field_name).name = it2->second.second->name;
+        }
+
+        StructConverter converter(m_pixel_struct, target_struct);
+        converter.convert(data(), target->data(), pixel_count());
+
+        result.push_back({prefix, target});
+        it = range.second;
+    }
+
+    // Sort by prefix name.
+    std::sort(result.begin(), result.end(), [](const auto& a, const auto& b) { return a.first < b.first; });
+
+    return result;
+}
+
 ref<Bitmap> Bitmap::convert(PixelFormat pixel_format, ComponentType component_type, bool srgb_gamma) const
 {
     uint32_t channel_count = 0;
@@ -406,18 +493,18 @@ std::string Bitmap::to_string() const
         "Bitmap(\n"
         "  pixel_format = {},\n"
         "  component_type = {},\n"
-        "  pixel_struct = {}\n"
         "  width = {},\n"
         "  height = {},\n"
         "  srgb_gamma = {},\n"
+        "  pixel_struct = {}\n"
         "  data = {}\n"
         ")",
         m_pixel_format,
         m_component_type,
-        string::indent(m_pixel_struct->to_string()),
         m_width,
         m_height,
         m_srgb_gamma,
+        string::indent(m_pixel_struct->to_string()),
         string::format_byte_size(buffer_size())
     );
 }
