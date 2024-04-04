@@ -85,20 +85,18 @@ size_t hash(const Struct::Field& field)
 
 std::string Struct::Field::to_string() const
 {
-    std::vector<std::string> blend_strings;
-    for (const auto& [w, n] : blend)
-        blend_strings.push_back(fmt::format("({}, \"{}\")", w, n));
-
-    return fmt::format(
-        "Field(name=\"{}\", type={}, flags={}, size={}, offset={}, default_value={}, blend=[{}])",
-        name,
-        type,
-        flags,
-        size,
-        offset,
-        default_value,
-        string::join(blend_strings, ", ")
-    );
+    std::string result;
+    result = fmt::format("Field(name=\"{}\", type={}, flags={}, size={}, offset={}", name, type, flags, size, offset);
+    if (is_set(flags, Flags::default_))
+        result += fmt::format(", default_value={}", default_value);
+    if (!blend.empty()) {
+        std::vector<std::string> blend_strings;
+        for (const auto& [w, n] : blend)
+            blend_strings.push_back(fmt::format("({}, \"{}\")", w, n));
+        result += fmt::format(", blend=[{}]", string::join(blend_strings, ", "));
+    }
+    result += ")";
+    return result;
 }
 
 Struct::Struct(bool pack, ByteOrder byte_order)
