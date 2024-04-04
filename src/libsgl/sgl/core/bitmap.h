@@ -223,6 +223,21 @@ public:
     /// Vertically flip the bitmap.
     void vflip();
 
+    /**
+     * \brief Split bitmap into multiple bitmaps, each containing the channels with the same prefix.
+     *
+     * For example, if the bitmap has channels `albedo.R`, `albedo.G`, `albedo.B`, `normal.R`, `normal.G`, `normal.B`,
+     * this function will return two bitmaps, one containing the channels `albedo.R`, `albedo.G`, `albedo.B` and the
+     * other containing the channels `normal.R`, `normal.G`, `normal.B`.
+     *
+     * Common pixel formats (e.g. `y`, `rgb`, `rgba`) are automatically detected and used for the split bitmaps.
+     *
+     * Any channels that do not have a prefix will be returned in the bitmap with the empty prefix.
+     *
+     * \return Returns a list of (prefix, bitmap) pairs.
+     */
+    std::vector<std::pair<std::string, ref<Bitmap>>> split() const;
+
     ref<Bitmap> convert(PixelFormat pixel_format, ComponentType component_type, bool srgb_gamma) const;
 
     void convert(Bitmap* target) const;

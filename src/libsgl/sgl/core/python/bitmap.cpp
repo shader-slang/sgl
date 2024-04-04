@@ -117,6 +117,7 @@ SGL_PY_EXPORT(core_bitmap)
         .def("empty", &Bitmap::empty, D(Bitmap, empty))
         .def("clear", &Bitmap::clear, D(Bitmap, clear))
         .def("vflip", &Bitmap::vflip, D(Bitmap, vflip))
+        .def("split", &Bitmap::split, D_NA(Bitmap, split))
         .def(
             "convert",
             [](Bitmap& self,
