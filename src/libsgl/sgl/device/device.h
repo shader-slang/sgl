@@ -51,7 +51,7 @@ struct AdapterInfo {
             "  name = \"{}\",\n"
             "  vendor_id = 0x{:x},\n"
             "  device_id = 0x{:x},\n"
-            "  luid = {},\n"
+            "  luid = {}\n"
             ")",
             name,
             vendor_id,
