@@ -190,7 +190,7 @@ def process_class(obj, name, ctx: Context):
     if is_alias:
         # print(f"CLASS ALIAS: {ctx.prefix}.{name}")
         ctx.push(name)
-        ctx.write(f":noindex:")
+        # ctx.write(f":noindex:")
         ctx.write(f":canonical: {obj.__module__}.{obj.__qualname__}\n")
         ctx.write(f"Alias class: :py:class:`{obj.__module__}.{obj.__qualname__}`\n")
         ctx.pop()
