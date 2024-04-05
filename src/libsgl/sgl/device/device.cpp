@@ -748,11 +748,7 @@ uint64_t Device::submit_command_buffer(CommandBuffer* command_buffer, CommandQue
         for (const auto& buffer : command_buffer->m_cuda_interop_buffers)
             buffer->copy_from_cuda(cuda_stream);
 
-        // Signal fence from CUDA, wait for it on graphics queue.
-        uint64_t signal_value = m_global_fence->update_signaled_value();
-        m_cuda_semaphore->signal(signal_value);
-        gfx::IFence* fence = m_global_fence->gfx_fence();
-        m_gfx_graphics_queue->waitForFenceValuesOnDevice(1, &fence, &signal_value);
+        sync_to_cuda(cuda_stream);
     }
 
     uint64_t fence_value = m_global_fence->update_signaled_value();
@@ -760,8 +756,7 @@ uint64_t Device::submit_command_buffer(CommandBuffer* command_buffer, CommandQue
         ->executeCommandBuffer(command_buffer->gfx_command_buffer(), m_global_fence->gfx_fence(), fence_value);
 
     if (m_supports_cuda_interop && command_buffer->m_cuda_interop_buffers.size() > 0) {
-        // Wait on CUDA stream.
-        m_cuda_semaphore->wait(fence_value, cuda_stream);
+        sync_to_device(cuda_stream);
 
         for (const auto& buffer : command_buffer->m_cuda_interop_buffers)
             if (buffer->is_uav())
@@ -781,16 +776,18 @@ void Device::wait_for_idle()
     m_gfx_graphics_queue->waitOnHost();
 }
 
-void Device::wait_for_cuda(void* cuda_stream)
+void Device::sync_to_cuda(void* cuda_stream)
 {
-    SGL_UNUSED(cuda_stream);
-    SGL_UNIMPLEMENTED();
+    // Signal fence from CUDA, wait for it on graphics queue.
+    uint64_t signal_value = m_global_fence->update_signaled_value();
+    m_cuda_semaphore->signal(signal_value, CUstream(cuda_stream));
+    gfx::IFence* fence = m_global_fence->gfx_fence();
+    m_gfx_graphics_queue->waitForFenceValuesOnDevice(1, &fence, &signal_value);
 }
 
-void Device::wait_for_device(void* cuda_stream)
+void Device::sync_to_device(void* cuda_stream)
 {
-    SGL_UNUSED(cuda_stream);
-    SGL_UNIMPLEMENTED();
+    m_cuda_semaphore->wait(m_global_fence->signaled_value(), CUstream(cuda_stream));
 }
 
 void Device::run_garbage_collection()
