@@ -31,8 +31,8 @@ struct SwapchainDesc {
 class SGL_API Swapchain : public Object {
     SGL_OBJECT(Swapchain)
 public:
-    Swapchain(SwapchainDesc desc, WindowHandle window_handle, ref<CommandQueue> queue, ref<Device> device);
-    Swapchain(SwapchainDesc desc, Window* window, ref<CommandQueue> queue, ref<Device> device);
+    Swapchain(SwapchainDesc desc, WindowHandle window_handle, ref<Device> device);
+    Swapchain(SwapchainDesc desc, Window* window, ref<Device> device);
     ~Swapchain();
 
     /// Returns the swapchain description.
@@ -66,7 +66,6 @@ private:
     void get_images();
 
     SwapchainDesc m_desc;
-    ref<CommandQueue> m_queue;
     ref<Device> m_device;
     Slang::ComPtr<gfx::ISwapchain> m_gfx_swapchain;
     bool m_fullscreen{false};

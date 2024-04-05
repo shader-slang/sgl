@@ -37,145 +37,6 @@ namespace detail {
     }
 } // namespace detail
 
-// ----------------------------------------------------------------------------
-// CommandQueue
-// ----------------------------------------------------------------------------
-
-CommandQueue::CommandQueue(ref<Device> device, CommandQueueDesc desc)
-    : DeviceResource(std::move(device))
-    , m_desc(std::move(desc))
-{
-    gfx::ICommandQueue::Desc gfx_desc{
-        .type = static_cast<gfx::ICommandQueue::QueueType>(m_desc.type),
-    };
-
-    SLANG_CALL(m_device->gfx_device()->createCommandQueue(gfx_desc, m_gfx_command_queue.writeRef()));
-
-    if (m_device->supports_cuda_interop()) {
-        m_cuda_fence = m_device->create_fence({.shared = true});
-        m_cuda_fence->break_strong_reference_to_device();
-        m_cuda_semaphore = make_ref<cuda::ExternalSemaphore>(m_cuda_fence);
-    }
-}
-
-void CommandQueue::submit(const CommandBuffer* command_buffer)
-{
-    SGL_CHECK_NOT_NULL(command_buffer);
-
-    if (m_device->supports_cuda_interop())
-        handle_copy_from_cuda(command_buffer);
-
-    m_gfx_command_queue->executeCommandBuffer(command_buffer->gfx_command_buffer());
-
-    if (m_device->supports_cuda_interop())
-        handle_copy_to_cuda(command_buffer);
-}
-
-void CommandQueue::submit(std::span<const CommandBuffer*> command_buffers)
-{
-    SGL_UNUSED(command_buffers);
-    SGL_UNIMPLEMENTED();
-    // m_gfx_command_queue->executeCommandBuffers(
-    //     narrow_cast<gfx::GfxCount>(command_buffers.size()),
-    //     reinterpret_cast<gfx::ICommandBuffer*>(command_buffers.data())
-    // );
-}
-
-void CommandQueue::submit_and_wait(const CommandBuffer* command_buffer)
-{
-    submit(command_buffer);
-    wait();
-}
-
-void CommandQueue::wait()
-{
-    m_gfx_command_queue->waitOnHost();
-}
-
-uint64_t CommandQueue::signal(Fence* fence, uint64_t value)
-{
-    SGL_CHECK_NOT_NULL(fence);
-
-    uint64_t signal_value = fence->update_signaled_value(value);
-    m_gfx_command_queue->executeCommandBuffers(0, nullptr, fence->gfx_fence(), signal_value);
-    return signal_value;
-}
-
-void CommandQueue::wait(const Fence* fence, uint64_t value)
-{
-    SGL_CHECK_NOT_NULL(fence);
-
-    uint64_t wait_value = value == Fence::AUTO ? fence->signaled_value() : value;
-    gfx::IFence* fences[] = {fence->gfx_fence()};
-    uint64_t wait_values[] = {wait_value};
-    SLANG_CALL(m_gfx_command_queue->waitForFenceValuesOnDevice(1, fences, wait_values));
-}
-
-void CommandQueue::wait_for_cuda(void* cuda_stream)
-{
-    SGL_CHECK(m_device->supports_cuda_interop(), "Device does not support CUDA interop");
-    m_cuda_semaphore->wait_for_cuda(this, static_cast<CUstream>(cuda_stream));
-}
-
-void CommandQueue::wait_for_device(void* cuda_stream)
-{
-    SGL_CHECK(m_device->supports_cuda_interop(), "Device does not support CUDA interop");
-    m_cuda_semaphore->wait_for_device(this, static_cast<CUstream>(cuda_stream));
-}
-
-NativeHandle CommandQueue::get_native_handle() const
-{
-    gfx::InteropHandle handle = {};
-    SLANG_CALL(m_gfx_command_queue->getNativeHandle(&handle));
-#if SGL_HAS_D3D12
-    if (m_device->type() == DeviceType::d3d12)
-        return NativeHandle(reinterpret_cast<ID3D12CommandQueue*>(handle.handleValue));
-#endif
-#if SGL_HAS_VULKAN
-    if (m_device->type() == DeviceType::vulkan)
-        return NativeHandle(reinterpret_cast<VkQueue>(handle.handleValue));
-#endif
-    return {};
-}
-
-std::string CommandQueue::to_string() const
-{
-    return fmt::format(
-        "CommandQueue("
-        "  device = {},\n",
-        "  type = {}\n",
-        ")",
-        m_device,
-        m_desc.type
-    );
-}
-
-void CommandQueue::handle_copy_from_cuda(const CommandBuffer* command_buffer)
-{
-    void* cuda_stream = 0; // TODO
-
-    if (command_buffer->m_cuda_interop_buffers.empty())
-        return;
-
-    for (const auto& buffer : command_buffer->m_cuda_interop_buffers)
-        buffer->copy_from_cuda(cuda_stream);
-
-    wait_for_cuda(cuda_stream);
-}
-
-void CommandQueue::handle_copy_to_cuda(const CommandBuffer* command_buffer)
-{
-    void* cuda_stream = 0; // TODO
-
-    if (command_buffer->m_cuda_interop_buffers.empty())
-        return;
-
-    wait_for_device(cuda_stream);
-
-    for (const auto& buffer : command_buffer->m_cuda_interop_buffers)
-        if (buffer->is_uav())
-            buffer->copy_to_cuda(cuda_stream);
-}
 
 // ----------------------------------------------------------------------------
 // ComputeCommandEncoder
@@ -593,10 +454,29 @@ void RayTracingCommandEncoder::deserialize_acceleration_structure(AccelerationSt
 // CommandBuffer
 // ----------------------------------------------------------------------------
 
-CommandBuffer::CommandBuffer(ref<Device> device, Slang::ComPtr<gfx::ICommandBuffer> gfx_command_buffer)
+CommandBuffer::CommandBuffer(ref<Device> device)
     : DeviceResource(std::move(device))
-    , m_gfx_command_buffer(std::move(gfx_command_buffer))
 {
+    m_device->_set_current_command_buffer(this);
+
+    open();
+}
+
+CommandBuffer::~CommandBuffer()
+{
+    close();
+
+    m_device->_set_current_command_buffer(nullptr);
+}
+
+void CommandBuffer::open()
+{
+    if (m_open)
+        return;
+
+    m_gfx_transient_resource_heap = m_device->_get_or_create_transient_resource_heap();
+    SLANG_CALL(m_gfx_transient_resource_heap->createCommandBuffer(m_gfx_command_buffer.writeRef()));
+    m_open = true;
 }
 
 void CommandBuffer::close()
@@ -609,14 +489,13 @@ void CommandBuffer::close()
 
     end_current_gfx_encoder();
     m_gfx_command_buffer->close();
-    m_device->deferred_release(m_gfx_command_buffer);
     m_open = false;
 }
 
-void CommandBuffer::submit()
+uint64_t CommandBuffer::submit(CommandQueueType queue)
 {
     close();
-    m_device->graphics_queue()->submit(this);
+    return m_device->submit_command_buffer(this, queue);
 }
 
 void CommandBuffer::write_timestamp(QueryPool* query_pool, uint32_t index)
@@ -1395,6 +1274,7 @@ void CommandBuffer::end_encoder()
 
 gfx::IResourceCommandEncoder* CommandBuffer::get_gfx_resource_command_encoder()
 {
+    SGL_ASSERT(m_open);
     if (m_active_gfx_encoder == EncoderType::none) {
         m_gfx_command_encoder = m_gfx_command_buffer->encodeResourceCommands();
         m_active_gfx_encoder = EncoderType::resource;

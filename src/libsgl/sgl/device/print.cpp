@@ -269,9 +269,6 @@ DebugPrinter::DebugPrinter(Device* device, size_t buffer_size)
         .debug_name = "debug_printer_readback_buffer",
     });
     m_readback_buffer->break_strong_reference_to_device();
-
-    m_fence = m_device->create_fence({});
-    m_fence->break_strong_reference_to_device();
 }
 
 void DebugPrinter::add_hashed_strings(const std::map<uint32_t, std::string>& hashed_strings)
@@ -321,14 +318,10 @@ void DebugPrinter::bind(ShaderCursor cursor)
 
 void DebugPrinter::flush_device(bool wait)
 {
-    ref<CommandBuffer> command_buffer = m_device->create_command_buffer();
-    command_buffer->break_strong_reference_to_device();
+    CommandBuffer* command_buffer = m_device->_begin_shared_command_buffer();
     command_buffer->copy_resource(m_readback_buffer, m_buffer);
     command_buffer->clear_resource_view(m_buffer->get_uav({.first_element = 0, .element_count = 4}), uint4(0));
-    command_buffer->submit();
-    m_device->graphics_queue()->signal(m_fence);
-    if (wait)
-        m_fence->wait();
+    m_device->_end_shared_command_buffer(wait);
 }
 
 } // namespace sgl

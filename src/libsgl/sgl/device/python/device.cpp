@@ -515,6 +515,26 @@ SGL_PY_EXPORT(device_device)
     );
     device.def("create_command_buffer", &Device::create_command_buffer, D(Device, create_command_buffer));
     device.def(
+        "submit_command_buffer",
+        &Device::submit_command_buffer,
+        "command_buffer"_a,
+        "queue"_a = CommandQueueType::graphics,
+        D_NA(Device, submit_command_buffer)
+    );
+    device.def("wait_command_buffer", &Device::wait_command_buffer, "id"_a, D_NA(Device, wait_command_buffer));
+    device.def(
+        "wait_for_cuda",
+        [](Device* self, uint64_t cuda_stream) { self->wait_for_cuda(reinterpret_cast<void*>(cuda_stream)); },
+        "cuda_stream"_a = 0,
+        D_NA(Device, wait_for_cuda)
+    );
+    device.def(
+        "wait_for_device",
+        [](Device* self, uint64_t cuda_stream) { self->wait_for_device(reinterpret_cast<void*>(cuda_stream)); },
+        "cuda_stream"_a = 0,
+        D_NA(Device, wait_for_device)
+    );
+    device.def(
         "get_acceleration_structure_prebuild_info",
         &Device::get_acceleration_structure_prebuild_info,
         "build_inputs"_a,
@@ -742,11 +762,12 @@ SGL_PY_EXPORT(device_device)
         D(Device, create_memory_heap)
     );
 
-    device.def_prop_ro("graphics_queue", &Device::graphics_queue, D(Device, graphics_queue));
+    // device.def_prop_ro("graphics_queue", &Device::graphics_queue, D(Device, graphics_queue));
     device.def_prop_ro("upload_heap", &Device::upload_heap, D(Device, upload_heap));
     device.def_prop_ro("read_back_heap", &Device::read_back_heap, D(Device, read_back_heap));
     device.def("flush_print", &Device::flush_print, D(Device, flush_print));
     device.def("flush_print_to_string", &Device::flush_print_to_string, D(Device, flush_print_to_string));
+    device.def("run_garbage_collection", &Device::run_garbage_collection, D_NA(Device, run_garbage_collection));
     device.def("end_frame", &Device::end_frame, D(Device, end_frame));
     device.def("wait", &Device::wait, D(Device, wait));
 

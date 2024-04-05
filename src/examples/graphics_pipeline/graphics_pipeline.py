@@ -7,20 +7,21 @@ from pathlib import Path
 EXAMPLE_DIR = Path(__file__).parent
 
 device = sgl.Device(
-    enable_debug_layers=True, compiler_options={"include_paths": [EXAMPLE_DIR]}
+    enable_debug_layers=True,
+    compiler_options={"include_paths": [EXAMPLE_DIR]},
 )
 
 vertices = np.array([-1, -1, 1, -1, 0, 1], dtype=np.float32)
 indices = np.array([0, 1, 2], dtype=np.uint32)
 
 vertex_buffer = device.create_buffer(
-    usage=sgl.ResourceUsage.shader_resource,
+    usage=sgl.ResourceUsage.vertex | sgl.ResourceUsage.shader_resource,
     debug_name="vertex_buffer",
     data=vertices,
 )
 
 index_buffer = device.create_buffer(
-    usage=sgl.ResourceUsage.shader_resource,
+    usage=sgl.ResourceUsage.index | sgl.ResourceUsage.shader_resource,
     debug_name="index_buffer",
     data=indices,
 )

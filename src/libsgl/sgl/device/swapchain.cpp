@@ -11,9 +11,8 @@
 
 namespace sgl {
 
-Swapchain::Swapchain(SwapchainDesc desc, WindowHandle window_handle, ref<CommandQueue> queue, ref<Device> device)
+Swapchain::Swapchain(SwapchainDesc desc, WindowHandle window_handle, ref<Device> device)
     : m_desc(std::move(desc))
-    , m_queue(std::move(queue))
     , m_device(std::move(device))
 {
     SGL_ASSERT(m_device);
@@ -23,7 +22,7 @@ Swapchain::Swapchain(SwapchainDesc desc, WindowHandle window_handle, ref<Command
         .width = static_cast<gfx::GfxCount>(m_desc.width),
         .height = static_cast<gfx::GfxCount>(m_desc.height),
         .imageCount = static_cast<gfx::GfxCount>(m_desc.image_count),
-        .queue = m_queue->gfx_command_queue(),
+        .queue = m_device->gfx_graphics_queue(),
         .enableVSync = m_desc.enable_vsync,
     };
 
@@ -40,8 +39,8 @@ Swapchain::Swapchain(SwapchainDesc desc, WindowHandle window_handle, ref<Command
     get_images();
 }
 
-Swapchain::Swapchain(SwapchainDesc desc, Window* window, ref<CommandQueue> queue, ref<Device> device)
-    : Swapchain(std::move(desc), window->window_handle(), std::move(queue), std::move(device))
+Swapchain::Swapchain(SwapchainDesc desc, Window* window, ref<Device> device)
+    : Swapchain(std::move(desc), window->window_handle(), std::move(device))
 {
 }
 

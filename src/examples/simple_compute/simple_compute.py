@@ -7,7 +7,7 @@ from pathlib import Path
 EXAMPLE_DIR = Path(__file__).parent
 
 device = sgl.Device(
-    enable_debug_layers=False,
+    enable_debug_layers=True,
     compiler_options={"include_paths": [EXAMPLE_DIR]},
 )
 

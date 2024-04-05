@@ -47,7 +47,7 @@ std::vector<ref<Texture>> TextureLoader::load_textures(std::span<const Bitmap*> 
         textures[i] = load_from_bitmap(command_buffer, bitmaps[i], options);
         if (i && (i % BATCH_SIZE == 0)) {
             command_buffer->submit();
-            m_device->end_frame();
+            m_device->run_garbage_collection();
             command_buffer = m_device->create_command_buffer();
         }
     }
@@ -281,7 +281,7 @@ ref<Texture> TextureLoader::load_array_from_bitmaps(std::span<const Bitmap*> bit
         if (i % BATCH_SIZE == 0) {
             if (command_buffer)
                 command_buffer->submit();
-            m_device->end_frame();
+            m_device->run_garbage_collection();
             command_buffer = m_device->create_command_buffer();
         }
 

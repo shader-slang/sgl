@@ -590,7 +590,9 @@ class PathTracer:
         self.program = self.device.load_program("pathtracer.slang", ["main"])
         self.pipeline = self.device.create_compute_pipeline(self.program)
 
-    def execute(self, output: sgl.Texture, frame: int):
+    def execute(
+        self, command_buffer: sgl.CommandBuffer, output: sgl.Texture, frame: int
+    ):
         w = output.width
         h = output.height
 
@@ -598,7 +600,6 @@ class PathTracer:
         self.scene.camera.height = h
         self.scene.camera.recompute()
 
-        command_buffer = self.device.create_command_buffer()
         with command_buffer.encode_compute_commands() as encoder:
             shader_object = encoder.bind_pipeline(self.pipeline)
             cursor = sgl.ShaderCursor(shader_object)
@@ -606,7 +607,6 @@ class PathTracer:
             cursor.g_frame = frame
             self.scene.bind(cursor.g_scene)
             encoder.dispatch(thread_count=[w, h, 1])
-        command_buffer.submit()
 
 
 class Accumulator:
@@ -616,7 +616,13 @@ class Accumulator:
         self.kernel = self.device.create_compute_kernel(self.program)
         self.accumulator: sgl.Texture = None
 
-    def execute(self, input: sgl.Texture, output: sgl.Texture, reset=False):
+    def execute(
+        self,
+        command_buffer: sgl.CommandBuffer,
+        input: sgl.Texture,
+        output: sgl.Texture,
+        reset=False,
+    ):
         if (
             self.accumulator == None
             or self.accumulator.width != input.width
@@ -641,6 +647,7 @@ class Accumulator:
                     "reset": reset,
                 }
             },
+            command_buffer=command_buffer,
         )
 
 
@@ -650,7 +657,9 @@ class ToneMapper:
         self.program = self.device.load_program("tone_mapper.slang", ["main"])
         self.kernel = self.device.create_compute_kernel(self.program)
 
-    def execute(self, input: sgl.Texture, output: sgl.Texture):
+    def execute(
+        self, command_buffer: sgl.CommandBuffer, input: sgl.Texture, output: sgl.Texture
+    ):
         self.kernel.dispatch(
             thread_count=[input.width, input.height, 1],
             vars={
@@ -659,6 +668,7 @@ class ToneMapper:
                     "output": output,
                 }
             },
+            command_buffer=command_buffer,
         )
 
 
@@ -771,16 +781,20 @@ class App:
                     debug_name="accum_texture",
                 )
 
-            self.path_tracer.execute(self.render_texture, frame)
-            self.accumulator.execute(
-                self.render_texture, self.accum_texture, frame == 0
-            )
-            self.tone_mapper.execute(self.accum_texture, self.output_texture)
-
             command_buffer = self.device.create_command_buffer()
+
+            self.path_tracer.execute(command_buffer, self.render_texture, frame)
+            self.accumulator.execute(
+                command_buffer, self.render_texture, self.accum_texture, frame == 0
+            )
+            self.tone_mapper.execute(
+                command_buffer, self.accum_texture, self.output_texture
+            )
+
             command_buffer.copy_resource(dst=image, src=self.output_texture)
             command_buffer.set_texture_state(image, sgl.ResourceState.present)
             command_buffer.submit()
+            del command_buffer
             del image
 
             self.swapchain.present()

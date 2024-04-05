@@ -16,94 +16,6 @@
 
 namespace sgl {
 
-enum CommandQueueType : uint32_t {
-    graphics = static_cast<uint32_t>(gfx::ICommandQueue::QueueType::Graphics),
-};
-
-SGL_ENUM_INFO(
-    CommandQueueType,
-    {
-        {CommandQueueType::graphics, "graphics"},
-    }
-);
-SGL_ENUM_REGISTER(CommandQueueType);
-
-struct CommandQueueDesc {
-    CommandQueueType type;
-};
-
-class SGL_API CommandQueue : public DeviceResource {
-    SGL_OBJECT(CommandQueue)
-public:
-    /// Constructor.
-    CommandQueue(ref<Device> device, CommandQueueDesc desc);
-
-    const CommandQueueDesc& desc() const { return m_desc; }
-
-    void submit(const CommandBuffer* command_buffer);
-    void submit(std::span<const CommandBuffer*> command_buffers);
-
-    void submit_and_wait(const CommandBuffer* command_buffer);
-
-    void wait();
-
-    /**
-     * Signal a fence.
-     * \param pFence The fence to signal.
-     * \param value The value to signal. If \c Fence::AUTO, the signaled value will be auto-incremented.
-     * \return The signaled value.
-     */
-    uint64_t signal(Fence* fence, uint64_t value = Fence::AUTO);
-
-    /**
-     * Wait for a fence to be signaled on the device.
-     * Queues a device-side wait and returns immediately.
-     * The device will wait until the fence reaches or exceeds the specified value.
-     * \param pFence The fence to wait for.
-     * \param value The value to wait for. If \c Fence::AUTO, wait for the last signaled value.
-     */
-    void wait(const Fence* fence, uint64_t value = Fence::AUTO);
-
-    /**
-     * \brief Synchronize CUDA -> device.
-     *
-     * This first signals a shared CUDA semaphore in the CUDA stream.
-     * Then it adds a wait for the shared CUDA semaphore on the command queue.
-     *
-     * \param cuda_stream CUDA stream
-     */
-    void wait_for_cuda(void* cuda_stream = 0);
-
-    /**
-     * \brief Synchronize device -> CUDA.
-     *
-     * This first signals a shared CUDA semaphore on the command queue.
-     * Then it adds a wait for the shared CUDA semaphore in the CUDA stream.
-     *
-     * \param cuda_stream CUDA stream
-     */
-    void wait_for_device(void* cuda_stream = 0);
-
-    /// Returns the native API handle for the command queue:
-    /// - D3D12: ID3D12CommandQueue*
-    /// - Vulkan: VkQueue (Vulkan)
-    NativeHandle get_native_handle() const;
-
-    gfx::ICommandQueue* gfx_command_queue() const { return m_gfx_command_queue; }
-
-    std::string to_string() const override;
-
-private:
-    void handle_copy_from_cuda(const CommandBuffer* command_buffer);
-    void handle_copy_to_cuda(const CommandBuffer* command_buffer);
-
-    CommandQueueDesc m_desc;
-    Slang::ComPtr<gfx::ICommandQueue> m_gfx_command_queue;
-
-    ref<Fence> m_cuda_fence;
-    ref<cuda::ExternalSemaphore> m_cuda_semaphore;
-};
-
 class SGL_API ComputeCommandEncoder {
 public:
     ComputeCommandEncoder(ComputeCommandEncoder&& other) noexcept
@@ -292,14 +204,37 @@ private:
 class SGL_API CommandBuffer : public DeviceResource {
     SGL_OBJECT(CommandBuffer)
 public:
-    CommandBuffer(ref<Device> device, Slang::ComPtr<gfx::ICommandBuffer> gfx_command_buffer);
-
-    void close();
+    CommandBuffer(ref<Device> device);
+    ~CommandBuffer();
 
     /**
-     * Submit all recorded commands to the command queue.
+     * \brief Open the command buffer for recording.
+     *
+     * No-op if command buffer is already open.
+     *
+     * \note Due to current limitations, only a single command buffer can be open at any given time.
      */
-    void submit();
+    void open();
+
+    /**
+     * \brief Close the command buffer.
+     *
+     * No-op if command buffer is already closed.
+     */
+    void close();
+
+    /// True if the command buffer is open.
+    bool is_open() const { return m_open; }
+
+    /**
+     * \brief Submit the command buffer to the device.
+     *
+     * The returned submission ID can be used to wait for the command buffer to complete.
+     *
+     * \param queue Command queue to submit to.
+     * \return Submission ID.
+     */
+    uint64_t submit(CommandQueueType queue = CommandQueueType::graphics);
 
     // ------------------------------------------------------------------------
     // Queries
@@ -575,9 +510,10 @@ private:
     gfx::IResourceCommandEncoder* get_gfx_resource_command_encoder();
     void end_current_gfx_encoder();
 
+    Slang::ComPtr<gfx::ITransientResourceHeap> m_gfx_transient_resource_heap;
     Slang::ComPtr<gfx::ICommandBuffer> m_gfx_command_buffer;
 
-    bool m_open{true};
+    bool m_open{false};
     bool m_encoder_open{false};
 
     enum class EncoderType {
@@ -593,7 +529,8 @@ private:
 
     std::vector<ref<cuda::InteropBuffer>> m_cuda_interop_buffers;
 
-    friend class CommandQueue;
+    // TODO remove this
+    friend class Device;
     friend class ComputeCommandEncoder;
     friend class RenderCommandEncoder;
     friend class RayTracingCommandEncoder;

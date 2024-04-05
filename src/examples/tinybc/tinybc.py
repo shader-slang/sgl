@@ -45,7 +45,8 @@ except Exception as e:
 
 # Create device
 device = sgl.Device(
-    enable_debug_layers=args.verbose, compiler_options={"include_paths": [EXAMPLE_DIR]}
+    enable_debug_layers=args.verbose,
+    compiler_options={"include_paths": [EXAMPLE_DIR]},
 )
 
 # Create input texture
