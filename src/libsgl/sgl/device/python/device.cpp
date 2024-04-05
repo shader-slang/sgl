@@ -523,16 +523,16 @@ SGL_PY_EXPORT(device_device)
     );
     device.def("wait_command_buffer", &Device::wait_command_buffer, "id"_a, D_NA(Device, wait_command_buffer));
     device.def(
-        "wait_for_cuda",
-        [](Device* self, uint64_t cuda_stream) { self->wait_for_cuda(reinterpret_cast<void*>(cuda_stream)); },
+        "sync_to_cuda",
+        [](Device* self, uint64_t cuda_stream) { self->sync_to_cuda(reinterpret_cast<void*>(cuda_stream)); },
         "cuda_stream"_a = 0,
-        D_NA(Device, wait_for_cuda)
+        D_NA(Device, sync_to_cuda)
     );
     device.def(
-        "wait_for_device",
-        [](Device* self, uint64_t cuda_stream) { self->wait_for_device(reinterpret_cast<void*>(cuda_stream)); },
+        "sync_to_device",
+        [](Device* self, uint64_t cuda_stream) { self->sync_to_device(reinterpret_cast<void*>(cuda_stream)); },
         "cuda_stream"_a = 0,
-        D_NA(Device, wait_for_device)
+        D_NA(Device, sync_to_device)
     );
     device.def(
         "get_acceleration_structure_prebuild_info",

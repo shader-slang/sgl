@@ -381,7 +381,7 @@ public:
      *
      * \param cuda_stream CUDA stream
      */
-    void wait_for_cuda(void* cuda_stream = 0);
+    void sync_to_cuda(void* cuda_stream = 0);
 
     /**
      * \brief Synchronize device -> CUDA.
@@ -390,7 +390,7 @@ public:
      *
      * \param cuda_stream CUDA stream
      */
-    void wait_for_device(void* cuda_stream = 0);
+    void sync_to_device(void* cuda_stream = 0);
 
     /**
      * \brief Execute garbage collection.
