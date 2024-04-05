@@ -38,7 +38,6 @@ private:
 
     ref<Buffer> m_buffer;
     ref<Buffer> m_readback_buffer;
-    ref<Fence> m_fence;
 
     std::map<uint32_t, std::string> m_hashed_strings;
 };

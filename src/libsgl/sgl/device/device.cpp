@@ -20,6 +20,7 @@
 #include "sgl/device/native_handle_traits.h"
 #include "sgl/device/agility_sdk.h"
 #include "sgl/device/cuda_utils.h"
+#include "sgl/device/cuda_interop.h"
 #include "sgl/device/print.h"
 
 #include "sgl/core/config.h"
@@ -38,8 +39,6 @@
 #endif
 
 namespace sgl {
-
-static constexpr uint32_t IN_FLIGHT_FRAME_COUNT = 3;
 
 class DebugLogger : public gfx::IDebugCallback {
 public:
@@ -419,6 +418,12 @@ Device::Device(const DeviceDesc& desc)
         m_features.push_back(features[i]);
     log_debug("Supported features: {}", string::join(m_features, ", "));
 
+    // Create graphics queue.
+    SLANG_CALL(m_gfx_device->createCommandQueue(
+        {.type = gfx::ICommandQueue::QueueType::Graphics},
+        m_gfx_graphics_queue.writeRef()
+    ));
+
     // Create default slang session.
     m_slang_session = create_slang_session({
         .compiler_options = m_desc.compiler_options,
@@ -427,37 +432,18 @@ Device::Device(const DeviceDesc& desc)
     });
     m_slang_session->break_strong_reference_to_device();
 
-    // Create per-frame data.
-    m_frame_data.resize(IN_FLIGHT_FRAME_COUNT);
-    for (auto& frame_data : m_frame_data) {
-        m_gfx_device->createTransientResourceHeap(
-            gfx::ITransientResourceHeap::Desc{
-                .flags = gfx::ITransientResourceHeap::Flags::AllowResizing,
-                .constantBufferSize = 1024 * 1024 * 4,
-                .samplerDescriptorCount = 1024,
-                .uavDescriptorCount = 1024,
-                .srvDescriptorCount = 1024,
-                .constantBufferDescriptorCount = 1024,
-                .accelerationStructureDescriptorCount = 1024,
-            },
-            frame_data.transient_resource_heap.writeRef()
-        );
-    }
+    // Create global fence to synchronize command submission.
+    m_global_fence = create_fence({.shared = m_desc.enable_cuda_interop});
+    m_global_fence->break_strong_reference_to_device();
 
-    // Create CUDA device before creating the graphics queue, which internally
-    // allocates a shared semaphore for synchronization.
+    // Setup CUDA interop.
     if (m_desc.enable_cuda_interop) {
         SGL_CHECK(sgl_cuda_api_init(), "Failed to initialize CUDA driver API.");
         SGL_CHECK(m_desc.type == DeviceType::d3d12, "CUDA interop is currently only supported on D3D12 devices");
         m_cuda_device = make_ref<cuda::Device>(this);
+        m_cuda_semaphore = make_ref<cuda::ExternalSemaphore>(m_global_fence);
         m_supports_cuda_interop = true;
     }
-
-    m_frame_fence = create_fence({});
-    m_frame_fence->break_strong_reference_to_device();
-
-    m_graphics_queue = make_ref<CommandQueue>(ref<Device>(this), CommandQueueDesc{.type = CommandQueueType::graphics});
-    m_graphics_queue->break_strong_reference_to_device();
 
     m_upload_heap = create_memory_heap(
         {.memory_type = MemoryType::upload,
@@ -488,14 +474,16 @@ Device::~Device()
     m_read_back_heap.reset();
     m_upload_heap.reset();
 
-    m_graphics_queue.reset();
-    m_frame_data.clear();
-    m_frame_fence.reset();
+    m_global_fence.reset();
 
+    m_current_transient_resource_heap.setNull();
+    m_in_flight_transient_resource_heaps = {};
+    m_transient_resource_heap_pool = {};
     m_deferred_release_queue = {};
 
     m_slang_session.reset();
 
+    m_gfx_graphics_queue.setNull();
     m_gfx_device.setNull();
 
 #if SGL_HAS_NVAPI
@@ -518,7 +506,7 @@ ShaderCacheStats Device::shader_cache_stats() const
 
 ref<Swapchain> Device::create_swapchain(SwapchainDesc desc, Window* window)
 {
-    return make_ref<Swapchain>(std::move(desc), window, m_graphics_queue, ref<Device>(this));
+    return make_ref<Swapchain>(std::move(desc), window, ref<Device>(this));
 }
 
 ref<Buffer> Device::create_buffer(BufferDesc desc)
@@ -683,15 +671,163 @@ ref<ComputeKernel> Device::create_compute_kernel(ComputeKernelDesc desc)
 
 ref<CommandBuffer> Device::create_command_buffer()
 {
-    return make_ref<CommandBuffer>(
-        ref<Device>(this),
-        m_frame_data[m_current_frame_index].transient_resource_heap->createCommandBuffer()
-    );
+    SGL_ASSERT(m_shared_command_buffer == nullptr);
+
+    if (m_current_command_buffer)
+        SGL_THROW("Only one command buffer can be created at any time.");
+
+    return make_ref<CommandBuffer>(ref<Device>(this));
+}
+
+void Device::_set_current_command_buffer(CommandBuffer* command_buffer)
+{
+    m_current_command_buffer = command_buffer;
+}
+
+Slang::ComPtr<gfx::ITransientResourceHeap> Device::_get_or_create_transient_resource_heap()
+{
+    if (m_current_transient_resource_heap)
+        return m_current_transient_resource_heap;
+
+    if (!m_transient_resource_heap_pool.empty()) {
+        m_current_transient_resource_heap = m_transient_resource_heap_pool.front();
+        m_transient_resource_heap_pool.pop();
+        return m_current_transient_resource_heap;
+    }
+
+    SLANG_CALL(m_gfx_device->createTransientResourceHeap(
+        gfx::ITransientResourceHeap::Desc{
+            .flags = gfx::ITransientResourceHeap::Flags::AllowResizing,
+            .constantBufferSize = 1024 * 1024 * 4,
+            .samplerDescriptorCount = 1024,
+            .uavDescriptorCount = 1024,
+            .srvDescriptorCount = 1024,
+            .constantBufferDescriptorCount = 1024,
+            .accelerationStructureDescriptorCount = 1024,
+        },
+        m_current_transient_resource_heap.writeRef()
+    ));
+    return m_current_transient_resource_heap;
+}
+
+CommandBuffer* Device::_begin_shared_command_buffer()
+{
+    if (!m_current_command_buffer)
+        m_shared_command_buffer = create_command_buffer();
+
+    m_current_command_buffer->open();
+
+    return m_current_command_buffer;
+}
+
+void Device::_end_shared_command_buffer(bool wait)
+{
+    SGL_ASSERT(m_current_command_buffer);
+
+    m_current_command_buffer->close();
+    uint64_t id = submit_command_buffer(m_current_command_buffer);
+
+    if (wait)
+        wait_command_buffer(id);
+
+    m_shared_command_buffer.reset();
+}
+
+uint64_t Device::submit_command_buffer(CommandBuffer* command_buffer, CommandQueueType queue)
+{
+    SGL_CHECK_NOT_NULL(command_buffer);
+    SGL_CHECK(queue == CommandQueueType::graphics, "Only graphics queue is supported.");
+    SGL_ASSERT(command_buffer == m_current_command_buffer);
+
+    if (command_buffer->is_open())
+        SGL_THROW("Cannot submit open command buffer.");
+
+    CUstream cuda_stream = 0;
+
+    if (m_supports_cuda_interop && command_buffer->m_cuda_interop_buffers.size() > 0) {
+        for (const auto& buffer : command_buffer->m_cuda_interop_buffers)
+            buffer->copy_from_cuda(cuda_stream);
+
+        // Signal fence from CUDA, wait for it on graphics queue.
+        uint64_t signal_value = m_global_fence->update_signaled_value();
+        m_cuda_semaphore->signal(signal_value);
+        gfx::IFence* fence = m_global_fence->gfx_fence();
+        m_gfx_graphics_queue->waitForFenceValuesOnDevice(1, &fence, &signal_value);
+    }
+
+    uint64_t fence_value = m_global_fence->update_signaled_value();
+    m_gfx_graphics_queue
+        ->executeCommandBuffer(command_buffer->gfx_command_buffer(), m_global_fence->gfx_fence(), fence_value);
+
+    if (m_supports_cuda_interop && command_buffer->m_cuda_interop_buffers.size() > 0) {
+        // Wait on CUDA stream.
+        m_cuda_semaphore->wait(fence_value, cuda_stream);
+
+        for (const auto& buffer : command_buffer->m_cuda_interop_buffers)
+            if (buffer->is_uav())
+                buffer->copy_to_cuda(cuda_stream);
+    }
+
+    return fence_value;
+}
+
+void Device::wait_command_buffer(uint64_t id)
+{
+    m_global_fence->wait(id);
+}
+
+void Device::wait_for_idle()
+{
+    m_gfx_graphics_queue->waitOnHost();
+}
+
+void Device::wait_for_cuda(void* cuda_stream)
+{
+    SGL_UNUSED(cuda_stream);
+    SGL_UNIMPLEMENTED();
+}
+
+void Device::wait_for_device(void* cuda_stream)
+{
+    SGL_UNUSED(cuda_stream);
+    SGL_UNIMPLEMENTED();
+}
+
+void Device::run_garbage_collection()
+{
+    uint64_t signaled_value = m_global_fence->signaled_value();
+
+    // Finish current transient resource heap and push it to the in-flight queue.
+    if (m_current_transient_resource_heap) {
+        m_current_transient_resource_heap->finish();
+        m_in_flight_transient_resource_heaps.push({m_current_transient_resource_heap, signaled_value});
+        m_current_transient_resource_heap.setNull();
+    }
+
+    // Execute deferred releases on the upload and read-back heaps.
+    m_upload_heap->execute_deferred_releases();
+    m_read_back_heap->execute_deferred_releases();
+
+    uint64_t current_value = m_global_fence->current_value();
+
+    // Reset transient resource heaps that are no longer in use.
+    while (m_in_flight_transient_resource_heaps.size()
+           && m_in_flight_transient_resource_heaps.front().second <= current_value) {
+        Slang::ComPtr<gfx::ITransientResourceHeap> transient_resource_heap
+            = m_in_flight_transient_resource_heaps.front().first;
+        m_in_flight_transient_resource_heaps.pop();
+        transient_resource_heap->synchronizeAndReset();
+        m_transient_resource_heap_pool.push(transient_resource_heap);
+    }
+
+    // Release deferred objects that are no longer in use.
+    while (m_deferred_release_queue.size() && m_deferred_release_queue.front().fence_value <= current_value)
+        m_deferred_release_queue.pop();
 }
 
 ref<MemoryHeap> Device::create_memory_heap(MemoryHeapDesc desc)
 {
-    return make_ref<MemoryHeap>(ref<Device>(this), m_frame_fence, std::move(desc));
+    return make_ref<MemoryHeap>(ref<Device>(this), m_global_fence, std::move(desc));
 }
 
 void Device::flush_print()
@@ -705,26 +841,10 @@ std::string Device::flush_print_to_string()
     return m_debug_printer ? m_debug_printer->flush_to_string() : "";
 }
 
-void Device::end_frame()
-{
-    flush_print();
-
-    if (m_frame_fence->signaled_value() > IN_FLIGHT_FRAME_COUNT)
-        m_frame_fence->wait(m_frame_fence->signaled_value() - IN_FLIGHT_FRAME_COUNT);
-
-    m_frame_data[m_current_frame_index].transient_resource_heap->finish();
-    m_current_frame_index = (m_current_frame_index + 1) % IN_FLIGHT_FRAME_COUNT;
-    m_frame_data[m_current_frame_index].transient_resource_heap->synchronizeAndReset();
-
-    m_graphics_queue->signal(m_frame_fence);
-
-    execute_deferred_releases();
-}
-
 void Device::wait()
 {
-    m_graphics_queue->wait();
-    end_frame();
+    wait_for_idle();
+    run_garbage_collection();
 }
 
 void Device::upload_buffer_data(Buffer* buffer, const void* data, size_t size, size_t offset)
@@ -737,10 +857,9 @@ void Device::upload_buffer_data(Buffer* buffer, const void* data, size_t size, s
 
     std::memcpy(alloc->data, data, size);
 
-    // TODO we want to use existing command buffer.
-    ref<CommandBuffer> command_buffer = create_command_buffer();
+    CommandBuffer* command_buffer = _begin_shared_command_buffer();
     command_buffer->copy_buffer_region(buffer, offset, alloc->buffer, alloc->offset, size);
-    command_buffer->submit();
+    _end_shared_command_buffer(false);
 }
 
 void Device::read_buffer_data(const Buffer* buffer, void* data, size_t size, size_t offset)
@@ -751,11 +870,9 @@ void Device::read_buffer_data(const Buffer* buffer, void* data, size_t size, siz
 
     auto alloc = m_read_back_heap->allocate(size);
 
-    // TODO we want to use existing command buffer.
-    ref<CommandBuffer> command_buffer = create_command_buffer();
+    CommandBuffer* command_buffer = _begin_shared_command_buffer();
     command_buffer->copy_buffer_region(alloc->buffer, alloc->offset, buffer, offset, size);
-    command_buffer->submit();
-    m_graphics_queue->wait();
+    _end_shared_command_buffer(true);
 
     std::memcpy(data, alloc->data, size);
 }
@@ -765,10 +882,9 @@ void Device::upload_texture_data(Texture* texture, uint32_t subresource, Subreso
     SGL_CHECK_NOT_NULL(texture);
     SGL_CHECK_LT(subresource, texture->subresource_count());
 
-    // TODO we want to use existing command buffer.
-    ref<CommandBuffer> command_buffer = create_command_buffer();
+    CommandBuffer* command_buffer = _begin_shared_command_buffer();
     command_buffer->upload_texture_data(texture, subresource, subresource_data);
-    command_buffer->submit();
+    _end_shared_command_buffer(false);
 }
 
 OwnedSubresourceData Device::read_texture_data(const Texture* texture, uint32_t subresource)
@@ -781,8 +897,7 @@ OwnedSubresourceData Device::read_texture_data(const Texture* texture, uint32_t 
     size_t size = layout.total_size_aligned();
     auto alloc = m_read_back_heap->allocate(size);
 
-    // TODO we want to use existing command buffer.
-    ref<CommandBuffer> command_buffer = create_command_buffer();
+    CommandBuffer* command_buffer = _begin_shared_command_buffer();
     command_buffer->copy_texture_to_buffer(
         alloc->buffer,
         alloc->offset,
@@ -791,8 +906,7 @@ OwnedSubresourceData Device::read_texture_data(const Texture* texture, uint32_t 
         texture,
         subresource
     );
-    command_buffer->submit();
-    m_graphics_queue->wait();
+    _end_shared_command_buffer(true);
 
     OwnedSubresourceData subresource_data;
     subresource_data.size = layout.total_size();
@@ -817,19 +931,9 @@ OwnedSubresourceData Device::read_texture_data(const Texture* texture, uint32_t 
 void Device::deferred_release(ISlangUnknown* object)
 {
     m_deferred_release_queue.push({
-        .fence_value = m_frame_fence ? m_frame_fence->signaled_value() : 0,
+        .fence_value = m_global_fence ? m_global_fence->signaled_value() : 0,
         .object = Slang::ComPtr<ISlangUnknown>(object),
     });
-}
-
-void Device::execute_deferred_releases()
-{
-    m_upload_heap->execute_deferred_releases();
-    m_read_back_heap->execute_deferred_releases();
-
-    uint64_t current_value = m_frame_fence->current_value();
-    while (m_deferred_release_queue.size() && m_deferred_release_queue.front().fence_value < current_value)
-        m_deferred_release_queue.pop();
 }
 
 NativeHandle Device::get_native_handle(uint32_t index) const
@@ -854,6 +958,23 @@ NativeHandle Device::get_native_handle(uint32_t index) const
         else if (index == 2)
             return NativeHandle(reinterpret_cast<VkDevice>(handles.handles[2].handleValue));
     }
+#endif
+    return {};
+}
+
+NativeHandle Device::get_native_command_queue_handle(CommandQueueType queue) const
+{
+    SGL_CHECK(queue == CommandQueueType::graphics, "Only graphics queue is supported.");
+
+    gfx::InteropHandle handle = {};
+    SLANG_CALL(m_gfx_graphics_queue->getNativeHandle(&handle));
+#if SGL_HAS_D3D12
+    if (type() == DeviceType::d3d12)
+        return NativeHandle(reinterpret_cast<ID3D12CommandQueue*>(handle.handleValue));
+#endif
+#if SGL_HAS_VULKAN
+    if (type() == DeviceType::vulkan)
+        return NativeHandle(reinterpret_cast<VkQueue>(handle.handleValue));
 #endif
     return {};
 }

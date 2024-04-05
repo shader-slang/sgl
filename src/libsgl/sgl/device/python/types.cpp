@@ -32,6 +32,8 @@ SGL_PY_EXPORT(device_types)
 {
     using namespace sgl;
 
+    nb::sgl_enum<CommandQueueType>(m, "CommandQueueType");
+
     nb::sgl_enum<ShaderModel>(m, "ShaderModel");
     nb::sgl_enum<ShaderStage>(m, "ShaderStage");
 

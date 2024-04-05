@@ -658,19 +658,15 @@ struct PathTracer {
         pipeline = device->create_compute_pipeline({.program = program});
     }
 
-    void execute(ref<Texture> output, uint32_t frame)
+    void execute(ref<CommandBuffer> command_buffer, ref<Texture> output, uint32_t frame)
     {
-        ref<CommandBuffer> command_buffer = device->create_command_buffer();
-        {
-            ComputeCommandEncoder encoder = command_buffer->encode_compute_commands();
-            ref<ShaderObject> shader_object = encoder.bind_pipeline(pipeline);
-            ShaderCursor cursor = ShaderCursor(shader_object);
-            cursor["g_output"] = output;
-            cursor["g_frame"] = frame;
-            scene.bind(cursor["g_scene"]);
-            encoder.dispatch({output->width(), output->height(), 1});
-        }
-        command_buffer->submit();
+        ComputeCommandEncoder encoder = command_buffer->encode_compute_commands();
+        ref<ShaderObject> shader_object = encoder.bind_pipeline(pipeline);
+        ShaderCursor cursor = ShaderCursor(shader_object);
+        cursor["g_output"] = output;
+        cursor["g_frame"] = frame;
+        scene.bind(cursor["g_scene"]);
+        encoder.dispatch({output->width(), output->height(), 1});
     }
 };
 
@@ -686,7 +682,7 @@ struct Accumulator {
         kernel = device->create_compute_kernel({.program = program});
     }
 
-    void execute(ref<Texture> input, ref<Texture> output, bool reset = false)
+    void execute(ref<CommandBuffer> command_buffer, ref<Texture> input, ref<Texture> output, bool reset = false)
     {
         if (!accumulator || accumulator->width() != input->width() || accumulator->height() != input->height()) {
             accumulator = device->create_texture({
@@ -707,7 +703,8 @@ struct Accumulator {
                 a["output"] = output;
                 a["accumulator"] = accumulator;
                 a["reset"] = reset;
-            }
+            },
+            command_buffer
         );
     }
 };
@@ -723,7 +720,7 @@ struct ToneMapper {
         kernel = device->create_compute_kernel({.program = program});
     }
 
-    void execute(ref<Texture> input, ref<Texture> output)
+    void execute(ref<CommandBuffer> command_buffer, ref<Texture> input, ref<Texture> output)
     {
         kernel->dispatch(
             uint3(input->width(), input->height(), 1),
@@ -732,7 +729,8 @@ struct ToneMapper {
                 ShaderCursor t = cursor["g_tone_mapper"];
                 t["input"] = input;
                 t["output"] = output;
-            }
+            },
+            command_buffer
         );
     }
 };
@@ -864,11 +862,12 @@ struct App {
             stage->camera.height = image->height();
             stage->camera.recompute();
 
-            path_tracer->execute(render_texture, frame);
-            accumulator->execute(render_texture, accum_texture, frame == 0);
-            tone_mapper->execute(accum_texture, output_texture);
-
             ref<CommandBuffer> command_buffer = device->create_command_buffer();
+
+            path_tracer->execute(command_buffer, render_texture, frame);
+            accumulator->execute(command_buffer, render_texture, accum_texture, frame == 0);
+            tone_mapper->execute(command_buffer, accum_texture, output_texture);
+
             command_buffer->copy_resource(image, output_texture);
             command_buffer->set_texture_state(image, ResourceState::present);
             command_buffer->submit();

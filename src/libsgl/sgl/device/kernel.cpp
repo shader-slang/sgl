@@ -54,9 +54,9 @@ void ComputeKernel::dispatch(uint3 thread_count, BindVarsCallback bind_vars, Com
 
 void ComputeKernel::dispatch(uint3 thread_count, BindVarsCallback bind_vars, CommandBuffer* command_buffer)
 {
-    ref<CommandBuffer> temp_command_buffer;
+    CommandBuffer* temp_command_buffer{nullptr};
     if (command_buffer == nullptr) {
-        temp_command_buffer = m_device->create_command_buffer();
+        temp_command_buffer = m_device->_begin_shared_command_buffer();
         command_buffer = temp_command_buffer;
     }
 
@@ -66,7 +66,7 @@ void ComputeKernel::dispatch(uint3 thread_count, BindVarsCallback bind_vars, Com
     }
 
     if (temp_command_buffer)
-        temp_command_buffer->submit();
+        m_device->_end_shared_command_buffer(false);
 }
 
 // ----------------------------------------------------------------------------

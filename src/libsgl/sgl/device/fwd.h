@@ -98,8 +98,6 @@ class ShaderTable;
 
 // command.h
 
-struct CommandQueueDesc;
-class CommandQueue;
 class CommandBuffer;
 class ComputeCommandEncoder;
 class RenderCommandEncoder;

@@ -348,9 +348,61 @@ public:
 
     ref<CommandBuffer> create_command_buffer();
 
-    ref<MemoryHeap> create_memory_heap(MemoryHeapDesc desc);
+    void _set_current_command_buffer(CommandBuffer* command_buffer);
+    Slang::ComPtr<gfx::ITransientResourceHeap> _get_or_create_transient_resource_heap();
 
-    CommandQueue* graphics_queue() const { return m_graphics_queue; }
+    CommandBuffer* _begin_shared_command_buffer();
+    void _end_shared_command_buffer(bool wait);
+
+    /**
+     * \brief Submit a command buffer to the device.
+     *
+     * The returned submission ID can be used to wait for the command buffer to complete.
+     *
+     * \param command_buffer Command buffer to submit.
+     * \param queue Command queue to submit to.
+     * \return Submission ID.
+     */
+    uint64_t submit_command_buffer(CommandBuffer* command_buffer, CommandQueueType queue = CommandQueueType::graphics);
+
+    /**
+     * \brief Wait for a command buffer to complete.
+     *
+     * \param id Submission ID.
+     */
+    void wait_command_buffer(uint64_t id);
+
+    void wait_for_idle();
+
+    /**
+     * \brief Synchronize CUDA -> device.
+     *
+     * This signals a shared CUDA semaphore from the CUDA stream and then waits for the signal on the command queue.
+     *
+     * \param cuda_stream CUDA stream
+     */
+    void wait_for_cuda(void* cuda_stream = 0);
+
+    /**
+     * \brief Synchronize device -> CUDA.
+     *
+     * This waits for a shared CUDA semaphore on the CUDA stream, making sure all commands on the device have completed.
+     *
+     * \param cuda_stream CUDA stream
+     */
+    void wait_for_device(void* cuda_stream = 0);
+
+    /**
+     * \brief Execute garbage collection.
+     *
+     * This function should be called regularly to execute deferred releases (at least once a frame).
+     */
+    void run_garbage_collection();
+
+    // TODO deprecated
+    inline void end_frame() { run_garbage_collection(); }
+
+    ref<MemoryHeap> create_memory_heap(MemoryHeapDesc desc);
 
     MemoryHeap* upload_heap() const { return m_upload_heap; }
     MemoryHeap* read_back_heap() const { return m_read_back_heap; }
@@ -362,8 +414,6 @@ public:
 
     /// Block and flush all shader side debug print output to a string.
     std::string flush_print_to_string();
-
-    void end_frame();
 
     void wait();
 
@@ -409,20 +459,20 @@ public:
 
     void deferred_release(ISlangUnknown* object);
 
-    /**
-     * \brief Execute deferred releases.
-     *
-     * This function should be called regularly to execute deferred releases.
-     */
-    void execute_deferred_releases();
-
     gfx::IDevice* gfx_device() const { return m_gfx_device; }
+    gfx::ICommandQueue* gfx_graphics_queue() const { return m_gfx_graphics_queue; }
+
     slang::IGlobalSession* global_session() const { return m_global_session; }
 
     /// Returns the native API handle:
     /// - D3D12: ID3D12Device* (0)
     /// - Vulkan: VkInstance (0), VkPhysicalDevice (1), VkDevice (2)
     NativeHandle get_native_handle(uint32_t index = 0) const;
+
+    /// Returns the native API handle for the command queue:
+    /// - D3D12: ID3D12CommandQueue*
+    /// - Vulkan: VkQueue (Vulkan)
+    NativeHandle get_native_command_queue_handle(CommandQueueType queue = CommandQueueType::graphics) const;
 
     /// Enumerates all available adapters of a given device type.
     static std::vector<AdapterInfo> enumerate_adapters(DeviceType type = DeviceType::automatic);
@@ -459,26 +509,32 @@ private:
     std::filesystem::path m_shader_cache_path;
 
     Slang::ComPtr<gfx::IDevice> m_gfx_device;
+    Slang::ComPtr<gfx::ICommandQueue> m_gfx_graphics_queue;
     Slang::ComPtr<slang::IGlobalSession> m_global_session;
 
     ref<SlangSession> m_slang_session;
 
     std::vector<std::string> m_features;
 
-    ref<CommandQueue> m_graphics_queue;
+    ref<Fence> m_global_fence;
 
     ref<MemoryHeap> m_upload_heap;
     ref<MemoryHeap> m_read_back_heap;
 
     std::unique_ptr<DebugPrinter> m_debug_printer;
 
-    struct FrameData {
-        Slang::ComPtr<gfx::ITransientResourceHeap> transient_resource_heap;
-    };
+    CommandBuffer* m_current_command_buffer{nullptr};
+    ref<CommandBuffer> m_shared_command_buffer;
 
-    std::vector<FrameData> m_frame_data;
-    uint32_t m_current_frame_index{0};
-    ref<Fence> m_frame_fence;
+    /// Currently active transient resource heap.
+    /// All command buffers are created on this heap.
+    Slang::ComPtr<gfx::ITransientResourceHeap> m_current_transient_resource_heap;
+
+    /// Transient resource heaps available for reuse.
+    std::queue<Slang::ComPtr<gfx::ITransientResourceHeap>> m_transient_resource_heap_pool;
+
+    /// Transient resource heaps that are currently in flight.
+    std::queue<std::pair<Slang::ComPtr<gfx::ITransientResourceHeap>, uint64_t>> m_in_flight_transient_resource_heaps;
 
     struct DeferredRelease {
         uint64_t fence_value;
@@ -494,6 +550,7 @@ private:
 
     bool m_supports_cuda_interop{false};
     ref<cuda::Device> m_cuda_device;
+    ref<cuda::ExternalSemaphore> m_cuda_semaphore;
 };
 
 } // namespace sgl

@@ -88,9 +88,6 @@ public:
     void signal(uint64_t value, CUstream stream = 0);
     void wait(uint64_t value, CUstream stream = 0);
 
-    void wait_for_cuda(CommandQueue* command_queue, CUstream cuda_stream = 0, uint64_t value = Fence::AUTO);
-    void wait_for_device(CommandQueue* command_queue, CUstream cuda_stream = 0, uint64_t value = Fence::AUTO);
-
 private:
     /// Non-owning pointer to the fence.
     Fence* m_fence;

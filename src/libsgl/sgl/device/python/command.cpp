@@ -13,36 +13,10 @@ SGL_PY_EXPORT(device_command)
 {
     using namespace sgl;
 
-    nb::sgl_enum<CommandQueueType>(m, "CommandQueueType");
-
-    nb::class_<CommandQueueDesc>(m, "CommandQueueDesc").def(nb::init<>()).def_rw("type", &CommandQueueDesc::type);
-
-    nb::class_<CommandQueue, DeviceResource>(m, "CommandQueue")
-        .def("desc", &CommandQueue::desc)
-        .def("submit", nb::overload_cast<const CommandBuffer*>(&CommandQueue::submit), "command_buffer"_a)
-        .def(
-            "submit_and_wait",
-            nb::overload_cast<const CommandBuffer*>(&CommandQueue::submit_and_wait),
-            "command_buffer"_a
-        )
-        .def("wait", nb::overload_cast<>(&CommandQueue::wait))
-        .def("signal", &CommandQueue::signal, "fence"_a, "value"_a = Fence::AUTO)
-        .def("wait", nb::overload_cast<const Fence*, uint64_t>(&CommandQueue::wait), "fence"_a, "value"_a = Fence::AUTO)
-        .def(
-            "wait_for_cuda",
-            [](CommandQueue* self, uint64_t cuda_stream) { self->wait_for_cuda(reinterpret_cast<void*>(cuda_stream)); },
-            "cuda_stream"_a = 0
-        )
-        .def(
-            "wait_for_device",
-            [](CommandQueue* self, uint64_t cuda_stream)
-            { self->wait_for_device(reinterpret_cast<void*>(cuda_stream)); },
-            "cuda_stream"_a = 0
-        );
-
     nb::class_<CommandBuffer, DeviceResource>(m, "CommandBuffer")
-        .def("close", &CommandBuffer::close)
-        .def("submit", &CommandBuffer::submit)
+        .def("open", &CommandBuffer::open, D_NA(CommandBuffer, open))
+        .def("close", &CommandBuffer::close, D_NA(CommandBuffer, close))
+        .def("submit", &CommandBuffer::submit, "queue"_a = CommandQueueType::graphics, D_NA(CommandBuffer, submit))
         .def("write_timestamp", &CommandBuffer::write_timestamp, "query_pool"_a, "index"_a)
         .def(
             "resolve_query",

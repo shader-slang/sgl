@@ -21,6 +21,18 @@ using DeviceOffset = uint64_t;
 /// Represents a size in device memory (in bytes).
 using DeviceSize = uint64_t;
 
+enum CommandQueueType : uint32_t {
+    graphics = static_cast<uint32_t>(gfx::ICommandQueue::QueueType::Graphics),
+};
+
+SGL_ENUM_INFO(
+    CommandQueueType,
+    {
+        {CommandQueueType::graphics, "graphics"},
+    }
+);
+SGL_ENUM_REGISTER(CommandQueueType);
+
 enum class ShaderModel : uint32_t {
     unknown = 0,
     sm_6_0 = 60,
