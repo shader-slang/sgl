@@ -8,6 +8,8 @@
 
 #include <slang-gfx.h>
 
+#include <array>
+
 namespace sgl {
 
 /// Resource formats.
@@ -152,66 +154,103 @@ SGL_ENUM_INFO(
 );
 SGL_ENUM_REGISTER(FormatType);
 
-enum class TextureChannelFlags : uint32_t {
+enum class FormatChannels : uint32_t {
     none = 0x0,
     r = 0x1,
     g = 0x2,
     b = 0x4,
     a = 0x8,
-    rg = 0x3,
-    rgb = 0x7,
-    rgba = 0xf,
+    rg = r | g,
+    rgb = r | g | b,
+    rgba = r | g | b | a,
 };
 
-SGL_ENUM_CLASS_OPERATORS(TextureChannelFlags);
+SGL_ENUM_INFO(
+    FormatChannels,
+    {
+        {FormatChannels::none, "none"},
+        {FormatChannels::r, "r"},
+        {FormatChannels::g, "g"},
+        {FormatChannels::b, "b"},
+        {FormatChannels::a, "a"},
+        {FormatChannels::rg, "rg"},
+        {FormatChannels::rgb, "rgb"},
+        {FormatChannels::rgba, "rgba"},
+    }
+);
+SGL_ENUM_REGISTER(FormatChannels);
+
+SGL_ENUM_CLASS_OPERATORS(FormatChannels);
 
 /// Resource format information.
-struct FormatInfo {
+struct SGL_API FormatInfo {
+    /// Resource format.
     Format format;
+    /// Format name.
     std::string name;
+    /// Number of bytes per block (compressed) or pixel (uncompressed).
     uint32_t bytes_per_block;
+    /// Number of channels.
     uint32_t channel_count;
+    /// Format type (typeless, float, unorm, unorm_srgb, snorm, uint, sint).
     FormatType type;
+    /// True if format has a depth component.
     bool is_depth;
+    /// True if format has a stencil component.
     bool is_stencil;
+    /// True if format is compressed.
     bool is_compressed;
+    /// Block width for compressed formats (1 for uncompressed formats).
     uint32_t block_width;
+    /// Block height for compressed formats (1 for uncompressed formats).
     uint32_t block_height;
-    uint32_t channel_bit_count[4];
+    /// Number of bits per channel.
+    std::array<uint32_t, 4> channel_bit_count;
+    /// DXGI format.
     uint32_t dxgi_format;
+    /// Vulkan format.
     uint32_t vk_format;
 
+    /// True if format has a depth or stencil component.
     bool is_depth_stencil() const { return is_depth || is_stencil; }
 
+    /// True if format is typeless.
     bool is_typeless_format() const { return type == FormatType::typeless; }
+    /// True if format is floating point.
     bool is_float_format() const { return type == FormatType::float_; }
+    /// True if format is integer.
     bool is_integer_format() const { return type == FormatType::uint || type == FormatType::sint; }
+    /// True if format is normalized.
     bool is_normalized_format() const
     {
         return type == FormatType::unorm || type == FormatType::unorm_srgb || type == FormatType::snorm;
     }
+    /// True if format is sRGB.
     bool is_srgb_format() const { return type == FormatType::unorm_srgb; }
 
-    TextureChannelFlags get_mask() const
+    /// Get the channels for the format (only for color formats).
+    FormatChannels get_channels() const
     {
-        TextureChannelFlags flags = TextureChannelFlags::none;
-        flags |= channel_count >= 1 ? TextureChannelFlags::r : TextureChannelFlags::none;
-        flags |= channel_count >= 2 ? TextureChannelFlags::g : TextureChannelFlags::none;
-        flags |= channel_count >= 3 ? TextureChannelFlags::b : TextureChannelFlags::none;
-        flags |= channel_count >= 4 ? TextureChannelFlags::a : TextureChannelFlags::none;
-        return flags;
+        FormatChannels channels = FormatChannels::none;
+        channels |= channel_count >= 1 ? FormatChannels::r : FormatChannels::none;
+        channels |= channel_count >= 2 ? FormatChannels::g : FormatChannels::none;
+        channels |= channel_count >= 3 ? FormatChannels::b : FormatChannels::none;
+        channels |= channel_count >= 4 ? FormatChannels::a : FormatChannels::none;
+        return channels;
     }
 
-    uint32_t get_channel_bits(TextureChannelFlags flags) const
+    /// Get the number of bits for the specified channels.
+    uint32_t get_channel_bits(FormatChannels channels) const
     {
         uint32_t bits = 0;
-        bits += (is_set(flags, TextureChannelFlags::r)) ? channel_bit_count[0] : 0;
-        bits += (is_set(flags, TextureChannelFlags::g)) ? channel_bit_count[1] : 0;
-        bits += (is_set(flags, TextureChannelFlags::b)) ? channel_bit_count[2] : 0;
-        bits += (is_set(flags, TextureChannelFlags::a)) ? channel_bit_count[3] : 0;
+        bits += (is_set(channels, FormatChannels::r)) ? channel_bit_count[0] : 0;
+        bits += (is_set(channels, FormatChannels::g)) ? channel_bit_count[1] : 0;
+        bits += (is_set(channels, FormatChannels::b)) ? channel_bit_count[2] : 0;
+        bits += (is_set(channels, FormatChannels::a)) ? channel_bit_count[3] : 0;
         return bits;
     }
 
+    /// Check if all channels have the same number of bits.
     bool has_equal_channel_bits() const
     {
         uint32_t bits = channel_bit_count[0];
@@ -220,6 +259,8 @@ struct FormatInfo {
                 return false;
         return true;
     }
+
+    std::string to_string() const;
 };
 
 SGL_API const FormatInfo& get_format_info(Format format);

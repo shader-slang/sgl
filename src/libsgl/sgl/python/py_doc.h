@@ -3226,7 +3226,7 @@ static const char *__doc_sgl_FormatInfo_format = R"doc()doc";
 
 static const char *__doc_sgl_FormatInfo_get_channel_bits = R"doc()doc";
 
-static const char *__doc_sgl_FormatInfo_get_mask = R"doc()doc";
+static const char *__doc_sgl_FormatInfo_get_channels = R"doc()doc";
 
 static const char *__doc_sgl_FormatInfo_has_equal_channel_bits = R"doc()doc";
 

@@ -121,6 +121,41 @@ static const FormatInfo s_format_infos[] = {
 
 static_assert(std::size(s_format_infos) == uint32_t(Format::count), "Format info table size mismatch");
 
+std::string FormatInfo::to_string() const
+{
+    return fmt::format(
+        "FormatInfo(\n"
+        "  format = {},\n"
+        "  bytes_per_block = {},\n"
+        "  channel_count = {},\n"
+        "  type = {},\n"
+        "  is_depth = {},\n"
+        "  is_stencil = {},\n"
+        "  is_compressed = {},\n"
+        "  block_width = {},\n"
+        "  block_height = {},\n"
+        "  channel_bit_count = [{}, {}, {}, {}],\n"
+        "  dxgi_format = {},\n"
+        "  vk_format = {}\n"
+        ")",
+        format,
+        bytes_per_block,
+        channel_count,
+        type,
+        is_depth,
+        is_stencil,
+        is_compressed,
+        block_width,
+        block_height,
+        channel_bit_count[0],
+        channel_bit_count[1],
+        channel_bit_count[2],
+        channel_bit_count[3],
+        dxgi_format,
+        vk_format
+    );
+}
+
 const FormatInfo& get_format_info(Format format)
 {
     SGL_ASSERT(uint32_t(format) < uint32_t(Format::count));
