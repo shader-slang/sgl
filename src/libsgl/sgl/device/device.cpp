@@ -776,13 +776,19 @@ uint64_t Device::submit_command_buffer(CommandBuffer* command_buffer, CommandQue
     return fence_value;
 }
 
+bool Device::is_command_buffer_complete(uint64_t id)
+{
+    return id <= m_global_fence->current_value();
+}
+
 void Device::wait_command_buffer(uint64_t id)
 {
     m_global_fence->wait(id);
 }
 
-void Device::wait_for_idle()
+void Device::wait_for_idle(CommandQueueType queue)
 {
+    SGL_CHECK(queue == CommandQueueType::graphics, "Only graphics queue is supported.");
     m_gfx_graphics_queue->waitOnHost();
 }
 
