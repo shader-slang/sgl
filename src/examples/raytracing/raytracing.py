@@ -77,7 +77,6 @@ with command_buffer.encode_ray_tracing_commands() as encoder:
         scratch_data=blas_scratch_buffer.device_address,
     )
 command_buffer.submit()
-del command_buffer
 
 instance_desc = sgl.RayTracingInstanceDesc()
 instance_desc.transform = sgl.float3x4.identity()
@@ -127,7 +126,6 @@ with command_buffer.encode_ray_tracing_commands() as encoder:
         scratch_data=tlas_scratch_buffer.device_address,
     )
 command_buffer.submit()
-del command_buffer
 
 render_texture = device.create_texture(
     format=sgl.Format.rgba32_float,

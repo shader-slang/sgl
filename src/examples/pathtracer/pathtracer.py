@@ -794,7 +794,6 @@ class App:
             command_buffer.copy_resource(dst=image, src=self.output_texture)
             command_buffer.set_texture_state(image, sgl.ResourceState.present)
             command_buffer.submit()
-            del command_buffer
             del image
 
             self.swapchain.present()
