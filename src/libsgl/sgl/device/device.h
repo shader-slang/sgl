@@ -470,9 +470,6 @@ public:
      */
     void run_garbage_collection();
 
-    // TODO deprecated
-    inline void end_frame() { run_garbage_collection(); }
-
     ref<MemoryHeap> create_memory_heap(MemoryHeapDesc desc);
 
     MemoryHeap* upload_heap() const { return m_upload_heap; }

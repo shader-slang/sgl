@@ -780,7 +780,6 @@ SGL_PY_EXPORT(device_device)
     device.def("flush_print", &Device::flush_print, D(Device, flush_print));
     device.def("flush_print_to_string", &Device::flush_print_to_string, D(Device, flush_print_to_string));
     device.def("run_garbage_collection", &Device::run_garbage_collection, D_NA(Device, run_garbage_collection));
-    device.def("end_frame", &Device::end_frame, D(Device, end_frame));
     device.def("wait", &Device::wait, D(Device, wait));
 
     device.def_static(
