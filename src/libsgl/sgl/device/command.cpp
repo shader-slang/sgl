@@ -569,8 +569,14 @@ bool CommandBuffer::set_buffer_state(const Buffer* buffer, ResourceState new_sta
     if (new_state == current_state)
         return false;
 
-    buffer_barrier(buffer, current_state, new_state);
     state_tracker.set_global_state(new_state);
+
+    get_gfx_resource_command_encoder()->bufferBarrier(
+        buffer->gfx_buffer_resource(),
+        static_cast<gfx::ResourceState>(current_state),
+        static_cast<gfx::ResourceState>(new_state)
+    );
+
     return true;
 }
 
@@ -584,8 +590,15 @@ bool CommandBuffer::set_texture_state(const Texture* texture, ResourceState new_
         ResourceState current_state = state_tracker.global_state();
         if (new_state == current_state)
             return false;
-        texture_barrier(texture, current_state, new_state);
+
         state_tracker.set_global_state(new_state);
+
+        get_gfx_resource_command_encoder()->textureBarrier(
+            texture->gfx_texture_resource(),
+            static_cast<gfx::ResourceState>(current_state),
+            static_cast<gfx::ResourceState>(new_state)
+        );
+
         return true;
     } else {
         bool changed = false;
@@ -594,16 +607,16 @@ bool CommandBuffer::set_texture_state(const Texture* texture, ResourceState new_
                 uint32_t subresource = texture->get_subresource_index(m, a);
                 ResourceState old_state = state_tracker.subresource_state(subresource);
                 if (old_state != new_state) {
-                    texture_subresource_barrier(
-                        texture,
+                    get_gfx_resource_command_encoder()->textureSubresourceBarrier(
+                        texture->gfx_texture_resource(),
                         {
-                            .mip_level = m,
-                            .mip_count = 1,
-                            .base_array_layer = a,
-                            .layer_count = 1,
+                            .mipLevel = narrow_cast<gfx::GfxIndex>(m),
+                            .mipLevelCount = 1,
+                            .baseArrayLayer = narrow_cast<gfx::GfxIndex>(a),
+                            .layerCount = 1,
                         },
-                        old_state,
-                        new_state
+                        static_cast<gfx::ResourceState>(old_state),
+                        static_cast<gfx::ResourceState>(new_state)
                     );
                     changed = true;
                 }
@@ -647,18 +660,18 @@ bool CommandBuffer::set_texture_subresource_state(
             uint32_t subresource = texture->get_subresource_index(m, a);
             ResourceState old_state = state_tracker.subresource_state(subresource);
             if (old_state != new_state) {
-                texture_subresource_barrier(
-                    texture,
-                    {
-                        .mip_level = m,
-                        .mip_count = 1,
-                        .base_array_layer = a,
-                        .layer_count = 1,
-                    },
-                    old_state,
-                    new_state
-                );
                 state_tracker.set_subresource_state(subresource, new_state);
+                get_gfx_resource_command_encoder()->textureSubresourceBarrier(
+                    texture->gfx_texture_resource(),
+                    {
+                        .mipLevel = narrow_cast<gfx::GfxIndex>(m),
+                        .mipLevelCount = 1,
+                        .baseArrayLayer = narrow_cast<gfx::GfxIndex>(a),
+                        .layerCount = 1,
+                    },
+                    static_cast<gfx::ResourceState>(old_state),
+                    static_cast<gfx::ResourceState>(new_state)
+                );
                 changed = true;
             }
         }
@@ -675,103 +688,18 @@ void CommandBuffer::uav_barrier(const Resource* resource)
         return;
 
     if (resource->type() == ResourceType::buffer) {
-        buffer_barrier(
-            static_cast<const Buffer*>(resource),
-            ResourceState::unordered_access,
-            ResourceState::unordered_access
+        get_gfx_resource_command_encoder()->bufferBarrier(
+            static_cast<const Buffer*>(resource)->gfx_buffer_resource(),
+            gfx::ResourceState::UnorderedAccess,
+            gfx::ResourceState::UnorderedAccess
         );
     } else {
-        texture_barrier(
-            static_cast<const Texture*>(resource),
-            ResourceState::unordered_access,
-            ResourceState::unordered_access
+        get_gfx_resource_command_encoder()->textureBarrier(
+            static_cast<const Texture*>(resource)->gfx_texture_resource(),
+            gfx::ResourceState::UnorderedAccess,
+            gfx::ResourceState::UnorderedAccess
         );
     }
-}
-
-void CommandBuffer::buffer_barrier(std::span<const Buffer*> buffers, ResourceState old_state, ResourceState new_state)
-{
-    short_vector<gfx::IBufferResource*, 16> gfx_buffers(buffers.size(), nullptr);
-    for (size_t i = 0; i < buffers.size(); i++)
-        gfx_buffers[i] = buffers[i]->gfx_buffer_resource();
-    get_gfx_resource_command_encoder()->bufferBarrier(
-        narrow_cast<gfx::GfxCount>(buffers.size()),
-        gfx_buffers.data(),
-        static_cast<gfx::ResourceState>(old_state),
-        static_cast<gfx::ResourceState>(new_state)
-    );
-}
-
-void CommandBuffer::buffer_barrier(const Buffer* buffer, ResourceState old_state, ResourceState new_state)
-{
-    SGL_ASSERT(buffer != nullptr);
-
-    gfx::IBufferResource* gfx_buffer_resource = buffer->gfx_buffer_resource();
-    get_gfx_resource_command_encoder()->bufferBarrier(
-        1,
-        &gfx_buffer_resource,
-        static_cast<gfx::ResourceState>(old_state),
-        static_cast<gfx::ResourceState>(new_state)
-    );
-}
-
-void CommandBuffer::texture_barrier(
-    std::span<const Texture*> textures,
-    ResourceState old_state,
-    ResourceState new_state
-)
-{
-    short_vector<gfx::ITextureResource*, 16> gfx_textures(textures.size(), nullptr);
-    for (size_t i = 0; i < textures.size(); i++)
-        gfx_textures[i] = textures[i]->gfx_texture_resource();
-    get_gfx_resource_command_encoder()->textureBarrier(
-        narrow_cast<gfx::GfxCount>(textures.size()),
-        gfx_textures.data(),
-        static_cast<gfx::ResourceState>(old_state),
-        static_cast<gfx::ResourceState>(new_state)
-    );
-}
-
-void CommandBuffer::texture_barrier(const Texture* texture, ResourceState old_state, ResourceState new_state)
-{
-    SGL_ASSERT(texture != nullptr);
-
-    gfx::ITextureResource* gfx_texture_resource = texture->gfx_texture_resource();
-    get_gfx_resource_command_encoder()->textureBarrier(
-        1,
-        &gfx_texture_resource,
-        static_cast<gfx::ResourceState>(old_state),
-        static_cast<gfx::ResourceState>(new_state)
-    );
-}
-
-void CommandBuffer::texture_subresource_barrier(
-    const Texture* texture,
-    SubresourceRange subresource_range,
-    ResourceState old_state,
-    ResourceState new_state
-)
-{
-    SGL_ASSERT(texture != nullptr);
-    SGL_ASSERT(subresource_range.mip_level < texture->mip_count());
-    SGL_ASSERT(subresource_range.mip_level + subresource_range.mip_count <= texture->mip_count());
-    SGL_ASSERT(subresource_range.base_array_layer < texture->array_size());
-    SGL_ASSERT(subresource_range.base_array_layer + subresource_range.layer_count <= texture->array_size());
-
-    gfx::SubresourceRange gfx_subresource_range = {
-        .aspectMask = static_cast<gfx::TextureAspect>(subresource_range.texture_aspect),
-        .mipLevel = narrow_cast<gfx::GfxIndex>(subresource_range.mip_level),
-        .mipLevelCount = narrow_cast<gfx::GfxCount>(subresource_range.mip_count),
-        .baseArrayLayer = narrow_cast<gfx::GfxIndex>(subresource_range.base_array_layer),
-        .layerCount = narrow_cast<gfx::GfxCount>(subresource_range.layer_count),
-    };
-
-    get_gfx_resource_command_encoder()->textureSubresourceBarrier(
-        texture->gfx_texture_resource(),
-        gfx_subresource_range,
-        static_cast<gfx::ResourceState>(old_state),
-        static_cast<gfx::ResourceState>(new_state)
-    );
 }
 
 void CommandBuffer::clear_resource_view(ResourceView* resource_view, float4 clear_value)

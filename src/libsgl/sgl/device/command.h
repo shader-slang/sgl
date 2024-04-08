@@ -260,7 +260,7 @@ public:
     void resolve_query(QueryPool* query_pool, uint32_t index, uint32_t count, Buffer* buffer, DeviceOffset offset);
 
     // ------------------------------------------------------------------------
-    // Barriers
+    // Resource state tracking
     // ------------------------------------------------------------------------
 
     /**
@@ -310,28 +310,6 @@ public:
      * Insert a UAV barrier
      */
     void uav_barrier(const Resource* resource);
-
-    /**
-     * \brief Insert a barrier for a set of buffers.
-     *
-     * \param buffers List of buffers.
-     * \param old_state The state the buffers must be in before the barrier.
-     * \param new_state The state the buffers must be in after the barrier.
-     */
-    void buffer_barrier(std::span<const Buffer*> buffers, ResourceState old_state, ResourceState new_state);
-    void buffer_barrier(const Buffer* buffer, ResourceState old_state, ResourceState new_state);
-
-    // TODO: Barrier without state tracking
-    void texture_barrier(std::span<const Texture*> textures, ResourceState old_state, ResourceState new_state);
-    void texture_barrier(const Texture* texture, ResourceState old_state, ResourceState new_state);
-
-    // TODO: Barrier without state tracking
-    void texture_subresource_barrier(
-        const Texture* texture,
-        SubresourceRange subresource_range,
-        ResourceState old_state,
-        ResourceState new_state
-    );
 
     // ------------------------------------------------------------------------
     // Resources
