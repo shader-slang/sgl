@@ -406,7 +406,7 @@ public:
 
     ref<CommandBuffer> create_command_buffer();
 
-    void _set_current_command_buffer(CommandBuffer* command_buffer);
+    void _set_open_command_buffer(CommandBuffer* command_buffer);
     Slang::ComPtr<gfx::ITransientResourceHeap> _get_or_create_transient_resource_heap();
 
     CommandBuffer* _begin_shared_command_buffer();
@@ -581,7 +581,9 @@ private:
 
     std::unique_ptr<DebugPrinter> m_debug_printer;
 
-    CommandBuffer* m_current_command_buffer{nullptr};
+    /// Currently open command buffer.
+    /// Due to limitations in gfx, only one command buffer can be open at a time.
+    CommandBuffer* m_open_command_buffer{nullptr};
     ref<CommandBuffer> m_shared_command_buffer;
 
     /// Currently active transient resource heap.

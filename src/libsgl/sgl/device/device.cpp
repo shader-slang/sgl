@@ -673,15 +673,17 @@ ref<CommandBuffer> Device::create_command_buffer()
 {
     SGL_ASSERT(m_shared_command_buffer == nullptr);
 
-    if (m_current_command_buffer)
-        SGL_THROW("Only one command buffer can be created at any time.");
-
     return make_ref<CommandBuffer>(ref<Device>(this));
 }
 
-void Device::_set_current_command_buffer(CommandBuffer* command_buffer)
+void Device::_set_open_command_buffer(CommandBuffer* command_buffer)
 {
-    m_current_command_buffer = command_buffer;
+    SGL_CHECK(
+        m_open_command_buffer == nullptr || command_buffer == nullptr,
+        "Only one command buffer can be open at any time."
+    );
+
+    m_open_command_buffer = command_buffer;
 }
 
 Slang::ComPtr<gfx::ITransientResourceHeap> Device::_get_or_create_transient_resource_heap()
@@ -712,37 +714,45 @@ Slang::ComPtr<gfx::ITransientResourceHeap> Device::_get_or_create_transient_reso
 
 CommandBuffer* Device::_begin_shared_command_buffer()
 {
-    if (!m_current_command_buffer)
+    CommandBuffer* command_buffer = m_open_command_buffer;
+    if (!command_buffer) {
         m_shared_command_buffer = create_command_buffer();
+        command_buffer = m_shared_command_buffer;
+    }
 
-    m_current_command_buffer->open();
-
-    return m_current_command_buffer;
+    return command_buffer;
 }
 
 void Device::_end_shared_command_buffer(bool wait)
 {
-    SGL_ASSERT(m_current_command_buffer);
+    SGL_ASSERT(m_open_command_buffer);
 
-    m_current_command_buffer->close();
-    uint64_t id = submit_command_buffer(m_current_command_buffer);
-
+    uint64_t id = 0;
+    if (m_shared_command_buffer) {
+        m_shared_command_buffer->close();
+        id = submit_command_buffer(m_shared_command_buffer);
+        m_shared_command_buffer.reset();
+    } else {
+        if (wait) {
+            m_open_command_buffer->close();
+            id = submit_command_buffer(m_open_command_buffer);
+            m_open_command_buffer->open();
+        }
+    }
     if (wait)
         wait_command_buffer(id);
-
-    m_shared_command_buffer.reset();
 }
 
 uint64_t Device::submit_command_buffer(CommandBuffer* command_buffer, CommandQueueType queue)
 {
     SGL_CHECK_NOT_NULL(command_buffer);
     SGL_CHECK(queue == CommandQueueType::graphics, "Only graphics queue is supported.");
-    SGL_ASSERT(command_buffer == m_current_command_buffer);
 
     if (command_buffer->is_open())
         SGL_THROW("Cannot submit open command buffer.");
 
-    CUstream cuda_stream = 0;
+    // TODO make parameter
+    void* cuda_stream = 0;
 
     if (m_supports_cuda_interop && command_buffer->m_cuda_interop_buffers.size() > 0) {
         for (const auto& buffer : command_buffer->m_cuda_interop_buffers)

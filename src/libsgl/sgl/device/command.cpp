@@ -457,22 +457,20 @@ void RayTracingCommandEncoder::deserialize_acceleration_structure(AccelerationSt
 CommandBuffer::CommandBuffer(ref<Device> device)
     : DeviceResource(std::move(device))
 {
-    m_device->_set_current_command_buffer(this);
-
     open();
 }
 
 CommandBuffer::~CommandBuffer()
 {
     close();
-
-    m_device->_set_current_command_buffer(nullptr);
 }
 
 void CommandBuffer::open()
 {
     if (m_open)
         return;
+
+    m_device->_set_open_command_buffer(this);
 
     m_gfx_transient_resource_heap = m_device->_get_or_create_transient_resource_heap();
     SLANG_CALL(m_gfx_transient_resource_heap->createCommandBuffer(m_gfx_command_buffer.writeRef()));
@@ -486,6 +484,8 @@ void CommandBuffer::close()
 
     if (m_encoder_open)
         SGL_THROW("Cannot close command buffer with an open encoder.");
+
+    m_device->_set_open_command_buffer(nullptr);
 
     end_current_gfx_encoder();
     m_gfx_command_buffer->close();
