@@ -181,7 +181,7 @@ class App:
             del image
 
             self.swapchain.present()
-            self.device.end_frame()
+            self.device.run_garbage_collection()
             frame += 1
 
 
