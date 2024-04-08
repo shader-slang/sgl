@@ -534,56 +534,67 @@ namespace detail {
         case ASTC_6X5_UNORM_SRGB:
             block_width = 6;
             block_height = 5;
+            break;
         case ASTC_6X6_TYPELESS:
         case ASTC_6X6_UNORM:
         case ASTC_6X6_UNORM_SRGB:
             block_width = 6;
             block_height = 6;
+            break;
         case ASTC_8X5_TYPELESS:
         case ASTC_8X5_UNORM:
         case ASTC_8X5_UNORM_SRGB:
             block_width = 8;
             block_height = 5;
+            break;
         case ASTC_8X6_TYPELESS:
         case ASTC_8X6_UNORM:
         case ASTC_8X6_UNORM_SRGB:
             block_width = 8;
             block_height = 6;
+            break;
         case ASTC_8X8_TYPELESS:
         case ASTC_8X8_UNORM:
         case ASTC_8X8_UNORM_SRGB:
             block_width = 8;
             block_height = 8;
+            break;
         case ASTC_10X5_TYPELESS:
         case ASTC_10X5_UNORM:
         case ASTC_10X5_UNORM_SRGB:
             block_width = 10;
             block_height = 5;
+            break;
         case ASTC_10X6_TYPELESS:
         case ASTC_10X6_UNORM:
         case ASTC_10X6_UNORM_SRGB:
             block_width = 10;
             block_height = 6;
+            break;
         case ASTC_10X8_TYPELESS:
         case ASTC_10X8_UNORM:
         case ASTC_10X8_UNORM_SRGB:
             block_width = 10;
             block_height = 8;
+            break;
         case ASTC_10X10_TYPELESS:
         case ASTC_10X10_UNORM:
         case ASTC_10X10_UNORM_SRGB:
             block_width = 10;
             block_height = 10;
+            break;
         case ASTC_12X10_TYPELESS:
         case ASTC_12X10_UNORM:
         case ASTC_12X10_UNORM_SRGB:
             block_width = 12;
             block_height = 10;
+            break;
         case ASTC_12X12_TYPELESS:
         case ASTC_12X12_UNORM:
         case ASTC_12X12_UNORM_SRGB:
             block_width = 12;
             block_height = 12;
+            break;
         default:
             block_width = 1;
             block_height = 1;
