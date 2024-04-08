@@ -424,13 +424,26 @@ public:
     uint64_t submit_command_buffer(CommandBuffer* command_buffer, CommandQueueType queue = CommandQueueType::graphics);
 
     /**
+     * \brief Check if a command buffer is complete.
+     *
+     * \param id Submission ID.
+     * \return True if the command buffer is complete.
+     */
+    bool is_command_buffer_complete(uint64_t id);
+
+    /**
      * \brief Wait for a command buffer to complete.
      *
      * \param id Submission ID.
      */
     void wait_command_buffer(uint64_t id);
 
-    void wait_for_idle();
+    /**
+     * \brief Wait for the command queue to be idle.
+     *
+     * \param queue Command queue to wait for.
+     */
+    void wait_for_idle(CommandQueueType queue = CommandQueueType::graphics);
 
     /**
      * \brief Synchronize CUDA -> device.
@@ -473,6 +486,7 @@ public:
     /// Block and flush all shader side debug print output to a string.
     std::string flush_print_to_string();
 
+    /// Wait for all device work to complete.
     void wait();
 
     /**

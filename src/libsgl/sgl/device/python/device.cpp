@@ -521,7 +521,19 @@ SGL_PY_EXPORT(device_device)
         "queue"_a = CommandQueueType::graphics,
         D_NA(Device, submit_command_buffer)
     );
+    device.def(
+        "is_command_buffer_complete",
+        &Device::is_command_buffer_complete,
+        "id"_a,
+        D_NA(Device, is_command_buffer_complete)
+    );
     device.def("wait_command_buffer", &Device::wait_command_buffer, "id"_a, D_NA(Device, wait_command_buffer));
+    device.def(
+        "wait_for_idle",
+        &Device::wait_for_idle,
+        "queue"_a = CommandQueueType::graphics,
+        D_NA(Device, wait_for_idle)
+    );
     device.def(
         "sync_to_cuda",
         [](Device* self, uint64_t cuda_stream) { self->sync_to_cuda(reinterpret_cast<void*>(cuda_stream)); },
