@@ -56,38 +56,6 @@ SGL_PY_EXPORT(device_command)
             D(CommandBuffer, set_texture_state)
         )
         .def("uav_barrier", &CommandBuffer::uav_barrier, "resource"_a, D(CommandBuffer, uav_barrier))
-        // .def(
-        //     "buffer_barrier",
-        //     nb::overload_cast<std::span<Buffer*>, ResourceState,
-        //     ResourceState>(&CommandBuffer::buffer_barrier
-        //     ),
-        //     "buffers"_a,
-        //     "old_state"_a,
-        //     "new_state"_a
-        // )
-        .def(
-            "buffer_barrier",
-            nb::overload_cast<const Buffer*, ResourceState, ResourceState>(&CommandBuffer::buffer_barrier),
-            "buffer"_a,
-            "old_state"_a,
-            "new_state"_a
-        )
-        // .def(
-        //     "texture_barrier",
-        //     nb::overload_cast<std::span<Texture*>, ResourceState, ResourceState>(
-        //         &CommandBuffer::texture_barrier
-        //     ),
-        //     "textures"_a,
-        //     "old_state"_a,
-        //     "new_state"_a
-        // )
-        .def(
-            "texture_barrier",
-            nb::overload_cast<const Texture*, ResourceState, ResourceState>(&CommandBuffer::texture_barrier),
-            "texture"_a,
-            "old_state"_a,
-            "new_state"_a
-        )
         .def(
             "clear_resource_view",
             nb::overload_cast<ResourceView*, float4>(&CommandBuffer::clear_resource_view),
