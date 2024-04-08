@@ -355,13 +355,17 @@ struct BufferDesc {
     size_t size{0};
     /// Struct size in bytes. If > 0, this is a structured buffer.
     size_t struct_size{0};
-    /// Buffer format. If != unknown, this is a typed buffer.
+    /// Buffer format. If != \c Format::unknown, this is a typed buffer.
     Format format{Format::unknown};
 
+    /// Initial resource state.
     ResourceState initial_state{ResourceState::undefined};
+    /// Resource usage flags.
     ResourceUsage usage{ResourceUsage::none};
+    /// Memory type.
     MemoryType memory_type{MemoryType::device_local};
 
+    /// Resource debug name.
     std::string debug_name;
 
     /// Initial data to upload to the buffer.
@@ -371,12 +375,17 @@ struct BufferDesc {
 };
 
 struct RawBufferDesc {
+    /// Buffer size in bytes.
     size_t size{0};
 
+    /// Initial resource state.
     ResourceState initial_state{ResourceState::undefined};
+    /// Resource usage flags.
     ResourceUsage usage{ResourceUsage::none};
+    /// Memory type.
     MemoryType memory_type{MemoryType::device_local};
 
+    /// Resource debug name.
     std::string debug_name;
 
     /// Initial data to upload to the buffer.
@@ -397,10 +406,14 @@ struct StructuredBufferDesc {
     /// Note: Either \c struct_size or \c struct_type can be set, but not both.
     const TypeLayoutReflection* struct_type{nullptr};
 
+    /// Initial resource state.
     ResourceState initial_state{ResourceState::undefined};
+    /// Resource usage flags.
     ResourceUsage usage{ResourceUsage::none};
+    /// Memory type.
     MemoryType memory_type{MemoryType::device_local};
 
+    /// Resource debug name.
     std::string debug_name;
 
     /// Initial data to upload to the buffer.
@@ -416,10 +429,14 @@ struct TypedBufferDesc {
     /// The format of the buffer.
     Format format;
 
+    /// Initial resource state.
     ResourceState initial_state{ResourceState::undefined};
+    /// Resource usage flags.
     ResourceUsage usage{ResourceUsage::none};
+    /// Memory type.
     MemoryType memory_type{MemoryType::device_local};
 
+    /// Resource debug name.
     std::string debug_name;
 
     /// Initial data to upload to the buffer.
