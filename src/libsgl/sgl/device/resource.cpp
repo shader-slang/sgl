@@ -59,14 +59,6 @@ inline gfx::ResourceStateSet gfx_allowed_states(ResourceUsage usage)
     return states;
 }
 
-inline gfx::ResourceState gfx_initial_state(ResourceUsage usage)
-{
-    if (is_set(usage, ResourceUsage::acceleration_structure)) {
-        return gfx::ResourceState::AccelerationStructure;
-    }
-    return gfx::ResourceState::General;
-}
-
 inline ResourceUsage get_required_resource_usage(ResourceViewType type)
 {
     switch (type) {
