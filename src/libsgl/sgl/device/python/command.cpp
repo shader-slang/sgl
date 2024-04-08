@@ -14,9 +14,9 @@ SGL_PY_EXPORT(device_command)
     using namespace sgl;
 
     nb::class_<CommandBuffer, DeviceResource>(m, "CommandBuffer")
-        .def("open", &CommandBuffer::open, D_NA(CommandBuffer, open))
-        .def("close", &CommandBuffer::close, D_NA(CommandBuffer, close))
-        .def("submit", &CommandBuffer::submit, "queue"_a = CommandQueueType::graphics, D_NA(CommandBuffer, submit))
+        .def("open", &CommandBuffer::open, D(CommandBuffer, open))
+        .def("close", &CommandBuffer::close, D(CommandBuffer, close))
+        .def("submit", &CommandBuffer::submit, "queue"_a = CommandQueueType::graphics, D(CommandBuffer, submit))
         .def("write_timestamp", &CommandBuffer::write_timestamp, "query_pool"_a, "index"_a)
         .def(
             "resolve_query",
