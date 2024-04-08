@@ -515,6 +515,7 @@ void CommandBuffer::resolve_query(
     DeviceOffset offset
 )
 {
+    SGL_CHECK(m_open, "Command buffer is closed");
     SGL_CHECK_NOT_NULL(query_pool);
     SGL_CHECK_NOT_NULL(buffer);
     SGL_CHECK_LE(index + count, query_pool->desc().count);
@@ -528,6 +529,7 @@ void CommandBuffer::resolve_query(
 
 bool CommandBuffer::set_resource_state(const Resource* resource, ResourceState new_state)
 {
+    SGL_CHECK(m_open, "Command buffer is closed");
     SGL_CHECK_NOT_NULL(resource);
 
     if (resource->type() == ResourceType::buffer) {
@@ -539,6 +541,7 @@ bool CommandBuffer::set_resource_state(const Resource* resource, ResourceState n
 
 bool CommandBuffer::set_resource_state(const ResourceView* resource_view, ResourceState new_state)
 {
+    SGL_CHECK(m_open, "Command buffer is closed");
     SGL_CHECK_NOT_NULL(resource_view);
 
     if (resource_view->resource()->type() == ResourceType::buffer) {
@@ -557,6 +560,7 @@ bool CommandBuffer::set_resource_state(const ResourceView* resource_view, Resour
 
 bool CommandBuffer::set_buffer_state(const Buffer* buffer, ResourceState new_state)
 {
+    SGL_CHECK(m_open, "Command buffer is closed");
     SGL_CHECK_NOT_NULL(buffer);
 
     ResourceStateTracker& state_tracker = buffer->state_tracker();
@@ -572,6 +576,7 @@ bool CommandBuffer::set_buffer_state(const Buffer* buffer, ResourceState new_sta
 
 bool CommandBuffer::set_texture_state(const Texture* texture, ResourceState new_state)
 {
+    SGL_CHECK(m_open, "Command buffer is closed");
     SGL_CHECK_NOT_NULL(texture);
 
     ResourceStateTracker& state_tracker = texture->state_tracker();
@@ -615,6 +620,7 @@ bool CommandBuffer::set_texture_subresource_state(
     ResourceState new_state
 )
 {
+    SGL_CHECK(m_open, "Command buffer is closed");
     SGL_CHECK_NOT_NULL(texture);
 
     uint32_t mip_count = range.mip_count;
@@ -662,6 +668,7 @@ bool CommandBuffer::set_texture_subresource_state(
 
 void CommandBuffer::uav_barrier(const Resource* resource)
 {
+    SGL_CHECK(m_open, "Command buffer is closed");
     SGL_CHECK_NOT_NULL(resource);
 
     if (set_resource_state(resource, ResourceState::unordered_access))
@@ -769,6 +776,7 @@ void CommandBuffer::texture_subresource_barrier(
 
 void CommandBuffer::clear_resource_view(ResourceView* resource_view, float4 clear_value)
 {
+    SGL_CHECK(m_open, "Command buffer is closed");
     SGL_CHECK_NOT_NULL(resource_view);
 
     switch (resource_view->type()) {
@@ -799,6 +807,7 @@ void CommandBuffer::clear_resource_view(ResourceView* resource_view, float4 clea
 
 void CommandBuffer::clear_resource_view(ResourceView* resource_view, uint4 clear_value)
 {
+    SGL_CHECK(m_open, "Command buffer is closed");
     SGL_CHECK_NOT_NULL(resource_view);
 
     switch (resource_view->type()) {
@@ -832,6 +841,7 @@ void CommandBuffer::clear_resource_view(
     bool clear_stencil
 )
 {
+    SGL_CHECK(m_open, "Command buffer is closed");
     SGL_CHECK_NOT_NULL(resource_view);
 
     switch (resource_view->type()) {
@@ -859,6 +869,7 @@ void CommandBuffer::clear_resource_view(
 
 void CommandBuffer::clear_texture(Texture* texture, float4 clear_value)
 {
+    SGL_CHECK(m_open, "Command buffer is closed");
     SGL_CHECK_NOT_NULL(texture);
     FormatType format_type = get_format_info(texture->format()).type;
     SGL_CHECK(
@@ -877,6 +888,7 @@ void CommandBuffer::clear_texture(Texture* texture, float4 clear_value)
 
 void CommandBuffer::clear_texture(Texture* texture, uint4 clear_value)
 {
+    SGL_CHECK(m_open, "Command buffer is closed");
     SGL_CHECK_NOT_NULL(texture);
     FormatType format_type = get_format_info(texture->format()).type;
     SGL_CHECK(
@@ -895,6 +907,7 @@ void CommandBuffer::clear_texture(Texture* texture, uint4 clear_value)
 
 void CommandBuffer::copy_resource(Resource* dst, const Resource* src)
 {
+    SGL_CHECK(m_open, "Command buffer is closed");
     SGL_CHECK_NOT_NULL(dst);
     SGL_CHECK_NOT_NULL(src);
     SGL_CHECK(dst->type() == src->type(), "Resources must be of the same type");
@@ -942,6 +955,7 @@ void CommandBuffer::copy_buffer_region(
     DeviceSize size
 )
 {
+    SGL_CHECK(m_open, "Command buffer is closed");
     SGL_CHECK_NOT_NULL(dst);
     SGL_CHECK_NOT_NULL(src);
     SGL_CHECK_LE(dst_offset + size, dst->size());
@@ -964,6 +978,7 @@ void CommandBuffer::copy_texture_region(
     uint3 extent
 )
 {
+    SGL_CHECK(m_open, "Command buffer is closed");
     SGL_CHECK_NOT_NULL(dst);
     SGL_CHECK_NOT_NULL(src);
     SGL_CHECK_LT(dst_subresource, dst->subresource_count());
@@ -1008,6 +1023,7 @@ void CommandBuffer::copy_texture_to_buffer(
     uint3 extent
 )
 {
+    SGL_CHECK(m_open, "Command buffer is closed");
     SGL_CHECK_NOT_NULL(dst);
     SGL_CHECK(dst_offset + dst_size <= dst->size(), "Destination buffer is too small");
     SGL_CHECK_NOT_NULL(src);
@@ -1039,6 +1055,7 @@ void CommandBuffer::copy_texture_to_buffer(
 
 void CommandBuffer::upload_buffer_data(Buffer* buffer, size_t offset, size_t size, const void* data)
 {
+    SGL_CHECK(m_open, "Command buffer is closed");
     SGL_CHECK_NOT_NULL(buffer);
     SGL_CHECK(offset + size <= buffer->size(), "Buffer upload is out of bounds");
     SGL_CHECK_NOT_NULL(data);
@@ -1051,6 +1068,7 @@ void CommandBuffer::upload_buffer_data(Buffer* buffer, size_t offset, size_t siz
 
 void CommandBuffer::upload_texture_data(Texture* texture, uint32_t subresource, SubresourceData subresource_data)
 {
+    SGL_CHECK(m_open, "Command buffer is closed");
     SGL_CHECK_NOT_NULL(texture);
     SGL_CHECK_LT(subresource, texture->subresource_count());
 
@@ -1084,6 +1102,7 @@ void CommandBuffer::upload_texture_data(Texture* texture, uint32_t subresource, 
 
 void CommandBuffer::resolve_texture(Texture* dst, const Texture* src)
 {
+    SGL_CHECK(m_open, "Command buffer is closed");
     SGL_CHECK_NOT_NULL(dst);
     SGL_CHECK_NOT_NULL(src);
     SGL_CHECK(dst->desc().sample_count == 1, "Destination texture must not be multi-sampled.");
@@ -1129,6 +1148,7 @@ void CommandBuffer::resolve_subresource(
     uint32_t src_subresource
 )
 {
+    SGL_CHECK(m_open, "Command buffer is closed");
     SGL_CHECK_NOT_NULL(dst);
     SGL_CHECK_NOT_NULL(src);
     SGL_CHECK_LT(dst_subresource, dst->subresource_count());
@@ -1174,6 +1194,7 @@ void CommandBuffer::resolve_subresource(
 
 ComputeCommandEncoder CommandBuffer::encode_compute_commands()
 {
+    SGL_CHECK(m_open, "Command buffer is closed");
     SGL_CHECK(!m_encoder_open, "CommandBuffer already has an active encoder");
 
     if (m_active_gfx_encoder != EncoderType::compute) {
@@ -1188,6 +1209,7 @@ ComputeCommandEncoder CommandBuffer::encode_compute_commands()
 
 RenderCommandEncoder CommandBuffer::encode_render_commands(Framebuffer* framebuffer)
 {
+    SGL_CHECK(m_open, "Command buffer is closed");
     SGL_CHECK(!m_encoder_open, "CommandBuffer already has an active encoder");
     SGL_CHECK_NOT_NULL(framebuffer);
 
@@ -1233,6 +1255,7 @@ RenderCommandEncoder CommandBuffer::encode_render_commands(Framebuffer* framebuf
 
 RayTracingCommandEncoder CommandBuffer::encode_ray_tracing_commands()
 {
+    SGL_CHECK(m_open, "Command buffer is closed");
     SGL_CHECK(!m_encoder_open, "CommandBuffer already has an active encoder");
 
     if (m_active_gfx_encoder != EncoderType::raytracing) {
@@ -1247,11 +1270,13 @@ RayTracingCommandEncoder CommandBuffer::encode_ray_tracing_commands()
 
 void CommandBuffer::begin_debug_event(const char* name, float3 color)
 {
+    SGL_CHECK(m_open, "Command buffer is closed");
     get_gfx_resource_command_encoder()->beginDebugEvent(name, &color.x);
 }
 
 void CommandBuffer::end_debug_event()
 {
+    SGL_CHECK(m_open, "Command buffer is closed");
     get_gfx_resource_command_encoder()->endDebugEvent();
 }
 
