@@ -519,32 +519,32 @@ SGL_PY_EXPORT(device_device)
         &Device::submit_command_buffer,
         "command_buffer"_a,
         "queue"_a = CommandQueueType::graphics,
-        D_NA(Device, submit_command_buffer)
+        D(Device, submit_command_buffer)
     );
     device.def(
         "is_command_buffer_complete",
         &Device::is_command_buffer_complete,
         "id"_a,
-        D_NA(Device, is_command_buffer_complete)
+        D(Device, is_command_buffer_complete)
     );
-    device.def("wait_command_buffer", &Device::wait_command_buffer, "id"_a, D_NA(Device, wait_command_buffer));
+    device.def("wait_command_buffer", &Device::wait_command_buffer, "id"_a, D(Device, wait_command_buffer));
     device.def(
         "wait_for_idle",
         &Device::wait_for_idle,
         "queue"_a = CommandQueueType::graphics,
-        D_NA(Device, wait_for_idle)
+        D(Device, wait_for_idle)
     );
     device.def(
         "sync_to_cuda",
         [](Device* self, uint64_t cuda_stream) { self->sync_to_cuda(reinterpret_cast<void*>(cuda_stream)); },
         "cuda_stream"_a = 0,
-        D_NA(Device, sync_to_cuda)
+        D(Device, sync_to_cuda)
     );
     device.def(
         "sync_to_device",
         [](Device* self, uint64_t cuda_stream) { self->sync_to_device(reinterpret_cast<void*>(cuda_stream)); },
         "cuda_stream"_a = 0,
-        D_NA(Device, sync_to_device)
+        D(Device, sync_to_device)
     );
     device.def(
         "get_acceleration_structure_prebuild_info",
@@ -779,7 +779,7 @@ SGL_PY_EXPORT(device_device)
     device.def_prop_ro("read_back_heap", &Device::read_back_heap, D(Device, read_back_heap));
     device.def("flush_print", &Device::flush_print, D(Device, flush_print));
     device.def("flush_print_to_string", &Device::flush_print_to_string, D(Device, flush_print_to_string));
-    device.def("run_garbage_collection", &Device::run_garbage_collection, D_NA(Device, run_garbage_collection));
+    device.def("run_garbage_collection", &Device::run_garbage_collection, D(Device, run_garbage_collection));
     device.def("wait", &Device::wait, D(Device, wait));
 
     device.def_static(
