@@ -875,7 +875,7 @@ struct App {
 
             swapchain->present();
 
-            device->end_frame();
+            device->run_garbage_collection();
 
             frame++;
         }
