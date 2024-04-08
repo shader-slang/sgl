@@ -97,12 +97,12 @@ TEST_CASE("rgba32_float")
     CHECK_EQ(info.is_integer_format(), false);
     CHECK_EQ(info.is_normalized_format(), false);
     CHECK_EQ(info.is_srgb_format(), false);
-    CHECK_EQ(info.get_mask(), TextureChannelFlags::rgba);
-    CHECK_EQ(info.get_channel_bits(TextureChannelFlags::r), 32);
-    CHECK_EQ(info.get_channel_bits(TextureChannelFlags::g), 32);
-    CHECK_EQ(info.get_channel_bits(TextureChannelFlags::b), 32);
-    CHECK_EQ(info.get_channel_bits(TextureChannelFlags::a), 32);
-    CHECK_EQ(info.get_channel_bits(TextureChannelFlags::rgba), 128);
+    CHECK_EQ(info.get_channels(), FormatChannels::rgba);
+    CHECK_EQ(info.get_channel_bits(FormatChannels::r), 32);
+    CHECK_EQ(info.get_channel_bits(FormatChannels::g), 32);
+    CHECK_EQ(info.get_channel_bits(FormatChannels::b), 32);
+    CHECK_EQ(info.get_channel_bits(FormatChannels::a), 32);
+    CHECK_EQ(info.get_channel_bits(FormatChannels::rgba), 128);
 }
 
 TEST_CASE("rg16_uint")
@@ -131,12 +131,12 @@ TEST_CASE("rg16_uint")
     CHECK_EQ(info.is_integer_format(), true);
     CHECK_EQ(info.is_normalized_format(), false);
     CHECK_EQ(info.is_srgb_format(), false);
-    CHECK_EQ(info.get_mask(), TextureChannelFlags::rg);
-    CHECK_EQ(info.get_channel_bits(TextureChannelFlags::r), 16);
-    CHECK_EQ(info.get_channel_bits(TextureChannelFlags::g), 16);
-    CHECK_EQ(info.get_channel_bits(TextureChannelFlags::b), 0);
-    CHECK_EQ(info.get_channel_bits(TextureChannelFlags::a), 0);
-    CHECK_EQ(info.get_channel_bits(TextureChannelFlags::rgba), 32);
+    CHECK_EQ(info.get_channels(), FormatChannels::rg);
+    CHECK_EQ(info.get_channel_bits(FormatChannels::r), 16);
+    CHECK_EQ(info.get_channel_bits(FormatChannels::g), 16);
+    CHECK_EQ(info.get_channel_bits(FormatChannels::b), 0);
+    CHECK_EQ(info.get_channel_bits(FormatChannels::a), 0);
+    CHECK_EQ(info.get_channel_bits(FormatChannels::rgba), 32);
 }
 
 TEST_CASE("r8_snorm")
@@ -165,12 +165,12 @@ TEST_CASE("r8_snorm")
     CHECK_EQ(info.is_integer_format(), false);
     CHECK_EQ(info.is_normalized_format(), true);
     CHECK_EQ(info.is_srgb_format(), false);
-    CHECK_EQ(info.get_mask(), TextureChannelFlags::r);
-    CHECK_EQ(info.get_channel_bits(TextureChannelFlags::r), 8);
-    CHECK_EQ(info.get_channel_bits(TextureChannelFlags::g), 0);
-    CHECK_EQ(info.get_channel_bits(TextureChannelFlags::b), 0);
-    CHECK_EQ(info.get_channel_bits(TextureChannelFlags::a), 0);
-    CHECK_EQ(info.get_channel_bits(TextureChannelFlags::rgba), 8);
+    CHECK_EQ(info.get_channels(), FormatChannels::r);
+    CHECK_EQ(info.get_channel_bits(FormatChannels::r), 8);
+    CHECK_EQ(info.get_channel_bits(FormatChannels::g), 0);
+    CHECK_EQ(info.get_channel_bits(FormatChannels::b), 0);
+    CHECK_EQ(info.get_channel_bits(FormatChannels::a), 0);
+    CHECK_EQ(info.get_channel_bits(FormatChannels::rgba), 8);
 }
 
 TEST_CASE("d32_float_s8_uint")
@@ -199,12 +199,12 @@ TEST_CASE("d32_float_s8_uint")
     CHECK_EQ(info.is_integer_format(), false);
     CHECK_EQ(info.is_normalized_format(), false);
     CHECK_EQ(info.is_srgb_format(), false);
-    CHECK_EQ(info.get_mask(), TextureChannelFlags::rg);
-    CHECK_EQ(info.get_channel_bits(TextureChannelFlags::r), 32);
-    CHECK_EQ(info.get_channel_bits(TextureChannelFlags::g), 8);
-    CHECK_EQ(info.get_channel_bits(TextureChannelFlags::b), 0);
-    CHECK_EQ(info.get_channel_bits(TextureChannelFlags::a), 0);
-    CHECK_EQ(info.get_channel_bits(TextureChannelFlags::rgba), 40);
+    CHECK_EQ(info.get_channels(), FormatChannels::rg);
+    CHECK_EQ(info.get_channel_bits(FormatChannels::r), 32);
+    CHECK_EQ(info.get_channel_bits(FormatChannels::g), 8);
+    CHECK_EQ(info.get_channel_bits(FormatChannels::b), 0);
+    CHECK_EQ(info.get_channel_bits(FormatChannels::a), 0);
+    CHECK_EQ(info.get_channel_bits(FormatChannels::rgba), 40);
 }
 
 TEST_CASE("r10g10b10a2_typeless")
@@ -233,12 +233,12 @@ TEST_CASE("r10g10b10a2_typeless")
     CHECK_EQ(info.is_integer_format(), false);
     CHECK_EQ(info.is_normalized_format(), false);
     CHECK_EQ(info.is_srgb_format(), false);
-    CHECK_EQ(info.get_mask(), TextureChannelFlags::rgba);
-    CHECK_EQ(info.get_channel_bits(TextureChannelFlags::r), 10);
-    CHECK_EQ(info.get_channel_bits(TextureChannelFlags::g), 10);
-    CHECK_EQ(info.get_channel_bits(TextureChannelFlags::b), 10);
-    CHECK_EQ(info.get_channel_bits(TextureChannelFlags::a), 2);
-    CHECK_EQ(info.get_channel_bits(TextureChannelFlags::rgba), 32);
+    CHECK_EQ(info.get_channels(), FormatChannels::rgba);
+    CHECK_EQ(info.get_channel_bits(FormatChannels::r), 10);
+    CHECK_EQ(info.get_channel_bits(FormatChannels::g), 10);
+    CHECK_EQ(info.get_channel_bits(FormatChannels::b), 10);
+    CHECK_EQ(info.get_channel_bits(FormatChannels::a), 2);
+    CHECK_EQ(info.get_channel_bits(FormatChannels::rgba), 32);
 }
 
 TEST_CASE("bc7_unorm_srgb")
@@ -267,12 +267,12 @@ TEST_CASE("bc7_unorm_srgb")
     CHECK_EQ(info.is_integer_format(), false);
     CHECK_EQ(info.is_normalized_format(), true);
     CHECK_EQ(info.is_srgb_format(), true);
-    CHECK_EQ(info.get_mask(), TextureChannelFlags::rgba);
-    CHECK_EQ(info.get_channel_bits(TextureChannelFlags::r), 128);
-    CHECK_EQ(info.get_channel_bits(TextureChannelFlags::g), 0);
-    CHECK_EQ(info.get_channel_bits(TextureChannelFlags::b), 0);
-    CHECK_EQ(info.get_channel_bits(TextureChannelFlags::a), 0);
-    CHECK_EQ(info.get_channel_bits(TextureChannelFlags::rgba), 128);
+    CHECK_EQ(info.get_channels(), FormatChannels::rgba);
+    CHECK_EQ(info.get_channel_bits(FormatChannels::r), 128);
+    CHECK_EQ(info.get_channel_bits(FormatChannels::g), 0);
+    CHECK_EQ(info.get_channel_bits(FormatChannels::b), 0);
+    CHECK_EQ(info.get_channel_bits(FormatChannels::a), 0);
+    CHECK_EQ(info.get_channel_bits(FormatChannels::rgba), 128);
 }
 
 TEST_SUITE_END();
