@@ -179,10 +179,13 @@ public:
 
     const DeviceDesc& desc() const { return m_desc; }
 
+    /// Type of the graphics API used by this device.
     DeviceType type() const { return m_desc.type; }
 
+    /// Device information.
     const DeviceInfo& info() const { return m_info; }
 
+    /// Shader cache statistics.
     ShaderCacheStats shader_cache_stats() const;
 
     /// The highest shader model supported by the device.
@@ -210,12 +213,67 @@ public:
      */
     ref<Swapchain> create_swapchain(SwapchainDesc desc, Window* window);
 
+    /**
+     * \brief Create a new buffer.
+     *
+     * \param size Buffer size in bytes.
+     * \param struct_size Struct size in bytes. If > 0, this is a structured buffer.
+     * \param format Buffer format. If != \c Format::unknown, this is a typed buffer.
+     * \param initial_state Initial resource state.
+     * \param usage Resource usage flags.
+     * \param memory_type Memory type.
+     * \param debug_name Resource debug name.
+     * \param data Initial data to upload to the buffer.
+     * \param data_size Size of the initial data in bytes.
+     * \return New buffer object.
+     */
     ref<Buffer> create_buffer(BufferDesc desc);
 
+    /**
+     * \brief Create a new raw buffer.
+     *
+     * \param size Buffer size in bytes.
+     * \param initial_state Initial resource state.
+     * \param usage Resource usage flags.
+     * \param memory_type Memory type.
+     * \param debug_name Resource debug name.
+     * \param data Initial data to upload to the buffer.
+     * \param data_size Size of the initial data in bytes.
+     * \return New buffer object.
+     */
     ref<Buffer> create_raw_buffer(RawBufferDesc desc);
 
+    /**
+     * \brief Create a new structured buffer.
+     *
+     * \note Either \c struct_size or \c struct_type can be set, but not both.
+     *
+     * \param element_count Number of elements in the buffer.
+     * \param struct_size Size of the struct in bytes.
+     * \param struct_type Type of the struct.
+     * \param initial_state Initial resource state.
+     * \param usage Resource usage flags.
+     * \param memory_type Memory type.
+     * \param debug_name Resource debug name.
+     * \param data Initial data to upload to the buffer.
+     * \param data_size Size of the initial data in bytes.
+     * \return New buffer object.
+     */
     ref<Buffer> create_structured_buffer(StructuredBufferDesc desc);
 
+    /**
+     * \brief Create a new typed buffer.
+     *
+     * \param element_count Number of elements in the buffer.
+     * \param format The format of the buffer.
+     * \param initial_state Initial resource state.
+     * \param usage Resource usage flags.
+     * \param memory_type Memory type.
+     * \param debug_name Resource debug name.
+     * \param data Initial data to upload to the buffer.
+     * \param data_size Size of the initial data in bytes.
+     * \return New buffer object.
+     */
     ref<Buffer> create_typed_buffer(TypedBufferDesc desc);
 
     /**
