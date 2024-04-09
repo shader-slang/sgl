@@ -2,7 +2,8 @@
 
 #include "nanobind.h"
 
-#include "sgl/device/texture_loader.h"
+#include "sgl/utils/texture_loader.h"
+
 #include "sgl/device/device.h"
 
 #include "sgl/core/bitmap.h"
@@ -19,7 +20,7 @@ SGL_DICT_TO_DESC_FIELD(usage, ResourceUsage)
 SGL_DICT_TO_DESC_END()
 } // namespace sgl
 
-SGL_PY_EXPORT(device_texture_loader)
+SGL_PY_EXPORT(utils_texture_loader)
 {
     using namespace sgl;
 
