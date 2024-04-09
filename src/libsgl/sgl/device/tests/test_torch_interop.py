@@ -32,7 +32,7 @@ def test_torch_interop(device_type):
     # Create a torch CUDA device
     torch_device = torch.device("cuda:0")
 
-    # Create some pytorch CUDA tensors
+    # Create some torch CUDA tensors
     a = torch.linspace(0, 1023, 1024, device=torch_device, dtype=torch.float32)
     b = torch.linspace(1024, 1, 1024, device=torch_device, dtype=torch.float32)
     c = torch.zeros(1024, device=torch_device, dtype=torch.float32)
