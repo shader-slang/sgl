@@ -49,51 +49,54 @@ SGL_PY_EXPORT(device_texture_loader)
         .def(nb::init<ref<Device>>(), "device"_a, D(TextureLoader, TextureLoader))
         .def(
             "load_texture",
-            nb::overload_cast<const Bitmap*, const TextureLoader::Options&>(&TextureLoader::load_texture),
+            nb::overload_cast<const Bitmap*, std::optional<TextureLoader::Options>>(&TextureLoader::load_texture),
             "bitmap"_a,
-            "options"_a = TextureLoader::Options(),
+            "options"_a.none() = nb::none(),
             D(TextureLoader, load_texture)
         )
         .def(
             "load_texture",
-            nb::overload_cast<const std::filesystem::path&, const TextureLoader::Options&>(&TextureLoader::load_texture
+            nb::overload_cast<const std::filesystem::path&, std::optional<TextureLoader::Options>>(
+                &TextureLoader::load_texture
             ),
             "path"_a,
-            "options"_a = TextureLoader::Options(),
+            "options"_a.none() = nb::none(),
             D(TextureLoader, load_texture, 2)
         )
         .def(
             "load_textures",
-            nb::overload_cast<std::span<const Bitmap*>, const TextureLoader::Options&>(&TextureLoader::load_textures),
+            nb::overload_cast<std::span<const Bitmap*>, std::optional<TextureLoader::Options>>(
+                &TextureLoader::load_textures
+            ),
             "bitmaps"_a,
-            "options"_a = TextureLoader::Options(),
+            "options"_a.none() = nb::none(),
             D(TextureLoader, load_textures)
         )
         .def(
             "load_textures",
-            nb::overload_cast<std::span<std::filesystem::path>, const TextureLoader::Options&>(
+            nb::overload_cast<std::span<std::filesystem::path>, std::optional<TextureLoader::Options>>(
                 &TextureLoader::load_textures
             ),
             "paths"_a,
-            "options"_a = TextureLoader::Options(),
+            "options"_a.none() = nb::none(),
             D(TextureLoader, load_textures, 2)
         )
         .def(
             "load_texture_array",
-            nb::overload_cast<std::span<const Bitmap*>, const TextureLoader::Options&>(
+            nb::overload_cast<std::span<const Bitmap*>, std::optional<TextureLoader::Options>>(
                 &TextureLoader::load_texture_array
             ),
             "bitmaps"_a,
-            "options"_a = TextureLoader::Options(),
+            "options"_a.none() = nb::none(),
             D(TextureLoader, load_texture_array)
         )
         .def(
             "load_texture_array",
-            nb::overload_cast<std::span<std::filesystem::path>, const TextureLoader::Options&>(
+            nb::overload_cast<std::span<std::filesystem::path>, std::optional<TextureLoader::Options>>(
                 &TextureLoader::load_texture_array
             ),
             "paths"_a,
-            "options"_a = TextureLoader::Options(),
+            "options"_a.none() = nb::none(),
             D(TextureLoader, load_texture_array, 2)
         );
 }
