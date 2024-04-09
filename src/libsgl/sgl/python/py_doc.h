@@ -1954,20 +1954,6 @@ static const char *__doc_sgl_CommandBuffer_EncoderType_resource = R"doc()doc";
 
 static const char *__doc_sgl_CommandBuffer_begin_debug_event = R"doc(Begin a debug event.)doc";
 
-static const char *__doc_sgl_CommandBuffer_buffer_barrier =
-R"doc(Insert a barrier for a set of buffers.
-
-Parameter ``buffers``:
-    List of buffers.
-
-Parameter ``old_state``:
-    The state the buffers must be in before the barrier.
-
-Parameter ``new_state``:
-    The state the buffers must be in after the barrier.)doc";
-
-static const char *__doc_sgl_CommandBuffer_buffer_barrier_2 = R"doc()doc";
-
 static const char *__doc_sgl_CommandBuffer_class_name = R"doc()doc";
 
 static const char *__doc_sgl_CommandBuffer_clear_resource_view = R"doc()doc";
@@ -2249,12 +2235,6 @@ Parameter ``queue``:
 
 Returns:
     Submission ID.)doc";
-
-static const char *__doc_sgl_CommandBuffer_texture_barrier = R"doc()doc";
-
-static const char *__doc_sgl_CommandBuffer_texture_barrier_2 = R"doc()doc";
-
-static const char *__doc_sgl_CommandBuffer_texture_subresource_barrier = R"doc()doc";
 
 static const char *__doc_sgl_CommandBuffer_to_string = R"doc()doc";
 
@@ -7303,12 +7283,6 @@ will be added automatically if ``generate_mips`` is true.)doc";
 static const char *__doc_sgl_TextureLoader_TextureLoader = R"doc()doc";
 
 static const char *__doc_sgl_TextureLoader_class_name = R"doc()doc";
-
-static const char *__doc_sgl_TextureLoader_determine_texture_format = R"doc()doc";
-
-static const char *__doc_sgl_TextureLoader_load_array_from_bitmaps = R"doc()doc";
-
-static const char *__doc_sgl_TextureLoader_load_from_bitmap = R"doc()doc";
 
 static const char *__doc_sgl_TextureLoader_load_texture =
 R"doc(Load a texture from a bitmap.
