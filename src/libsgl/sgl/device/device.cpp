@@ -439,7 +439,6 @@ Device::Device(const DeviceDesc& desc)
     // Setup CUDA interop.
     if (m_desc.enable_cuda_interop) {
         SGL_CHECK(sgl_cuda_api_init(), "Failed to initialize CUDA driver API.");
-        SGL_CHECK(m_desc.type == DeviceType::d3d12, "CUDA interop is currently only supported on D3D12 devices");
         m_cuda_device = make_ref<cuda::Device>(this);
         m_cuda_semaphore = make_ref<cuda::ExternalSemaphore>(m_global_fence);
         m_supports_cuda_interop = true;
