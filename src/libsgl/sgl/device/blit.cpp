@@ -52,8 +52,8 @@ void Blitter::blit(
         "dst must be a 2D texture RTV"
     );
 
-    Texture* src_texture = static_cast<Texture*>(src->resource());
-    Texture* dst_texture = static_cast<Texture*>(dst->resource());
+    Texture* src_texture = src->resource()->as_texture();
+    Texture* dst_texture = dst->resource()->as_texture();
 
     SGL_CHECK(
         src_texture->desc().sample_count == 1 && dst_texture->desc().sample_count == 1,
@@ -80,27 +80,16 @@ void Blitter::blit(
     TextureLayout src_layout
         = src_texture->array_size() > 1 ? TextureLayout::texture_2d_array : TextureLayout::texture_2d;
 
-    ref<ShaderProgram> program = get_program({
-        .src_layout = src_layout,
-        .src_type = src_type,
-        .dst_type = dst_type,
-    });
+    ref<Framebuffer> framebuffer = m_device->create_framebuffer({.render_targets{dst}});
 
-    ref<Framebuffer> framebuffer = m_device->create_framebuffer({
-        .render_targets{
-            {
-                .texture = ref(dst_texture),
-                .mip_level = dst_mip_level,
-                .base_array_layer = dst_base_array_layer,
-                .layer_count = 1,
-            },
+    ref<GraphicsPipeline> pipeline = get_pipeline(
+        {
+            .src_layout = src_layout,
+            .src_type = src_type,
+            .dst_type = dst_type,
         },
-    });
-
-    ref<GraphicsPipeline> pipeline = m_device->create_graphics_pipeline({
-        .program = program,
-        .framebuffer = framebuffer,
-    });
+        framebuffer
+    );
 
     {
         auto encoder = command_buffer->encode_render_commands(framebuffer);
@@ -168,5 +157,23 @@ ref<ShaderProgram> Blitter::get_program(ProgramKey key)
     m_program_cache[key] = program;
     return program;
 }
+
+ref<GraphicsPipeline> Blitter::get_pipeline(ProgramKey key, const Framebuffer* framebuffer)
+{
+    auto it = m_pipeline_cache.find({key, framebuffer->layout()->desc()});
+    if (it != m_pipeline_cache.end())
+        return it->second;
+
+    ref<ShaderProgram> program = get_program(key);
+
+    ref<GraphicsPipeline> pipeline = m_device->create_graphics_pipeline({
+        .program = program,
+        .framebuffer_layout = framebuffer->layout(),
+    });
+
+    m_pipeline_cache[{key, framebuffer->layout()->desc()}] = pipeline;
+    return pipeline;
+}
+
 
 } // namespace sgl

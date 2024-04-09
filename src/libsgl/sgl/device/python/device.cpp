@@ -501,16 +501,19 @@ SGL_PY_EXPORT(device_device)
     device.def(
         "create_framebuffer",
         [](Device* self,
-           std::vector<FramebufferAttachmentDesc> render_targets,
-           std::optional<FramebufferAttachmentDesc> depth_stencil)
+           std::vector<ref<ResourceView>> render_targets,
+           ref<ResourceView> depth_stencil,
+           ref<FramebufferLayout> layout)
         {
             return self->create_framebuffer({
                 .render_targets = std::move(render_targets),
                 .depth_stencil = std::move(depth_stencil),
+                .layout = std::move(layout),
             });
         },
         "render_targets"_a,
         "depth_stencil"_a.none() = nb::none(),
+        "layout"_a.none() = nb::none(),
         D(Device, create_framebuffer)
     );
     device.def("create_command_buffer", &Device::create_command_buffer, D(Device, create_command_buffer));
@@ -675,7 +678,7 @@ SGL_PY_EXPORT(device_device)
         [](Device* self,
            ref<ShaderProgram> program,
            const InputLayout* input_layout,
-           const Framebuffer* framebuffer,
+           const FramebufferLayout* framebuffer_layout,
            PrimitiveType primitive_type,
            std::optional<DepthStencilDesc> depth_stencil,
            std::optional<RasterizerDesc> rasterizer,
@@ -684,7 +687,7 @@ SGL_PY_EXPORT(device_device)
             return self->create_graphics_pipeline({
                 .program = std::move(program),
                 .input_layout = input_layout,
-                .framebuffer = framebuffer,
+                .framebuffer_layout = framebuffer_layout,
                 .primitive_type = primitive_type,
                 .depth_stencil = depth_stencil.value_or(DepthStencilDesc{}),
                 .rasterizer = rasterizer.value_or(RasterizerDesc{}),
@@ -693,7 +696,7 @@ SGL_PY_EXPORT(device_device)
         },
         "program"_a,
         "input_layout"_a,
-        "framebuffer"_a,
+        "framebuffer_layout"_a,
         "primitive_type"_a = PrimitiveType::triangle,
         "depth_stencil"_a.none() = nb::none(),
         "rasterizer"_a.none() = nb::none(),

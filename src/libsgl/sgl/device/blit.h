@@ -75,12 +75,14 @@ private:
     };
 
     ref<ShaderProgram> get_program(ProgramKey key);
+    ref<GraphicsPipeline> get_pipeline(ProgramKey key, const Framebuffer* framebuffer);
 
     ref<Device> m_device;
     ref<Sampler> m_linear_sampler;
     ref<Sampler> m_point_sampler;
 
     std::map<ProgramKey, ref<ShaderProgram>> m_program_cache;
+    std::map<std::pair<ProgramKey, FramebufferLayoutDesc>, ref<GraphicsPipeline>> m_pipeline_cache;
 };
 
 } // namespace sgl

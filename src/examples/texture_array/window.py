@@ -96,11 +96,10 @@ class App:
         self.create_framebuffers()
 
     def create_framebuffers(self):
-        for i in range(self.swapchain.desc.image_count):
-            image = self.swapchain.get_image(i)
-            self.framebuffers.append(
-                self.device.create_framebuffer(render_targets=[{"texture": image}])
-            )
+        self.framebuffers = [
+            self.device.create_framebuffer(render_targets=[image.get_rtv()])
+            for image in self.swapchain.images
+        ]
 
     def run(self):
         while not self.window.should_close():

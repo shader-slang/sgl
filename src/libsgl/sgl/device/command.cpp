@@ -533,9 +533,9 @@ bool CommandBuffer::set_resource_state(const Resource* resource, ResourceState n
     SGL_CHECK_NOT_NULL(resource);
 
     if (resource->type() == ResourceType::buffer) {
-        return set_buffer_state(static_cast<const Buffer*>(resource), new_state);
+        return set_buffer_state(resource->as_buffer(), new_state);
     } else {
-        return set_texture_state(static_cast<const Texture*>(resource), new_state);
+        return set_texture_state(resource->as_texture(), new_state);
     }
 }
 
@@ -545,13 +545,13 @@ bool CommandBuffer::set_resource_state(const ResourceView* resource_view, Resour
     SGL_CHECK_NOT_NULL(resource_view);
 
     if (resource_view->resource()->type() == ResourceType::buffer) {
-        return set_buffer_state(static_cast<const Buffer*>(resource_view->resource()), new_state);
+        return set_buffer_state(resource_view->resource()->as_buffer(), new_state);
     } else {
         if (resource_view->all_subresources())
-            return set_texture_state(static_cast<const Texture*>(resource_view->resource()), new_state);
+            return set_texture_state(resource_view->resource()->as_texture(), new_state);
         else
             return set_texture_subresource_state(
-                static_cast<const Texture*>(resource_view->resource()),
+                resource_view->resource()->as_texture(),
                 resource_view->desc().subresource_range,
                 new_state
             );
@@ -689,13 +689,13 @@ void CommandBuffer::uav_barrier(const Resource* resource)
 
     if (resource->type() == ResourceType::buffer) {
         get_gfx_resource_command_encoder()->bufferBarrier(
-            static_cast<const Buffer*>(resource)->gfx_buffer_resource(),
+            resource->as_buffer()->gfx_buffer_resource(),
             gfx::ResourceState::UnorderedAccess,
             gfx::ResourceState::UnorderedAccess
         );
     } else {
         get_gfx_resource_command_encoder()->textureBarrier(
-            static_cast<const Texture*>(resource)->gfx_texture_resource(),
+            resource->as_texture()->gfx_texture_resource(),
             gfx::ResourceState::UnorderedAccess,
             gfx::ResourceState::UnorderedAccess
         );
@@ -844,8 +844,8 @@ void CommandBuffer::copy_resource(Resource* dst, const Resource* src)
     set_resource_state(src, ResourceState::copy_source);
 
     if (dst->type() == ResourceType::buffer) {
-        const Buffer* dst_buffer = static_cast<const Buffer*>(dst);
-        const Buffer* src_buffer = static_cast<const Buffer*>(src);
+        const Buffer* dst_buffer = dst->as_buffer();
+        const Buffer* src_buffer = src->as_buffer();
 
         SGL_CHECK(src_buffer->size() <= dst_buffer->size(), "Source buffer is larger than destination buffer");
 
@@ -857,8 +857,8 @@ void CommandBuffer::copy_resource(Resource* dst, const Resource* src)
             src_buffer->size()
         );
     } else {
-        const Texture* dst_texture = static_cast<const Texture*>(dst);
-        const Texture* src_texture = static_cast<const Texture*>(src);
+        const Texture* dst_texture = dst->as_texture();
+        const Texture* src_texture = src->as_texture();
         gfx::SubresourceRange sr_range = {};
 
         get_gfx_resource_command_encoder()->copyTexture(
@@ -1144,26 +1144,15 @@ RenderCommandEncoder CommandBuffer::encode_render_commands(Framebuffer* framebuf
     // Set the render target and depth-stencil barriers.
     for (const auto& render_target : framebuffer->desc().render_targets) {
         set_texture_subresource_state(
-            render_target.texture,
-            {
-                .mip_level = render_target.mip_level,
-                .mip_count = 1,
-                .base_array_layer = render_target.base_array_layer,
-                .layer_count = render_target.layer_count,
-            },
+            render_target->resource()->as_texture(),
+            render_target->subresource_range(),
             ResourceState::render_target
         );
     }
-    if (framebuffer->desc().depth_stencil) {
-        const auto& depth_stencil = framebuffer->desc().depth_stencil.value();
+    if (const auto& depth_stencil = framebuffer->desc().depth_stencil) {
         set_texture_subresource_state(
-            depth_stencil.texture,
-            {
-                .mip_level = depth_stencil.mip_level,
-                .mip_count = 1,
-                .base_array_layer = depth_stencil.base_array_layer,
-                .layer_count = depth_stencil.layer_count,
-            },
+            depth_stencil->resource()->as_texture(),
+            depth_stencil->subresource_range(),
             ResourceState::depth_write
         );
     }
