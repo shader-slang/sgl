@@ -15,9 +15,9 @@ framework.
 
 Unit tests are located next to where the code they test is located.
 For example, the code for the ``Bitmap`` class is located in
-``src/libsgl/sgl/core/bitmap.cpp``,
+``src/sgl/core/bitmap.cpp``,
 and it's corresponding unit test is located in
-``src/libsgl/sgl/core/tests/test_bitmap.py``.
+``src/sgl/core/tests/test_bitmap.py``.
 
 In order to run unit tests, you need to have the ``pytest`` package installed
 in your active Python environment. You also need to have the ``sgl`` package
@@ -34,13 +34,13 @@ To run all tests in a specific file, you can specify the file to run:
 
 .. code-block:: bash
 
-    pytest src/libsgl/sgl/core/tests/test_bitmap.py
+    pytest src/sgl/core/tests/test_bitmap.py
 
 To run just one specific test case, you can additionally set the ``-k`` flag:
 
 .. code-block:: bash
 
-    pytest src/libsgl/sgl/core/tests/test_bitmap.py -k test_jpg_io
+    pytest src/sgl/core/tests/test_bitmap.py -k test_jpg_io
 
 Each test source file should also be executable as a standalone script. This is
 most useful when debugging from an IDE. Allowing scripts to be run standalone
@@ -60,7 +60,7 @@ C++ unit tests are written in the `doctest <https://github.com/doctest/doctest>`
 framework.
 
 The main application entry point is located in
-``src/libsgl/sgl/tests/sgl_tests.cpp``.
+``src/sgl/tests/sgl_tests.cpp``.
 Similar to the Python unit tests, the C++ unit tests are located next to the
 code they test in a ``tests`` directory.
 
