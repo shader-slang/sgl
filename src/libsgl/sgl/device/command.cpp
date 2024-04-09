@@ -1022,7 +1022,7 @@ void CommandBuffer::upload_texture_data(Texture* texture, uint32_t subresource, 
         texture->gfx_texture_resource(),
         sr,
         gfx::ITextureResource::Offset3D(0, 0, 0),
-        gfx::ITextureResource::Extents(-1, -1, -1),
+        gfx::ITextureResource::Extents{-1, -1, -1},
         &gfx_subresource_data,
         1
     );
