@@ -46,7 +46,7 @@ public:
      * \param options Texture loading options.
      * \return New texture object.
      */
-    ref<Texture> load_texture(const Bitmap* bitmap, const Options& options = {});
+    ref<Texture> load_texture(const Bitmap* bitmap, std::optional<Options> options = {});
 
     /**
      * \brief Load a texture from an image file.
@@ -55,7 +55,7 @@ public:
      * \param options Texture loading options.
      * \return New texture object.
      */
-    ref<Texture> load_texture(const std::filesystem::path& path, const Options& options = {});
+    ref<Texture> load_texture(const std::filesystem::path& path, std::optional<Options> options = {});
 
     /**
      * \brief Load textures from a list of bitmaps.
@@ -64,7 +64,7 @@ public:
      * \param options Texture loading options.
      * \return List of new of texture objects.
      */
-    std::vector<ref<Texture>> load_textures(std::span<const Bitmap*> bitmaps, const Options& options = {});
+    std::vector<ref<Texture>> load_textures(std::span<const Bitmap*> bitmaps, std::optional<Options> options = {});
 
     /**
      * \brief Load textures from a list of image files.
@@ -73,7 +73,8 @@ public:
      * \param options Texture loading options.
      * \return List of new texture objects.
      */
-    std::vector<ref<Texture>> load_textures(std::span<std::filesystem::path> paths, const Options& options = {});
+    std::vector<ref<Texture>>
+    load_textures(std::span<std::filesystem::path> paths, std::optional<Options> options = {});
 
     /**
      * \brief Load a texture array from a list of bitmaps.
@@ -84,7 +85,7 @@ public:
      * \param options Texture loading options.
      * \return New texture array object.
      */
-    ref<Texture> load_texture_array(std::span<const Bitmap*> bitmaps, const Options& options = {});
+    ref<Texture> load_texture_array(std::span<const Bitmap*> bitmaps, std::optional<Options> options = {});
 
     /**
      * \brief Load a texture array from a list of image files.
@@ -95,13 +96,9 @@ public:
      * \param options Texture loading options.
      * \return New texture array object.
      */
-    ref<Texture> load_texture_array(std::span<std::filesystem::path> paths, const Options& options = {});
+    ref<Texture> load_texture_array(std::span<std::filesystem::path> paths, std::optional<Options> options = {});
 
 private:
-    std::pair<Format, bool> determine_texture_format(const Bitmap* bitmap, const Options& options) const;
-    ref<Texture> load_from_bitmap(CommandBuffer* command_buffer, const Bitmap* bitmap, const Options& options);
-    ref<Texture> load_array_from_bitmaps(std::span<const Bitmap*> bitmaps, const Options& options);
-
     ref<Device> m_device;
     ref<Blitter> m_blitter;
 };
