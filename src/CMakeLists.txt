@@ -319,7 +319,7 @@ target_link_libraries(sgl
         sgl_data
     PRIVATE
         git_version
-        glfw stb
+        glfw stb header_only
         $<$<BOOL:${SGL_HAS_D3D12}>:d3d12>
         $<$<BOOL:${SGL_HAS_AGILITY_SDK}>:agility_sdk>
         # $<$<BOOL:${SGL_HAS_AFTERMATH}>:aftermath>
