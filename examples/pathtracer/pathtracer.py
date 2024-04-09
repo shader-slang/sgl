@@ -712,7 +712,7 @@ class App:
                 self.window.close()
             elif event.key == sgl.KeyCode.f1:
                 if self.output_texture:
-                    sgl.utils.show_in_tev_async(self.output_texture)
+                    sgl.tev.show_async(self.output_texture)
             elif event.key == sgl.KeyCode.f2:
                 if self.output_texture:
                     bitmap = self.output_texture.to_bitmap()

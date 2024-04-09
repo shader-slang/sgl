@@ -16,7 +16,7 @@
 #include <atomic>
 #include <semaphore>
 
-namespace sgl::utils {
+namespace sgl::tev {
 
 #if SGL_HAS_TEVCLIENT
 
@@ -71,7 +71,7 @@ private:
 
 #endif // SGL_HAS_TEVCLIENT
 
-bool show_in_tev(const Bitmap* bitmap, std::string name, std::string host, uint16_t port, uint32_t max_retries)
+bool show(const Bitmap* bitmap, std::string name, std::string host, uint16_t port, uint32_t max_retries)
 {
     SGL_CHECK_NOT_NULL(bitmap);
 
@@ -166,15 +166,15 @@ bool show_in_tev(const Bitmap* bitmap, std::string name, std::string host, uint1
 #endif
 }
 
-bool show_in_tev(const Texture* texture, std::string name, std::string host, uint16_t port, uint32_t max_retries)
+bool show(const Texture* texture, std::string name, std::string host, uint16_t port, uint32_t max_retries)
 {
     SGL_CHECK_NOT_NULL(texture);
 
     ref<Bitmap> bitmap = texture->to_bitmap();
-    return show_in_tev(bitmap, name, host, port, max_retries);
+    return show(bitmap, name, host, port, max_retries);
 }
 
-void show_in_tev_async(const Bitmap* bitmap, std::string name, std::string host, uint16_t port, uint32_t max_retries)
+void show_async(const Bitmap* bitmap, std::string name, std::string host, uint16_t port, uint32_t max_retries)
 {
     SGL_CHECK_NOT_NULL(bitmap);
 
@@ -185,19 +185,19 @@ void show_in_tev_async(const Bitmap* bitmap, std::string name, std::string host,
         {
             static std::counting_semaphore semaphore{8};
             semaphore.acquire();
-            show_in_tev(bitmap, name, host, port, max_retries);
+            show(bitmap, name, host, port, max_retries);
             semaphore.release();
             bitmap->dec_ref();
         }
     );
 }
 
-void show_in_tev_async(const Texture* texture, std::string name, std::string host, uint16_t port, uint32_t max_retries)
+void show_async(const Texture* texture, std::string name, std::string host, uint16_t port, uint32_t max_retries)
 {
     SGL_CHECK_NOT_NULL(texture);
 
     ref<Bitmap> bitmap = texture->to_bitmap();
-    return show_in_tev_async(bitmap, name, host, port, max_retries);
+    return show_async(bitmap, name, host, port, max_retries);
 }
 
-} // namespace sgl::utils
+} // namespace sgl::tev

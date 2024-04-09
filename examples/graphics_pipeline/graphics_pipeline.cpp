@@ -95,7 +95,7 @@ int main()
         }
         command_buffer->submit();
 
-        utils::show_in_tev(render_texture, "graphics_pipeline");
+        tev::show(render_texture, "graphics_pipeline");
     }
 
     sgl::static_shutdown();

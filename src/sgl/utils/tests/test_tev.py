@@ -18,27 +18,27 @@ def create_bitmap(
 
 
 def test_show_in_tev():
-    sgl.utils.show_in_tev(
+    sgl.tev.show(
         bitmap=create_bitmap(component_type=sgl.Bitmap.ComponentType.float32),
         name="test1_float",
     )
-    sgl.utils.show_in_tev(
+    sgl.tev.show(
         bitmap=create_bitmap(component_type=sgl.Bitmap.ComponentType.uint8),
         name="test1_uint8",
     )
-    sgl.utils.show_in_tev(
+    sgl.tev.show(
         bitmap=create_bitmap(component_type=sgl.Bitmap.ComponentType.uint32),
         name="test1_uint32",
     )
 
 
 def test_show_in_tev_async():
-    sgl.utils.show_in_tev_async(bitmap=create_bitmap(), name="test2")
+    sgl.tev.show_async(bitmap=create_bitmap(), name="test2")
 
 
 def test_show_in_tev_async_stress():
     for i in range(500):
-        sgl.utils.show_in_tev_async(bitmap=create_bitmap(), name=f"test3_{i}")
+        sgl.tev.show_async(bitmap=create_bitmap(), name=f"test3_{i}")
 
 
 if __name__ == "__main__":

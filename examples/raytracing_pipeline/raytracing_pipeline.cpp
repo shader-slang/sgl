@@ -209,7 +209,7 @@ int main()
             command_buffer->submit();
         }
 
-        utils::show_in_tev(render_texture, "raytracing_pipeline");
+        tev::show(render_texture, "raytracing_pipeline");
     }
 
     sgl::static_shutdown();

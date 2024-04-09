@@ -429,7 +429,7 @@ if(SGL_BUILD_PYTHON)
         OUTPUT ${SGL_OUTPUT_DIRECTORY}/python/sgl/__init__.pyi
         DEPENDS sgl_ext
     )
-    foreach(submodule IN ITEMS platform thread math ui utils utils.renderdoc)
+    foreach(submodule IN ITEMS platform thread math ui tev renderdoc)
         string(REPLACE "." "/" submodule_path ${submodule})
         nanobind_add_stub(
             sgl_${submodule}_stub

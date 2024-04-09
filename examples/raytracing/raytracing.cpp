@@ -188,7 +188,7 @@ int main()
             }
         );
 
-        utils::show_in_tev(render_texture, "raytracing");
+        tev::show(render_texture, "raytracing");
     }
 
     sgl::static_shutdown();

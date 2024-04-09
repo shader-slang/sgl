@@ -27,4 +27,4 @@ for i in range(COUNT):
         thread_count=[tex.width, tex.height, 1],
         vars={"g_texture": tex, "g_checker_size": i + 1},
     )
-    sgl.utils.show_in_tev_async(tex, f"test_{i:04d}")
+    sgl.tev.show_async(tex, f"test_{i:04d}")

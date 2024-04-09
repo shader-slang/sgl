@@ -6,7 +6,7 @@
 #include "sgl/core/fwd.h"
 #include "sgl/device/fwd.h"
 
-namespace sgl::utils::renderdoc {
+namespace sgl::renderdoc {
 
 /**
  * \brief Check if RenderDoc is available.
@@ -47,4 +47,4 @@ SGL_API bool end_frame_capture();
  */
 SGL_API bool is_frame_capturing();
 
-} // namespace sgl::utils::renderdoc
+} // namespace sgl::renderdoc

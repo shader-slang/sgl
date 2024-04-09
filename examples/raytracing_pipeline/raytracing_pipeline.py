@@ -166,4 +166,4 @@ with command_buffer.encode_ray_tracing_commands() as encoder:
 command_buffer.submit()
 
 
-sgl.utils.show_in_tev(render_texture, "raytracing_pipeline")
+sgl.tev.show(render_texture, "raytracing_pipeline")

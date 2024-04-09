@@ -10,7 +10,7 @@
 #include <string>
 #include <cstdint>
 
-namespace sgl::utils {
+namespace sgl::tev {
 
 /**
  * \brief Show a bitmap in the tev viewer (https://github.com/Tom94/tev).
@@ -24,7 +24,7 @@ namespace sgl::utils {
  * \param max_retries Maximum number of retries.
  * \return True if successful.
  */
-SGL_API bool show_in_tev(
+SGL_API bool show(
     const Bitmap* bitmap,
     std::string name = "",
     std::string host = "127.0.0.1",
@@ -44,7 +44,7 @@ SGL_API bool show_in_tev(
  * \param max_retries Maximum number of retries.
  * \return True if successful.
  */
-SGL_API bool show_in_tev(
+SGL_API bool show(
     const Texture* texture,
     std::string name = "",
     std::string host = "127.0.0.1",
@@ -63,7 +63,7 @@ SGL_API bool show_in_tev(
  * \param port Port to connect to.
  * \param max_retries Maximum number of retries.
  */
-SGL_API void show_in_tev_async(
+SGL_API void show_async(
     const Bitmap* bitmap,
     std::string name = "",
     std::string host = "127.0.0.1",
@@ -82,7 +82,7 @@ SGL_API void show_in_tev_async(
  * \param port Port to connect to.
  * \param max_retries Maximum number of retries.
  */
-SGL_API void show_in_tev_async(
+SGL_API void show_async(
     const Texture* texture,
     std::string name = "",
     std::string host = "127.0.0.1",
@@ -90,4 +90,4 @@ SGL_API void show_in_tev_async(
     uint32_t max_retries = 3
 );
 
-} // namespace sgl::utils
+} // namespace sgl::tev

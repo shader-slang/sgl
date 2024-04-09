@@ -121,8 +121,9 @@ NB_MODULE(sgl_ext, m_)
     SGL_PY_IMPORT(ui);
     SGL_PY_IMPORT(ui_widgets);
 
-    m.def_submodule("utils", "Utility module");
+    m.def_submodule("renderdoc", "RenderDoc module");
     SGL_PY_IMPORT(utils_renderdoc);
+    m.def_submodule("tev", "tev image viewer module");
     SGL_PY_IMPORT(utils_tev);
 
     // Wait for all tasks to finish before shutting down.
