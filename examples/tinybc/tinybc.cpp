@@ -92,7 +92,7 @@ int main(int argc, const char* argv[])
 
     // Show input texture in tev
     if (tev)
-        utils::show_in_tev_async(input_tex, "tinybc-input");
+        tev::show_async(input_tex, "tinybc-input");
 
     // Create decoded texture
     ref<Texture> decoded_tex = device->create_texture({
@@ -172,7 +172,7 @@ int main(int argc, const char* argv[])
 
     // Show decoded texture in tev
     if (tev)
-        utils::show_in_tev_async(decoded_tex, "tinybc-decoded");
+        tev::show_async(decoded_tex, "tinybc-decoded");
 
     // Output decoded texture
     if (output_path) {

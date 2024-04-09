@@ -10,46 +10,46 @@ SGL_PY_EXPORT(utils_tev)
 {
     using namespace sgl;
 
-    nb::module_ utils = m.attr("utils");
+    nb::module_ tev = m.attr("tev");
 
-    utils.def(
-        "show_in_tev",
-        nb::overload_cast<const Bitmap*, std::string, std::string, uint16_t, uint32_t>(&utils::show_in_tev),
+    tev.def(
+        "show",
+        nb::overload_cast<const Bitmap*, std::string, std::string, uint16_t, uint32_t>(&tev::show),
         "bitmap"_a,
         "name"_a = "",
         "host"_a = "127.0.0.1",
         "port"_a = 14158,
         "max_retries"_a = 3,
-        D(utils, show_in_tev)
+        D(tev, show)
     );
-    utils.def(
-        "show_in_tev",
-        nb::overload_cast<const Texture*, std::string, std::string, uint16_t, uint32_t>(&utils::show_in_tev),
+    tev.def(
+        "show",
+        nb::overload_cast<const Texture*, std::string, std::string, uint16_t, uint32_t>(&tev::show),
         "texture"_a,
         "name"_a = "",
         "host"_a = "127.0.0.1",
         "port"_a = 14158,
         "max_retries"_a = 3,
-        D(utils, show_in_tev_2)
+        D(tev, show_2)
     );
-    utils.def(
-        "show_in_tev_async",
-        nb::overload_cast<const Bitmap*, std::string, std::string, uint16_t, uint32_t>(&utils::show_in_tev_async),
+    tev.def(
+        "show_async",
+        nb::overload_cast<const Bitmap*, std::string, std::string, uint16_t, uint32_t>(&tev::show_async),
         "bitmap"_a,
         "name"_a = "",
         "host"_a = "127.0.0.1",
         "port"_a = 14158,
         "max_retries"_a = 3,
-        D(utils, show_in_tev_async)
+        D(tev, show_async)
     );
-    utils.def(
-        "show_in_tev_async",
-        nb::overload_cast<const Texture*, std::string, std::string, uint16_t, uint32_t>(&utils::show_in_tev_async),
+    tev.def(
+        "show_async",
+        nb::overload_cast<const Texture*, std::string, std::string, uint16_t, uint32_t>(&tev::show_async),
         "texture"_a,
         "name"_a = "",
         "host"_a = "127.0.0.1",
         "port"_a = 14158,
         "max_retries"_a = 3,
-        D(utils, show_in_tev_async_2)
+        D(tev, show_async_2)
     );
 }

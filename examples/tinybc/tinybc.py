@@ -61,7 +61,7 @@ input_tex = device.create_texture(
 
 # Show input texture in tev
 if args.tev:
-    sgl.utils.show_in_tev_async(input_tex, name="tinybc-input")
+    sgl.tev.show_async(input_tex, name="tinybc-input")
 
 # Create decoded texture
 decoded_tex = device.create_texture(
@@ -129,7 +129,7 @@ print(f"PSNR: {psnr:.4g}")
 
 # Show decoded texture in tev
 if args.tev:
-    sgl.utils.show_in_tev_async(decoded_tex, name="tinybc-decoded")
+    sgl.tev.show_async(decoded_tex, name="tinybc-decoded")
 
 # Output decoded texture
 if args.output_path:

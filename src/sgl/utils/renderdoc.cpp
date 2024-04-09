@@ -13,7 +13,7 @@
 
 #include <vector>
 
-namespace sgl::utils::renderdoc {
+namespace sgl::renderdoc {
 
 class API {
 public:
@@ -167,4 +167,4 @@ bool is_frame_capturing()
     return API::get().is_frame_capturing();
 }
 
-} // namespace sgl::utils::renderdoc
+} // namespace sgl::renderdoc

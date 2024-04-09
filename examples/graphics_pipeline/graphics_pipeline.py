@@ -68,4 +68,4 @@ with command_buffer.encode_render_commands(framebuffer) as encoder:
 command_buffer.submit()
 
 
-sgl.utils.show_in_tev(render_texture, "graphics_pipeline")
+sgl.tev.show(render_texture, "graphics_pipeline")

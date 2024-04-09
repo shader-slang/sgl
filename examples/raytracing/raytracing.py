@@ -146,4 +146,4 @@ kernel.dispatch(
     },
 )
 
-sgl.utils.show_in_tev(render_texture, "raytracing")
+sgl.tev.show(render_texture, "raytracing")

@@ -10854,7 +10854,7 @@ static const char *__doc_sgl_ui_operator_ior = R"doc()doc";
 
 static const char *__doc_sgl_ui_operator_ior_2 = R"doc()doc";
 
-static const char *__doc_sgl_utils_renderdoc_end_frame_capture =
+static const char *__doc_sgl_renderdoc_end_frame_capture =
 R"doc(End capturing a frame in RenderDoc.
 
 This function will end capturing a frame (or some partial
@@ -10863,7 +10863,7 @@ compute/graphics workload) in RenderDoc.
 Returns:
     True if the frame capture was ended successfully.)doc";
 
-static const char *__doc_sgl_utils_renderdoc_is_available =
+static const char *__doc_sgl_renderdoc_is_available =
 R"doc(Check if RenderDoc is available.
 
 This is typically the case when the application is running under the
@@ -10872,13 +10872,13 @@ RenderDoc.
 Returns:
     True if RenderDoc is available.)doc";
 
-static const char *__doc_sgl_utils_renderdoc_is_frame_capturing =
+static const char *__doc_sgl_renderdoc_is_frame_capturing =
 R"doc(Check if a frame is currently being captured in RenderDoc.
 
 Returns:
     True if a frame is currently being captured.)doc";
 
-static const char *__doc_sgl_utils_renderdoc_start_frame_capture =
+static const char *__doc_sgl_renderdoc_start_frame_capture =
 R"doc(Start capturing a frame in RenderDoc.
 
 This function will start capturing a frame (or some partial
@@ -10895,7 +10895,7 @@ Parameter ``window``:
 Returns:
     True if the frame capture was started successfully.)doc";
 
-static const char *__doc_sgl_utils_show_in_tev =
+static const char *__doc_sgl_tev_show =
 R"doc(Show a bitmap in the tev viewer (https://github.com/Tom94/tev).
 
 This will block until the image is sent over.
@@ -10919,7 +10919,7 @@ Parameter ``max_retries``:
 Returns:
     True if successful.)doc";
 
-static const char *__doc_sgl_utils_show_in_tev_2 =
+static const char *__doc_sgl_tev_show_2 =
 R"doc(Show texture in the tev viewer (https://github.com/Tom94/tev).
 
 This will block until the image is sent over.
@@ -10943,7 +10943,7 @@ Parameter ``max_retries``:
 Returns:
     True if successful.)doc";
 
-static const char *__doc_sgl_utils_show_in_tev_async =
+static const char *__doc_sgl_tev_show_async =
 R"doc(Show a bitmap in the tev viewer (https://github.com/Tom94/tev).
 
 This will return immediately and send the image asynchronously in the
@@ -10965,7 +10965,7 @@ Parameter ``port``:
 Parameter ``max_retries``:
     Maximum number of retries.)doc";
 
-static const char *__doc_sgl_utils_show_in_tev_async_2 =
+static const char *__doc_sgl_tev_show_async_2 =
 R"doc(Show a texture in the tev viewer (https://github.com/Tom94/tev).
 
 This will return immediately and send the image asynchronously in the

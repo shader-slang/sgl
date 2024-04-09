@@ -206,7 +206,7 @@
         "sgl\\.ui\\.[\\w]+"
     ],
     "Utilities": [
-        "sgl\\.utils\\.[\\w]+",
-        "sgl\\.utils\\.renderdoc\\.[\\w]+"
+        "sgl\\.tev\\.[\\w]+",
+        "sgl\\.renderdoc\\.[\\w]+"
     ]
 }
