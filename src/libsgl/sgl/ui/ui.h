@@ -57,8 +57,7 @@ private:
 
     std::map<std::string, ImFont*> m_fonts;
 
-    // TODO: we can reuse pipelines for the same framebuffer layout
-    std::map<Framebuffer*, ref<GraphicsPipeline>> m_pipelines;
+    std::map<FramebufferLayoutDesc, ref<GraphicsPipeline>> m_pipelines;
 };
 
 } // namespace sgl::ui

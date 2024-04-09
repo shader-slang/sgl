@@ -97,6 +97,30 @@ void Resource::invalidate_views()
     m_views.clear();
 }
 
+const Buffer* Resource::as_buffer() const
+{
+    SGL_ASSERT(m_type == ResourceType::buffer);
+    return static_cast<const Buffer*>(this);
+}
+
+Buffer* Resource::as_buffer()
+{
+    SGL_ASSERT(m_type == ResourceType::buffer);
+    return static_cast<Buffer*>(this);
+}
+
+const Texture* Resource::as_texture() const
+{
+    SGL_ASSERT(m_type != ResourceType::buffer);
+    return static_cast<const Texture*>(this);
+}
+
+Texture* Resource::as_texture()
+{
+    SGL_ASSERT(m_type != ResourceType::buffer);
+    return static_cast<Texture*>(this);
+}
+
 SharedResourceHandle Resource::get_shared_handle() const
 {
     gfx::InteropHandle handle = {};

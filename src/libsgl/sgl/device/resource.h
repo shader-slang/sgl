@@ -251,6 +251,9 @@ public:
 
     Resource* resource() const { return m_resource; }
 
+    const BufferRange& buffer_range() const { return m_desc.buffer_range; }
+    const SubresourceRange& subresource_range() const { return m_desc.subresource_range; }
+
     /// True if the view covers all subresources.
     bool all_subresources() const { return m_all_subresources; }
 
@@ -319,11 +322,17 @@ public:
 
     ResourceType type() const { return m_type; };
 
-    Format format() const { return Format::unknown; }
+    virtual Format format() const = 0;
 
     ResourceStateTracker& state_tracker() const { return m_state_tracker; }
 
     void invalidate_views();
+
+    const Buffer* as_buffer() const;
+    Buffer* as_buffer();
+
+    const Texture* as_texture() const;
+    Texture* as_texture();
 
     virtual gfx::IResource* gfx_resource() const = 0;
 
@@ -459,7 +468,7 @@ public:
 
     size_t size() const { return m_desc.size; }
     size_t struct_size() const { return m_desc.struct_size; }
-    Format format() const { return m_desc.format; }
+    Format format() const override { return m_desc.format; }
 
     bool is_structured() const { return m_desc.struct_size > 0; }
     bool is_typed() const { return m_desc.format != Format::unknown; }
@@ -637,7 +646,7 @@ public:
 
     const TextureDesc& desc() const { return m_desc; }
 
-    Format format() const { return m_desc.format; }
+    Format format() const override { return m_desc.format; }
     uint32_t width() const { return m_desc.width; }
     uint32_t height() const { return m_desc.height; }
     uint32_t depth() const { return m_desc.depth; }

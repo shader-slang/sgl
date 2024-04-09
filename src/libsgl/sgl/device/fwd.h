@@ -43,7 +43,9 @@ class Fence;
 
 // framebuffer.h
 
-struct FramebufferAttachmentDesc;
+struct FramebufferLayoutTargetDesc;
+struct FramebufferLayoutDesc;
+class FramebufferLayout;
 struct FramebufferDesc;
 class Framebuffer;
 

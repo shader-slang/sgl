@@ -45,7 +45,7 @@ input_layout = device.create_input_layout(
     vertex_streams=[{"stride": 8}],
 )
 
-framebuffer = device.create_framebuffer(render_targets=[{"texture": render_texture}])
+framebuffer = device.create_framebuffer(render_targets=[render_texture.get_rtv()])
 
 program = device.load_program(
     "graphics_pipeline.slang", ["vertex_main", "fragment_main"]
@@ -53,7 +53,7 @@ program = device.load_program(
 pipeline = device.create_graphics_pipeline(
     program=program,
     input_layout=input_layout,
-    framebuffer=framebuffer,
+    framebuffer_layout=framebuffer.layout,
 )
 
 command_buffer = device.create_command_buffer()

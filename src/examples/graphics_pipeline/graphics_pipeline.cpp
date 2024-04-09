@@ -68,15 +68,17 @@ int main()
             },
         });
 
-        ref<Framebuffer> framebuffer = device->create_framebuffer({.render_targets{
-            {.texture = render_texture},
-        }});
+        ref<Framebuffer> framebuffer = device->create_framebuffer({
+            .render_targets{
+                render_texture->get_rtv(),
+            },
+        });
 
         ref<ShaderProgram> program = device->load_program("graphics_pipeline.slang", {"vertex_main", "fragment_main"});
         ref<GraphicsPipeline> pipeline = device->create_graphics_pipeline({
             .program = program,
             .input_layout = input_layout,
-            .framebuffer = framebuffer,
+            .framebuffer_layout = framebuffer->layout(),
         });
 
         ref<CommandBuffer> command_buffer = device->create_command_buffer();

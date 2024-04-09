@@ -361,7 +361,7 @@ void Context::render(Framebuffer* framebuffer, CommandBuffer* command_buffer)
     ImGui::SetCurrentContext(m_imgui_context);
     ImGuiIO& io = ImGui::GetIO();
 
-    bool is_srgb_format = get_format_info(framebuffer->desc().render_targets[0].texture->format()).is_srgb_format();
+    bool is_srgb_format = get_format_info(framebuffer->desc().render_targets[0]->resource()->format()).is_srgb_format();
 
     m_screen->render();
 
@@ -515,7 +515,7 @@ void Context::process_events()
 
 GraphicsPipeline* Context::get_pipeline(Framebuffer* framebuffer)
 {
-    auto it = m_pipelines.find(framebuffer);
+    auto it = m_pipelines.find(framebuffer->layout()->desc());
     if (it != m_pipelines.end())
         return it->second;
 
@@ -523,7 +523,7 @@ GraphicsPipeline* Context::get_pipeline(Framebuffer* framebuffer)
     ref<GraphicsPipeline> pipeline = m_device->create_graphics_pipeline({
         .program = m_program,
         .input_layout = m_input_layout,
-        .framebuffer = framebuffer,
+        .framebuffer_layout = framebuffer->layout(),
         .primitive_type = PrimitiveType::triangle,
         .blend = {.targets = {
             {
@@ -542,7 +542,7 @@ GraphicsPipeline* Context::get_pipeline(Framebuffer* framebuffer)
         }},
     });
 
-    m_pipelines.emplace(framebuffer, pipeline);
+    m_pipelines.emplace(framebuffer->layout()->desc(), pipeline);
     return pipeline;
 }
 

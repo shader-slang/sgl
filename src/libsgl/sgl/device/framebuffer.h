@@ -13,16 +13,44 @@
 
 namespace sgl {
 
-struct FramebufferAttachmentDesc {
-    ref<Texture> texture;
-    uint32_t mip_level{0};
-    uint32_t base_array_layer{0};
-    uint32_t layer_count{1};
+struct FramebufferLayoutTargetDesc {
+    Format format{Format::unknown};
+    uint32_t sample_count{0};
+
+    auto operator<=>(const FramebufferLayoutTargetDesc&) const = default;
+};
+
+struct FramebufferLayoutDesc {
+    std::vector<FramebufferLayoutTargetDesc> render_targets;
+    std::optional<FramebufferLayoutTargetDesc> depth_stencil;
+
+    auto operator<=>(const FramebufferLayoutDesc&) const = default;
+};
+
+class SGL_API FramebufferLayout : public DeviceResource {
+    SGL_OBJECT(FramebufferLayout)
+public:
+    FramebufferLayout(ref<Device> device, FramebufferLayoutDesc desc);
+    virtual ~FramebufferLayout();
+
+    const FramebufferLayoutDesc& desc() const { return m_desc; }
+
+    gfx::IFramebufferLayout* gfx_framebuffer_layout() const { return m_gfx_framebuffer_layout; }
+
+    std::string to_string() const override;
+
+private:
+    FramebufferLayoutDesc m_desc;
+    Slang::ComPtr<gfx::IFramebufferLayout> m_gfx_framebuffer_layout;
 };
 
 struct FramebufferDesc {
-    std::vector<FramebufferAttachmentDesc> render_targets;
-    std::optional<FramebufferAttachmentDesc> depth_stencil;
+    /// List of render targets.
+    std::vector<ref<ResourceView>> render_targets;
+    /// Depth-stencil target (optional).
+    ref<ResourceView> depth_stencil;
+    /// Framebuffer layout (optional). If not provided, framebuffer layout is determined from the render targets.
+    ref<FramebufferLayout> layout;
 };
 
 class SGL_API Framebuffer : public DeviceResource {
@@ -33,7 +61,8 @@ public:
 
     const FramebufferDesc& desc() const { return m_desc; }
 
-    gfx::IFramebufferLayout* gfx_framebuffer_layout() const { return m_gfx_framebuffer_layout; }
+    const FramebufferLayout* layout() const { return m_desc.layout; }
+
     gfx::IFramebuffer* gfx_framebuffer() const { return m_gfx_framebuffer; }
     gfx::IRenderPassLayout* gfx_render_pass_layout() const { return m_gfx_render_pass_layout; }
 
@@ -41,7 +70,6 @@ public:
 
 private:
     FramebufferDesc m_desc;
-    Slang::ComPtr<gfx::IFramebufferLayout> m_gfx_framebuffer_layout;
     Slang::ComPtr<gfx::IFramebuffer> m_gfx_framebuffer;
     Slang::ComPtr<gfx::IRenderPassLayout> m_gfx_render_pass_layout;
 };
