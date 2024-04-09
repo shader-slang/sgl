@@ -338,7 +338,7 @@ message(STATUS "SGL_HAS_TEVCLIENT: ${SGL_HAS_TEVCLIENT}")
 add_subdirectory(src/libsgl)
 
 if (SGL_BUILD_EXAMPLES)
-    add_subdirectory(src/examples)
+    add_subdirectory(examples)
 endif()
 
 if(SGL_BUILD_DOC)
