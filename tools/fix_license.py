@@ -18,9 +18,9 @@ INCLUDE_PATHS = [
 ]
 
 EXCLUDE_PATHS = [
-    "src/libsgl/sgl/stl/",
-    "src/libsgl/sgl/python/py_doc.h",
-    "src/libsgl/sgl/utils/renderdoc_app.h",
+    "src/sgl/stl/",
+    "src/sgl/python/py_doc.h",
+    "src/sgl/utils/renderdoc_app.h",
 ]
 
 EXTENSIONS = "h,cpp,slang,slangh,py"

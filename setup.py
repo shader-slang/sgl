@@ -99,7 +99,7 @@ VERSION_REGEX = re.compile(
     r"^\s*#\s*define\s+SGL_VERSION_([A-Z]+)\s+(.*)$", re.MULTILINE
 )
 
-with open("src/libsgl/sgl/sgl.h") as f:
+with open("src/sgl/sgl.h") as f:
     matches = dict(VERSION_REGEX.findall(f.read()))
     version = "{MAJOR}.{MINOR}.{PATCH}".format(**matches)
     print(f"version={version}")

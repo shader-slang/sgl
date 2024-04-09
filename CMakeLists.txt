@@ -335,7 +335,7 @@ message(STATUS "SGL_HAS_OPENEXR: ${SGL_HAS_OPENEXR}")
 message(STATUS "SGL_HAS_ASMJIT: ${SGL_HAS_ASMJIT}")
 message(STATUS "SGL_HAS_TEVCLIENT: ${SGL_HAS_TEVCLIENT}")
 
-add_subdirectory(src/libsgl)
+add_subdirectory(src)
 
 if (SGL_BUILD_EXAMPLES)
     add_subdirectory(examples)
@@ -393,7 +393,7 @@ install(
 
 # Install header files.
 install(
-    DIRECTORY src/libsgl/sgl
+    DIRECTORY src/sgl
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     FILES_MATCHING PATTERN "*.h"
 )
