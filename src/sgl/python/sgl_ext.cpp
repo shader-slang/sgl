@@ -39,7 +39,6 @@ SGL_PY_DECLARE(device_shader_cursor);
 SGL_PY_DECLARE(device_shader_object);
 SGL_PY_DECLARE(device_shader);
 SGL_PY_DECLARE(device_swapchain);
-SGL_PY_DECLARE(device_texture_loader);
 SGL_PY_DECLARE(device_types);
 
 SGL_PY_DECLARE(math_scalar);
@@ -52,6 +51,7 @@ SGL_PY_DECLARE(ui_widgets);
 
 SGL_PY_DECLARE(utils_renderdoc);
 SGL_PY_DECLARE(utils_tev);
+SGL_PY_DECLARE(utils_texture_loader);
 
 
 NB_MODULE(sgl_ext, m_)
@@ -115,7 +115,6 @@ NB_MODULE(sgl_ext, m_)
     SGL_PY_IMPORT(device_kernel);
     SGL_PY_IMPORT(device_memory_heap);
     SGL_PY_IMPORT(device_device);
-    SGL_PY_IMPORT(device_texture_loader);
 
     m.def_submodule("ui", "UI module");
     SGL_PY_IMPORT(ui);
@@ -125,6 +124,7 @@ NB_MODULE(sgl_ext, m_)
     SGL_PY_IMPORT(utils_renderdoc);
     m.def_submodule("tev", "tev image viewer module");
     SGL_PY_IMPORT(utils_tev);
+    SGL_PY_IMPORT(utils_texture_loader);
 
     // Wait for all tasks to finish before shutting down.
     auto atexit = nb::module_::import_("atexit");

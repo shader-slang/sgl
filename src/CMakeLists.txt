@@ -121,8 +121,6 @@ target_sources(sgl PRIVATE
     sgl/device/slang_utils.h
     sgl/device/swapchain.cpp
     sgl/device/swapchain.h
-    sgl/device/texture_loader.cpp
-    sgl/device/texture_loader.h
     sgl/device/types.h
 
     sgl/math/constants.h
@@ -156,6 +154,8 @@ target_sources(sgl PRIVATE
     sgl/utils/renderdoc.h
     sgl/utils/tev.cpp
     sgl/utils/tev.h
+    sgl/utils/texture_loader.cpp
+    sgl/utils/texture_loader.h
 
     ${SGL_IMGUI_DIR}/imconfig.h
     ${SGL_IMGUI_DIR}/imgui.h
@@ -392,7 +392,6 @@ if(SGL_BUILD_PYTHON)
         sgl/device/python/shader_object.cpp
         sgl/device/python/shader.cpp
         sgl/device/python/swapchain.cpp
-        sgl/device/python/texture_loader.cpp
         sgl/device/python/types.cpp
         sgl/math/python/matrix.cpp
         sgl/math/python/quaternion.cpp
@@ -402,6 +401,7 @@ if(SGL_BUILD_PYTHON)
         sgl/ui/python/widgets.cpp
         sgl/utils/python/renderdoc.cpp
         sgl/utils/python/tev.cpp
+        sgl/utils/python/texture_loader.cpp
     )
 
     if(SGL_ENABLE_PCH)
