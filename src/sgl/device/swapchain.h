@@ -48,8 +48,8 @@ public:
     void present();
 
     /// Returns the index of next back buffer image that will be presented in the next `present` call.
-    /// If the swapchain is invalid/out-of-date, an error is thrown.
-    uint32_t acquire_next_image();
+    /// Returns -1 if no image is available and the caller should skip the frame.
+    int acquire_next_image();
 
     /// Resizes the back buffers of this swapchain. All render target views and framebuffers
     /// referencing the back buffer images must be freed before calling this method.

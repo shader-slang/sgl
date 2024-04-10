@@ -16,6 +16,8 @@ Swapchain::Swapchain(SwapchainDesc desc, WindowHandle window_handle, ref<Device>
     , m_device(std::move(device))
 {
     SGL_ASSERT(m_device);
+    SGL_CHECK(m_desc.width > 0 && m_desc.height, "Swapchain width/height must be greater than 0");
+    SGL_CHECK(m_desc.image_count > 0, "Swapchain image count must be greater than 0");
 
     gfx::ISwapchain::Desc gfx_desc{
         .format = static_cast<gfx::Format>(m_desc.format),
@@ -57,16 +59,15 @@ void Swapchain::present()
     SLANG_CALL(m_gfx_swapchain->present());
 }
 
-uint32_t Swapchain::acquire_next_image()
+int Swapchain::acquire_next_image()
 {
-    int index = m_gfx_swapchain->acquireNextImage();
-    if (index < 0)
-        SGL_THROW("Failed to acquire next image");
-    return index;
+    return m_gfx_swapchain->acquireNextImage();
 }
 
 void Swapchain::resize(uint32_t width, uint32_t height)
 {
+    if (width == 0 || height == 0)
+        return;
     m_images.clear();
     m_desc.width = width;
     m_desc.height = height;
