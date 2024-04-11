@@ -105,23 +105,23 @@ static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_params = R"doc()d
 
 static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_reserved = R"doc()doc";
 
-static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_623_5 = R"doc()doc";
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_sgl_device_cuda_api_h_623_5 = R"doc()doc";
 
-static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_623_5_fence = R"doc()doc";
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_sgl_device_cuda_api_h_623_5_fence = R"doc()doc";
 
-static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_623_5_keyedMutex = R"doc()doc";
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_sgl_device_cuda_api_h_623_5_keyedMutex = R"doc()doc";
 
-static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_623_5_nvSciSync = R"doc()doc";
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_sgl_device_cuda_api_h_623_5_nvSciSync = R"doc()doc";
 
-static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_623_5_reserved = R"doc()doc";
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_sgl_device_cuda_api_h_623_5_reserved = R"doc()doc";
 
-static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_623_5_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_624_9 = R"doc()doc";
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_sgl_device_cuda_api_h_623_5_unnamed_struct_at_home_skallweit_projects_sgl_src_sgl_device_cuda_api_h_624_9 = R"doc()doc";
 
-static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_623_5_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_624_9_value = R"doc()doc";
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_sgl_device_cuda_api_h_623_5_unnamed_struct_at_home_skallweit_projects_sgl_src_sgl_device_cuda_api_h_624_9_value = R"doc()doc";
 
-static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_623_5_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_631_9 = R"doc()doc";
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_sgl_device_cuda_api_h_623_5_unnamed_struct_at_home_skallweit_projects_sgl_src_sgl_device_cuda_api_h_631_9 = R"doc()doc";
 
-static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_623_5_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_631_9_key = R"doc()doc";
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_sgl_device_cuda_api_h_623_5_unnamed_struct_at_home_skallweit_projects_sgl_src_sgl_device_cuda_api_h_631_9_key = R"doc()doc";
 
 static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS = R"doc()doc";
 
@@ -131,25 +131,25 @@ static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_params = R"doc()doc
 
 static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_reserved = R"doc()doc";
 
-static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_641_5 = R"doc()doc";
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_sgl_device_cuda_api_h_641_5 = R"doc()doc";
 
-static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_641_5_fence = R"doc()doc";
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_sgl_device_cuda_api_h_641_5_fence = R"doc()doc";
 
-static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_641_5_keyedMutex = R"doc()doc";
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_sgl_device_cuda_api_h_641_5_keyedMutex = R"doc()doc";
 
-static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_641_5_nvSciSync = R"doc()doc";
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_sgl_device_cuda_api_h_641_5_nvSciSync = R"doc()doc";
 
-static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_641_5_reserved = R"doc()doc";
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_sgl_device_cuda_api_h_641_5_reserved = R"doc()doc";
 
-static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_641_5_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_642_9 = R"doc()doc";
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_sgl_device_cuda_api_h_641_5_unnamed_struct_at_home_skallweit_projects_sgl_src_sgl_device_cuda_api_h_642_9 = R"doc()doc";
 
-static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_641_5_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_642_9_value = R"doc()doc";
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_sgl_device_cuda_api_h_641_5_unnamed_struct_at_home_skallweit_projects_sgl_src_sgl_device_cuda_api_h_642_9_value = R"doc()doc";
 
-static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_641_5_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_649_9 = R"doc()doc";
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_sgl_device_cuda_api_h_641_5_unnamed_struct_at_home_skallweit_projects_sgl_src_sgl_device_cuda_api_h_649_9 = R"doc()doc";
 
-static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_641_5_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_649_9_key = R"doc()doc";
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_sgl_device_cuda_api_h_641_5_unnamed_struct_at_home_skallweit_projects_sgl_src_sgl_device_cuda_api_h_649_9_key = R"doc()doc";
 
-static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_641_5_unnamed_struct_at_home_skallweit_projects_sgl_src_libsgl_sgl_device_cuda_api_h_649_9_timeoutMs = R"doc()doc";
+static const char *__doc_CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS_unnamed_struct_at_home_skallweit_projects_sgl_src_sgl_device_cuda_api_h_641_5_unnamed_struct_at_home_skallweit_projects_sgl_src_sgl_device_cuda_api_h_649_9_timeoutMs = R"doc()doc";
 
 static const char *__doc_CUDA_MEMCPY2D = R"doc()doc";
 
@@ -1799,11 +1799,15 @@ Parameter ``texture``:
 Parameter ``array_layer``:
     Array layer to generate mipmaps for.)doc";
 
+static const char *__doc_sgl_Blitter_get_pipeline = R"doc()doc";
+
 static const char *__doc_sgl_Blitter_get_program = R"doc()doc";
 
 static const char *__doc_sgl_Blitter_m_device = R"doc()doc";
 
 static const char *__doc_sgl_Blitter_m_linear_sampler = R"doc()doc";
+
+static const char *__doc_sgl_Blitter_m_pipeline_cache = R"doc()doc";
 
 static const char *__doc_sgl_Blitter_m_point_sampler = R"doc()doc";
 
@@ -3782,21 +3786,47 @@ static const char *__doc_sgl_Format_unknown = R"doc()doc";
 
 static const char *__doc_sgl_Framebuffer = R"doc()doc";
 
-static const char *__doc_sgl_FramebufferAttachmentDesc = R"doc()doc";
-
-static const char *__doc_sgl_FramebufferAttachmentDesc_base_array_layer = R"doc()doc";
-
-static const char *__doc_sgl_FramebufferAttachmentDesc_layer_count = R"doc()doc";
-
-static const char *__doc_sgl_FramebufferAttachmentDesc_mip_level = R"doc()doc";
-
-static const char *__doc_sgl_FramebufferAttachmentDesc_texture = R"doc()doc";
-
 static const char *__doc_sgl_FramebufferDesc = R"doc()doc";
 
-static const char *__doc_sgl_FramebufferDesc_depth_stencil = R"doc()doc";
+static const char *__doc_sgl_FramebufferDesc_depth_stencil = R"doc(Depth-stencil target (optional).)doc";
 
-static const char *__doc_sgl_FramebufferDesc_render_targets = R"doc()doc";
+static const char *__doc_sgl_FramebufferDesc_layout =
+R"doc(Framebuffer layout (optional). If not provided, framebuffer layout is
+determined from the render targets.)doc";
+
+static const char *__doc_sgl_FramebufferDesc_render_targets = R"doc(List of render targets.)doc";
+
+static const char *__doc_sgl_FramebufferLayout = R"doc()doc";
+
+static const char *__doc_sgl_FramebufferLayoutDesc = R"doc()doc";
+
+static const char *__doc_sgl_FramebufferLayoutDesc_depth_stencil = R"doc()doc";
+
+static const char *__doc_sgl_FramebufferLayoutDesc_operator_le = R"doc()doc";
+
+static const char *__doc_sgl_FramebufferLayoutDesc_render_targets = R"doc()doc";
+
+static const char *__doc_sgl_FramebufferLayoutTargetDesc = R"doc()doc";
+
+static const char *__doc_sgl_FramebufferLayoutTargetDesc_format = R"doc()doc";
+
+static const char *__doc_sgl_FramebufferLayoutTargetDesc_operator_le = R"doc()doc";
+
+static const char *__doc_sgl_FramebufferLayoutTargetDesc_sample_count = R"doc()doc";
+
+static const char *__doc_sgl_FramebufferLayout_FramebufferLayout = R"doc()doc";
+
+static const char *__doc_sgl_FramebufferLayout_class_name = R"doc()doc";
+
+static const char *__doc_sgl_FramebufferLayout_desc = R"doc()doc";
+
+static const char *__doc_sgl_FramebufferLayout_gfx_framebuffer_layout = R"doc()doc";
+
+static const char *__doc_sgl_FramebufferLayout_m_desc = R"doc()doc";
+
+static const char *__doc_sgl_FramebufferLayout_m_gfx_framebuffer_layout = R"doc()doc";
+
+static const char *__doc_sgl_FramebufferLayout_to_string = R"doc()doc";
 
 static const char *__doc_sgl_Framebuffer_Framebuffer = R"doc()doc";
 
@@ -3806,15 +3836,13 @@ static const char *__doc_sgl_Framebuffer_desc = R"doc()doc";
 
 static const char *__doc_sgl_Framebuffer_gfx_framebuffer = R"doc()doc";
 
-static const char *__doc_sgl_Framebuffer_gfx_framebuffer_layout = R"doc()doc";
-
 static const char *__doc_sgl_Framebuffer_gfx_render_pass_layout = R"doc()doc";
+
+static const char *__doc_sgl_Framebuffer_layout = R"doc()doc";
 
 static const char *__doc_sgl_Framebuffer_m_desc = R"doc()doc";
 
 static const char *__doc_sgl_Framebuffer_m_gfx_framebuffer = R"doc()doc";
-
-static const char *__doc_sgl_Framebuffer_m_gfx_framebuffer_layout = R"doc()doc";
 
 static const char *__doc_sgl_Framebuffer_m_gfx_render_pass_layout = R"doc()doc";
 
@@ -3930,7 +3958,7 @@ static const char *__doc_sgl_GraphicsPipelineDesc_blend = R"doc()doc";
 
 static const char *__doc_sgl_GraphicsPipelineDesc_depth_stencil = R"doc()doc";
 
-static const char *__doc_sgl_GraphicsPipelineDesc_framebuffer = R"doc()doc";
+static const char *__doc_sgl_GraphicsPipelineDesc_framebuffer_layout = R"doc()doc";
 
 static const char *__doc_sgl_GraphicsPipelineDesc_input_layout = R"doc()doc";
 
@@ -6050,6 +6078,8 @@ static const char *__doc_sgl_ResourceView_ResourceView_2 = R"doc()doc";
 
 static const char *__doc_sgl_ResourceView_all_subresources = R"doc(True if the view covers all subresources.)doc";
 
+static const char *__doc_sgl_ResourceView_buffer_range = R"doc()doc";
+
 static const char *__doc_sgl_ResourceView_class_name = R"doc()doc";
 
 static const char *__doc_sgl_ResourceView_desc = R"doc()doc";
@@ -6073,6 +6103,8 @@ static const char *__doc_sgl_ResourceView_m_resource = R"doc()doc";
 
 static const char *__doc_sgl_ResourceView_resource = R"doc()doc";
 
+static const char *__doc_sgl_ResourceView_subresource_range = R"doc()doc";
+
 static const char *__doc_sgl_ResourceView_to_string = R"doc()doc";
 
 static const char *__doc_sgl_ResourceView_type = R"doc()doc";
@@ -6080,6 +6112,14 @@ static const char *__doc_sgl_ResourceView_type = R"doc()doc";
 static const char *__doc_sgl_Resource_Resource = R"doc()doc";
 
 static const char *__doc_sgl_Resource_Resource_2 = R"doc()doc";
+
+static const char *__doc_sgl_Resource_as_buffer = R"doc()doc";
+
+static const char *__doc_sgl_Resource_as_buffer_2 = R"doc()doc";
+
+static const char *__doc_sgl_Resource_as_texture = R"doc()doc";
+
+static const char *__doc_sgl_Resource_as_texture_2 = R"doc()doc";
 
 static const char *__doc_sgl_Resource_class_name = R"doc()doc";
 
@@ -7124,8 +7164,8 @@ static const char *__doc_sgl_Swapchain_Swapchain_2 = R"doc()doc";
 
 static const char *__doc_sgl_Swapchain_acquire_next_image =
 R"doc(Returns the index of next back buffer image that will be presented in
-the next `present` call. If the swapchain is invalid/out-of-date, an
-error is thrown.)doc";
+the next `present` call. Returns -1 if no image is available and the
+caller should skip the frame.)doc";
 
 static const char *__doc_sgl_Swapchain_class_name = R"doc()doc";
 
@@ -9924,6 +9964,47 @@ static const char *__doc_sgl_ref_swap = R"doc(Swap this reference with another r
 
 static const char *__doc_sgl_remove_ref = R"doc()doc";
 
+static const char *__doc_sgl_renderdoc_end_frame_capture =
+R"doc(End capturing a frame in RenderDoc.
+
+This function will end capturing a frame (or some partial
+compute/graphics workload) in RenderDoc.
+
+Returns:
+    True if the frame capture was ended successfully.)doc";
+
+static const char *__doc_sgl_renderdoc_is_available =
+R"doc(Check if RenderDoc is available.
+
+This is typically the case when the application is running under the
+RenderDoc.
+
+Returns:
+    True if RenderDoc is available.)doc";
+
+static const char *__doc_sgl_renderdoc_is_frame_capturing =
+R"doc(Check if a frame is currently being captured in RenderDoc.
+
+Returns:
+    True if a frame is currently being captured.)doc";
+
+static const char *__doc_sgl_renderdoc_start_frame_capture =
+R"doc(Start capturing a frame in RenderDoc.
+
+This function will start capturing a frame (or some partial
+compute/graphics workload) in RenderDoc.
+
+To end the frame capture, call ``end_frame_capture``().
+
+Parameter ``device``:
+    The device to capture the frame for.
+
+Parameter ``window``:
+    The window to capture the frame for (optional).
+
+Returns:
+    True if the frame capture was started successfully.)doc";
+
 static const char *__doc_sgl_report_assertion = R"doc(Report a failed assertion.)doc";
 
 static const char *__doc_sgl_set_exception_diagnostics = R"doc(Set exception diagnostic options.)doc";
@@ -10317,6 +10398,98 @@ Parameter ``str``:
 
 Returns:
     Wide string.)doc";
+
+static const char *__doc_sgl_tev_show =
+R"doc(Show a bitmap in the tev viewer (https://github.com/Tom94/tev).
+
+This will block until the image is sent over.
+
+Parameter ``bitmap``:
+    Bitmap to show.
+
+Parameter ``name``:
+    Name of the image in tev. If not specified, a unique name will be
+    generated.
+
+Parameter ``host``:
+    Host to connect to.
+
+Parameter ``port``:
+    Port to connect to.
+
+Parameter ``max_retries``:
+    Maximum number of retries.
+
+Returns:
+    True if successful.)doc";
+
+static const char *__doc_sgl_tev_show_2 =
+R"doc(Show texture in the tev viewer (https://github.com/Tom94/tev).
+
+This will block until the image is sent over.
+
+Parameter ``texture``:
+    Texture to show.
+
+Parameter ``name``:
+    Name of the image in tev. If not specified, a unique name will be
+    generated.
+
+Parameter ``host``:
+    Host to connect to.
+
+Parameter ``port``:
+    Port to connect to.
+
+Parameter ``max_retries``:
+    Maximum number of retries.
+
+Returns:
+    True if successful.)doc";
+
+static const char *__doc_sgl_tev_show_async =
+R"doc(Show a bitmap in the tev viewer (https://github.com/Tom94/tev).
+
+This will return immediately and send the image asynchronously in the
+background.
+
+Parameter ``bitmap``:
+    Bitmap to show.
+
+Parameter ``name``:
+    Name of the image in tev. If not specified, a unique name will be
+    generated.
+
+Parameter ``host``:
+    Host to connect to.
+
+Parameter ``port``:
+    Port to connect to.
+
+Parameter ``max_retries``:
+    Maximum number of retries.)doc";
+
+static const char *__doc_sgl_tev_show_async_2 =
+R"doc(Show a texture in the tev viewer (https://github.com/Tom94/tev).
+
+This will return immediately and send the image asynchronously in the
+background.
+
+Parameter ``bitmap``:
+    Texture to show.
+
+Parameter ``name``:
+    Name of the image in tev. If not specified, a unique name will be
+    generated.
+
+Parameter ``host``:
+    Host to connect to.
+
+Parameter ``port``:
+    Port to connect to.
+
+Parameter ``max_retries``:
+    Maximum number of retries.)doc";
 
 static const char *__doc_sgl_thread_do_async = R"doc()doc";
 
@@ -10853,139 +11026,6 @@ static const char *__doc_sgl_ui_operator_iand_2 = R"doc()doc";
 static const char *__doc_sgl_ui_operator_ior = R"doc()doc";
 
 static const char *__doc_sgl_ui_operator_ior_2 = R"doc()doc";
-
-static const char *__doc_sgl_renderdoc_end_frame_capture =
-R"doc(End capturing a frame in RenderDoc.
-
-This function will end capturing a frame (or some partial
-compute/graphics workload) in RenderDoc.
-
-Returns:
-    True if the frame capture was ended successfully.)doc";
-
-static const char *__doc_sgl_renderdoc_is_available =
-R"doc(Check if RenderDoc is available.
-
-This is typically the case when the application is running under the
-RenderDoc.
-
-Returns:
-    True if RenderDoc is available.)doc";
-
-static const char *__doc_sgl_renderdoc_is_frame_capturing =
-R"doc(Check if a frame is currently being captured in RenderDoc.
-
-Returns:
-    True if a frame is currently being captured.)doc";
-
-static const char *__doc_sgl_renderdoc_start_frame_capture =
-R"doc(Start capturing a frame in RenderDoc.
-
-This function will start capturing a frame (or some partial
-compute/graphics workload) in RenderDoc.
-
-To end the frame capture, call ``end_frame_capture``().
-
-Parameter ``device``:
-    The device to capture the frame for.
-
-Parameter ``window``:
-    The window to capture the frame for (optional).
-
-Returns:
-    True if the frame capture was started successfully.)doc";
-
-static const char *__doc_sgl_tev_show =
-R"doc(Show a bitmap in the tev viewer (https://github.com/Tom94/tev).
-
-This will block until the image is sent over.
-
-Parameter ``bitmap``:
-    Bitmap to show.
-
-Parameter ``name``:
-    Name of the image in tev. If not specified, a unique name will be
-    generated.
-
-Parameter ``host``:
-    Host to connect to.
-
-Parameter ``port``:
-    Port to connect to.
-
-Parameter ``max_retries``:
-    Maximum number of retries.
-
-Returns:
-    True if successful.)doc";
-
-static const char *__doc_sgl_tev_show_2 =
-R"doc(Show texture in the tev viewer (https://github.com/Tom94/tev).
-
-This will block until the image is sent over.
-
-Parameter ``texture``:
-    Texture to show.
-
-Parameter ``name``:
-    Name of the image in tev. If not specified, a unique name will be
-    generated.
-
-Parameter ``host``:
-    Host to connect to.
-
-Parameter ``port``:
-    Port to connect to.
-
-Parameter ``max_retries``:
-    Maximum number of retries.
-
-Returns:
-    True if successful.)doc";
-
-static const char *__doc_sgl_tev_show_async =
-R"doc(Show a bitmap in the tev viewer (https://github.com/Tom94/tev).
-
-This will return immediately and send the image asynchronously in the
-background.
-
-Parameter ``bitmap``:
-    Bitmap to show.
-
-Parameter ``name``:
-    Name of the image in tev. If not specified, a unique name will be
-    generated.
-
-Parameter ``host``:
-    Host to connect to.
-
-Parameter ``port``:
-    Port to connect to.
-
-Parameter ``max_retries``:
-    Maximum number of retries.)doc";
-
-static const char *__doc_sgl_tev_show_async_2 =
-R"doc(Show a texture in the tev viewer (https://github.com/Tom94/tev).
-
-This will return immediately and send the image asynchronously in the
-background.
-
-Parameter ``bitmap``:
-    Texture to show.
-
-Parameter ``name``:
-    Name of the image in tev. If not specified, a unique name will be
-    generated.
-
-Parameter ``host``:
-    Host to connect to.
-
-Parameter ``port``:
-    Port to connect to.
-
-Parameter ``max_retries``:
-    Maximum number of retries.)doc";
 
 static const char *__doc_std_numeric_limits = R"doc()doc";
 

@@ -166,9 +166,8 @@ SGL_PY_EXPORT(ui_widgets)
 
     nb::module_ ui = m.attr("ui");
 
-    nb::class_<Widget, sgl::Object> widget(ui, "Widget", nb::type_slots(widget_type_slots), D(Widget));
-
-    widget.def_prop_rw("parent", (Widget * (Widget::*)(void)) & Widget::parent, &Widget::set_parent, D(Widget, parent))
+    nb::class_<Widget, sgl::Object>(ui, "Widget", nb::type_slots(widget_type_slots), D(Widget))
+        .def_prop_rw("parent", (Widget * (Widget::*)(void)) & Widget::parent, &Widget::set_parent, D(Widget, parent))
         .def_prop_ro("children", &Widget::children, D(Widget, children))
         .def_prop_rw("visible", &Widget::visible, &Widget::set_visible, D(Widget, visible))
         .def_prop_rw("enabled", &Widget::enabled, &Widget::set_enabled, D(Widget, enabled))

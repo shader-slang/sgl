@@ -15,14 +15,14 @@ SGL_PY_EXPORT(device_query)
 {
     using namespace sgl;
 
-    nb::class_<QueryPoolDesc>(m, "QueryPoolDesc")
+    nb::class_<QueryPoolDesc>(m, "QueryPoolDesc", D(QueryPoolDesc))
         .def(nb::init<>())
         .def(
             "__init__",
             [](QueryPoolDesc* self, nb::dict dict) { new (self) QueryPoolDesc(dict_to_QueryPoolDesc(dict)); }
         )
-        .def_rw("type", &QueryPoolDesc::type)
-        .def_rw("count", &QueryPoolDesc::count);
+        .def_rw("type", &QueryPoolDesc::type, D(QueryPoolDesc, type))
+        .def_rw("count", &QueryPoolDesc::count, D(QueryPoolDesc, count));
     nb::implicitly_convertible<nb::dict, QueryPoolDesc>();
 
     nb::class_<QueryPool, DeviceResource>(m, "QueryPool", D(QueryPool))
