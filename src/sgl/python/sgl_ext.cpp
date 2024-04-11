@@ -9,6 +9,8 @@
 
 #include <iostream>
 
+SGL_PY_DECLARE(app_app);
+
 SGL_PY_DECLARE(core_bitmap);
 SGL_PY_DECLARE(core_crypto);
 SGL_PY_DECLARE(core_input);
@@ -125,6 +127,8 @@ NB_MODULE(sgl_ext, m_)
     m.def_submodule("tev", "tev image viewer module");
     SGL_PY_IMPORT(utils_tev);
     SGL_PY_IMPORT(utils_texture_loader);
+
+    SGL_PY_IMPORT(app_app);
 
     // Wait for all tasks to finish before shutting down.
     auto atexit = nb::module_::import_("atexit");
