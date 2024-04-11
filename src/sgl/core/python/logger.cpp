@@ -30,7 +30,7 @@ SGL_PY_EXPORT(core_logger)
         .value("error", LogLevel::error)
         .value("fatal", LogLevel::fatal);
 
-    nb::enum_<LogFrequency>(m, "LogFrequency")
+    nb::enum_<LogFrequency>(m, "LogFrequency", D(LogFrequency))
         .value("always", LogFrequency::always, D(LogFrequency, always))
         .value("once", LogFrequency::once, D(LogFrequency, once));
 
@@ -51,7 +51,7 @@ SGL_PY_EXPORT(core_logger)
 #define DEF_LOG_METHOD(name) def(#name, [](Logger& self, const std::string_view msg) { self.name(msg); }, "msg"_a)
     // clang-format on
 
-    nb::class_<Logger>(m, "Logger")
+    nb::class_<Logger>(m, "Logger", D(Logger))
         .def(
             nb::init<LogLevel, std::string_view, bool>(),
             "level"_a = LogLevel::info,
@@ -93,7 +93,8 @@ SGL_PY_EXPORT(core_logger)
          { Logger::get().log(level, msg, frequency); },
          "level"_a,
          "msg"_a,
-         "frequency"_a = LogFrequency::always
+         "frequency"_a = LogFrequency::always,
+         D(Logger, log)
     )
         .DEF_LOG_FUNC(log_debug)
         .DEF_LOG_FUNC(log_debug_once)

@@ -19,17 +19,17 @@ SGL_PY_EXPORT(device_swapchain)
 {
     using namespace sgl;
 
-    nb::class_<SwapchainDesc>(m, "SwapchainDesc")
+    nb::class_<SwapchainDesc>(m, "SwapchainDesc", D(SwapchainDesc))
         .def(nb::init<>())
         .def(
             "__init__",
             [](SwapchainDesc* self, nb::dict dict) { new (self) SwapchainDesc(dict_to_SwapchainDesc(dict)); }
         )
-        .def_rw("format", &SwapchainDesc::format)
-        .def_rw("width", &SwapchainDesc::width)
-        .def_rw("height", &SwapchainDesc::height)
-        .def_rw("image_count", &SwapchainDesc::image_count)
-        .def_rw("enable_vsync", &SwapchainDesc::enable_vsync);
+        .def_rw("format", &SwapchainDesc::format, D(SwapchainDesc, format))
+        .def_rw("width", &SwapchainDesc::width, D(SwapchainDesc, width))
+        .def_rw("height", &SwapchainDesc::height, D(SwapchainDesc, height))
+        .def_rw("image_count", &SwapchainDesc::image_count, D(SwapchainDesc, image_count))
+        .def_rw("enable_vsync", &SwapchainDesc::enable_vsync, D(SwapchainDesc, enable_vsync));
     nb::implicitly_convertible<nb::dict, SwapchainDesc>();
 
     nb::class_<Swapchain, Object>(m, "Swapchain", D(Swapchain))

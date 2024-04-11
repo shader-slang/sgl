@@ -51,24 +51,24 @@ SGL_PY_EXPORT(device_types)
     // Graphics
     // ------------------------------------------------------------------------
 
-    nb::class_<Viewport>(m, "Viewport")
+    nb::class_<Viewport>(m, "Viewport", D(Viewport))
         .def(nb::init<>())
         .def("__init__", [](Viewport* self, nb::dict dict) { new (self) Viewport(dict_to_Viewport(dict)); })
-        .def_rw("x", &Viewport::x)
-        .def_rw("y", &Viewport::y)
-        .def_rw("width", &Viewport::width)
-        .def_rw("height", &Viewport::height)
-        .def_rw("min_depth", &Viewport::min_depth)
-        .def_rw("max_depth", &Viewport::max_depth);
+        .def_rw("x", &Viewport::x, D(Viewport, x))
+        .def_rw("y", &Viewport::y, D(Viewport, y))
+        .def_rw("width", &Viewport::width, D(Viewport, width))
+        .def_rw("height", &Viewport::height, D(Viewport, height))
+        .def_rw("min_depth", &Viewport::min_depth, D(Viewport, min_depth))
+        .def_rw("max_depth", &Viewport::max_depth, D(Viewport, max_depth));
     nb::implicitly_convertible<nb::dict, Viewport>();
 
-    nb::class_<ScissorRect>(m, "ScissorRect")
+    nb::class_<ScissorRect>(m, "ScissorRect", D(ScissorRect))
         .def(nb::init<>())
         .def("__init__", [](ScissorRect* self, nb::dict dict) { new (self) ScissorRect(dict_to_ScissorRect(dict)); })
-        .def_rw("min_x", &ScissorRect::min_x)
-        .def_rw("min_y", &ScissorRect::min_y)
-        .def_rw("max_x", &ScissorRect::max_x)
-        .def_rw("max_y", &ScissorRect::max_y);
+        .def_rw("min_x", &ScissorRect::min_x, D(ScissorRect, min_x))
+        .def_rw("min_y", &ScissorRect::min_y, D(ScissorRect, min_y))
+        .def_rw("max_x", &ScissorRect::max_x, D(ScissorRect, max_x))
+        .def_rw("max_y", &ScissorRect::max_y, D(ScissorRect, max_y));
     nb::implicitly_convertible<nb::dict, ScissorRect>();
 
     nb::sgl_enum<PrimitiveType>(m, "PrimitiveType");
@@ -78,63 +78,83 @@ SGL_PY_EXPORT(device_types)
     nb::sgl_enum<CullMode>(m, "CullMode");
     nb::sgl_enum<FrontFaceMode>(m, "FrontFaceMode");
 
-    nb::class_<DepthStencilOpDesc>(m, "DepthStencilOpDesc")
+    nb::class_<DepthStencilOpDesc>(m, "DepthStencilOpDesc", D(DepthStencilOpDesc))
         .def(nb::init<>())
-        .def_rw("stencil_fail_op", &DepthStencilOpDesc::stencil_fail_op)
-        .def_rw("stencil_depth_fail_op", &DepthStencilOpDesc::stencil_depth_fail_op)
-        .def_rw("stencil_pass_op", &DepthStencilOpDesc::stencil_pass_op)
-        .def_rw("stencil_func", &DepthStencilOpDesc::stencil_func);
+        .def_rw("stencil_fail_op", &DepthStencilOpDesc::stencil_fail_op, D(DepthStencilOpDesc, stencil_fail_op))
+        .def_rw(
+            "stencil_depth_fail_op",
+            &DepthStencilOpDesc::stencil_depth_fail_op,
+            D(DepthStencilOpDesc, stencil_depth_fail_op)
+        )
+        .def_rw("stencil_pass_op", &DepthStencilOpDesc::stencil_pass_op, D(DepthStencilOpDesc, stencil_pass_op))
+        .def_rw("stencil_func", &DepthStencilOpDesc::stencil_func, D(DepthStencilOpDesc, stencil_func));
 
-    nb::class_<DepthStencilDesc>(m, "DepthStencilDesc")
+    nb::class_<DepthStencilDesc>(m, "DepthStencilDesc", D(DepthStencilDesc))
         .def(nb::init<>())
-        .def_rw("depth_test_enable", &DepthStencilDesc::depth_test_enable)
-        .def_rw("depth_write_enable", &DepthStencilDesc::depth_write_enable)
-        .def_rw("depth_func", &DepthStencilDesc::depth_func)
-        .def_rw("stencil_enable", &DepthStencilDesc::stencil_enable)
-        .def_rw("stencil_read_mask", &DepthStencilDesc::stencil_read_mask)
-        .def_rw("stencil_write_mask", &DepthStencilDesc::stencil_write_mask)
-        .def_rw("front_face", &DepthStencilDesc::front_face)
-        .def_rw("back_face", &DepthStencilDesc::back_face)
-        .def_rw("stencil_ref", &DepthStencilDesc::stencil_ref);
+        .def_rw("depth_test_enable", &DepthStencilDesc::depth_test_enable, D(DepthStencilDesc, depth_test_enable))
+        .def_rw("depth_write_enable", &DepthStencilDesc::depth_write_enable, D(DepthStencilDesc, depth_write_enable))
+        .def_rw("depth_func", &DepthStencilDesc::depth_func, D(DepthStencilDesc, depth_func))
+        .def_rw("stencil_enable", &DepthStencilDesc::stencil_enable, D(DepthStencilDesc, stencil_enable))
+        .def_rw("stencil_read_mask", &DepthStencilDesc::stencil_read_mask, D(DepthStencilDesc, stencil_read_mask))
+        .def_rw("stencil_write_mask", &DepthStencilDesc::stencil_write_mask, D(DepthStencilDesc, stencil_write_mask))
+        .def_rw("front_face", &DepthStencilDesc::front_face, D(DepthStencilDesc, front_face))
+        .def_rw("back_face", &DepthStencilDesc::back_face, D(DepthStencilDesc, back_face))
+        .def_rw("stencil_ref", &DepthStencilDesc::stencil_ref, D(DepthStencilDesc, stencil_ref));
 
-    nb::class_<RasterizerDesc>(m, "RasterizerDesc")
+    nb::class_<RasterizerDesc>(m, "RasterizerDesc", D(RasterizerDesc))
         .def(nb::init<>())
-        .def_rw("fill_mode", &RasterizerDesc::fill_mode)
-        .def_rw("cull_mode", &RasterizerDesc::cull_mode)
-        .def_rw("front_face", &RasterizerDesc::front_face)
-        .def_rw("depth_bias", &RasterizerDesc::depth_bias)
-        .def_rw("depth_bias_clamp", &RasterizerDesc::depth_bias_clamp)
-        .def_rw("slope_scaled_depth_bias", &RasterizerDesc::slope_scaled_depth_bias)
-        .def_rw("depth_clip_enable", &RasterizerDesc::depth_clip_enable)
-        .def_rw("scissor_enable", &RasterizerDesc::scissor_enable)
-        .def_rw("multisample_enable", &RasterizerDesc::multisample_enable)
-        .def_rw("antialiased_line_enable", &RasterizerDesc::antialiased_line_enable)
-        .def_rw("enable_conservative_rasterization", &RasterizerDesc::enable_conservative_rasterization)
-        .def_rw("forced_sample_count", &RasterizerDesc::forced_sample_count);
+        .def_rw("fill_mode", &RasterizerDesc::fill_mode, D(RasterizerDesc, fill_mode))
+        .def_rw("cull_mode", &RasterizerDesc::cull_mode, D(RasterizerDesc, cull_mode))
+        .def_rw("front_face", &RasterizerDesc::front_face, D(RasterizerDesc, front_face))
+        .def_rw("depth_bias", &RasterizerDesc::depth_bias, D(RasterizerDesc, depth_bias))
+        .def_rw("depth_bias_clamp", &RasterizerDesc::depth_bias_clamp, D(RasterizerDesc, depth_bias_clamp))
+        .def_rw(
+            "slope_scaled_depth_bias",
+            &RasterizerDesc::slope_scaled_depth_bias,
+            D(RasterizerDesc, slope_scaled_depth_bias)
+        )
+        .def_rw("depth_clip_enable", &RasterizerDesc::depth_clip_enable, D(RasterizerDesc, depth_clip_enable))
+        .def_rw("scissor_enable", &RasterizerDesc::scissor_enable, D(RasterizerDesc, scissor_enable))
+        .def_rw("multisample_enable", &RasterizerDesc::multisample_enable, D(RasterizerDesc, multisample_enable))
+        .def_rw(
+            "antialiased_line_enable",
+            &RasterizerDesc::antialiased_line_enable,
+            D(RasterizerDesc, antialiased_line_enable)
+        )
+        .def_rw(
+            "enable_conservative_rasterization",
+            &RasterizerDesc::enable_conservative_rasterization,
+            D(RasterizerDesc, enable_conservative_rasterization)
+        )
+        .def_rw("forced_sample_count", &RasterizerDesc::forced_sample_count, D(RasterizerDesc, forced_sample_count));
 
     nb::sgl_enum<LogicOp>(m, "LogicOp");
     nb::sgl_enum<BlendOp>(m, "BlendOp");
     nb::sgl_enum<BlendFactor>(m, "BlendFactor");
     nb::sgl_enum_flags<RenderTargetWriteMask>(m, "RenderTargetWriteMask");
 
-    nb::class_<AspectBlendDesc>(m, "AspectBlendDesc")
+    nb::class_<AspectBlendDesc>(m, "AspectBlendDesc", D(AspectBlendDesc))
         .def(nb::init<>())
-        .def_rw("src_factor", &AspectBlendDesc::src_factor)
-        .def_rw("dst_factor", &AspectBlendDesc::dst_factor)
-        .def_rw("op", &AspectBlendDesc::op);
+        .def_rw("src_factor", &AspectBlendDesc::src_factor, D(AspectBlendDesc, src_factor))
+        .def_rw("dst_factor", &AspectBlendDesc::dst_factor, D(AspectBlendDesc, dst_factor))
+        .def_rw("op", &AspectBlendDesc::op, D(AspectBlendDesc, op));
 
-    nb::class_<TargetBlendDesc>(m, "TargetBlendDesc")
+    nb::class_<TargetBlendDesc>(m, "TargetBlendDesc", D(TargetBlendDesc))
         .def(nb::init<>())
-        .def_rw("color", &TargetBlendDesc::color)
-        .def_rw("alpha", &TargetBlendDesc::alpha)
-        .def_rw("enable_blend", &TargetBlendDesc::enable_blend)
-        .def_rw("logic_op", &TargetBlendDesc::logic_op)
-        .def_rw("write_mask", &TargetBlendDesc::write_mask);
+        .def_rw("color", &TargetBlendDesc::color, D(TargetBlendDesc, color))
+        .def_rw("alpha", &TargetBlendDesc::alpha, D(TargetBlendDesc, alpha))
+        .def_rw("enable_blend", &TargetBlendDesc::enable_blend, D(TargetBlendDesc, enable_blend))
+        .def_rw("logic_op", &TargetBlendDesc::logic_op, D(TargetBlendDesc, logic_op))
+        .def_rw("write_mask", &TargetBlendDesc::write_mask, D(TargetBlendDesc, write_mask));
 
-    nb::class_<BlendDesc>(m, "BlendDesc")
+    nb::class_<BlendDesc>(m, "BlendDesc", D(BlendDesc))
         .def(nb::init<>())
         // TODO targets
-        .def_rw("alpha_to_coverage_enable", &BlendDesc::alpha_to_coverage_enable);
+        .def_rw(
+            "alpha_to_coverage_enable",
+            &BlendDesc::alpha_to_coverage_enable,
+            D(BlendDesc, alpha_to_coverage_enable)
+        );
 
     // ------------------------------------------------------------------------
     // Queries
@@ -151,32 +171,32 @@ SGL_PY_EXPORT(device_types)
     nb::sgl_enum_flags<RayTracingGeometryFlags>(m, "RayTracingGeometryFlags");
     nb::sgl_enum_flags<RayTracingInstanceFlags>(m, "RayTracingInstanceFlags");
 
-    nb::class_<RayTracingTrianglesDesc>(m, "RayTracingTrianglesDesc")
+    nb::class_<RayTracingTrianglesDesc>(m, "RayTracingTrianglesDesc", D(RayTracingTrianglesDesc))
         .def(nb::init<>())
-        .def_rw("transform3x4", &RayTracingTrianglesDesc::transform3x4)
-        .def_rw("index_format", &RayTracingTrianglesDesc::index_format)
-        .def_rw("vertex_format", &RayTracingTrianglesDesc::vertex_format)
-        .def_rw("index_count", &RayTracingTrianglesDesc::index_count)
-        .def_rw("vertex_count", &RayTracingTrianglesDesc::vertex_count)
-        .def_rw("index_data", &RayTracingTrianglesDesc::index_data)
-        .def_rw("vertex_data", &RayTracingTrianglesDesc::vertex_data)
-        .def_rw("vertex_stride", &RayTracingTrianglesDesc::vertex_stride);
+        .def_rw("transform3x4", &RayTracingTrianglesDesc::transform3x4, D(RayTracingTrianglesDesc, transform3x4))
+        .def_rw("index_format", &RayTracingTrianglesDesc::index_format, D(RayTracingTrianglesDesc, index_format))
+        .def_rw("vertex_format", &RayTracingTrianglesDesc::vertex_format, D(RayTracingTrianglesDesc, vertex_format))
+        .def_rw("index_count", &RayTracingTrianglesDesc::index_count, D(RayTracingTrianglesDesc, index_count))
+        .def_rw("vertex_count", &RayTracingTrianglesDesc::vertex_count, D(RayTracingTrianglesDesc, vertex_count))
+        .def_rw("index_data", &RayTracingTrianglesDesc::index_data, D(RayTracingTrianglesDesc, index_data))
+        .def_rw("vertex_data", &RayTracingTrianglesDesc::vertex_data, D(RayTracingTrianglesDesc, vertex_data))
+        .def_rw("vertex_stride", &RayTracingTrianglesDesc::vertex_stride, D(RayTracingTrianglesDesc, vertex_stride));
 
-    nb::class_<RayTracingAABB>(m, "RayTracingAABB")
+    nb::class_<RayTracingAABB>(m, "RayTracingAABB", D(RayTracingAABB))
         .def(nb::init<>())
-        .def_rw("min", &RayTracingAABB::min)
-        .def_rw("max", &RayTracingAABB::max);
+        .def_rw("min", &RayTracingAABB::min, D(RayTracingAABB, min))
+        .def_rw("max", &RayTracingAABB::max, D(RayTracingAABB, max));
 
-    nb::class_<RayTracingAABBsDesc>(m, "RayTracingAABBsDesc")
+    nb::class_<RayTracingAABBsDesc>(m, "RayTracingAABBsDesc", D(RayTracingAABBsDesc))
         .def(nb::init<>())
-        .def_rw("count", &RayTracingAABBsDesc::count)
-        .def_rw("data", &RayTracingAABBsDesc::data)
-        .def_rw("stride", &RayTracingAABBsDesc::stride);
+        .def_rw("count", &RayTracingAABBsDesc::count, D(RayTracingAABBsDesc, count))
+        .def_rw("data", &RayTracingAABBsDesc::data, D(RayTracingAABBsDesc, data))
+        .def_rw("stride", &RayTracingAABBsDesc::stride, D(RayTracingAABBsDesc, stride));
 
-    nb::class_<RayTracingGeometryDesc>(m, "RayTracingGeometryDesc")
+    nb::class_<RayTracingGeometryDesc>(m, "RayTracingGeometryDesc", D(RayTracingGeometryDesc))
         .def(nb::init<>())
-        .def_rw("type", &RayTracingGeometryDesc::type)
-        .def_rw("flags", &RayTracingGeometryDesc::flags)
+        .def_rw("type", &RayTracingGeometryDesc::type, D(RayTracingGeometryDesc, type))
+        .def_rw("flags", &RayTracingGeometryDesc::flags, D(RayTracingGeometryDesc, flags))
         .def_prop_rw(
             "triangles",
             [](RayTracingGeometryDesc& self) -> RayTracingTrianglesDesc&
@@ -208,26 +228,38 @@ SGL_PY_EXPORT(device_types)
             }
         );
 
-    nb::class_<RayTracingInstanceDesc>(m, "RayTracingInstanceDesc")
+    nb::class_<RayTracingInstanceDesc>(m, "RayTracingInstanceDesc", D(RayTracingInstanceDesc))
         .def(nb::init<>())
-        .def_rw("transform", &RayTracingInstanceDesc::transform)
+        .def_rw("transform", &RayTracingInstanceDesc::transform, D(RayTracingInstanceDesc, transform))
         .def_prop_rw(
             "instance_id",
             [](RayTracingInstanceDesc& self) { return self.instance_id; },
-            [](RayTracingInstanceDesc& self, uint32_t value) { self.instance_id = value; }
+            [](RayTracingInstanceDesc& self, uint32_t value) { self.instance_id = value; },
+            D(RayTracingInstanceDesc, instance_id)
         )
         .def_prop_rw(
             "instance_mask",
             [](RayTracingInstanceDesc& self) { return self.instance_mask; },
-            [](RayTracingInstanceDesc& self, uint32_t value) { self.instance_mask = value; }
+            [](RayTracingInstanceDesc& self, uint32_t value) { self.instance_mask = value; },
+            D(RayTracingInstanceDesc, instance_mask)
         )
         .def_prop_rw(
             "instance_contribution_to_hit_group_index",
             [](RayTracingInstanceDesc& self) { return self.instance_contribution_to_hit_group_index; },
-            [](RayTracingInstanceDesc& self, uint32_t value) { self.instance_contribution_to_hit_group_index = value; }
+            [](RayTracingInstanceDesc& self, uint32_t value) { self.instance_contribution_to_hit_group_index = value; },
+            D(RayTracingInstanceDesc, instance_contribution_to_hit_group_index)
         )
-        .def_prop_rw("flags", &RayTracingInstanceDesc::flags, &RayTracingInstanceDesc::set_flags)
-        .def_rw("acceleration_structure", &RayTracingInstanceDesc::acceleration_structure)
+        .def_prop_rw(
+            "flags",
+            &RayTracingInstanceDesc::flags,
+            &RayTracingInstanceDesc::set_flags,
+            D(RayTracingInstanceDesc, flags)
+        )
+        .def_rw(
+            "acceleration_structure",
+            &RayTracingInstanceDesc::acceleration_structure,
+            D(RayTracingInstanceDesc, acceleration_structure)
+        )
         .def(
             "to_numpy",
             [](RayTracingInstanceDesc& self)
@@ -245,12 +277,17 @@ SGL_PY_EXPORT(device_types)
 
     nb::class_<PyAccelerationStructureBuildInputs, AccelerationStructureBuildInputs>(
         m,
-        "AccelerationStructureBuildInputs"
+        "AccelerationStructureBuildInputs",
+        D(AccelerationStructureBuildInputs)
     )
         .def(nb::init<>())
-        .def_rw("kind", &PyAccelerationStructureBuildInputs::kind)
-        .def_rw("flags", &PyAccelerationStructureBuildInputs::flags)
-        .def_rw("desc_count", &PyAccelerationStructureBuildInputs::desc_count)
+        .def_rw("kind", &PyAccelerationStructureBuildInputs::kind, D(AccelerationStructureBuildInputs, kind))
+        .def_rw("flags", &PyAccelerationStructureBuildInputs::flags, D(AccelerationStructureBuildInputs, flags))
+        .def_rw(
+            "desc_count",
+            &PyAccelerationStructureBuildInputs::desc_count,
+            D(AccelerationStructureBuildInputs, desc_count)
+        )
         .def_prop_rw(
             "instance_descs",
             [](PyAccelerationStructureBuildInputs& self)
@@ -262,7 +299,8 @@ SGL_PY_EXPORT(device_types)
             {
                 self.kind = AccelerationStructureKind::top_level;
                 self.instance_descs = instance_descs;
-            }
+            },
+            D(AccelerationStructureBuildInputs, instance_descs)
         )
         .def_prop_rw(
             "geometry_descs",
@@ -277,6 +315,7 @@ SGL_PY_EXPORT(device_types)
                 self.geometry_descs_data = geometry_descs;
                 self.geometry_descs = self.geometry_descs_data.data();
                 self.desc_count = narrow_cast<uint32_t>(geometry_descs.size());
-            }
+            },
+            D(AccelerationStructureBuildInputs, geometry_descs)
         );
 }

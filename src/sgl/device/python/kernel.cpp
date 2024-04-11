@@ -70,15 +70,15 @@ SGL_PY_EXPORT(device_kernel)
 {
     using namespace sgl;
 
-    nb::class_<Kernel, DeviceResource>(m, "Kernel") //
-        .def_prop_ro("program", &Kernel::program)
-        .def_prop_ro("reflection", &Kernel::reflection);
+    nb::class_<Kernel, DeviceResource>(m, "Kernel", D(Kernel)) //
+        .def_prop_ro("program", &Kernel::program, D(Kernel, program))
+        .def_prop_ro("reflection", &Kernel::reflection, D(Kernel, reflection));
 
-    nb::class_<ComputeKernelDesc>(m, "ComputeKernelDesc")
+    nb::class_<ComputeKernelDesc>(m, "ComputeKernelDesc", D(ComputeKernelDesc))
         .def(nb::init<>())
         .def_rw("program", &ComputeKernelDesc::program, D(ComputeKernelDesc, program));
 
-    nb::class_<ComputeKernel, Kernel>(m, "ComputeKernel")
+    nb::class_<ComputeKernel, Kernel>(m, "ComputeKernel", D(ComputeKernel))
         .def_prop_ro("pipeline", &ComputeKernel::pipeline, D(ComputeKernel, pipeline))
         .def(
             "dispatch",

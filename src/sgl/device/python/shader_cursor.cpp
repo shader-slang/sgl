@@ -16,11 +16,11 @@ SGL_PY_EXPORT(device_shader_cursor)
 {
     using namespace sgl;
 
-    nb::class_<ShaderOffset>(m, "ShaderOffset")
-        .def_ro("uniform_offset", &ShaderOffset::uniform_offset)
-        .def_ro("binding_range_index", &ShaderOffset::binding_range_index)
-        .def_ro("binding_array_index", &ShaderOffset::binding_array_index)
-        .def("is_valid", &ShaderOffset::is_valid);
+    nb::class_<ShaderOffset>(m, "ShaderOffset", D(ShaderOffset))
+        .def_ro("uniform_offset", &ShaderOffset::uniform_offset, D(ShaderOffset, uniform_offset))
+        .def_ro("binding_range_index", &ShaderOffset::binding_range_index, D(ShaderOffset, binding_range_index))
+        .def_ro("binding_array_index", &ShaderOffset::binding_array_index, D(ShaderOffset, binding_array_index))
+        .def("is_valid", &ShaderOffset::is_valid, D(ShaderOffset, is_valid));
 
     nb::class_<ShaderCursor> shader_cursor(m, "ShaderCursor", D(ShaderCursor));
 

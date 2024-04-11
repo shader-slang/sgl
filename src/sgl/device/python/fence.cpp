@@ -15,11 +15,11 @@ SGL_PY_EXPORT(device_fence)
 {
     using namespace sgl;
 
-    nb::class_<FenceDesc>(m, "FenceDesc")
+    nb::class_<FenceDesc>(m, "FenceDesc", D(FenceDesc))
         .def(nb::init<>())
         .def("__init__", [](FenceDesc* self, nb::dict dict) { new (self) FenceDesc(dict_to_FenceDesc(dict)); })
-        .def_rw("initial_value", &FenceDesc::initial_value)
-        .def_rw("shared", &FenceDesc::shared);
+        .def_rw("initial_value", &FenceDesc::initial_value, D(FenceDesc, initial_value))
+        .def_rw("shared", &FenceDesc::shared, D(FenceDesc, shared));
     nb::implicitly_convertible<nb::dict, FenceDesc>();
 
     nb::class_<Fence, DeviceResource>(m, "Fence", D(Fence))

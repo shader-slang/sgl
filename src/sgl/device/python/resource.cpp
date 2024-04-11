@@ -209,7 +209,7 @@ SGL_PY_EXPORT(device_resource)
 
     nb::sgl_enum<MemoryType>(m, "MemoryType");
 
-    nb::class_<Resource, DeviceResource>(m, "Resource");
+    nb::class_<Resource, DeviceResource>(m, "Resource", D(Resource));
 
     nb::sgl_enum<ResourceViewType>(m, "ResourceViewType");
 
@@ -217,16 +217,16 @@ SGL_PY_EXPORT(device_resource)
         .def_prop_ro("type", &ResourceView::type, D(ResourceView, type))
         .def_prop_ro("resource", &ResourceView::resource, D(ResourceView, resource));
 
-    nb::class_<BufferDesc>(m, "BufferDesc")
+    nb::class_<BufferDesc>(m, "BufferDesc", D(BufferDesc))
         .def(nb::init<>())
         .def("__init__", [](BufferDesc* self, nb::dict dict) { new (self) BufferDesc(dict_to_BufferDesc(dict)); })
-        .def_rw("size", &BufferDesc::size)
-        .def_rw("struct_size", &BufferDesc::struct_size)
-        .def_rw("format", &BufferDesc::format)
-        .def_rw("initial_state", &BufferDesc::initial_state)
-        .def_rw("usage", &BufferDesc::usage)
-        .def_rw("memory_type", &BufferDesc::memory_type)
-        .def_rw("debug_name", &BufferDesc::debug_name);
+        .def_rw("size", &BufferDesc::size, D(BufferDesc, size))
+        .def_rw("struct_size", &BufferDesc::struct_size, D(BufferDesc, struct_size))
+        .def_rw("format", &BufferDesc::format, D(BufferDesc, format))
+        .def_rw("initial_state", &BufferDesc::initial_state, D(BufferDesc, initial_state))
+        .def_rw("usage", &BufferDesc::usage, D(BufferDesc, usage))
+        .def_rw("memory_type", &BufferDesc::memory_type, D(BufferDesc, memory_type))
+        .def_rw("debug_name", &BufferDesc::debug_name, D(BufferDesc, debug_name));
     nb::implicitly_convertible<nb::dict, BufferDesc>();
 
     nb::class_<Buffer, Resource>(m, "Buffer", D(Buffer))
@@ -266,31 +266,35 @@ SGL_PY_EXPORT(device_resource)
         .def("to_numpy", &buffer_to_numpy, D(buffer_to_numpy))
         .def("from_numpy", &buffer_from_numpy, "data"_a, D(buffer_from_numpy));
 
-    nb::class_<TextureDesc>(m, "TextureDesc")
+    nb::class_<TextureDesc>(m, "TextureDesc", D(TextureDesc))
         .def(nb::init<>())
         .def("__init__", [](TextureDesc* self, nb::dict dict) { new (self) TextureDesc(dict_to_TextureDesc(dict)); })
-        .def_rw("type", &TextureDesc::type)
-        .def_rw("format", &TextureDesc::format)
-        .def_rw("width", &TextureDesc::width)
-        .def_rw("height", &TextureDesc::height)
-        .def_rw("depth", &TextureDesc::depth)
-        .def_rw("array_size", &TextureDesc::array_size)
-        .def_rw("mip_count", &TextureDesc::mip_count)
-        .def_rw("sample_count", &TextureDesc::sample_count)
-        .def_rw("quality", &TextureDesc::quality)
-        .def_rw("initial_state", &TextureDesc::initial_state)
-        .def_rw("usage", &TextureDesc::usage)
-        .def_rw("memory_type", &TextureDesc::memory_type)
-        .def_rw("debug_name", &TextureDesc::debug_name);
+        .def_rw("type", &TextureDesc::type, D(TextureDesc, type))
+        .def_rw("format", &TextureDesc::format, D(TextureDesc, format))
+        .def_rw("width", &TextureDesc::width, D(TextureDesc, width))
+        .def_rw("height", &TextureDesc::height, D(TextureDesc, height))
+        .def_rw("depth", &TextureDesc::depth, D(TextureDesc, depth))
+        .def_rw("array_size", &TextureDesc::array_size, D(TextureDesc, array_size))
+        .def_rw("mip_count", &TextureDesc::mip_count, D(TextureDesc, mip_count))
+        .def_rw("sample_count", &TextureDesc::sample_count, D(TextureDesc, sample_count))
+        .def_rw("quality", &TextureDesc::quality, D(TextureDesc, quality))
+        .def_rw("initial_state", &TextureDesc::initial_state, D(TextureDesc, initial_state))
+        .def_rw("usage", &TextureDesc::usage, D(TextureDesc, usage))
+        .def_rw("memory_type", &TextureDesc::memory_type, D(TextureDesc, memory_type))
+        .def_rw("debug_name", &TextureDesc::debug_name, D(TextureDesc, debug_name));
     nb::implicitly_convertible<nb::dict, TextureDesc>();
 
-    nb::class_<SubresourceLayout>(m, "SubresourceLayout")
-        .def_ro("row_pitch", &SubresourceLayout::row_pitch)
-        .def_ro("row_pitch_aligned", &SubresourceLayout::row_pitch_aligned)
-        .def_ro("row_count", &SubresourceLayout::row_count)
-        .def_ro("depth", &SubresourceLayout::depth)
-        .def_prop_ro("total_size", &SubresourceLayout::total_size)
-        .def_prop_ro("total_size_aligned", &SubresourceLayout::total_size_aligned);
+    nb::class_<SubresourceLayout>(m, "SubresourceLayout", D(SubresourceLayout))
+        .def_ro("row_pitch", &SubresourceLayout::row_pitch, D(SubresourceLayout, row_pitch))
+        .def_ro("row_pitch_aligned", &SubresourceLayout::row_pitch_aligned, D(SubresourceLayout, row_pitch_aligned))
+        .def_ro("row_count", &SubresourceLayout::row_count, D(SubresourceLayout, row_count))
+        .def_ro("depth", &SubresourceLayout::depth, D(SubresourceLayout, depth))
+        .def_prop_ro("total_size", &SubresourceLayout::total_size, D(SubresourceLayout, total_size))
+        .def_prop_ro(
+            "total_size_aligned",
+            &SubresourceLayout::total_size_aligned,
+            D(SubresourceLayout, total_size_aligned)
+        );
 
     nb::class_<Texture, Resource>(m, "Texture", D(Texture))
         .def_prop_ro("desc", &Texture::desc, D(Texture, desc))

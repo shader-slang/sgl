@@ -44,7 +44,7 @@ SGL_PY_EXPORT(device_device)
 
     nb::sgl_enum<DeviceType>(m, "DeviceType");
 
-    nb::class_<DeviceDesc>(m, "DeviceDesc")
+    nb::class_<DeviceDesc>(m, "DeviceDesc", D(DeviceDesc))
         .def(nb::init<>())
         .def("__init__", [](DeviceDesc* self, nb::dict dict) { new (self) DeviceDesc(dict_to_DeviceDesc(dict)); })
         .def_rw("type", &DeviceDesc::type, D(DeviceDesc, type))
@@ -56,7 +56,7 @@ SGL_PY_EXPORT(device_device)
         .def_rw("shader_cache_path", &DeviceDesc::shader_cache_path, D(DeviceDesc, shader_cache_path));
     nb::implicitly_convertible<nb::dict, DeviceDesc>();
 
-    nb::class_<DeviceLimits>(m, "DeviceLimits")
+    nb::class_<DeviceLimits>(m, "DeviceLimits", D(DeviceLimits))
         .def_ro(
             "max_texture_dimension_1d",
             &DeviceLimits::max_texture_dimension_1d,
@@ -130,20 +130,20 @@ SGL_PY_EXPORT(device_device)
             D(DeviceLimits, max_shader_visible_samplers)
         );
 
-    nb::class_<DeviceInfo>(m, "DeviceInfo")
+    nb::class_<DeviceInfo>(m, "DeviceInfo", D(DeviceInfo))
         .def_ro("type", &DeviceInfo::type, D(DeviceInfo, type))
         .def_ro("api_name", &DeviceInfo::api_name, D(DeviceInfo, api_name))
         .def_ro("adapter_name", &DeviceInfo::adapter_name, D(DeviceInfo, adapter_name))
         .def_ro("timestamp_frequency", &DeviceInfo::timestamp_frequency, D(DeviceInfo, timestamp_frequency))
         .def_ro("limits", &DeviceInfo::limits, D(DeviceInfo, limits));
 
-    nb::class_<ShaderCacheStats>(m, "ShaderCacheStats")
+    nb::class_<ShaderCacheStats>(m, "ShaderCacheStats", D(ShaderCacheStats))
         .def_ro("entry_count", &ShaderCacheStats::entry_count, D(ShaderCacheStats, entry_count))
         .def_ro("hit_count", &ShaderCacheStats::hit_count, D(ShaderCacheStats, hit_count))
         .def_ro("miss_count", &ShaderCacheStats::miss_count, D(ShaderCacheStats, miss_count));
 
     nb::class_<Device, Object> device(m, "Device", D(Device));
-    device.def(nb::init<DeviceDesc>(), "desc"_a, D(Device, desc));
+    device.def(nb::init<DeviceDesc>(), "desc"_a, D(Device, Device));
     device.def(
         "__init__",
         [](Device* self,
@@ -171,7 +171,8 @@ SGL_PY_EXPORT(device_device)
         "enable_print"_a = false,
         "adapter_luid"_a.none() = nb::none(),
         "compiler_options"_a.none() = nb::none(),
-        "shader_cache_path"_a.none() = nb::none()
+        "shader_cache_path"_a.none() = nb::none(),
+        D(Device, Device)
     );
     device.def_prop_ro("desc", &Device::desc, D(Device, desc));
     device.def_prop_ro("info", &Device::info, D(Device, info));
@@ -773,7 +774,6 @@ SGL_PY_EXPORT(device_device)
         D(Device, create_memory_heap)
     );
 
-    // device.def_prop_ro("graphics_queue", &Device::graphics_queue, D(Device, graphics_queue));
     device.def_prop_ro("upload_heap", &Device::upload_heap, D(Device, upload_heap));
     device.def_prop_ro("read_back_heap", &Device::read_back_heap, D(Device, read_back_heap));
     device.def("flush_print", &Device::flush_print, D(Device, flush_print));

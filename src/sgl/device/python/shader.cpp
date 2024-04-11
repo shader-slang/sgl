@@ -91,54 +91,101 @@ SGL_PY_EXPORT(device_shader)
     nb::sgl_enum<sgl::SlangDebugInfoLevel>(m, "SlangDebugInfoLevel");
     nb::sgl_enum<sgl::SlangOptimizationLevel>(m, "SlangOptimizationLevel");
 
-    nb::class_<SlangCompilerOptions>(m, "SlangCompilerOptions")
+    nb::class_<SlangCompilerOptions>(m, "SlangCompilerOptions", D(SlangCompilerOptions))
         .def(nb::init<>())
         .def(
             "__init__",
             [](SlangCompilerOptions* self, nb::dict dict)
             { new (self) SlangCompilerOptions(dict_to_SlangCompilerOptions(dict)); }
         )
-        .def_rw("include_paths", &SlangCompilerOptions::include_paths)
-        .def_rw("defines", &SlangCompilerOptions::defines)
-        .def_rw("shader_model", &SlangCompilerOptions::shader_model)
-        .def_rw("matrix_layout", &SlangCompilerOptions::matrix_layout)
-        .def_rw("enable_warnings", &SlangCompilerOptions::enable_warnings)
-        .def_rw("disable_warnings", &SlangCompilerOptions::disable_warnings)
-        .def_rw("warnings_as_errors", &SlangCompilerOptions::warnings_as_errors)
-        .def_rw("report_downstream_time", &SlangCompilerOptions::report_downstream_time)
-        .def_rw("report_perf_benchmark", &SlangCompilerOptions::report_perf_benchmark)
-        .def_rw("skip_spirv_validation", &SlangCompilerOptions::skip_spirv_validation)
-        .def_rw("floating_point_mode", &SlangCompilerOptions::floating_point_mode)
-        .def_rw("debug_info", &SlangCompilerOptions::debug_info)
-        .def_rw("optimization", &SlangCompilerOptions::optimization)
-        .def_rw("downstream_args", &SlangCompilerOptions::downstream_args)
-        .def_rw("dump_intermediates", &SlangCompilerOptions::dump_intermediates)
-        .def_rw("dump_intermediates_prefix", &SlangCompilerOptions::dump_intermediates_prefix);
+        .def_rw("include_paths", &SlangCompilerOptions::include_paths, D(SlangCompilerOptions, include_paths))
+        .def_rw("defines", &SlangCompilerOptions::defines, D(SlangCompilerOptions, defines))
+        .def_rw("shader_model", &SlangCompilerOptions::shader_model, D(SlangCompilerOptions, shader_model))
+        .def_rw("matrix_layout", &SlangCompilerOptions::matrix_layout, D(SlangCompilerOptions, matrix_layout))
+        .def_rw("enable_warnings", &SlangCompilerOptions::enable_warnings, D(SlangCompilerOptions, enable_warnings))
+        .def_rw("disable_warnings", &SlangCompilerOptions::disable_warnings, D(SlangCompilerOptions, disable_warnings))
+        .def_rw(
+            "warnings_as_errors",
+            &SlangCompilerOptions::warnings_as_errors,
+            D(SlangCompilerOptions, warnings_as_errors)
+        )
+        .def_rw(
+            "report_downstream_time",
+            &SlangCompilerOptions::report_downstream_time,
+            D(SlangCompilerOptions, report_downstream_time)
+        )
+        .def_rw(
+            "report_perf_benchmark",
+            &SlangCompilerOptions::report_perf_benchmark,
+            D(SlangCompilerOptions, report_perf_benchmark)
+        )
+        .def_rw(
+            "skip_spirv_validation",
+            &SlangCompilerOptions::skip_spirv_validation,
+            D(SlangCompilerOptions, skip_spirv_validation)
+        )
+        .def_rw(
+            "floating_point_mode",
+            &SlangCompilerOptions::floating_point_mode,
+            D(SlangCompilerOptions, floating_point_mode)
+        )
+        .def_rw("debug_info", &SlangCompilerOptions::debug_info, D(SlangCompilerOptions, debug_info))
+        .def_rw("optimization", &SlangCompilerOptions::optimization, D(SlangCompilerOptions, optimization))
+        .def_rw("downstream_args", &SlangCompilerOptions::downstream_args, D(SlangCompilerOptions, downstream_args))
+        .def_rw(
+            "dump_intermediates",
+            &SlangCompilerOptions::dump_intermediates,
+            D(SlangCompilerOptions, dump_intermediates)
+        )
+        .def_rw(
+            "dump_intermediates_prefix",
+            &SlangCompilerOptions::dump_intermediates_prefix,
+            D(SlangCompilerOptions, dump_intermediates_prefix)
+        );
     nb::implicitly_convertible<nb::dict, SlangCompilerOptions>();
 
-    nb::class_<SlangLinkOptions>(m, "SlangLinkOptions")
+    nb::class_<SlangLinkOptions>(m, "SlangLinkOptions", D(SlangLinkOptions))
         .def(nb::init<>())
         .def(
             "__init__",
             [](SlangLinkOptions* self, nb::dict dict) { new (self) SlangLinkOptions(dict_to_SlangLinkOptions(dict)); }
         )
-        .def_rw("floating_point_mode", &SlangLinkOptions::floating_point_mode, nb::none())
-        .def_rw("debug_info", &SlangLinkOptions::debug_info, nb::none())
-        .def_rw("optimization", &SlangLinkOptions::optimization, nb::none())
-        .def_rw("downstream_args", &SlangLinkOptions::downstream_args)
-        .def_rw("dump_intermediates", &SlangLinkOptions::dump_intermediates, nb::none())
-        .def_rw("dump_intermediates_prefix", &SlangLinkOptions::dump_intermediates_prefix, nb::none());
+        .def_rw(
+            "floating_point_mode",
+            &SlangLinkOptions::floating_point_mode,
+            nb::none(),
+            D(SlangLinkOptions, floating_point_mode)
+        )
+        .def_rw("debug_info", &SlangLinkOptions::debug_info, nb::none(), D(SlangLinkOptions, debug_info))
+        .def_rw("optimization", &SlangLinkOptions::optimization, nb::none(), D(SlangLinkOptions, optimization))
+        .def_rw("downstream_args", &SlangLinkOptions::downstream_args, nb::none(), D(SlangLinkOptions, downstream_args))
+        .def_rw(
+            "dump_intermediates",
+            &SlangLinkOptions::dump_intermediates,
+            nb::none(),
+            D(SlangLinkOptions, dump_intermediates)
+        )
+        .def_rw(
+            "dump_intermediates_prefix",
+            &SlangLinkOptions::dump_intermediates_prefix,
+            nb::none(),
+            D(SlangLinkOptions, dump_intermediates_prefix)
+        );
     nb::implicitly_convertible<nb::dict, SlangLinkOptions>();
 
-    nb::class_<SlangSessionDesc>(m, "SlangSessionDesc")
+    nb::class_<SlangSessionDesc>(m, "SlangSessionDesc", D(SlangSessionDesc))
         .def(nb::init<>())
         .def(
             "__init__",
             [](SlangSessionDesc* self, nb::dict dict) { new (self) SlangSessionDesc(dict_to_SlangSessionDesc(dict)); }
         )
-        .def_rw("compiler_options", &SlangSessionDesc::compiler_options)
-        .def_rw("add_default_include_paths", &SlangSessionDesc::add_default_include_paths)
-        .def_rw("cache_path", &SlangSessionDesc::cache_path, nb::none());
+        .def_rw("compiler_options", &SlangSessionDesc::compiler_options, D(SlangSessionDesc, compiler_options))
+        .def_rw(
+            "add_default_include_paths",
+            &SlangSessionDesc::add_default_include_paths,
+            D(SlangSessionDesc, add_default_include_paths)
+        )
+        .def_rw("cache_path", &SlangSessionDesc::cache_path, nb::none(), D(SlangSessionDesc, cache_path));
     nb::implicitly_convertible<nb::dict, SlangSessionDesc>();
 
     // Disambiguate from the types in slang.h
