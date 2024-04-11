@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 #include "dds_file.h"
 
 #include "sgl/core/file_stream.h"
