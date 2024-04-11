@@ -11,6 +11,8 @@ import helpers
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_torch_interop(device_type):
+    if device_type == sgl.DeviceType.vulkan:
+        pytest.skip("Vulkan does not support CUDA interop")
     try:
         import torch
     except ImportError:
