@@ -649,13 +649,13 @@ SGL_PY_EXPORT(device_device)
         "create_mutable_shader_object",
         nb::overload_cast<const TypeLayoutReflection*>(&Device::create_mutable_shader_object),
         "type_layout"_a,
-        D(Device, create_mutable_shader_object_2)
+        D(Device, create_mutable_shader_object, 2)
     );
     device.def(
         "create_mutable_shader_object",
         nb::overload_cast<ReflectionCursor>(&Device::create_mutable_shader_object),
         "cursor"_a,
-        D(Device, create_mutable_shader_object_3)
+        D(Device, create_mutable_shader_object, 3)
     );
 
     device

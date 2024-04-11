@@ -100,7 +100,7 @@ SGL_PY_EXPORT(core_bitmap)
             "__init__",
             [](Bitmap* self, const std::filesystem::path& path) { new (self) Bitmap(path); },
             "path"_a,
-            D(Bitmap, Bitmap_3)
+            D(Bitmap, Bitmap, 3)
         )
         .def_prop_ro("pixel_format", &Bitmap::pixel_format, D(Bitmap, pixel_format))
         .def_prop_ro("component_type", &Bitmap::component_type, D(Bitmap, component_type))

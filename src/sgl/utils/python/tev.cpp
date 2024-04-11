@@ -30,7 +30,7 @@ SGL_PY_EXPORT(utils_tev)
         "host"_a = "127.0.0.1",
         "port"_a = 14158,
         "max_retries"_a = 3,
-        D(tev, show_2)
+        D(tev, show, 2)
     );
     tev.def(
         "show_async",
@@ -50,6 +50,6 @@ SGL_PY_EXPORT(utils_tev)
         "host"_a = "127.0.0.1",
         "port"_a = 14158,
         "max_retries"_a = 3,
-        D(tev, show_async_2)
+        D(tev, show_async, 2)
     );
 }

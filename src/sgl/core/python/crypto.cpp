@@ -14,9 +14,9 @@ SGL_PY_EXPORT(core_crypto)
             "__init__",
             [](SHA1* self, nb::bytes data) { new (self) SHA1(data.c_str(), data.size()); },
             "data"_a,
-            D(SHA1, SHA1_2)
+            D(SHA1, SHA1, 2)
         )
-        .def(nb::init<std::string_view>(), "str"_a, D(SHA1, SHA1_3))
+        .def(nb::init<std::string_view>(), "str"_a, D(SHA1, SHA1, 3))
         .def(
             "update",
             [](SHA1& self, nb::bytes data)
@@ -25,7 +25,7 @@ SGL_PY_EXPORT(core_crypto)
                 return self;
             },
             "data"_a,
-            D(SHA1, update_2)
+            D(SHA1, update, 2)
         )
         .def(
             "update",
@@ -35,7 +35,7 @@ SGL_PY_EXPORT(core_crypto)
                 return self;
             },
             "str"_a,
-            D(SHA1, update_3)
+            D(SHA1, update, 3)
         )
         .def(
             "digest",

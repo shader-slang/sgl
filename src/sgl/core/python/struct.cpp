@@ -54,7 +54,7 @@ SGL_PY_EXPORT(core_struct)
             "default_value"_a = 0.0,
             "blend"_a = Struct::Field::BlendList(),
             nb::rv_policy::reference,
-            D(Struct, append_2)
+            D(Struct, append, 2)
         )
         .def("has_field", &Struct::has_field, "name"_a, D(Struct, has_field))
         .def(
