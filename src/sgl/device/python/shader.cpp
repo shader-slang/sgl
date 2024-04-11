@@ -75,13 +75,13 @@ SGL_PY_EXPORT(device_shader)
             "add",
             nb::overload_cast<const TypeConformanceList&>(&TypeConformanceList::add),
             "other"_a,
-            D(TypeConformanceList, add_2)
+            D(TypeConformanceList, add, 2)
         )
         .def(
             "remove",
             nb::overload_cast<const TypeConformanceList&>(&TypeConformanceList::remove),
             "other"_a,
-            D(TypeConformanceList, remove_2)
+            D(TypeConformanceList, remove, 2)
         );
 
     nb::exception<SlangCompileError>(m, "SlangCompileError");
