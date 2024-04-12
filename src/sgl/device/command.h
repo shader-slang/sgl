@@ -451,11 +451,7 @@ public:
      * \param src SRV of the source texture.
      * \param filter Filtering mode to use.
      */
-    void blit(
-        ResourceView* dst,
-        ResourceView* src,
-        TextureFilteringMode filter = TextureFilteringMode::linear
-    );
+    void blit(ResourceView* dst, ResourceView* src, TextureFilteringMode filter = TextureFilteringMode::linear);
 
     /**
      * \brief Blit a texture to another texture.
@@ -466,11 +462,7 @@ public:
      * \param src Source texture.
      * \param filter Filtering mode to use.
      */
-    void blit(
-        Texture* dst,
-        Texture* src,
-        TextureFilteringMode filter = TextureFilteringMode::linear
-    );
+    void blit(Texture* dst, Texture* src, TextureFilteringMode filter = TextureFilteringMode::linear);
 
     /**
      * \brief Start encoding compute commands.

@@ -34,12 +34,7 @@ Blitter::Blitter(Device* device)
 
 Blitter::~Blitter() { }
 
-void Blitter::blit(
-    CommandBuffer* command_buffer,
-    ref<ResourceView> dst,
-    ref<ResourceView> src,
-    TextureFilteringMode filter
-)
+void Blitter::blit(CommandBuffer* command_buffer, ResourceView* dst, ResourceView* src, TextureFilteringMode filter)
 {
     SGL_UNUSED(filter);
 
@@ -83,7 +78,7 @@ void Blitter::blit(
     TextureLayout src_layout
         = src_texture->array_size() > 1 ? TextureLayout::texture_2d_array : TextureLayout::texture_2d;
 
-    ref<Framebuffer> framebuffer = m_device->create_framebuffer({.render_targets{dst}});
+    ref<Framebuffer> framebuffer = m_device->create_framebuffer({.render_targets{ref(dst)}});
 
     ref<GraphicsPipeline> pipeline = get_pipeline(
         {
@@ -102,7 +97,7 @@ void Blitter::blit(
             .width = float(dst_size.x),
             .height = float(dst_size.y),
         });
-        cursor["src"] = src;
+        cursor["src"] = ref(src);
         cursor["sampler"] = filter == TextureFilteringMode::linear ? m_linear_sampler : m_point_sampler;
         encoder.draw(3);
     }
