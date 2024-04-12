@@ -443,6 +443,36 @@ public:
     void resolve_subresource(Texture* dst, uint32_t dst_subresource, const Texture* src, uint32_t src_subresource);
 
     /**
+     * \brief Blit a SRV to an RTV.
+     *
+     * Blits the full extent of the source texture to the destination texture.
+     *
+     * \param dst RTV of the destination texture.
+     * \param src SRV of the source texture.
+     * \param filter Filtering mode to use.
+     */
+    void blit(
+        ResourceView* dst,
+        ResourceView* src,
+        TextureFilteringMode filter = TextureFilteringMode::linear
+    );
+
+    /**
+     * \brief Blit a texture to another texture.
+     *
+     * Blits the full extent of the source texture to the destination texture.
+     *
+     * \param dst Destination texture.
+     * \param src Source texture.
+     * \param filter Filtering mode to use.
+     */
+    void blit(
+        Texture* dst,
+        Texture* src,
+        TextureFilteringMode filter = TextureFilteringMode::linear
+    );
+
+    /**
      * \brief Start encoding compute commands.
      *
      * The returned \c ComputeCommandEncoder is used to bind compute pipelines and issue dispatches.

@@ -125,6 +125,22 @@ SGL_PY_EXPORT(device_command)
             D(CommandBuffer, copy_texture_region)
         )
         .def(
+            "blit",
+            nb::overload_cast<ResourceView*, ResourceView*, TextureFilteringMode>(&CommandBuffer::blit),
+            "dst"_a,
+            "src"_a,
+            "filter"_a = TextureFilteringMode::linear,
+            D_NA(CommandBuffer, blit)
+        )
+        .def(
+            "blit",
+            nb::overload_cast<Texture*, Texture*, TextureFilteringMode>(&CommandBuffer::blit),
+            "dst"_a,
+            "src"_a,
+            "filter"_a = TextureFilteringMode::linear,
+            D_NA(CommandBuffer, blit, 2)
+        )
+        .def(
             "encode_compute_commands",
             &CommandBuffer::encode_compute_commands,
             nb::rv_policy::reference_internal,

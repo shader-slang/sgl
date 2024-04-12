@@ -16,6 +16,7 @@
 #include "sgl/device/cuda_interop.h"
 #include "sgl/device/shader_cursor.h"
 #include "sgl/device/print.h"
+#include "sgl/device/blit.h"
 
 #include "sgl/core/short_vector.h"
 #include "sgl/core/maths.h"
@@ -1118,6 +1119,22 @@ void CommandBuffer::resolve_subresource(
         gfx::ResourceState::ResolveDestination,
         dst_sr
     );
+}
+
+void CommandBuffer::blit(ResourceView* dst, ResourceView* src, TextureFilteringMode filter)
+{
+    SGL_CHECK(m_open, "Command buffer is closed");
+    SGL_CHECK_NOT_NULL(dst);
+    SGL_CHECK_NOT_NULL(src);
+    m_device->_blitter()->blit(this, ref(dst), ref(src), filter);
+}
+
+void CommandBuffer::blit(Texture* dst, Texture* src, TextureFilteringMode filter)
+{
+    SGL_CHECK(m_open, "Command buffer is closed");
+    SGL_CHECK_NOT_NULL(dst);
+    SGL_CHECK_NOT_NULL(src);
+    m_device->_blitter()->blit(this, dst->get_rtv(), src->get_srv(), filter);
 }
 
 ComputeCommandEncoder CommandBuffer::encode_compute_commands()
