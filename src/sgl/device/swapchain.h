@@ -17,7 +17,7 @@ class Window;
 
 struct SwapchainDesc {
     /// Format of the swapchain images.
-    Format format{Format::rgba8_unorm_srgb};
+    Format format{Format::bgra8_unorm_srgb};
     /// Width of the swapchain images in pixels.
     uint32_t width{0};
     /// Height of the swapchain images in pixels.
