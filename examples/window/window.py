@@ -17,7 +17,6 @@ class App:
             compiler_options={"include_paths": [EXAMPLE_DIR]},
         )
         self.swapchain = self.device.create_swapchain(
-            format=sgl.Format.rgba8_unorm_srgb,
             image_count=3,
             width=self.window.width,
             height=self.window.height,
@@ -146,7 +145,7 @@ class App:
                 or self.output_texture.height != image.height
             ):
                 self.output_texture = self.device.create_texture(
-                    format=sgl.Format.rgba8_unorm,
+                    format=sgl.Format.rgba16_float,
                     width=image.width,
                     height=image.height,
                     mip_count=1,
@@ -170,7 +169,7 @@ class App:
                 },
                 command_buffer=command_buffer,
             )
-            command_buffer.copy_resource(dst=image, src=self.output_texture)
+            command_buffer.blit(image, self.output_texture)
 
             self.ui.new_frame(image.width, image.height)
             self.ui.render(self.framebuffers[image_index], command_buffer)

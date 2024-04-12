@@ -763,7 +763,6 @@ struct App {
         });
         swapchain = device->create_swapchain(
             {
-                .format = Format::rgba8_unorm,
                 .width = window->width(),
                 .height = window->height(),
                 .enable_vsync = false,
@@ -833,7 +832,7 @@ struct App {
             if (!output_texture || output_texture->width() != image->width()
                 || output_texture->height() != image->height()) {
                 output_texture = device->create_texture({
-                    .format = Format::rgba8_unorm,
+                    .format = Format::rgba32_float,
                     .width = image->width(),
                     .height = image->height(),
                     .mip_count = 1,
@@ -868,7 +867,7 @@ struct App {
             accumulator->execute(command_buffer, render_texture, accum_texture, frame == 0);
             tone_mapper->execute(command_buffer, accum_texture, output_texture);
 
-            command_buffer->copy_resource(image, output_texture);
+            command_buffer->blit(image, output_texture);
             command_buffer->set_texture_state(image, ResourceState::present);
             command_buffer->submit();
             image.reset();
