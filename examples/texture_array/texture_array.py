@@ -62,7 +62,7 @@ class DemoWindow(sgl.AppWindow):
             or self.render_texture.height != image.height
         ):
             self.render_texture = self.device.create_texture(
-                format=sgl.Format.rgba8_unorm,
+                format=sgl.Format.rgba16_float,
                 width=image.width,
                 height=image.height,
                 mip_count=1,
@@ -85,7 +85,7 @@ class DemoWindow(sgl.AppWindow):
             command_buffer=command_buffer,
         )
 
-        command_buffer.copy_resource(image, self.render_texture)
+        command_buffer.blit(image, self.render_texture)
 
 
 if __name__ == "__main__":
