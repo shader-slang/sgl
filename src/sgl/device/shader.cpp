@@ -793,7 +793,7 @@ ShaderProgram::ShaderProgram(
     Slang::ComPtr<slang::IComponentType> linked_program,
     Slang::ComPtr<gfx::IShaderProgram> gfx_shader_program
 )
-    : m_device(std::move(device))
+    : DeviceResource(std::move(device))
     , m_session(std::move(session))
     , m_modules(std::move(modules))
     , m_entry_points(std::move(entry_points))

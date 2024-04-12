@@ -5,6 +5,7 @@
 #include "sgl/device/fwd.h"
 #include "sgl/device/types.h"
 #include "sgl/device/reflection.h"
+#include "sgl/device/device_resource.h"
 
 #include "sgl/core/object.h"
 #include "sgl/core/enum.h"
@@ -375,7 +376,7 @@ private:
     ShaderStage m_stage;
 };
 
-class SGL_API ShaderProgram : public Object {
+class SGL_API ShaderProgram : public DeviceResource {
     SGL_OBJECT(ShaderProgram)
 public:
     ShaderProgram(
@@ -388,8 +389,6 @@ public:
     );
     ~ShaderProgram() = default;
 
-    const ref<Device>& device() const { return m_device; }
-
     const ProgramLayout* layout() const { return ProgramLayout::from_slang(m_linked_program->getLayout()); }
 
     ReflectionCursor reflection() const { return ReflectionCursor(this); }
@@ -399,7 +398,6 @@ public:
     virtual std::string to_string() const override;
 
 private:
-    ref<Device> m_device;
     ref<SlangSession> m_session;
     std::vector<ref<SlangModule>> m_modules;
     std::vector<ref<SlangEntryPoint>> m_entry_points;
