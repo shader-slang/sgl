@@ -1,8 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
 
-
-// SPDX-License-Identifier: Apache-2.0
-
 RWTexture2D g_output;
 Texture2DArray<float4> g_texture;
 SamplerState g_sampler;
@@ -22,7 +19,6 @@ void main(uint3 tid: SV_DispatchThreadID)
     float2 uv = float2(pixel) / dims.xy;
 
     float4 color = g_texture.Sample(g_sampler, float3(uv, g_layer), uint2(0), g_mip_level);
-    color = pow(color, 1.0 / 2.2);
 
     g_output[pixel] = color;
 }

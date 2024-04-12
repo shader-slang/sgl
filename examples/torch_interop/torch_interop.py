@@ -25,7 +25,7 @@ c = torch.zeros(1024, device=td, dtype=torch.float32)
 
 # Dispatch compute kernel
 # (CUDA tensors are internally copied to/from sgl buffers)
-kernel.dispatch([1024, 1, 1], vars={"a": a, "b": b, "c": c})
+kernel.dispatch([1024, 1, 1], a=a, b=b, c=c)
 
 # Print the result
 print(c)
