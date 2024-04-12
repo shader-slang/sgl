@@ -16,56 +16,59 @@
 
 namespace sgl {
 
-Blitter::Blitter(ref<Device> device)
-    : m_device(std::move(device))
+Blitter::Blitter(Device* device)
+    : m_device(device)
 {
     m_linear_sampler = m_device->create_sampler({
         .min_filter = TextureFilteringMode::linear,
         .mag_filter = TextureFilteringMode::linear,
     });
+    m_linear_sampler->break_strong_reference_to_device();
+
     m_point_sampler = m_device->create_sampler({
         .min_filter = TextureFilteringMode::point,
         .mag_filter = TextureFilteringMode::point,
     });
+    m_point_sampler->break_strong_reference_to_device();
 }
 
 Blitter::~Blitter() { }
 
 void Blitter::blit(
     CommandBuffer* command_buffer,
-    ref<ResourceView> src,
     ref<ResourceView> dst,
+    ref<ResourceView> src,
     TextureFilteringMode filter
 )
 {
     SGL_UNUSED(filter);
 
     SGL_CHECK_NOT_NULL(command_buffer);
-    SGL_CHECK_NOT_NULL(src);
     SGL_CHECK_NOT_NULL(dst);
-    SGL_CHECK(
-        src->resource()->type() == ResourceType::texture_2d && src->type() == ResourceViewType::shader_resource,
-        "src must be a 2D texture SRV"
-    );
+    SGL_CHECK_NOT_NULL(src);
     SGL_CHECK(
         dst->resource()->type() == ResourceType::texture_2d && dst->type() == ResourceViewType::render_target,
         "dst must be a 2D texture RTV"
     );
+    SGL_CHECK(
+        src->resource()->type() == ResourceType::texture_2d && src->type() == ResourceViewType::shader_resource,
+        "src must be a 2D texture SRV"
+    );
 
-    Texture* src_texture = src->resource()->as_texture();
     Texture* dst_texture = dst->resource()->as_texture();
+    Texture* src_texture = src->resource()->as_texture();
 
     SGL_CHECK(
-        src_texture->desc().sample_count == 1 && dst_texture->desc().sample_count == 1,
+        dst_texture->desc().sample_count == 1 && src_texture->desc().sample_count == 1,
         "src and dst must be not be multi-sampled textures"
     );
 
-    uint32_t src_mip_level = src->desc().subresource_range.mip_level;
     uint32_t dst_mip_level = dst->desc().subresource_range.mip_level;
     uint32_t dst_base_array_layer = dst->desc().subresource_range.base_array_layer;
+    uint32_t src_mip_level = src->desc().subresource_range.mip_level;
 
-    uint2 src_size = src_texture->get_mip_dimensions(src_mip_level).xy();
     uint2 dst_size = src_texture->get_mip_dimensions(dst_mip_level).xy();
+    uint2 src_size = src_texture->get_mip_dimensions(src_mip_level).xy();
 
     auto determine_texture_type = [](Format resource_format)
     {
@@ -75,8 +78,8 @@ void Blitter::blit(
         return TextureType::int_;
     };
 
-    TextureType src_type = determine_texture_type(src_texture->format());
     TextureType dst_type = determine_texture_type(dst_texture->format());
+    TextureType src_type = determine_texture_type(src_texture->format());
     TextureLayout src_layout
         = src_texture->array_size() > 1 ? TextureLayout::texture_2d_array : TextureLayout::texture_2d;
 
@@ -124,7 +127,7 @@ void Blitter::generate_mips(CommandBuffer* command_buffer, Texture* texture, uin
             .base_array_layer = array_layer,
             .layer_count = 1,
         });
-        blit(command_buffer, src, dst);
+        blit(command_buffer, dst, src);
     }
 }
 
@@ -165,11 +168,13 @@ ref<GraphicsPipeline> Blitter::get_pipeline(ProgramKey key, const Framebuffer* f
         return it->second;
 
     ref<ShaderProgram> program = get_program(key);
+    program->break_strong_reference_to_device();
 
     ref<GraphicsPipeline> pipeline = m_device->create_graphics_pipeline({
         .program = program,
         .framebuffer_layout = framebuffer->layout(),
     });
+    pipeline->break_strong_reference_to_device();
 
     m_pipeline_cache[{key, framebuffer->layout()->desc()}] = pipeline;
     return pipeline;

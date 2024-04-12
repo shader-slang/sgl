@@ -22,7 +22,7 @@ namespace sgl {
 class Blitter : public Object {
     SGL_OBJECT(Blitter)
 public:
-    Blitter(ref<Device> device);
+    Blitter(Device* device);
     ~Blitter();
 
     /**
@@ -31,14 +31,14 @@ public:
      * Blits the full extent of the source texture to the destination texture.
      *
      * \param command_buffer Command buffer.
-     * \param src SRV of the source texture.
      * \param dst RTV of the destination texture.
+     * \param src SRV of the source texture.
      * \param filter Filtering mode to use.
      */
     void blit(
         CommandBuffer* command_buffer,
-        ref<ResourceView> src,
         ref<ResourceView> dst,
+        ref<ResourceView> src,
         TextureFilteringMode filter = TextureFilteringMode::linear
     );
 
@@ -77,7 +77,7 @@ private:
     ref<ShaderProgram> get_program(ProgramKey key);
     ref<GraphicsPipeline> get_pipeline(ProgramKey key, const Framebuffer* framebuffer);
 
-    ref<Device> m_device;
+    Device* m_device;
     ref<Sampler> m_linear_sampler;
     ref<Sampler> m_point_sampler;
 
