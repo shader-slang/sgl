@@ -569,6 +569,8 @@ public:
 
     std::string to_string() const override;
 
+    Blitter* _blitter();
+
 private:
     DeviceDesc m_desc;
     DeviceInfo m_info;
@@ -618,6 +620,8 @@ private:
     class PipelineCreationAPIDispatcher;
     std::unique_ptr<PipelineCreationAPIDispatcher> m_api_dispatcher;
 #endif
+
+    ref<Blitter> m_blitter;
 
     bool m_supports_cuda_interop{false};
     ref<cuda::Device> m_cuda_device;

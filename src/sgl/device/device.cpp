@@ -22,6 +22,7 @@
 #include "sgl/device/cuda_utils.h"
 #include "sgl/device/cuda_interop.h"
 #include "sgl/device/print.h"
+#include "sgl/device/blit.h"
 
 #include "sgl/core/config.h"
 #include "sgl/core/error.h"
@@ -467,6 +468,8 @@ Device::Device(const DeviceDesc& desc)
 Device::~Device()
 {
     wait();
+
+    m_blitter.reset();
 
     m_debug_printer.reset();
 
@@ -1109,6 +1112,13 @@ std::string Device::to_string() const
         m_shader_cache_enabled,
         m_shader_cache_path
     );
+}
+
+Blitter* Device::_blitter()
+{
+    if (!m_blitter)
+        m_blitter = ref(new Blitter(this));
+    return m_blitter;
 }
 
 } // namespace sgl
