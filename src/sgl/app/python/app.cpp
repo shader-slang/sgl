@@ -142,7 +142,7 @@ SGL_PY_EXPORT(app_app)
             "title"_a = "sgl",
             "mode"_a = WindowMode::normal,
             "resizable"_a = true,
-            "swapchain_format"_a = Format::rgba8_unorm_srgb,
+            "swapchain_format"_a = Format::bgra8_unorm_srgb,
             "enable_vsync"_a = false,
             D_NA(App, App)
         )

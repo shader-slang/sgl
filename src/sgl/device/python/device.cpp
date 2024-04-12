@@ -212,7 +212,7 @@ SGL_PY_EXPORT(device_device)
             );
         },
         "window"_a,
-        "format"_a = Format::unknown,
+        "format"_a = Format::bgra8_unorm_srgb,
         "width"_a = 0,
         "height"_a = 0,
         "image_count"_a = 3,
