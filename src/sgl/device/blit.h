@@ -37,8 +37,8 @@ public:
      */
     void blit(
         CommandBuffer* command_buffer,
-        ref<ResourceView> dst,
-        ref<ResourceView> src,
+        ResourceView* dst,
+        ResourceView* src,
         TextureFilteringMode filter = TextureFilteringMode::linear
     );
 

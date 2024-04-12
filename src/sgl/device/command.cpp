@@ -1126,7 +1126,7 @@ void CommandBuffer::blit(ResourceView* dst, ResourceView* src, TextureFilteringM
     SGL_CHECK(m_open, "Command buffer is closed");
     SGL_CHECK_NOT_NULL(dst);
     SGL_CHECK_NOT_NULL(src);
-    m_device->_blitter()->blit(this, ref(dst), ref(src), filter);
+    m_device->_blitter()->blit(this, dst, src, filter);
 }
 
 void CommandBuffer::blit(Texture* dst, Texture* src, TextureFilteringMode filter)

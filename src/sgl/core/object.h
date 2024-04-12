@@ -284,7 +284,7 @@ public:
 
     /// Construct a reference by moving from a convertible reference.
     template<typename T2>
-    ref(ref<T2>&& r) noexcept
+    explicit ref(ref<T2>&& r) noexcept
         : m_ptr(r.m_ptr)
 #if SGL_ENABLE_REF_TRACKING
         , m_ref_id(r.m_ref_id)
