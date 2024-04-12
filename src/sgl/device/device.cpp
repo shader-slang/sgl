@@ -736,9 +736,10 @@ void Device::_end_shared_command_buffer(bool wait)
         m_shared_command_buffer.reset();
     } else {
         if (wait) {
-            m_open_command_buffer->close();
-            id = submit_command_buffer(m_open_command_buffer);
-            m_open_command_buffer->open();
+            CommandBuffer* command_buffer = m_open_command_buffer;
+            command_buffer->close();
+            id = submit_command_buffer(command_buffer);
+            command_buffer->open();
         }
     }
     if (wait)
