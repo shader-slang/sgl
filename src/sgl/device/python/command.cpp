@@ -130,7 +130,7 @@ SGL_PY_EXPORT(device_command)
             "dst"_a,
             "src"_a,
             "filter"_a = TextureFilteringMode::linear,
-            D_NA(CommandBuffer, blit)
+            D(CommandBuffer, blit)
         )
         .def(
             "blit",
@@ -138,7 +138,7 @@ SGL_PY_EXPORT(device_command)
             "dst"_a,
             "src"_a,
             "filter"_a = TextureFilteringMode::linear,
-            D_NA(CommandBuffer, blit, 2)
+            D(CommandBuffer, blit, 2)
         )
         .def(
             "encode_compute_commands",

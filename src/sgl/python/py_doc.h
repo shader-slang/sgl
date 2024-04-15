@@ -1460,6 +1460,118 @@ static const char *__doc_sgl_AdapterInfo_vendor_id =
 R"doc(Unique identifier for the vendor (only available for D3D12 and
 Vulkan).)doc";
 
+static const char *__doc_sgl_App = R"doc()doc";
+
+static const char *__doc_sgl_AppDesc = R"doc()doc";
+
+static const char *__doc_sgl_AppDesc_device =
+R"doc(Device to use for rendering. If not provided, a default device will be
+created.)doc";
+
+static const char *__doc_sgl_AppWindow = R"doc()doc";
+
+static const char *__doc_sgl_AppWindow_2 = R"doc()doc";
+
+static const char *__doc_sgl_AppWindowDesc = R"doc()doc";
+
+static const char *__doc_sgl_AppWindowDesc_app = R"doc()doc";
+
+static const char *__doc_sgl_AppWindowDesc_enable_vsync = R"doc(Enable/disable vertical synchronization.)doc";
+
+static const char *__doc_sgl_AppWindowDesc_height = R"doc(Height of the window in pixels.)doc";
+
+static const char *__doc_sgl_AppWindowDesc_mode = R"doc(Window mode.)doc";
+
+static const char *__doc_sgl_AppWindowDesc_resizable = R"doc(Whether the window is resizable.)doc";
+
+static const char *__doc_sgl_AppWindowDesc_swapchain_format = R"doc(Format of the swapchain images.)doc";
+
+static const char *__doc_sgl_AppWindowDesc_title = R"doc(Title of the window.)doc";
+
+static const char *__doc_sgl_AppWindowDesc_width = R"doc(Width of the window in pixels.)doc";
+
+static const char *__doc_sgl_AppWindow_AppWindow = R"doc()doc";
+
+static const char *__doc_sgl_AppWindow_RenderContext = R"doc()doc";
+
+static const char *__doc_sgl_AppWindow_RenderContext_command_buffer = R"doc()doc";
+
+static const char *__doc_sgl_AppWindow_RenderContext_framebuffer = R"doc()doc";
+
+static const char *__doc_sgl_AppWindow_RenderContext_swapchain_image = R"doc()doc";
+
+static const char *__doc_sgl_AppWindow_app = R"doc()doc";
+
+static const char *__doc_sgl_AppWindow_class_name = R"doc()doc";
+
+static const char *__doc_sgl_AppWindow_create_framebuffers = R"doc()doc";
+
+static const char *__doc_sgl_AppWindow_device = R"doc()doc";
+
+static const char *__doc_sgl_AppWindow_handle_drop_files = R"doc()doc";
+
+static const char *__doc_sgl_AppWindow_handle_gamepad_event = R"doc()doc";
+
+static const char *__doc_sgl_AppWindow_handle_keyboard_event = R"doc()doc";
+
+static const char *__doc_sgl_AppWindow_handle_mouse_event = R"doc()doc";
+
+static const char *__doc_sgl_AppWindow_handle_resize = R"doc()doc";
+
+static const char *__doc_sgl_AppWindow_m_app = R"doc()doc";
+
+static const char *__doc_sgl_AppWindow_m_device = R"doc()doc";
+
+static const char *__doc_sgl_AppWindow_m_framebuffers = R"doc()doc";
+
+static const char *__doc_sgl_AppWindow_m_swapchain = R"doc()doc";
+
+static const char *__doc_sgl_AppWindow_m_ui_context = R"doc()doc";
+
+static const char *__doc_sgl_AppWindow_m_window = R"doc()doc";
+
+static const char *__doc_sgl_AppWindow_on_drop_files = R"doc()doc";
+
+static const char *__doc_sgl_AppWindow_on_gamepad_event = R"doc()doc";
+
+static const char *__doc_sgl_AppWindow_on_keyboard_event = R"doc()doc";
+
+static const char *__doc_sgl_AppWindow_on_mouse_event = R"doc()doc";
+
+static const char *__doc_sgl_AppWindow_on_resize = R"doc()doc";
+
+static const char *__doc_sgl_AppWindow_render = R"doc()doc";
+
+static const char *__doc_sgl_AppWindow_render_ui = R"doc()doc";
+
+static const char *__doc_sgl_AppWindow_run_frame = R"doc()doc";
+
+static const char *__doc_sgl_AppWindow_screen = R"doc()doc";
+
+static const char *__doc_sgl_AppWindow_should_close = R"doc()doc";
+
+static const char *__doc_sgl_App_App = R"doc()doc";
+
+static const char *__doc_sgl_App_add_window = R"doc()doc";
+
+static const char *__doc_sgl_App_class_name = R"doc()doc";
+
+static const char *__doc_sgl_App_device = R"doc()doc";
+
+static const char *__doc_sgl_App_m_device = R"doc()doc";
+
+static const char *__doc_sgl_App_m_terminate = R"doc()doc";
+
+static const char *__doc_sgl_App_m_windows = R"doc()doc";
+
+static const char *__doc_sgl_App_remove_window = R"doc()doc";
+
+static const char *__doc_sgl_App_run = R"doc()doc";
+
+static const char *__doc_sgl_App_run_frame = R"doc()doc";
+
+static const char *__doc_sgl_App_terminate = R"doc()doc";
+
 static const char *__doc_sgl_AspectBlendDesc = R"doc()doc";
 
 static const char *__doc_sgl_AspectBlendDesc_dst_factor = R"doc()doc";
@@ -1771,11 +1883,11 @@ texture.
 Parameter ``command_buffer``:
     Command buffer.
 
-Parameter ``src``:
-    SRV of the source texture.
-
 Parameter ``dst``:
     RTV of the destination texture.
+
+Parameter ``src``:
+    SRV of the source texture.
 
 Parameter ``filter``:
     Filtering mode to use.)doc";
@@ -1957,6 +2069,36 @@ static const char *__doc_sgl_CommandBuffer_EncoderType_render = R"doc()doc";
 static const char *__doc_sgl_CommandBuffer_EncoderType_resource = R"doc()doc";
 
 static const char *__doc_sgl_CommandBuffer_begin_debug_event = R"doc(Begin a debug event.)doc";
+
+static const char *__doc_sgl_CommandBuffer_blit =
+R"doc(Blit a SRV to an RTV.
+
+Blits the full extent of the source texture to the destination
+texture.
+
+Parameter ``dst``:
+    RTV of the destination texture.
+
+Parameter ``src``:
+    SRV of the source texture.
+
+Parameter ``filter``:
+    Filtering mode to use.)doc";
+
+static const char *__doc_sgl_CommandBuffer_blit_2 =
+R"doc(Blit a texture to another texture.
+
+Blits the full extent of the source texture to the destination
+texture.
+
+Parameter ``dst``:
+    Destination texture.
+
+Parameter ``src``:
+    Source texture.
+
+Parameter ``filter``:
+    Filtering mode to use.)doc";
 
 static const char *__doc_sgl_CommandBuffer_class_name = R"doc()doc";
 
@@ -2737,6 +2879,8 @@ static const char *__doc_sgl_Device_Device = R"doc()doc";
 
 static const char *__doc_sgl_Device_begin_shared_command_buffer = R"doc()doc";
 
+static const char *__doc_sgl_Device_blitter = R"doc()doc";
+
 static const char *__doc_sgl_Device_class_name = R"doc()doc";
 
 static const char *__doc_sgl_Device_create = R"doc()doc";
@@ -3134,6 +3278,8 @@ static const char *__doc_sgl_Device_load_module = R"doc()doc";
 static const char *__doc_sgl_Device_load_module_from_source = R"doc()doc";
 
 static const char *__doc_sgl_Device_load_program = R"doc()doc";
+
+static const char *__doc_sgl_Device_m_blitter = R"doc()doc";
 
 static const char *__doc_sgl_Device_m_cuda_device = R"doc()doc";
 
@@ -6447,13 +6593,9 @@ static const char *__doc_sgl_ShaderProgram_ShaderProgram = R"doc()doc";
 
 static const char *__doc_sgl_ShaderProgram_class_name = R"doc()doc";
 
-static const char *__doc_sgl_ShaderProgram_device = R"doc()doc";
-
 static const char *__doc_sgl_ShaderProgram_gfx_shader_program = R"doc()doc";
 
 static const char *__doc_sgl_ShaderProgram_layout = R"doc()doc";
-
-static const char *__doc_sgl_ShaderProgram_m_device = R"doc()doc";
 
 static const char *__doc_sgl_ShaderProgram_m_entry_points = R"doc()doc";
 
