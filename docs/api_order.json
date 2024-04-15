@@ -4,7 +4,8 @@
         "sgl.Bitmap",
         "sgl.Struct",
         "sgl.StructConverter",
-        "sgl.Timer"
+        "sgl.Timer",
+        "sgl.SHA1"
     ],
     "Constants": [
         "sgl.SGL_VERSION",
@@ -183,6 +184,12 @@
         "sgl.MemoryHeap",
         "sgl.AdapterInfo"
     ],
+    "Application": [
+        "sgl.AppDesc",
+        "sgl.App",
+        "sgl.AppWindowDesc",
+        "sgl.AppWindow"
+    ],
     "Math": [
         "sgl\\.math\\.float[\\d]",
         "sgl\\.float[\\d]",
@@ -206,6 +213,7 @@
         "sgl\\.ui\\.[\\w]+"
     ],
     "Utilities": [
+        "sgl.TextureLoader",
         "sgl\\.tev\\.[\\w]+",
         "sgl\\.renderdoc\\.[\\w]+"
     ]
