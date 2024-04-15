@@ -61,7 +61,7 @@ SGL_PY_EXPORT(app_app)
     nb::class_<AppDesc>(m, "AppDesc")
         .def(nb::init<>())
         .def("__init__", [](AppDesc* self, nb::dict dict) { new (self) AppDesc(dict_to_AppDesc(dict)); })
-        .def_rw("device", &AppDesc::device, D_NA(AppDesc, device));
+        .def_rw("device", &AppDesc::device, D(AppDesc, device));
     nb::implicitly_convertible<nb::dict, AppDesc>();
 
     nb::class_<App, PyApp, Object>(m, "App")
@@ -75,41 +75,41 @@ SGL_PY_EXPORT(app_app)
                 });
             },
             "device"_a.none() = nb::none(),
-            D_NA(App, App)
+            D(App, App)
         )
-        .def_prop_ro("device", &App::device, D_NA(App, device))
-        .def("run", &App::run, D_NA(App, run))
-        .def("run_frame", &App::run_frame, D_NA(App, run_frame))
-        .def("terminate", &App::terminate, D_NA(App, terminate));
+        .def_prop_ro("device", &App::device, D(App, device))
+        .def("run", &App::run, D(App, run))
+        .def("run_frame", &App::run_frame, D(App, run_frame))
+        .def("terminate", &App::terminate, D(App, terminate));
 
-    nb::class_<AppWindowDesc>(m, "AppWindowDesc", D_NA(AppWindowDesc))
+    nb::class_<AppWindowDesc>(m, "AppWindowDesc", D(AppWindowDesc))
         .def(nb::init<>())
         .def(
             "__init__",
             [](AppWindowDesc* self, nb::dict dict) { new (self) AppWindowDesc(dict_to_AppWindowDesc(dict)); }
         )
-        .def_rw("width", &AppWindowDesc::width, D_NA(AppWindowDesc, width))
-        .def_rw("height", &AppWindowDesc::height, D_NA(AppWindowDesc, height))
-        .def_rw("title", &AppWindowDesc::title, D_NA(AppWindowDesc, title))
-        .def_rw("mode", &AppWindowDesc::mode, D_NA(AppWindowDesc, mode))
-        .def_rw("resizable", &AppWindowDesc::resizable, D_NA(AppWindowDesc, resizable))
-        .def_rw("swapchain_format", &AppWindowDesc::swapchain_format, D_NA(AppWindowDesc, swapchain_format))
-        .def_rw("enable_vsync", &AppWindowDesc::enable_vsync, D_NA(AppWindowDesc, enable_vsync));
+        .def_rw("width", &AppWindowDesc::width, D(AppWindowDesc, width))
+        .def_rw("height", &AppWindowDesc::height, D(AppWindowDesc, height))
+        .def_rw("title", &AppWindowDesc::title, D(AppWindowDesc, title))
+        .def_rw("mode", &AppWindowDesc::mode, D(AppWindowDesc, mode))
+        .def_rw("resizable", &AppWindowDesc::resizable, D(AppWindowDesc, resizable))
+        .def_rw("swapchain_format", &AppWindowDesc::swapchain_format, D(AppWindowDesc, swapchain_format))
+        .def_rw("enable_vsync", &AppWindowDesc::enable_vsync, D(AppWindowDesc, enable_vsync));
     nb::implicitly_convertible<nb::dict, AppWindowDesc>();
 
-    nb::class_<AppWindow, PyAppWindow, Object> app_window(m, "AppWindow", D_NA(AppWindow));
+    nb::class_<AppWindow, PyAppWindow, Object> app_window(m, "AppWindow", D(AppWindow));
 
-    nb::class_<AppWindow::RenderContext>(app_window, "RenderContext", D_NA(AppWindow, RenderContext))
+    nb::class_<AppWindow::RenderContext>(app_window, "RenderContext", D(AppWindow, RenderContext))
         .def_ro(
             "swapchain_image",
             &AppWindow::RenderContext::swapchain_image,
-            D_NA(AppWindow::RenderContext, swapchain_image)
+            D(AppWindow, RenderContext, swapchain_image)
         )
-        .def_ro("framebuffer", &AppWindow::RenderContext::framebuffer, D_NA(AppWindow::RenderContext, framebuffer))
+        .def_ro("framebuffer", &AppWindow::RenderContext::framebuffer, D(AppWindow, RenderContext, framebuffer))
         .def_ro(
             "command_buffer",
             &AppWindow::RenderContext::command_buffer,
-            D_NA(AppWindow::RenderContext, command_buffer)
+            D(AppWindow, RenderContext, command_buffer)
         );
 
     app_window //
@@ -144,14 +144,14 @@ SGL_PY_EXPORT(app_app)
             "resizable"_a = true,
             "swapchain_format"_a = Format::bgra8_unorm_srgb,
             "enable_vsync"_a = false,
-            D_NA(App, App)
+            D(App, App)
         )
-        .def_prop_ro("device", &AppWindow::device, D_NA(AppWindow, device))
-        .def_prop_ro("screen", &AppWindow::screen, D_NA(AppWindow, screen))
-        .def("render", &AppWindow::render, "render_context"_a, D_NA(AppWindow, render))
-        .def("on_resize", &AppWindow::on_resize, "width"_a, "height"_a, D_NA(AppWindow, on_resize))
-        .def("on_keyboard_event", &AppWindow::on_keyboard_event, "event"_a, D_NA(AppWindow, on_keyboard_event))
-        .def("on_mouse_event", &AppWindow::on_mouse_event, "event"_a, D_NA(AppWindow, on_mouse_event))
-        .def("on_gamepad_event", &AppWindow::on_gamepad_event, "event"_a, D_NA(AppWindow, on_gamepad_event))
-        .def("on_drop_files", &AppWindow::on_drop_files, "files"_a, D_NA(AppWindow, on_drop_files));
+        .def_prop_ro("device", &AppWindow::device, D(AppWindow, device))
+        .def_prop_ro("screen", &AppWindow::screen, D(AppWindow, screen))
+        .def("render", &AppWindow::render, "render_context"_a, D(AppWindow, render))
+        .def("on_resize", &AppWindow::on_resize, "width"_a, "height"_a, D(AppWindow, on_resize))
+        .def("on_keyboard_event", &AppWindow::on_keyboard_event, "event"_a, D(AppWindow, on_keyboard_event))
+        .def("on_mouse_event", &AppWindow::on_mouse_event, "event"_a, D(AppWindow, on_mouse_event))
+        .def("on_gamepad_event", &AppWindow::on_gamepad_event, "event"_a, D(AppWindow, on_gamepad_event))
+        .def("on_drop_files", &AppWindow::on_drop_files, "files"_a, D(AppWindow, on_drop_files));
 }

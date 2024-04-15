@@ -480,6 +480,7 @@ if(SGL_BUILD_PYTHON)
             ${MKDOC_ARGS}
             -I${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include
             -I${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include
+            ${CMAKE_CURRENT_SOURCE_DIR}/sgl/app/*.h
             ${CMAKE_CURRENT_SOURCE_DIR}/sgl/core/*.h
             ${CMAKE_CURRENT_SOURCE_DIR}/sgl/device/*.h
             ${CMAKE_CURRENT_SOURCE_DIR}/sgl/math/*.h
