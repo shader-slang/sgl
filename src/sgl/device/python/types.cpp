@@ -20,6 +20,39 @@ SGL_DICT_TO_DESC_FIELD(min_y, int32_t)
 SGL_DICT_TO_DESC_FIELD(max_x, int32_t)
 SGL_DICT_TO_DESC_FIELD(max_y, int32_t)
 SGL_DICT_TO_DESC_END()
+
+SGL_DICT_TO_DESC_BEGIN(DepthStencilDesc)
+SGL_DICT_TO_DESC_FIELD(depth_test_enable, bool)
+SGL_DICT_TO_DESC_FIELD(depth_write_enable, bool)
+SGL_DICT_TO_DESC_FIELD(depth_func, ComparisonFunc)
+SGL_DICT_TO_DESC_FIELD(stencil_enable, bool)
+SGL_DICT_TO_DESC_FIELD(stencil_read_mask, uint32_t)
+SGL_DICT_TO_DESC_FIELD(stencil_write_mask, uint32_t)
+SGL_DICT_TO_DESC_FIELD(front_face, DepthStencilOpDesc)
+SGL_DICT_TO_DESC_FIELD(back_face, DepthStencilOpDesc)
+SGL_DICT_TO_DESC_FIELD(stencil_ref, uint32_t)
+SGL_DICT_TO_DESC_END()
+
+SGL_DICT_TO_DESC_BEGIN(RasterizerDesc)
+SGL_DICT_TO_DESC_FIELD(fill_mode, FillMode)
+SGL_DICT_TO_DESC_FIELD(cull_mode, CullMode)
+SGL_DICT_TO_DESC_FIELD(front_face, FrontFaceMode)
+SGL_DICT_TO_DESC_FIELD(depth_bias, int32_t)
+SGL_DICT_TO_DESC_FIELD(depth_bias_clamp, float)
+SGL_DICT_TO_DESC_FIELD(slope_scaled_depth_bias, float)
+SGL_DICT_TO_DESC_FIELD(depth_clip_enable, bool)
+SGL_DICT_TO_DESC_FIELD(scissor_enable, bool)
+SGL_DICT_TO_DESC_FIELD(multisample_enable, bool)
+SGL_DICT_TO_DESC_FIELD(antialiased_line_enable, bool)
+SGL_DICT_TO_DESC_FIELD(enable_conservative_rasterization, bool)
+SGL_DICT_TO_DESC_FIELD(forced_sample_count, uint32_t)
+SGL_DICT_TO_DESC_END()
+
+SGL_DICT_TO_DESC_BEGIN(BlendDesc)
+// TODO
+SGL_DICT_TO_DESC_FIELD(alpha_to_coverage_enable, bool)
+SGL_DICT_TO_DESC_END()
+
 } // namespace sgl
 
 namespace sgl {
@@ -91,6 +124,10 @@ SGL_PY_EXPORT(device_types)
 
     nb::class_<DepthStencilDesc>(m, "DepthStencilDesc", D(DepthStencilDesc))
         .def(nb::init<>())
+        .def(
+            "__init__",
+            [](DepthStencilDesc* self, nb::dict dict) { new (self) DepthStencilDesc(dict_to_DepthStencilDesc(dict)); }
+        )
         .def_rw("depth_test_enable", &DepthStencilDesc::depth_test_enable, D(DepthStencilDesc, depth_test_enable))
         .def_rw("depth_write_enable", &DepthStencilDesc::depth_write_enable, D(DepthStencilDesc, depth_write_enable))
         .def_rw("depth_func", &DepthStencilDesc::depth_func, D(DepthStencilDesc, depth_func))
@@ -100,9 +137,14 @@ SGL_PY_EXPORT(device_types)
         .def_rw("front_face", &DepthStencilDesc::front_face, D(DepthStencilDesc, front_face))
         .def_rw("back_face", &DepthStencilDesc::back_face, D(DepthStencilDesc, back_face))
         .def_rw("stencil_ref", &DepthStencilDesc::stencil_ref, D(DepthStencilDesc, stencil_ref));
+    nb::implicitly_convertible<nb::dict, DepthStencilDesc>();
 
     nb::class_<RasterizerDesc>(m, "RasterizerDesc", D(RasterizerDesc))
         .def(nb::init<>())
+        .def(
+            "__init__",
+            [](RasterizerDesc* self, nb::dict dict) { new (self) RasterizerDesc(dict_to_RasterizerDesc(dict)); }
+        )
         .def_rw("fill_mode", &RasterizerDesc::fill_mode, D(RasterizerDesc, fill_mode))
         .def_rw("cull_mode", &RasterizerDesc::cull_mode, D(RasterizerDesc, cull_mode))
         .def_rw("front_face", &RasterizerDesc::front_face, D(RasterizerDesc, front_face))
@@ -127,6 +169,7 @@ SGL_PY_EXPORT(device_types)
             D(RasterizerDesc, enable_conservative_rasterization)
         )
         .def_rw("forced_sample_count", &RasterizerDesc::forced_sample_count, D(RasterizerDesc, forced_sample_count));
+    nb::implicitly_convertible<nb::dict, RasterizerDesc>();
 
     nb::sgl_enum<LogicOp>(m, "LogicOp");
     nb::sgl_enum<BlendOp>(m, "BlendOp");

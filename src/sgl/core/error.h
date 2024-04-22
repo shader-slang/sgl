@@ -63,6 +63,7 @@ enum class ExceptionDiagnosticFlags {
     /// Log exception message.
     log = 2,
 };
+
 SGL_ENUM_CLASS_OPERATORS(ExceptionDiagnosticFlags);
 
 /// Set exception diagnostic options.
