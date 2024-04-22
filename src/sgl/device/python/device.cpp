@@ -143,7 +143,6 @@ SGL_PY_EXPORT(device_device)
         .def_ro("miss_count", &ShaderCacheStats::miss_count, D(ShaderCacheStats, miss_count));
 
     nb::class_<Device, Object> device(m, "Device", D(Device));
-    device.def(nb::init<DeviceDesc>(), "desc"_a, D(Device, Device));
     device.def(
         "__init__",
         [](Device* self,
@@ -174,6 +173,7 @@ SGL_PY_EXPORT(device_device)
         "shader_cache_path"_a.none() = nb::none(),
         D(Device, Device)
     );
+    device.def(nb::init<DeviceDesc>(), "desc"_a, D(Device, Device));
     device.def_prop_ro("desc", &Device::desc, D(Device, desc));
     device.def_prop_ro("info", &Device::info, D(Device, info));
     device.def_prop_ro("shader_cache_stats", &Device::shader_cache_stats, D(Device, shader_cache_stats));
@@ -182,14 +182,6 @@ SGL_PY_EXPORT(device_device)
     device.def_prop_ro("supports_cuda_interop", &Device::supports_cuda_interop, D(Device, supports_cuda_interop));
 
     device.def_prop_ro("slang_session", &Device::slang_session, D(Device, slang_session));
-    device.def(
-        "create_swapchain",
-        [](Device* self, const SwapchainDesc& desc, ref<Window> window)
-        { return self->create_swapchain(desc, window); },
-        "desc"_a,
-        "window"_a,
-        D(Device, create_swapchain)
-    );
     device.def(
         "create_swapchain",
         [](Device* self,
@@ -220,10 +212,12 @@ SGL_PY_EXPORT(device_device)
         D(Device, create_swapchain)
     );
     device.def(
-        "create_buffer",
-        [](Device* self, const BufferDesc& desc) { return self->create_buffer(desc); },
+        "create_swapchain",
+        [](Device* self, const SwapchainDesc& desc, ref<Window> window)
+        { return self->create_swapchain(desc, window); },
         "desc"_a,
-        D(Device, create_buffer)
+        "window"_a,
+        D(Device, create_swapchain)
     );
     device.def(
         "create_buffer",
@@ -257,6 +251,12 @@ SGL_PY_EXPORT(device_device)
         "memory_type"_a = MemoryType::device_local,
         "debug_name"_a = "",
         "data"_a.none() = nb::none(),
+        D(Device, create_buffer)
+    );
+    device.def(
+        "create_buffer",
+        [](Device* self, const BufferDesc& desc) { return self->create_buffer(desc); },
+        "desc"_a,
         D(Device, create_buffer)
     );
     device.def(
@@ -362,12 +362,6 @@ SGL_PY_EXPORT(device_device)
 
     device.def(
         "create_texture",
-        [](Device* self, const TextureDesc& desc) { return self->create_texture(desc); },
-        "desc"_a,
-        D(Device, create_texture)
-    );
-    device.def(
-        "create_texture",
         [](Device* self,
            ResourceType type,
            Format format,
@@ -418,7 +412,13 @@ SGL_PY_EXPORT(device_device)
         "data"_a.none() = nb::none(),
         D(Device, create_texture)
     );
-    device.def("create_sampler", &Device::create_sampler, "desc"_a, D(Device, create_sampler));
+    device.def(
+        "create_texture",
+        [](Device* self, const TextureDesc& desc) { return self->create_texture(desc); },
+        "desc"_a,
+        D(Device, create_texture)
+    );
+
     device.def(
         "create_sampler",
         [](Device* self,
@@ -467,7 +467,8 @@ SGL_PY_EXPORT(device_device)
         "max_lod"_a = 1000.f,
         D(Device, create_sampler)
     );
-    device.def("create_fence", &Device::create_fence, "desc"_a, D(Device, create_fence));
+    device.def("create_sampler", &Device::create_sampler, "desc"_a, D(Device, create_sampler));
+
     device.def(
         "create_fence",
         [](Device* self, uint64_t initial_value, bool shared)
@@ -476,6 +477,8 @@ SGL_PY_EXPORT(device_device)
         "shared"_a = false,
         D(Device, create_fence)
     );
+    device.def("create_fence", &Device::create_fence, "desc"_a, D(Device, create_fence));
+
     device.def(
         "create_query_pool",
         [](Device* self, QueryType type, uint32_t count)
@@ -484,7 +487,7 @@ SGL_PY_EXPORT(device_device)
         "count"_a,
         D(Device, create_query_pool)
     );
-    device.def("create_input_layout", &Device::create_input_layout, "desc"_a, D(Device, create_input_layout));
+
     device.def(
         "create_input_layout",
         [](Device* self, std::vector<InputElementDesc> input_elements, std::vector<VertexStreamDesc> vertex_streams)
@@ -498,7 +501,8 @@ SGL_PY_EXPORT(device_device)
         "vertex_streams"_a,
         D(Device, create_input_layout)
     );
-    device.def("create_framebuffer", &Device::create_framebuffer, "desc"_a, D(Device, create_framebuffer));
+    device.def("create_input_layout", &Device::create_input_layout, "desc"_a, D(Device, create_input_layout));
+
     device.def(
         "create_framebuffer",
         [](Device* self,
@@ -517,6 +521,8 @@ SGL_PY_EXPORT(device_device)
         "layout"_a.none() = nb::none(),
         D(Device, create_framebuffer)
     );
+    device.def("create_framebuffer", &Device::create_framebuffer, "desc"_a, D(Device, create_framebuffer));
+
     device.def("create_command_buffer", &Device::create_command_buffer, D(Device, create_command_buffer));
     device.def(
         "submit_command_buffer",
@@ -569,7 +575,6 @@ SGL_PY_EXPORT(device_device)
         "size"_a = 0,
         D(Device, create_acceleration_structure)
     );
-    device.def("create_shader_table", &Device::create_shader_table, "desc"_a, D(Device, create_shader_table));
     device.def(
         "create_shader_table",
         [](Device* self,
@@ -594,6 +599,7 @@ SGL_PY_EXPORT(device_device)
         "callable_entry_points"_a = std::vector<std::string>{},
         D(Device, create_shader_table)
     );
+    device.def("create_shader_table", &Device::create_shader_table, "desc"_a, D(Device, create_shader_table));
     device.def(
         "create_slang_session",
         [](Device* self,
@@ -658,8 +664,6 @@ SGL_PY_EXPORT(device_device)
         D(Device, create_mutable_shader_object, 3)
     );
 
-    device
-        .def("create_compute_pipeline", &Device::create_compute_pipeline, "desc"_a, D(Device, create_compute_pipeline));
     device.def(
         "create_compute_pipeline",
         [](Device* self, ref<ShaderProgram> program)
@@ -667,13 +671,9 @@ SGL_PY_EXPORT(device_device)
         "program"_a,
         D(Device, create_compute_pipeline)
     );
+    device
+        .def("create_compute_pipeline", &Device::create_compute_pipeline, "desc"_a, D(Device, create_compute_pipeline));
 
-    device.def(
-        "create_graphics_pipeline",
-        &Device::create_graphics_pipeline,
-        "desc"_a,
-        D(Device, create_graphics_pipeline)
-    );
     device.def(
         "create_graphics_pipeline",
         [](Device* self,
@@ -704,13 +704,13 @@ SGL_PY_EXPORT(device_device)
         "blend"_a.none() = nb::none(),
         D(Device, create_graphics_pipeline)
     );
-
     device.def(
-        "create_ray_tracing_pipeline",
-        &Device::create_ray_tracing_pipeline,
+        "create_graphics_pipeline",
+        &Device::create_graphics_pipeline,
         "desc"_a,
-        D(Device, create_ray_tracing_pipeline)
+        D(Device, create_graphics_pipeline)
     );
+
     device.def(
         "create_ray_tracing_pipeline",
         [](Device* self,
@@ -738,8 +738,13 @@ SGL_PY_EXPORT(device_device)
         "flags"_a = RayTracingPipelineFlags::none,
         D(Device, create_ray_tracing_pipeline)
     );
+    device.def(
+        "create_ray_tracing_pipeline",
+        &Device::create_ray_tracing_pipeline,
+        "desc"_a,
+        D(Device, create_ray_tracing_pipeline)
+    );
 
-    device.def("create_compute_kernel", &Device::create_compute_kernel, "desc"_a, D(Device, create_compute_kernel));
     device.def(
         "create_compute_kernel",
         [](Device* self, ref<ShaderProgram> program)
@@ -747,8 +752,8 @@ SGL_PY_EXPORT(device_device)
         "program"_a,
         D(Device, create_compute_kernel)
     );
+    device.def("create_compute_kernel", &Device::create_compute_kernel, "desc"_a, D(Device, create_compute_kernel));
 
-    device.def("create_memory_heap", &Device::create_memory_heap, "desc"_a, D(Device, create_memory_heap));
     device.def(
         "create_memory_heap",
         [](Device* self,
@@ -773,6 +778,7 @@ SGL_PY_EXPORT(device_device)
         "debug_name"_a = "",
         D(Device, create_memory_heap)
     );
+    device.def("create_memory_heap", &Device::create_memory_heap, "desc"_a, D(Device, create_memory_heap));
 
     device.def_prop_ro("upload_heap", &Device::upload_heap, D(Device, upload_heap));
     device.def_prop_ro("read_back_heap", &Device::read_back_heap, D(Device, read_back_heap));
