@@ -165,6 +165,7 @@ enum class FormatChannels : uint32_t {
     rgba = r | g | b | a,
 };
 
+SGL_ENUM_CLASS_OPERATORS(FormatChannels);
 SGL_ENUM_INFO(
     FormatChannels,
     {
@@ -179,8 +180,6 @@ SGL_ENUM_INFO(
     }
 );
 SGL_ENUM_REGISTER(FormatChannels);
-
-SGL_ENUM_CLASS_OPERATORS(FormatChannels);
 
 /// Resource format information.
 struct SGL_API FormatInfo {

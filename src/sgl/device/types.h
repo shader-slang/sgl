@@ -44,6 +44,7 @@ enum class ShaderModel : uint32_t {
     sm_6_6 = 66,
     sm_6_7 = 67,
 };
+
 SGL_ENUM_INFO(
     ShaderModel,
     {
@@ -582,8 +583,8 @@ enum class RayTracingGeometryFlags : uint32_t {
     no_duplicate_any_hit_invocation
     = static_cast<uint32_t>(gfx::IAccelerationStructure::GeometryFlags::NoDuplicateAnyHitInvocation),
 };
-SGL_ENUM_CLASS_OPERATORS(RayTracingGeometryFlags);
 
+SGL_ENUM_CLASS_OPERATORS(RayTracingGeometryFlags);
 SGL_ENUM_INFO(
     RayTracingGeometryFlags,
     {
@@ -666,8 +667,8 @@ enum class RayTracingInstanceFlags : uint32_t {
     force_opaque = static_cast<uint32_t>(gfx::IAccelerationStructure::GeometryInstanceFlags::ForceOpaque),
     no_opaque = static_cast<uint32_t>(gfx::IAccelerationStructure::GeometryInstanceFlags::NoOpaque),
 };
-SGL_ENUM_CLASS_OPERATORS(RayTracingInstanceFlags);
 
+SGL_ENUM_CLASS_OPERATORS(RayTracingInstanceFlags);
 SGL_ENUM_INFO(
     RayTracingInstanceFlags,
     {
@@ -730,8 +731,8 @@ enum class AccelerationStructureBuildFlags : uint32_t {
     minimize_memory = static_cast<uint32_t>(gfx::IAccelerationStructure::BuildFlags::MinimizeMemory),
     perform_update = static_cast<uint32_t>(gfx::IAccelerationStructure::BuildFlags::PerformUpdate),
 };
-SGL_ENUM_CLASS_OPERATORS(AccelerationStructureBuildFlags);
 
+SGL_ENUM_CLASS_OPERATORS(AccelerationStructureBuildFlags);
 SGL_ENUM_INFO(
     AccelerationStructureBuildFlags,
     {

@@ -200,6 +200,8 @@ public:
     /// Default slang session.
     SlangSession* slang_session() const { return m_slang_session; }
 
+    // Resource creation
+
     /**
      * \brief Create a new swapchain.
      *

@@ -502,7 +502,7 @@ std::string Bitmap::to_string() const
         "  width = {},\n"
         "  height = {},\n"
         "  srgb_gamma = {},\n"
-        "  pixel_struct = {}\n"
+        "  pixel_struct = {},\n"
         "  data = {}\n"
         ")",
         m_pixel_format,

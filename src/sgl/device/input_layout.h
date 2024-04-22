@@ -17,6 +17,7 @@ enum class InputSlotClass : uint8_t {
     per_vertex = static_cast<uint8_t>(gfx::InputSlotClass::PerVertex),
     per_instance = static_cast<uint8_t>(gfx::InputSlotClass::PerInstance),
 };
+
 SGL_ENUM_INFO(
     InputSlotClass,
     {

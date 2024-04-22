@@ -28,6 +28,7 @@ public:
         texture_3d,
         texture_cube,
     };
+
     SGL_ENUM_INFO(
         TextureType,
         {

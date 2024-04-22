@@ -91,6 +91,7 @@ enum class SlangMatrixLayout {
     row_major = SLANG_MATRIX_LAYOUT_ROW_MAJOR,
     column_major = SLANG_MATRIX_LAYOUT_COLUMN_MAJOR,
 };
+
 SGL_ENUM_INFO(
     SlangMatrixLayout,
     {
@@ -106,6 +107,7 @@ enum class SlangFloatingPointMode {
     fast = SLANG_FLOATING_POINT_MODE_FAST,
     precise = SLANG_FLOATING_POINT_MODE_PRECISE,
 };
+
 SGL_ENUM_INFO(
     SlangFloatingPointMode,
     {
@@ -127,6 +129,7 @@ enum class SlangDebugInfoLevel {
     /// Emit as much debug infromation as possible for each target.
     maximal = SLANG_DEBUG_INFO_LEVEL_MAXIMAL,
 };
+
 SGL_ENUM_INFO(
     SlangDebugInfoLevel,
     {
@@ -149,6 +152,7 @@ enum class SlangOptimizationLevel {
     /// Include optimizations that may take a very long time, or may involve severe space-vs-speed tradeoffs.
     maximal = SLANG_OPTIMIZATION_LEVEL_MAXIMAL,
 };
+
 SGL_ENUM_INFO(
     SlangOptimizationLevel,
     {

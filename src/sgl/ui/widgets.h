@@ -539,6 +539,7 @@ enum class SliderFlags {
     no_round_to_format = ImGuiSliderFlags_NoRoundToFormat,
     no_input = ImGuiSliderFlags_NoInput,
 };
+
 SGL_ENUM_CLASS_OPERATORS(SliderFlags);
 
 template<typename T>
@@ -763,6 +764,7 @@ enum class InputTextFlags {
     chars_scientific = ImGuiInputTextFlags_CharsScientific,
     escape_clears_all = ImGuiInputTextFlags_EscapeClearsAll,
 };
+
 SGL_ENUM_CLASS_OPERATORS(InputTextFlags);
 
 template<typename T>
