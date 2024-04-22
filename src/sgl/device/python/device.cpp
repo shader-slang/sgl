@@ -696,7 +696,7 @@ SGL_PY_EXPORT(device_device)
             });
         },
         "program"_a,
-        "input_layout"_a,
+        "input_layout"_a.none(),
         "framebuffer_layout"_a,
         "primitive_type"_a = PrimitiveType::triangle,
         "depth_stencil"_a.none() = nb::none(),
