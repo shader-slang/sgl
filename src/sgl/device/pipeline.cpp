@@ -85,6 +85,7 @@ GraphicsPipeline::GraphicsPipeline(ref<Device> device, GraphicsPipelineDesc desc
     , m_program(std::move(desc.program))
 {
     SGL_CHECK_NOT_NULL(m_program);
+    SGL_CHECK_NOT_NULL(desc.framebuffer_layout);
 
     gfx::GraphicsPipelineStateDesc gfx_desc{
         .program = m_program->gfx_shader_program(),
