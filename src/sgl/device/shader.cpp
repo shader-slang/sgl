@@ -173,6 +173,8 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
 {
     SGL_CHECK_NOT_NULL(m_device);
 
+    DeviceType device_type = m_device->type();
+
     CompilerOptionEntries session_options;
     CompilerOptionEntries target_options;
 
@@ -215,10 +217,22 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
     session_options.add(slang::CompilerOptionName::ReportPerfBenchmark, options.report_perf_benchmark);
     session_options.add(slang::CompilerOptionName::SkipSPIRVValidation, options.skip_spirv_validation);
 
+    // Set optimization and debug options.
+    session_options.add(slang::CompilerOptionName::DebugInformation, int(options.debug_info));
+    session_options.add(slang::CompilerOptionName::Optimization, int(options.optimization));
+
+    // Set downstream arguments.
+    if (device_type == DeviceType::d3d12) {
+        for (const auto& arg : options.downstream_args)
+            session_options.add(slang::CompilerOptionName::DownstreamArgs, "dxc", arg);
+    }
+
+    // Set intermediate dump options.
+    session_options.add(slang::CompilerOptionName::DumpIntermediates, options.dump_intermediates);
+    session_options.add(slang::CompilerOptionName::DumpIntermediatePrefix, options.dump_intermediates_prefix);
+
     // Only use up to date binary modules (required for caching to work properly).
     session_options.add(slang::CompilerOptionName::UseUpToDateBinaryModule, true);
-
-    DeviceType device_type = m_device->type();
 
     slang::SessionDesc session_desc{};
 
@@ -455,9 +469,12 @@ ref<ShaderProgram> SlangSession::link_program(
             link_option_entries.add(slang::CompilerOptionName::DebugInformation, int(*link_options->debug_info));
         if (link_options->optimization)
             link_option_entries.add(slang::CompilerOptionName::Optimization, int(*link_options->optimization));
-        if (link_options->downstream_args)
-            for (const auto& arg : *link_options->downstream_args)
-                link_option_entries.add(slang::CompilerOptionName::DownstreamArgs, arg);
+        if (link_options->downstream_args) {
+            if (m_device->type() == DeviceType::d3d12) {
+                for (const auto& arg : *link_options->downstream_args)
+                    link_option_entries.add(slang::CompilerOptionName::DownstreamArgs, "dxc", arg);
+            }
+        }
         if (link_options->dump_intermediates)
             link_option_entries.add(slang::CompilerOptionName::DumpIntermediates, *link_options->dump_intermediates);
         if (link_options->dump_intermediates_prefix)
