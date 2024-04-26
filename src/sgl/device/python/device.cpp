@@ -328,37 +328,6 @@ SGL_PY_EXPORT(device_device)
         "data"_a.none() = nb::none(),
         D(Device, create_structured_buffer)
     );
-    device.def(
-        "create_typed_buffer",
-        [](Device* self,
-           size_t element_count,
-           Format format,
-           ResourceUsage usage,
-           MemoryType memory_type,
-           std::string debug_name,
-           std::optional<nb::ndarray<nb::numpy>> data)
-        {
-            if (data) {
-                SGL_CHECK(is_ndarray_contiguous(*data), "Data is not contiguous.");
-            }
-            return self->create_typed_buffer({
-                .element_count = element_count,
-                .format = format,
-                .usage = usage,
-                .memory_type = memory_type,
-                .debug_name = std::move(debug_name),
-                .data = data ? data->data() : nullptr,
-                .data_size = data ? data->nbytes() : 0,
-            });
-        },
-        "element_count"_a = 0,
-        "format"_a = Format::unknown,
-        "usage"_a = ResourceUsage::none,
-        "memory_type"_a = MemoryType::device_local,
-        "debug_name"_a = "",
-        "data"_a.none() = nb::none(),
-        D(Device, create_typed_buffer)
-    );
 
     device.def(
         "create_texture",

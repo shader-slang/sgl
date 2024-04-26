@@ -383,26 +383,6 @@ struct BufferDesc {
     size_t data_size{0};
 };
 
-struct RawBufferDesc {
-    /// Buffer size in bytes.
-    size_t size{0};
-
-    /// Initial resource state.
-    ResourceState initial_state{ResourceState::undefined};
-    /// Resource usage flags.
-    ResourceUsage usage{ResourceUsage::none};
-    /// Memory type.
-    MemoryType memory_type{MemoryType::device_local};
-
-    /// Resource debug name.
-    std::string debug_name;
-
-    /// Initial data to upload to the buffer.
-    const void* data{nullptr};
-    /// Size of the initial data in bytes.
-    size_t data_size{0};
-};
-
 struct StructuredBufferDesc {
     /// Number of elements in the buffer.
     size_t element_count{0};
@@ -431,36 +411,12 @@ struct StructuredBufferDesc {
     size_t data_size{0};
 };
 
-struct TypedBufferDesc {
-    /// Number of elements in the buffer.
-    size_t element_count;
-
-    /// The format of the buffer.
-    Format format;
-
-    /// Initial resource state.
-    ResourceState initial_state{ResourceState::undefined};
-    /// Resource usage flags.
-    ResourceUsage usage{ResourceUsage::none};
-    /// Memory type.
-    MemoryType memory_type{MemoryType::device_local};
-
-    /// Resource debug name.
-    std::string debug_name;
-
-    /// Initial data to upload to the buffer.
-    const void* data{nullptr};
-    /// Size of the initial data in bytes.
-    size_t data_size{0};
-};
 
 class SGL_API Buffer : public Resource {
     SGL_OBJECT(Buffer)
 public:
     Buffer(ref<Device> device, BufferDesc desc);
-    Buffer(ref<Device> device, RawBufferDesc desc);
     Buffer(ref<Device> device, StructuredBufferDesc desc);
-    Buffer(ref<Device> device, TypedBufferDesc desc);
 
     ~Buffer();
 

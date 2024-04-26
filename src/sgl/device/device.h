@@ -232,20 +232,6 @@ public:
     ref<Buffer> create_buffer(BufferDesc desc);
 
     /**
-     * \brief Create a new raw buffer.
-     *
-     * \param size Buffer size in bytes.
-     * \param initial_state Initial resource state.
-     * \param usage Resource usage flags.
-     * \param memory_type Memory type.
-     * \param debug_name Resource debug name.
-     * \param data Initial data to upload to the buffer.
-     * \param data_size Size of the initial data in bytes.
-     * \return New buffer object.
-     */
-    ref<Buffer> create_raw_buffer(RawBufferDesc desc);
-
-    /**
      * \brief Create a new structured buffer.
      *
      * \note Either \c struct_size or \c struct_type can be set, but not both.
@@ -262,21 +248,6 @@ public:
      * \return New buffer object.
      */
     ref<Buffer> create_structured_buffer(StructuredBufferDesc desc);
-
-    /**
-     * \brief Create a new typed buffer.
-     *
-     * \param element_count Number of elements in the buffer.
-     * \param format The format of the buffer.
-     * \param initial_state Initial resource state.
-     * \param usage Resource usage flags.
-     * \param memory_type Memory type.
-     * \param debug_name Resource debug name.
-     * \param data Initial data to upload to the buffer.
-     * \param data_size Size of the initial data in bytes.
-     * \return New buffer object.
-     */
-    ref<Buffer> create_typed_buffer(TypedBufferDesc desc);
 
     /**
      * \brief Create a new texture.
