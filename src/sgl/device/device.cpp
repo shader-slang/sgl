@@ -326,6 +326,17 @@ Device::Device(const DeviceDesc& desc)
     }
     std::string gfx_shader_cache_path = (m_shader_cache_path / "gfx").string();
 
+    // Setup extensions.
+    std::vector<void*> extended_descs;
+    gfx::D3D12DeviceExtendedDesc d3d12_extended_desc{
+        .structType = gfx::StructType::D3D12DeviceExtendedDesc,
+        .rootParameterShaderAttributeName = "root",
+        .debugBreakOnD3D12Error = false,
+        .highestShaderModel = 0,
+    };
+    if (m_desc.type == DeviceType::d3d12)
+        extended_descs.push_back(&d3d12_extended_desc);
+
     gfx::IDevice::Desc gfx_desc
     {
         .deviceType = gfx_device_type(m_desc.type),
@@ -341,6 +352,7 @@ Device::Device(const DeviceDesc& desc)
         .slang{
             .slangGlobalSession = m_global_session,
         },
+        .extendedDescCount = narrow_cast<gfx::GfxCount>(extended_descs.size()), .extendedDescs = extended_descs.data(),
     };
     log_debug(
         "Creating graphics device (type: {}, luid: {}, shader_cache_path: {}).",
