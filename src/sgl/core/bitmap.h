@@ -250,6 +250,8 @@ public:
 
     std::string to_string() const override;
 
+    static FileFormat detect_file_format(Stream* stream);
+
     static void static_init();
     static void static_shutdown();
 
@@ -257,8 +259,6 @@ private:
     void rebuild_pixel_struct(uint32_t channel_count = 0, const std::vector<std::string>& channel_names = {});
 
     void read(Stream* stream, FileFormat format);
-
-    static FileFormat detect_file_format(Stream* stream);
 
     void check_required_format(
         std::string_view file_format,

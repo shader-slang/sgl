@@ -156,8 +156,7 @@ Bitmap::Bitmap(Bitmap&& other)
 
 Bitmap::Bitmap(Stream* stream, FileFormat format)
 {
-    SGL_UNUSED(stream);
-    SGL_UNUSED(format);
+    read(stream, format);
 }
 
 Bitmap::Bitmap(const std::filesystem::path& path, FileFormat format)
@@ -515,6 +514,51 @@ std::string Bitmap::to_string() const
     );
 }
 
+Bitmap::FileFormat Bitmap::detect_file_format(Stream* stream)
+{
+    FileFormat format = FileFormat::unknown;
+
+    size_t pos = stream->tell();
+    uint8_t header[8];
+    stream->read(header, 8);
+
+    if (header[0] == 'B' && header[1] == 'M') {
+        format = FileFormat::bmp;
+    } else if (header[0] == '#' && header[1] == '?') {
+        format = FileFormat::hdr;
+#if SGL_HAS_JPEG
+    } else if (header[0] == 0xFF && header[1] == 0xD8) {
+        format = FileFormat::jpg;
+#endif
+#if SGL_HAS_PNG
+    } else if (png_sig_cmp(header, 0, 8) == 0) {
+        format = FileFormat::png;
+#endif
+#if SGL_HAS_OPENEXR
+    } else if (Imf::isImfMagic(reinterpret_cast<const char*>(header))) {
+        format = FileFormat::exr;
+#endif
+    } else {
+        // Check for TGAv1 file
+        char spec[10];
+        stream->read(spec, 10);
+        if ((header[1] == 0 || header[1] == 1)
+            && (header[2] == 1 || header[2] == 2 || header[2] == 3 || header[2] == 9 || header[2] == 10
+                || header[2] == 11)
+            && (spec[8] == 8 || spec[8] == 16 || spec[8] == 24 || spec[8] == 32))
+            format = FileFormat::tga;
+
+        // Check for a TGAv2 file
+        char footer[18];
+        stream->seek(stream->size() - 18);
+        stream->read(footer, 18);
+        if (footer[17] == 0 && strncmp(footer, "TRUEVISION-XFILE.", 17) == 0)
+            format = FileFormat::tga;
+    }
+    stream->seek(pos);
+    return format;
+}
+
 void Bitmap::static_init()
 {
     // IlmThread::ThreadPool::globalThreadPool().setThreadProvider(new EXRThreadPool());
@@ -611,51 +655,6 @@ void Bitmap::read(Stream* stream, FileFormat format)
     default:
         SGL_THROW("Unknown file format!");
     }
-}
-
-Bitmap::FileFormat Bitmap::detect_file_format(Stream* stream)
-{
-    FileFormat format = FileFormat::unknown;
-
-    size_t pos = stream->tell();
-    uint8_t header[8];
-    stream->read(header, 8);
-
-    if (header[0] == 'B' && header[1] == 'M') {
-        format = FileFormat::bmp;
-    } else if (header[0] == '#' && header[1] == '?') {
-        format = FileFormat::hdr;
-#if SGL_HAS_JPEG
-    } else if (header[0] == 0xFF && header[1] == 0xD8) {
-        format = FileFormat::jpg;
-#endif
-#if SGL_HAS_PNG
-    } else if (png_sig_cmp(header, 0, 8) == 0) {
-        format = FileFormat::png;
-#endif
-#if SGL_HAS_OPENEXR
-    } else if (Imf::isImfMagic(reinterpret_cast<const char*>(header))) {
-        format = FileFormat::exr;
-#endif
-    } else {
-        // Check for TGAv1 file
-        char spec[10];
-        stream->read(spec, 10);
-        if ((header[1] == 0 || header[1] == 1)
-            && (header[2] == 1 || header[2] == 2 || header[2] == 3 || header[2] == 9 || header[2] == 10
-                || header[2] == 11)
-            && (spec[8] == 8 || spec[8] == 16 || spec[8] == 24 || spec[8] == 32))
-            format = FileFormat::tga;
-
-        // Check for a TGAv2 file
-        char footer[18];
-        stream->seek(stream->size() - 18);
-        stream->read(footer, 18);
-        if (footer[17] == 0 && strncmp(footer, "TRUEVISION-XFILE.", 17) == 0)
-            format = FileFormat::tga;
-    }
-    stream->seek(pos);
-    return format;
 }
 
 void Bitmap::check_required_format(
