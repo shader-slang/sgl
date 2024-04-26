@@ -528,17 +528,7 @@ ref<Buffer> Device::create_buffer(BufferDesc desc)
     return make_ref<Buffer>(ref<Device>(this), std::move(desc));
 }
 
-ref<Buffer> Device::create_raw_buffer(RawBufferDesc desc)
-{
-    return make_ref<Buffer>(ref<Device>(this), std::move(desc));
-}
-
 ref<Buffer> Device::create_structured_buffer(StructuredBufferDesc desc)
-{
-    return make_ref<Buffer>(ref<Device>(this), std::move(desc));
-}
-
-ref<Buffer> Device::create_typed_buffer(TypedBufferDesc desc)
 {
     return make_ref<Buffer>(ref<Device>(this), std::move(desc));
 }

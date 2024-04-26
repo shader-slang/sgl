@@ -332,24 +332,6 @@ Buffer::Buffer(ref<Device> device, BufferDesc desc)
     m_desc.data_size = 0;
 }
 
-inline BufferDesc to_buffer_desc(RawBufferDesc desc)
-{
-    return {
-        .size = desc.size,
-        .initial_state = desc.initial_state,
-        .usage = desc.usage,
-        .memory_type = desc.memory_type,
-        .debug_name = desc.debug_name,
-        .data = desc.data,
-        .data_size = desc.data_size,
-    };
-}
-
-Buffer::Buffer(ref<Device> device, RawBufferDesc desc)
-    : Buffer(std::move(device), to_buffer_desc(std::move(desc)))
-{
-}
-
 inline BufferDesc to_buffer_desc(StructuredBufferDesc desc)
 {
     SGL_CHECK(desc.struct_size > 0 || desc.struct_type, "Either 'struct_size' or 'struct_type' must be set.");
@@ -374,27 +356,6 @@ inline BufferDesc to_buffer_desc(StructuredBufferDesc desc)
 }
 
 Buffer::Buffer(ref<Device> device, StructuredBufferDesc desc)
-    : Buffer(std::move(device), to_buffer_desc(std::move(desc)))
-{
-}
-
-inline BufferDesc to_buffer_desc(TypedBufferDesc desc)
-{
-    SGL_CHECK(desc.format != Format::unknown, "Invalid format.");
-
-    return {
-        .size = desc.element_count * get_format_info(desc.format).bytes_per_block,
-        .format = desc.format,
-        .initial_state = desc.initial_state,
-        .usage = desc.usage,
-        .memory_type = desc.memory_type,
-        .debug_name = desc.debug_name,
-        .data = desc.data,
-        .data_size = desc.data_size,
-    };
-}
-
-Buffer::Buffer(ref<Device> device, TypedBufferDesc desc)
     : Buffer(std::move(device), to_buffer_desc(std::move(desc)))
 {
 }
