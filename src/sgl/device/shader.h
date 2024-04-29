@@ -209,7 +209,7 @@ struct SlangCompilerOptions {
     SlangFloatingPointMode floating_point_mode{SlangFloatingPointMode::default_};
 
     /// Specifies the level of debug information to include in the generated code.
-    SlangDebugInfoLevel debug_info{SlangDebugInfoLevel::standard};
+    SlangDebugInfoLevel debug_info{SlangDebugInfoLevel::none};
 
     /// Specifies the optimization level.
     SlangOptimizationLevel optimization{SlangOptimizationLevel::default_};
