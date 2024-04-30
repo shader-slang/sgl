@@ -18,6 +18,11 @@ struct Test {
     float2 f_float2;
     float3 f_float3;
     float4 f_float4;
+
+    bool f_bool_array[1];
+    int f_int_array[2];
+    uint f_uint_array[3];
+    float f_float_array[4];
 };
 
 // Global uniforms
@@ -98,8 +103,13 @@ uniform float16_t4 u_float16_t4;
 uniform float16_t4 u_float16_t4_min;
 uniform float16_t4 u_float16_t4_max;
 
-uniform Test u_struct;
+uniform bool u_bool_array[4];
 uniform int u_int_array[4];
+uniform uint u_uint_array[4];
+uniform float u_float_array[4];
+
+uniform Test u_struct;
+uniform int u_int_array_2[4];
 uniform Test u_struct_array[4];
 
 Buffer<uint> u_buffer;
@@ -271,6 +281,15 @@ void main(uint3 tid: SV_DispatchThreadID)
     writer.write(u_float16_t4_min);
     writer.write(u_float16_t4_max);
 
+    for (uint i = 0; i < 4; ++i)
+        writer.write(u_bool_array[i]);
+    for (uint i = 0; i < 4; ++i)
+        writer.write(u_int_array[i]);
+    for (uint i = 0; i < 4; ++i)
+        writer.write(u_uint_array[i]);
+    for (uint i = 0; i < 4; ++i)
+        writer.write(u_float_array[i]);
+
     writer.write(u_struct.f_bool);
     writer.write(u_struct.f_bool2);
     writer.write(u_struct.f_bool3);
@@ -288,10 +307,17 @@ void main(uint3 tid: SV_DispatchThreadID)
     writer.write(u_struct.f_float3);
     writer.write(u_struct.f_float4);
 
-    writer.write(u_int_array[0]);
-    writer.write(u_int_array[1]);
-    writer.write(u_int_array[2]);
-    writer.write(u_int_array[3]);
+    for (uint i = 0; i < 1; ++i)
+        writer.write(u_struct.f_bool_array[i]);
+    for (uint i = 0; i < 2; ++i)
+        writer.write(u_struct.f_int_array[i]);
+    for (uint i = 0; i < 3; ++i)
+        writer.write(u_struct.f_uint_array[i]);
+    for (uint i = 0; i < 4; ++i)
+        writer.write(u_struct.f_float_array[i]);
+
+    for (uint i = 0; i < 4; ++i)
+        writer.write(u_int_array_2[i]);
 
     writer.write(u_struct_array[0].f_int);
     writer.write(u_struct_array[0].f_uint);

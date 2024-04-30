@@ -4,7 +4,9 @@ import pytest
 import sys
 import sgl
 import struct
+import numpy as np
 from dataclasses import dataclass
+from typing import Literal
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent))
@@ -22,66 +24,31 @@ FLOAT16_MAX = 65504.0
 
 @dataclass
 class TypeInfo:
+    # size in bytes when reading back
     size: int
+    # encoding of read back data
     struct: str
-    converter: lambda list: any | None = None
+    # numpy dtype
+    dtype: np.dtype
 
 
 TYPE_INFOS = {
-    "bool": TypeInfo(size=4, struct="I"),
-    "bool2": TypeInfo(size=8, struct="II"),
-    "bool3": TypeInfo(size=12, struct="III"),
-    "bool4": TypeInfo(size=16, struct="IIII"),
-    "int": TypeInfo(size=4, struct="i"),
-    "int2": TypeInfo(size=8, struct="ii"),
-    "int3": TypeInfo(size=12, struct="iii"),
-    "int4": TypeInfo(size=16, struct="iiii"),
-    "uint": TypeInfo(size=4, struct="I"),
-    "uint2": TypeInfo(size=8, struct="II"),
-    "uint3": TypeInfo(size=12, struct="III"),
-    "uint4": TypeInfo(size=16, struct="IIII"),
-    "float": TypeInfo(size=4, struct="f"),
-    "float2": TypeInfo(size=8, struct="ff"),
-    "float3": TypeInfo(size=12, struct="fff"),
-    "float4": TypeInfo(size=16, struct="ffff"),
-    "float2x2": TypeInfo(
-        size=16, struct="ffff", converter=lambda values: sgl.float2x2(values)
-    ),
-    "float3x3": TypeInfo(
-        size=36, struct="fffffffff", converter=lambda values: sgl.float3x3(values)
-    ),
-    "float2x4": TypeInfo(
-        size=32, struct="ffffffff", converter=lambda values: sgl.float2x4(values)
-    ),
-    "float3x4": TypeInfo(
-        size=48, struct="ffffffffffff", converter=lambda values: sgl.float3x4(values)
-    ),
-    "float4x4": TypeInfo(
-        size=64,
-        struct="ffffffffffffffff",
-        converter=lambda values: sgl.float4x4(values),
-    ),
-    "float16_t": TypeInfo(size=4, struct="exx"),
-    "float16_t2": TypeInfo(
-        size=8,
-        struct="exxexx",
-        converter=lambda values: sgl.float16_t2(values),
-    ),
-    "float16_t3": TypeInfo(
-        size=12,
-        struct="exxexxexx",
-        converter=lambda values: sgl.float16_t3(values),
-    ),
-    "float16_t4": TypeInfo(
-        size=16,
-        struct="exxexxexxexx",
-        converter=lambda values: sgl.float16_t4(values),
-    ),
+    "bool": TypeInfo(size=4, struct="I", dtype=np.uint32),  # np.bool is 8 bits
+    "int": TypeInfo(size=4, struct="i", dtype=np.int32),
+    "uint": TypeInfo(size=4, struct="I", dtype=np.uint32),
+    "float": TypeInfo(size=4, struct="f", dtype=np.float32),
+    "int16_t": TypeInfo(size=4, struct="hxx", dtype=np.int16),
+    "uint16_t": TypeInfo(size=4, struct="Hxx", dtype=np.uint16),
+    "float16_t": TypeInfo(size=4, struct="exx", dtype=np.float16),
+    "int64_t": TypeInfo(size=8, struct="q", dtype=np.int64),
+    "int64_t": TypeInfo(size=8, struct="Q", dtype=np.uint64),
+    "float64_t": TypeInfo(size=8, struct="d", dtype=np.float64),
 }
 
 
 @dataclass
 class Var:
+    kind: Literal["scalar", "vector", "matrix", "array"]
     type: str
     value: any
 
@@ -90,131 +57,140 @@ TEST_VARS = {
     # fmt: off
     # Global uniforms
     # bool
-    "u_bool_false": Var(type="bool", value=False),
-    "u_bool_true": Var(type="bool", value=True),
+    "u_bool_false": Var(kind="scalar", type="bool", value=False),
+    "u_bool_true": Var(kind="scalar", type="bool", value=True),
     # bool2
-    "u_bool2": Var(type="bool2", value=[False, True]),
+    "u_bool2": Var(kind="vector", type="bool", value=[False, True]),
     # bool3
-    "u_bool3": Var(type="bool3", value=[False, True, False]),
+    "u_bool3": Var(kind="vector", type="bool", value=[False, True, False]),
     # bool4
-    "u_bool4": Var(type="bool4", value=[False, True, False, True]),
+    "u_bool4": Var(kind="vector", type="bool", value=[False, True, False, True]),
     # int
-    "u_int": Var(type="int", value=-12345),
-    "u_int_min": Var(type="int", value=INT_MIN),
-    "u_int_max": Var(type="int", value=INT_MAX),
+    "u_int": Var(kind="salar", type="int", value=-12345),
+    "u_int_min": Var(kind="salar", type="int", value=INT_MIN),
+    "u_int_max": Var(kind="salar", type="int", value=INT_MAX),
     # int2
-    "u_int2": Var(type="int2", value=[-12345, 12345]),
-    "u_int2_min": Var(type="int2", value=[INT_MIN, INT_MIN]),
-    "u_int2_max": Var(type="int2", value=[INT_MAX, INT_MAX]),
+    "u_int2": Var(kind="vector", type="int", value=[-12345, 12345]),
+    "u_int2_min": Var(kind="vector", type="int", value=[INT_MIN, INT_MIN]),
+    "u_int2_max": Var(kind="vector", type="int", value=[INT_MAX, INT_MAX]),
     # int3
-    "u_int3": Var(type="int3", value=[-12345, 12345, -123456]),
-    "u_int3_min": Var(type="int3", value=[INT_MIN, INT_MIN, INT_MIN]),
-    "u_int3_max": Var(type="int3", value=[INT_MAX, INT_MAX, INT_MAX]),
+    "u_int3": Var(kind="vector", type="int", value=[-12345, 12345, -123456]),
+    "u_int3_min": Var(kind="vector", type="int", value=[INT_MIN, INT_MIN, INT_MIN]),
+    "u_int3_max": Var(kind="vector", type="int", value=[INT_MAX, INT_MAX, INT_MAX]),
     # int4
-    "u_int4": Var(type="int4", value=[-12345, 12345, -123456, 123456]),
-    "u_int4_min": Var(type="int4", value=[INT_MIN, INT_MIN, INT_MIN, INT_MIN]),
-    "u_int4_max": Var(type="int4", value=[INT_MAX, INT_MAX, INT_MAX, INT_MAX]),
+    "u_int4": Var(kind="vector", type="int", value=[-12345, 12345, -123456, 123456]),
+    "u_int4_min": Var(kind="vector", type="int", value=[INT_MIN, INT_MIN, INT_MIN, INT_MIN]),
+    "u_int4_max": Var(kind="vector", type="int", value=[INT_MAX, INT_MAX, INT_MAX, INT_MAX]),
     # uint
-    "u_uint": Var(type="uint", value=12345),
-    "u_uint_min": Var(type="uint", value=UINT_MIN),
-    "u_uint_max": Var(type="uint", value=UINT_MAX),
+    "u_uint": Var(kind="scalar", type="uint", value=12345),
+    "u_uint_min": Var(kind="scalar", type="uint", value=UINT_MIN),
+    "u_uint_max": Var(kind="scalar", type="uint", value=UINT_MAX),
     # uint2
-    "u_uint2": Var(type="uint2", value=[12345, 123456]),
-    "u_uint2_min": Var(type="uint2", value=[UINT_MIN, UINT_MIN]),
-    "u_uint2_max": Var(type="uint2", value=[UINT_MAX, UINT_MAX]),
+    "u_uint2": Var(kind="vector", type="uint", value=[12345, 123456]),
+    "u_uint2_min": Var(kind="vector", type="uint", value=[UINT_MIN, UINT_MIN]),
+    "u_uint2_max": Var(kind="vector", type="uint", value=[UINT_MAX, UINT_MAX]),
     # uint3
-    "u_uint3": Var(type="uint3", value=[12345, 123456, 1234567]),
-    "u_uint3_min": Var(type="uint3", value=[UINT_MIN, UINT_MIN, UINT_MIN]),
-    "u_uint3_max": Var(type="uint3", value=[UINT_MAX, UINT_MAX, UINT_MAX]),
+    "u_uint3": Var(kind="vector", type="uint", value=[12345, 123456, 1234567]),
+    "u_uint3_min": Var(kind="vector", type="uint", value=[UINT_MIN, UINT_MIN, UINT_MIN]),
+    "u_uint3_max": Var(kind="vector", type="uint", value=[UINT_MAX, UINT_MAX, UINT_MAX]),
     # uint4
-    "u_uint4": Var(type="uint4", value=[12345, 123456, 1234567, 12345678]),
-    "u_uint4_min": Var(type="uint4", value=[UINT_MIN, UINT_MIN, UINT_MIN, UINT_MIN]),
-    "u_uint4_max": Var(type="uint4", value=[UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX]),
+    "u_uint4": Var(kind="vector", type="uint", value=[12345, 123456, 1234567, 12345678]),
+    "u_uint4_min": Var(kind="vector", type="uint", value=[UINT_MIN, UINT_MIN, UINT_MIN, UINT_MIN]),
+    "u_uint4_max": Var(kind="vector", type="uint", value=[UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX]),
     # float
-    "u_float": Var(type="float", value=1.2345),
-    "u_float_min": Var(type="float", value=FLOAT_MIN),
-    "u_float_max": Var(type="float", value=FLOAT_MAX),
+    "u_float": Var(kind="scalar", type="float", value=1.2345),
+    "u_float_min": Var(kind="scalar", type="float", value=FLOAT_MIN),
+    "u_float_max": Var(kind="scalar", type="float", value=FLOAT_MAX),
     # float2
-    "u_float2": Var(type="float2", value=[1.2345, -1.2345]),
-    "u_float2_min": Var(type="float2", value=[FLOAT_MIN, FLOAT_MIN]),
-    "u_float2_max": Var(type="float2", value=[FLOAT_MAX, FLOAT_MAX]),
+    "u_float2": Var(kind="vector", type="float", value=[1.2345, -1.2345]),
+    "u_float2_min": Var(kind="vector", type="float", value=[FLOAT_MIN, FLOAT_MIN]),
+    "u_float2_max": Var(kind="vector", type="float", value=[FLOAT_MAX, FLOAT_MAX]),
     # float3
-    "u_float3": Var(type="float3", value=[1.2345, -1.2345, 12.345]),
-    "u_float3_min": Var(type="float3", value=[FLOAT_MIN, FLOAT_MIN, FLOAT_MIN]),
-    "u_float3_max": Var(type="float3", value=[FLOAT_MAX, FLOAT_MAX, FLOAT_MAX]),
+    "u_float3": Var(kind="vector", type="float", value=[1.2345, -1.2345, 12.345]),
+    "u_float3_min": Var(kind="vector", type="float", value=[FLOAT_MIN, FLOAT_MIN, FLOAT_MIN]),
+    "u_float3_max": Var(kind="vector", type="float", value=[FLOAT_MAX, FLOAT_MAX, FLOAT_MAX]),
     # float4
-    "u_float4": Var(type="float4", value=[1.2345, -1.2345, 12.345, -12.345]),
-    "u_float4_min": Var(type="float4", value=[FLOAT_MIN, FLOAT_MIN, FLOAT_MIN, FLOAT_MIN]),
-    "u_float4_max": Var(type="float4", value=[FLOAT_MAX, FLOAT_MAX, FLOAT_MAX, FLOAT_MAX]),
+    "u_float4": Var(kind="vector", type="float", value=[1.2345, -1.2345, 12.345, -12.345]),
+    "u_float4_min": Var(kind="vector", type="float", value=[FLOAT_MIN, FLOAT_MIN, FLOAT_MIN, FLOAT_MIN]),
+    "u_float4_max": Var(kind="vector", type="float", value=[FLOAT_MAX, FLOAT_MAX, FLOAT_MAX, FLOAT_MAX]),
     # floatXxX
-    "u_float2x2": Var(type="float2x2", value=[0, 1, 2, 3]),
-    "u_float3x3": Var(type="float3x3", value=[0, 1, 2, 3, 4, 5, 6, 7, 8]),
-    "u_float2x4": Var(type="float2x4", value=[0, 1, 2, 3, 4, 5, 6, 7]),
-    "u_float3x4": Var(type="float3x4", value=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]),
-    "u_float4x4": Var(type="float4x4", value=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]),
+    "u_float2x2": Var(kind="matrix", type="float", value=[[0, 1], [2, 3]]),
+    "u_float3x3": Var(kind="matrix", type="float", value=[[0, 1, 2], [3, 4, 5], [6, 7, 8]]),
+    "u_float2x4": Var(kind="matrix", type="float", value=[[0, 1, 2, 3], [4, 5, 6, 7]]),
+    "u_float3x4": Var(kind="matrix", type="float", value=[[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11]]),
+    "u_float4x4": Var(kind="matrix", type="float", value=[[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15]]),
     # float16_t
-    "u_float16_t": Var(type="float16_t", value=1.2345),
-    "u_float16_t_min": Var(type="float16_t", value=FLOAT16_MIN),
-    "u_float16_t_max": Var(type="float16_t", value=FLOAT16_MAX),
+    "u_float16_t": Var(kind="scalar", type="float16_t", value=1.2345),
+    "u_float16_t_min": Var(kind="scalar", type="float16_t", value=FLOAT16_MIN),
+    "u_float16_t_max": Var(kind="scalar", type="float16_t", value=FLOAT16_MAX),
     # float16_t2
-    "u_float16_t2": Var(type="float16_t2", value=[1.2345, -1.2345]),
-    "u_float16_t2_min": Var(type="float16_t2", value=[FLOAT16_MIN, FLOAT16_MIN]),
-    "u_float16_t2_max": Var(type="float16_t2", value=[FLOAT16_MAX, FLOAT16_MAX]),
+    "u_float16_t2": Var(kind="vector", type="float16_t", value=[1.2345, -1.2345]),
+    "u_float16_t2_min": Var(kind="vector", type="float16_t", value=[FLOAT16_MIN, FLOAT16_MIN]),
+    "u_float16_t2_max": Var(kind="vector", type="float16_t", value=[FLOAT16_MAX, FLOAT16_MAX]),
     # float16_t3
-    "u_float16_t3": Var(type="float16_t3", value=[1.2345, -1.2345, 12.345]),
-    "u_float16_t3_min": Var(type="float16_t3", value=[FLOAT16_MIN, FLOAT16_MIN, FLOAT16_MIN]),
-    "u_float16_t3_max": Var(type="float16_t3", value=[FLOAT16_MAX, FLOAT16_MAX, FLOAT16_MAX]),
+    "u_float16_t3": Var(kind="vector", type="float16_t", value=[1.2345, -1.2345, 12.345]),
+    "u_float16_t3_min": Var(kind="vector", type="float16_t", value=[FLOAT16_MIN, FLOAT16_MIN, FLOAT16_MIN]),
+    "u_float16_t3_max": Var(kind="vector", type="float16_t", value=[FLOAT16_MAX, FLOAT16_MAX, FLOAT16_MAX]),
     # float16_t4
-    "u_float16_t4": Var(type="float16_t4", value=[1.2345, -1.2345, 12.345, -12.345]),
-    "u_float16_t4_min": Var(type="float16_t4", value=[FLOAT16_MIN, FLOAT16_MIN, FLOAT16_MIN, FLOAT16_MIN]),
-    "u_float16_t4_max": Var(type="float16_t4", value=[FLOAT16_MAX, FLOAT16_MAX, FLOAT16_MAX, FLOAT16_MAX]),
+    "u_float16_t4": Var(kind="vector", type="float16_t", value=[1.2345, -1.2345, 12.345, -12.345]),
+    "u_float16_t4_min": Var(kind="vector", type="float16_t", value=[FLOAT16_MIN, FLOAT16_MIN, FLOAT16_MIN, FLOAT16_MIN]),
+    "u_float16_t4_max": Var(kind="vector", type="float16_t", value=[FLOAT16_MAX, FLOAT16_MAX, FLOAT16_MAX, FLOAT16_MAX]),
+    # uniform arrays
+    "u_bool_array": Var(kind="array", type="bool", value=[False, True, False, True]),
+    "u_int_array": Var(kind="array", type="int", value=[-2, -1, 0, 1]),
+    "u_uint_array": Var(kind="array", type="uint", value=[10, 20, 30, 40]),
+    "u_float_array": Var(kind="array", type="float", value=[1.1, 2.2, 3.3, 4.4]),
     # u_struct
     "u_struct": {
-        "f_bool": Var(type="bool", value=True),
-        "f_bool2": Var(type="bool2", value=[False, True]),
-        "f_bool3": Var(type="bool3", value=[False, True, False]),
-        "f_bool4": Var(type="bool4", value=[False, True, False, True]),
-        "f_int": Var(type="int", value=-123),
-        "f_int2": Var(type="int2", value=[-123, 123]),
-        "f_int3": Var(type="int3", value=[-123, 123, -1234]),
-        "f_int4": Var(type="int4", value=[-123, 123, -1234, 1234]),
-        "f_uint": Var(type="uint", value=12),
-        "f_uint2": Var(type="uint2", value=[123, 1234]),
-        "f_uint3": Var(type="uint3", value=[123, 1234, 12345]),
-        "f_uint4": Var(type="uint4", value=[123, 1235, 123456, 1234567]),
-        "f_float": Var(type="float", value=1.2),
-        "f_float2": Var(type="float2", value=[1.23, 1.234]),
-        "f_float3": Var(type="float3", value=[1.23, 1.234, 1.2345]),
-        "f_float4": Var(type="float4", value=[1.23, 1.235, 1.23456, 1.234567]),
+        "f_bool": Var(kind="scalar", type="bool", value=True),
+        "f_bool2": Var(kind="vector", type="bool", value=[False, True]),
+        "f_bool3": Var(kind="vector", type="bool", value=[False, True, False]),
+        "f_bool4": Var(kind="vector", type="bool", value=[False, True, False, True]),
+        "f_int": Var(kind="scalar", type="int", value=-123),
+        "f_int2": Var(kind="vector", type="int", value=[-123, 123]),
+        "f_int3": Var(kind="vector", type="int", value=[-123, 123, -1234]),
+        "f_int4": Var(kind="vector", type="int", value=[-123, 123, -1234, 1234]),
+        "f_uint": Var(kind="scalar", type="uint", value=12),
+        "f_uint2": Var(kind="vector", type="uint", value=[123, 1234]),
+        "f_uint3": Var(kind="vector", type="uint", value=[123, 1234, 12345]),
+        "f_uint4": Var(kind="vector", type="uint", value=[123, 1235, 123456, 1234567]),
+        "f_float": Var(kind="scalar", type="float", value=1.2),
+        "f_float2": Var(kind="vector", type="float", value=[1.23, 1.234]),
+        "f_float3": Var(kind="vector", type="float", value=[1.23, 1.234, 1.2345]),
+        "f_float4": Var(kind="vector", type="float", value=[1.23, 1.235, 1.23456, 1.234567]),
+        "f_bool_array": Var(kind="array", type="bool", value=[False]),
+        "f_int_array": Var(kind="array", type="int", value=[-10, 10]),
+        "f_uint_array": Var(kind="array", type="uint", value=[0, 10, 20]),
+        "f_float_array": Var(kind="array", type="float", value=[0.1, 0.2, 0.3, 0.4]),
     },
-    # u_int_array
-    "u_int_array": [
-        Var(type="int", value=1),
-        Var(type="int", value=2),
-        Var(type="int", value=3),
-        Var(type="int", value=4),
+    # u_int_array_2
+    "u_int_array_2": [
+        Var(kind="scalar", type="int", value=1),
+        Var(kind="scalar", type="int", value=2),
+        Var(kind="scalar", type="int", value=3),
+        Var(kind="scalar", type="int", value=4),
     ],
     # u_struct_array
     "u_struct_array": [
         {
-            "f_int": Var(type="int", value=-1),
-            "f_uint": Var(type="uint", value=1),
-            "f_float": Var(type="float", value=1.0),
+            "f_int": Var(kind="scalar", type="int", value=-1),
+            "f_uint": Var(kind="scalar", type="uint", value=1),
+            "f_float": Var(kind="scalar", type="float", value=1.0),
         },
         {
-            "f_int": Var(type="int", value=-2),
-            "f_uint": Var(type="uint", value=2),
-            "f_float": Var(type="float", value=2.0),
+            "f_int": Var(kind="scalar", type="int", value=-2),
+            "f_uint": Var(kind="scalar", type="uint", value=2),
+            "f_float": Var(kind="scalar", type="float", value=2.0),
         },
         {
-            "f_int": Var(type="int", value=-3),
-            "f_uint": Var(type="uint", value=3),
-            "f_float": Var(type="float", value=3.0),
+            "f_int": Var(kind="scalar", type="int", value=-3),
+            "f_uint": Var(kind="scalar", type="uint", value=3),
+            "f_float": Var(kind="scalar", type="float", value=3.0),
         },
         {
-            "f_int": Var(type="int", value=-4),
-            "f_uint": Var(type="uint", value=4),
-            "f_float": Var(type="float", value=4.0),
+            "f_int": Var(kind="scalar", type="int", value=-4),
+            "f_uint": Var(kind="scalar", type="uint", value=4),
+            "f_float": Var(kind="scalar", type="float", value=4.0),
         },
     ]
     # u_test
@@ -222,8 +198,40 @@ TEST_VARS = {
 }
 
 
+def flatten(values):
+    if isinstance(values, list):
+        if isinstance(values[0], list):
+            return [item for sublist in values for item in sublist]
+        return values
+    else:
+        return [values]
+
+
+def convert_vector(type, dim, values):
+    TABLE = {
+        ("float16_t", 2): sgl.float16_t2,
+        ("float16_t", 3): sgl.float16_t3,
+        ("float16_t", 4): sgl.float16_t4,
+    }
+    key = (type, dim)
+    return TABLE[key](values) if key in TABLE else values
+
+
+def convert_matrix(type, rows, cols, values):
+    TABLE = {
+        ("float", 2, 2): sgl.float2x2,
+        ("float", 3, 3): sgl.float3x3,
+        ("float", 2, 4): sgl.float2x4,
+        ("float", 3, 4): sgl.float3x4,
+        ("float", 4, 4): sgl.float4x4,
+    }
+    key = (type, rows, cols)
+    return TABLE[key](flatten(values))
+
+
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_shader_cursor(device_type):
+@pytest.mark.parametrize("use_numpy", [False, True])
+def test_shader_cursor(device_type, use_numpy):
     device = helpers.get_device(type=device_type)
 
     program = device.load_program("test_shader_cursor.slang", ["main"])
@@ -248,22 +256,50 @@ def test_shader_cursor(device_type):
         nonlocal names
         nonlocal sizes
         nonlocal references
+
         type_info = TYPE_INFOS[var.type]
+
+        # Determine descriptive name
         if isinstance(name_or_index, str):
             name = name_prefix + name_or_index
         elif isinstance(name_or_index, int):
             name = name_prefix + f"[{name_or_index}]"
         names.append(name)
-        sizes.append(type_info.size)
+
+        # Value to write
         value = var.value
-        if type_info.converter:
-            value = type_info.converter(value)
-        # print(f"Setting {name}={value}")
+        flat_value = flatten(value)
+
+        # Read back size
+        size = type_info.size
+        struct_pattern = type_info.struct
+        element_count = 1
+
+        if var.kind == "vector":
+            element_count = len(var.value)
+            if use_numpy:
+                value = np.array(var.value, dtype=type_info.dtype)
+            else:
+                value = convert_vector(var.type, element_count, var.value)
+        elif var.kind == "matrix":
+            rows = len(var.value)
+            cols = len(var.value[0])
+            element_count = rows * cols
+            if use_numpy:
+                value = np.array(var.value, dtype=type_info.dtype)
+            else:
+                value = convert_matrix(var.type, rows, cols, var.value)
+        elif var.kind == "array":
+            element_count = len(var.value)
+            value = np.array(var.value, dtype=type_info.dtype)
+
+        size *= element_count
+        struct_pattern *= element_count
+
+        sizes.append(size)
+        references.append(struct.pack(struct_pattern, *flat_value).hex())
+
         cursor[name_or_index] = value
-        if type(var.value) == list:
-            references.append(struct.pack(type_info.struct, *var.value).hex())
-        else:
-            references.append(struct.pack(type_info.struct, var.value).hex())
 
     def write_vars(cursor: sgl.ShaderCursor, vars: dict | list, name_prefix: str = ""):
         if isinstance(vars, dict):
