@@ -54,6 +54,30 @@ inline bool allow_scalar_conversion(TypeReflection::ScalarType from, TypeReflect
     return table.allow_conversion(from, to);
 }
 
+inline size_t get_scalar_type_size(TypeReflection::ScalarType type)
+{
+    switch (type) {
+    case TypeReflection::ScalarType::int8:
+    case TypeReflection::ScalarType::uint8:
+        return 1;
+    case TypeReflection::ScalarType::int16:
+    case TypeReflection::ScalarType::uint16:
+    case TypeReflection::ScalarType::float16:
+        return 2;
+    case TypeReflection::ScalarType::bool_:
+    case TypeReflection::ScalarType::int32:
+    case TypeReflection::ScalarType::uint32:
+    case TypeReflection::ScalarType::float32:
+        return 4;
+    case TypeReflection::ScalarType::int64:
+    case TypeReflection::ScalarType::uint64:
+    case TypeReflection::ScalarType::float64:
+        return 8;
+    default:
+        return 0;
+    }
+}
+
 ShaderCursor::ShaderCursor(ShaderObject* shader_object)
     : m_shader_object(shader_object)
     , m_type_layout(shader_object->element_type_layout())
@@ -482,7 +506,47 @@ void ShaderCursor::set_cuda_tensor_view(const cuda::TensorView& tensor_view) con
     }
 }
 
-void ShaderCursor::set_scalar(const void* data, size_t size, TypeReflection::ScalarType scalar_type) const
+void ShaderCursor::_set_array(
+    const void* data,
+    size_t size,
+    TypeReflection::ScalarType scalar_type,
+    size_t element_count
+) const
+{
+    const TypeReflection* type = m_type_layout->type();
+    const TypeReflection* element_type = m_type_layout->unwrap_array()->type();
+    size_t element_size = get_scalar_type_size(element_type->scalar_type());
+
+    SGL_CHECK(type->is_array(), "\"{}\" cannot bind an array", m_type_layout->name());
+    SGL_CHECK(
+        allow_scalar_conversion(scalar_type, element_type->scalar_type()),
+        "\"{}\" expects scalar type {} (no implicit conversion from type {})",
+        m_type_layout->name(),
+        element_type->scalar_type(),
+        scalar_type
+    );
+    SGL_CHECK(
+        element_count <= type->element_count(),
+        "\"{}\" expects an array with at most {} elements (got {})",
+        m_type_layout->name(),
+        type->element_count(),
+        element_count
+    );
+    SGL_ASSERT(element_count * element_size == size);
+
+    size_t stride = m_type_layout->element_stride();
+    if (element_size == stride) {
+        m_shader_object->set_data(m_offset, data, size);
+    } else {
+        ShaderOffset offset = m_offset;
+        for (size_t i = 0; i < element_count; ++i) {
+            m_shader_object->set_data(offset, reinterpret_cast<const uint8_t*>(data) + i * element_size, element_size);
+            offset.uniform_offset += narrow_cast<uint32_t>(stride);
+        }
+    }
+}
+
+void ShaderCursor::_set_scalar(const void* data, size_t size, TypeReflection::ScalarType scalar_type) const
 {
     const TypeReflection* type = m_type_layout->unwrap_array()->type();
 
@@ -498,7 +562,7 @@ void ShaderCursor::set_scalar(const void* data, size_t size, TypeReflection::Sca
     m_shader_object->set_data(m_offset, data, size);
 }
 
-void ShaderCursor::set_vector(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int dimension)
+void ShaderCursor::_set_vector(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int dimension)
     const
 {
     const TypeReflection* type = m_type_layout->unwrap_array()->type();
@@ -522,8 +586,13 @@ void ShaderCursor::set_vector(const void* data, size_t size, TypeReflection::Sca
     m_shader_object->set_data(m_offset, data, size);
 }
 
-void ShaderCursor::set_matrix(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int rows, int cols)
-    const
+void ShaderCursor::_set_matrix(
+    const void* data,
+    size_t size,
+    TypeReflection::ScalarType scalar_type,
+    int rows,
+    int cols
+) const
 {
     const TypeReflection* type = m_type_layout->unwrap_array()->type();
 
@@ -602,21 +671,21 @@ SGL_API void ShaderCursor::set(const ref<AccelerationStructure>& value) const
     template<>                                                                                                         \
     SGL_API void ShaderCursor::set(const type& value) const                                                            \
     {                                                                                                                  \
-        set_scalar(&value, sizeof(value), TypeReflection::ScalarType::scalar_type);                                    \
+        _set_scalar(&value, sizeof(value), TypeReflection::ScalarType::scalar_type);                                   \
     }
 
 #define SET_VECTOR(type, scalar_type)                                                                                  \
     template<>                                                                                                         \
     SGL_API void ShaderCursor::set(const type& value) const                                                            \
     {                                                                                                                  \
-        set_vector(&value, sizeof(value), TypeReflection::ScalarType::scalar_type, type::dimension);                   \
+        _set_vector(&value, sizeof(value), TypeReflection::ScalarType::scalar_type, type::dimension);                  \
     }
 
 #define SET_MATRIX(type, scalar_type)                                                                                  \
     template<>                                                                                                         \
     SGL_API void ShaderCursor::set(const type& value) const                                                            \
     {                                                                                                                  \
-        set_matrix(&value, sizeof(value), TypeReflection::ScalarType::scalar_type, type::rows, type::cols);            \
+        _set_matrix(&value, sizeof(value), TypeReflection::ScalarType::scalar_type, type::rows, type::cols);           \
     }
 
 SET_SCALAR(int, int32);
@@ -662,28 +731,28 @@ template<>
 SGL_API void ShaderCursor::set(const bool& value) const
 {
     uint v = value ? 1 : 0;
-    set_scalar(&v, sizeof(v), TypeReflection::ScalarType::bool_);
+    _set_scalar(&v, sizeof(v), TypeReflection::ScalarType::bool_);
 }
 
 template<>
 SGL_API void ShaderCursor::set(const bool2& value) const
 {
     uint2 v = {value.x ? 1 : 0, value.y ? 1 : 0};
-    set_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 2);
+    _set_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 2);
 }
 
 template<>
 SGL_API void ShaderCursor::set(const bool3& value) const
 {
     uint3 v = {value.x ? 1 : 0, value.y ? 1 : 0, value.z ? 1 : 0};
-    set_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 3);
+    _set_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 3);
 }
 
 template<>
 SGL_API void ShaderCursor::set(const bool4& value) const
 {
     uint4 v = {value.x ? 1 : 0, value.y ? 1 : 0, value.z ? 1 : 0, value.w ? 1 : 0};
-    set_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 4);
+    _set_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 4);
 }
 
 } // namespace sgl
