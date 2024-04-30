@@ -67,11 +67,12 @@ public:
         set(value);
     }
 
-private:
-    void set_scalar(const void* data, size_t size, TypeReflection::ScalarType scalar_type) const;
-    void set_vector(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int dimension) const;
-    void set_matrix(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int rows, int cols) const;
+    void _set_array(const void* data, size_t size, TypeReflection::ScalarType scalar_type, size_t element_count) const;
+    void _set_scalar(const void* data, size_t size, TypeReflection::ScalarType scalar_type) const;
+    void _set_vector(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int dimension) const;
+    void _set_matrix(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int rows, int cols) const;
 
+private:
     template<typename T>
     void set(const T& value) const;
 

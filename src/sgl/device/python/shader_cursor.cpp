@@ -12,6 +12,49 @@
 #include "sgl/math/vector_types.h"
 #include "sgl/math/matrix_types.h"
 
+namespace sgl {
+inline std::optional<TypeReflection::ScalarType> dtype_to_scalar_type(nb::dlpack::dtype dtype)
+{
+    switch (dtype.code) {
+    case uint8_t(nb::dlpack::dtype_code::Int):
+        switch (dtype.bits) {
+        case 8:
+            return TypeReflection::ScalarType::int8;
+        case 16:
+            return TypeReflection::ScalarType::int16;
+        case 32:
+            return TypeReflection::ScalarType::int32;
+        case 64:
+            return TypeReflection::ScalarType::int64;
+        }
+        break;
+    case uint8_t(nb::dlpack::dtype_code::UInt):
+        switch (dtype.bits) {
+        case 8:
+            return TypeReflection::ScalarType::uint8;
+        case 16:
+            return TypeReflection::ScalarType::uint16;
+        case 32:
+            return TypeReflection::ScalarType::uint32;
+        case 64:
+            return TypeReflection::ScalarType::uint64;
+        }
+        break;
+    case uint8_t(nb::dlpack::dtype_code::Float):
+        switch (dtype.bits) {
+        case 16:
+            return TypeReflection::ScalarType::float16;
+        case 32:
+            return TypeReflection::ScalarType::float32;
+        case 64:
+            return TypeReflection::ScalarType::float64;
+        }
+        break;
+    }
+    return {};
+}
+} // namespace sgl
+
 SGL_PY_EXPORT(device_shader_cursor)
 {
     using namespace sgl;
@@ -205,6 +248,44 @@ SGL_PY_EXPORT(device_shader_cursor)
     shader_cursor.def("__setitem__", set_float_field);
     shader_cursor.def("__setitem__", set_float_element);
     shader_cursor.def("__setattr__", set_float_field);
+
+    auto set_numpy_field = [](ShaderCursor& self, std::string_view name, nb::ndarray<nb::numpy> value)
+    {
+        const TypeReflection* type = self[name].type();
+        auto src_scalar_type = dtype_to_scalar_type(value.dtype());
+        SGL_CHECK(src_scalar_type, "numpy array has unsupported dtype.");
+        SGL_CHECK(is_ndarray_contiguous(value), "numpy array is not contiguous.");
+
+        switch (type->kind()) {
+        case TypeReflection::Kind::array:
+            SGL_CHECK(value.ndim() == 1, "numpy array must have 1 dimension.");
+            self[name]._set_array(value.data(), value.nbytes(), *src_scalar_type, narrow_cast<int>(value.shape(0)));
+            break;
+        case TypeReflection::Kind::matrix:
+            SGL_CHECK(value.ndim() == 2, "numpy array must have 2 dimensions.");
+            self[name]._set_matrix(
+                value.data(),
+                value.nbytes(),
+                *src_scalar_type,
+                narrow_cast<int>(value.shape(0)),
+                narrow_cast<int>(value.shape(1))
+            );
+            break;
+        case TypeReflection::Kind::vector: {
+            SGL_CHECK(value.ndim() == 1 || value.ndim() == 2, "numpy array must have 1 or 2 dimensions.");
+            size_t dimension = 1;
+            for (size_t i = 0; i < value.ndim(); ++i)
+                dimension *= value.shape(i);
+            self[name]._set_vector(value.data(), value.nbytes(), *src_scalar_type, narrow_cast<int>(dimension));
+            break;
+        }
+        default:
+            SGL_THROW("Field \"{}\" is not a vector, matrix, or array type.", name);
+        }
+    };
+
+    shader_cursor.def("__setitem__", set_numpy_field);
+    shader_cursor.def("__setattr__", set_numpy_field);
 
     auto set_cuda_tensor_field = [](ShaderCursor& self, std::string_view name, nb::ndarray<nb::device::cuda> ndarray)
     { self[name].set_cuda_tensor_view(ndarray_to_cuda_tensor_view(ndarray)); };
