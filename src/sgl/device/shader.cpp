@@ -173,6 +173,8 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
 {
     SGL_CHECK_NOT_NULL(m_device);
 
+    ConstructorRefGuard ref_guard(this);
+
     DeviceType device_type = m_device->type();
 
     CompilerOptionEntries session_options;
@@ -361,8 +363,10 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
 
     // Load NVAPI module if available.
     // We link this to all programs because slang uses NVAPI features while not including NVAPI itself.
-    if (SGL_HAS_NVAPI && m_device->type() == DeviceType::d3d12)
+    if (SGL_HAS_NVAPI && m_device->type() == DeviceType::d3d12) {
         m_nvapi_module = load_module("sgl/device/nvapi.slang");
+        m_nvapi_module->break_strong_reference_to_session();
+    }
 }
 
 SlangSession::~SlangSession() { }
