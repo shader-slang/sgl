@@ -341,8 +341,10 @@ public:
 
     std::string to_string() const override;
 
+    void break_strong_reference_to_session() { m_session.break_strong_reference(); }
+
 private:
-    ref<SlangSession> m_session;
+    breakable_ref<SlangSession> m_session;
     /// Slang module (owned by the session).
     slang::IModule* m_slang_module;
     std::string m_name;
