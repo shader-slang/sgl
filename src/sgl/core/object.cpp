@@ -19,17 +19,23 @@ static std::mutex s_tracked_objects_mutex;
 static std::set<const Object*> s_tracked_objects;
 #endif
 
+#if SGL_ENABLE_OBJECT_TRACKING
+Object::Object()
+{
+    std::lock_guard<std::mutex> lock(s_tracked_objects_mutex);
+    s_tracked_objects.insert(this);
+}
+Object::~Object()
+{
+    std::lock_guard<std::mutex> lock(s_tracked_objects_mutex);
+    s_tracked_objects.erase(this);
+}
+#endif
+
+
 void Object::inc_ref() const noexcept
 {
     uintptr_t value = m_state.load(std::memory_order_relaxed);
-
-    // TODO check this
-#if SGL_ENABLE_OBJECT_TRACKING
-    if (m_state == 1) {
-        std::lock_guard<std::mutex> lock(s_tracked_objects_mutex);
-        s_tracked_objects.insert(this);
-    }
-#endif
 
     while (true) {
         if (value & 1) {
@@ -54,12 +60,6 @@ void Object::dec_ref(bool dealloc) const noexcept
                 abort();
             } else if (value == 3) {
                 if (dealloc) {
-#if SGL_ENABLE_OBJECT_TRACKING
-                    {
-                        std::lock_guard<std::mutex> lock(s_tracked_objects_mutex);
-                        s_tracked_objects.erase(this);
-                    }
-#endif
                     delete this;
                 } else {
                     m_state.store(1, std::memory_order_relaxed);

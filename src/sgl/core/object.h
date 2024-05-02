@@ -84,8 +84,17 @@ namespace sgl {
  */
 class SGL_API Object {
 public:
+#if SGL_ENABLE_OBJECT_TRACKING
+    /// Default constructor.
+    Object();
+    /// Destructor.
+    virtual ~Object();
+#else
     /// Default constructor.
     Object() = default;
+    /// Destructor.
+    virtual ~Object() = default;
+#endif
 
     /// Copy constructor.
     /// Note: We don't copy the reference counter, so that the new object
@@ -102,9 +111,6 @@ public:
     /// Make the object non-movable.
     Object(Object&&) = delete;
     Object& operator=(Object&&) = delete;
-
-    /// Destructor.
-    virtual ~Object() = default;
 
     /// Return the name of the class.
     /// Note: This reports the actual class name if \c SGL_OBJECT() is used.
