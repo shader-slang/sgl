@@ -54,9 +54,11 @@ def get_device(type: sgl.DeviceType, use_cache: bool = True) -> sgl.Device:
 
 class Context:
     buffers: dict[str, sgl.Buffer]
+    textures: dict[str, sgl.Texture]
 
     def __init__(self):
         self.buffers = {}
+        self.textures = {}
 
 
 def dispatch_compute(
@@ -65,6 +67,7 @@ def dispatch_compute(
     entry_point: str,
     thread_count: list[int],
     buffers: dict = {},
+    textures: dict = {},
     defines: dict[str, str] = {},
     compiler_options: dict = {},
     shader_model: sgl.ShaderModel = sgl.ShaderModel.sm_6_6,
@@ -87,31 +90,52 @@ def dispatch_compute(
     params = {}
 
     for name, desc in buffers.items():
-        is_global = "global" in desc
+        if isinstance(desc, sgl.Buffer):
+            buffer = desc
+        else:
+            args = {
+                "usage": sgl.ResourceUsage.shader_resource
+                | sgl.ResourceUsage.unordered_access,
+            }
+            if "size" in desc:
+                args["size"] = desc["size"]
+            if "element_count" in desc:
+                args["element_count"] = desc["element_count"]
+                args["struct_type"] = (
+                    kernel.reflection[name]
+                    if is_global
+                    else kernel.reflection[entry_point][name]
+                )
+            if "data" in desc:
+                args["data"] = desc["data"]
 
-        struct_type = (
-            kernel.reflection[name]
-            if is_global
-            else kernel.reflection[entry_point][name]
-        )
+            # TODO change this when there is a single create_buffer function that can optionally take a struct_type
+            if "struct_type" in args:
+                buffer = device.create_structured_buffer(**args)
+            else:
+                buffer = device.create_buffer(**args)
 
-        args = {
-            "struct_type": struct_type,
-            "usage": sgl.ResourceUsage.shader_resource
-            | sgl.ResourceUsage.unordered_access,
-        }
-        if "element_count" in desc:
-            args["element_count"] = desc["element_count"]
-        if "data" in desc:
-            args["data"] = desc["data"]
-
-        buffer = device.create_structured_buffer(**args)
         ctx.buffers[name] = buffer
 
+        is_global = kernel.reflection.find_field(name).is_valid()
         if is_global:
             vars[name] = buffer
         else:
             params[name] = buffer
+
+    for name, desc in textures.items():
+        if isinstance(desc, sgl.Texture):
+            texture = desc
+        else:
+            raise NotImplementedError("Texture creation from dict not implemented")
+
+        ctx.textures[name] = texture
+
+        is_global = kernel.reflection.find_field(name).is_valid()
+        if is_global:
+            vars[name] = texture
+        else:
+            params[name] = texture
 
     kernel.dispatch(thread_count=thread_count, vars=vars, **params)
 
