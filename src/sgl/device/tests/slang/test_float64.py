@@ -27,7 +27,7 @@ def test_float64(device_type, shader_model, view):
     ctx = helpers.dispatch_compute(
         device=device,
         path=Path(__file__).parent / "test_float64.slang",
-        entry_point="main_" + view,
+        entry_point=f"main_{view}",
         shader_model=shader_model,
         thread_count=[ELEMENT_COUNT, 1, 1],
         buffers={
