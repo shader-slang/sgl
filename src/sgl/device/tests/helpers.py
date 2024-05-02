@@ -42,7 +42,10 @@ def get_device(type: sgl.DeviceType, use_cache: bool = True) -> sgl.Device:
     device = sgl.Device(
         type=type,
         enable_debug_layers=True,
-        compiler_options={"include_paths": [SHADER_DIR]},
+        compiler_options={
+            "include_paths": [SHADER_DIR],
+            "debug_info": sgl.SlangDebugInfoLevel.standard,
+        },
     )
     if use_cache:
         DEVICE_CACHE[type] = device
@@ -61,7 +64,7 @@ def dispatch_compute(
     path: str,
     entry_point: str,
     thread_count: list[int],
-    buffers: dict,
+    buffers: dict = {},
     defines: dict[str, str] = {},
     compiler_options: dict = {},
     shader_model: sgl.ShaderModel = sgl.ShaderModel.sm_6_6,
@@ -71,6 +74,7 @@ def dispatch_compute(
 
     compiler_options["shader_model"] = shader_model
     compiler_options["defines"] = defines
+    compiler_options["debug_info"] = sgl.SlangDebugInfoLevel.standard
 
     session = device.create_slang_session(compiler_options)
     program = session.load_program(
@@ -80,10 +84,19 @@ def dispatch_compute(
 
     ctx = Context()
     vars = {}
+    params = {}
 
     for name, desc in buffers.items():
+        is_global = "global" in desc
+
+        struct_type = (
+            kernel.reflection[name]
+            if is_global
+            else kernel.reflection[entry_point][name]
+        )
+
         args = {
-            "struct_type": kernel.reflection[name],
+            "struct_type": struct_type,
             "usage": sgl.ResourceUsage.shader_resource
             | sgl.ResourceUsage.unordered_access,
         }
@@ -94,8 +107,12 @@ def dispatch_compute(
 
         buffer = device.create_structured_buffer(**args)
         ctx.buffers[name] = buffer
-        vars[name] = buffer
 
-    kernel.dispatch(thread_count=thread_count, vars=vars)
+        if is_global:
+            vars[name] = buffer
+        else:
+            params[name] = buffer
+
+    kernel.dispatch(thread_count=thread_count, vars=vars, **params)
 
     return ctx
