@@ -1,0 +1,55 @@
+[__AttributeUsage(_AttributeTargets.Var)]
+struct rootAttribute { };
+
+// ByteAddressBuffer
+
+[shader("compute")]
+[numthreads(32, 1, 1)]
+void copy_byte_address_buffer(
+    uint tid: SV_DispatchThreadID,
+    ByteAddressBuffer src,
+    RWByteAddressBuffer dst,
+    uniform uint src_offset,
+    uniform uint dst_offset,
+    uniform uint count
+)
+{
+    if (tid < count) {
+        uint value = src.Load((src_offset + tid) * 4);
+        dst.Store((dst_offset + tid) * 4, value);
+    }
+}
+
+// Buffer<uint>
+
+[shader("compute")]
+[numthreads(32, 1, 1)]
+void copy_buffer_uint(
+    uint tid: SV_DispatchThreadID,
+    Buffer<uint> src,
+    RWBuffer<uint> dst,
+    uniform uint src_offset,
+    uniform uint dst_offset,
+    uniform uint count
+)
+{
+    if (tid < count)
+        dst[dst_offset + tid] = src[src_offset + tid];
+}
+
+// StructuredBuffer<uint>
+
+[shader("compute")]
+[numthreads(32, 1, 1)]
+void copy_structured_buffer_uint(
+    uint tid: SV_DispatchThreadID,
+    StructuredBuffer<uint> src,
+    RWStructuredBuffer<uint> dst,
+    uniform uint src_offset,
+    uniform uint dst_offset,
+    uniform uint count
+)
+{
+    if (tid < count)
+        dst[dst_offset + tid] = src[src_offset + tid];
+}
