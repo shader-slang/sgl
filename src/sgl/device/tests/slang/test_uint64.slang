@@ -1,21 +1,23 @@
 // SPDX-License-Identifier: Apache-2.0
 
-RWStructuredBuffer<uint> result;
-
-#if USE_UAV
-RWStructuredBuffer<uint64_t> data;
-#else
-StructuredBuffer<uint64_t> data;
-#endif
+[shader("compute")]
+[numthreads(16, 1, 1)]
+void main_srv(uint tid: SV_DispatchThreadID, StructuredBuffer<uint64_t> data, RWStructuredBuffer<uint> result)
+{
+    uint i = tid;
+    uint64_t value = data[i]; // 64-bit load
+    uint lo = (uint)value;
+    uint hi = (uint)(value >> 32);
+    result[2 * i] = lo;
+    result[2 * i + 1] = hi;
+}
 
 [shader("compute")]
 [numthreads(16, 1, 1)]
-void main(uint3 tid: SV_DispatchThreadID)
+void main_uav(uint tid: SV_DispatchThreadID, RWStructuredBuffer<uint64_t> data, RWStructuredBuffer<uint> result)
 {
-    uint i = tid.x;
-
+    uint i = tid;
     uint64_t value = data[i]; // 64-bit load
-
     uint lo = (uint)value;
     uint hi = (uint)(value >> 32);
     result[2 * i] = lo;

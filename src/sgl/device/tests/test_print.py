@@ -20,7 +20,6 @@ def test_print(device_type):
         path=Path(__file__).parent / "test_print.slang",
         entry_point="compute_main",
         thread_count=[1, 1, 1],
-        buffers={},
     )
     result = device.flush_print_to_string()
     # print("result:", result)
