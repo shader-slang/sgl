@@ -11,6 +11,7 @@ macro(sgl_download_package name url)
     )
     FetchContent_GetProperties(${name})
     if(NOT ${name}_POPULATED)
+        message(STATUS "Populating ${name} ...")
         FetchContent_Populate(${name})
     endif()
 endmacro()
@@ -33,7 +34,7 @@ set(SGL_LOCAL_SLANG OFF CACHE BOOL "Use a local build of slang instead of downlo
 set(SGL_LOCAL_SLANG_DIR "${CMAKE_SOURCE_DIR}/../slang" CACHE PATH "Path to a local slang build")
 set(SGL_LOCAL_SLANG_CONFIG "debug" CACHE STRING "Build configuration of the local slang build")
 
-set(SLANG_VERSION "2024.1.6")
+set(SLANG_VERSION "2024.1.11")
 set(SLANG_URL_BASE "https://github.com/shader-slang/slang/releases/download/v${SLANG_VERSION}")
 
 if(SGL_WINDOWS)
