@@ -43,7 +43,7 @@ def test_buffer_add_f16(device_type):
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_buffer_add_f16x2(device_type):
     if device_type == sgl.DeviceType.vulkan:
-        pytest.skip("Vulkan does not support half-float atomics")
+        pytest.skip("Vulkan does not support float16_t2 atomics")
 
     device = helpers.get_device(device_type)
 
