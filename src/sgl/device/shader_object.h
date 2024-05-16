@@ -78,16 +78,17 @@ public:
     virtual ref<ShaderObject> get_entry_point(uint32_t index) override;
 
     virtual ref<ShaderObject> get_object(const ShaderOffset& offset) override;
+    virtual void set_object(const ShaderOffset& offset, const ref<ShaderObject>& object) override;
 
     virtual void set_resource(const ShaderOffset& offset, const ref<ResourceView>& resource_view) override;
 
-    void set_resource_states(CommandBuffer* command_buffer);
+    void set_resource_states(CommandBuffer* command_buffer) const;
 
     virtual void get_cuda_interop_buffers(std::vector<ref<cuda::InteropBuffer>>& cuda_interop_buffers) const override;
 
 private:
     std::map<ShaderOffset, ref<ResourceView>> m_resource_views;
-    std::vector<ref<MutableShaderObject>> m_sub_objects;
+    std::map<ShaderOffset, ref<MutableShaderObject>> m_sub_objects;
 };
 
 } // namespace sgl
