@@ -362,9 +362,15 @@ protected:
 struct BufferDesc {
     /// Buffer size in bytes.
     size_t size{0};
-    /// Struct size in bytes. If > 0, this is a structured buffer.
+
+    /// Buffer size in number of struct elements. Can be used instead of \c size.
+    size_t element_count{0};
+    /// Struct size in bytes.
     size_t struct_size{0};
-    /// Buffer format. If != \c Format::unknown, this is a typed buffer.
+    /// Struct type. Can be used instead of \c struct_size to specify the size of the struct.
+    const TypeLayoutReflection* struct_type{nullptr};
+
+    /// Buffer format. Used when creating typed buffer views.
     Format format{Format::unknown};
 
     /// Initial resource state.
@@ -383,40 +389,10 @@ struct BufferDesc {
     size_t data_size{0};
 };
 
-struct StructuredBufferDesc {
-    /// Number of elements in the buffer.
-    size_t element_count{0};
-
-    /// Size of the struct in bytes.
-    /// Note: Either \c struct_size or \c struct_type can be set, but not both.
-    size_t struct_size{0};
-
-    /// Type of the struct.
-    /// Note: Either \c struct_size or \c struct_type can be set, but not both.
-    const TypeLayoutReflection* struct_type{nullptr};
-
-    /// Initial resource state.
-    ResourceState initial_state{ResourceState::undefined};
-    /// Resource usage flags.
-    ResourceUsage usage{ResourceUsage::none};
-    /// Memory type.
-    MemoryType memory_type{MemoryType::device_local};
-
-    /// Resource debug name.
-    std::string debug_name;
-
-    /// Initial data to upload to the buffer.
-    const void* data{nullptr};
-    /// Size of the initial data in bytes.
-    size_t data_size{0};
-};
-
-
 class SGL_API Buffer : public Resource {
     SGL_OBJECT(Buffer)
 public:
     Buffer(ref<Device> device, BufferDesc desc);
-    Buffer(ref<Device> device, StructuredBufferDesc desc);
 
     ~Buffer();
 

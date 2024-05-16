@@ -117,9 +117,7 @@ int main()
             .acceleration_structure = blas->device_address(),
         };
 
-        ref<Buffer> instance_buffer = device->create_structured_buffer({
-            .element_count = 1,
-            .struct_size = sizeof(RayTracingInstanceDesc),
+        ref<Buffer> instance_buffer = device->create_buffer({
             .usage = ResourceUsage::shader_resource,
             .debug_name = "instance_buffer",
             .data = &instance_desc,

@@ -219,8 +219,10 @@ public:
      * \brief Create a new buffer.
      *
      * \param size Buffer size in bytes.
-     * \param struct_size Struct size in bytes. If > 0, this is a structured buffer.
-     * \param format Buffer format. If != \c Format::unknown, this is a typed buffer.
+     * \param element_count Buffer size in number of struct elements. Can be used instead of \c size.
+     * \param struct_size Struct size in bytes.
+     * \param struct_type Struct type. Can be used instead of \c struct_size to specify the size of the struct.
+     * \param format Buffer format. Used when creating typed buffer views.
      * \param initial_state Initial resource state.
      * \param usage Resource usage flags.
      * \param memory_type Memory type.
@@ -230,24 +232,6 @@ public:
      * \return New buffer object.
      */
     ref<Buffer> create_buffer(BufferDesc desc);
-
-    /**
-     * \brief Create a new structured buffer.
-     *
-     * \note Either \c struct_size or \c struct_type can be set, but not both.
-     *
-     * \param element_count Number of elements in the buffer.
-     * \param struct_size Size of the struct in bytes.
-     * \param struct_type Type of the struct.
-     * \param initial_state Initial resource state.
-     * \param usage Resource usage flags.
-     * \param memory_type Memory type.
-     * \param debug_name Resource debug name.
-     * \param data Initial data to upload to the buffer.
-     * \param data_size Size of the initial data in bytes.
-     * \return New buffer object.
-     */
-    ref<Buffer> create_structured_buffer(StructuredBufferDesc desc);
 
     /**
      * \brief Create a new texture.

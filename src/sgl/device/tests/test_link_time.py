@@ -32,7 +32,7 @@ def test_link_time_constants(device_type, value):
 
     kernel = device.create_compute_kernel(program)
 
-    result = device.create_structured_buffer(
+    result = device.create_buffer(
         element_count=16,
         struct_type=program.reflection.result,
         usage=sgl.ResourceUsage.unordered_access,
@@ -66,7 +66,7 @@ def test_link_time_type(device_type, op):
 
     kernel = device.create_compute_kernel(program)
 
-    result = device.create_structured_buffer(
+    result = device.create_buffer(
         element_count=1,
         struct_type=program.reflection.result,
         usage=sgl.ResourceUsage.unordered_access,

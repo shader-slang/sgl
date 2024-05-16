@@ -3071,42 +3071,6 @@ Parameter ``compiler_options``:
 Returns:
     New slang session object.)doc";
 
-static const char *__doc_sgl_Device_create_structured_buffer =
-R"doc(Create a new structured buffer.
-
-\note Either ``struct_size`` or ``struct_type`` can be set, but not
-both.
-
-Parameter ``element_count``:
-    Number of elements in the buffer.
-
-Parameter ``struct_size``:
-    Size of the struct in bytes.
-
-Parameter ``struct_type``:
-    Type of the struct.
-
-Parameter ``initial_state``:
-    Initial resource state.
-
-Parameter ``usage``:
-    Resource usage flags.
-
-Parameter ``memory_type``:
-    Memory type.
-
-Parameter ``debug_name``:
-    Resource debug name.
-
-Parameter ``data``:
-    Initial data to upload to the buffer.
-
-Parameter ``data_size``:
-    Size of the initial data in bytes.
-
-Returns:
-    New buffer object.)doc";
-
 static const char *__doc_sgl_Device_create_swapchain =
 R"doc(Create a new swapchain.
 
