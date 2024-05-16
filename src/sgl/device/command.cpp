@@ -332,8 +332,7 @@ ref<TransientShaderObject> RayTracingCommandEncoder::bind_pipeline(const RayTrac
 
     m_bound_pipeline = pipeline;
     gfx::IShaderObject* gfx_shader_object;
-    // TODO gfx bindPipeline should return Result (fix in slang/gfx)
-    m_gfx_ray_tracing_command_encoder->bindPipeline(pipeline->gfx_pipeline_state(), &gfx_shader_object);
+    SLANG_CALL(m_gfx_ray_tracing_command_encoder->bindPipeline(pipeline->gfx_pipeline_state(), &gfx_shader_object));
     ref<TransientShaderObject> transient_shader_object
         = make_ref<TransientShaderObject>(ref<Device>(m_command_buffer->device()), gfx_shader_object, m_command_buffer);
     if (m_command_buffer->device()->debug_printer())
