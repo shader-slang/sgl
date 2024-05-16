@@ -80,6 +80,7 @@ void ComputeCommandEncoder::bind_pipeline(const ComputePipeline* pipeline, const
     // TODO we should probably take shader_object by ref<const ShaderObject>
     // alternatively we could process CUDA buffers at bind time
     m_bound_shader_object = ref<const ShaderObject>(shader_object);
+    static_cast<const MutableShaderObject*>(shader_object)->set_resource_states(m_command_buffer);
     SLANG_CALL(m_gfx_compute_command_encoder
                    ->bindPipelineWithRootObject(pipeline->gfx_pipeline_state(), shader_object->gfx_shader_object()));
 }
@@ -154,6 +155,7 @@ void RenderCommandEncoder::bind_pipeline(const GraphicsPipeline* pipeline, const
 
     m_bound_pipeline = pipeline;
     m_bound_shader_object = ref<const ShaderObject>(shader_object);
+    static_cast<const MutableShaderObject*>(shader_object)->set_resource_states(m_command_buffer);
     SLANG_CALL(m_gfx_render_command_encoder
                    ->bindPipelineWithRootObject(pipeline->gfx_pipeline_state(), shader_object->gfx_shader_object()));
 }
@@ -347,6 +349,7 @@ void RayTracingCommandEncoder::bind_pipeline(const RayTracingPipeline* pipeline,
 
     m_bound_pipeline = pipeline;
     m_bound_shader_object = ref<const ShaderObject>(shader_object);
+    static_cast<const MutableShaderObject*>(shader_object)->set_resource_states(m_command_buffer);
     SLANG_CALL(m_gfx_ray_tracing_command_encoder
                    ->bindPipelineWithRootObject(pipeline->gfx_pipeline_state(), shader_object->gfx_shader_object()));
 }

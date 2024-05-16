@@ -167,6 +167,7 @@ void TransientShaderObject::get_cuda_interop_buffers(std::vector<ref<cuda::Inter
 MutableShaderObject::MutableShaderObject(ref<Device> device, gfx::IShaderObject* shader_object)
     : ShaderObject(std::move(device), shader_object)
 {
+    m_shader_object->addRef();
 }
 
 MutableShaderObject::MutableShaderObject(ref<Device> device, const ShaderProgram* shader_program)
@@ -194,9 +195,21 @@ ref<ShaderObject> MutableShaderObject::get_entry_point(uint32_t index)
 
 ref<ShaderObject> MutableShaderObject::get_object(const ShaderOffset& offset)
 {
+    auto it = m_sub_objects.find(offset);
+    if (it != m_sub_objects.end())
+        return it->second;
     auto object = make_ref<MutableShaderObject>(m_device, m_shader_object->getObject(gfx_shader_offset(offset)));
-    m_sub_objects.push_back(object);
+    m_sub_objects.insert({offset, object});
     return object;
+}
+
+void MutableShaderObject::set_object(const ShaderOffset& offset, const ref<ShaderObject>& object)
+{
+    if (ref<MutableShaderObject> mutable_object = dynamic_ref_cast<MutableShaderObject>(object)) {
+        m_sub_objects.insert({offset, mutable_object});
+    }
+
+    ShaderObject::set_object(offset, object);
 }
 
 void MutableShaderObject::set_resource(const ShaderOffset& offset, const ref<ResourceView>& resource_view)
@@ -209,7 +222,7 @@ void MutableShaderObject::set_resource(const ShaderOffset& offset, const ref<Res
         m_resource_views.erase(offset);
 }
 
-void MutableShaderObject::set_resource_states(CommandBuffer* command_buffer)
+void MutableShaderObject::set_resource_states(CommandBuffer* command_buffer) const
 {
     for (auto& [offset, resource_view] : m_resource_views) {
         switch (resource_view->type()) {
@@ -226,13 +239,17 @@ void MutableShaderObject::set_resource_states(CommandBuffer* command_buffer)
             SGL_THROW("Invalid resource view type");
         }
     }
+    for (auto& [_, sub_object] : m_sub_objects) {
+        sub_object->set_resource_states(command_buffer);
+    }
 }
 
 void MutableShaderObject::get_cuda_interop_buffers(std::vector<ref<cuda::InteropBuffer>>& cuda_interop_buffers) const
 {
     ShaderObject::get_cuda_interop_buffers(cuda_interop_buffers);
-    for (const auto& sub_object : m_sub_objects)
+    for (auto& [_, sub_object] : m_sub_objects) {
         sub_object->get_cuda_interop_buffers(cuda_interop_buffers);
+    }
 }
 
 } // namespace sgl

@@ -112,6 +112,7 @@ SGL_PY_EXPORT(device_shader_cursor)
     );                                                                                                                 \
     shader_cursor.def("__setattr__", [](ShaderCursor& self, std::string_view name, type value) { self[name] = value; });
 
+    def_setter(ref<MutableShaderObject>);
     def_setter(ref<ResourceView>);
     def_setter(ref<Buffer>);
     def_setter(ref<Texture>);
