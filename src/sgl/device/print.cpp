@@ -320,7 +320,7 @@ void DebugPrinter::flush_device(bool wait)
 {
     CommandBuffer* command_buffer = m_device->_begin_shared_command_buffer();
     command_buffer->copy_resource(m_readback_buffer, m_buffer);
-    command_buffer->clear_resource_view(m_buffer->get_uav({.first_element = 0, .element_count = 4}), uint4(0));
+    command_buffer->clear_resource_view(m_buffer->get_uav({.offset = 0, .size = 4}), uint4(0));
     m_device->_end_shared_command_buffer(wait);
 }
 

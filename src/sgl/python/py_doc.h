@@ -1949,9 +1949,9 @@ static const char *__doc_sgl_BufferDesc_usage = R"doc(Resource usage flags.)doc"
 
 static const char *__doc_sgl_BufferRange = R"doc()doc";
 
-static const char *__doc_sgl_BufferRange_element_count = R"doc()doc";
+static const char *__doc_sgl_BufferRange_size = R"doc()doc";
 
-static const char *__doc_sgl_BufferRange_first_element = R"doc()doc";
+static const char *__doc_sgl_BufferRange_offset = R"doc()doc";
 
 static const char *__doc_sgl_BufferRange_operator_le = R"doc()doc";
 
