@@ -17,6 +17,7 @@
 #include <slang-gfx.h>
 
 #include <map>
+#include <set>
 #include <limits>
 
 namespace sgl {
@@ -96,6 +97,8 @@ SGL_ENUM_INFO(
     }
 );
 SGL_ENUM_REGISTER(ResourceState);
+
+using ResourceStateSet = std::set<ResourceState>;
 
 enum class ResourceUsage : uint32_t {
     /// The resource will not be bound the pipeline. Use this to create a staging resource.

@@ -197,6 +197,9 @@ public:
     /// True if the device supports CUDA interoperability.
     bool supports_cuda_interop() const { return m_supports_cuda_interop; }
 
+    /// Returns the supported resource states for a given format.
+    ResourceStateSet get_format_supported_resource_states(Format format) const;
+
     /// Default slang session.
     SlangSession* slang_session() const { return m_slang_session; }
 

@@ -518,6 +518,17 @@ ShaderCacheStats Device::shader_cache_stats() const
     };
 }
 
+ResourceStateSet Device::get_format_supported_resource_states(Format format) const
+{
+    gfx::ResourceStateSet gfx_state_set;
+    SLANG_CALL(m_gfx_device->getFormatSupportedResourceStates(static_cast<gfx::Format>(format), &gfx_state_set));
+    ResourceStateSet state_set;
+    for (uint32_t i = 0; i < uint32_t(gfx::ResourceState::_Count); ++i)
+        if (gfx_state_set.contains(static_cast<gfx::ResourceState>(i)))
+            state_set.insert(static_cast<ResourceState>(i));
+    return state_set;
+}
+
 ref<Swapchain> Device::create_swapchain(SwapchainDesc desc, Window* window)
 {
     return make_ref<Swapchain>(std::move(desc), window, ref<Device>(this));

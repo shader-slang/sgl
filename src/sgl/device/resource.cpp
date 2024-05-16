@@ -12,12 +12,13 @@
 #include "sgl/core/string.h"
 #include "sgl/core/maths.h"
 #include "sgl/core/bitmap.h"
+#include "sgl/core/static_vector.h"
 
 #include "sgl/stl/bit.h" // Replace with <bit> when available on all platforms.
 
 namespace sgl {
 
-inline gfx::ResourceStateSet gfx_allowed_states(ResourceUsage usage)
+inline gfx::ResourceStateSet gfx_resource_usage_set_from_usage(ResourceUsage usage)
 {
     gfx::ResourceStateSet states(gfx::ResourceState::CopyDestination, gfx::ResourceState::CopySource);
 
@@ -328,7 +329,7 @@ Buffer::Buffer(ref<Device> device, BufferDesc desc)
     gfx::IBufferResource::Desc gfx_desc{};
     gfx_desc.type = gfx::IResource::Type::Buffer;
     gfx_desc.defaultState = static_cast<gfx::ResourceState>(m_desc.initial_state);
-    gfx_desc.allowedStates = gfx_allowed_states(m_desc.usage);
+    gfx_desc.allowedStates = gfx_resource_usage_set_from_usage(m_desc.usage);
     gfx_desc.memoryType = static_cast<gfx::MemoryType>(m_desc.memory_type);
     // TODO(@skallweit): add support for existing handles
     // gfx_desc.existingHandle =
@@ -575,10 +576,29 @@ Texture::Texture(ref<Device> device, TextureDesc desc)
 
     m_state_tracker.set_global_state(m_desc.initial_state);
 
+    // Check if format supports requested resource states.
+    gfx::ResourceStateSet gfx_allowed_states = gfx_resource_usage_set_from_usage(m_desc.usage);
+    gfx::ResourceStateSet gfx_supported_states;
+    SLANG_CALL(m_device->gfx_device()
+                   ->getFormatSupportedResourceStates(static_cast<gfx::Format>(m_desc.format), &gfx_supported_states));
+    // TODO remove this workaround when D3D12 reports CopySource and CopyDestination states for formats
+    gfx_supported_states.add(gfx::ResourceState::CopySource);
+    gfx_supported_states.add(gfx::ResourceState::CopyDestination);
+    static_vector<ResourceState, size_t(gfx::ResourceState::_Count)> unsupported_states;
+    for (uint32_t i = 0; i < uint32_t(gfx::ResourceState::_Count); ++i)
+        if (gfx_allowed_states.contains(gfx::ResourceState(i)) && !gfx_supported_states.contains(gfx::ResourceState(i)))
+            unsupported_states.push_back(ResourceState(i));
+    if (!unsupported_states.empty()) {
+        SGL_THROW(
+            "Format {} does not support requested resource states: {}",
+            m_desc.format,
+            fmt::join(unsupported_states, ", ")
+        );
+    }
     gfx::ITextureResource::Desc gfx_desc{};
     gfx_desc.type = static_cast<gfx::IResource::Type>(m_desc.type);
     gfx_desc.defaultState = static_cast<gfx::ResourceState>(m_desc.initial_state);
-    gfx_desc.allowedStates = gfx_allowed_states(m_desc.usage);
+    gfx_desc.allowedStates = gfx_allowed_states;
     gfx_desc.memoryType = static_cast<gfx::MemoryType>(m_desc.memory_type);
     // TODO(@skallweit): add support for existing handles
     // gfx_desc.existingHandle =
