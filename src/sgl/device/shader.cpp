@@ -233,6 +233,10 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
     session_options.add(slang::CompilerOptionName::DumpIntermediates, options.dump_intermediates);
     session_options.add(slang::CompilerOptionName::DumpIntermediatePrefix, options.dump_intermediates_prefix);
 
+    // TODO: We enable loop inversion as it was the default in older versions of Slang,
+    //       and leads to artifacts in one project using sgl.
+    session_options.add(slang::CompilerOptionName::LoopInversion, true);
+
     // Only use up to date binary modules (required for caching to work properly).
     session_options.add(slang::CompilerOptionName::UseUpToDateBinaryModule, true);
 
