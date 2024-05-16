@@ -17,7 +17,7 @@ def test_cast_float16(device_type):
     program = device.load_program("slang/test_nested_structs.slang", ["main"])
     kernel = device.create_compute_kernel(program)
 
-    result_buffer = device.create_structured_buffer(
+    result_buffer = device.create_buffer(
         struct_type=kernel.reflection.result,
         element_count=32,
         usage=sgl.ResourceUsage.unordered_access,

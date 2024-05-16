@@ -38,7 +38,7 @@ int main()
         for (uint32_t i = 0; i < N; ++i)
             data_b[i] = uint32_t(N) - i;
 
-        ref<Buffer> buffer_a = device->create_structured_buffer({
+        ref<Buffer> buffer_a = device->create_buffer({
             .element_count = N,
             .struct_type = kernel->reflection()["processor"]["a"],
             .usage = ResourceUsage::shader_resource,
@@ -46,7 +46,7 @@ int main()
             .data_size = data_a.size() * sizeof(uint32_t),
         });
 
-        ref<Buffer> buffer_b = device->create_structured_buffer({
+        ref<Buffer> buffer_b = device->create_buffer({
             .element_count = N,
             .struct_type = kernel->reflection()["processor"]["b"],
             .usage = ResourceUsage::shader_resource,
@@ -54,7 +54,7 @@ int main()
             .data_size = data_b.size() * sizeof(uint32_t),
         });
 
-        ref<Buffer> buffer_c = device->create_structured_buffer({
+        ref<Buffer> buffer_c = device->create_buffer({
             .element_count = N,
             .struct_type = kernel->reflection()["processor"]["c"],
             .usage = ResourceUsage::unordered_access,

@@ -277,14 +277,36 @@ Buffer::Buffer(ref<Device> device, BufferDesc desc)
     : Resource(std::move(device), ResourceType::buffer)
     , m_desc(std::move(desc))
 {
+    SGL_CHECK(m_desc.size == 0 || m_desc.element_count == 0, "Only one of 'size' or 'element_count' must be set.");
+    SGL_CHECK(
+        m_desc.struct_size == 0 || m_desc.struct_type == nullptr,
+        "Only one of 'struct_size' or 'struct_type' must be set."
+    );
+
     // Derive buffer size from initial data.
-    if (m_desc.size == 0 && m_desc.data && m_desc.data_size > 0)
+    if (m_desc.size == 0 && m_desc.element_count == 0 && m_desc.data && m_desc.data_size > 0)
         m_desc.size = m_desc.data_size;
+
+    // Derive struct size from struct type.
+    if (m_desc.struct_type) {
+        const TypeLayoutReflection* type = desc.struct_type->unwrap_array()->element_type_layout();
+        SGL_CHECK(type, "Invalid struct type.");
+        m_desc.struct_size = type->stride();
+        m_desc.struct_type = nullptr;
+    }
+
+    // Derive buffer size from element count and struct size.
+    SGL_CHECK(
+        m_desc.element_count == 0 || m_desc.struct_size > 0,
+        "'element_count' can only be used with 'struct_size' or 'struct_type' set."
+    );
+    if (m_desc.element_count > 0) {
+        m_desc.size = m_desc.element_count * m_desc.struct_size;
+        m_desc.element_count = 0;
+    }
 
     // TODO check init_data size
     SGL_ASSERT(m_desc.size > 0);
-    SGL_ASSERT(m_desc.struct_size == 0 || m_desc.format == Format::unknown);
-    SGL_ASSERT(m_desc.struct_size == 0 || m_desc.size % m_desc.struct_size == 0);
 
     SGL_CHECK(
         (m_desc.data == nullptr && m_desc.data_size == 0) || m_desc.data_size == m_desc.size,
@@ -327,34 +349,6 @@ Buffer::Buffer(ref<Device> device, BufferDesc desc)
     // Clear initial data fields in desc.
     m_desc.data = nullptr;
     m_desc.data_size = 0;
-}
-
-inline BufferDesc to_buffer_desc(StructuredBufferDesc desc)
-{
-    SGL_CHECK(desc.struct_size > 0 || desc.struct_type, "Either 'struct_size' or 'struct_type' must be set.");
-
-    size_t struct_size = desc.struct_size;
-    if (desc.struct_type) {
-        const TypeLayoutReflection* type = desc.struct_type->unwrap_array()->element_type_layout();
-        if (type)
-            struct_size = type->stride();
-    }
-
-    return {
-        .size = desc.element_count * struct_size,
-        .struct_size = struct_size,
-        .initial_state = desc.initial_state,
-        .usage = desc.usage,
-        .memory_type = desc.memory_type,
-        .debug_name = desc.debug_name,
-        .data = desc.data,
-        .data_size = desc.data_size,
-    };
-}
-
-Buffer::Buffer(ref<Device> device, StructuredBufferDesc desc)
-    : Buffer(std::move(device), to_buffer_desc(std::move(desc)))
-{
 }
 
 Buffer::~Buffer()

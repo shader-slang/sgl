@@ -528,11 +528,6 @@ ref<Buffer> Device::create_buffer(BufferDesc desc)
     return make_ref<Buffer>(ref<Device>(this), std::move(desc));
 }
 
-ref<Buffer> Device::create_structured_buffer(StructuredBufferDesc desc)
-{
-    return make_ref<Buffer>(ref<Device>(this), std::move(desc));
-}
-
 ref<Texture> Device::create_texture(TextureDesc desc)
 {
     return make_ref<Texture>(ref<Device>(this), std::move(desc));

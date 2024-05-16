@@ -223,7 +223,9 @@ SGL_PY_EXPORT(device_device)
         "create_buffer",
         [](Device* self,
            size_t size,
+           size_t element_count,
            size_t struct_size,
+           nb::object struct_type,
            Format format,
            ResourceUsage usage,
            MemoryType memory_type,
@@ -233,9 +235,17 @@ SGL_PY_EXPORT(device_device)
             if (data) {
                 SGL_CHECK(is_ndarray_contiguous(*data), "Data is not contiguous.");
             }
+            const TypeLayoutReflection* resolved_struct_type = nullptr;
+            nb::try_cast(struct_type, resolved_struct_type);
+            ReflectionCursor reflection_cursor;
+            if (nb::try_cast(struct_type, reflection_cursor)) {
+                resolved_struct_type = reflection_cursor.type_layout();
+            }
             return self->create_buffer({
                 .size = size,
+                .element_count = element_count,
                 .struct_size = struct_size,
+                .struct_type = resolved_struct_type,
                 .format = format,
                 .usage = usage,
                 .memory_type = memory_type,
@@ -245,7 +255,9 @@ SGL_PY_EXPORT(device_device)
             });
         },
         "size"_a = 0,
+        "element_count"_a = 0,
         "struct_size"_a = 0,
+        "struct_type"_a.none() = nb::none(),
         "format"_a = Format::unknown,
         "usage"_a = ResourceUsage::none,
         "memory_type"_a = MemoryType::device_local,
@@ -258,75 +270,6 @@ SGL_PY_EXPORT(device_device)
         [](Device* self, const BufferDesc& desc) { return self->create_buffer(desc); },
         "desc"_a,
         D(Device, create_buffer)
-    );
-    device.def(
-        "create_structured_buffer",
-        [](Device* self,
-           size_t element_count,
-           size_t struct_size,
-           const TypeLayoutReflection* struct_type,
-           ResourceUsage usage,
-           MemoryType memory_type,
-           std::string debug_name,
-           std::optional<nb::ndarray<nb::numpy>> data)
-        {
-            if (data) {
-                SGL_CHECK(is_ndarray_contiguous(*data), "Data is not contiguous.");
-            }
-            return self->create_structured_buffer({
-                .element_count = element_count,
-                .struct_size = struct_size,
-                .struct_type = struct_type,
-                .usage = usage,
-                .memory_type = memory_type,
-                .debug_name = std::move(debug_name),
-                .data = data ? data->data() : nullptr,
-                .data_size = data ? data->nbytes() : 0,
-            });
-        },
-        "element_count"_a = 0,
-        "struct_size"_a = 0,
-        "struct_type"_a = nullptr,
-        "usage"_a = ResourceUsage::none,
-        "memory_type"_a = MemoryType::device_local,
-        "debug_name"_a = "",
-        "data"_a.none() = nb::none(),
-        D(Device, create_structured_buffer)
-    );
-    // Convenience overload that takes a reflection cursor instead of a type layout.
-    device.def(
-        "create_structured_buffer",
-        [](Device* self,
-           size_t element_count,
-           size_t struct_size,
-           const ReflectionCursor& struct_type,
-           ResourceUsage usage,
-           MemoryType memory_type,
-           std::string debug_name,
-           std::optional<nb::ndarray<nb::numpy>> data)
-        {
-            if (data) {
-                SGL_CHECK(is_ndarray_contiguous(*data), "Data is not contiguous.");
-            }
-            return self->create_structured_buffer({
-                .element_count = element_count,
-                .struct_size = struct_size,
-                .struct_type = struct_type.type_layout(),
-                .usage = usage,
-                .memory_type = memory_type,
-                .debug_name = std::move(debug_name),
-                .data = data ? data->data() : nullptr,
-                .data_size = data ? data->nbytes() : 0,
-            });
-        },
-        "element_count"_a = 0,
-        "struct_size"_a = 0,
-        "struct_type"_a = nullptr,
-        "usage"_a = ResourceUsage::none,
-        "memory_type"_a = MemoryType::device_local,
-        "debug_name"_a = "",
-        "data"_a.none() = nb::none(),
-        D(Device, create_structured_buffer)
     );
 
     device.def(

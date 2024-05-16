@@ -109,11 +109,7 @@ def dispatch_compute(
             if "data" in desc:
                 args["data"] = desc["data"]
 
-            # TODO change this when there is a single create_buffer function that can optionally take a struct_type
-            if "struct_type" in args:
-                buffer = device.create_structured_buffer(**args)
-            else:
-                buffer = device.create_buffer(**args)
+            buffer = device.create_buffer(**args)
 
         ctx.buffers[name] = buffer
 
