@@ -82,12 +82,14 @@ inline nb::ndarray<nb::numpy> buffer_to_numpy(Buffer* self)
     nb::capsule owner(data, [](void* p) noexcept { delete[] reinterpret_cast<uint8_t*>(p); });
 
     if (auto dtype = resource_format_to_dtype(self->format())) {
-        uint32_t channel_count = get_format_info(self->format()).channel_count;
+        const FormatInfo& format_info = get_format_info(self->format());
+        size_t channel_count = format_info.channel_count;
+        size_t element_count = self->size() / format_info.bytes_per_block;
         if (channel_count == 1) {
-            size_t shape[1] = {self->element_count()};
+            size_t shape[1] = {element_count};
             return nb::ndarray<nb::numpy>(data, 1, shape, owner, nullptr, *dtype, nb::device::cpu::value);
         } else {
-            size_t shape[2] = {self->element_count(), channel_count};
+            size_t shape[2] = {element_count, channel_count};
             return nb::ndarray<nb::numpy>(data, 2, shape, owner, nullptr, *dtype, nb::device::cpu::value);
         }
     } else {
@@ -234,33 +236,31 @@ SGL_PY_EXPORT(device_resource)
         .def_prop_ro("size", &Buffer::size, D(Buffer, size))
         .def_prop_ro("struct_size", &Buffer::struct_size, D(Buffer, struct_size))
         .def_prop_ro("format", &Buffer::format, D(Buffer, format))
-        .def_prop_ro("element_size", &Buffer::element_size, D(Buffer, element_size))
-        .def_prop_ro("element_count", &Buffer::element_count, D(Buffer, element_count))
         .def_prop_ro("device_address", &Buffer::device_address, D(Buffer, device_address))
         .def(
             "get_srv",
-            [](Buffer* self, uint64_t first_element, uint64_t element_count)
+            [](Buffer* self, uint64_t offset, uint64_t size)
             {
                 return self->get_srv({
-                    .first_element = first_element,
-                    .element_count = element_count,
+                    .offset = offset,
+                    .size = size,
                 });
             },
-            "first_element"_a = 0,
-            "element_count"_a = BufferRange::ALL,
+            "offset"_a = 0,
+            "size"_a = BufferRange::ALL,
             D(Buffer, get_srv)
         )
         .def(
             "get_uav",
-            [](Buffer* self, uint64_t first_element, uint64_t element_count)
+            [](Buffer* self, uint64_t offset, uint64_t size)
             {
                 return self->get_uav({
-                    .first_element = first_element,
-                    .element_count = element_count,
+                    .offset = offset,
+                    .size = size,
                 });
             },
-            "first_element"_a = 0,
-            "element_count"_a = BufferRange::ALL,
+            "offset"_a = 0,
+            "size"_a = BufferRange::ALL,
             D(Buffer, get_uav)
         )
         .def("to_numpy", &buffer_to_numpy, D(buffer_to_numpy))

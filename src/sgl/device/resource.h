@@ -185,8 +185,8 @@ SGL_ENUM_REGISTER(ResourceViewType);
 
 struct BufferRange {
     static constexpr uint64_t ALL = std::numeric_limits<uint64_t>::max();
-    uint64_t first_element{0};
-    uint64_t element_count{ALL};
+    uint64_t offset{0};
+    uint64_t size{ALL};
 
     auto operator<=>(const BufferRange&) const = default;
 };
@@ -425,12 +425,6 @@ public:
     size_t size() const { return m_desc.size; }
     size_t struct_size() const { return m_desc.struct_size; }
     Format format() const override { return m_desc.format; }
-
-    bool is_structured() const { return m_desc.struct_size > 0; }
-    bool is_typed() const { return m_desc.format != Format::unknown; }
-
-    size_t element_size() const;
-    size_t element_count() const;
 
     /// Map the whole buffer.
     /// Only available for buffers created with \c MemoryType::upload or \c MemoryType::read_back.

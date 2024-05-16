@@ -163,10 +163,9 @@ ResourceView::ResourceView(const ResourceViewDesc& desc, Buffer* buffer)
         .type = static_cast<gfx::IResourceView::Type>(m_desc.type),
         .format = static_cast<gfx::Format>(m_desc.format),
         .bufferRange{
-            .firstElement = m_desc.buffer_range.first_element,
-            .elementCount = m_desc.buffer_range.element_count,
+            .offset = m_desc.buffer_range.offset,
+            .size = m_desc.buffer_range.size,
         },
-        .bufferElementSize = m_desc.buffer_element_size,
     };
     // TODO handle uav counter
     SLANG_CALL(buffer->m_device->gfx_device()
@@ -257,16 +256,14 @@ std::string ResourceView::to_string() const
         "ResourceView(\n"
         "  type = {},\n"
         "  format = {},\n"
-        "  buffer_range = (first_element={}, element_count={}),\n"
-        "  buffer_element_size = {},\n"
+        "  buffer_range = (offset={}, size={}),\n"
         // "  subresource_range = {},\n"
         "  resource = {}\n"
         ")",
         m_desc.type,
         m_desc.format,
-        m_desc.buffer_range.first_element,
-        m_desc.buffer_range.element_count,
-        m_desc.buffer_element_size,
+        m_desc.buffer_range.offset,
+        m_desc.buffer_range.size,
         // m_desc.subresource_range,
         string::indent(m_resource ? m_resource->to_string() : "null")
     );
@@ -365,21 +362,6 @@ Buffer::~Buffer()
     m_device->deferred_release(m_gfx_buffer);
 }
 
-size_t Buffer::element_size() const
-{
-    if (is_structured())
-        return m_desc.struct_size;
-    else if (is_typed())
-        return get_format_info(m_desc.format).bytes_per_block;
-    else
-        return 1;
-}
-
-size_t Buffer::element_count() const
-{
-    return size() / element_size();
-}
-
 void* Buffer::map() const
 {
     SGL_ASSERT(m_desc.memory_type != MemoryType::device_local);
@@ -470,16 +452,15 @@ ref<ResourceView> Buffer::get_view(ResourceViewDesc desc)
         "Buffer does not support view type {}",
         desc.type
     );
-    size_t element_count = this->element_count();
-    SGL_CHECK(desc.buffer_range.first_element < element_count, "'first_element' out of range");
+    size_t size = this->size();
+    SGL_CHECK(desc.buffer_range.offset < size, "'offset' out of range");
     SGL_CHECK(
-        (desc.buffer_range.element_count == BufferRange::ALL)
-            || (desc.buffer_range.first_element + desc.buffer_range.element_count <= element_count),
-        "'element_count' out of range"
+        (desc.buffer_range.size == BufferRange::ALL) || (desc.buffer_range.offset + desc.buffer_range.size <= size),
+        "'size' out of range"
     );
 
-    if (desc.buffer_range.element_count == BufferRange::ALL) {
-        desc.buffer_range.element_count = element_count - desc.buffer_range.first_element;
+    if (desc.buffer_range.size == BufferRange::ALL) {
+        desc.buffer_range.size = size - desc.buffer_range.offset;
     }
 
     auto it = m_views.find(desc);
