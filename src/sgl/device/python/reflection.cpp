@@ -31,6 +31,7 @@ SGL_PY_EXPORT(device_reflection)
         .def_prop_ro("resource_result_type", &TypeReflection::resource_result_type)
         .def_prop_ro("resource_shape", &TypeReflection::resource_shape)
         .def_prop_ro("resource_access", &TypeReflection::resource_access)
+        .def("unwrap_array", &TypeReflection::unwrap_array)
         .def("__repr__", &TypeReflection::to_string);
 
     nb::class_<TypeLayoutReflection>(m, "TypeLayoutReflection")
@@ -38,6 +39,7 @@ SGL_PY_EXPORT(device_reflection)
         .def_prop_ro("name", &TypeLayoutReflection::name)
         .def_prop_ro("type", &TypeLayoutReflection::type)
         .def_prop_ro("fields", &TypeLayoutReflection::fields)
+        .def_prop_ro("element_type_layout", &TypeLayoutReflection::element_type_layout)
         .def("unwrap_array", &TypeLayoutReflection::unwrap_array)
         .def("__repr__", &TypeLayoutReflection::to_string);
 
