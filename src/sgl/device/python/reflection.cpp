@@ -48,7 +48,8 @@ SGL_PY_EXPORT(device_reflection)
     nb::class_<VariableLayoutReflection>(m, "VariableLayoutReflection")
         .def_prop_ro("name", &VariableLayoutReflection::name)
         .def_prop_ro("variable", &VariableLayoutReflection::variable)
-        .def_prop_ro("type_layout", &VariableLayoutReflection::type_layout);
+        .def_prop_ro("type_layout", &VariableLayoutReflection::type_layout)
+        .def("__repr__", &VariableLayoutReflection::to_string);
 
     nb::class_<EntryPointLayout>(m, "EntryPointLayout", D(EntryPointLayout))
         .def_prop_ro("name", &EntryPointLayout::name, D(EntryPointLayout, name))
@@ -59,6 +60,7 @@ SGL_PY_EXPORT(device_reflection)
             &EntryPointLayout::compute_thread_group_size,
             D(EntryPointLayout, compute_thread_group_size)
         )
+        .def_prop_ro("parameters", &EntryPointLayout::parameters, D_NA(EntryPointLayout, parameters))
         .def("__repr__", &EntryPointLayout::to_string);
 
     nb::class_<ProgramLayout> program_layout(m, "ProgramLayout", D(ProgramLayout));
