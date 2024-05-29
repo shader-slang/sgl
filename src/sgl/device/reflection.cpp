@@ -23,9 +23,12 @@ std::string TypeReflection::to_string() const
 {
     std::string str;
     str += "TypeReflection(\n";
-    // str += fmt::format("  kind={},\n", kind());
-    // str += fmt::format("  name={},\n", c_str_to_string(name()));
+    str += fmt::format("  kind={},\n", kind());
+    str += fmt::format("  name={},\n", c_str_to_string(name()));
     // str += fmt::format("  fields={},", vector_to_string(fields()));
+    // str += fmt::format("  scalar_type={},\n", scalar_type());
+    // str += fmt::format("  row_count={},\n", row_count());
+    // str += fmt::format("  col_count={},\n", col_count());
     str += ")";
     return str;
 }
