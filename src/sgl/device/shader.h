@@ -23,7 +23,7 @@ namespace sgl {
 struct TypeConformance {
     std::string type_name;
     std::string interface_name;
-#ifdef SGL_MACOS
+#if SGL_MACOS
     // macOS clang stdc++ doesn't support C++20 <=> operator for standard containers yet.
     bool operator<(const TypeConformance& other) const
     {
