@@ -15,6 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
+        python: ["3.10"]
         config: [Debug, Release]
         include:
           - os: windows-latest
@@ -24,16 +25,28 @@ jobs:
             preset: linux-gcc
             cmake: tools/host/cmake/bin/cmake
           - os: macos-latest
-            preset: macos-x64-clang
+            preset: macos-arm64-clang
             cmake: tools/host/cmake/CMake.app/Contents/bin/cmake
 
     env:
       VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
+
+      # Setup Python.
+      - name: Setup Python ${{ matrix.python }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: 'pip'
+
+      # Install Python packages.
+      - name: Install Python packages
+        run: |
+          python -m pip install pytest pytest-github-actions-annotate-failures typing_extensions
 
       # Install MSVC.
       - name: Install MSVC
