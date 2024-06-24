@@ -24,7 +24,15 @@ struct FramebufferLayoutDesc {
     std::vector<FramebufferLayoutTargetDesc> render_targets;
     std::optional<FramebufferLayoutTargetDesc> depth_stencil;
 
+#if SGL_MACOS
+    // macOS clang stdc++ doesn't support C++20 <=> operator for standard containers yet.
+    bool operator<(const FramebufferLayoutDesc& other) const
+    {
+        return std::tie(render_targets, depth_stencil) < std::tie(other.render_targets, other.depth_stencil);
+    }
+#else
     auto operator<=>(const FramebufferLayoutDesc&) const = default;
+#endif
 };
 
 class SGL_API FramebufferLayout : public DeviceResource {
