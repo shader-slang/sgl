@@ -11,7 +11,7 @@ SGL_PY_EXPORT(core_struct)
     nb::class_<Struct, Object> struct_(m, "Struct", D(Struct));
 
     nb::sgl_enum<Struct::Type>(struct_, "Type", D(Struct, Type));
-    nb::sgl_enum<Struct::Flags>(struct_, "Flags", D(Struct, Flags)).def_enum_operators();
+    nb::sgl_enum_flags<Struct::Flags>(struct_, "Flags", D(Struct, Flags));
     nb::sgl_enum<Struct::ByteOrder>(struct_, "ByteOrder", D(Struct, ByteOrder));
 
     nb::class_<Struct::Field>(struct_, "Field", D(Struct, Field))

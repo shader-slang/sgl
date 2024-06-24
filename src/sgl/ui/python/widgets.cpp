@@ -287,13 +287,12 @@ SGL_PY_EXPORT(ui_widgets)
             D(ListBox, height_in_items)
         );
 
-    nb::enum_<SliderFlags>(ui, "SliderFlags", D(SliderFlags))
+    nb::enum_<SliderFlags>(ui, "SliderFlags", nb::is_arithmetic(), nb::is_flag(), D(SliderFlags))
         .value("none", SliderFlags::none)
         .value("always_clamp", SliderFlags::always_clamp)
         .value("logarithmic", SliderFlags::logarithmic)
         .value("no_round_to_format", SliderFlags::no_round_to_format)
-        .value("no_input", SliderFlags::no_input)
-        .def_enum_operators();
+        .value("no_input", SliderFlags::no_input);
 
     bind_drag<DragFloat>(ui, "DragFloat");
     bind_drag<DragFloat2>(ui, "DragFloat2");
@@ -313,7 +312,7 @@ SGL_PY_EXPORT(ui_widgets)
     bind_slider<SliderInt3>(ui, "SliderInt3");
     bind_slider<SliderInt4>(ui, "SliderInt4");
 
-    nb::enum_<InputTextFlags>(ui, "InputTextFlags", D(InputTextFlags))
+    nb::enum_<InputTextFlags>(ui, "InputTextFlags", nb::is_arithmetic(), nb::is_flag(), D(InputTextFlags))
         .value("none", InputTextFlags::none)
         .value("chars_decimal", InputTextFlags::chars_decimal)
         .value("chars_hexadecimal", InputTextFlags::chars_hexadecimal)
@@ -333,8 +332,7 @@ SGL_PY_EXPORT(ui_widgets)
         .value("password", InputTextFlags::password)
         .value("no_undo_redo", InputTextFlags::no_undo_redo)
         .value("chars_scientific", InputTextFlags::chars_scientific)
-        .value("escape_clears_all", InputTextFlags::escape_clears_all)
-        .def_enum_operators();
+        .value("escape_clears_all", InputTextFlags::escape_clears_all);
 
     bind_input<InputFloat>(ui, "InputFloat");
     bind_input<InputFloat2>(ui, "InputFloat2");

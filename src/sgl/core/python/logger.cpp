@@ -22,7 +22,7 @@ SGL_PY_EXPORT(core_logger)
 {
     using namespace sgl;
 
-    nb::enum_<LogLevel>(m, "LogLevel", D(LogLevel))
+    nb::enum_<LogLevel>(m, "LogLevel", nb::is_arithmetic(), D(LogLevel))
         .value("none", LogLevel::none)
         .value("debug", LogLevel::debug)
         .value("info", LogLevel::info)

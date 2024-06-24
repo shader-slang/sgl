@@ -82,14 +82,14 @@ struct type_caster<std::span<T>> {
         Caster caster;
         bool success = o != nullptr;
 
-        if constexpr (is_base_caster_v<Caster> && !std::is_pointer_v<T>)
-            flags |= (uint8_t)cast_flags::none_disallowed;
+        flags = flags_for_local_caster<T>(flags);
 
         for (size_t i = 0; i < size; ++i) {
-            if (!caster.from_python(o[i], flags, cleanup)) {
+            if (!caster.from_python(o[i], flags, cleanup) || !caster.template can_cast<T>()) {
                 success = false;
                 break;
             }
+
             vec.push_back(caster.operator cast_t<T>());
         }
 
@@ -151,13 +151,8 @@ public:
 
     template<typename... Extra>
     NB_INLINE sgl_enum_flags(handle scope, const char* name, const Extra&... extra)
-        : Base(scope, name, extra...)
+        : Base(scope, name, nb::is_arithmetic(), nb::is_flag(), extra...)
     {
-        for (const auto& item : ::sgl::EnumInfo<T>::items())
-            Base::value(item.second.c_str(), item.first);
-
-        Base::def("__and__", [](T value1, T value2) { return value1 & value2; });
-        Base::def("__or__", [](T value1, T value2) { return value1 | value2; });
     }
 };
 
@@ -292,17 +287,6 @@ inline constexpr uint64_t const_hash(std::string_view str)
 #define SGL_PY_DECLARE(name) extern void sgl_python_export_##name(nb::module_& m)
 #define SGL_PY_EXPORT(name) void sgl_python_export_##name([[maybe_unused]] ::nb::module_& m)
 #define SGL_PY_IMPORT(name) sgl_python_export_##name(m)
-
-
-#define def_enum_operators()                                                                                           \
-    def(nb::self == nb::self)                                                                                          \
-        .def(nb::self != nb::self)                                                                                     \
-        .def(nb::self | nb::self)                                                                                      \
-        .def(nb::self |= nb::self)                                                                                     \
-        .def(nb::self& nb::self)                                                                                       \
-        .def(nb::self &= nb::self)                                                                                     \
-        .def(~nb::self)
-
 
 #define D(...) DOC(sgl, __VA_ARGS__)
 #define D_NA(...) "N/A"
