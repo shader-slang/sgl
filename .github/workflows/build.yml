@@ -53,6 +53,7 @@ jobs:
         run: |
           ./setup.sh
           sudo apt install libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev pkg-config
+          pip install typing-extensions
 
       # Setup for macOS.
       - name: Setup (macOS)
@@ -60,6 +61,7 @@ jobs:
         shell: bash
         run: |
           ./setup.sh
+          pip install typing-extensions
 
       # Setup vcpkg caching.
       - name: Export GitHub Actions cache environment variables
