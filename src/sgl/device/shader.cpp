@@ -543,7 +543,7 @@ void SlangSession::recreate_module(SlangModule* module)
 
     module->init(slang_module);
     module->recreate_entry_points();
-} 
+}
 
 void SlangSession::on_program_destroyed(ShaderProgram* program)
 {
@@ -697,7 +697,7 @@ SlangModule::SlangModule(ref<SlangSession> session, const SlangModuleDesc& desc)
     : m_session(std::move(session))
     , m_desc(std::move(desc))
 {
-    
+
 }
 
 SlangModule::~SlangModule()
@@ -819,7 +819,7 @@ ref<SlangEntryPoint> SlangEntryPoint::rename(const std::string& new_name)
     auto ep = make_ref<SlangEntryPoint>(m_module, desc);
     m_module->on_entry_point_created(ep.get());
     ep->init(renamed_entry_point);
-        
+
     return ep;
 }
 
@@ -975,8 +975,8 @@ void ShaderProgram::link()
     log_debug("Linking shader program \"{}\" took {}", name, string::format_duration(timer.elapsed_s()));
 
     // Store program info
-    m_linked_program = std::move(linked_program);
-    m_gfx_shader_program = std::move(gfx_shader_program);
+    m_linked_program = linked_program;
+    m_gfx_shader_program = gfx_shader_program;
 
     // If this is a hot reload, notify pipelines that the program has refreshed so they may need to rebuild
     if (is_reload)

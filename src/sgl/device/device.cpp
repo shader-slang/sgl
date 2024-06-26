@@ -287,7 +287,7 @@ inline gfx::DeviceType gfx_device_type(DeviceType device_type)
 }
 
 Device::Device(const DeviceDesc& desc)
-    : m_desc(desc)
+    : m_desc(desc)   
 {
     ConstructorRefGuard ref_guard(this);
 
@@ -475,6 +475,9 @@ Device::Device(const DeviceDesc& desc)
 
     if (m_desc.enable_print)
         m_debug_printer = std::make_unique<DebugPrinter>(this);
+
+    m_file_system_watcher.set_on_change([this](const std::filesystem::path& path, FileSystemWatcherChange change) { on_file_system_event(path, change); });
+    m_file_system_watcher.add_watch({.path = std::filesystem::current_path()});
 }
 
 Device::~Device()
@@ -1113,6 +1116,13 @@ bool Device::enable_agility_sdk()
     return true;
 #endif
     return false;
+}
+
+void Device::on_file_system_event(std::filesystem::path path, FileSystemWatcherChange event)
+{
+    SGL_UNUSED(event);
+    if (path.extension() == ".slang")
+        reload_all_programs();
 }
 
 std::string Device::to_string() const

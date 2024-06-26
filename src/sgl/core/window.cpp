@@ -11,6 +11,7 @@
 
 #if SGL_WINDOWS
 #define GLFW_EXPOSE_NATIVE_WIN32
+#include <windows.h>
 #elif SGL_LINUX
 #include <X11/Xlib.h>
 #include <X11/extensions/Xrandr.h>
@@ -440,6 +441,9 @@ void Window::process_events()
 {
     glfwPollEvents();
     poll_gamepad_input();
+
+    SleepEx(0, TRUE);
+
 }
 
 void Window::set_clipboard(const std::string& text)

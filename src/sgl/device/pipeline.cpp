@@ -47,7 +47,8 @@ void Pipeline::notify_program_reloaded(const ShaderProgram* program)
 {
     for (Pipeline* pipeline : m_existing_pipelines) {
         if (pipeline->m_program == program) {
-            pipeline->m_device->deferred_release(pipeline->m_gfx_pipeline_state);
+            //pipeline->m_device->deferred_release(pipeline->m_gfx_pipeline_state);
+            pipeline->m_gfx_pipeline_state = nullptr;
             pipeline->recreate();
         }
     }
@@ -82,11 +83,6 @@ ComputePipeline::ComputePipeline(ref<Device> device, ComputePipelineDesc desc)
 
 void ComputePipeline::recreate()
 {
-    if (m_gfx_pipeline_state) {
-        m_device->deferred_release(m_gfx_pipeline_state);
-        m_gfx_pipeline_state = nullptr;
-    }
-
     gfx::ComputePipelineStateDesc gfx_desc{.program = m_program->gfx_shader_program()};
     SLANG_CALL(m_device->gfx_device()->createComputePipelineState(gfx_desc, m_gfx_pipeline_state.writeRef()));
     m_thread_group_size = m_program->layout()->get_entry_point_by_index(0)->compute_thread_group_size();
@@ -114,16 +110,13 @@ GraphicsPipeline::GraphicsPipeline(ref<Device> device, GraphicsPipelineDesc desc
     : Pipeline(std::move(device), desc.program.get())
     , m_desc(std::move(desc))
 {
+    m_stored_input_layout = ref<const InputLayout>(m_desc.input_layout);
+    m_stored_framebuffer_layout = ref<const FramebufferLayout>(m_desc.framebuffer_layout);
     recreate();
 }
 
 void GraphicsPipeline::recreate()
 {
-    if (m_gfx_pipeline_state) {
-        m_device->deferred_release(m_gfx_pipeline_state);
-        m_gfx_pipeline_state = nullptr;
-    }
-
     const GraphicsPipelineDesc& desc = m_desc;
 
     SGL_CHECK_NOT_NULL(desc.framebuffer_layout);
@@ -223,11 +216,6 @@ RayTracingPipeline::RayTracingPipeline(ref<Device> device, RayTracingPipelineDes
 
 void RayTracingPipeline::recreate()
 {
-    if (m_gfx_pipeline_state) {
-        m_device->deferred_release(m_gfx_pipeline_state);
-        m_gfx_pipeline_state = nullptr;
-    }
-
     const RayTracingPipelineDesc& desc = m_desc;
 
     short_vector<gfx::HitGroupDesc, 16> gfx_hit_groups;

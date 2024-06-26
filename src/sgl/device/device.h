@@ -13,6 +13,7 @@
 #include "sgl/core/enum.h"
 #include "sgl/core/object.h"
 #include "sgl/math/vector_types.h"
+#include "sgl/core/file_system_watcher.h"
 
 #include <slang-gfx.h>
 
@@ -536,6 +537,9 @@ public:
     Blitter* _blitter();
 
 private:
+
+    void on_file_system_event(std::filesystem::path path, FileSystemWatcherChange change);
+
     DeviceDesc m_desc;
     DeviceInfo m_info;
     ShaderModel m_supported_shader_model{ShaderModel::unknown};
@@ -591,6 +595,8 @@ private:
     bool m_supports_cuda_interop{false};
     ref<cuda::Device> m_cuda_device;
     ref<cuda::ExternalSemaphore> m_cuda_semaphore;
+
+    FileSystemWatcher m_file_system_watcher;
 };
 
 } // namespace sgl

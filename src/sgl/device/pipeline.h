@@ -107,6 +107,9 @@ private:
     /// Shared reference to shader program to keep reflection data alive.
     //ref<ShaderProgram> m_program;
     GraphicsPipelineDesc m_desc;
+
+    ref<const InputLayout> m_stored_input_layout;
+    ref<const FramebufferLayout> m_stored_framebuffer_layout;
 };
 
 struct HitGroupDesc {
