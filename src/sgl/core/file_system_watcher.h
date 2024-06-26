@@ -9,6 +9,7 @@
 #include <map>
 #include <functional>
 #include <filesystem>
+#include <chrono>
 
 namespace sgl {
 
@@ -27,6 +28,12 @@ struct FileSystemWatchDesc {
     std::filesystem::path path;
 };
 
+struct FileSystemWatchEvent {
+    std::filesystem::path path;
+    FileSystemWatcherChange change;
+    std::chrono::system_clock::time_point time;
+};
+
 class FileSystemWatcher : public Object {
     SGL_OBJECT(FileSystemWatcher)
 public:
@@ -37,14 +44,18 @@ public:
     void add_watch(const FileSystemWatchDesc& desc);
     void remove_watch(const std::filesystem::path& path);
 
-    void set_on_change(std::function<void(const std::filesystem::path&, FileSystemWatcherChange)> on_change);
+    void set_on_change(std::function<void(std::vector<FileSystemWatchEvent>&)> on_change);
 
     void notify_change(const std::filesystem::path& path, FileSystemWatcherChange change);
+
+    void update();
 
 private:
     int m_next_id = 1;
     std::map<int, FileSystemWatchState*> m_watches;
-    std::function<void(const std::filesystem::path&, FileSystemWatcherChange)> m_on_change;
+    std::function<void(std::vector<FileSystemWatchEvent>&)> m_on_change;
+    std::vector<FileSystemWatchEvent> m_queued_events;
+    std::chrono::system_clock::time_point m_last_event;
 
     FileSystemWatchState* get_watch(int id);
 };

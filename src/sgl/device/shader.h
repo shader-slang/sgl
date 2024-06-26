@@ -296,6 +296,8 @@ public:
 
     void recreate_all_modules();
 
+    void recreate_modules_referencing(const std::set<std::filesystem::path>& paths);
+
     void recreate_module(SlangModule* module);
 
     void on_program_destroyed(ShaderProgram* program);

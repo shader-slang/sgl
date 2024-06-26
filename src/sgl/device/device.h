@@ -541,7 +541,7 @@ public:
 
 private:
 
-    void on_file_system_event(std::filesystem::path path, FileSystemWatcherChange change);
+    void on_file_system_event(std::vector<FileSystemWatchEvent>& events);
 
     DeviceDesc m_desc;
     DeviceInfo m_info;

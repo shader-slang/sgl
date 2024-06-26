@@ -494,6 +494,22 @@ void SlangSession::recreate_all_modules()
         recreate_module(module);
 }
 
+void SlangSession::recreate_modules_referencing(const std::set<std::filesystem::path>& paths)
+{
+    int dependencies = 0;
+    for (int i = 0; i < m_slang_session->getLoadedModuleCount(); ++i) {
+        slang::IModule* slang_module = m_slang_session->getLoadedModule(i);
+        std::filesystem::path module_path = slang_module->getFilePath();
+        if (paths.contains(module_path))
+        {
+            log_info("Hot reload, module {} changed", module_path);
+            dependencies++;
+        }
+    }
+    if (dependencies > 0)
+        recreate_session();
+}
+
 void SlangSession::recreate_module(SlangModule* module)
 {
     module->load();
@@ -858,7 +874,7 @@ ShaderProgram::ShaderProgram(
     ref<Device> device, ref<SlangSession> session, const ShaderProgramDesc& desc)
     : DeviceResource(std::move(device))
     , m_session(std::move(session))
-    , m_desc(std::move(desc))
+    , m_desc(desc)
 {
 }
 

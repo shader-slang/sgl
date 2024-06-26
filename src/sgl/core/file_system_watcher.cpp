@@ -150,7 +150,7 @@ void FileSystemWatcher::remove_watch(const std::filesystem::path& path)
 }
 
 void FileSystemWatcher::set_on_change(
-    std::function<void(const std::filesystem::path&, FileSystemWatcherChange)> on_change
+    std::function<void(std::vector<FileSystemWatchEvent>&)> on_change
 )
 {
     m_on_change = on_change;
@@ -163,7 +163,25 @@ FileSystemWatchState* FileSystemWatcher::get_watch(int id)
 
 void FileSystemWatcher::notify_change(const std::filesystem::path& path, FileSystemWatcherChange change)
 {
-    m_on_change(path, change);
+    auto now = std::chrono::system_clock::now();
+    FileSystemWatchEvent event = {.path = path, .change = change, .time = now};
+    m_queued_events.push_back(event);
+    m_last_event = now;
+}
+
+void FileSystemWatcher::update()
+{
+#if SGL_WINDOWS
+    SleepEx(0, TRUE);
+#endif
+    if (m_queued_events.size() > 0) {
+        auto duration = std::chrono::system_clock::now() - m_last_event;
+        auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+        if (millis > 1000) {
+            m_on_change(m_queued_events);
+            m_queued_events.resize(0);
+        }
+    }
 }
 
 } // namespace sgl

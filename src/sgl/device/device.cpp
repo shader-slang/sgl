@@ -476,7 +476,8 @@ Device::Device(const DeviceDesc& desc)
     if (m_desc.enable_print)
         m_debug_printer = std::make_unique<DebugPrinter>(this);
 
-    m_file_system_watcher.set_on_change([this](const std::filesystem::path& path, FileSystemWatcherChange change) { on_file_system_event(path, change); });
+    m_file_system_watcher.set_on_change([this](std::vector<FileSystemWatchEvent>& events)
+                                        { on_file_system_event(events); });
 
     if (m_desc.hot_reload_on_edit)
         m_file_system_watcher.add_watch({.path = std::filesystem::current_path()});
@@ -866,6 +867,10 @@ void Device::run_garbage_collection()
     // Release deferred objects that are no longer in use.
     while (m_deferred_release_queue.size() && m_deferred_release_queue.front().fence_value <= current_value)
         m_deferred_release_queue.pop();
+
+    // Trigger hot reload events
+    if (m_desc.hot_reload_on_edit)
+        m_file_system_watcher.update();
 }
 
 ref<MemoryHeap> Device::create_memory_heap(MemoryHeapDesc desc)
@@ -1120,11 +1125,15 @@ bool Device::enable_agility_sdk()
     return false;
 }
 
-void Device::on_file_system_event(std::filesystem::path path, FileSystemWatcherChange event)
+void Device::on_file_system_event(std::vector<FileSystemWatchEvent>& events)
 {
-    SGL_UNUSED(event);
-    if (path.extension() == ".slang")
-        reload_all_programs();
+    SGL_UNUSED(events);
+    std::set<std::filesystem::path> paths;
+    for (auto ev : events)
+        paths.insert(ev.path);
+
+    for (auto session: m_all_slang_sessions)
+        session->recreate_modules_referencing(paths);
 }
 
 std::string Device::to_string() const
