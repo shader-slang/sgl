@@ -294,7 +294,7 @@ public:
 
     void on_module_destroyed(SlangModule* module);
 
-    void recreate_modules();
+    void recreate_all_modules();
 
     void recreate_module(SlangModule* module);
 
@@ -304,11 +304,11 @@ public:
 
     void recreate_program(ShaderProgram* program);
 
+    std::string resolve_module_name(std::string_view module_name);
+
 private:
     void update_module_cache();
     bool write_module_to_cache(slang::IModule* module);
-
-    std::string resolve_module_name(std::string_view module_name);
 
     /// Register a module with the debug printer.
     /// This extracts all the hashed strings of the module.
@@ -358,7 +358,6 @@ public:
     SlangModule(ref<SlangSession> session, const SlangModuleDesc& desc);
     ~SlangModule();
 
-    void init(slang::IModule* slang_module);
     void load();
 
     SlangSession* session() const { return m_session; }
@@ -391,10 +390,12 @@ private:
     breakable_ref<SlangSession> m_session;
     SlangModuleDesc m_desc;
     /// Slang module (owned by the session).
-    slang::IModule* m_slang_module;
+    slang::IModule* m_slang_module = nullptr;
     std::string m_name;
     std::filesystem::path m_path;
     mutable std::set<SlangEntryPoint*> m_created_entry_points;
+
+    void register_with_debug_printer() const;
 };
 
 struct SlangEntryPointDesc {

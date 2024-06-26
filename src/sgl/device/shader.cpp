@@ -383,7 +383,7 @@ void SlangSession::recreate_session()
         m_nvapi_module->break_strong_reference_to_session();
     }
 
-    recreate_modules();
+    recreate_all_modules();
     recreate_programs();
 }
 
@@ -488,7 +488,7 @@ void SlangSession::on_module_destroyed(SlangModule* module)
     m_created_modules.erase(module);
 }
 
-void SlangSession::recreate_modules()
+void SlangSession::recreate_all_modules()
 {
     for (SlangModule* module : m_created_modules)
         recreate_module(module);
@@ -496,52 +496,8 @@ void SlangSession::recreate_modules()
 
 void SlangSession::recreate_module(SlangModule* module)
 {
-    const SlangModuleDesc& desc = module->desc();
-
-    Timer timer;
-    Slang::ComPtr<ISlangBlob> diagnostics;
-    slang::IModule* slang_module;
-
-    // Load module either from resolved name or source depending on whether source specified
-    if (!desc.source.has_value())
-    {
-        std::string resolved_name = resolve_module_name(desc.module_name);
-        slang_module = m_slang_session->loadModule(resolved_name.c_str(), diagnostics.writeRef());
-        if (!slang_module) {
-            std::string msg = append_diagnostics(
-                fmt::format("Failed to load slang module \"{}\"", desc.module_name),
-                diagnostics);
-            throw SlangCompileError(msg);
-        }
-    }
-    else
-    {
-        // TODO workaround: slang doesn't like loading the same source twice
-        static uint32_t id = 0;
-        std::string source_str = fmt::format("// {}\n{}", id++, desc.source);
-
-        slang_module = m_slang_session->loadModuleFromSourceString(
-            std::string{desc.module_name}.c_str(),
-            desc.path ? desc.path->string().c_str() : nullptr,
-            source_str.c_str(),
-            diagnostics.writeRef()
-        );
-        if (!slang_module) {
-            std::string msg = append_diagnostics(
-                fmt::format("Failed to load slang module \"{}\" from source", desc.module_name),
-                diagnostics
-            );
-            throw SlangCompileError(msg);
-        }
-
-    }
-
-    report_diagnostics(diagnostics);
-    log_debug("Loading slang module \"{}\" took {}", desc.module_name, string::format_duration(timer.elapsed_s()));
-    register_with_debug_printer(module);
+    module->load();
     update_module_cache();
-
-    module->init(slang_module);
     module->recreate_entry_points();
 }
 
@@ -695,7 +651,7 @@ void SlangSession::register_with_debug_printer(SlangModule* module) const
 
 SlangModule::SlangModule(ref<SlangSession> session, const SlangModuleDesc& desc)
     : m_session(std::move(session))
-    , m_desc(std::move(desc))
+    , m_desc(desc)
 {
 
 }
@@ -705,16 +661,57 @@ SlangModule::~SlangModule()
     m_session->on_module_destroyed(this);
 }
 
-void SlangModule::init( slang::IModule* slang_module)
+void SlangModule::load()
 {
+    Timer timer;
+    Slang::ComPtr<ISlangBlob> diagnostics;
+    slang::IModule* slang_module;
+
+    // Load module either from resolved name or source depending on whether source specified
+    if (!m_desc.source.has_value()) {
+        std::string resolved_name = m_session->resolve_module_name(m_desc.module_name);
+        slang_module = m_session->get_slang_session()->loadModule(resolved_name.c_str(), diagnostics.writeRef());
+        if (!slang_module) {
+            std::string msg
+                = append_diagnostics(fmt::format("Failed to load slang module \"{}\"", m_desc.module_name), diagnostics);
+            throw SlangCompileError(msg);
+        }
+    } else {
+        // TODO workaround: slang doesn't like loading the same source twice
+        static uint32_t id = 0;
+        std::string source_str = fmt::format("// {}\n{}", id++, m_desc.source);
+
+        slang_module = m_session->get_slang_session()->loadModuleFromSourceString(
+            std::string{m_desc.module_name}.c_str(),
+            m_desc.path ? m_desc.path->string().c_str() : nullptr,
+            source_str.c_str(),
+            diagnostics.writeRef()
+        );
+        if (!slang_module) {
+            std::string msg = append_diagnostics(
+                fmt::format("Failed to load slang module \"{}\" from source", m_desc.module_name),
+                diagnostics
+            );
+            throw SlangCompileError(msg);
+        }
+    }
+
+    report_diagnostics(diagnostics);
+    log_debug("Loading slang module \"{}\" took {}", m_desc.module_name, string::format_duration(timer.elapsed_s()));
+    register_with_debug_printer();
+
+    // Store initialized module info
     m_slang_module = slang_module;
     m_name = m_slang_module->getName();
     m_path = m_slang_module->getFilePath() ? m_slang_module->getFilePath() : "";
+
+    // In case this was a re-load, tell any existing entry points to recreate
+    recreate_entry_points();
 }
 
-void load()
-{
-
+void SlangModule::register_with_debug_printer() const {
+    if (m_session->device()->debug_printer())
+        m_session->device()->debug_printer()->add_hashed_strings(layout()->hashed_strings_map());
 }
 
 std::vector<ref<SlangEntryPoint>> SlangModule::entry_points() const
