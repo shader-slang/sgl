@@ -6,7 +6,10 @@
 
 #include <fstream>
 #include <iostream>
+
+#if SGL_WINDOWS
 #include <windows.h>
+#endif
 
 namespace sgl {
 
