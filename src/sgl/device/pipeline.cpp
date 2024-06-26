@@ -47,7 +47,7 @@ void Pipeline::notify_program_reloaded(const ShaderProgram* program)
 {
     for (Pipeline* pipeline : m_existing_pipelines) {
         if (pipeline->m_program == program) {
-            //pipeline->m_device->deferred_release(pipeline->m_gfx_pipeline_state);
+            pipeline->m_device->deferred_release(pipeline->m_gfx_pipeline_state);
             pipeline->m_gfx_pipeline_state = nullptr;
             pipeline->recreate();
         }
