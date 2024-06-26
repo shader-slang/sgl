@@ -359,6 +359,7 @@ public:
     ~SlangModule();
 
     void init(slang::IModule* slang_module);
+    void load();
 
     SlangSession* session() const { return m_session; }
     const SlangModuleDesc& desc() const { return m_desc; }
@@ -452,6 +453,8 @@ public:
     void init(
         Slang::ComPtr<slang::IComponentType> linked_program,
         Slang::ComPtr<gfx::IShaderProgram> gfx_shader_program);
+
+    void link();
 
     const ShaderProgramDesc& desc() const { return m_desc; }
 

@@ -558,111 +558,7 @@ void SlangSession::recreate_programs()
 
 void SlangSession::recreate_program(ShaderProgram* program)
 {
-    const ShaderProgramDesc& desc = program->desc();
-    bool is_reload = program->gfx_shader_program() != nullptr;
-
-    Timer timer;
-
-    // Compose the program from it's components.
-    Slang::ComPtr<slang::IComponentType> composed_program;
-    {
-        std::vector<slang::IComponentType*> component_types;
-        for (const auto& module : desc.modules)
-            component_types.push_back(module->slang_module());
-        for (const auto& entry_point : desc.entry_points)
-            component_types.push_back(entry_point->slang_entry_point());
-        Slang::ComPtr<ISlangBlob> diagnostics;
-        m_slang_session->createCompositeComponentType(
-            component_types.data(),
-            component_types.size(),
-            composed_program.writeRef(),
-            diagnostics.writeRef()
-        );
-        if (!composed_program) {
-            std::string msg = append_diagnostics("Failed to compose program", diagnostics);
-            throw SlangCompileError(msg);
-        }
-        report_diagnostics(diagnostics);
-    }
-
-    // Setup link options.
-    CompilerOptionEntries link_option_entries;
-    std::string downstream_args;
-    if (desc.link_options) {
-        const SlangLinkOptions& link_options = desc.link_options.value();
-
-        if (link_options.floating_point_mode)
-            link_option_entries.add(
-                slang::CompilerOptionName::FloatingPointMode,
-                int(*link_options.floating_point_mode)
-            );
-        if (link_options.debug_info)
-            link_option_entries.add(slang::CompilerOptionName::DebugInformation, int(*link_options.debug_info));
-        if (link_options.optimization)
-            link_option_entries.add(slang::CompilerOptionName::Optimization, int(*link_options.optimization));
-        if (link_options.downstream_args) {
-            if (m_device->type() == DeviceType::d3d12) {
-                for (const auto& arg : *link_options.downstream_args)
-                    link_option_entries.add(slang::CompilerOptionName::DownstreamArgs, "dxc", arg);
-            }
-        }
-        if (link_options.dump_intermediates)
-            link_option_entries.add(slang::CompilerOptionName::DumpIntermediates, *link_options.dump_intermediates);
-        if (link_options.dump_intermediates_prefix)
-            link_option_entries.add(
-                slang::CompilerOptionName::DumpIntermediatePrefix,
-                *link_options.dump_intermediates_prefix
-            );
-    }
-
-    // Link the composed program.
-    Slang::ComPtr<slang::IComponentType> linked_program;
-    {
-        Slang::ComPtr<ISlangBlob> diagnostics;
-        auto slang_link_option_entries = link_option_entries.slang_entries();
-        composed_program->linkWithOptions(
-            linked_program.writeRef(),
-            narrow_cast<uint32_t>(slang_link_option_entries.size()),
-            slang_link_option_entries.data(),
-            diagnostics.writeRef()
-        );
-        if (!composed_program) {
-            std::string msg = append_diagnostics("Failed to link program", diagnostics);
-            throw SlangCompileError(msg);
-        }
-        report_diagnostics(diagnostics);
-    }
-
-    // Create shader program.
-    Slang::ComPtr<gfx::IShaderProgram> gfx_shader_program;
-    {
-        gfx::IShaderProgram::Desc gfx_desc{
-            .slangGlobalScope = linked_program,
-        };
-
-        Slang::ComPtr<ISlangBlob> diagnostics;
-        if (m_device->gfx_device()->createProgram(gfx_desc, gfx_shader_program.writeRef(), diagnostics.writeRef())
-            != SLANG_OK) {
-            std::string msg = append_diagnostics("Failed to create shader program", diagnostics);
-            SGL_THROW(msg);
-        }
-        report_diagnostics(diagnostics);
-    }
-
-    // Report link time.
-    std::string name;
-    for (const auto& entry_point : desc.entry_points)
-        name += (name.empty() ? "" : ", ") + entry_point->module()->name() + ":" + entry_point->name();
-    log_debug("Linking shader program \"{}\" took {}", name, string::format_duration(timer.elapsed_s()));
-
-    program->init(linked_program, gfx_shader_program);
-
-    if (is_reload)
-    {
-        ComputePipeline::on_program_reloaded(program);
-        GraphicsPipeline::on_program_reloaded(program);
-        RayTracingPipeline::on_program_reloaded(program);
-    }
+    program->link();
 }
 
 std::string SlangSession::to_string() const
@@ -814,6 +710,11 @@ void SlangModule::init( slang::IModule* slang_module)
     m_slang_module = slang_module;
     m_name = m_slang_module->getName();
     m_path = m_slang_module->getFilePath() ? m_slang_module->getFilePath() : "";
+}
+
+void load()
+{
+
 }
 
 std::vector<ref<SlangEntryPoint>> SlangModule::entry_points() const
@@ -971,6 +872,115 @@ void ShaderProgram::init(
 {
     m_linked_program = std::move(linked_program);
     m_gfx_shader_program = std::move(gfx_shader_program);
+}
+
+void ShaderProgram::link()
+{
+    const ShaderProgramDesc& desc = m_desc;
+    bool is_reload = m_gfx_shader_program != nullptr;
+    slang::ISession* session = m_session->get_slang_session();
+
+    Timer timer;
+
+    // Compose the program from it's components.
+    Slang::ComPtr<slang::IComponentType> composed_program;
+    {
+        std::vector<slang::IComponentType*> component_types;
+        for (const auto& module : desc.modules)
+            component_types.push_back(module->slang_module());
+        for (const auto& entry_point : desc.entry_points)
+            component_types.push_back(entry_point->slang_entry_point());
+        Slang::ComPtr<ISlangBlob> diagnostics;
+        session->createCompositeComponentType(
+            component_types.data(),
+            component_types.size(),
+            composed_program.writeRef(),
+            diagnostics.writeRef()
+        );
+        if (!composed_program) {
+            std::string msg = append_diagnostics("Failed to compose program", diagnostics);
+            throw SlangCompileError(msg);
+        }
+        report_diagnostics(diagnostics);
+    }
+
+    // Setup link options.
+    CompilerOptionEntries link_option_entries;
+    std::string downstream_args;
+    if (desc.link_options) {
+        const SlangLinkOptions& link_options = desc.link_options.value();
+
+        if (link_options.floating_point_mode)
+            link_option_entries.add(
+                slang::CompilerOptionName::FloatingPointMode,
+                int(*link_options.floating_point_mode)
+            );
+        if (link_options.debug_info)
+            link_option_entries.add(slang::CompilerOptionName::DebugInformation, int(*link_options.debug_info));
+        if (link_options.optimization)
+            link_option_entries.add(slang::CompilerOptionName::Optimization, int(*link_options.optimization));
+        if (link_options.downstream_args) {
+            if (m_device->type() == DeviceType::d3d12) {
+                for (const auto& arg : *link_options.downstream_args)
+                    link_option_entries.add(slang::CompilerOptionName::DownstreamArgs, "dxc", arg);
+            }
+        }
+        if (link_options.dump_intermediates)
+            link_option_entries.add(slang::CompilerOptionName::DumpIntermediates, *link_options.dump_intermediates);
+        if (link_options.dump_intermediates_prefix)
+            link_option_entries.add(
+                slang::CompilerOptionName::DumpIntermediatePrefix,
+                *link_options.dump_intermediates_prefix
+            );
+    }
+
+    // Link the composed program.
+    Slang::ComPtr<slang::IComponentType> linked_program;
+    {
+        Slang::ComPtr<ISlangBlob> diagnostics;
+        auto slang_link_option_entries = link_option_entries.slang_entries();
+        composed_program->linkWithOptions(
+            linked_program.writeRef(),
+            narrow_cast<uint32_t>(slang_link_option_entries.size()),
+            slang_link_option_entries.data(),
+            diagnostics.writeRef()
+        );
+        if (!composed_program) {
+            std::string msg = append_diagnostics("Failed to link program", diagnostics);
+            throw SlangCompileError(msg);
+        }
+        report_diagnostics(diagnostics);
+    }
+
+    // Create shader program.
+    Slang::ComPtr<gfx::IShaderProgram> gfx_shader_program;
+    {
+        gfx::IShaderProgram::Desc gfx_desc{
+            .slangGlobalScope = linked_program,
+        };
+
+        Slang::ComPtr<ISlangBlob> diagnostics;
+        if (m_device->gfx_device()->createProgram(gfx_desc, gfx_shader_program.writeRef(), diagnostics.writeRef())
+            != SLANG_OK) {
+            std::string msg = append_diagnostics("Failed to create shader program", diagnostics);
+            SGL_THROW(msg);
+        }
+        report_diagnostics(diagnostics);
+    }
+
+    // Report link time.
+    std::string name;
+    for (const auto& entry_point : desc.entry_points)
+        name += (name.empty() ? "" : ", ") + entry_point->module()->name() + ":" + entry_point->name();
+    log_debug("Linking shader program \"{}\" took {}", name, string::format_duration(timer.elapsed_s()));
+
+    // Store program info
+    m_linked_program = std::move(linked_program);
+    m_gfx_shader_program = std::move(gfx_shader_program);
+
+    // If this is a hot reload, notify pipelines that the program has refreshed so they may need to rebuild
+    if (is_reload)
+        Pipeline::notify_program_reloaded(this);
 }
 
 ShaderProgram::~ShaderProgram()
