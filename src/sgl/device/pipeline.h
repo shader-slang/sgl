@@ -20,11 +20,13 @@
 
 namespace sgl {
 
+
+
 /// Pipeline base class.
 class SGL_API Pipeline : public DeviceResource {
     SGL_OBJECT(Pipeline)
 public:
-    Pipeline(ref<Device> device);
+    Pipeline(ref<Device> device, const ShaderProgram* program);
 
     virtual ~Pipeline();
 
@@ -39,13 +41,12 @@ public:
 
 protected:
 
-    virtual void on_program_reloaded(const ShaderProgram* program) = 0;
+    virtual void recreate() = 0;
 
     Slang::ComPtr<gfx::IPipelineState> m_gfx_pipeline_state;
+    ref<const ShaderProgram> m_program;
 
 private:
-
-    void recreate();
 
     static std::set<Pipeline*> m_existing_pipelines;
 };
@@ -68,11 +69,9 @@ public:
 
 protected:
 
-    virtual void on_program_reloaded(const ShaderProgram* program) override;
+    virtual void recreate() override;
 
  private:
-
-    void recreate();
 
     /// Shared reference to shader program to keep reflection data alive.
     //ref<ShaderProgram> m_program;
@@ -101,10 +100,9 @@ public:
 
 protected:
 
-    virtual void on_program_reloaded(const ShaderProgram* program) override;
+    virtual void recreate() override;
 
 private:
-    void recreate();
 
     /// Shared reference to shader program to keep reflection data alive.
     //ref<ShaderProgram> m_program;
@@ -136,10 +134,9 @@ public:
 
 protected:
 
-    virtual void on_program_reloaded(const ShaderProgram* program) override;
+    virtual void recreate() override;
 
 private:
-    void recreate();
 
     /// Shared reference to shader program to keep reflection data alive.
     //ref<ShaderProgram> m_program;
