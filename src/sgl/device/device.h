@@ -104,6 +104,9 @@ struct DeviceDesc {
     /// Path to the shader cache directory (optional).
     /// If a relative path is used, the cache is stored in the application data directory.
     std::optional<std::filesystem::path> shader_cache_path;
+
+    /// Whether to auto-compile programs in response to file system events
+    bool hot_reload_on_edit{false};
 };
 
 struct DeviceLimits {

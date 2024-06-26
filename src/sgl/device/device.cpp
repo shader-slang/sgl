@@ -477,7 +477,9 @@ Device::Device(const DeviceDesc& desc)
         m_debug_printer = std::make_unique<DebugPrinter>(this);
 
     m_file_system_watcher.set_on_change([this](const std::filesystem::path& path, FileSystemWatcherChange change) { on_file_system_event(path, change); });
-    m_file_system_watcher.add_watch({.path = std::filesystem::current_path()});
+
+    if (m_desc.hot_reload_on_edit)
+        m_file_system_watcher.add_watch({.path = std::filesystem::current_path()});
 }
 
 Device::~Device()
