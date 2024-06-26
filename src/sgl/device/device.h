@@ -529,6 +529,10 @@ public:
 
     std::string to_string() const override;
 
+    void on_slang_session_destroyed(SlangSession* session);
+
+    void reload_all_programs();
+
     Blitter* _blitter();
 
 private:
@@ -544,6 +548,7 @@ private:
     Slang::ComPtr<slang::IGlobalSession> m_global_session;
 
     ref<SlangSession> m_slang_session;
+    std::set<SlangSession*> m_all_slang_sessions;
 
     std::vector<std::string> m_features;
 

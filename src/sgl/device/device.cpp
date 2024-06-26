@@ -601,8 +601,22 @@ ref<ShaderTable> Device::create_shader_table(ShaderTableDesc desc)
 
 ref<SlangSession> Device::create_slang_session(SlangSessionDesc desc)
 {
-    return make_ref<SlangSession>(ref<Device>(this), std::move(desc));
+    auto session_ref = make_ref<SlangSession>(ref<Device>(this), std::move(desc));
+    m_all_slang_sessions.insert(session_ref.get());
+    return session_ref;
 }
+
+void Device::on_slang_session_destroyed(SlangSession* session)
+{
+    m_all_slang_sessions.erase(session);
+}
+
+void Device::reload_all_programs()
+{
+    for (SlangSession* session : m_all_slang_sessions)
+        session->recreate_session();
+}
+
 
 ref<SlangModule> Device::load_module(std::string_view module_name)
 {

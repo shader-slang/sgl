@@ -258,6 +258,8 @@ public:
     SlangSession(ref<Device> device, SlangSessionDesc desc);
     ~SlangSession();
 
+    void recreate_session();
+
     Device* device() const { return m_device; }
     const SlangSessionDesc& desc() const { return m_desc; }
 
@@ -290,6 +292,18 @@ public:
 
     void break_strong_reference_to_device() { m_device.break_strong_reference(); }
 
+    void on_module_destroyed(SlangModule* module);
+
+    void recreate_modules();
+
+    void recreate_module(SlangModule* module);
+
+    void on_program_destroyed(ShaderProgram* program);
+
+    void recreate_programs();
+
+    void recreate_program(ShaderProgram* program);
+
 private:
     void update_module_cache();
     bool write_module_to_cache(slang::IModule* module);
@@ -319,15 +333,35 @@ private:
 
     /// Set of all currently loaded slang modules.
     std::set<slang::IModule*> m_loaded_modules;
+
+    /// All loaded sgl modules (wrappers around IModule returned from load_module)
+    std::set<SlangModule*> m_created_modules;
+
+    /// All created sgl programs (via link_program)
+    std::set<ShaderProgram*> m_created_programs;
+};
+
+struct SlangModuleDesc {
+    /// Required module name
+    std::string module_name;
+
+    /// Optional module source. If not specified slang module resolution is used
+    std::optional<std::string> source;
+
+    /// If source specified, additional path for compilation
+    std::optional<std::filesystem::path> path;
 };
 
 class SGL_API SlangModule : public Object {
     SGL_OBJECT(SlangModule)
 public:
-    SlangModule(ref<SlangSession> session, slang::IModule* slang_module);
+    SlangModule(ref<SlangSession> session, const SlangModuleDesc& desc);
     ~SlangModule();
 
+    void init(slang::IModule* slang_module);
+
     SlangSession* session() const { return m_session; }
+    const SlangModuleDesc& desc() const { return m_desc; }
 
     const std::string& name() const { return m_name; }
     const std::filesystem::path& path() const { return m_path; }
@@ -343,23 +377,40 @@ public:
 
     void break_strong_reference_to_session() { m_session.break_strong_reference(); }
 
+    void recreate_entry_points();
+
+    void recreate_entry_point(SlangEntryPoint* entry_point) const;
+
+    void on_entry_point_created(SlangEntryPoint* entry_point) const;
+
+    void on_entry_point_destroyed(SlangEntryPoint* entry_point) const;
+
+
 private:
     breakable_ref<SlangSession> m_session;
+    SlangModuleDesc m_desc;
     /// Slang module (owned by the session).
     slang::IModule* m_slang_module;
     std::string m_name;
     std::filesystem::path m_path;
+    mutable std::set<SlangEntryPoint*> m_created_entry_points;
 };
 
+struct SlangEntryPointDesc {
+    std::string name;
+};
 class SGL_API SlangEntryPoint : public Object {
     SGL_OBJECT(SlangEntryPoint)
 public:
-    SlangEntryPoint(ref<SlangModule> module, Slang::ComPtr<slang::IComponentType> slang_entry_point);
+    SlangEntryPoint(ref<SlangModule> module, const SlangEntryPointDesc& desc);
     ~SlangEntryPoint() = default;
+
+    void init(Slang::ComPtr<slang::IComponentType> slang_entry_point);
 
     SlangModule* module() const { return m_module; }
 
     const std::string& name() const { return m_name; }
+    const SlangEntryPointDesc& desc() const { return m_desc; }
     ShaderStage stage() const { return m_stage; }
     const EntryPointLayout* layout() const;
 
@@ -377,23 +428,32 @@ public:
 
 private:
     ref<SlangModule> m_module;
+    SlangEntryPointDesc m_desc;
     Slang::ComPtr<slang::IComponentType> m_slang_entry_point;
     std::string m_name;
     ShaderStage m_stage;
 };
 
+struct ShaderProgramDesc {
+    std::vector<ref<SlangModule>> modules;
+    std::vector<ref<SlangEntryPoint>> entry_points;
+    std::optional<SlangLinkOptions> link_options;
+};
 class SGL_API ShaderProgram : public DeviceResource {
     SGL_OBJECT(ShaderProgram)
 public:
     ShaderProgram(
         ref<Device> device,
         ref<SlangSession> session,
-        std::vector<ref<SlangModule>> modules,
-        std::vector<ref<SlangEntryPoint>> entry_points,
-        Slang::ComPtr<slang::IComponentType> linked_program,
-        Slang::ComPtr<gfx::IShaderProgram> gfx_shader_program
+        const ShaderProgramDesc& desc        
     );
-    ~ShaderProgram() = default;
+    ~ShaderProgram();
+
+    void init(
+        Slang::ComPtr<slang::IComponentType> linked_program,
+        Slang::ComPtr<gfx::IShaderProgram> gfx_shader_program);
+
+    const ShaderProgramDesc& desc() const { return m_desc; }
 
     const ProgramLayout* layout() const { return ProgramLayout::from_slang(m_linked_program->getLayout()); }
 
@@ -405,8 +465,7 @@ public:
 
 private:
     ref<SlangSession> m_session;
-    std::vector<ref<SlangModule>> m_modules;
-    std::vector<ref<SlangEntryPoint>> m_entry_points;
+    ShaderProgramDesc m_desc;
     Slang::ComPtr<slang::IComponentType> m_linked_program;
     Slang::ComPtr<gfx::IShaderProgram> m_gfx_shader_program;
 };

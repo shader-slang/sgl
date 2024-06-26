@@ -19,18 +19,35 @@
 namespace sgl {
 
 // ----------------------------------------------------------------------------
+// Global record of created pipelines used by hot-reload
+// ----------------------------------------------------------------------------
+
+std::set<Pipeline*> Pipeline::m_existing_pipelines;
+
+// ----------------------------------------------------------------------------
 // Pipeline
 // ----------------------------------------------------------------------------
 
 Pipeline::Pipeline(ref<Device> device)
     : DeviceResource(std::move(device))
 {
+    m_existing_pipelines.insert(this);
 }
 
 Pipeline::~Pipeline()
 {
     m_device->deferred_release(m_gfx_pipeline_state);
+    m_existing_pipelines.erase(this);
 }
+
+
+void Pipeline::notify_program_reloaded(const ShaderProgram* program)
+{
+    for (Pipeline* pipeline : m_existing_pipelines) {
+        pipeline->on_program_reloaded(program);
+    }
+}
+
 
 NativeHandle Pipeline::get_native_handle() const
 {
@@ -53,13 +70,28 @@ NativeHandle Pipeline::get_native_handle() const
 
 ComputePipeline::ComputePipeline(ref<Device> device, ComputePipelineDesc desc)
     : Pipeline(std::move(device))
-    , m_program(std::move(desc.program))
+    , m_desc(std::move(desc))
 {
-    SGL_CHECK_NOT_NULL(m_program);
+    SGL_CHECK_NOT_NULL(m_desc.program);
+    recreate();
+}
 
-    gfx::ComputePipelineStateDesc gfx_desc{.program = m_program->gfx_shader_program()};
+void ComputePipeline::recreate()
+{
+    if (m_gfx_pipeline_state) {
+        m_device->deferred_release(m_gfx_pipeline_state);
+        m_gfx_pipeline_state = nullptr;
+    }
+
+    gfx::ComputePipelineStateDesc gfx_desc{.program = m_desc.program->gfx_shader_program()};
     SLANG_CALL(m_device->gfx_device()->createComputePipelineState(gfx_desc, m_gfx_pipeline_state.writeRef()));
-    m_thread_group_size = m_program->layout()->get_entry_point_by_index(0)->compute_thread_group_size();
+    m_thread_group_size = m_desc.program->layout()->get_entry_point_by_index(0)->compute_thread_group_size();
+}
+
+void ComputePipeline::on_program_reloaded(const ShaderProgram* program)
+{
+    if (m_desc.program == program)
+        recreate();
 }
 
 std::string ComputePipeline::to_string() const
@@ -71,7 +103,7 @@ std::string ComputePipeline::to_string() const
         "  thread_group_size = {}\n"
         ")",
         m_device,
-        m_program,
+        m_desc.program,
         m_thread_group_size
     );
 }
@@ -82,13 +114,25 @@ std::string ComputePipeline::to_string() const
 
 GraphicsPipeline::GraphicsPipeline(ref<Device> device, GraphicsPipelineDesc desc)
     : Pipeline(std::move(device))
-    , m_program(std::move(desc.program))
+    , m_desc(std::move(desc))
 {
-    SGL_CHECK_NOT_NULL(m_program);
+    SGL_CHECK_NOT_NULL(m_desc.program);
+    recreate();
+}
+
+void GraphicsPipeline::recreate()
+{
+    if (m_gfx_pipeline_state) {
+        m_device->deferred_release(m_gfx_pipeline_state);
+        m_gfx_pipeline_state = nullptr;
+    }
+
+    const GraphicsPipelineDesc& desc = m_desc;
+
     SGL_CHECK_NOT_NULL(desc.framebuffer_layout);
 
     gfx::GraphicsPipelineStateDesc gfx_desc{
-        .program = m_program->gfx_shader_program(),
+        .program = desc.program->gfx_shader_program(),
         .inputLayout = desc.input_layout ? desc.input_layout->gfx_input_layout() : nullptr,
         .framebufferLayout = desc.framebuffer_layout->gfx_framebuffer_layout(),
         .primitiveType = static_cast<gfx::PrimitiveType>(desc.primitive_type),
@@ -157,6 +201,12 @@ GraphicsPipeline::GraphicsPipeline(ref<Device> device, GraphicsPipelineDesc desc
     SLANG_CALL(m_device->gfx_device()->createGraphicsPipelineState(gfx_desc, m_gfx_pipeline_state.writeRef()));
 }
 
+void GraphicsPipeline::on_program_reloaded(const ShaderProgram* program)
+{
+    if (program == m_desc.program)
+        recreate();
+}
+
 std::string GraphicsPipeline::to_string() const
 {
     return fmt::format(
@@ -165,7 +215,7 @@ std::string GraphicsPipeline::to_string() const
         "  program = {}\n"
         ")",
         m_device,
-        m_program
+        m_desc.program
     );
 }
 
@@ -175,9 +225,20 @@ std::string GraphicsPipeline::to_string() const
 
 RayTracingPipeline::RayTracingPipeline(ref<Device> device, RayTracingPipelineDesc desc)
     : Pipeline(std::move(device))
-    , m_program(std::move(desc.program))
+    , m_desc(std::move(desc))
 {
-    SGL_CHECK_NOT_NULL(m_program);
+    SGL_CHECK_NOT_NULL(m_desc.program);
+    recreate();
+}
+
+void RayTracingPipeline::recreate()
+{
+    if (m_gfx_pipeline_state) {
+        m_device->deferred_release(m_gfx_pipeline_state);
+        m_gfx_pipeline_state = nullptr;
+    }
+
+    const RayTracingPipelineDesc& desc = m_desc;
 
     short_vector<gfx::HitGroupDesc, 16> gfx_hit_groups;
     gfx_hit_groups.reserve(desc.hit_groups.size());
@@ -191,7 +252,7 @@ RayTracingPipeline::RayTracingPipeline(ref<Device> device, RayTracingPipelineDes
     }
 
     gfx::RayTracingPipelineStateDesc gfx_desc{
-        .program = m_program->gfx_shader_program(),
+        .program = desc.program->gfx_shader_program(),
         .hitGroupCount = narrow_cast<gfx::GfxCount>(gfx_hit_groups.size()),
         .hitGroups = gfx_hit_groups.data(),
         .maxRecursion = narrow_cast<int>(desc.max_recursion),
@@ -202,6 +263,12 @@ RayTracingPipeline::RayTracingPipeline(ref<Device> device, RayTracingPipelineDes
     SLANG_CALL(m_device->gfx_device()->createRayTracingPipelineState(gfx_desc, m_gfx_pipeline_state.writeRef()));
 }
 
+void RayTracingPipeline::on_program_reloaded(const ShaderProgram* program)
+{
+    if (program == m_desc.program)
+        recreate();
+}
+
 std::string RayTracingPipeline::to_string() const
 {
     return fmt::format(
@@ -210,7 +277,7 @@ std::string RayTracingPipeline::to_string() const
         "  program = {}\n"
         ")",
         m_device,
-        m_program
+        m_desc.program
     );
 }
 

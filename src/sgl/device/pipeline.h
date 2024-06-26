@@ -16,6 +16,7 @@
 #include <slang-gfx.h>
 
 #include <map>
+#include <set>
 
 namespace sgl {
 
@@ -34,8 +35,19 @@ public:
     /// - Vulkan: VkPipeline
     NativeHandle get_native_handle() const;
 
+    static void notify_program_reloaded(const ShaderProgram* program);
+
 protected:
+
+    virtual void on_program_reloaded(const ShaderProgram* program) = 0;
+
     Slang::ComPtr<gfx::IPipelineState> m_gfx_pipeline_state;
+
+private:
+
+    void recreate();
+
+    static std::set<Pipeline*> m_existing_pipelines;
 };
 
 struct ComputePipelineDesc {
@@ -50,13 +62,23 @@ public:
     /// Thread group size.
     /// Used to determine the number of thread groups to dispatch.
     uint3 thread_group_size() const { return m_thread_group_size; }
+    const ComputePipelineDesc& desc() const { return m_desc; }
 
     std::string to_string() const override;
 
-private:
+protected:
+
+    virtual void on_program_reloaded(const ShaderProgram* program) override;
+
+ private:
+
+    void recreate();
+
     /// Shared reference to shader program to keep reflection data alive.
-    ref<ShaderProgram> m_program;
+    //ref<ShaderProgram> m_program;
+    ComputePipelineDesc m_desc;
     uint3 m_thread_group_size;
+
 };
 
 struct GraphicsPipelineDesc {
@@ -75,10 +97,18 @@ public:
     GraphicsPipeline(ref<Device> device, GraphicsPipelineDesc desc);
 
     std::string to_string() const override;
+    const GraphicsPipelineDesc& desc() const { return m_desc; }
+
+protected:
+
+    virtual void on_program_reloaded(const ShaderProgram* program) override;
 
 private:
+    void recreate();
+
     /// Shared reference to shader program to keep reflection data alive.
-    ref<ShaderProgram> m_program;
+    //ref<ShaderProgram> m_program;
+    GraphicsPipelineDesc m_desc;
 };
 
 struct HitGroupDesc {
@@ -104,9 +134,17 @@ public:
 
     std::string to_string() const override;
 
+protected:
+
+    virtual void on_program_reloaded(const ShaderProgram* program) override;
+
 private:
+    void recreate();
+
     /// Shared reference to shader program to keep reflection data alive.
-    ref<ShaderProgram> m_program;
+    //ref<ShaderProgram> m_program;
+    RayTracingPipelineDesc m_desc;
+
 };
 
 } // namespace sgl

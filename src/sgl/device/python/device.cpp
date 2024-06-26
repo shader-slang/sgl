@@ -704,6 +704,7 @@ SGL_PY_EXPORT(device_device)
     device.def("flush_print_to_string", &Device::flush_print_to_string, D(Device, flush_print_to_string));
     device.def("run_garbage_collection", &Device::run_garbage_collection, D(Device, run_garbage_collection));
     device.def("wait", &Device::wait, D(Device, wait));
+    device.def("reload_all_programs", &Device::reload_all_programs, D_NA(Device, reload_all_programs));
 
     device.def_static(
         "enumerate_adapters",
