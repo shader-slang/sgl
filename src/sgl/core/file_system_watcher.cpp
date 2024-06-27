@@ -24,7 +24,7 @@ struct FileSystemWatchState {
 };
 
 #if SGL_WINDOWS
-// Windows completion routine called with buffer of files sytem events
+// Windows completion routine called with buffer of filesytem events
 void CALLBACK FileIOCompletionRoutine(
     DWORD dwErrorCode,
     DWORD dwNumberOfBytesTransfered,
@@ -39,31 +39,31 @@ void CALLBACK FileIOCompletionRoutine(
         FILE_NOTIFY_INFORMATION* pNotify;
         int offset = 0;
 
-        // Iterate over events, and called 'notify_change' on the watcher for each one
+        // Iterate over events, and call '_notify_change' on the watcher for each one
         do {
             pNotify = (FILE_NOTIFY_INFORMATION*)((char*)state->buffer + offset);
             std::wstring fileName(pNotify->FileName, pNotify->FileNameLength / sizeof(WCHAR));
 
             std::filesystem::path path = fileName;
-            FileSystemWatcherChange change = FileSystemWatcherChange::Invalid;
+            FileSystemWatcherChange change = FileSystemWatcherChange::invalid;
 
             switch (pNotify->Action) {
             case FILE_ACTION_ADDED:
-                change = FileSystemWatcherChange::Added;
+                change = FileSystemWatcherChange::added;
                 break;
             case FILE_ACTION_REMOVED:
-                change = FileSystemWatcherChange::Removed;
+                change = FileSystemWatcherChange::removed;
                 break;
             case FILE_ACTION_MODIFIED:
-                change = FileSystemWatcherChange::Modified;
+                change = FileSystemWatcherChange::modified;
                 break;
             case FILE_ACTION_RENAMED_NEW_NAME:
-                change = FileSystemWatcherChange::Renamed;
+                change = FileSystemWatcherChange::renamed;
                 break;
             default:
                 break;
             }
-            state->watcher->notify_change(path, change);
+            state->watcher->_notify_change(path, change);
 
             offset += pNotify->NextEntryOffset;
         } while (pNotify->NextEntryOffset != 0);
@@ -131,6 +131,8 @@ void FileSystemWatcher::add_watch(const FileSystemWatchDesc& desc)
         )) {
         log_error("ReadDirectoryChangesW failed. Error: {}\n", GetLastError());
     }
+#else
+    SGL_THROW("File system watcher is only implemented on windows platforms")
 #endif
 }
 
@@ -164,7 +166,7 @@ FileSystemWatchState* FileSystemWatcher::get_watch(int id)
     return m_watches[id];
 }
 
-void FileSystemWatcher::notify_change(const std::filesystem::path& path, FileSystemWatcherChange change)
+void FileSystemWatcher::_notify_change(const std::filesystem::path& path, FileSystemWatcherChange change)
 {
     auto now = std::chrono::system_clock::now();
     FileSystemWatchEvent event = {.path = path, .change = change, .time = now};

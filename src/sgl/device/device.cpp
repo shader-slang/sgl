@@ -24,6 +24,7 @@
 #include "sgl/device/print.h"
 #include "sgl/device/blit.h"
 
+#include "sgl/core/file_system_watcher.h"
 #include "sgl/core/config.h"
 #include "sgl/core/error.h"
 #include "sgl/core/window.h"
@@ -476,11 +477,17 @@ Device::Device(const DeviceDesc& desc)
     if (m_desc.enable_print)
         m_debug_printer = std::make_unique<DebugPrinter>(this);
 
-    m_file_system_watcher.set_on_change([this](std::vector<FileSystemWatchEvent>& events)
-                                        { on_file_system_event(events); });
+    if (m_desc.enable_hot_reload) {
+        m_file_system_watcher = make_ref<FileSystemWatcher>();
+        m_file_system_watcher->set_on_change([this](std::vector<FileSystemWatchEvent>& events)
+                                            { on_file_system_event(events); });
 
-    if (m_desc.hot_reload_on_edit)
-        m_file_system_watcher.add_watch({.path = std::filesystem::current_path()});
+#if SGL_WINDOWS
+        m_file_system_watcher->add_watch({.path = std::filesystem::current_path()});
+#else
+        log_error("Hot reload is currently only supported on windows\n");
+#endif
+    }
 }
 
 Device::~Device()
@@ -607,8 +614,7 @@ ref<ShaderTable> Device::create_shader_table(ShaderTableDesc desc)
 
 ref<SlangSession> Device::create_slang_session(SlangSessionDesc desc)
 {
-    auto session_ref = make_ref<SlangSession>(ref<Device>(this), std::move(desc));
-    return session_ref;
+    return make_ref<SlangSession>(ref<Device>(this), std::move(desc));
 }
 
 void Device::_register_slang_session(SlangSession* session)
@@ -872,9 +878,9 @@ void Device::run_garbage_collection()
     while (m_deferred_release_queue.size() && m_deferred_release_queue.front().fence_value <= current_value)
         m_deferred_release_queue.pop();
 
-    // Trigger hot reload events
-    if (m_desc.hot_reload_on_edit)
-        m_file_system_watcher.update();
+    // Update file system watcher if created
+    if (m_file_system_watcher)
+        m_file_system_watcher->update();
 }
 
 ref<MemoryHeap> Device::create_memory_heap(MemoryHeapDesc desc)
@@ -1139,7 +1145,7 @@ void Device::on_file_system_event(std::vector<FileSystemWatchEvent>& events)
     if (slang_count == 0)
         return;
 
-    if (m_desc.hot_reload_all_sessions) {
+    if (m_desc.hot_reload_everything) {
         reload_all_programs();
     } else {
         std::set<std::filesystem::path> paths;

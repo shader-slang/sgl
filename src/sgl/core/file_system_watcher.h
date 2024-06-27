@@ -17,11 +17,11 @@ class FileSystemWatcher;
 struct FileSystemWatchState;
 
 enum class FileSystemWatcherChange {
-    Added,
-    Removed,
-    Modified,
-    Renamed,
-    Invalid
+    invalid,
+    added,
+    removed,
+    modified,
+    renamed,
 };
 
 struct FileSystemWatchDesc {
@@ -46,9 +46,9 @@ public:
 
     void set_on_change(std::function<void(std::vector<FileSystemWatchEvent>&)> on_change);
 
-    void notify_change(const std::filesystem::path& path, FileSystemWatcherChange change);
-
     void update();
+
+    void _notify_change(const std::filesystem::path& path, FileSystemWatcherChange change);
 
 private:
     int m_next_id = 1;

@@ -13,7 +13,6 @@
 #include "sgl/core/enum.h"
 #include "sgl/core/object.h"
 #include "sgl/math/vector_types.h"
-#include "sgl/core/file_system_watcher.h"
 
 #include <slang-gfx.h>
 
@@ -28,6 +27,8 @@ namespace sgl {
 
 class Window;
 class DebugPrinter;
+class FileSystemWatcher;
+struct FileSystemWatchEvent;
 
 /// Adapter LUID (locally unique identifier).
 using AdapterLUID = std::array<uint8_t, 16>;
@@ -105,11 +106,12 @@ struct DeviceDesc {
     /// If a relative path is used, the cache is stored in the application data directory.
     std::optional<std::filesystem::path> shader_cache_path;
 
-    /// Whether to auto-compile programs in response to file system events
-    bool hot_reload_on_edit{false};
+    /// Enable automatic shader reload in response to file changes (windows only)
+    bool enable_hot_reload{false};
 
-    /// Whether to be overzealous on change detection and just reload all sessions
-    bool hot_reload_all_sessions{false};
+    /// Enable full reload of all loaded programs when any file changes, instead
+    /// of restricting to only modules that reference the changed file
+    bool hot_reload_everything{false};
 };
 
 struct DeviceLimits {
@@ -603,7 +605,7 @@ private:
     ref<cuda::Device> m_cuda_device;
     ref<cuda::ExternalSemaphore> m_cuda_semaphore;
 
-    FileSystemWatcher m_file_system_watcher;
+    ref<FileSystemWatcher> m_file_system_watcher;
 };
 
 } // namespace sgl
