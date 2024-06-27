@@ -15,8 +15,7 @@ class App:
         self.device = sgl.Device(
             enable_debug_layers=True,
             compiler_options={"include_paths": [EXAMPLE_DIR]},
-            enable_hot_reload = True,       # Enable hot reload
-            hot_reload_everything = False   # Choose whether to reload ALL programs whenever a slang file changes
+            enable_hot_reload = True
         )
         self.swapchain = self.device.create_swapchain(
             image_count=3,

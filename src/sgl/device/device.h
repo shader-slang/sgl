@@ -8,6 +8,7 @@
 #include "sgl/device/resource.h"
 #include "sgl/device/shader.h"
 
+#include "sgl/core/fwd.h"
 #include "sgl/core/config.h"
 #include "sgl/core/macros.h"
 #include "sgl/core/enum.h"
@@ -25,10 +26,7 @@
 
 namespace sgl {
 
-class Window;
 class DebugPrinter;
-class FileSystemWatcher;
-struct FileSystemWatchEvent;
 
 /// Adapter LUID (locally unique identifier).
 using AdapterLUID = std::array<uint8_t, 16>;
@@ -106,12 +104,9 @@ struct DeviceDesc {
     /// If a relative path is used, the cache is stored in the application data directory.
     std::optional<std::filesystem::path> shader_cache_path;
 
-    /// Enable automatic shader reload in response to file changes (windows only)
+    /// Enable automatic shader reload in response to file changes.
+    /// Note: Currently windows only.
     bool enable_hot_reload{false};
-
-    /// Enable full reload of all loaded programs when any file changes, instead
-    /// of restricting to only modules that reference the changed file
-    bool hot_reload_everything{false};
 };
 
 struct DeviceLimits {

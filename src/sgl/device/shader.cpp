@@ -384,7 +384,7 @@ void SlangSession::recreate_session()
         m_nvapi_module->break_strong_reference_to_session();
     }
 
-    recreate_all_modules();
+    recreate_modules();
     recreate_programs();
 }
 
@@ -501,7 +501,7 @@ void SlangSession::_unregister_module(SlangModule* module)
     m_registered_modules.erase(module);
 }
 
-void SlangSession::recreate_all_modules()
+void SlangSession::recreate_modules()
 {
     for (SlangModule* module : m_registered_modules)
         recreate_module(module);

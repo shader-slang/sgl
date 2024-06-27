@@ -60,10 +60,11 @@ class SGL_API ComputePipeline : public Pipeline {
 public:
     ComputePipeline(ref<Device> device, ComputePipelineDesc desc);
 
+    const ComputePipelineDesc& desc() const { return m_desc; }
+
     /// Thread group size.
     /// Used to determine the number of thread groups to dispatch.
     uint3 thread_group_size() const { return m_thread_group_size; }
-    const ComputePipelineDesc& desc() const { return m_desc; }
 
     std::string to_string() const override;
 
@@ -73,7 +74,6 @@ protected:
 
  private:
 
-    /// Shared reference to shader program to keep reflection data alive.
     ComputePipelineDesc m_desc;
     uint3 m_thread_group_size;
 
@@ -103,9 +103,10 @@ protected:
 
 private:
 
-    /// Shared reference to shader program to keep reflection data alive.
     GraphicsPipelineDesc m_desc;
 
+    // These are stored to ensure the layouts aren't freed when pipeline
+    // relies on them if it needs to be recreated for hot reload. 
     ref<const InputLayout> m_stored_input_layout;
     ref<const FramebufferLayout> m_stored_framebuffer_layout;
 };
@@ -139,7 +140,6 @@ protected:
 
 private:
 
-    /// Shared reference to shader program to keep reflection data alive.
     RayTracingPipelineDesc m_desc;
 
 };

@@ -20,8 +20,6 @@
 
 namespace sgl {
 
-class Pipeline;
-
 struct TypeConformance {
     std::string type_name;
     std::string interface_name;
@@ -296,7 +294,7 @@ public:
 
     std::string resolve_module_name(std::string_view module_name);
 
-    void recreate_all_modules();
+    void recreate_modules();
     void recreate_modules_referencing(const std::set<std::filesystem::path>& paths);
     void recreate_module(SlangModule* module);
 

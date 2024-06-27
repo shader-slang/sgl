@@ -1145,16 +1145,18 @@ void Device::on_file_system_event(std::span<FileSystemWatchEvent> events)
     if (slang_count == 0)
         return;
 
-    if (m_desc.hot_reload_everything) {
-        reload_all_programs();
-    } else {
-        std::set<std::filesystem::path> paths;
-        for (auto ev : events)
-            paths.insert(ev.path);
+    reload_all_programs();
 
-        for (auto session : m_all_slang_sessions)
-            session->recreate_modules_referencing(paths);
-    }
+    //TODO(@ccummings): Once slang gives access to full module dependencies, reload specific modules
+    /*
+    std::set<std::filesystem::path> paths;
+    for (auto ev : events)
+        paths.insert(ev.path);
+
+    for (auto session : m_all_slang_sessions)
+        session->recreate_modules_referencing(paths);
+    */
+
 }
 
 std::string Device::to_string() const
