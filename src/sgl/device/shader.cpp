@@ -434,11 +434,7 @@ ref<ShaderProgram> SlangSession::link_program(
     desc.entry_points = entry_points;
     desc.link_options = link_options;
 
-    auto program = make_ref<ShaderProgram>(
-        ref(device()),
-        ref(this),
-        desc
-    );
+    auto program = make_ref<ShaderProgram>(ref(device()), ref(this), desc);
 
     recreate_program(program.get());
 
@@ -513,8 +509,7 @@ void SlangSession::recreate_modules_referencing(const std::set<std::filesystem::
     for (int i = 0; i < m_slang_session->getLoadedModuleCount(); ++i) {
         slang::IModule* slang_module = m_slang_session->getLoadedModule(i);
         std::filesystem::path module_path = slang_module->getFilePath();
-        if (paths.contains(module_path))
-        {
+        if (paths.contains(module_path)) {
             log_info("Hot reload, module {} changed", module_path);
             dependencies++;
         }
@@ -696,8 +691,10 @@ void SlangModule::load()
         std::string resolved_name = m_session->resolve_module_name(m_desc.module_name);
         slang_module = m_session->get_slang_session()->loadModule(resolved_name.c_str(), diagnostics.writeRef());
         if (!slang_module) {
-            std::string msg
-                = append_diagnostics(fmt::format("Failed to load slang module \"{}\"", m_desc.module_name), diagnostics);
+            std::string msg = append_diagnostics(
+                fmt::format("Failed to load slang module \"{}\"", m_desc.module_name),
+                diagnostics
+            );
             throw SlangCompileError(msg);
         }
     } else {
@@ -733,7 +730,8 @@ void SlangModule::load()
     recreate_entry_points();
 }
 
-void SlangModule::register_with_debug_printer() const {
+void SlangModule::register_with_debug_printer() const
+{
     if (m_session->device()->debug_printer())
         m_session->device()->debug_printer()->add_hashed_strings(layout()->hashed_strings_map());
 }
@@ -758,9 +756,7 @@ ref<SlangEntryPoint> SlangModule::entry_point(std::string_view name) const
     SlangEntryPointDesc desc;
     desc.name = name;
 
-    auto entry_point = make_ref<SlangEntryPoint>(
-        ref(const_cast<SlangModule*>(this)), desc
-    );
+    auto entry_point = make_ref<SlangEntryPoint>(ref(const_cast<SlangModule*>(this)), desc);
 
     recreate_entry_point(entry_point.get());
 
@@ -881,8 +877,7 @@ std::string SlangEntryPoint::to_string() const
     return fmt::format("SlangEntryPoint(name=\"{}\", stage={})", m_name, m_stage);
 }
 
-ShaderProgram::ShaderProgram(
-    ref<Device> device, ref<SlangSession> session, const ShaderProgramDesc& desc)
+ShaderProgram::ShaderProgram(ref<Device> device, ref<SlangSession> session, const ShaderProgramDesc& desc)
     : DeviceResource(std::move(device))
     , m_session(std::move(session))
     , m_desc(desc)

@@ -21,7 +21,6 @@
 namespace sgl {
 
 
-
 /// Pipeline base class.
 class SGL_API Pipeline : public DeviceResource {
     SGL_OBJECT(Pipeline)
@@ -39,13 +38,11 @@ public:
     void notify_program_reloaded();
 
 protected:
-
     virtual void recreate() = 0;
 
     Slang::ComPtr<gfx::IPipelineState> m_gfx_pipeline_state;
 
 private:
-
     /// Pipelines store program in their descriptor - this
     /// is just so we can register/unregister with program
     ref<ShaderProgram> m_program;
@@ -69,14 +66,11 @@ public:
     std::string to_string() const override;
 
 protected:
-
     virtual void recreate() override;
 
- private:
-
+private:
     ComputePipelineDesc m_desc;
     uint3 m_thread_group_size;
-
 };
 
 struct GraphicsPipelineDesc {
@@ -98,15 +92,13 @@ public:
     const GraphicsPipelineDesc& desc() const { return m_desc; }
 
 protected:
-
     virtual void recreate() override;
 
 private:
-
     GraphicsPipelineDesc m_desc;
 
     // These are stored to ensure the layouts aren't freed when pipeline
-    // relies on them if it needs to be recreated for hot reload. 
+    // relies on them if it needs to be recreated for hot reload.
     ref<const InputLayout> m_stored_input_layout;
     ref<const FramebufferLayout> m_stored_framebuffer_layout;
 };
@@ -135,13 +127,10 @@ public:
     std::string to_string() const override;
 
 protected:
-
     virtual void recreate() override;
 
 private:
-
     RayTracingPipelineDesc m_desc;
-
 };
 
 } // namespace sgl

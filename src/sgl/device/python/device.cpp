@@ -157,16 +157,16 @@ SGL_PY_EXPORT(device_device)
            std::optional<std::filesystem::path> shader_cache_path,
            bool enable_hot_reload)
         {
-            new (self) Device({
-                .type = type,
-                .enable_debug_layers = enable_debug_layers,
-                .enable_cuda_interop = enable_cuda_interop,
-                .enable_print = enable_print,
-                .adapter_luid = adapter_luid,
-                .compiler_options = compiler_options.value_or(SlangCompilerOptions{}),
-                .shader_cache_path = shader_cache_path,
-                .enable_hot_reload = enable_hot_reload
-            });
+            new (self) Device(
+                {.type = type,
+                 .enable_debug_layers = enable_debug_layers,
+                 .enable_cuda_interop = enable_cuda_interop,
+                 .enable_print = enable_print,
+                 .adapter_luid = adapter_luid,
+                 .compiler_options = compiler_options.value_or(SlangCompilerOptions{}),
+                 .shader_cache_path = shader_cache_path,
+                 .enable_hot_reload = enable_hot_reload}
+            );
         },
         "type"_a = DeviceType::automatic,
         "enable_debug_layers"_a = false,

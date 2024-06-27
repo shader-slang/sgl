@@ -20,7 +20,7 @@ struct FileSystemWatchState {
 #if SGL_WINDOWS
     OVERLAPPED overlapped;
     HANDLE directory_handle;
-    char buffer[32*1024];
+    char buffer[32 * 1024];
     bool is_shutdown;
 #endif
     FileSystemWatcher* watcher;
@@ -29,11 +29,7 @@ struct FileSystemWatchState {
 
 #if SGL_WINDOWS
 // Windows completion routine called with buffer of filesytem events
-void CALLBACK FileIOCompletionRoutine(
-    DWORD dwErrorCode,
-    DWORD dwNumberOfBytesTransfered,
-    LPOVERLAPPED lpOverlapped
-)
+void CALLBACK FileIOCompletionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered, LPOVERLAPPED lpOverlapped)
 {
     // Overlapped is pointer to FileSystemWatchState with windows OVERLAPPED structure at start.
     FileSystemWatchState* state = (FileSystemWatchState*)lpOverlapped;
@@ -98,14 +94,16 @@ void CALLBACK FileIOCompletionRoutine(
 }
 #endif
 
-FileSystemWatcher::FileSystemWatcher() {
+FileSystemWatcher::FileSystemWatcher()
+{
 #if !SGL_WINDOWS
-    //TODO(@ccummings): File system watcher linux support
+    // TODO(@ccummings): File system watcher linux support
     SGL_THROW("File system watcher is only implemented on windows platforms")
 #endif
 }
 
-FileSystemWatcher::~FileSystemWatcher() {
+FileSystemWatcher::~FileSystemWatcher()
+{
     for (auto pair : m_watches) {
         FileSystemWatchState* state = pair.second;
         stop_watch(state);

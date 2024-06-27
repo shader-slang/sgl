@@ -443,16 +443,11 @@ struct ShaderProgramDesc {
 class SGL_API ShaderProgram : public DeviceResource {
     SGL_OBJECT(ShaderProgram)
 public:
-    ShaderProgram(
-        ref<Device> device,
-        ref<SlangSession> session,
-        const ShaderProgramDesc& desc        
-    );
+    ShaderProgram(ref<Device> device, ref<SlangSession> session, const ShaderProgramDesc& desc);
     ~ShaderProgram();
 
-    void init(
-        Slang::ComPtr<slang::IComponentType> linked_program,
-        Slang::ComPtr<gfx::IShaderProgram> gfx_shader_program);
+    void
+    init(Slang::ComPtr<slang::IComponentType> linked_program, Slang::ComPtr<gfx::IShaderProgram> gfx_shader_program);
 
     void link();
 

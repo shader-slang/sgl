@@ -288,7 +288,7 @@ inline gfx::DeviceType gfx_device_type(DeviceType device_type)
 }
 
 Device::Device(const DeviceDesc& desc)
-    : m_desc(desc)   
+    : m_desc(desc)
 {
     ConstructorRefGuard ref_guard(this);
 
@@ -480,7 +480,7 @@ Device::Device(const DeviceDesc& desc)
     if (m_desc.enable_hot_reload) {
         m_file_system_watcher = make_ref<FileSystemWatcher>();
         m_file_system_watcher->set_on_change([this](std::span<FileSystemWatchEvent> events)
-                                            { on_file_system_event(events); });
+                                             { on_file_system_event(events); });
 
 #if SGL_WINDOWS
         m_file_system_watcher->add_watch({.directory = std::filesystem::current_path()});
@@ -1147,7 +1147,7 @@ void Device::on_file_system_event(std::span<FileSystemWatchEvent> events)
 
     reload_all_programs();
 
-    //TODO(@ccummings): Once slang gives access to full module dependencies, reload specific modules
+    // TODO(@ccummings): Once slang gives access to full module dependencies, reload specific modules
     /*
     std::set<std::filesystem::path> paths;
     for (auto ev : events)
@@ -1156,7 +1156,6 @@ void Device::on_file_system_event(std::span<FileSystemWatchEvent> events)
     for (auto session : m_all_slang_sessions)
         session->recreate_modules_referencing(paths);
     */
-
 }
 
 std::string Device::to_string() const

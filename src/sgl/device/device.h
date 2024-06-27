@@ -541,7 +541,6 @@ public:
     Blitter* _blitter();
 
 private:
-
     void on_file_system_event(std::span<FileSystemWatchEvent> events);
 
     DeviceDesc m_desc;
