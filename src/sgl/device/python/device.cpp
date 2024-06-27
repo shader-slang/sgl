@@ -29,6 +29,7 @@ SGL_DICT_TO_DESC_FIELD(adapter_luid, AdapterLUID)
 SGL_DICT_TO_DESC_FIELD_DICT(compiler_options, SlangCompilerOptions)
 SGL_DICT_TO_DESC_FIELD(shader_cache_path, std::filesystem::path)
 SGL_DICT_TO_DESC_FIELD(hot_reload_on_edit, bool)
+SGL_DICT_TO_DESC_FIELD(hot_reload_all_sessions, bool)
 SGL_DICT_TO_DESC_END()
 } // namespace sgl
 
@@ -55,7 +56,8 @@ SGL_PY_EXPORT(device_device)
         .def_rw("adapter_luid", &DeviceDesc::adapter_luid, D(DeviceDesc, adapter_luid))
         .def_rw("compiler_options", &DeviceDesc::compiler_options, D(DeviceDesc, compiler_options))
         .def_rw("shader_cache_path", &DeviceDesc::shader_cache_path, D(DeviceDesc, shader_cache_path))
-        .def_rw("hot_reload_on_edit", &DeviceDesc::hot_reload_on_edit, D(DeviceDesc, adapter_luid));
+        .def_rw("hot_reload_on_edit", &DeviceDesc::hot_reload_on_edit, D(DeviceDesc, adapter_luid))
+        .def_rw("hot_reload_all_sessions", &DeviceDesc::hot_reload_on_edit, D(DeviceDesc, adapter_luid));
     nb::implicitly_convertible<nb::dict, DeviceDesc>();
 
     nb::class_<DeviceLimits>(m, "DeviceLimits", D(DeviceLimits))
@@ -155,7 +157,8 @@ SGL_PY_EXPORT(device_device)
            std::optional<AdapterLUID> adapter_luid,
            std::optional<SlangCompilerOptions> compiler_options,
            std::optional<std::filesystem::path> shader_cache_path,
-           bool hot_reload_on_edit)
+           bool hot_reload_on_edit,
+           bool hot_reload_all_sessions)
         {
             new (self) Device({
                 .type = type,
@@ -165,7 +168,8 @@ SGL_PY_EXPORT(device_device)
                 .adapter_luid = adapter_luid,
                 .compiler_options = compiler_options.value_or(SlangCompilerOptions{}),
                 .shader_cache_path = shader_cache_path,
-                .hot_reload_on_edit = hot_reload_on_edit
+                .hot_reload_on_edit = hot_reload_on_edit,
+                .hot_reload_all_sessions = hot_reload_all_sessions
             });
         },
         "type"_a = DeviceType::automatic,
@@ -176,6 +180,7 @@ SGL_PY_EXPORT(device_device)
         "compiler_options"_a.none() = nb::none(),
         "shader_cache_path"_a.none() = nb::none(),
         "hot_reload_on_edit"_a = false,
+        "hot_reload_all_sessions"_a = false,
         D(Device, Device)
     );
     device.def(nb::init<DeviceDesc>(), "desc"_a, D(Device, Device));

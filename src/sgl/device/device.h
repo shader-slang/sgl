@@ -107,6 +107,9 @@ struct DeviceDesc {
 
     /// Whether to auto-compile programs in response to file system events
     bool hot_reload_on_edit{false};
+
+    /// Whether to be overzealous on change detection and just reload all sessions
+    bool hot_reload_all_sessions{false};
 };
 
 struct DeviceLimits {

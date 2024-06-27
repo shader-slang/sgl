@@ -1131,13 +1131,24 @@ bool Device::enable_agility_sdk()
 
 void Device::on_file_system_event(std::vector<FileSystemWatchEvent>& events)
 {
-    SGL_UNUSED(events);
-    std::set<std::filesystem::path> paths;
-    for (auto ev : events)
-        paths.insert(ev.path);
+    int slang_count = 0;
+    for (auto ev : events) {
+        if (ev.path.extension() == ".slang")
+            slang_count++;
+    }
+    if (slang_count == 0)
+        return;
 
-    for (auto session: m_all_slang_sessions)
-        session->recreate_modules_referencing(paths);
+    if (m_desc.hot_reload_all_sessions) {
+        reload_all_programs();
+    } else {
+        std::set<std::filesystem::path> paths;
+        for (auto ev : events)
+            paths.insert(ev.path);
+
+        for (auto session : m_all_slang_sessions)
+            session->recreate_modules_referencing(paths);
+    }
 }
 
 std::string Device::to_string() const
