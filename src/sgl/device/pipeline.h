@@ -26,8 +26,7 @@ namespace sgl {
 class SGL_API Pipeline : public DeviceResource {
     SGL_OBJECT(Pipeline)
 public:
-    Pipeline(ref<Device> device, const ShaderProgram* program);
-
+    Pipeline(ref<Device> device, ref<ShaderProgram> program);
     virtual ~Pipeline();
 
     gfx::IPipelineState* gfx_pipeline_state() const { return m_gfx_pipeline_state; }
@@ -37,18 +36,14 @@ public:
     /// - Vulkan: VkPipeline
     NativeHandle get_native_handle() const;
 
-    static void notify_program_reloaded(const ShaderProgram* program);
+    void notify_program_reloaded();
 
 protected:
 
     virtual void recreate() = 0;
 
     Slang::ComPtr<gfx::IPipelineState> m_gfx_pipeline_state;
-    ref<const ShaderProgram> m_program;
-
-private:
-
-    static std::set<Pipeline*> m_existing_pipelines;
+    //ref<ShaderProgram> m_program;
 };
 
 struct ComputePipelineDesc {

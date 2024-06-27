@@ -172,12 +172,13 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
     : m_device(std::move(device))
     , m_desc(std::move(desc))
 {
+    m_device->_register_slang_session(this);
     recreate_session();
 }
 
 SlangSession::~SlangSession()
 {
-    m_device->on_slang_session_destroyed(this);
+    m_device->_unregister_slang_session(this);
 }
 
 void SlangSession::recreate_session()
@@ -393,7 +394,6 @@ ref<SlangModule> SlangSession::load_module(std::string_view module_name)
     desc.module_name = module_name;
 
     ref<SlangModule> module = make_ref<SlangModule>(ref(this), desc);
-    m_created_modules.insert(module.get());
     recreate_module(module.get());
     return module;
 }
@@ -410,7 +410,6 @@ ref<SlangModule> SlangSession::load_module_from_source(
     desc.path = path;
 
     ref<SlangModule> module = make_ref<SlangModule>(ref(this), desc);
-    m_created_modules.insert(module.get());
     recreate_module(module.get());
     return module;
 }
@@ -440,7 +439,6 @@ ref<ShaderProgram> SlangSession::link_program(
         ref(this),
         desc
     );
-    m_created_programs.insert(program.get());
 
     recreate_program(program.get());
 
@@ -483,14 +481,29 @@ std::string SlangSession::load_source(std::string_view module_name)
     SGL_THROW("Failed to load source for module \"{}\"", module_name);
 }
 
-void SlangSession::on_module_destroyed(SlangModule* module)
+void SlangSession::_register_program(ShaderProgram* program)
 {
-    m_created_modules.erase(module);
+    m_registered_programs.insert(program);
+}
+
+void SlangSession::_unregister_program(ShaderProgram* program)
+{
+    m_registered_programs.erase(program);
+}
+
+void SlangSession::_register_module(SlangModule* module)
+{
+    m_registered_modules.insert(module);
+}
+
+void SlangSession::_unregister_module(SlangModule* module)
+{
+    m_registered_modules.erase(module);
 }
 
 void SlangSession::recreate_all_modules()
 {
-    for (SlangModule* module : m_created_modules)
+    for (SlangModule* module : m_registered_modules)
         recreate_module(module);
 }
 
@@ -517,14 +530,9 @@ void SlangSession::recreate_module(SlangModule* module)
     module->recreate_entry_points();
 }
 
-void SlangSession::on_program_destroyed(ShaderProgram* program)
-{
-    m_created_programs.erase(program);
-}
-
 void SlangSession::recreate_programs()
 {
-    for (ShaderProgram* program : m_created_programs)
+    for (ShaderProgram* program : m_registered_programs)
         recreate_program(program);
 }
 
@@ -669,12 +677,12 @@ SlangModule::SlangModule(ref<SlangSession> session, const SlangModuleDesc& desc)
     : m_session(std::move(session))
     , m_desc(desc)
 {
-
+    m_session->_register_module(this);
 }
 
 SlangModule::~SlangModule()
 {
-    m_session->on_module_destroyed(this);
+    m_session->_unregister_module(this);
 }
 
 void SlangModule::load()
@@ -753,7 +761,6 @@ ref<SlangEntryPoint> SlangModule::entry_point(std::string_view name) const
     auto entry_point = make_ref<SlangEntryPoint>(
         ref(const_cast<SlangModule*>(this)), desc
     );
-    on_entry_point_created(entry_point.get());
 
     recreate_entry_point(entry_point.get());
 
@@ -769,7 +776,7 @@ bool SlangModule::has_entry_point(std::string_view name) const
 
 void SlangModule::recreate_entry_points()
 {
-    for (SlangEntryPoint* entry_point : m_created_entry_points)
+    for (SlangEntryPoint* entry_point : m_registered_entry_points)
         recreate_entry_point(entry_point);
 }
 
@@ -783,16 +790,15 @@ void SlangModule::recreate_entry_point(SlangEntryPoint* entry_point) const
     entry_point->init(Slang::ComPtr<slang::IComponentType>(slang_entry_point));
 }
 
-void SlangModule::on_entry_point_created(SlangEntryPoint* entry_point) const
+void SlangModule::_register_entry_point(SlangEntryPoint* entry_point) const
 {
-    m_created_entry_points.insert(entry_point);
+    m_registered_entry_points.insert(entry_point);
 }
 
-void SlangModule::on_entry_point_destroyed(SlangEntryPoint* entry_point) const
+void SlangModule::_unregister_entry_point(SlangEntryPoint* entry_point) const
 {
-    m_created_entry_points.erase(entry_point);
+    m_registered_entry_points.erase(entry_point);
 }
-
 
 std::string SlangModule::to_string() const
 {
@@ -811,7 +817,14 @@ std::string SlangModule::to_string() const
 SlangEntryPoint::SlangEntryPoint(ref<SlangModule> module, const SlangEntryPointDesc& desc)
     : m_module(module)
     , m_desc(desc)
+    , m_stage(ShaderStage::none)
 {
+    m_module->_register_entry_point(this);
+}
+
+SlangEntryPoint::~SlangEntryPoint()
+{
+    m_module->_unregister_entry_point(this);
 }
 
 void SlangEntryPoint::init(Slang::ComPtr<slang::IComponentType> slang_entry_point)
@@ -830,7 +843,6 @@ ref<SlangEntryPoint> SlangEntryPoint::rename(const std::string& new_name)
     SlangEntryPointDesc desc;
     desc.name = new_name;
     auto ep = make_ref<SlangEntryPoint>(m_module, desc);
-    m_module->on_entry_point_created(ep.get());
     ep->init(renamed_entry_point);
 
     return ep;
@@ -844,7 +856,6 @@ ref<SlangEntryPoint> SlangEntryPoint::with_name(const std::string& name) const
     SlangEntryPointDesc desc;
     desc.name = name;
     auto ep = make_ref<SlangEntryPoint>(m_module, desc);
-    m_module->on_entry_point_created(ep.get());
     ep->init(new_entry_point);
 
     return ep;
@@ -876,21 +887,18 @@ ShaderProgram::ShaderProgram(
     , m_session(std::move(session))
     , m_desc(desc)
 {
+    m_session->_register_program(this);
 }
 
-void ShaderProgram::init(
-    Slang::ComPtr<slang::IComponentType> linked_program,
-    Slang::ComPtr<gfx::IShaderProgram> gfx_shader_program
-)
+ShaderProgram::~ShaderProgram()
 {
-    m_linked_program = std::move(linked_program);
-    m_gfx_shader_program = std::move(gfx_shader_program);
+    m_session->_unregister_program(this);
 }
+
 
 void ShaderProgram::link()
 {
     const ShaderProgramDesc& desc = m_desc;
-    bool is_reload = m_gfx_shader_program != nullptr;
     slang::ISession* session = m_session->get_slang_session();
 
     Timer timer;
@@ -992,13 +1000,18 @@ void ShaderProgram::link()
     m_gfx_shader_program = gfx_shader_program;
 
     // If this is a hot reload, notify pipelines that the program has refreshed so they may need to rebuild
-    if (is_reload)
-        Pipeline::notify_program_reloaded(this);
+    for (Pipeline* pipeline : m_registered_pipelines)
+        pipeline->notify_program_reloaded();
 }
 
-ShaderProgram::~ShaderProgram()
+void ShaderProgram::_register_pipeline(Pipeline* pipeline)
 {
-    m_session->on_program_destroyed(this);
+    m_registered_pipelines.insert(pipeline);
+}
+
+void ShaderProgram::_unregister_pipeline(Pipeline* pipeline)
+{
+    m_registered_pipelines.erase(pipeline);
 }
 
 std::string ShaderProgram::to_string() const

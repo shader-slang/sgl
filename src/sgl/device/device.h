@@ -533,7 +533,8 @@ public:
 
     std::string to_string() const override;
 
-    void on_slang_session_destroyed(SlangSession* session);
+    void _register_slang_session(SlangSession* session);
+    void _unregister_slang_session(SlangSession* session);
 
     void reload_all_programs();
 

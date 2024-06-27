@@ -20,6 +20,8 @@
 
 namespace sgl {
 
+class Pipeline;
+
 struct TypeConformance {
     std::string type_name;
     std::string interface_name;
@@ -292,21 +294,20 @@ public:
 
     void break_strong_reference_to_device() { m_device.break_strong_reference(); }
 
-    void on_module_destroyed(SlangModule* module);
+    std::string resolve_module_name(std::string_view module_name);
 
     void recreate_all_modules();
-
     void recreate_modules_referencing(const std::set<std::filesystem::path>& paths);
-
     void recreate_module(SlangModule* module);
 
-    void on_program_destroyed(ShaderProgram* program);
-
     void recreate_programs();
-
     void recreate_program(ShaderProgram* program);
 
-    std::string resolve_module_name(std::string_view module_name);
+    // Internal functions to link programs+modules to their owning session
+    void _register_program(ShaderProgram* program);
+    void _unregister_program(ShaderProgram* program);
+    void _register_module(SlangModule* module);
+    void _unregister_module(SlangModule* module);
 
 private:
     void update_module_cache();
@@ -337,10 +338,10 @@ private:
     std::set<slang::IModule*> m_loaded_modules;
 
     /// All loaded sgl modules (wrappers around IModule returned from load_module)
-    std::set<SlangModule*> m_created_modules;
+    std::set<SlangModule*> m_registered_modules;
 
     /// All created sgl programs (via link_program)
-    std::set<ShaderProgram*> m_created_programs;
+    std::set<ShaderProgram*> m_registered_programs;
 };
 
 struct SlangModuleDesc {
@@ -380,12 +381,10 @@ public:
     void break_strong_reference_to_session() { m_session.break_strong_reference(); }
 
     void recreate_entry_points();
-
     void recreate_entry_point(SlangEntryPoint* entry_point) const;
 
-    void on_entry_point_created(SlangEntryPoint* entry_point) const;
-
-    void on_entry_point_destroyed(SlangEntryPoint* entry_point) const;
+    void _register_entry_point(SlangEntryPoint* entry_point) const;
+    void _unregister_entry_point(SlangEntryPoint* entry_point) const;
 
 
 private:
@@ -395,7 +394,7 @@ private:
     slang::IModule* m_slang_module = nullptr;
     std::string m_name;
     std::filesystem::path m_path;
-    mutable std::set<SlangEntryPoint*> m_created_entry_points;
+    mutable std::set<SlangEntryPoint*> m_registered_entry_points;
 
     void register_with_debug_printer() const;
 };
@@ -407,7 +406,7 @@ class SGL_API SlangEntryPoint : public Object {
     SGL_OBJECT(SlangEntryPoint)
 public:
     SlangEntryPoint(ref<SlangModule> module, const SlangEntryPointDesc& desc);
-    ~SlangEntryPoint() = default;
+    ~SlangEntryPoint();
 
     void init(Slang::ComPtr<slang::IComponentType> slang_entry_point);
 
@@ -469,11 +468,15 @@ public:
 
     virtual std::string to_string() const override;
 
+    void _register_pipeline(Pipeline* pipeline);
+    void _unregister_pipeline(Pipeline* pipeline);
+
 private:
     ref<SlangSession> m_session;
     ShaderProgramDesc m_desc;
     Slang::ComPtr<slang::IComponentType> m_linked_program;
     Slang::ComPtr<gfx::IShaderProgram> m_gfx_shader_program;
+    std::set<Pipeline*> m_registered_pipelines;
 };
 
 } // namespace sgl

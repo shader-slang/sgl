@@ -608,11 +608,15 @@ ref<ShaderTable> Device::create_shader_table(ShaderTableDesc desc)
 ref<SlangSession> Device::create_slang_session(SlangSessionDesc desc)
 {
     auto session_ref = make_ref<SlangSession>(ref<Device>(this), std::move(desc));
-    m_all_slang_sessions.insert(session_ref.get());
     return session_ref;
 }
 
-void Device::on_slang_session_destroyed(SlangSession* session)
+void Device::_register_slang_session(SlangSession* session)
+{
+    m_all_slang_sessions.insert(session);
+}
+
+void Device::_unregister_slang_session(SlangSession* session)
 {
     m_all_slang_sessions.erase(session);
 }
