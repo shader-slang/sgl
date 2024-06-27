@@ -24,16 +24,16 @@ namespace sgl {
 
 Pipeline::Pipeline(ref<Device> device, ref<ShaderProgram> program)
     : DeviceResource(std::move(device))
-    //, m_program(program)
+    , m_program(program)
 {
     SGL_CHECK_NOT_NULL(program);
-    //m_program->_register_pipeline(this);
+    m_program->_register_pipeline(this);
 }
 
 Pipeline::~Pipeline()
 {
     m_device->deferred_release(m_gfx_pipeline_state);
-    //m_program->_unregister_pipeline(this);
+    m_program->_unregister_pipeline(this);
 }
 
 

@@ -43,7 +43,12 @@ protected:
     virtual void recreate() = 0;
 
     Slang::ComPtr<gfx::IPipelineState> m_gfx_pipeline_state;
-    //ref<ShaderProgram> m_program;
+
+private:
+
+    /// Pipelines store program in their descriptor - this
+    /// is just so we can register/unregister with program
+    ref<ShaderProgram> m_program;
 };
 
 struct ComputePipelineDesc {
