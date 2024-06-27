@@ -26,7 +26,7 @@ enum class FileSystemWatcherChange {
 /// Init options for FileSystemWatcher.
 struct FileSystemWatchDesc {
 
-    /// Directory to monitor
+    /// Directory to monitor.
     std::filesystem::path directory;
 };
 
@@ -34,13 +34,13 @@ struct FileSystemWatchDesc {
 /// by FileSystemWatcher.
 struct FileSystemWatchEvent {
 
-    /// Path of file that has changed
+    /// Path of file that has changed.
     std::filesystem::path path;
 
-    /// Change type
+    /// Change type.
     FileSystemWatcherChange change;
 
-    /// System time change was recorded
+    /// System time change was recorded.
     std::chrono::system_clock::time_point time;
 };
 

@@ -354,6 +354,8 @@ public:
         std::optional<SlangLinkOptions> link_options = {}
     );
 
+    void reload_all_programs();
+
     ref<MutableShaderObject> create_mutable_shader_object(const ShaderProgram* shader_program);
 
     ref<MutableShaderObject> create_mutable_shader_object(const TypeLayoutReflection* type_layout);
@@ -535,8 +537,6 @@ public:
 
     void _register_slang_session(SlangSession* session);
     void _unregister_slang_session(SlangSession* session);
-
-    void reload_all_programs();
 
     Blitter* _blitter();
 
