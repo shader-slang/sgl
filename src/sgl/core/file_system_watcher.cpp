@@ -8,6 +8,9 @@
 #include <iostream>
 
 #if SGL_WINDOWS
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
 #include <windows.h>
 #endif
 
@@ -36,18 +39,18 @@ void CALLBACK FileIOCompletionRoutine(
         // Overlapped is pointer to FileSystemWatchState with windows OVERLAPPED structure at start
         FileSystemWatchState* state = (FileSystemWatchState*)lpOverlapped;
 
-        FILE_NOTIFY_INFORMATION* pNotify;
+        FILE_NOTIFY_INFORMATION* notify_information;
         int offset = 0;
 
         // Iterate over events, and call '_notify_change' on the watcher for each one
         do {
-            pNotify = (FILE_NOTIFY_INFORMATION*)((char*)state->buffer + offset);
-            std::wstring fileName(pNotify->FileName, pNotify->FileNameLength / sizeof(WCHAR));
+            notify_information = (FILE_NOTIFY_INFORMATION*)((char*)state->buffer + offset);
+            std::wstring file_name(notify_information->FileName, notify_information->FileNameLength / sizeof(WCHAR));
 
-            std::filesystem::path path = fileName;
+            std::filesystem::path path{file_name};
             FileSystemWatcherChange change = FileSystemWatcherChange::invalid;
 
-            switch (pNotify->Action) {
+            switch (notify_information->Action) {
             case FILE_ACTION_ADDED:
                 change = FileSystemWatcherChange::added;
                 break;
@@ -65,10 +68,10 @@ void CALLBACK FileIOCompletionRoutine(
             }
             state->watcher->_notify_change(path, change);
 
-            offset += pNotify->NextEntryOffset;
-        } while (pNotify->NextEntryOffset != 0);
+            offset += notify_information->NextEntryOffset;
+        } while (notify_information->NextEntryOffset != 0);
 
-        // Reissue the read request
+        // Reissue the read request.
         if (!ReadDirectoryChangesW(
                 state->directory_handle,
                 state->buffer,
@@ -87,26 +90,38 @@ void CALLBACK FileIOCompletionRoutine(
 #endif
 
 FileSystemWatcher::FileSystemWatcher() {
-
+#if !SGL_WINDOWS
+    SGL_THROW("File system watcher is only implemented on windows platforms")
+#endif
 }
 
-FileSystemWatcher::~FileSystemWatcher()
-{
-
+FileSystemWatcher::~FileSystemWatcher() {
+    for (auto pair : m_watches) {
+        FileSystemWatchState* state = pair.second;
+        stop_watch(state);
+        delete state;
+    }
 }
 
 void FileSystemWatcher::add_watch(const FileSystemWatchDesc& desc)
 {
+    // Check watch doesn't already exist
+    for (auto pair : m_watches) {
+        if (pair.second->desc.directory == desc.directory) {
+            SGL_THROW("A watch already exists for {}.", desc.directory);
+        }
+    }
+
     // Init a new watcher state object
-    int id = m_next_id++;
+    uint32_t id = m_next_id++;
     FileSystemWatchState* state = new FileSystemWatchState();
     state->desc = desc;
     state->watcher = this;
     m_watches.insert(std::pair(id, state));
 
 #if SGL_WINDOWS
-    // On wiondows, open a directory handle then start the directory changed monitoring process
-    auto wtxt = state->desc.path.wstring();
+    // On windows, open a directory handle then start the directory changed monitoring process.
+    auto wtxt = state->desc.directory.wstring();
     state->directory_handle = CreateFile(
         wtxt.c_str(),
         FILE_LIST_DIRECTORY,
@@ -116,7 +131,7 @@ void FileSystemWatcher::add_watch(const FileSystemWatchDesc& desc)
         FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
         NULL
     );
-    memset(&state->overlapped, 0, sizeof(OVERLAPPED));
+    std::memset(&state->overlapped, 0, sizeof(OVERLAPPED));
     state->overlapped.hEvent = this;
     if (!ReadDirectoryChangesW(
             state->directory_handle,
@@ -131,37 +146,34 @@ void FileSystemWatcher::add_watch(const FileSystemWatchDesc& desc)
         )) {
         log_error("ReadDirectoryChangesW failed. Error: {}\n", GetLastError());
     }
-#else
-    SGL_THROW("File system watcher is only implemented on windows platforms")
 #endif
 }
 
-void FileSystemWatcher::remove_watch(const std::filesystem::path& path)
+void FileSystemWatcher::remove_watch(const std::filesystem::path& directory)
 {
     for (auto pair : m_watches) {
-        if (pair.second->desc.path == path) {
+        if (pair.second->desc.directory == directory) {
             FileSystemWatchState* state = pair.second;
-
-#if SGL_WINDOWS
-            // do stuff
-            CloseHandle(state->directory_handle);
-#endif
-
+            stop_watch(state);
             delete state;
             m_watches.erase(pair.first);
-
         }
     }
 }
 
-void FileSystemWatcher::set_on_change(
-    std::function<void(std::vector<FileSystemWatchEvent>&)> on_change
-)
+void FileSystemWatcher::stop_watch(FileSystemWatchState* state)
+{
+#if SGL_WINDOWS
+    CloseHandle(state->directory_handle);
+#endif
+}
+
+void FileSystemWatcher::set_on_change(ChangeCallback on_change)
 {
     m_on_change = on_change;
 }
 
-FileSystemWatchState* FileSystemWatcher::get_watch(int id)
+FileSystemWatchState* FileSystemWatcher::get_watch(uint32_t id)
 {
     return m_watches[id];
 }

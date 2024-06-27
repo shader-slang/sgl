@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "sgl/core/fwd.h"
 #include "sgl/core/stream.h"
 #include "sgl/core/enum.h"
 #include "sgl/core/platform.h"
@@ -13,9 +14,7 @@
 
 namespace sgl {
 
-class FileSystemWatcher;
-struct FileSystemWatchState;
-
+/// Types of file system event that can be reported
 enum class FileSystemWatcherChange {
     invalid,
     added,
@@ -24,40 +23,76 @@ enum class FileSystemWatcherChange {
     renamed,
 };
 
+/// Init options for FileSystemWatcher
 struct FileSystemWatchDesc {
-    std::filesystem::path path;
+
+    /// Directory to monitor
+    std::filesystem::path directory;
 };
 
+/// Data reported on a given file system event to a file monitored
+/// by FileSystemWatcher
 struct FileSystemWatchEvent {
+
+    /// Path of file that has changed
     std::filesystem::path path;
+
+    /// Change type
     FileSystemWatcherChange change;
+
+    /// System time change was recorded
     std::chrono::system_clock::time_point time;
 };
 
+/// Monitors directories for changes and calls a callback when they're detected.
+/// The watcher automatically queues up changes until disk has been idle for
+/// a period. Relies on regular polling of update().
 class FileSystemWatcher : public Object {
     SGL_OBJECT(FileSystemWatcher)
 public:
 
+    using ChangeCallback = std::function<void(std::span<FileSystemWatchEvent>)>;
+
     FileSystemWatcher();
-    virtual ~FileSystemWatcher();
+    ~FileSystemWatcher();
 
+    /// Add watch of a new directory
     void add_watch(const FileSystemWatchDesc& desc);
-    void remove_watch(const std::filesystem::path& path);
 
-    void set_on_change(std::function<void(std::vector<FileSystemWatchEvent>&)> on_change);
+    /// Remove existing watch
+    void remove_watch(const std::filesystem::path& directory);
 
+    /// Set callback for file system events
+    void set_on_change(ChangeCallback on_change);
+
+    /// Update function to poll the watcher + report events
     void update();
 
+    /// Internal function called when OS reports an event
     void _notify_change(const std::filesystem::path& path, FileSystemWatcherChange change);
 
 private:
-    int m_next_id = 1;
+
+    /// Next unique id to be assigned to a given watch
+    uint32_t m_next_id{1};
+
+    /// Map of id->watch
     std::map<int, FileSystemWatchState*> m_watches;
-    std::function<void(std::vector<FileSystemWatchEvent>&)> m_on_change;
+
+    /// Watch event callback
+    ChangeCallback m_on_change;
+
+    /// Events reported since last call to watch event callback
     std::vector<FileSystemWatchEvent> m_queued_events;
+
+    /// Time last event was recorded
     std::chrono::system_clock::time_point m_last_event;
 
-    FileSystemWatchState* get_watch(int id);
+    /// Get watch by id
+    FileSystemWatchState* get_watch(uint32_t id);
+
+    /// Releases OS monitoring for a given watch 
+    void stop_watch(FileSystemWatchState* state);
 };
 
 

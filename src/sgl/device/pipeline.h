@@ -74,7 +74,6 @@ protected:
  private:
 
     /// Shared reference to shader program to keep reflection data alive.
-    //ref<ShaderProgram> m_program;
     ComputePipelineDesc m_desc;
     uint3 m_thread_group_size;
 
@@ -105,7 +104,6 @@ protected:
 private:
 
     /// Shared reference to shader program to keep reflection data alive.
-    //ref<ShaderProgram> m_program;
     GraphicsPipelineDesc m_desc;
 
     ref<const InputLayout> m_stored_input_layout;
@@ -142,7 +140,6 @@ protected:
 private:
 
     /// Shared reference to shader program to keep reflection data alive.
-    //ref<ShaderProgram> m_program;
     RayTracingPipelineDesc m_desc;
 
 };

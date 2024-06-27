@@ -547,7 +547,7 @@ public:
 
 private:
 
-    void on_file_system_event(std::vector<FileSystemWatchEvent>& events);
+    void on_file_system_event(std::span<FileSystemWatchEvent> events);
 
     DeviceDesc m_desc;
     DeviceInfo m_info;

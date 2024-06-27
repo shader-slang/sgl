@@ -479,11 +479,11 @@ Device::Device(const DeviceDesc& desc)
 
     if (m_desc.enable_hot_reload) {
         m_file_system_watcher = make_ref<FileSystemWatcher>();
-        m_file_system_watcher->set_on_change([this](std::vector<FileSystemWatchEvent>& events)
+        m_file_system_watcher->set_on_change([this](std::span<FileSystemWatchEvent> events)
                                             { on_file_system_event(events); });
 
 #if SGL_WINDOWS
-        m_file_system_watcher->add_watch({.path = std::filesystem::current_path()});
+        m_file_system_watcher->add_watch({.directory = std::filesystem::current_path()});
 #else
         log_error("Hot reload is currently only supported on windows\n");
 #endif
@@ -1135,7 +1135,7 @@ bool Device::enable_agility_sdk()
     return false;
 }
 
-void Device::on_file_system_event(std::vector<FileSystemWatchEvent>& events)
+void Device::on_file_system_event(std::span<FileSystemWatchEvent> events)
 {
     int slang_count = 0;
     for (auto ev : events) {
