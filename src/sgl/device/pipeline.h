@@ -44,7 +44,7 @@ protected:
 
 private:
     /// Pipelines store program in their descriptor - this
-    /// is just so we can register/unregister with program
+    /// is just so we can register/unregister with program.
     ref<ShaderProgram> m_program;
 };
 
