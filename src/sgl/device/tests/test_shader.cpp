@@ -24,7 +24,8 @@ struct Foo {
 };
 
 [shader("compute")]
-[numthreads(1, 1, 1)] void main_a(uint3 tid : SV_DispatchThreadID, uniform Foo foo)
+[numthreads(1, 1, 1)]
+void main_a(uint3 tid : SV_DispatchThreadID, uniform Foo foo)
 {
 }
 )SHADER";
@@ -49,7 +50,8 @@ struct Foo {
             shader << R"SHADER(
 import _testshader_struct;
 [shader("compute")]
-[numthreads(1, 1, 1)] void main_a(uint3 tid : SV_DispatchThreadID, uniform Foo foo)
+[numthreads(1, 1, 1)]
+void main_a(uint3 tid : SV_DispatchThreadID, uniform Foo foo)
 {
 }
 )SHADER";
@@ -60,7 +62,7 @@ import _testshader_struct;
 
 TEST_SUITE_BEGIN("device");
 
-TEST_CASE_GPU("Shader")
+TEST_CASE_GPU("shader")
 {
     // Perform 1-time setup that creates shader files for these test cases.
     setup_testshader_files();
