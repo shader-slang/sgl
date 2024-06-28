@@ -15,7 +15,7 @@ namespace sgl::testing {
 // Cached devices.
 static std::map<DeviceType, ref<Device>> g_cached_devices;
 
-// Temp directory to create files for teting in
+// Temp directory to create files for teting in.
 static std::filesystem::path g_test_temp_directory;
 
 std::string build_current_date_string()

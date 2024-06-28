@@ -61,7 +61,7 @@ struct FileSystemWatchEvent {
     std::chrono::system_clock::time_point time;
 };
 
-// Declare watch state (only used internally)
+// Declare watch state (only used internally).
 struct FileSystemWatchState;
 
 /// Monitors directories for changes and calls a callback when they're detected.

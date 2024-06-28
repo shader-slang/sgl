@@ -28,7 +28,7 @@ struct FileSystemWatchState {
 };
 
 #if SGL_WINDOWS
-// Windows completion routine called with buffer of filesytem events
+// Windows completion routine called with buffer of filesytem events.
 void CALLBACK FileIOCompletionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered, LPOVERLAPPED lpOverlapped)
 {
     // Overlapped is pointer to FileSystemWatchState with windows OVERLAPPED structure at start.
