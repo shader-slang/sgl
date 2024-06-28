@@ -13,7 +13,6 @@ SGL_PY_DECLARE(app_app);
 
 SGL_PY_DECLARE(core_bitmap);
 SGL_PY_DECLARE(core_crypto);
-SGL_PY_DECLARE(core_filesystemwatcher);
 SGL_PY_DECLARE(core_input);
 SGL_PY_DECLARE(core_logger);
 SGL_PY_DECLARE(core_object);
@@ -84,7 +83,6 @@ NB_MODULE(sgl_ext, m_)
     SGL_PY_IMPORT(core_platform);
     m.def_submodule("thread", "Threading module");
     SGL_PY_IMPORT(core_thread);
-    SGL_PY_IMPORT(core_filesystemwatcher);
     SGL_PY_IMPORT(core_input);
     SGL_PY_IMPORT(core_logger);
     SGL_PY_IMPORT(core_timer);

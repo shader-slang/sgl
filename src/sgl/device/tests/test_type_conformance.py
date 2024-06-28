@@ -16,7 +16,7 @@ def test_type_conformance(device_type):
 
     def run(conformances):
         module = device.load_module("test_type_conformance.slang")
-        entry_point = module.entry_point("main").with_type_conformances(conformances)
+        entry_point = module.entry_point("main",conformances)
         program = device.link_program(modules=[module], entry_points=[entry_point])
         kernel = device.create_compute_kernel(program)
         result = device.create_buffer(

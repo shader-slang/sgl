@@ -162,6 +162,11 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
 
 SlangSession::~SlangSession()
 {
+    // Ensure nvapi module gets released before destructor completes, to
+    // avoid issues with list of registered modules getting corrupted
+    // due to member variable destructor ordering.
+    m_nvapi_module.reset();
+
     m_device->_unregister_slang_session(this);
 }
 
@@ -817,6 +822,13 @@ void SlangEntryPoint::init()
         m_slang_entry_point = std::move(slang_entry_point);
 
     } else {
+
+        // Find the input entry point
+        Slang::ComPtr<slang::IEntryPoint> slang_entry_point;
+        m_module->slang_module()->findEntryPointByName(std::string{desc.name}.c_str(), slang_entry_point.writeRef());
+        if (!slang_entry_point)
+            SGL_THROW("Entry point \"{}\" not found", desc.name);
+
         // Validate type conformance entries.
         {
             std::set<std::pair<std::string_view, std::string_view>> type_conformance_set;
@@ -870,7 +882,7 @@ void SlangEntryPoint::init()
         }
 
         // Create a new composite component type containing all the type conformances and the original entrypoint.
-        slang_component_types[desc.type_conformances.size()] = m_slang_entry_point.get();
+        slang_component_types[desc.type_conformances.size()] = slang_entry_point.get();
         Slang::ComPtr<slang::IComponentType> new_entry_point;
         Slang::ComPtr<ISlangBlob> diagnostics;
         m_module->session()->get_slang_session()->createCompositeComponentType(
