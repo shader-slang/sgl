@@ -67,7 +67,9 @@ void CALLBACK FileIOCompletionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTr
                 default:
                     break;
                 }
-                state->watcher->_notify_change(path, change);
+
+                if (change != FileSystemWatcherChange::invalid)
+                    state->watcher->_notify_change(state, path, change);
 
                 offset += notify_information->NextEntryOffset;
             } while (notify_information->NextEntryOffset != 0);
@@ -139,6 +141,12 @@ void FileSystemWatcher::add_watch(const FileSystemWatchDesc& desc)
         FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
         NULL
     );
+    if (state->directory_handle == INVALID_HANDLE_VALUE) {
+        m_watches.erase(id);
+        delete state;
+        SGL_THROW("Failed to open directory for file watcher");
+    }
+    BOOL recursive = state->desc.recursive;
     std::memset(&state->overlapped, 0, sizeof(OVERLAPPED));
     state->overlapped.hEvent = this;
     state->is_shutdown = false;
@@ -146,7 +154,7 @@ void FileSystemWatcher::add_watch(const FileSystemWatchDesc& desc)
             state->directory_handle,
             state->buffer,
             sizeof(state->buffer),
-            state->desc.recursive,
+            recursive,
             FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_ATTRIBUTES
                 | FILE_NOTIFY_CHANGE_SIZE | FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_SECURITY,
             NULL,
@@ -199,10 +207,17 @@ FileSystemWatchState* FileSystemWatcher::get_watch(uint32_t id)
     return m_watches[id];
 }
 
-void FileSystemWatcher::_notify_change(const std::filesystem::path& path, FileSystemWatcherChange change)
+void FileSystemWatcher::_notify_change(
+    FileSystemWatchState* state,
+    const std::filesystem::path& path,
+    FileSystemWatcherChange change
+)
 {
+    std::filesystem::path abs_path(state->desc.directory.string() + "/" + path.string());
+    abs_path = std::filesystem::absolute(abs_path);
+
     auto now = std::chrono::system_clock::now();
-    FileSystemWatchEvent event = {.path = path, .change = change, .time = now};
+    FileSystemWatchEvent event = {.path = path, .absolute_path = abs_path, .change = change, .time = now};
     m_queued_events.push_back(event);
     m_last_event = now;
 }
@@ -215,7 +230,7 @@ void FileSystemWatcher::update()
     if (m_queued_events.size() > 0) {
         auto duration = std::chrono::system_clock::now() - m_last_event;
         auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-        if (millis > 1000) {
+        if (millis > m_output_delay_ms) {
             std::span events(m_queued_events);
             m_on_change(events);
             m_queued_events.resize(0);

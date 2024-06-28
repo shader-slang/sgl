@@ -19,6 +19,11 @@ class Blob;
 class EOFException;
 class FileStream;
 
+// file_system_watcher.h
+
+struct FileSystemWatchEvent;
+class FileSystemWatcher;
+
 // input.h
 
 struct KeyboardEvent;
