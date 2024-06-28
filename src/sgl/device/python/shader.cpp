@@ -56,8 +56,12 @@ SGL_PY_EXPORT(device_shader)
         .def(nb::init<std::string, std::string, int32_t>(), "type_name"_a, "interface_name"_a, "id"_a = -1)
         .def(
             "__init__",
-            [](TypeConformance* self, nb::tuple tuple) {
-                new (self) TypeConformance{nb::cast<std::string>(tuple[0]), nb::cast<std::string>(tuple[1]), tuple.size() > 2 ? nb::cast<int32_t>(tuple[2]) : -1};
+            [](TypeConformance* self, nb::tuple tuple)
+            {
+                new (self) TypeConformance{
+                    nb::cast<std::string>(tuple[0]),
+                    nb::cast<std::string>(tuple[1]),
+                    tuple.size() > 2 ? nb::cast<int32_t>(tuple[2]) : -1};
             }
         )
         .def_rw("interface_name", &TypeConformance::interface_name, D_NA(TypeConformance, interface_name))
@@ -217,7 +221,12 @@ SGL_PY_EXPORT(device_shader)
         .def_prop_ro("layout", &SlangEntryPoint::layout, nb::rv_policy::reference_internal, D(SlangEntryPoint, layout))
         .def("rename", &SlangEntryPoint::rename, "new_name"_a, D(SlangEntryPoint, rename))
         .def("with_name", &SlangEntryPoint::with_name, "new_name"_a, D(SlangEntryPoint, with_name))
-        .def("with_type_conformances", &SlangEntryPoint::with_type_conformances, "type_conformances"_a, D(SlangEntryPoint, with_type_conformances));
+        .def(
+            "with_type_conformances",
+            &SlangEntryPoint::with_type_conformances,
+            "type_conformances"_a,
+            D(SlangEntryPoint, with_type_conformances)
+        );
 
     nb::class_<ShaderProgram, DeviceResource>(m, "ShaderProgram", D(ShaderProgram))
         .def_prop_ro("layout", &ShaderProgram::layout, nb::rv_policy::reference_internal, D(ShaderProgram, layout))

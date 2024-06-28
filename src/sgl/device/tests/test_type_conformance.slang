@@ -24,7 +24,8 @@ struct Foo4 : IFoo {
 
 [shader("compute")]
 [numthreads(1, 1, 1)]
-void main(uint tid : SV_DispatchThreadID, RWStructuredBuffer<uint> result) {
+void main(uint tid: SV_DispatchThreadID, RWStructuredBuffer<uint> result)
+{
     uint type_id = tid;
     uint dummy = 0;
     IFoo foo = createDynamicObject<IFoo>(type_id, dummy);
