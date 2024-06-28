@@ -22,12 +22,26 @@ enum class FileSystemWatcherChange {
     modified,
     renamed,
 };
+SGL_ENUM_INFO(
+    FileSystemWatcherChange,
+    {
+        {FileSystemWatcherChange::invalid, "invalid"},
+        {FileSystemWatcherChange::added, "added"},
+        {FileSystemWatcherChange::removed, "removed"},
+        {FileSystemWatcherChange::modified, "modified"},
+        {FileSystemWatcherChange::renamed, "renamed"},
+    }
+);
+SGL_ENUM_REGISTER(FileSystemWatcherChange);
 
 /// Init options for FileSystemWatcher.
 struct FileSystemWatchDesc {
 
     /// Directory to monitor.
     std::filesystem::path directory;
+
+    /// Whether to monitor subdirectories.
+    bool recursive{true};
 };
 
 /// Data reported on a given file system event to a file monitored
@@ -47,7 +61,7 @@ struct FileSystemWatchEvent {
 /// Monitors directories for changes and calls a callback when they're detected.
 /// The watcher automatically queues up changes until disk has been idle for
 /// a period. Relies on regular polling of update().
-class FileSystemWatcher : public Object {
+class SGL_API FileSystemWatcher : public Object {
     SGL_OBJECT(FileSystemWatcher)
 public:
     using ChangeCallback = std::function<void(std::span<FileSystemWatchEvent>)>;
@@ -60,6 +74,12 @@ public:
 
     /// Remove existing watch.
     void remove_watch(const std::filesystem::path& directory);
+
+    /// Get number of active watches
+    size_t get_watch_count() const { return m_watches.size(); }
+
+    /// Get callback for file system events.
+    ChangeCallback get_on_change() const { return m_on_change; }
 
     /// Set callback for file system events.
     void set_on_change(ChangeCallback on_change);

@@ -371,6 +371,7 @@ if(SGL_BUILD_PYTHON)
         sgl/app/python/app.cpp
         sgl/core/python/bitmap.cpp
         sgl/core/python/crypto.cpp
+        sgl/core/python/file_system_watcher.cpp
         sgl/core/python/input.cpp
         sgl/core/python/logger.cpp
         sgl/core/python/object.cpp

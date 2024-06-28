@@ -146,7 +146,7 @@ void FileSystemWatcher::add_watch(const FileSystemWatchDesc& desc)
             state->directory_handle,
             state->buffer,
             sizeof(state->buffer),
-            TRUE,
+            state->desc.recursive,
             FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_ATTRIBUTES
                 | FILE_NOTIFY_CHANGE_SIZE | FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_SECURITY,
             NULL,
@@ -166,6 +166,7 @@ void FileSystemWatcher::remove_watch(const std::filesystem::path& directory)
             stop_watch(state);
             delete state;
             m_watches.erase(pair.first);
+            break;
         }
     }
 }
@@ -173,7 +174,17 @@ void FileSystemWatcher::remove_watch(const std::filesystem::path& directory)
 void FileSystemWatcher::stop_watch(FileSystemWatchState* state)
 {
 #if SGL_WINDOWS
+    // On windows, CancelIO.
+    // Note: the loop below could be a while(!state->is_shutdown), but making
+    // it a fixed number of iterations lets us throw an exception if shutdown fails
     CancelIo(state->directory_handle);
+    for (int it = 0; it < 100; it++) {
+        if (state->is_shutdown)
+            break;
+        SleepEx(5, TRUE);
+    }
+    if (!state->is_shutdown)
+        SGL_THROW("File system watch failed to shutdown after 500ms");
     CloseHandle(state->directory_handle);
 #endif
 }
@@ -211,5 +222,6 @@ void FileSystemWatcher::update()
         }
     }
 }
+
 
 } // namespace sgl
