@@ -24,6 +24,16 @@ TEST_CASE("FileSystemWatcher")
         watcher->remove_watch(path);
     }
 
+    SUBCASE("add_and_remove_watch_by_id")
+    {
+        auto path = sgl::testing::get_case_temp_directory();
+        path += "/add_and_remove_watch";
+        std::filesystem::create_directories(path);
+        ref<FileSystemWatcher> watcher = make_ref<FileSystemWatcher>();
+        auto id = watcher->add_watch({.directory = path});
+        watcher->remove_watch(id);
+    }
+
     SUBCASE("fail_missing_directory")
     {
         ref<FileSystemWatcher> watcher = make_ref<FileSystemWatcher>();

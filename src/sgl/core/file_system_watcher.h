@@ -22,17 +22,6 @@ enum class FileSystemWatcherChange {
     modified,
     renamed,
 };
-SGL_ENUM_INFO(
-    FileSystemWatcherChange,
-    {
-        {FileSystemWatcherChange::invalid, "invalid"},
-        {FileSystemWatcherChange::added, "added"},
-        {FileSystemWatcherChange::removed, "removed"},
-        {FileSystemWatcherChange::modified, "modified"},
-        {FileSystemWatcherChange::renamed, "renamed"},
-    }
-);
-SGL_ENUM_REGISTER(FileSystemWatcherChange);
 
 /// Init options for FileSystemWatcher.
 struct FileSystemWatchDesc {
@@ -55,7 +44,7 @@ struct FileSystemWatchEvent {
     std::filesystem::path absolute_path;
 
     /// Change type.
-    FileSystemWatcherChange change;
+    FileSystemWatcherChange change{FileSystemWatcherChange::invalid};
 
     /// System time change was recorded.
     std::chrono::system_clock::time_point time;
@@ -75,23 +64,32 @@ public:
     FileSystemWatcher();
     ~FileSystemWatcher();
 
+    /// FileSystemWatch move constructor is deleted to allow for map of unique ptrs.
+    FileSystemWatcher(FileSystemWatcher&& other) = delete;
+
     /// Add watch of a new directory.
-    void add_watch(const FileSystemWatchDesc& desc);
+    uint32_t add_watch(const FileSystemWatchDesc& desc);
+
+    /// Remove existing watch.
+    void remove_watch(uint32_t id);
 
     /// Remove existing watch.
     void remove_watch(const std::filesystem::path& directory);
 
     /// Get number of active watches
-    size_t get_watch_count() const { return m_watches.size(); }
+    size_t watch_count() const { return m_watches.size(); }
 
     /// Get callback for file system events.
-    ChangeCallback get_on_change() const { return m_on_change; }
+    ChangeCallback on_change() const { return m_on_change; }
 
     /// Set callback for file system events.
     void set_on_change(ChangeCallback on_change);
 
     /// Update function to poll the watcher + report events.
     void update();
+
+    /// Delay period before queued events are output.
+    uint32_t delay() { return m_output_delay_ms; }
 
     /// Set delay period before queued events are output.
     void set_delay(uint32_t milliseconds) { m_output_delay_ms = milliseconds; }
@@ -107,7 +105,7 @@ private:
     uint32_t m_output_delay_ms{1000};
 
     /// Map of id->watch.
-    std::map<int, FileSystemWatchState*> m_watches;
+    std::map<int, std::unique_ptr<FileSystemWatchState>> m_watches;
 
     /// Watch event callback.
     ChangeCallback m_on_change;
@@ -118,11 +116,8 @@ private:
     /// Time last event was recorded.
     std::chrono::system_clock::time_point m_last_event;
 
-    /// Get watch by id.
-    FileSystemWatchState* get_watch(uint32_t id);
-
     /// Releases OS monitoring for a given watch.
-    void stop_watch(FileSystemWatchState* state);
+    void stop_watch(const std::unique_ptr<FileSystemWatchState>&);
 };
 
 
