@@ -21,7 +21,7 @@ static std::filesystem::path g_test_temp_directory;
 std::string build_current_date_string()
 {
     auto now = std::chrono::system_clock::now();
-    auto local_now = std::chrono::time_point_cast<std::chrono::seconds> (std::chrono::current_zone()->to_local(now));
+    auto local_now = std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::current_zone()->to_local(now));
     auto res = std::format("{:%Y-%m-%d-%H-%M-%S}", local_now);
     return res;
 }
@@ -54,8 +54,7 @@ std::filesystem::path get_case_temp_directory()
     return root_path;
 }
 
-void static_init() {
-}
+void static_init() { }
 
 void static_shutdown()
 {
