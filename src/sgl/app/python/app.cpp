@@ -137,13 +137,13 @@ SGL_PY_EXPORT(app_app)
                 });
             },
             "app"_a,
-            "width"_a = 1920,
-            "height"_a = 1280,
-            "title"_a = "sgl",
-            "mode"_a = WindowMode::normal,
-            "resizable"_a = true,
-            "swapchain_format"_a = Format::bgra8_unorm_srgb,
-            "enable_vsync"_a = false,
+            "width"_a = AppWindowDesc().width,
+            "height"_a = AppWindowDesc().height,
+            "title"_a = AppWindowDesc().title,
+            "mode"_a = AppWindowDesc().mode,
+            "resizable"_a = AppWindowDesc().resizable,
+            "swapchain_format"_a = AppWindowDesc().swapchain_format,
+            "enable_vsync"_a = AppWindowDesc().enable_vsync,
             D(App, App)
         )
         .def_prop_ro("device", &AppWindow::device, D(AppWindow, device))

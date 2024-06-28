@@ -168,10 +168,10 @@ SGL_PY_EXPORT(device_device)
                  .enable_hot_reload = enable_hot_reload}
             );
         },
-        "type"_a = DeviceType::automatic,
-        "enable_debug_layers"_a = false,
-        "enable_cuda_interop"_a = false,
-        "enable_print"_a = false,
+        "type"_a = DeviceDesc().type,
+        "enable_debug_layers"_a = DeviceDesc().enable_debug_layers,
+        "enable_cuda_interop"_a = DeviceDesc().enable_cuda_interop,
+        "enable_print"_a = DeviceDesc().enable_print,
         "adapter_luid"_a.none() = nb::none(),
         "compiler_options"_a.none() = nb::none(),
         "shader_cache_path"_a.none() = nb::none(),
@@ -215,11 +215,11 @@ SGL_PY_EXPORT(device_device)
             );
         },
         "window"_a,
-        "format"_a = Format::bgra8_unorm_srgb,
-        "width"_a = 0,
-        "height"_a = 0,
-        "image_count"_a = 3,
-        "enable_vsync"_a = false,
+        "format"_a = SwapchainDesc().format,
+        "width"_a = SwapchainDesc().width,
+        "height"_a = SwapchainDesc().height,
+        "image_count"_a = SwapchainDesc().image_count,
+        "enable_vsync"_a = SwapchainDesc().enable_vsync,
         D(Device, create_swapchain)
     );
     device.def(
@@ -265,14 +265,14 @@ SGL_PY_EXPORT(device_device)
                 .data_size = data ? data->nbytes() : 0,
             });
         },
-        "size"_a = 0,
-        "element_count"_a = 0,
-        "struct_size"_a = 0,
+        "size"_a = BufferDesc().size,
+        "element_count"_a = BufferDesc().element_count,
+        "struct_size"_a = BufferDesc().struct_size,
         "struct_type"_a.none() = nb::none(),
-        "format"_a = Format::unknown,
-        "usage"_a = ResourceUsage::none,
-        "memory_type"_a = MemoryType::device_local,
-        "debug_name"_a = "",
+        "format"_a = BufferDesc().format,
+        "usage"_a = BufferDesc().usage,
+        "memory_type"_a = BufferDesc().memory_type,
+        "debug_name"_a = BufferDesc().debug_name,
         "data"_a.none() = nb::none(),
         D(Device, create_buffer)
     );
@@ -320,18 +320,18 @@ SGL_PY_EXPORT(device_device)
                 .data_size = data ? data->nbytes() : 0,
             });
         },
-        "type"_a = ResourceType::unknown,
-        "format"_a = Format::unknown,
-        "width"_a = 0,
-        "height"_a = 0,
-        "depth"_a = 0,
-        "array_size"_a = 1,
-        "mip_count"_a = 0,
-        "sample_count"_a = 1,
-        "quality"_a = 0,
-        "usage"_a = ResourceUsage::none,
-        "memory_type"_a = MemoryType::device_local,
-        "debug_name"_a = "",
+        "type"_a = TextureDesc().type,
+        "format"_a = TextureDesc().format,
+        "width"_a = TextureDesc().width,
+        "height"_a = TextureDesc().height,
+        "depth"_a = TextureDesc().depth,
+        "array_size"_a = TextureDesc().array_size,
+        "mip_count"_a = TextureDesc().mip_count,
+        "sample_count"_a = TextureDesc().sample_count,
+        "quality"_a = TextureDesc().quality,
+        "usage"_a = TextureDesc().usage,
+        "memory_type"_a = TextureDesc().memory_type,
+        "debug_name"_a = TextureDesc().debug_name,
         "data"_a.none() = nb::none(),
         D(Device, create_texture)
     );
@@ -375,19 +375,19 @@ SGL_PY_EXPORT(device_device)
                 .max_lod = max_lod,
             });
         },
-        "min_filter"_a = TextureFilteringMode::linear,
-        "mag_filter"_a = TextureFilteringMode::linear,
-        "mip_filter"_a = TextureFilteringMode::linear,
-        "reduction_op"_a = TextureReductionOp::average,
-        "address_u"_a = TextureAddressingMode::wrap,
-        "address_v"_a = TextureAddressingMode::wrap,
-        "address_w"_a = TextureAddressingMode::wrap,
-        "mip_lod_bias"_a = 0.f,
-        "max_anisotropy"_a = 1,
-        "comparison_func"_a = ComparisonFunc::never,
-        "border_color"_a = float4{1.f, 1.f, 1.f, 1.f},
-        "min_lod"_a = -1000.f,
-        "max_lod"_a = 1000.f,
+        "min_filter"_a = SamplerDesc().min_filter,
+        "mag_filter"_a = SamplerDesc().mag_filter,
+        "mip_filter"_a = SamplerDesc().mip_filter,
+        "reduction_op"_a = SamplerDesc().reduction_op,
+        "address_u"_a = SamplerDesc().address_u,
+        "address_v"_a = SamplerDesc().address_v,
+        "address_w"_a = SamplerDesc().address_w,
+        "mip_lod_bias"_a = SamplerDesc().mip_lod_bias,
+        "max_anisotropy"_a = SamplerDesc().max_anisotropy,
+        "comparison_func"_a = SamplerDesc().comparison_func,
+        "border_color"_a = SamplerDesc().border_color,
+        "min_lod"_a = SamplerDesc().min_lod,
+        "max_lod"_a = SamplerDesc().max_lod,
         D(Device, create_sampler)
     );
     device.def("create_sampler", &Device::create_sampler, "desc"_a, D(Device, create_sampler));
@@ -396,8 +396,8 @@ SGL_PY_EXPORT(device_device)
         "create_fence",
         [](Device* self, uint64_t initial_value, bool shared)
         { return self->create_fence({.initial_value = initial_value, .shared = shared}); },
-        "initial_value"_a = 0,
-        "shared"_a = false,
+        "initial_value"_a = FenceDesc().initial_value,
+        "shared"_a = FenceDesc().shared,
         D(Device, create_fence)
     );
     device.def("create_fence", &Device::create_fence, "desc"_a, D(Device, create_fence));
@@ -537,7 +537,7 @@ SGL_PY_EXPORT(device_device)
             });
         },
         "compiler_options"_a.none() = nb::none(),
-        "add_default_include_paths"_a = true,
+        "add_default_include_paths"_a = SlangSessionDesc().add_default_include_paths,
         "cache_path"_a.none() = nb::none(),
         D(Device, create_slang_session)
     );
@@ -621,7 +621,7 @@ SGL_PY_EXPORT(device_device)
         "program"_a,
         "input_layout"_a.none(),
         "framebuffer_layout"_a,
-        "primitive_type"_a = PrimitiveType::triangle,
+        "primitive_type"_a = GraphicsPipelineDesc().primitive_type,
         "depth_stencil"_a.none() = nb::none(),
         "rasterizer"_a.none() = nb::none(),
         "blend"_a.none() = nb::none(),
@@ -655,10 +655,10 @@ SGL_PY_EXPORT(device_device)
         },
         "program"_a,
         "hit_groups"_a,
-        "max_recursion"_a = 0,
-        "max_ray_payload_size"_a = 0,
-        "max_attribute_size"_a = 8,
-        "flags"_a = RayTracingPipelineFlags::none,
+        "max_recursion"_a = RayTracingPipelineDesc().max_recursion,
+        "max_ray_payload_size"_a = RayTracingPipelineDesc().max_ray_payload_size,
+        "max_attribute_size"_a = RayTracingPipelineDesc().max_attribute_size,
+        "flags"_a = RayTracingPipelineDesc().flags,
         D(Device, create_ray_tracing_pipeline)
     );
     device.def(
@@ -696,9 +696,9 @@ SGL_PY_EXPORT(device_device)
         },
         "memory_type"_a,
         "usage"_a,
-        "page_size"_a = 4 * 1024 * 1024,
-        "retain_large_pages"_a = false,
-        "debug_name"_a = "",
+        "page_size"_a = MemoryHeapDesc().page_size,
+        "retain_large_pages"_a = MemoryHeapDesc().retain_large_pages,
+        "debug_name"_a = MemoryHeapDesc().debug_name,
         D(Device, create_memory_heap)
     );
     device.def("create_memory_heap", &Device::create_memory_heap, "desc"_a, D(Device, create_memory_heap));
