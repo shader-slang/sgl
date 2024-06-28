@@ -85,7 +85,7 @@ public:
     size_t watch_count() const { return m_watches.size(); }
 
     /// Get callback for file system events.
-    ChangeCallback get_on_change() const { return m_on_change; }
+    ChangeCallback on_change() const { return m_on_change; }
 
     /// Set callback for file system events.
     void set_on_change(ChangeCallback on_change);
