@@ -143,7 +143,6 @@
         "sgl.ProgramLayout",
         "sgl.ReflectionCursor",
         "sgl.TypeConformance",
-        "sgl.TypeConformanceList",
         "sgl.DefineList",
         "sgl.SlangCompileError",
         "sgl.SlangMatrixLayout",

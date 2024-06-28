@@ -20,7 +20,7 @@
 
 namespace sgl {
 
-/// Type conformance entry.
+/// \brief Type conformance entry.
 /// Type conformances are used to narrow the set of types supported by a slang interface.
 /// They can be specified on an entry point to omit generating code for types that do not conform.
 struct SGL_API TypeConformance {

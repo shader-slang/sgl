@@ -833,13 +833,14 @@ ref<SlangEntryPoint> SlangEntryPoint::with_type_conformances(std::span<TypeConfo
     slang_component_types[type_conformances.size()] = m_slang_entry_point.get();
     Slang::ComPtr<slang::IComponentType> new_entry_point;
     Slang::ComPtr<ISlangBlob> diagnostics;
-    SLANG_CALL(m_module->session()->get_slang_session()->createCompositeComponentType(
+    m_module->session()->get_slang_session()->createCompositeComponentType(
         slang_component_types.data(),
         narrow_cast<SlangInt>(slang_component_types.size()),
         new_entry_point.writeRef(),
         diagnostics.writeRef()
-    ));
+    );
     report_diagnostics(diagnostics);
+    SGL_CHECK(new_entry_point, "Failed to create composite component type for new entry point");
     return make_ref<SlangEntryPoint>(m_module, new_entry_point);
 }
 
