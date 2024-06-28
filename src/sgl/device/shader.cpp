@@ -24,33 +24,17 @@
 namespace sgl {
 
 // ----------------------------------------------------------------------------
-// TypeConformanceList
+// TypeConformance
 // ----------------------------------------------------------------------------
 
-TypeConformanceList& TypeConformanceList::add(std::string type_name, std::string interface_name, uint32_t id)
+std::string TypeConformance::to_string() const
 {
-    (*this)[TypeConformance{std::move(type_name), std::move(interface_name)}] = id;
-    return *this;
-}
-
-TypeConformanceList& TypeConformanceList::remove(std::string type_name, std::string interface_name)
-{
-    (*this).erase(TypeConformance{std::move(type_name), std::move(interface_name)});
-    return *this;
-}
-
-TypeConformanceList& TypeConformanceList::add(const TypeConformanceList& other)
-{
-    for (const auto& p : other)
-        add(p.first.type_name, p.first.interface_name, p.second);
-    return *this;
-}
-
-TypeConformanceList& TypeConformanceList::remove(const TypeConformanceList& other)
-{
-    for (const auto& p : other)
-        remove(p.first.type_name, p.first.interface_name);
-    return *this;
+    return fmt::format(
+        "TypeConformance(interface_name=\"{}\", type_name=\"{}\", id={})",
+        interface_name,
+        type_name,
+        id
+    );
 }
 
 // ----------------------------------------------------------------------------
@@ -778,12 +762,7 @@ void SlangModule::recreate_entry_points()
 
 void SlangModule::recreate_entry_point(SlangEntryPoint* entry_point) const
 {
-    const SlangEntryPointDesc& desc = entry_point->desc();
-    Slang::ComPtr<slang::IEntryPoint> slang_entry_point;
-    m_slang_module->findEntryPointByName(std::string{desc.name}.c_str(), slang_entry_point.writeRef());
-    if (!slang_entry_point)
-        SGL_THROW("Entry point \"{}\" not found", desc.name);
-    entry_point->init(Slang::ComPtr<slang::IComponentType>(slang_entry_point));
+    entry_point->init();
 }
 
 void SlangModule::_register_entry_point(SlangEntryPoint* entry_point) const
@@ -823,9 +802,89 @@ SlangEntryPoint::~SlangEntryPoint()
     m_module->_unregister_entry_point(this);
 }
 
-void SlangEntryPoint::init(Slang::ComPtr<slang::IComponentType> slang_entry_point)
+void SlangEntryPoint::init()
 {
-    m_slang_entry_point = std::move(slang_entry_point);
+    const SlangEntryPointDesc& desc = m_desc;
+
+    if (desc.type_conformances.size() == 0) {
+
+        // Simple case with no type conformances simply finds the entry point from its module
+        Slang::ComPtr<slang::IEntryPoint> slang_entry_point;
+        m_module->slang_module()->findEntryPointByName(std::string{desc.name}.c_str(), slang_entry_point.writeRef());
+        if (!slang_entry_point)
+            SGL_THROW("Entry point \"{}\" not found", desc.name);
+        m_slang_entry_point = std::move(slang_entry_point);
+
+    } else {
+        // Validate type conformance entries.
+        {
+            std::set<std::pair<std::string_view, std::string_view>> type_conformance_set;
+            std::multimap<std::string_view, int32_t> type_conformance_ids;
+            for (const TypeConformance& c : desc.type_conformances) {
+                // Check for duplicate type conformance entries (interface/type pair).
+                if (type_conformance_set.contains({c.interface_name, c.type_name}))
+                    SGL_THROW(
+                        "Duplicate type conformance entry for interface type \"{}\" and type \"{}\"",
+                        c.interface_name,
+                        c.type_name
+                    );
+                type_conformance_set.insert({c.interface_name, c.type_name});
+                // Check for duplicate ids within same interface type.
+                if (c.id >= 0) {
+                    auto range = type_conformance_ids.equal_range(c.interface_name);
+                    if (std::any_of(range.first, range.second, [&c](const auto& pair) { return pair.second == c.id; }))
+                        SGL_THROW("Duplicate type id {} for interface type \"{}\"", c.id, c.interface_name);
+                    type_conformance_ids.insert({c.interface_name, c.id});
+                }
+            }
+        }
+
+        std::vector<Slang::ComPtr<slang::ITypeConformance>> slang_type_conformances(type_conformances.size());
+        std::vector<slang::IComponentType*> slang_component_types(type_conformances.size() + 1);
+        slang::ProgramLayout* layout = m_module->slang_module()->getLayout();
+
+        // Create a slang type conformance component for each type conformance entry.
+        for (size_t i = 0; i < type_conformances.size(); ++i) {
+            const TypeConformance& c = type_conformances[i];
+            slang::TypeReflection* interface_type = layout->findTypeByName(c.interface_name.c_str());
+            SGL_CHECK(interface_type, "Interface type \"{}\" not found", c.interface_name);
+            slang::TypeReflection* type = layout->findTypeByName(c.type_name.c_str());
+            SGL_CHECK(type, "Type \"{}\" not found", c.type_name);
+            Slang::ComPtr<ISlangBlob> diagnostics;
+            m_module->session()->get_slang_session()->createTypeConformanceComponentType(
+                type,
+                interface_type,
+                slang_type_conformances[i].writeRef(),
+                c.id,
+                diagnostics.writeRef()
+            );
+            report_diagnostics(diagnostics);
+            SGL_CHECK(
+                slang_type_conformances[i],
+                "Failed to create type conformance for interface \"{}\" and type \"{}\"",
+                c.interface_name,
+                c.type_name
+            );
+            slang_component_types[i] = slang_type_conformances[i].get();
+        }
+
+        // Create a new composite component type containing all the type conformances and the original entrypoint.
+        slang_component_types[type_conformances.size()] = m_slang_entry_point.get();
+        Slang::ComPtr<slang::IComponentType> new_entry_point;
+        Slang::ComPtr<ISlangBlob> diagnostics;
+        m_module->session()->get_slang_session()->createCompositeComponentType(
+            slang_component_types.data(),
+            narrow_cast<SlangInt>(slang_component_types.size()),
+            new_entry_point.writeRef(),
+            diagnostics.writeRef()
+        );
+        report_diagnostics(diagnostics);
+        SGL_CHECK(new_entry_point, "Failed to create composite component type for new entry point");
+
+        m_slang_entry_point = std::move(new_entry_point);
+    }
+
+
     slang::EntryPointLayout* layout = m_slang_entry_point->getLayout()->getEntryPointByIndex(0);
     m_name = layout->getNameOverride() ? layout->getNameOverride() : layout->getName();
     m_stage = static_cast<ShaderStage>(layout->getStage());
@@ -857,14 +916,73 @@ ref<SlangEntryPoint> SlangEntryPoint::with_name(const std::string& name) const
     return ep;
 }
 
-ref<SlangEntryPoint> SlangEntryPoint::with_type_conformances(const TypeConformanceList& type_conformances) const
+ref<SlangEntryPoint> SlangEntryPoint::with_type_conformances(std::span<TypeConformance> type_conformances) const
 {
-    SGL_UNUSED(type_conformances);
-    // TODO
-    // m_module->m_session->get_slang_session()->createTypeConformanceComponentType
+    // Validate type conformance entries.
+    {
+        std::set<std::pair<std::string_view, std::string_view>> type_conformance_set;
+        std::multimap<std::string_view, int32_t> type_conformance_ids;
+        for (const TypeConformance& c : type_conformances) {
+            // Check for duplicate type conformance entries (interface/type pair).
+            if (type_conformance_set.contains({c.interface_name, c.type_name}))
+                SGL_THROW(
+                    "Duplicate type conformance entry for interface type \"{}\" and type \"{}\"",
+                    c.interface_name,
+                    c.type_name
+                );
+            type_conformance_set.insert({c.interface_name, c.type_name});
+            // Check for duplicate ids within same interface type.
+            if (c.id >= 0) {
+                auto range = type_conformance_ids.equal_range(c.interface_name);
+                if (std::any_of(range.first, range.second, [&c](const auto& pair) { return pair.second == c.id; }))
+                    SGL_THROW("Duplicate type id {} for interface type \"{}\"", c.id, c.interface_name);
+                type_conformance_ids.insert({c.interface_name, c.id});
+            }
+        }
+    }
 
-    SlangEntryPointDesc desc;
-    return make_ref<SlangEntryPoint>(m_module, desc);
+    std::vector<Slang::ComPtr<slang::ITypeConformance>> slang_type_conformances(type_conformances.size());
+    std::vector<slang::IComponentType*> slang_component_types(type_conformances.size() + 1);
+    slang::ProgramLayout* layout = m_module->slang_module()->getLayout();
+
+    // Create a slang type conformance component for each type conformance entry.
+    for (size_t i = 0; i < type_conformances.size(); ++i) {
+        const TypeConformance& c = type_conformances[i];
+        slang::TypeReflection* interface_type = layout->findTypeByName(c.interface_name.c_str());
+        SGL_CHECK(interface_type, "Interface type \"{}\" not found", c.interface_name);
+        slang::TypeReflection* type = layout->findTypeByName(c.type_name.c_str());
+        SGL_CHECK(type, "Type \"{}\" not found", c.type_name);
+        Slang::ComPtr<ISlangBlob> diagnostics;
+        m_module->session()->get_slang_session()->createTypeConformanceComponentType(
+            type,
+            interface_type,
+            slang_type_conformances[i].writeRef(),
+            c.id,
+            diagnostics.writeRef()
+        );
+        report_diagnostics(diagnostics);
+        SGL_CHECK(
+            slang_type_conformances[i],
+            "Failed to create type conformance for interface \"{}\" and type \"{}\"",
+            c.interface_name,
+            c.type_name
+        );
+        slang_component_types[i] = slang_type_conformances[i].get();
+    }
+
+    // Create a new composite component type containing all the type conformances and the original entrypoint.
+    slang_component_types[type_conformances.size()] = m_slang_entry_point.get();
+    Slang::ComPtr<slang::IComponentType> new_entry_point;
+    Slang::ComPtr<ISlangBlob> diagnostics;
+    m_module->session()->get_slang_session()->createCompositeComponentType(
+        slang_component_types.data(),
+        narrow_cast<SlangInt>(slang_component_types.size()),
+        new_entry_point.writeRef(),
+        diagnostics.writeRef()
+    );
+    report_diagnostics(diagnostics);
+    SGL_CHECK(new_entry_point, "Failed to create composite component type for new entry point");
+    return make_ref<SlangEntryPoint>(m_module, new_entry_point);
 }
 
 const EntryPointLayout* SlangEntryPoint::layout() const
