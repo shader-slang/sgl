@@ -82,7 +82,7 @@ public:
     void remove_watch(const std::filesystem::path& directory);
 
     /// Get number of active watches
-    size_t get_watch_count() const { return m_watches.size(); }
+    size_t watch_count() const { return m_watches.size(); }
 
     /// Get callback for file system events.
     ChangeCallback get_on_change() const { return m_on_change; }
