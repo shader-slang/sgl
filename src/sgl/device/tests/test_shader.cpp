@@ -78,7 +78,7 @@ TEST_CASE_GPU("Shader")
         ref<SlangModule> module = ctx.device->load_module("_testshader_simple.slang");
         CHECK_EQ(module->slang_module()->getDependencyFileCount(), 1);
         std::filesystem::path path0 = module->slang_module()->getDependencyFilePath(0);
-        CHECK_EQ(path0.filename(), "_testshader_simple.slang"); 
+        CHECK_EQ(path0.filename(), "_testshader_simple.slang");
     }
 
     // Load a module with a 2-stage dependency chain and verify all 3 dependencies.
