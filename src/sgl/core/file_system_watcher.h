@@ -41,15 +41,18 @@ struct FileSystemWatchDesc {
     std::filesystem::path directory;
 
     /// Whether to monitor subdirectories.
-    bool recursive{true};
+    bool recursive{false};
 };
 
 /// Data reported on a given file system event to a file monitored
 /// by FileSystemWatcher.
 struct FileSystemWatchEvent {
 
-    /// Path of file that has changed.
+    /// Path of file that has changed relative to watcher.
     std::filesystem::path path;
+
+    /// Absolute path of file in file system
+    std::filesystem::path absolute_path;
 
     /// Change type.
     FileSystemWatcherChange change;
@@ -57,6 +60,9 @@ struct FileSystemWatchEvent {
     /// System time change was recorded.
     std::chrono::system_clock::time_point time;
 };
+
+// Declare watch state (only used internally).
+struct FileSystemWatchState;
 
 /// Monitors directories for changes and calls a callback when they're detected.
 /// The watcher automatically queues up changes until disk has been idle for
@@ -87,12 +93,18 @@ public:
     /// Update function to poll the watcher + report events.
     void update();
 
+    /// Set delay period before queued events are output.
+    void set_delay(uint32_t milliseconds) { m_output_delay_ms = milliseconds; }
+
     /// Internal function called when OS reports an event.
-    void _notify_change(const std::filesystem::path& path, FileSystemWatcherChange change);
+    void _notify_change(FileSystemWatchState* state, const std::filesystem::path& path, FileSystemWatcherChange change);
 
 private:
     /// Next unique id to be assigned to a given watch.
     uint32_t m_next_id{1};
+
+    /// Delay before outputting events in milliseconds.
+    uint32_t m_output_delay_ms{1000};
 
     /// Map of id->watch.
     std::map<int, FileSystemWatchState*> m_watches;

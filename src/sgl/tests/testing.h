@@ -3,6 +3,7 @@
 #pragma once
 
 #include <doctest/doctest.h>
+#include <filesystem>
 
 namespace sgl {
 
@@ -11,6 +12,21 @@ class Device;
 } // namespace sgl
 
 namespace sgl::testing {
+
+/// Get name of running test suite (note: defined in sgl_tests.cpp).
+std::string get_current_test_suite_name();
+
+/// Get name of running test case (note: defined in sgl_tests.cpp).
+std::string get_current_test_case_name();
+
+/// Get global temp directory for tests.
+std::filesystem::path get_test_temp_directory();
+
+/// Get temp directory for current test suite.
+std::filesystem::path get_suite_temp_directory();
+
+/// Get temp directory for current test case.
+std::filesystem::path get_case_temp_directory();
 
 void static_init();
 void static_shutdown();

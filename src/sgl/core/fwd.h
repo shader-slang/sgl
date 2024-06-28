@@ -21,10 +21,8 @@ class FileStream;
 
 // file_system_watcher.h
 
-class FileSystemWatcher;
 struct FileSystemWatchEvent;
-struct FileSystemWatchState;
-
+class FileSystemWatcher;
 
 // input.h
 
