@@ -55,7 +55,7 @@ struct FileSystemWatchEvent {
     std::filesystem::path absolute_path;
 
     /// Change type.
-    FileSystemWatcherChange change;
+    FileSystemWatcherChange change{FileSystemWatcherChange::invalid};
 
     /// System time change was recorded.
     std::chrono::system_clock::time_point time;
