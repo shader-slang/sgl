@@ -44,45 +44,27 @@ SGL_DICT_TO_DESC_END()
 
 } // namespace sgl
 
-NB_MAKE_OPAQUE(std::map<sgl::TypeConformance, uint32_t>);
 NB_MAKE_OPAQUE(std::map<std::string, std::string, std::less<>>);
+NB_MAKE_OPAQUE(std::vector<sgl::TypeConformance>);
 
 SGL_PY_EXPORT(device_shader)
 {
     using namespace sgl;
 
-    nb::class_<TypeConformance>(m, "TypeConformance", D(TypeConformance))
-        .def_rw("type_name", &TypeConformance::type_name, D(TypeConformance, type_name))
-        .def_rw("interface_name", &TypeConformance::interface_name, D(TypeConformance, interface_name));
-
-    nb::bind_map<TypeConformanceList>(m, "TypeConformanceList", D(TypeConformanceList))
+    nb::class_<TypeConformance>(m, "TypeConformance", D_NA(TypeConformance))
+        .def(nb::init<>())
+        .def(nb::init<std::string, std::string, int32_t>(), "type_name"_a, "interface_name"_a, "id"_a = -1)
         .def(
-            "add",
-            nb::overload_cast<std::string, std::string, uint32_t>(&TypeConformanceList::add),
-            "type_name"_a,
-            "interface_name"_a,
-            "id"_a = -1,
-            D(TypeConformanceList, add)
+            "__init__",
+            [](TypeConformance* self, nb::tuple tuple) {
+                new (self) TypeConformance{nb::cast<std::string>(tuple[0]), nb::cast<std::string>(tuple[1]), tuple.size() > 2 ? nb::cast<int32_t>(tuple[2]) : -1};
+            }
         )
-        .def(
-            "remove",
-            nb::overload_cast<std::string, std::string>(&TypeConformanceList::remove),
-            "type_name"_a,
-            "interface_name"_a,
-            D(TypeConformanceList, remove)
-        )
-        .def(
-            "add",
-            nb::overload_cast<const TypeConformanceList&>(&TypeConformanceList::add),
-            "other"_a,
-            D(TypeConformanceList, add, 2)
-        )
-        .def(
-            "remove",
-            nb::overload_cast<const TypeConformanceList&>(&TypeConformanceList::remove),
-            "other"_a,
-            D(TypeConformanceList, remove, 2)
-        );
+        .def_rw("interface_name", &TypeConformance::interface_name, D_NA(TypeConformance, interface_name))
+        .def_rw("type_name", &TypeConformance::type_name, D_NA(TypeConformance, type_name))
+        .def_rw("id", &TypeConformance::id, D_NA(TypeConformance, id))
+        .def("__repr__", &TypeConformance::to_string);
+    nb::implicitly_convertible<nb::tuple, TypeConformance>();
 
     nb::exception<SlangCompileError>(m, "SlangCompileError");
 
@@ -233,7 +215,9 @@ SGL_PY_EXPORT(device_shader)
         .def_prop_ro("name", &SlangEntryPoint::name, D(SlangEntryPoint, name))
         .def_prop_ro("stage", &SlangEntryPoint::stage, D(SlangEntryPoint, stage))
         .def_prop_ro("layout", &SlangEntryPoint::layout, nb::rv_policy::reference_internal, D(SlangEntryPoint, layout))
-        .def("rename", &SlangEntryPoint::rename, "new_name"_a, D(SlangEntryPoint, rename));
+        .def("rename", &SlangEntryPoint::rename, "new_name"_a, D(SlangEntryPoint, rename))
+        .def("with_name", &SlangEntryPoint::with_name, "new_name"_a, D(SlangEntryPoint, with_name))
+        .def("with_type_conformances", &SlangEntryPoint::with_type_conformances, "type_conformances"_a, D(SlangEntryPoint, with_type_conformances));
 
     nb::class_<ShaderProgram, DeviceResource>(m, "ShaderProgram", D(ShaderProgram))
         .def_prop_ro("layout", &ShaderProgram::layout, nb::rv_policy::reference_internal, D(ShaderProgram, layout))

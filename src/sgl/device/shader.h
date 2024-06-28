@@ -20,61 +20,26 @@
 
 namespace sgl {
 
-struct TypeConformance {
-    std::string type_name;
+/// Type conformance entry.
+/// Type conformances are used to narrow the set of types supported by a slang interface.
+/// They can be specified on an entry point to omit generating code for types that do not conform.
+struct SGL_API TypeConformance {
+    /// Name of the interface.
     std::string interface_name;
-#if SGL_MACOS
-    // macOS clang stdc++ doesn't support C++20 <=> operator for standard containers yet.
-    bool operator<(const TypeConformance& other) const
-    {
-        return std::tie(type_name, interface_name) < std::tie(other.type_name, other.interface_name);
-    }
-#else
-    auto operator<=>(const TypeConformance&) const = default;
-#endif
-};
+    /// Name of the concrete type.
+    std::string type_name;
+    /// Unique id per type for an interface (optional).
+    int32_t id{-1};
 
-/// List of type conformances.
-class SGL_API TypeConformanceList : public std::map<TypeConformance, uint32_t> {
-public:
-    TypeConformanceList() = default;
-    TypeConformanceList(std::initializer_list<std::pair<const TypeConformance, uint32_t>> init)
-        : std::map<TypeConformance, uint32_t>(init)
+    TypeConformance() = default;
+    TypeConformance(std::string_view interface_name, std::string_view type_name, int32_t id = -1)
+        : interface_name(interface_name)
+        , type_name(type_name)
+        , id(id)
     {
     }
-    TypeConformanceList(const TypeConformanceList& other) = default;
-    TypeConformanceList(TypeConformanceList&& other) = default;
 
-    TypeConformanceList& operator=(const TypeConformanceList& other) = default;
-    TypeConformanceList& operator=(TypeConformanceList&& other) = default;
-
-    /**
-     * Adds a type conformance. If the type conformance exists, it will be replaced.
-     * \param type_name The name of the implementation type.
-     * \param interface_name The name of the interface type.
-     * \param id Optional. The id representing the implementation type for this interface. If it is -1, Slang will
-     * automatically assign a unique Id for the type.
-     * \return The updated list of type conformances.
-     */
-    TypeConformanceList& add(std::string type_name, std::string interface_name, uint32_t id = -1);
-
-    /**
-     * Removes a type conformance. If the type conformance doesn't exist, the call will be silently ignored.
-     * \param type_name The name of the implementation type.
-     * \param interface_name The name of the interface type.
-     * \return The updated list of type conformances.
-     */
-    TypeConformanceList& remove(std::string type_name, std::string interface_name);
-
-    /**
-     * Add a type conformance list to the current list.
-     */
-    TypeConformanceList& add(const TypeConformanceList& other);
-
-    /**
-     * Remove a type conformance list from the current list.
-     */
-    TypeConformanceList& remove(const TypeConformanceList& other);
+    std::string to_string() const;
 };
 
 /// Exception thrown on compilation errors.
@@ -369,7 +334,7 @@ public:
     ref<SlangEntryPoint> with_name(const std::string& name) const;
 
     /// Returns a copy of the entry point with a set of type conformances set.
-    ref<SlangEntryPoint> with_type_conformances(const TypeConformanceList& type_conformances) const;
+    ref<SlangEntryPoint> with_type_conformances(std::span<TypeConformance> type_conformances) const;
 
     slang::IComponentType* slang_entry_point() const { return m_slang_entry_point.get(); }
 
