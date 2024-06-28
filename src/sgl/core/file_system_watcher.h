@@ -22,17 +22,6 @@ enum class FileSystemWatcherChange {
     modified,
     renamed,
 };
-SGL_ENUM_INFO(
-    FileSystemWatcherChange,
-    {
-        {FileSystemWatcherChange::invalid, "invalid"},
-        {FileSystemWatcherChange::added, "added"},
-        {FileSystemWatcherChange::removed, "removed"},
-        {FileSystemWatcherChange::modified, "modified"},
-        {FileSystemWatcherChange::renamed, "renamed"},
-    }
-);
-SGL_ENUM_REGISTER(FileSystemWatcherChange);
 
 /// Init options for FileSystemWatcher.
 struct FileSystemWatchDesc {
