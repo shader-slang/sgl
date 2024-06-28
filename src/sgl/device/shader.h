@@ -334,7 +334,10 @@ public:
     const ProgramLayout* layout() const { return ProgramLayout::from_slang(m_slang_module->getLayout()); }
 
     std::vector<ref<SlangEntryPoint>> entry_points() const;
-    ref<SlangEntryPoint> entry_point(std::string_view name) const;
+    ref<SlangEntryPoint> entry_point(
+        std::string_view name,
+        std::span<TypeConformance> type_conformances = std::span<TypeConformance>()
+    ) const;
     bool has_entry_point(std::string_view name) const;
 
     slang::IModule* slang_module() const { return m_slang_module; }
@@ -372,7 +375,7 @@ public:
     SlangEntryPoint(ref<SlangModule> module, const SlangEntryPointDesc& desc);
     ~SlangEntryPoint();
 
-    void init(Slang::ComPtr<slang::IComponentType> slang_entry_point);
+    void init();
 
     SlangModule* module() const { return m_module; }
 
@@ -385,9 +388,6 @@ public:
 
     /// Returns a copy of the entry point with a new name.
     ref<SlangEntryPoint> with_name(const std::string& name) const;
-
-    /// Returns a copy of the entry point with a set of type conformances set.
-    ref<SlangEntryPoint> with_type_conformances(std::span<TypeConformance> type_conformances) const;
 
     slang::IComponentType* slang_entry_point() const { return m_slang_entry_point.get(); }
 
