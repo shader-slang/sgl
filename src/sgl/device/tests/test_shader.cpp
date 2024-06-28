@@ -11,7 +11,7 @@ using namespace sgl;
 /// Setup code for the shader test writes out some simple modules.
 void setup_testshader_files()
 {
-    // Use local static to ensure setup only occurs once
+    // Use local static to ensure setup only occurs once.
     static bool is_done = false;
     if (!is_done) {
         is_done = true;
