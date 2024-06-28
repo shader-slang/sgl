@@ -24,6 +24,8 @@ target_sources(sgl PRIVATE
     sgl/core/error.h
     sgl/core/file_stream.cpp
     sgl/core/file_stream.h
+    sgl/core/file_system_watcher.cpp
+    sgl/core/file_system_watcher.h
     sgl/core/format.h
     sgl/core/fwd.h
     sgl/core/hash.h
