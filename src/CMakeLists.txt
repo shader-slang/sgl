@@ -513,6 +513,7 @@ if(SGL_BUILD_TESTS)
         sgl/core/tests/test_string.cpp
         sgl/device/tests/test_device.cpp
         sgl/device/tests/test_formats.cpp
+        sgl/device/tests/test_shader.cpp
         sgl/math/tests/test_float16.cpp
         sgl/math/tests/test_matrix.cpp
         sgl/math/tests/test_quaternion.cpp
