@@ -27,6 +27,7 @@ struct FileSystemWatchState {
     FileSystemWatchDesc desc;
 };
 
+
 #if SGL_WINDOWS
 // Windows completion routine called with buffer of filesytem events.
 void CALLBACK FileIOCompletionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered, LPOVERLAPPED lpOverlapped)
@@ -106,17 +107,15 @@ FileSystemWatcher::FileSystemWatcher()
 
 FileSystemWatcher::~FileSystemWatcher()
 {
-    for (auto pair : m_watches) {
-        FileSystemWatchState* state = pair.second;
-        stop_watch(state);
-        delete state;
+    for (const auto& pair : m_watches) {
+        stop_watch(pair.second);
     }
 }
 
-void FileSystemWatcher::add_watch(const FileSystemWatchDesc& desc)
+uint32_t FileSystemWatcher::add_watch(const FileSystemWatchDesc& desc)
 {
     // Check watch doesn't already exist
-    for (auto pair : m_watches) {
+    for (const auto& pair : m_watches) {
         if (pair.second->desc.directory == desc.directory) {
             SGL_THROW("A watch already exists for {}.", desc.directory);
         }
@@ -124,10 +123,9 @@ void FileSystemWatcher::add_watch(const FileSystemWatchDesc& desc)
 
     // Init a new watcher state object
     uint32_t id = m_next_id++;
-    FileSystemWatchState* state = new FileSystemWatchState();
+    auto state = std::make_unique<FileSystemWatchState>();
     state->desc = desc;
     state->watcher = this;
-    m_watches.insert(std::pair(id, state));
 
 #if SGL_WINDOWS
     // On windows, open a directory handle then start the directory changed monitoring process.
@@ -142,8 +140,6 @@ void FileSystemWatcher::add_watch(const FileSystemWatchDesc& desc)
         NULL
     );
     if (state->directory_handle == INVALID_HANDLE_VALUE) {
-        m_watches.erase(id);
-        delete state;
         SGL_THROW("Failed to open directory for file watcher");
     }
     BOOL recursive = state->desc.recursive;
@@ -161,25 +157,33 @@ void FileSystemWatcher::add_watch(const FileSystemWatchDesc& desc)
             &state->overlapped,
             &FileIOCompletionRoutine
         )) {
-        log_error("ReadDirectoryChangesW failed. Error: {}\n", GetLastError());
+        SGL_THROW("ReadDirectoryChangesW failed. Error: {}\n", GetLastError());
     }
 #endif
+
+    m_watches[id] = std::move(state);
+    return id;
+}
+
+void FileSystemWatcher::remove_watch(uint32_t id)
+{
+    auto& state = m_watches[id];
+    stop_watch(state);
+    m_watches.erase(id);
 }
 
 void FileSystemWatcher::remove_watch(const std::filesystem::path& directory)
 {
-    for (auto pair : m_watches) {
+    for (const auto& pair : m_watches) {
         if (pair.second->desc.directory == directory) {
-            FileSystemWatchState* state = pair.second;
-            stop_watch(state);
-            delete state;
+            stop_watch(pair.second);
             m_watches.erase(pair.first);
             break;
         }
     }
 }
 
-void FileSystemWatcher::stop_watch(FileSystemWatchState* state)
+void FileSystemWatcher::stop_watch(const std::unique_ptr<FileSystemWatchState>& state)
 {
 #if SGL_WINDOWS
     // On windows, CancelIO.
@@ -200,11 +204,6 @@ void FileSystemWatcher::stop_watch(FileSystemWatchState* state)
 void FileSystemWatcher::set_on_change(ChangeCallback on_change)
 {
     m_on_change = on_change;
-}
-
-FileSystemWatchState* FileSystemWatcher::get_watch(uint32_t id)
-{
-    return m_watches[id];
 }
 
 void FileSystemWatcher::_notify_change(
