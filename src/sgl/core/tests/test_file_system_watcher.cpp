@@ -86,32 +86,40 @@ TEST_CASE("FileSystemWatcher")
 
         auto check = [&](std::string filename, FileSystemWatcherChange event_type)
         {
+            bool done = false;
             // Exact wait time is unpredicatable, so poll watcher for up to 1s in short intervals
             // Expecting less than 100ms really, but operating systems are unpredicatable!
-            for (int it = 0; it < 100; it++) {
+            for (int it = 0; it < 100 && !done; it++) {
                 std::this_thread::sleep_for(10ms);
                 watcher->update();
-                if (events.size() > 0)
-                    break;
+
+                // File system watcher can return spurious modification events, so
+                // we're just requiring the desired event to appear, but not treating
+                // excess events as an error.
+                for (auto ev : events) {
+                    if (ev.change == event_type && ev.path == filename) {
+                        // Verify abs path.
+                        CHECK_EQ(ev.absolute_path, path / filename);
+
+                        // Rough check for sane timing.
+                        auto duration = duration_cast<seconds>(ev.time - now).count();
+                        CHECK_GE(duration, 0);
+                        CHECK_LT(duration, 10);
+
+                        // Mark done and exit.
+                        done = true;
+                        break;
+                    }
+                }
             }
-
-            // Check basic event info for a single 'add' event.
-            CHECK_EQ(events.size(), 1);
-            CHECK_EQ(events[0].path, filename);
-            CHECK_EQ(events[0].absolute_path, path.string() + "/" + filename);
-            CHECK_EQ(events[0].change, event_type);
-
-            // Rough check for sane timing.
-            auto duration = duration_cast<seconds>(events[0].time - now).count();
-            CHECK_GE(duration, 0);
-            CHECK_LT(duration, 10);
+            CHECK(done);
             events.clear();
         };
 
         auto check_none = [&]()
         {
             // Verifying no events arrive just requires minimum wait. Chosen
-            // 1s to avoid making test system take too long
+            // 1s to avoid making test system take too long.
             for (int it = 0; it < 100; it++) {
                 std::this_thread::sleep_for(10ms);
                 watcher->update();

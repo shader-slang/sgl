@@ -18,7 +18,8 @@ static std::map<DeviceType, ref<Device>> g_cached_devices;
 // Temp directory to create files for teting in.
 static std::filesystem::path g_test_temp_directory;
 
-std::string build_current_date_string()
+// Calculates a files sytem compatible date string formatted YYYY-MM-DD-hh-mm-ss.
+static std::string build_current_date_string()
 {
     auto now = std::chrono::system_clock::now();
     auto local_now = std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::current_zone()->to_local(now));
@@ -45,7 +46,7 @@ std::filesystem::path get_suite_temp_directory()
 
 std::filesystem::path get_case_temp_directory()
 {
-    auto path = get_test_temp_directory() / get_current_test_suite_name() / get_current_test_case_name());
+    auto path = get_test_temp_directory() / get_current_test_suite_name() / get_current_test_case_name();
     std::filesystem::create_directories(path);
     return path;
 }
