@@ -101,7 +101,7 @@ FileSystemWatcher::FileSystemWatcher()
 {
 #if !SGL_WINDOWS
     // TODO(@ccummings): File system watcher linux support
-    SGL_THROW("File system watcher is only implemented on windows platforms")
+    SGL_THROW("File system watcher is only implemented on windows platforms");
 #endif
 }
 
