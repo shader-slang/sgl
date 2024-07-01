@@ -167,8 +167,7 @@ uint32_t FileSystemWatcher::add_watch(const FileSystemWatchDesc& desc)
 
 void FileSystemWatcher::remove_watch(uint32_t id)
 {
-    auto& state = m_watches[id];
-    stop_watch(state);
+    stop_watch(m_watches[id]);
     m_watches.erase(id);
 }
 
