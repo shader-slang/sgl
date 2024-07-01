@@ -55,8 +55,7 @@ void static_init() { }
 void static_shutdown()
 {
     // Clean up temp files
-    if (g_test_temp_directory != "")
-        std::filesystem::remove_all(g_test_temp_directory);
+    std::filesystem::remove_all(g_test_temp_directory);
 
     g_cached_devices.clear();
 }
