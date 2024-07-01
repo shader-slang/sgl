@@ -7,8 +7,7 @@
 #include "sgl/device/device.h"
 
 #include <map>
-#include <chrono>
-#include <time.h>
+#include <ctime>
 
 namespace sgl::testing {
 
@@ -21,10 +20,11 @@ static std::filesystem::path g_test_temp_directory;
 // Calculates a files sytem compatible date string formatted YYYY-MM-DD-hh-mm-ss.
 static std::string build_current_date_string()
 {
-    auto now = std::chrono::system_clock::now();
-    auto local_now = std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::current_zone()->to_local(now));
-    auto res = std::format("{:%Y-%m-%d-%H-%M-%S}", local_now);
-    return res;
+    time_t now;
+    time(&now);
+    char result[128];
+    std::strftime(result, sizeof(result), "%Y-%m-%d-%H-%M-%S", std::localtime(&now));
+    return result;
 }
 
 std::filesystem::path get_test_temp_directory()
