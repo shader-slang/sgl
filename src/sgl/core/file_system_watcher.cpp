@@ -215,7 +215,12 @@ void FileSystemWatcher::_notify_change(
     abs_path = std::filesystem::absolute(abs_path);
 
     auto now = std::chrono::system_clock::now();
-    FileSystemWatchEvent event = {.path = path, .absolute_path = abs_path, .change = change, .time = now};
+    FileSystemWatchEvent event{
+        .path = path,
+        .absolute_path = abs_path,
+        .change = change,
+        .time = now,
+    };
     m_queued_events.push_back(event);
     m_last_event = now;
 }
