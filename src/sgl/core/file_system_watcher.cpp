@@ -236,7 +236,7 @@ void FileSystemWatcher::update()
         if (millis > m_output_delay_ms) {
             std::span events(m_queued_events);
             m_on_change(events);
-            m_queued_events.resize(0);
+            m_queued_events.clear();
         }
     }
 }
