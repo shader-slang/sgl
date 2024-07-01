@@ -30,7 +30,7 @@ std::filesystem::path get_test_temp_directory()
 {
     if (g_test_temp_directory == "") {
         std::string datetime_str = build_current_date_string();
-        g_test_temp_directory = "./.test_temp/" + datetime_str;
+        g_test_temp_directory = std::filesystem::current_path() / ".test_temp" / datetime_str;
         std::filesystem::create_directories(g_test_temp_directory);
     }
     return g_test_temp_directory;
