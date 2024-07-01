@@ -234,8 +234,7 @@ void FileSystemWatcher::update()
         auto duration = std::chrono::system_clock::now() - m_last_event;
         auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
         if (millis > m_output_delay_ms) {
-            std::span events(m_queued_events);
-            m_on_change(events);
+            m_on_change(m_queued_events);
             m_queued_events.clear();
         }
     }
