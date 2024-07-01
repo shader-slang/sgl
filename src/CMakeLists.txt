@@ -24,6 +24,8 @@ target_sources(sgl PRIVATE
     sgl/core/error.h
     sgl/core/file_stream.cpp
     sgl/core/file_stream.h
+    sgl/core/file_system_watcher.cpp
+    sgl/core/file_system_watcher.h
     sgl/core/format.h
     sgl/core/fwd.h
     sgl/core/hash.h
@@ -502,6 +504,7 @@ if(SGL_BUILD_TESTS)
         sgl/tests/sgl_tests.cpp
         sgl/tests/testing.cpp
         sgl/core/tests/test_enum.cpp
+        sgl/core/tests/test_file_system_watcher.cpp
         sgl/core/tests/test_maths.cpp
         sgl/core/tests/test_memory_mapped_file.cpp
         sgl/core/tests/test_object.cpp

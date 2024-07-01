@@ -7,16 +7,57 @@
 #include "sgl/device/device.h"
 
 #include <map>
+#include <chrono>
+#include <time.h>
 
 namespace sgl::testing {
 
 // Cached devices.
 static std::map<DeviceType, ref<Device>> g_cached_devices;
 
+// Temp directory to create files for teting in.
+static std::filesystem::path g_test_temp_directory;
+
+// Calculates a files sytem compatible date string formatted YYYY-MM-DD-hh-mm-ss.
+static std::string build_current_date_string()
+{
+    auto now = std::chrono::system_clock::now();
+    auto local_now = std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::current_zone()->to_local(now));
+    auto res = std::format("{:%Y-%m-%d-%H-%M-%S}", local_now);
+    return res;
+}
+
+std::filesystem::path get_test_temp_directory()
+{
+    if (g_test_temp_directory == "") {
+        std::string datetime_str = build_current_date_string();
+        g_test_temp_directory = std::filesystem::current_path() / ".test_temp" / datetime_str;
+        std::filesystem::create_directories(g_test_temp_directory);
+    }
+    return g_test_temp_directory;
+}
+
+std::filesystem::path get_suite_temp_directory()
+{
+    auto path = get_test_temp_directory() / get_current_test_suite_name();
+    std::filesystem::create_directories(path);
+    return path;
+}
+
+std::filesystem::path get_case_temp_directory()
+{
+    auto path = get_test_temp_directory() / get_current_test_suite_name() / get_current_test_case_name();
+    std::filesystem::create_directories(path);
+    return path;
+}
+
 void static_init() { }
 
 void static_shutdown()
 {
+    // Clean up temp files
+    std::filesystem::remove_all(g_test_temp_directory);
+
     g_cached_devices.clear();
 }
 

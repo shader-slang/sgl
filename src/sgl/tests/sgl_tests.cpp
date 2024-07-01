@@ -9,6 +9,22 @@
 #define DOCTEST_CONFIG_IMPLEMENT
 #include <doctest/doctest.h>
 
+namespace sgl::testing {
+
+// Helpers to get current test suite and case name.
+// See https://github.com/doctest/doctest/issues/345.
+// Has to be defined in the same file as DOCTEST_CONFIG_IMPLEMENT
+std::string get_current_test_suite_name()
+{
+    return doctest::detail::g_cs->currentTest->m_test_suite;
+}
+std::string get_current_test_case_name()
+{
+    return doctest::detail::g_cs->currentTest->m_name;
+}
+
+} // namespace sgl::testing
+
 int main(int argc, char** argv)
 {
     sgl::static_init();
