@@ -45,11 +45,9 @@ std::filesystem::path get_suite_temp_directory()
 
 std::filesystem::path get_case_temp_directory()
 {
-    auto root_path = get_test_temp_directory();
-    root_path += ("/" + get_current_test_suite_name() + "/" + get_current_test_case_name());
-    if (!std::filesystem::exists(root_path))
-        std::filesystem::create_directories(root_path);
-    return root_path;
+    auto path = get_test_temp_directory() / get_current_test_suite_name() / get_current_test_case_name());
+    std::filesystem::create_directories(path);
+    return path;
 }
 
 void static_init() { }
