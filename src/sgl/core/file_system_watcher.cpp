@@ -167,8 +167,7 @@ uint32_t FileSystemWatcher::add_watch(const FileSystemWatchDesc& desc)
 
 void FileSystemWatcher::remove_watch(uint32_t id)
 {
-    auto& state = m_watches[id];
-    stop_watch(state);
+    stop_watch(m_watches[id]);
     m_watches.erase(id);
 }
 
@@ -216,7 +215,12 @@ void FileSystemWatcher::_notify_change(
     abs_path = std::filesystem::absolute(abs_path);
 
     auto now = std::chrono::system_clock::now();
-    FileSystemWatchEvent event = {.path = path, .absolute_path = abs_path, .change = change, .time = now};
+    FileSystemWatchEvent event{
+        .path = path,
+        .absolute_path = abs_path,
+        .change = change,
+        .time = now,
+    };
     m_queued_events.push_back(event);
     m_last_event = now;
 }
@@ -230,9 +234,8 @@ void FileSystemWatcher::update()
         auto duration = std::chrono::system_clock::now() - m_last_event;
         auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
         if (millis > m_output_delay_ms) {
-            std::span events(m_queued_events);
-            m_on_change(events);
-            m_queued_events.resize(0);
+            m_on_change(m_queued_events);
+            m_queued_events.clear();
         }
     }
 }

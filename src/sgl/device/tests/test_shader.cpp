@@ -88,12 +88,15 @@ TEST_CASE_GPU("shader")
     {
         ref<SlangModule> module = ctx.device->load_module("_testshader_dependent.slang");
         CHECK_EQ(module->slang_module()->getDependencyFileCount(), 3);
-        std::filesystem::path path0 = module->slang_module()->getDependencyFilePath(0);
-        std::filesystem::path path1 = module->slang_module()->getDependencyFilePath(1);
-        std::filesystem::path path2 = module->slang_module()->getDependencyFilePath(2);
-        CHECK_EQ(path0.filename(), "_testshader_dependent.slang");
-        CHECK_EQ(path1.filename(), "_testshader_struct.slang");
-        CHECK_EQ(path2.filename(), "print.slang");
+        std::vector<std::filesystem::path> paths{
+            module->slang_module()->getDependencyFilePath(0),
+            module->slang_module()->getDependencyFilePath(1),
+            module->slang_module()->getDependencyFilePath(2),
+        };
+        std::sort(paths.begin(), paths.end());
+        CHECK_EQ(paths[0].filename(), "_testshader_dependent.slang");
+        CHECK_EQ(paths[1].filename(), "_testshader_struct.slang");
+        CHECK_EQ(paths[2].filename(), "print.slang");
     }
 }
 

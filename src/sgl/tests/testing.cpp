@@ -18,7 +18,8 @@ static std::map<DeviceType, ref<Device>> g_cached_devices;
 // Temp directory to create files for teting in.
 static std::filesystem::path g_test_temp_directory;
 
-std::string build_current_date_string()
+// Calculates a files sytem compatible date string formatted YYYY-MM-DD-hh-mm-ss.
+static std::string build_current_date_string()
 {
     auto now = std::chrono::system_clock::now();
     auto local_now = std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::current_zone()->to_local(now));
@@ -30,7 +31,7 @@ std::filesystem::path get_test_temp_directory()
 {
     if (g_test_temp_directory == "") {
         std::string datetime_str = build_current_date_string();
-        g_test_temp_directory = "./.test_temp/" + datetime_str;
+        g_test_temp_directory = std::filesystem::current_path() / ".test_temp" / datetime_str;
         std::filesystem::create_directories(g_test_temp_directory);
     }
     return g_test_temp_directory;
@@ -38,20 +39,16 @@ std::filesystem::path get_test_temp_directory()
 
 std::filesystem::path get_suite_temp_directory()
 {
-    auto root_path = get_test_temp_directory();
-    root_path += ("/" + get_current_test_suite_name());
-    if (!std::filesystem::exists(root_path))
-        std::filesystem::create_directories(root_path);
-    return root_path;
+    auto path = get_test_temp_directory() / get_current_test_suite_name();
+    std::filesystem::create_directories(path);
+    return path;
 }
 
 std::filesystem::path get_case_temp_directory()
 {
-    auto root_path = get_test_temp_directory();
-    root_path += ("/" + get_current_test_suite_name() + "/" + get_current_test_case_name());
-    if (!std::filesystem::exists(root_path))
-        std::filesystem::create_directories(root_path);
-    return root_path;
+    auto path = get_test_temp_directory() / get_current_test_suite_name() / get_current_test_case_name();
+    std::filesystem::create_directories(path);
+    return path;
 }
 
 void static_init() { }
@@ -59,8 +56,7 @@ void static_init() { }
 void static_shutdown()
 {
     // Clean up temp files
-    if (g_test_temp_directory != "")
-        std::filesystem::remove_all(g_test_temp_directory);
+    std::filesystem::remove_all(g_test_temp_directory);
 
     g_cached_devices.clear();
 }
