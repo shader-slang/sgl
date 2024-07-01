@@ -194,8 +194,9 @@ ResourceView::ResourceView(const ResourceViewDesc& desc, Texture* texture)
         .type = static_cast<gfx::IResourceView::Type>(m_desc.type),
         .format = static_cast<gfx::Format>(m_desc.format),
         .renderTarget{
-            .shape = m_desc.type == ResourceViewType::render_target ? static_cast<gfx::IResource::Type>(texture->type())
-                                                                    : gfx::IResource::Type::Unknown,
+            .shape = (m_desc.type == ResourceViewType::render_target || m_desc.type == ResourceViewType::depth_stencil)
+                ? static_cast<gfx::IResource::Type>(texture->type())
+                : gfx::IResource::Type::Unknown,
         },
         .subresourceRange{
             .aspectMask = static_cast<gfx::TextureAspect>(m_desc.subresource_range.texture_aspect),
