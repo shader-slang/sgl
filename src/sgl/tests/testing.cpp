@@ -23,7 +23,13 @@ static std::string build_current_date_string()
     time_t now;
     time(&now);
     char result[128];
-    std::strftime(result, sizeof(result), "%Y-%m-%d-%H-%M-%S", std::localtime(&now));
+#if SGL_WINDOWS
+    tm localtime;
+    localtime_s(&localtime, &now);
+    std::strftime(result, sizeof(result), "%Y-%m-%d-%H-%M-%S", &localtime);
+#else
+    std::strftime(result, sizeof(result), "%Y-%m-%d-%H-%M-%S", localtime(&now));
+#endif
     return result;
 }
 
