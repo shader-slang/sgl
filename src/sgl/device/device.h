@@ -541,8 +541,6 @@ public:
     Blitter* _blitter();
 
 private:
-    void on_file_system_event(std::span<FileSystemWatchEvent> events);
-
     DeviceDesc m_desc;
     DeviceInfo m_info;
     ShaderModel m_supported_shader_model{ShaderModel::unknown};
@@ -555,7 +553,6 @@ private:
     Slang::ComPtr<slang::IGlobalSession> m_global_session;
 
     ref<SlangSession> m_slang_session;
-    std::set<SlangSession*> m_all_slang_sessions;
 
     std::vector<std::string> m_features;
 
@@ -599,7 +596,7 @@ private:
     ref<cuda::Device> m_cuda_device;
     ref<cuda::ExternalSemaphore> m_cuda_semaphore;
 
-    ref<FileSystemWatcher> m_file_system_watcher;
+    ref<HotReload> m_hot_reload;
 };
 
 } // namespace sgl

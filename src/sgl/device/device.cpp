@@ -23,6 +23,7 @@
 #include "sgl/device/cuda_interop.h"
 #include "sgl/device/print.h"
 #include "sgl/device/blit.h"
+#include "sgl/device/hotreload.h"
 
 #include "sgl/core/file_system_watcher.h"
 #include "sgl/core/config.h"
@@ -292,6 +293,11 @@ Device::Device(const DeviceDesc& desc)
 {
     ConstructorRefGuard ref_guard(this);
 
+    // Create hot reload system before creating any sessions
+    if (m_desc.enable_hot_reload) {
+        m_hot_reload = make_ref<HotReload>(ref<Device>(this));
+    }
+
     SLANG_CALL(slang::createGlobalSession(m_global_session.writeRef()));
 
     // Setup path for slang's downstream compilers.
@@ -477,17 +483,6 @@ Device::Device(const DeviceDesc& desc)
     if (m_desc.enable_print)
         m_debug_printer = std::make_unique<DebugPrinter>(this);
 
-    if (m_desc.enable_hot_reload) {
-        m_file_system_watcher = make_ref<FileSystemWatcher>();
-        m_file_system_watcher->set_on_change([this](std::span<FileSystemWatchEvent> events)
-                                             { on_file_system_event(events); });
-
-#if SGL_WINDOWS
-        m_file_system_watcher->add_watch({.directory = std::filesystem::current_path()});
-#else
-        log_error("Hot reload is currently only supported on windows\n");
-#endif
-    }
 }
 
 Device::~Device()
@@ -619,20 +614,21 @@ ref<SlangSession> Device::create_slang_session(SlangSessionDesc desc)
 
 void Device::_register_slang_session(SlangSession* session)
 {
-    m_all_slang_sessions.insert(session);
+    if (m_hot_reload)
+        m_hot_reload->_register_slang_session(session);
 }
 
 void Device::_unregister_slang_session(SlangSession* session)
 {
-    m_all_slang_sessions.erase(session);
+    if (m_hot_reload)
+        m_hot_reload->_unregister_slang_session(session);
 }
 
 void Device::reload_all_programs()
 {
-    for (SlangSession* session : m_all_slang_sessions)
-        session->recreate_session();
+    if (m_hot_reload)
+        m_hot_reload->reload_all_programs();
 }
-
 
 ref<SlangModule> Device::load_module(std::string_view module_name)
 {
@@ -878,9 +874,9 @@ void Device::run_garbage_collection()
     while (m_deferred_release_queue.size() && m_deferred_release_queue.front().fence_value <= current_value)
         m_deferred_release_queue.pop();
 
-    // Update file system watcher if created
-    if (m_file_system_watcher)
-        m_file_system_watcher->update();
+    // Update hot reload system if created.
+    if (m_hot_reload)
+        m_hot_reload->update();
 }
 
 ref<MemoryHeap> Device::create_memory_heap(MemoryHeapDesc desc)
@@ -1133,29 +1129,6 @@ bool Device::enable_agility_sdk()
     return true;
 #endif
     return false;
-}
-
-void Device::on_file_system_event(std::span<FileSystemWatchEvent> events)
-{
-    int slang_count = 0;
-    for (auto ev : events) {
-        if (ev.path.extension() == ".slang")
-            slang_count++;
-    }
-    if (slang_count == 0)
-        return;
-
-    reload_all_programs();
-
-    // TODO(@ccummings): Once slang gives access to full module dependencies, reload specific modules
-    /*
-    std::set<std::filesystem::path> paths;
-    for (auto ev : events)
-        paths.insert(ev.path);
-
-    for (auto session : m_all_slang_sessions)
-        session->recreate_modules_referencing(paths);
-    */
 }
 
 std::string Device::to_string() const
