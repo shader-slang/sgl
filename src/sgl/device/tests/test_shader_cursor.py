@@ -232,6 +232,9 @@ def convert_matrix(type, rows, cols, values):
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 @pytest.mark.parametrize("use_numpy", [False, True])
 def test_shader_cursor(device_type, use_numpy):
+    if sys.platform == "darwin":
+        pytest.skip("Test shader doesn't currently compile on MoltenVK")
+
     device = helpers.get_device(type=device_type)
 
     program = device.load_program("test_shader_cursor.slang", ["main"])
