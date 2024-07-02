@@ -66,8 +66,12 @@ void HotReload::_unregister_slang_session(SlangSession* session)
 
 void HotReload::reload_all_programs()
 {
-    for (SlangSession* session : m_all_slang_sessions)
-        session->recreate_session();
+    try {
+        for (SlangSession* session : m_all_slang_sessions)
+            session->recreate_session();
+    } catch (SlangCompileError compile_error) {
+        log_error(compile_error.what());
+    }
 }
 
 

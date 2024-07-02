@@ -209,7 +209,7 @@ void SlangSession::recreate_session()
 
 void SlangSession::create_session(SlangSessionBuild& build)
 {
-    SGL_CHECK_NOT_NULL(device);
+    SGL_CHECK_NOT_NULL(m_device);
 
     DeviceType device_type = m_device->type();
 
@@ -284,10 +284,10 @@ void SlangSession::create_session(SlangSessionBuild& build)
     // Slang will search for files in the order they are specified.
     // Use provided include paths first, followed by default include paths.
     // Keep a copy of the include paths for local resolution of module names.
-    data->m_include_paths = options.include_paths;
+    data->include_paths = options.include_paths;
     if (m_desc.add_default_include_paths)
-        data->m_include_paths.push_back(platform::runtime_directory() / "shaders");
-    for (const auto& path : data->m_include_paths)
+        data->include_paths.push_back(platform::runtime_directory() / "shaders");
+    for (const auto& path : data->include_paths)
         session_options.add_include(path);
 
     // Set macro defines.
@@ -375,7 +375,7 @@ void SlangSession::create_session(SlangSessionBuild& build)
     // Use the session descriptor to generate a hash that uniquely identifies the session.
     Slang::ComPtr<ISlangBlob> session_digest;
     SLANG_CALL(m_device->global_session()->getSessionDescDigest(&session_desc, session_digest.writeRef()));
-    data->m_uid = string::hexlify(session_digest->getBufferPointer(), session_digest->getBufferSize());
+    data->uid = string::hexlify(session_digest->getBufferPointer(), session_digest->getBufferSize());
 
     // Setup session cache.
     // The session cache relies on Slang's ability to serialize shader modules.
@@ -384,15 +384,15 @@ void SlangSession::create_session(SlangSessionBuild& build)
     // Next time the module is loaded, Slang can detect the cached file and load it directly.
     // Cached modules are stored in a directory structure that mirrors the include paths.
     if (m_desc.cache_path) {
-        data->m_cache_enabled = true;
-        data->m_cache_path = *m_desc.cache_path;
-        SGL_CHECK(data->m_cache_path.is_absolute(), "Cache path must be an absolute path");
-        data->m_cache_path /= data->m_uid;
-        data->m_cache_include_paths.resize(data->m_include_paths.size());
-        for (size_t i = 0; i < data->m_include_paths.size(); ++i) {
-            data->m_cache_include_paths[i] = data->m_cache_path / fmt::format("{}", i);
-            std::filesystem::create_directories(data->m_cache_include_paths[i]);
-            session_options.insert_cache_include(data->m_cache_include_paths[i], i);
+        data->cache_enabled = true;
+        data->cache_path = *m_desc.cache_path;
+        SGL_CHECK(data->cache_path.is_absolute(), "Cache path must be an absolute path");
+        data->cache_path /= data->uid;
+        data->cache_include_paths.resize(data->include_paths.size());
+        for (size_t i = 0; i < data->include_paths.size(); ++i) {
+            data->cache_include_paths[i] = data->cache_path / fmt::format("{}", i);
+            std::filesystem::create_directories(data->cache_include_paths[i]);
+            session_options.insert_cache_include(data->cache_include_paths[i], i);
         }
 
         // Update session descriptor with the patched include paths.
@@ -401,7 +401,7 @@ void SlangSession::create_session(SlangSessionBuild& build)
         session_desc.compilerOptionEntryCount = narrow_cast<uint32_t>(slang_session_option_entries.size());
     }
 
-    SLANG_CALL(m_device->global_session()->createSession(session_desc, data->m_slang_session.writeRef()));
+    SLANG_CALL(m_device->global_session()->createSession(session_desc, data->slang_session.writeRef()));
 
     // Store session.
     build.session = std::move(data);
@@ -503,7 +503,7 @@ std::string SlangSession::load_source(std::string_view module_name)
 {
     std::string resolved_name = m_data->resolve_module_name(module_name);
 
-    for (const std::filesystem::path& include_path : m_data->m_include_paths) {
+    for (const std::filesystem::path& include_path : m_data->include_paths) {
         std::filesystem::path full_path = include_path / resolved_name;
         if (std::filesystem::exists(full_path)) {
             FileStream stream(full_path, FileStream::Mode::read);
@@ -561,22 +561,22 @@ std::string SlangSession::to_string() const
         "  uid = {}\n"
         ")",
         m_device,
-        m_data->m_uid
+        m_data->uid
     );
 }
 
 void SlangSession::update_module_cache()
 {
-    if (!m_data->m_cache_enabled)
+    if (!m_data->cache_enabled)
         return;
 
     // Cache newly loaded modules.
-    for (int i = 0; i < m_data->m_slang_session->getLoadedModuleCount(); ++i) {
-        slang::IModule* slang_module = m_data->m_slang_session->getLoadedModule(i);
-        if (m_data->m_loaded_modules.contains(slang_module))
+    for (int i = 0; i < m_data->slang_session->getLoadedModuleCount(); ++i) {
+        slang::IModule* slang_module = m_data->slang_session->getLoadedModule(i);
+        if (m_data->loaded_modules.contains(slang_module))
             continue;
         write_module_to_cache(slang_module);
-        m_data->m_loaded_modules.insert(slang_module);
+        m_data->loaded_modules.insert(slang_module);
     }
 }
 
@@ -596,10 +596,10 @@ bool SlangSession::write_module_to_cache(slang::IModule* module)
     };
 
     // Find the include path that contains the module.
-    SGL_ASSERT(m_data->m_include_paths.size() == m_data->m_cache_include_paths.size());
+    SGL_ASSERT(m_data->include_paths.size() == m_data->cache_include_paths.size());
     size_t include_index = size_t(-1);
-    for (size_t i = 0; i < m_data->m_include_paths.size(); ++i) {
-        if (is_sub_path(m_data->m_include_paths[i], path)) {
+    for (size_t i = 0; i < m_data->include_paths.size(); ++i) {
+        if (is_sub_path(m_data->include_paths[i], path)) {
             include_index = i;
             break;
         }
@@ -608,8 +608,8 @@ bool SlangSession::write_module_to_cache(slang::IModule* module)
         return false;
 
     // Determine path of the cached module.
-    std::filesystem::path relative = std::filesystem::relative(path, m_data->m_include_paths[include_index]);
-    std::filesystem::path cache_path = m_data->m_cache_include_paths[include_index] / relative;
+    std::filesystem::path relative = std::filesystem::relative(path, m_data->include_paths[include_index]);
+    std::filesystem::path cache_path = m_data->cache_include_paths[include_index] / relative;
     cache_path.replace_extension(".slang-module");
 
     // Create directories to cache path.
@@ -657,7 +657,7 @@ std::string SlangSessionData::resolve_module_name(std::string_view module_name) 
         return path.string();
 
     // Return relative path if module name is a relative path within the include paths.
-    for (const std::filesystem::path& include_path : m_include_paths) {
+    for (const std::filesystem::path& include_path : include_paths) {
         std::filesystem::path full_path = include_path / path;
         if (std::filesystem::exists(full_path))
             return path.string();
@@ -668,7 +668,7 @@ std::string SlangSessionData::resolve_module_name(std::string_view module_name) 
     std::replace(str.begin(), str.end(), '.', '/');
     str += ".slang";
     path = str;
-    for (const std::filesystem::path& include_path : m_include_paths) {
+    for (const std::filesystem::path& include_path : include_paths) {
         std::filesystem::path full_path = include_path / path;
         if (std::filesystem::exists(full_path))
             return path.string();
@@ -704,7 +704,7 @@ void SlangModule::load(
     // Load module either from resolved name or source depending on whether source specified
     if (!desc.source.has_value()) {
         std::string resolved_name = session_data->resolve_module_name(desc.module_name);
-        slang_module = session_data->m_slang_session->loadModule(resolved_name.c_str(), diagnostics.writeRef());
+        slang_module = session_data->slang_session->loadModule(resolved_name.c_str(), diagnostics.writeRef());
         if (!slang_module) {
             std::string msg = append_diagnostics(fmt::format("Failed to load slang module \"{}\"", desc.module_name),
                 diagnostics
@@ -716,7 +716,7 @@ void SlangModule::load(
         static uint32_t id = 0;
         std::string source_str = fmt::format("// {}\n{}", id++, desc.source);
 
-        slang_module = session_data->m_slang_session->loadModuleFromSourceString(
+        slang_module = session_data->slang_session->loadModuleFromSourceString(
             std::string{desc.module_name}.c_str(),
             desc.path ? desc.path->string().c_str() : nullptr,
             source_str.c_str(),
@@ -743,9 +743,9 @@ void SlangModule::load(
     auto data = make_ref<SlangModuleData>();
 
     // Store initialized module info.
-    data->m_slang_module = slang_module;
-    data->m_name = slang_module->getName();
-    data->m_path = slang_module->getFilePath() ? slang_module->getFilePath() : "";
+    data->slang_module = slang_module;
+    data->name = slang_module->getName();
+    data->path = slang_module->getFilePath() ? slang_module->getFilePath() : "";
 
     // Output the built module.
     build_data.modules[this] = std::move(data);
@@ -773,9 +773,9 @@ void SlangModule::populate_build_data(SlangSessionBuild& build_data)
 std::vector<ref<SlangEntryPoint>> SlangModule::entry_points() const
 {
     std::vector<ref<SlangEntryPoint>> entry_points;
-    for (SlangInt32 i = 0; i < m_data->m_slang_module->getDefinedEntryPointCount(); ++i) {
+    for (SlangInt32 i = 0; i < m_data->slang_module->getDefinedEntryPointCount(); ++i) {
         Slang::ComPtr<slang::IEntryPoint> slang_entry_point;
-        m_data->m_slang_module->getDefinedEntryPoint(i, slang_entry_point.writeRef());
+        m_data->slang_module->getDefinedEntryPoint(i, slang_entry_point.writeRef());
 
         slang::EntryPointLayout* layout = slang_entry_point->getLayout()->getEntryPointByIndex(0);
         std::string name = layout->getNameOverride() ? layout->getNameOverride() : layout->getName();
@@ -795,7 +795,7 @@ ref<SlangEntryPoint> SlangModule::entry_point(std::string_view name, std::span<T
 
     // Setup build containing just the session and this module, then build and store the entry point.
     SlangSessionBuild build;
-    build.session = session()->data();
+    build.session = session()->_data();
     build.modules[this] = m_data;
     entry_point->init(build);
     entry_point->store_built_data(build);
@@ -806,7 +806,7 @@ ref<SlangEntryPoint> SlangModule::entry_point(std::string_view name, std::span<T
 bool SlangModule::has_entry_point(std::string_view name) const
 {
     Slang::ComPtr<slang::IEntryPoint> slang_entry_point;
-    m_data->m_slang_module->findEntryPointByName(std::string{name}.c_str(), slang_entry_point.writeRef());
+    m_data->slang_module->findEntryPointByName(std::string{name}.c_str(), slang_entry_point.writeRef());
     return slang_entry_point != nullptr;
 }
 
@@ -828,8 +828,8 @@ std::string SlangModule::to_string() const
         "  path = {},\n"
         "  entry_points = {}\n"
         ")",
-        m_data->m_name,
-        m_data->m_path,
+        m_data->name,
+        m_data->path,
         string::indent(string::list_to_string(entry_points()))
     );
 }
@@ -850,7 +850,7 @@ void SlangEntryPoint::init(SlangSessionBuild& build_data) const {
     const SlangEntryPointDesc& desc = m_desc;
 
     SlangModuleData* module_data = build_data.modules[m_module.get()];
-    slang::IModule* slang_module = module_data->m_slang_module;
+    slang::IModule* slang_module = module_data->slang_module;
 
     auto data = make_ref<SlangEntryPointData>();
 
@@ -861,7 +861,7 @@ void SlangEntryPoint::init(SlangSessionBuild& build_data) const {
         slang_module->findEntryPointByName(std::string{desc.name}.c_str(), slang_entry_point.writeRef());
         if (!slang_entry_point)
             SGL_THROW("Entry point \"{}\" not found", desc.name);
-        data->m_slang_entry_point = std::move(slang_entry_point);
+        data->slang_entry_point = std::move(slang_entry_point);
 
     } else {
 
@@ -906,7 +906,7 @@ void SlangEntryPoint::init(SlangSessionBuild& build_data) const {
             slang::TypeReflection* type = layout->findTypeByName(c.type_name.c_str());
             SGL_CHECK(type, "Type \"{}\" not found", c.type_name);
             Slang::ComPtr<ISlangBlob> diagnostics;
-            build_data.session->m_slang_session->createTypeConformanceComponentType(
+            build_data.session->slang_session->createTypeConformanceComponentType(
                 type,
                 interface_type,
                 slang_type_conformances[i].writeRef(),
@@ -927,7 +927,7 @@ void SlangEntryPoint::init(SlangSessionBuild& build_data) const {
         slang_component_types[desc.type_conformances.size()] = slang_entry_point.get();
         Slang::ComPtr<slang::IComponentType> new_entry_point;
         Slang::ComPtr<ISlangBlob> diagnostics;
-        build_data.session->m_slang_session->createCompositeComponentType(
+        build_data.session->slang_session->createCompositeComponentType(
             slang_component_types.data(),
             narrow_cast<SlangInt>(slang_component_types.size()),
             new_entry_point.writeRef(),
@@ -936,13 +936,13 @@ void SlangEntryPoint::init(SlangSessionBuild& build_data) const {
         report_diagnostics(diagnostics);
         SGL_CHECK(new_entry_point, "Failed to create composite component type for new entry point");
 
-        data->m_slang_entry_point = std::move(new_entry_point);
+        data->slang_entry_point = std::move(new_entry_point);
     }
 
     // Read name and stage from the entry point.
-    slang::EntryPointLayout* layout = data->m_slang_entry_point->getLayout()->getEntryPointByIndex(0);
-    data->m_name = layout->getNameOverride() ? layout->getNameOverride() : layout->getName();
-    data->m_stage = static_cast<ShaderStage>(layout->getStage());
+    slang::EntryPointLayout* layout = data->slang_entry_point->getLayout()->getEntryPointByIndex(0);
+    data->name = layout->getNameOverride() ? layout->getNameOverride() : layout->getName();
+    data->stage = static_cast<ShaderStage>(layout->getStage());
 
     // Output the built entry point.
     build_data.entry_points[this] = data;
@@ -961,7 +961,7 @@ void SlangEntryPoint::populate_build_data(SlangSessionBuild& build_data)
 ref<SlangEntryPoint> SlangEntryPoint::rename(const std::string& new_name)
 {
     Slang::ComPtr<slang::IComponentType> renamed_entry_point;
-    SLANG_CALL(m_data->m_slang_entry_point->renameEntryPoint(new_name.c_str(), renamed_entry_point.writeRef()));
+    SLANG_CALL(m_data->slang_entry_point->renameEntryPoint(new_name.c_str(), renamed_entry_point.writeRef()));
 
     SlangEntryPointDesc desc = m_desc;
     desc.name = new_name;
@@ -969,8 +969,8 @@ ref<SlangEntryPoint> SlangEntryPoint::rename(const std::string& new_name)
 
     // Setup build containing just the session and this module, then build and store the entry point.
     SlangSessionBuild build_data;
-    build_data.session = m_module->session()->data();
-    build_data.modules[m_module.get()] = m_module->data();
+    build_data.session = m_module->session()->_data();
+    build_data.modules[m_module.get()] = m_module->_data();
     ep->init(build_data);
     ep->store_built_data(build_data);
 
@@ -980,7 +980,7 @@ ref<SlangEntryPoint> SlangEntryPoint::rename(const std::string& new_name)
 ref<SlangEntryPoint> SlangEntryPoint::with_name(const std::string& name) const
 {
     Slang::ComPtr<slang::IComponentType> new_entry_point;
-    SLANG_CALL(m_data->m_slang_entry_point->renameEntryPoint(name.c_str(), new_entry_point.writeRef()));
+    SLANG_CALL(m_data->slang_entry_point->renameEntryPoint(name.c_str(), new_entry_point.writeRef()));
 
     SlangEntryPointDesc desc = m_desc;
     desc.name = name;
@@ -988,8 +988,8 @@ ref<SlangEntryPoint> SlangEntryPoint::with_name(const std::string& name) const
 
     // Setup build containing just the session and this module, then build and store the entry point.
     SlangSessionBuild build_data;
-    build_data.session = m_module->session()->data();
-    build_data.modules[m_module.get()] = m_module->data();
+    build_data.session = m_module->session()->_data();
+    build_data.modules[m_module.get()] = m_module->_data();
     ep->init(build_data);
     ep->store_built_data(build_data);
 
@@ -998,12 +998,12 @@ ref<SlangEntryPoint> SlangEntryPoint::with_name(const std::string& name) const
 
 const EntryPointLayout* SlangEntryPoint::layout() const
 {
-    return EntryPointLayout::from_slang(m_data->m_slang_entry_point->getLayout()->getEntryPointByIndex(0));
+    return EntryPointLayout::from_slang(m_data->slang_entry_point->getLayout()->getEntryPointByIndex(0));
 }
 
 std::string SlangEntryPoint::to_string() const
 {
-    return fmt::format("SlangEntryPoint(name=\"{}\", stage={})", m_data->m_name, m_data->m_stage);
+    return fmt::format("SlangEntryPoint(name=\"{}\", stage={})", m_data->name, m_data->stage);
 }
 
 ShaderProgram::ShaderProgram(ref<Device> device, ref<SlangSession> session, const ShaderProgramDesc& desc)
@@ -1021,9 +1021,9 @@ ShaderProgram::~ShaderProgram()
 
 void ShaderProgram::link(SlangSessionBuild& build_data) const
 {
-    Device* device = m_device; 
+    Device* device = m_device;
     const ShaderProgramDesc& desc = m_desc;
-    slang::ISession* session = build_data.session->m_slang_session;
+    slang::ISession* session = build_data.session->slang_session;
 
     Timer timer;
 
@@ -1033,12 +1033,12 @@ void ShaderProgram::link(SlangSessionBuild& build_data) const
         std::vector<slang::IComponentType*> component_types;
         for (const auto& module : desc.modules) {
             const SlangModuleData* module_data = build_data.modules[module.get()];
-            component_types.push_back(module_data->m_slang_module);
+            component_types.push_back(module_data->slang_module);
         }
 
         for (const auto& entry_point : desc.entry_points) {
             const SlangEntryPointData* entry_point_data = build_data.entry_points[entry_point.get()];
-            component_types.push_back(entry_point_data->m_slang_entry_point);
+            component_types.push_back(entry_point_data->slang_entry_point);
         }
 
         Slang::ComPtr<ISlangBlob> diagnostics;
@@ -1124,15 +1124,15 @@ void ShaderProgram::link(SlangSessionBuild& build_data) const
     for (const auto& entry_point : desc.entry_points) {
         auto module_data = build_data.modules[entry_point->module()];
         auto entry_point_data = build_data.entry_points[entry_point];
-        name += (name.empty() ? "" : ", ") + module_data->m_name + ":" + entry_point_data->m_name;
+        name += (name.empty() ? "" : ", ") + module_data->name + ":" + entry_point_data->name;
     }
     log_debug("Linking shader program \"{}\" took {}", name, string::format_duration(timer.elapsed_s()));
 
-    auto data = ref<ShaderProgramData>();
+    auto data = make_ref<ShaderProgramData>();
 
     // Store program info.
-    data->m_linked_program = linked_program;
-    data->m_gfx_shader_program = gfx_shader_program;
+    data->linked_program = linked_program;
+    data->gfx_shader_program = gfx_shader_program;
 
     // Store resulting program.
     build_data.programs[this] = std::move(data);

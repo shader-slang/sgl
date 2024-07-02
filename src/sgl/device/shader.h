@@ -232,25 +232,25 @@ struct SlangSessionDesc {
     std::optional<std::filesystem::path> cache_path;
 };
 struct SlangSessionData {
-    Slang::ComPtr<slang::ISession> m_slang_session;
+    Slang::ComPtr<slang::ISession> slang_session;
 
     /// Set of all currently loaded slang modules.
-    std::set<slang::IModule*> m_loaded_modules;
+    std::set<slang::IModule*> loaded_modules;
 
     /// Unique session hash
-    std::string m_uid;
+    std::string uid;
 
     /// List of include paths used for resolving module/include paths.
-    std::vector<std::filesystem::path> m_include_paths;
+    std::vector<std::filesystem::path> include_paths;
 
     /// True if session cache is enabled.
-    bool m_cache_enabled{false};
+    bool cache_enabled{false};
 
     /// Cache root path.
-    std::filesystem::path m_cache_path;
+    std::filesystem::path cache_path;
 
     /// One cache path for each include path under the root cache path.
-    std::vector<std::filesystem::path> m_cache_include_paths;
+    std::vector<std::filesystem::path> cache_include_paths;
 
     /// Finds fully qualified module name by scanning the cache and include paths.
     std::string resolve_module_name(std::string_view module_name) const;
@@ -290,7 +290,7 @@ public:
 
     std::string load_source(std::string_view module_name);
 
-    slang::ISession* get_slang_session() const { return m_data->m_slang_session; }
+    slang::ISession* get_slang_session() const { return m_data->slang_session; }
 
     std::string to_string() const override;
 
@@ -302,7 +302,7 @@ public:
     void _register_module(SlangModule* module);
     void _unregister_module(SlangModule* module);
 
-    ref<SlangSessionData> data() { return m_data; }
+    ref<SlangSessionData> _data() { return m_data; }
 
 private:
     void update_module_cache();
@@ -340,9 +340,9 @@ struct SlangModuleDesc {
 };
 
 struct SlangModuleData : Object {
-    slang::IModule* m_slang_module = nullptr;
-    std::string m_name;
-    std::filesystem::path m_path;
+    slang::IModule* slang_module = nullptr;
+    std::string name;
+    std::filesystem::path path;
 };
 
 class SGL_API SlangModule : public Object {
@@ -363,9 +363,9 @@ public:
     SlangSession* session() const { return m_session; }
     const SlangModuleDesc& desc() const { return m_desc; }
 
-    const std::string& name() const { return m_data->m_name; }
-    const std::filesystem::path& path() const { return m_data->m_path; }
-    const ProgramLayout* layout() const { return ProgramLayout::from_slang(m_data->m_slang_module->getLayout()); }
+    const std::string& name() const { return m_data->name; }
+    const std::filesystem::path& path() const { return m_data->path; }
+    const ProgramLayout* layout() const { return ProgramLayout::from_slang(m_data->slang_module->getLayout()); }
 
     std::vector<ref<SlangEntryPoint>> entry_points() const;
     ref<SlangEntryPoint> entry_point(
@@ -374,7 +374,7 @@ public:
     ) const;
     bool has_entry_point(std::string_view name) const;
 
-    slang::IModule* slang_module() const { return m_data->m_slang_module; }
+    slang::IModule* slang_module() const { return m_data->slang_module; }
 
     std::string to_string() const override;
 
@@ -382,8 +382,7 @@ public:
 
     void _register_entry_point(SlangEntryPoint* entry_point) const;
     void _unregister_entry_point(SlangEntryPoint* entry_point) const;
-
-    ref<SlangModuleData> data() { return m_data; }
+    ref<SlangModuleData> _data() { return m_data; }
 
 private:
     breakable_ref<SlangSession> m_session;
@@ -399,9 +398,9 @@ struct SlangEntryPointDesc {
     std::span<TypeConformance> type_conformances;
 };
 struct SlangEntryPointData : Object {
-    Slang::ComPtr<slang::IComponentType> m_slang_entry_point;
-    std::string m_name;
-    ShaderStage m_stage;
+    Slang::ComPtr<slang::IComponentType> slang_entry_point;
+    std::string name;
+    ShaderStage stage;
 };
 class SGL_API SlangEntryPoint : public Object {
     SGL_OBJECT(SlangEntryPoint)
@@ -420,9 +419,9 @@ public:
 
     SlangModule* module() const { return m_module; }
 
-    const std::string& name() const { return m_data->m_name; }
+    const std::string& name() const { return m_data->name; }
     const SlangEntryPointDesc& desc() const { return m_desc; }
-    ShaderStage stage() const { return m_data->m_stage; }
+    ShaderStage stage() const { return m_data->stage; }
     const EntryPointLayout* layout() const;
 
     ref<SlangEntryPoint> rename(const std::string& new_name);
@@ -430,7 +429,7 @@ public:
     /// Returns a copy of the entry point with a new name.
     ref<SlangEntryPoint> with_name(const std::string& name) const;
 
-    slang::IComponentType* slang_entry_point() const { return m_data->m_slang_entry_point.get(); }
+    slang::IComponentType* slang_entry_point() const { return m_data->slang_entry_point.get(); }
 
     virtual std::string to_string() const override;
 
@@ -446,8 +445,8 @@ struct ShaderProgramDesc {
     std::optional<SlangLinkOptions> link_options;
 };
 struct ShaderProgramData : Object {
-    Slang::ComPtr<slang::IComponentType> m_linked_program;
-    Slang::ComPtr<gfx::IShaderProgram> m_gfx_shader_program;
+    Slang::ComPtr<slang::IComponentType> linked_program;
+    Slang::ComPtr<gfx::IShaderProgram> gfx_shader_program;
 };
 class SGL_API ShaderProgram : public DeviceResource {
     SGL_OBJECT(ShaderProgram)
@@ -463,11 +462,11 @@ public:
 
     const ShaderProgramDesc& desc() const { return m_desc; }
 
-    const ProgramLayout* layout() const { return ProgramLayout::from_slang(m_data->m_linked_program->getLayout()); }
+    const ProgramLayout* layout() const { return ProgramLayout::from_slang(m_data->linked_program->getLayout()); }
 
     ReflectionCursor reflection() const { return ReflectionCursor(this); }
 
-    gfx::IShaderProgram* gfx_shader_program() const { return m_data->m_gfx_shader_program; }
+    gfx::IShaderProgram* gfx_shader_program() const { return m_data->gfx_shader_program; }
 
     virtual std::string to_string() const override;
 
