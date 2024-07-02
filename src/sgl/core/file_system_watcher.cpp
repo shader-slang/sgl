@@ -197,6 +197,8 @@ void FileSystemWatcher::stop_watch(const std::unique_ptr<FileSystemWatchState>& 
     if (!state->is_shutdown)
         SGL_THROW("File system watch failed to shutdown after 500ms");
     CloseHandle(state->directory_handle);
+#else
+    SGL_UNUSED(state);
 #endif
 }
 
