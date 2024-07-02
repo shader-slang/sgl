@@ -534,6 +534,13 @@ ref<Swapchain> Device::create_swapchain(SwapchainDesc desc, Window* window)
     return make_ref<Swapchain>(std::move(desc), window, ref<Device>(this));
 }
 
+#if SGL_WINDOWS
+ref<Swapchain> Device::create_swapchain(SwapchainDesc desc, WindowHandle window_handle)
+{
+    return make_ref<Swapchain>(std::move(desc), window_handle, ref<Device>(this));
+}
+#endif
+
 ref<Buffer> Device::create_buffer(BufferDesc desc)
 {
     return make_ref<Buffer>(ref<Device>(this), std::move(desc));

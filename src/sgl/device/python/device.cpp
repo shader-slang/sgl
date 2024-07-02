@@ -171,7 +171,38 @@ SGL_PY_EXPORT(device_device)
         "adapter_luid"_a.none() = nb::none(),
         "compiler_options"_a.none() = nb::none(),
         "shader_cache_path"_a.none() = nb::none(),
-        D(Device, Device)
+#if SGL_WINDOWS
+        D(Device, Device),
+        device.def(
+            "create_swapchain",
+            [](Device* self,
+               uint64_t window_handle,
+               Format format,
+               uint32_t width,
+               uint32_t height,
+               uint32_t image_count,
+               bool enable_vsync)
+            {
+                return self->create_swapchain(
+                    {
+                        .format = format,
+                        .width = width,
+                        .height = height,
+                        .image_count = image_count,
+                        .enable_vsync = enable_vsync,
+                    },
+                    reinterpret_cast<WindowHandle>(window_handle)
+                );
+            },
+            "window"_a,
+            "format"_a = Format::bgra8_unorm_srgb,
+            "width"_a = 0,
+            "height"_a = 0,
+            "image_count"_a = 3,
+            "enable_vsync"_a = false,
+            D(Device, create_swapchain)
+        )
+#endif
     );
     device.def(nb::init<DeviceDesc>(), "desc"_a, D(Device, Device));
     device.def_prop_ro("desc", &Device::desc, D(Device, desc));

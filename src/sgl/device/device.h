@@ -13,6 +13,7 @@
 #include "sgl/core/enum.h"
 #include "sgl/core/object.h"
 #include "sgl/math/vector_types.h"
+#include "sgl/core/platform.h"
 
 #include <slang-gfx.h>
 
@@ -217,6 +218,21 @@ public:
      * \return New swapchain object.
      */
     ref<Swapchain> create_swapchain(SwapchainDesc desc, Window* window);
+
+#if SGL_WINDOWS
+    /**
+     * \brief Create a new swapchain using OS window handle (windows only)
+     *
+     * \param format Format of the swapchain images.
+     * \param width Width of the swapchain images in pixels.
+     * \param height Height of the swapchain images in pixels.
+     * \param image_count Number of swapchain images.
+     * \param enable_vsync Enable/disable vertical synchronization.
+     * \param OS window handle to create the swapchain for.
+     * \return New swapchain object.
+     */
+    ref<Swapchain> create_swapchain(SwapchainDesc desc, WindowHandle window_handle);
+#endif
 
     /**
      * \brief Create a new buffer.
