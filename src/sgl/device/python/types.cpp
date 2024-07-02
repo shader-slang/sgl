@@ -49,7 +49,7 @@ SGL_DICT_TO_DESC_FIELD(forced_sample_count, uint32_t)
 SGL_DICT_TO_DESC_END()
 
 SGL_DICT_TO_DESC_BEGIN(BlendDesc)
-// TODO
+SGL_DICT_TO_DESC_FIELD(targets, std::vector<TargetBlendDesc>)
 SGL_DICT_TO_DESC_FIELD(alpha_to_coverage_enable, bool)
 SGL_DICT_TO_DESC_END()
 
@@ -192,7 +192,7 @@ SGL_PY_EXPORT(device_types)
 
     nb::class_<BlendDesc>(m, "BlendDesc", D(BlendDesc))
         .def(nb::init<>())
-        // TODO targets
+        .def_rw("targets", &BlendDesc::targets, D(BlendDesc, targets))
         .def_rw(
             "alpha_to_coverage_enable",
             &BlendDesc::alpha_to_coverage_enable,
