@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import pytest
-from sgl import TextureLoader, Bitmap, Format, Struct
+from sgl import TextureLoader, Bitmap, Format, Struct, ResourceState
 import sys
 import numpy as np
 import enum
@@ -125,6 +125,11 @@ def create_test_array(width, height, channels, dtype, type_range):
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_load_texture_formats(device_type, format):
     device = helpers.get_device(type=device_type)
+
+    # Check if format is supported
+    supported_states = device.get_format_supported_resource_states(format.format)
+    if not ResourceState.shader_resource in supported_states:
+        pytest.skip("Format not supported as shader resource")
 
     # Create empty bitmap
     bitmap = Bitmap(

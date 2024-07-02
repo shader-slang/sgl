@@ -43,6 +43,7 @@ def test_buffer_init_data(device_type):
 
 # TODO we should also test buffers bound as root descriptors in D3D12 (allow larger buffers)
 
+
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 @pytest.mark.parametrize(
     "type",
@@ -65,6 +66,13 @@ def test_buffer(device_type, type, size_MB):
         pytest.skip("Test currently failing with Vulkan")
     if device_type == sgl.DeviceType.vulkan and type == "buffer_uint" and size_MB > 128:
         pytest.skip("Vulkan does not support large type buffers (storage buffers)")
+    if (
+        device_type == sgl.DeviceType.vulkan
+        and type == "byte_address_buffer"
+        and sys.platform == "darwin"
+        and size_MB >= 4000
+    ):
+        pytest.skip("MoltenVK does not support large byte buffers")
 
     element_size = 4
     size = size_MB * 1024 * 1024
