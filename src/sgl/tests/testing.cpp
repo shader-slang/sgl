@@ -22,8 +22,14 @@ static std::string build_current_date_string()
 {
     time_t now;
     time(&now);
+    struct tm tm;
+#if SGL_WINDOWS
+    localtime_s(&tm, &now);
+#else
+    localtime_r(&now, &tm);
+#endif
     char result[128];
-    std::strftime(result, sizeof(result), "%Y-%m-%d-%H-%M-%S", std::localtime(&now));
+    std::strftime(result, sizeof(result), "%Y-%m-%d-%H-%M-%S", &tm);
     return result;
 }
 
