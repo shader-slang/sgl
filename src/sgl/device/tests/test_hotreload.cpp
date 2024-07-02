@@ -9,36 +9,6 @@
 
 using namespace sgl;
 
-/// Setup code for the shader test writes out some simple modules.
-static void setup_testshader_files()
-{
-    // Use local static to ensure setup only occurs once.
-    static bool is_done = false;
-    if (!is_done) {
-        is_done = true;
-
-        /*
-        // _testshader_simple.slang is a single compute shader + struct.
-        {
-            std::ofstream shader("_testshader_simple.slang");
-            shader << R"SHADER(
-struct Foo {
-    uint a;
-};
-
-[shader("compute")]
-[numthreads(1, 1, 1)]
-void main_a(uint3 tid : SV_DispatchThreadID, uniform Foo foo)
-{
-}
-)SHADER";
-            shader.close();
-        }
-        */
-
-    }
-}
-
 // Writes out a shader with a line in that is outbuffer[tid.x] = <set_to>
 static void write_shader(std::filesystem::path path, std::string set_to)
 {
@@ -60,12 +30,34 @@ void main(uint3 tid : SV_DispatchThreadID)
     }
 }
 
+static void run_and_verify(testing::GpuTestContext& ctx, ref<ComputeKernel> kernel, uint32_t expected_value)
+{
+    static int g_zeros[1024];
+    static int g_results[1024];
+    memset(g_zeros, 0, sizeof(g_zeros));
+    ref<Buffer> buffer = ctx.device->create_buffer(
+        {.element_count = 1024,
+         .struct_size = 4,
+         .usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access,
+         .data = g_zeros,
+         .data_size = sizeof(g_zeros)}
+    );
+
+    kernel->dispatch(uint3(1024, 1, 1), [&buffer](ShaderCursor cursor) { cursor["outbuffer"] = buffer; });
+
+    memset(g_results, 0, sizeof(g_results));
+    buffer->get_data(g_results, sizeof(g_results));
+
+    for (auto x : g_results) {
+        CHECK_EQ(x, expected_value);
+    }
+}
+
 TEST_SUITE_BEGIN("hotreload");
 
 TEST_CASE_GPU("HotReload")
 {
-    // Perform 1-time setup that creates shader files for these test cases.
-    setup_testshader_files();
+
 
     // Just verify module loads.
     SUBCASE("load module")
@@ -73,11 +65,10 @@ TEST_CASE_GPU("HotReload")
         std::filesystem::path abs_path = sgl::testing::get_case_temp_directory() / "lm_write1.slang";
         write_shader(abs_path, "1");
 
-        auto program = ctx.device->load_program(abs_path.string(), {"main"});
-        auto kernel = ctx.device->create_compute_kernel({.program = std::move(program)});
+        ref<ShaderProgram> program = ctx.device->load_program(abs_path.string(), {"main"});
+        ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
 
-        auto field = kernel->reflection().find_field("outbuffer");
-        
+        run_and_verify(ctx, kernel, 1);
     }
 
 }
