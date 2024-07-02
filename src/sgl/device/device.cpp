@@ -627,7 +627,7 @@ void Device::_unregister_slang_session(SlangSession* session)
 void Device::reload_all_programs()
 {
     if (m_hot_reload)
-        m_hot_reload->reload_all_programs();
+        m_hot_reload->recreate_all_sessions();
 }
 
 ref<SlangModule> Device::load_module(std::string_view module_name)

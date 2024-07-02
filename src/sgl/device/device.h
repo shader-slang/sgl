@@ -106,7 +106,7 @@ struct DeviceDesc {
 
     /// Enable automatic shader reload in response to file changes.
     /// Note: Currently windows only.
-    bool enable_hot_reload{false};
+    bool enable_hot_reload{true};
 };
 
 struct DeviceLimits {

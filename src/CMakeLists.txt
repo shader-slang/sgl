@@ -517,6 +517,7 @@ if(SGL_BUILD_TESTS)
         sgl/core/tests/test_stream.cpp
         sgl/core/tests/test_string.cpp
         sgl/device/tests/test_device.cpp
+        sgl/device/tests/test_hotreload.cpp
         sgl/device/tests/test_formats.cpp
         sgl/device/tests/test_shader.cpp
         sgl/math/tests/test_float16.cpp

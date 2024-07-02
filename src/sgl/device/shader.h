@@ -226,12 +226,15 @@ struct SlangSessionBuild {
     std::map<const SlangEntryPoint*, ref<SlangEntryPointData>> entry_points;
 };
 
+/// Descriptor for slang session initialization.
 struct SlangSessionDesc {
     SlangCompilerOptions compiler_options;
     bool add_default_include_paths{true};
     std::optional<std::filesystem::path> cache_path;
 };
-struct SlangSessionData {
+
+/// Internal data stored once the slang session has been created.
+struct SlangSessionData: Object {
     Slang::ComPtr<slang::ISession> slang_session;
 
     /// Set of all currently loaded slang modules.
@@ -256,31 +259,39 @@ struct SlangSessionData {
     std::string resolve_module_name(std::string_view module_name) const;
 };
 
+/// A slang session, used to load modules and link programs.
 class SGL_API SlangSession : public Object {
     SGL_OBJECT(SlangSession)
 public:
     SlangSession(ref<Device> device, SlangSessionDesc desc);
     ~SlangSession();
 
+    /// Fully recreates this session and any loaded modules or linked programs.
     void recreate_session();
 
     Device* device() const { return m_device; }
     const SlangSessionDesc& desc() const { return m_desc; }
 
+    /// Load a module by name.
     ref<SlangModule> load_module(std::string_view module_name);
 
+    /// Load a module from string source code.
     ref<SlangModule> load_module_from_source(
         std::string_view module_name,
         std::string_view source,
         std::optional<std::filesystem::path> path = {}
     );
 
+    /// Link a program with a set of modules and entry points.
     ref<ShaderProgram> link_program(
         std::vector<ref<SlangModule>> modules,
         std::vector<ref<SlangEntryPoint>> entry_points,
         std::optional<SlangLinkOptions> link_options = {}
     );
 
+    /// Load a program from a given module with a set of entry
+    /// points. Internally this simply wraps link_program without
+    /// requiring the user to explicitly load modules.
     ref<ShaderProgram> load_program(
         std::string_view module_name,
         std::vector<std::string_view> entry_point_names,
@@ -288,6 +299,7 @@ public:
         std::optional<SlangLinkOptions> link_options = {}
     );
 
+    /// Load the source code for a given module.
     std::string load_source(std::string_view module_name);
 
     slang::ISession* get_slang_session() const { return m_data->slang_session; }
@@ -302,6 +314,7 @@ public:
     void _register_module(SlangModule* module);
     void _unregister_module(SlangModule* module);
 
+    // Internal access to the built session data.
     ref<SlangSessionData> _data() { return m_data; }
 
 private:
