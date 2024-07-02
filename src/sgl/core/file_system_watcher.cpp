@@ -101,7 +101,7 @@ FileSystemWatcher::FileSystemWatcher()
 {
 #if !SGL_WINDOWS
     // TODO(@ccummings): File system watcher linux support
-    SGL_THROW("File system watcher is only implemented on windows platforms")
+    SGL_THROW("File system watcher is only implemented on windows platforms");
 #endif
 }
 
@@ -197,6 +197,8 @@ void FileSystemWatcher::stop_watch(const std::unique_ptr<FileSystemWatchState>& 
     if (!state->is_shutdown)
         SGL_THROW("File system watch failed to shutdown after 500ms");
     CloseHandle(state->directory_handle);
+#else
+    SGL_UNUSED(state);
 #endif
 }
 

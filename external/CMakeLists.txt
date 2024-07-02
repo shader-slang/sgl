@@ -91,7 +91,6 @@ elseif(SGL_MACOS)
         IMPORTED_LOCATION ${SLANG_BIN_DIR}/libslang.dylib
     )
     sgl_copy_binary(${SLANG_BIN_DIR}/libslang.dylib .)
-    sgl_copy_binary(${SLANG_BIN_DIR}/libslang-glslang.dylib .)
 endif()
 
 # slang-gfx
