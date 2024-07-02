@@ -7,7 +7,7 @@
 
 namespace sgl {
 SGL_DICT_TO_DESC_BEGIN(ShaderTableDesc)
-SGL_DICT_TO_DESC_FIELD(program, ShaderProgram*)
+SGL_DICT_TO_DESC_FIELD(program, ref<ShaderProgram>)
 SGL_DICT_TO_DESC_FIELD(ray_gen_entry_points, std::vector<std::string>)
 SGL_DICT_TO_DESC_FIELD(miss_entry_points, std::vector<std::string>)
 SGL_DICT_TO_DESC_FIELD(hit_group_names, std::vector<std::string>)

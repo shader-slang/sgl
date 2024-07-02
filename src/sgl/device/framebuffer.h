@@ -69,7 +69,7 @@ public:
 
     const FramebufferDesc& desc() const { return m_desc; }
 
-    const FramebufferLayout* layout() const { return m_desc.layout; }
+    const ref<FramebufferLayout> &layout() const { return m_desc.layout; }
 
     gfx::IFramebuffer* gfx_framebuffer() const { return m_gfx_framebuffer; }
     gfx::IRenderPassLayout* gfx_render_pass_layout() const { return m_gfx_render_pass_layout; }
