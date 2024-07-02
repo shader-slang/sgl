@@ -60,7 +60,7 @@ private:
 };
 
 struct ShaderTableDesc {
-    const ShaderProgram* program;
+    ref<ShaderProgram> program;
     std::vector<std::string> ray_gen_entry_points;
     std::vector<std::string> miss_entry_points;
     std::vector<std::string> hit_group_names;
