@@ -27,12 +27,18 @@ void bind_vector_type(nb::module_& m, const char* name)
 
     vec.def(nb::init<value_type>(), "scalar"_a);
 
-    if constexpr (dimension == 2)
+    if constexpr (dimension == 2) {
         vec.def(nb::init<value_type, value_type>(), "x"_a, "y"_a);
-    else if constexpr (dimension == 3)
+    } else if constexpr (dimension == 3) {
         vec.def(nb::init<value_type, value_type, value_type>(), "x"_a, "y"_a, "z"_a);
-    else if constexpr (dimension == 4)
+        vec.def(nb::init<vector<value_type, 2>, value_type>(), "xy"_a, "z"_a);
+        vec.def(nb::init<value_type, vector<value_type, 2>>(), "x"_a, "yz"_a);
+    } else if constexpr (dimension == 4) {
         vec.def(nb::init<value_type, value_type, value_type, value_type>(), "x"_a, "y"_a, "z"_a, "w"_a);
+        vec.def(nb::init<vector<value_type, 2>, vector<value_type, 2>>(), "xy"_a, "zw"_a);
+        vec.def(nb::init<vector<value_type, 3>, value_type>(), "xyz"_a, "w"_a);
+        vec.def(nb::init<value_type, vector<value_type, 3>>(), "x"_a, "yzw"_a);
+    }
 
     vec.def(nb::init_implicit<std::array<value_type, dimension>>(), "a"_a);
 
