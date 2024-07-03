@@ -339,7 +339,7 @@ TEST_CASE_GPU("change program with basic additional source")
     // Disable auto detection.
     ctx.device->hot_reload()->set_auto_detect_changes(false);
 
-    // Create a new session explicitly with no include paths
+    // Create a new session explicitly with no include paths.
     SlangCompilerOptions opts = ctx.device->desc().compiler_options;
     opts.include_paths.clear();
     ref<sgl::SlangSession> session = ctx.device->create_slang_session({
