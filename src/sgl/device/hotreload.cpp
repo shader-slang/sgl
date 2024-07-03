@@ -11,15 +11,16 @@ HotReload::HotReload(ref<Device> device)
     , m_auto_detect_changes(true)
     , m_last_build_failed(false)
 {
+    // Check for none-supported platforms.
+#if !SGL_WINDOWS
+    log_warning("Hot reload is currently only supported on windows\n");
+    return;
+#endif
+
     // Create file system monitor + hook up change event.
     m_file_system_watcher = make_ref<FileSystemWatcher>();
     m_file_system_watcher->set_on_change([this](std::span<FileSystemWatchEvent> events)
                                          { on_file_system_event(events); });
-
-    // Start a recursive monitor on working directory.
-#if !SGL_WINDOWS
-    log_error("Hot reload is currently only supported on windows\n");
-#endif
 }
 
 void HotReload::update()
@@ -32,12 +33,9 @@ void HotReload::update()
 void HotReload::on_file_system_event(std::span<FileSystemWatchEvent> events)
 {
     // Simple check to see if any events involved .slang files.
-    int slang_count = 0;
-    for (auto ev : events) {
-        if (ev.path.extension() == ".slang")
-            slang_count++;
-    }
-    if (slang_count == 0)
+    auto fn_check = [](const FileSystemWatchEvent& e) { return platform::has_extension(e.path, "slang"); };
+    bool has_slang_files = std::find_if(events.begin(), events.end(), fn_check) != events.end();
+    if (!has_slang_files)
         return;
 
     // If slang files detected, recreate all existing sessions
