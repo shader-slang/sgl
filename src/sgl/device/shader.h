@@ -336,7 +336,7 @@ private:
     ref<SlangModule> m_nvapi_module;
 
     /// All loaded sgl modules (wrappers around IModule returned from load_module).
-    /// Note: this is a vector, as order of creation matters
+    /// Note: this is a vector, as order of creation matters.
     std::vector<SlangModule*> m_registered_modules;
 
     /// All created sgl programs (via link_program)
