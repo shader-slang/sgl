@@ -52,8 +52,7 @@ public:
     uint32_t auto_detect_delay() const;
     void set_auto_detect_delay(uint32_t delay_ms);
 
-    /// Mainly for test, return true if last attempt to recreate sessions
-    /// failed with exception.
+    /// Return true if last attempt to recreate sessions failed with exception.
     bool last_build_failed() const { return m_last_build_failed; }
 
     /// Exclusively for testing, erase all existing file watches
