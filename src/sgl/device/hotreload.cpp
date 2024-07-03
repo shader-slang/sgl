@@ -103,7 +103,6 @@ void HotReload::update_watched_paths_for_session(SlangSession* session)
                 // Get the dependency as an FS path, verify it is absolute and turn into directory path.
                 std::filesystem::path abs_path = slang_module->getDependencyFilePath(dependency_index);
                 if (!abs_path.is_absolute()) {
-                    log_warn("None absolute path in hot reload: {}", abs_path);
                     continue;
                 }
                 abs_path = abs_path.parent_path().make_preferred();
