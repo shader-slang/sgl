@@ -199,7 +199,7 @@ TEST_CASE_GPU("change kernel name and recreate")
     // Re-write the shader, and verify it still returns 1, as hasn't reloaded yet.
     write_shader({.path = abs_path, .set_to = "1", .kernel_name = "main2"});
 
-    // Force a reload, and verify the result is now 2.
+    // Force a reload
     ctx.device->hot_reload()->recreate_all_sessions();
 
     // Hot reload should report error, as entry point name has changed so kernel is invalid
