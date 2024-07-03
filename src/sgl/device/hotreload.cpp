@@ -100,7 +100,6 @@ void HotReload::update_watched_paths_for_session(SlangSession* session)
 
         SlangInt32 dependency_count = slang_module->getDependencyFileCount();
         for (SlangInt32 dependency_index = 0; dependency_index < dependency_count; dependency_index++) {
-
             {
                 // Get the dependency as an FS path, verify it is absolute and turn into directory path.
                 std::filesystem::path abs_path = slang_module->getDependencyFilePath(dependency_index);
