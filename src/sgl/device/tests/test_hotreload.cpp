@@ -51,7 +51,7 @@ if(tid.x<1024)
     shader.close();
 }
 
-// Writes out a shader module with a function that returns <set_to>
+// Writes out a shader module with a function that returns <set_to>.
 struct WriteModuleDesc {
     std::filesystem::path path;
     std::string func_name{"func"};
