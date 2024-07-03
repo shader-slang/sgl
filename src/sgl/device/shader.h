@@ -347,7 +347,7 @@ struct SlangModuleDesc {
     /// Required module name
     std::string module_name;
 
-    /// Optional module source. If not specified slang module resolution is used
+    /// Optional module source. If not specified slang module resolution is used.
     std::optional<std::string> source;
 
     /// If source specified, additional path for compilation
