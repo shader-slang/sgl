@@ -13,7 +13,7 @@
 
 using namespace sgl;
 
-// Writes out a shader with a line in that is outbuffer[tid.x] = <set_to>;
+// Writes out a shader with a line in that is "outbuffer[tid.x] = <set_to>;".
 struct WriteShaderDesc {
     std::filesystem::path path;
     std::string set_to;
