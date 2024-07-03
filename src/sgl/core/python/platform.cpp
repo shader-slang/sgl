@@ -13,7 +13,7 @@ SGL_PY_EXPORT(core_platform)
         .def(
             "__init__",
             [](sgl::WindowHandle* self, uintptr_t hwnd)
-            { new (self) sgl::WindowHandle{reinterpret_cast<void*>(hwnd)}; },
+            { new (self) sgl::WindowHandle{reinterpret_cast<HWND>(hwnd)}; },
             "hwnd"_a
         )
 #elif SGL_LINUX
