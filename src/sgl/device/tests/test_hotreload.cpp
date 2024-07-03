@@ -384,7 +384,7 @@ TEST_CASE_GPU("load module separately from program")
     // Disable auto detection
     ctx.device->hot_reload()->set_auto_detect_changes(false);
 
-    // Create session with module in sub path
+    // Create module in subdirectory.
     std::filesystem::path inc_path = sgl::testing::get_suite_temp_directory() / "sepmod_inc";
     std::filesystem::create_directories(inc_path);
     std::filesystem::path mod_path = inc_path / "mod.slang";
