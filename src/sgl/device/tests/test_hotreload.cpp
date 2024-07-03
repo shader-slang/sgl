@@ -275,7 +275,7 @@ TEST_CASE_GPU("change program with correct module import and recreate")
     std::filesystem::path abs_module_path = sgl::testing::get_suite_temp_directory() / "goodimportmodule.slang";
     write_module({.path = abs_module_path, .set_to = "2"});
 
-    // Re-write shader with a valid import and check build succeeds
+    // Re-write shader with a valid import and check build succeeds.
     write_shader({.path = abs_path, .set_to = "func()", .imports = {"goodimportmodule"}});
     ctx.device->hot_reload()->recreate_all_sessions();
     CHECK(!ctx.device->hot_reload()->last_build_failed());
