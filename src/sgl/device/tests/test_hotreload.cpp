@@ -485,7 +485,7 @@ TEST_CASE_GPU("create multi directory session and monitor for changes")
         .set_to = "3",
     });
 
-    // Create a new session.
+    // Create a new session with access to both directories.
     SlangCompilerOptions opts = ctx.device->desc().compiler_options;
     opts.include_paths.push_back(inc_path_0);
     opts.include_paths.push_back(inc_path_1);
