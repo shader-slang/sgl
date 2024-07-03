@@ -205,7 +205,7 @@ TEST_CASE_GPU("change kernel name and recreate")
     // Hot reload should report error, as entry point name has changed so kernel is invalid
     CHECK(ctx.device->hot_reload()->last_build_failed());
 
-    // Program should still be valid and return 1
+    // Program should still be valid and return 1.
     run_and_verify(ctx, kernel, 1);
 }
 
