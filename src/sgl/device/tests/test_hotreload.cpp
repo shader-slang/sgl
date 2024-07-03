@@ -336,7 +336,7 @@ TEST_CASE_GPU("leave program then break the module it imports")
 
 TEST_CASE_GPU("change program with basic additional source")
 {
-    // Disable auto detection
+    // Disable auto detection.
     ctx.device->hot_reload()->set_auto_detect_changes(false);
 
     // Create a new session explicitly with no include paths
