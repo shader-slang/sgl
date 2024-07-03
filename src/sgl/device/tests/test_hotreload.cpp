@@ -8,6 +8,8 @@
 #include <fstream>
 #include <filesystem>
 #include <format>
+#include <thread>
+#include <chrono>
 
 using namespace sgl;
 
@@ -323,5 +325,226 @@ TEST_CASE_GPU("leave program then break the module it imports")
     // Program should still be valid and return 1.
     run_and_verify(ctx, kernel, 1);
 }
+
+TEST_CASE_GPU("change program with basic additional source")
+{
+    // Disable auto detection
+    ctx.device->hot_reload()->set_auto_detect_changes(false);
+
+    // Create a new session explicitly with no include paths
+    SlangCompilerOptions opts = ctx.device->desc().compiler_options;
+    opts.include_paths.clear();
+    ref<sgl::SlangSession> session = ctx.device->create_slang_session({
+        .compiler_options = opts,
+        .add_default_include_paths = true,
+    });
+
+    // Write a teeny 'config' file that predeclares the constant in additional source
+    std::ofstream config_module(sgl::testing::get_suite_temp_directory() / "addsourcebasicconfig.slang");
+    config_module << "extern static const uint SOMENUMBER;\n";
+    config_module.close();
+
+    // Build the additional source code that actually sets the number
+    std::string addsource = "export static const uint SOMENUMBER = 1;\n";
+
+    // Write first version of shader that reads a value from the additional source.
+    std::filesystem::path abs_path = sgl::testing::get_suite_temp_directory() / "addsourcebasic.slang";
+    write_shader({
+        .path = abs_path,
+        .set_to = "SOMENUMBER",
+        .imports = {"addsourcebasicconfig"},
+    });
+
+    // Load program + kernel with the extra source, and verify returns 1.
+    ref<ShaderProgram> program = ctx.device->load_program(abs_path.string(), {"main"}, addsource);
+    ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
+    run_and_verify(ctx, kernel, 1);
+
+    // Modify the shader to add one to the returned number and verify returns 2
+    write_shader({
+        .path = abs_path,
+        .set_to = "SOMENUMBER+1",
+        .imports = {"addsourcebasicconfig"},
+    });
+    ctx.device->hot_reload()->recreate_all_sessions();
+    CHECK(!ctx.device->hot_reload()->last_build_failed());
+    run_and_verify(ctx, kernel, 2);
+}
+
+TEST_CASE_GPU("load module separately from program")
+{
+    // Disable auto detection
+    ctx.device->hot_reload()->set_auto_detect_changes(false);
+
+    // Create session with module in sub path
+    std::filesystem::path inc_path = sgl::testing::get_suite_temp_directory() / "sepmod_inc";
+    std::filesystem::create_directories(inc_path);
+    std::filesystem::path mod_path = inc_path / "mod.slang";
+    write_module({
+        .path = mod_path,
+        .set_to = "1",
+    });
+
+    // Create a new session explicitly with no include paths
+    SlangCompilerOptions opts = ctx.device->desc().compiler_options;
+    opts.include_paths.clear();
+    opts.include_paths.push_back(inc_path);
+    ref<sgl::SlangSession> session = ctx.device->create_slang_session({
+        .compiler_options = opts,
+        .add_default_include_paths = true,
+    });
+
+    // Write version of shader that reads a value from the module
+    std::filesystem::path abs_path = sgl::testing::get_suite_temp_directory() / "sepmod.slang";
+    write_shader({
+        .path = abs_path,
+        .set_to = "func()",
+        .imports = {"mod"},
+    });
+
+    // Load module then program independently and verify result
+    ref<SlangModule> module = session->load_module(mod_path.string());
+    ref<ShaderProgram> program = session->load_program(abs_path.string(), {"main"});
+    ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
+    run_and_verify(ctx, kernel, 1);
+
+    // Modify the module to return 2 and verify the result
+    write_module({
+        .path = mod_path,
+        .set_to = "2",
+    });
+    ctx.device->hot_reload()->recreate_all_sessions();
+    CHECK(!ctx.device->hot_reload()->last_build_failed());
+    run_and_verify(ctx, kernel, 2);
+}
+
+
+TEST_CASE_GPU("change program and auto detect changes")
+{
+    // Enable auto detection and wipe any existing monitors to ensure test is from a 'clean slate'.
+    ctx.device->hot_reload()->set_auto_detect_changes(true);
+    ctx.device->hot_reload()->set_auto_detect_delay(100);
+    ctx.device->hot_reload()->_clear_file_watches();
+
+    // Write first version of shader that outputs 1.
+    std::filesystem::path abs_path = sgl::testing::get_suite_temp_directory() / "detectchangeprog.slang";
+    write_shader({.path = abs_path, .set_to = "1"});
+
+    // Load program + kernel, and verify returns 1.
+    ref<ShaderProgram> program = ctx.device->load_program(abs_path.string(), {"main"});
+    ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
+    run_and_verify(ctx, kernel, 1);
+
+    // Re-write the shader, and verify it still returns 1, as hasn't reloaded yet.
+    write_shader({.path = abs_path, .set_to = "2"});
+    run_and_verify(ctx, kernel, 1);
+
+    // Tell the hot reload system to auto detect changes for 500ms.
+    for (int i = 0; i < 5; i++) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        ctx.device->hot_reload()->update();
+    }
+
+    // Verify the result is now 2.
+    run_and_verify(ctx, kernel, 2);
+
+    // Hot reload should not report error.
+    CHECK(!ctx.device->hot_reload()->last_build_failed());
+}
+
+TEST_CASE_GPU("create multi directory session and monitor for changes")
+{
+    // Enable auto detection and wipe any existing monitors to ensure test is from a 'clean slate'.
+    ctx.device->hot_reload()->set_auto_detect_changes(true);
+    ctx.device->hot_reload()->set_auto_detect_delay(100);
+    ctx.device->hot_reload()->_clear_file_watches();
+
+    // Create 2 directories, and a module inside each one.
+    std::filesystem::path inc_path_0 = sgl::testing::get_suite_temp_directory() / "md_inc_0";
+    std::filesystem::path inc_path_1 = sgl::testing::get_suite_temp_directory() / "md_inc_1";
+    std::filesystem::create_directories(inc_path_0);
+    std::filesystem::create_directories(inc_path_1);
+    std::filesystem::path mod_path_0 = inc_path_0 / "mod0.slang";
+    std::filesystem::path mod_path_1 = inc_path_1 / "mod1.slang";
+    write_module({
+        .path = mod_path_0,
+        .func_name = "mod0func",
+        .set_to = "2",
+    });
+    write_module({
+        .path = mod_path_1,
+        .func_name = "mod1func",
+        .set_to = "3",
+    });
+
+    // Create a new session.
+    SlangCompilerOptions opts = ctx.device->desc().compiler_options;
+    opts.include_paths.push_back(inc_path_0);
+    opts.include_paths.push_back(inc_path_1);
+    ref<sgl::SlangSession> session = ctx.device->create_slang_session({
+        .compiler_options = opts,
+        .add_default_include_paths = true,
+    });
+
+    // Write first version of shader that imports but doesn't use both modules.
+    std::filesystem::path abs_path = sgl::testing::get_suite_temp_directory() / "multidirchangeprog.slang";
+    write_shader({
+        .path = abs_path,
+        .set_to = "1",
+        .imports = {"mod0", "mod1"},
+    });
+
+    // Load program + kernel, and verify returns 1.
+    ref<ShaderProgram> program = session->load_program(abs_path.string(), {"main"});
+    ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
+    run_and_verify(ctx, kernel, 1);
+
+    // Re-write the shader to call mod0 and check changes are detected.
+    write_shader({
+        .path = abs_path,
+        .set_to = "mod0func()",
+        .imports = {"mod0", "mod1"},
+    });
+    for (int i = 0; i < 5; i++) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        ctx.device->hot_reload()->update();
+    }
+    run_and_verify(ctx, kernel, 2);
+
+    // Modify module 0 to return a different number and check.
+    write_module({
+        .path = mod_path_0,
+        .func_name = "mod0func",
+        .set_to = "10",
+    });
+    for (int i = 0; i < 15; i++) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        ctx.device->hot_reload()->update();
+    }
+    run_and_verify(ctx, kernel, 10);
+
+    // Modify shader to use mod1, AND modify mod1, and check.
+    write_shader({
+        .path = abs_path,
+        .set_to = "mod1func()",
+        .imports = {"mod0", "mod1"},
+    });
+    write_module({
+        .path = mod_path_1,
+        .func_name = "mod1func",
+        .set_to = "20",
+    });
+    for (int i = 0; i < 15; i++) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        ctx.device->hot_reload()->update();
+    }
+    run_and_verify(ctx, kernel, 20);
+
+    //
+    //// Hot reload should not report error
+    //CHECK(!ctx.device->hot_reload()->last_build_failed());
+}
+
+
 
 TEST_SUITE_END();

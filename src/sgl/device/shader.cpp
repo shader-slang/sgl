@@ -205,6 +205,9 @@ void SlangSession::recreate_session()
     for (auto program : m_registered_programs) {
         program->store_built_data(build);
     }
+
+    // Update cache of loaded modules.
+    update_module_cache_and_dependencies();
 }
 
 void SlangSession::create_session(SlangSessionBuild& build)
@@ -420,6 +423,9 @@ ref<SlangModule> SlangSession::load_module(std::string_view module_name)
     module->load(build);
     module->store_built_data(build);
 
+    // Update cache of loaded modules.
+    update_module_cache_and_dependencies();
+
     return module;
 }
 
@@ -441,6 +447,10 @@ ref<SlangModule> SlangSession::load_module_from_source(
     build.session = m_data;
     module->load(build);
     module->store_built_data(build);
+
+    // Update cache of loaded modules.
+    update_module_cache_and_dependencies();
+
     return module;
 }
 
@@ -476,6 +486,9 @@ ref<ShaderProgram> SlangSession::link_program(
     }
     program->link(build);
     program->store_built_data(build);
+
+    // Update cache of loaded modules, as it may have changed after program link.
+    update_module_cache_and_dependencies();
 
     return program;
 }
@@ -528,12 +541,16 @@ void SlangSession::_unregister_program(ShaderProgram* program)
 
 void SlangSession::_register_module(SlangModule* module)
 {
-    m_registered_modules.insert(module);
+    auto existing = std::find(m_registered_modules.begin(), m_registered_modules.end(), module);
+    if (existing == m_registered_modules.end())
+        m_registered_modules.push_back(module);
 }
 
 void SlangSession::_unregister_module(SlangModule* module)
 {
-    m_registered_modules.erase(module);
+    auto existing = std::find(m_registered_modules.begin(), m_registered_modules.end(), module);
+    if (existing != m_registered_modules.end())
+        m_registered_modules.erase(existing);
 }
 
 /*
@@ -565,18 +582,21 @@ std::string SlangSession::to_string() const
     );
 }
 
-void SlangSession::update_module_cache()
+void SlangSession::update_module_cache_and_dependencies()
 {
-    if (!m_data->cache_enabled)
-        return;
+    // Notify hot reload system of potentially changed modules,
+    // thus potentially changed dependencies.
+    m_device->_on_session_modules_changed(this);
 
-    // Cache newly loaded modules.
-    for (int i = 0; i < m_data->slang_session->getLoadedModuleCount(); ++i) {
-        slang::IModule* slang_module = m_data->slang_session->getLoadedModule(i);
-        if (m_data->loaded_modules.contains(slang_module))
-            continue;
-        write_module_to_cache(slang_module);
-        m_data->loaded_modules.insert(slang_module);
+    // Cache newly loaded modules if enabled.
+    if (m_data->cache_enabled) {
+        for (int i = 0; i < m_data->slang_session->getLoadedModuleCount(); ++i) {
+            slang::IModule* slang_module = m_data->slang_session->getLoadedModule(i);
+            if (m_data->loaded_modules.contains(slang_module))
+                continue;
+            write_module_to_cache(slang_module);
+            m_data->loaded_modules.insert(slang_module);
+        }
     }
 }
 

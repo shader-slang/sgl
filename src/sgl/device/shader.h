@@ -318,7 +318,7 @@ public:
     ref<SlangSessionData> _data() { return m_data; }
 
 private:
-    void update_module_cache();
+    void update_module_cache_and_dependencies();
     bool write_module_to_cache(slang::IModule* module);
 
     void create_session(SlangSessionBuild& build);
@@ -334,8 +334,9 @@ private:
     /// Global NVAPI module linked to all programs.
     ref<SlangModule> m_nvapi_module;
 
-    /// All loaded sgl modules (wrappers around IModule returned from load_module)
-    std::set<SlangModule*> m_registered_modules;
+    /// All loaded sgl modules (wrappers around IModule returned from load_module).
+    /// Note: this is a vector, as order of creation matters
+    std::vector<SlangModule*> m_registered_modules;
 
     /// All created sgl programs (via link_program)
     std::set<ShaderProgram*> m_registered_programs;

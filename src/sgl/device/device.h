@@ -537,6 +537,7 @@ public:
 
     void _register_slang_session(SlangSession* session);
     void _unregister_slang_session(SlangSession* session);
+    void _on_session_modules_changed(SlangSession* session);
 
     Blitter* _blitter();
 

@@ -41,25 +41,37 @@ public:
     void _register_slang_session(SlangSession* session);
     void _unregister_slang_session(SlangSession* session);
 
+    // Called from session when modules have updated, meaning dependencies may have changed
+    void _on_session_modules_changed(SlangSession* session);
+
     // Enable/disable auto rebuild in response to file system events.
-    // Mainly just for testing system to have control over when
-    // certain changes are applied.
     bool auto_detect_changes() const { return m_auto_detect_changes; }
     void set_auto_detect_changes(bool val) { m_auto_detect_changes = val; }
+
+     // Adjust delay used by internal fs monitor before reponding to file system events.
+    uint32_t auto_detect_delay() const;
+    void set_auto_detect_delay(uint32_t delay_ms);
 
     /// Mainly for test, return true if last attempt to recreate sessions
     /// failed with exception.
     bool last_build_failed() const { return m_last_build_failed; }
 
+    /// Exclusively for testing, erase all existing file watches
+    void _clear_file_watches();
+
 private:
 
     void on_file_system_event(std::span<FileSystemWatchEvent> events);
+
+    void update_watched_paths_for_session(SlangSession* session);
 
     breakable_ref<Device> m_device;
     bool m_auto_detect_changes;
     ref<FileSystemWatcher> m_file_system_watcher;
     std::set<SlangSession*> m_all_slang_sessions;
     bool m_last_build_failed;
+
+    std::set<std::filesystem::path> m_watched_paths;
 };
 
 } // namespace sgl

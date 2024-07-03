@@ -624,6 +624,12 @@ void Device::_unregister_slang_session(SlangSession* session)
         m_hot_reload->_unregister_slang_session(session);
 }
 
+void Device::_on_session_modules_changed(SlangSession* session)
+{
+    if (m_hot_reload)
+        m_hot_reload->_on_session_modules_changed(session);
+}
+
 void Device::reload_all_programs()
 {
     if (m_hot_reload)
