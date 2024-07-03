@@ -416,7 +416,7 @@ TEST_CASE_GPU("load module separately from program")
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
     run_and_verify(ctx, kernel, 1);
 
-    // Modify the module to return 2 and verify the result
+    // Modify the module to return 2 and verify the result.
     write_module({
         .path = mod_path,
         .set_to = "2",
