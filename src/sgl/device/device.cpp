@@ -611,24 +611,6 @@ ref<SlangSession> Device::create_slang_session(SlangSessionDesc desc)
     return make_ref<SlangSession>(ref<Device>(this), std::move(desc));
 }
 
-void Device::_register_slang_session(SlangSession* session)
-{
-    if (m_hot_reload)
-        m_hot_reload->_register_slang_session(session);
-}
-
-void Device::_unregister_slang_session(SlangSession* session)
-{
-    if (m_hot_reload)
-        m_hot_reload->_unregister_slang_session(session);
-}
-
-void Device::_on_session_modules_changed(SlangSession* session)
-{
-    if (m_hot_reload)
-        m_hot_reload->_on_session_modules_changed(session);
-}
-
 void Device::reload_all_programs()
 {
     if (m_hot_reload)
@@ -1156,6 +1138,24 @@ std::string Device::to_string() const
         m_shader_cache_enabled,
         m_shader_cache_path
     );
+}
+
+void Device::_register_slang_session(SlangSession* session)
+{
+    if (m_hot_reload)
+        m_hot_reload->_register_slang_session(session);
+}
+
+void Device::_unregister_slang_session(SlangSession* session)
+{
+    if (m_hot_reload)
+        m_hot_reload->_unregister_slang_session(session);
+}
+
+void Device::_on_session_modules_changed(SlangSession* session)
+{
+    if (m_hot_reload)
+        m_hot_reload->_on_session_modules_changed(session);
 }
 
 Blitter* Device::_blitter()
