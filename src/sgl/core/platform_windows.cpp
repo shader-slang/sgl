@@ -51,7 +51,7 @@ void set_window_icon(WindowHandle handle, const std::filesystem::path& path)
     HANDLE hicon = LoadImageW(GetModuleHandleW(NULL), path.c_str(), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_LOADFROMFILE);
     if (!hicon)
         SGL_THROW("Failed to load icon from \"{}\".", path);
-    HWND hwnd = handle ? static_cast<HWND>(handle) : GetActiveWindow();
+    HWND hwnd = handle.hwnd ? handle.hwnd : GetActiveWindow();
     SendMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM)hicon);
 }
 
