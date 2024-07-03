@@ -547,10 +547,6 @@ TEST_CASE_GPU("create multi directory session and monitor for changes")
         ctx.device->hot_reload()->update();
     }
     run_and_verify(ctx, kernel, 20);
-
-    //
-    //// Hot reload should not report error
-    // CHECK(!ctx.device->hot_reload()->last_build_failed());
 }
 
 
