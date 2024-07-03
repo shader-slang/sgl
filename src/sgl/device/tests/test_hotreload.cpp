@@ -402,7 +402,7 @@ TEST_CASE_GPU("load module separately from program")
         .add_default_include_paths = true,
     });
 
-    // Write version of shader that reads a value from the module
+    // Write version of shader that reads a value from the module.
     std::filesystem::path abs_path = sgl::testing::get_suite_temp_directory() / "sepmod.slang";
     write_shader({
         .path = abs_path,
