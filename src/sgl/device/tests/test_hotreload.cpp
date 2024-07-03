@@ -325,7 +325,7 @@ TEST_CASE_GPU("leave program then break the module it imports")
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
     run_and_verify(ctx, kernel, 1);
 
-    // Recreate the module with a new value and recompile
+    // Recreate the module with a new value and expect failed recompile.
     write_module({.path = abs_module_path, .set_to = "blabla"});
     ctx.device->hot_reload()->recreate_all_sessions();
     CHECK(ctx.device->hot_reload()->last_build_failed());
