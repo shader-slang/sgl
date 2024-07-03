@@ -226,7 +226,7 @@ TEST_CASE_GPU("change buffer name and fail to use recreated program")
     // Re-write the shader, and verify it still returns 1, as hasn't reloaded yet.
     write_shader({.path = abs_path, .set_to = "2", .param_name = "outbuffer2"});
 
-    // Force a reload, which should succed
+    // Force a reload, which should succeed.
     ctx.device->hot_reload()->recreate_all_sessions();
     CHECK(!ctx.device->hot_reload()->last_build_failed());
 
