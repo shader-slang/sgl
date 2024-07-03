@@ -97,7 +97,6 @@ void HotReload::update_watched_paths_for_session(SlangSession* session)
     SlangInt module_count = slang_session->getLoadedModuleCount();
     for (SlangInt module_index = 0; module_index < module_count; module_index++) {
         slang::IModule* slang_module = slang_session->getLoadedModule(module_index);
-
         SlangInt32 dependency_count = slang_module->getDependencyFileCount();
         for (SlangInt32 dependency_index = 0; dependency_index < dependency_count; dependency_index++) {
             {
