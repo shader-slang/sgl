@@ -23,7 +23,7 @@ HotReload::HotReload(ref<Device> device)
 
 void HotReload::update()
 {
-    // Update file system watcher, which in turn my cause on_file_system_event
+    // Update file system watcher, which in turn may cause on_file_system_event
     // to be called.
     m_file_system_watcher->update();
 }
