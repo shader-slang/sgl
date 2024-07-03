@@ -28,7 +28,8 @@ static void write_shader(const WriteShaderDesc& desc)
         imports += "import " + i + ";\n";
     }
 
-    std::string formatted = std::format(R"SHADER(
+    std::string formatted = std::format(
+        R"SHADER(
 {3}
 RWStructuredBuffer<uint> {0};
 [shader("compute")]
@@ -48,7 +49,6 @@ if(tid.x<1024)
     std::ofstream shader(desc.path);
     shader << formatted;
     shader.close();
-
 }
 
 // Writes out a shader module with a function that returns <set_to>
@@ -65,7 +65,8 @@ static void write_module(const WriteModuleDesc& desc)
         imports += "import " + i + ";\n";
     }
 
-    std::string formatted = std::format(R"SHADER(
+    std::string formatted = std::format(
+        R"SHADER(
 {0}
 int {1}()
 {{
@@ -82,7 +83,12 @@ int {1}()
     shader.close();
 }
 
-    static void run_and_verify(testing::GpuTestContext& ctx, ref<ComputeKernel> kernel, uint32_t expected_value, bool expect_success=true)
+static void run_and_verify(
+    testing::GpuTestContext& ctx,
+    ref<ComputeKernel> kernel,
+    uint32_t expected_value,
+    bool expect_success = true
+)
 {
     static int g_zeros[1024];
     static int g_results[1024];
@@ -191,7 +197,7 @@ TEST_CASE_GPU("change kernel name and recreate")
     run_and_verify(ctx, kernel, 1);
 
     // Re-write the shader, and verify it still returns 1, as hasn't reloaded yet.
-    write_shader({.path = abs_path, .set_to = "1", .kernel_name="main2"});
+    write_shader({.path = abs_path, .set_to = "1", .kernel_name = "main2"});
 
     // Force a reload, and verify the result is now 2.
     ctx.device->hot_reload()->recreate_all_sessions();
@@ -544,9 +550,8 @@ TEST_CASE_GPU("create multi directory session and monitor for changes")
 
     //
     //// Hot reload should not report error
-    //CHECK(!ctx.device->hot_reload()->last_build_failed());
+    // CHECK(!ctx.device->hot_reload()->last_build_failed());
 }
-
 
 
 TEST_SUITE_END();

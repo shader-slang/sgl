@@ -91,7 +91,8 @@ void HotReload::recreate_all_sessions()
     }
 }
 
-void HotReload::update_watched_paths_for_session(SlangSession* session) {
+void HotReload::update_watched_paths_for_session(SlangSession* session)
+{
 
     // Iterate over all the dependencies of all modules in the session.
     slang::ISession* slang_session = session->get_slang_session();
@@ -125,11 +126,12 @@ void HotReload::update_watched_paths_for_session(SlangSession* session) {
     }
 }
 
-void HotReload::_clear_file_watches() {
+void HotReload::_clear_file_watches()
+{
     for (auto& path : m_watched_paths) {
         m_file_system_watcher->remove_watch(path);
     }
     m_watched_paths.clear();
 }
 
-}
+} // namespace sgl

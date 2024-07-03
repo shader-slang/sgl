@@ -710,9 +710,7 @@ SlangModule::~SlangModule()
     m_session->_unregister_module(this);
 }
 
-void SlangModule::load(
-    SlangSessionBuild& build_data
-) const
+void SlangModule::load(SlangSessionBuild& build_data) const
 {
     Timer timer;
     Slang::ComPtr<ISlangBlob> diagnostics;
@@ -726,9 +724,8 @@ void SlangModule::load(
         std::string resolved_name = session_data->resolve_module_name(desc.module_name);
         slang_module = session_data->slang_session->loadModule(resolved_name.c_str(), diagnostics.writeRef());
         if (!slang_module) {
-            std::string msg = append_diagnostics(fmt::format("Failed to load slang module \"{}\"", desc.module_name),
-                diagnostics
-            );
+            std::string msg
+                = append_diagnostics(fmt::format("Failed to load slang module \"{}\"", desc.module_name), diagnostics);
             throw SlangCompileError(msg);
         }
     } else {
@@ -866,7 +863,8 @@ SlangEntryPoint::~SlangEntryPoint()
     m_module->_unregister_entry_point(this);
 }
 
-void SlangEntryPoint::init(SlangSessionBuild& build_data) const {
+void SlangEntryPoint::init(SlangSessionBuild& build_data) const
+{
     const SlangEntryPointDesc& desc = m_desc;
 
     SlangModuleData* module_data = build_data.modules[m_module.get()];
@@ -1158,7 +1156,8 @@ void ShaderProgram::link(SlangSessionBuild& build_data) const
     build_data.programs[this] = std::move(data);
 }
 
-void ShaderProgram::store_built_data(SlangSessionBuild& build_data) {
+void ShaderProgram::store_built_data(SlangSessionBuild& build_data)
+{
     // Store built program data
     m_data = build_data.programs[this];
 

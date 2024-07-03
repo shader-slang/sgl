@@ -482,7 +482,6 @@ Device::Device(const DeviceDesc& desc)
 
     if (m_desc.enable_print)
         m_debug_printer = std::make_unique<DebugPrinter>(this);
-
 }
 
 Device::~Device()

@@ -48,7 +48,7 @@ public:
     bool auto_detect_changes() const { return m_auto_detect_changes; }
     void set_auto_detect_changes(bool val) { m_auto_detect_changes = val; }
 
-     // Adjust delay used by internal fs monitor before reponding to file system events.
+    // Adjust delay used by internal fs monitor before reponding to file system events.
     uint32_t auto_detect_delay() const;
     void set_auto_detect_delay(uint32_t delay_ms);
 
@@ -60,7 +60,6 @@ public:
     void _clear_file_watches();
 
 private:
-
     void on_file_system_event(std::span<FileSystemWatchEvent> events);
 
     void update_watched_paths_for_session(SlangSession* session);
