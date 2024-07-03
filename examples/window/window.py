@@ -14,8 +14,7 @@ class App:
         )
         self.device = sgl.Device(
             enable_debug_layers=True,
-            compiler_options={"include_paths": [EXAMPLE_DIR]},
-            enable_hot_reload = True
+            compiler_options={"include_paths": [EXAMPLE_DIR]}
         )
         self.swapchain = self.device.create_swapchain(
             image_count=3,
@@ -91,8 +90,6 @@ class App:
                         sgl.Bitmap.ComponentType.uint8,
                         srgb_gamma=True,
                     ).write_async("screenshot.png")
-            elif event.key == sgl.KeyCode.r:
-                self.device.reload_all_programs()
 
     def on_mouse_event(self, event: sgl.MouseEvent):
         if self.ui.handle_mouse_event(event):

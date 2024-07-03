@@ -36,29 +36,6 @@ pip install sgl
 
 The documentation is available on [readthedocs][2].
 
-## Hot Reload (experimental)
-
-Automatic hot reload (windows only) can be turned on when creating the device:
-
-```
-self.device = sgl.Device(
-    enable_hot_reload = True,       # Enable hot reload
-    hot_reload_everything = False   # Choose whether to reload ALL programs whenever a slang file changes
-)
-```
-
-Once enabled, any changes to slang files within the working directory will be detected and trigger a rebuild
-of the relevant shaders. Dependency checking is currently limited to the root file for a given module. To
-work around this, enable hot_reload_everything, which will trigger all programs to rebuild in response to changes.
-
-In addition to automatic reload, users can now trigger a full reload code manually as follows:
-```
-if event.key == sgl.KeyCode.r:
-    self.device.reload_all_programs()
-```
-
-The window.py example demonstrates turning on hot reload.
-
 ## License
 
 sgl source code is licensed under the Apache-2.0 License - see the [LICENSE.txt](LICENSE.txt) file for details.
