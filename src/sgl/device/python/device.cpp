@@ -219,6 +219,35 @@ SGL_PY_EXPORT(device_device)
     );
     device.def(
         "create_swapchain",
+        [](Device* self,
+           WindowHandle window_handle,
+           Format format,
+           uint32_t width,
+           uint32_t height,
+           uint32_t image_count,
+           bool enable_vsync)
+        {
+            return self->create_swapchain(
+                {
+                    .format = format,
+                    .width = width,
+                    .height = height,
+                    .image_count = image_count,
+                    .enable_vsync = enable_vsync,
+                },
+                window_handle
+            );
+        },
+        "window_handle"_a,
+        "format"_a = SwapchainDesc().format,
+        "width"_a = SwapchainDesc().width,
+        "height"_a = SwapchainDesc().height,
+        "image_count"_a = SwapchainDesc().image_count,
+        "enable_vsync"_a = SwapchainDesc().enable_vsync,
+        D_NA(Device, create_swapchain, 2)
+    );
+    device.def(
+        "create_swapchain",
         [](Device* self, const SwapchainDesc& desc, ref<Window> window)
         { return self->create_swapchain(desc, window); },
         "desc"_a,
