@@ -410,7 +410,7 @@ TEST_CASE_GPU("load module separately from program")
         .imports = {"mod"},
     });
 
-    // Load module then program independently and verify result
+    // Load module then program independently and verify result.
     ref<SlangModule> module = session->load_module(mod_path.string());
     ref<ShaderProgram> program = session->load_program(abs_path.string(), {"main"});
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
