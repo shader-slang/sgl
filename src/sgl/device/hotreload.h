@@ -12,13 +12,13 @@
 #include "sgl/core/object.h"
 #include "sgl/core/enum.h"
 
+#include <slang.h>
+
 #include <exception>
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
-
-#include <slang.h>
 
 namespace sgl {
 
