@@ -8,8 +8,6 @@ namespace sgl {
 
 HotReload::HotReload(ref<Device> device)
     : m_device(device)
-    , m_auto_detect_changes(true)
-    , m_last_build_failed(false)
 {
     // Check for none-supported platforms.
 #if !SGL_WINDOWS

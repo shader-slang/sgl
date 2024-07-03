@@ -63,10 +63,10 @@ private:
     void update_watched_paths_for_session(SlangSession* session);
 
     breakable_ref<Device> m_device;
-    bool m_auto_detect_changes;
+    bool m_auto_detect_changes{true};
     ref<FileSystemWatcher> m_file_system_watcher;
     std::set<SlangSession*> m_all_slang_sessions;
-    bool m_last_build_failed;
+    bool m_last_build_failed{false};
     std::set<std::filesystem::path> m_watched_paths;
 };
 
