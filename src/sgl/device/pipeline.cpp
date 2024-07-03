@@ -24,7 +24,7 @@ namespace sgl {
 
 Pipeline::Pipeline(ref<Device> device, ref<ShaderProgram> program)
     : DeviceResource(std::move(device))
-    , m_program(program)
+    , m_program(std::move(program))
 {
     SGL_CHECK_NOT_NULL(program);
     m_program->_register_pipeline(this);
