@@ -175,7 +175,7 @@ SGL_PY_EXPORT(device_device)
         "adapter_luid"_a.none() = nb::none(),
         "compiler_options"_a.none() = nb::none(),
         "shader_cache_path"_a.none() = nb::none(),
-        "enable_hot_reload"_a = false,
+        "enable_hot_reload"_a = true,
         D(Device, Device)
     );
     device.def(nb::init<DeviceDesc>(), "desc"_a, D(Device, Device));

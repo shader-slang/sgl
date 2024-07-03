@@ -22,9 +22,6 @@ HotReload::HotReload(ref<Device> device)
     m_file_system_watcher->set_on_change([this](std::span<FileSystemWatchEvent> events)
                                          { on_file_system_event(events); });
 
-#if !SGL_WINDOWS
-    log_error("Hot reload is currently only supported on windows\n");
-#endif
 }
 
 void HotReload::update()
