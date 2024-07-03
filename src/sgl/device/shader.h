@@ -235,6 +235,7 @@ struct SlangSessionDesc {
 
 /// Internal data stored once the slang session has been created.
 struct SlangSessionData : Object {
+    /// Pointer to internal slang session.
     Slang::ComPtr<slang::ISession> slang_session;
 
     /// Set of all currently loaded slang modules.
