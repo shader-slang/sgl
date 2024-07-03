@@ -393,7 +393,7 @@ TEST_CASE_GPU("load module separately from program")
         .set_to = "1",
     });
 
-    // Create a new session explicitly with no include paths
+    // Create a new session with access to the subdirectory.
     SlangCompilerOptions opts = ctx.device->desc().compiler_options;
     opts.include_paths.clear();
     opts.include_paths.push_back(inc_path);
