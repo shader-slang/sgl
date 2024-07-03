@@ -230,7 +230,7 @@ TEST_CASE_GPU("change buffer name and fail to use recreated program")
     ctx.device->hot_reload()->recreate_all_sessions();
     CHECK(!ctx.device->hot_reload()->last_build_failed());
 
-    // Verify should fail, as the normal parameter name is now wrong
+    // Verify should throw exception, as the normal parameter name is now wrong.
     CHECK_THROWS(run_and_verify(ctx, kernel, 2));
 }
 
