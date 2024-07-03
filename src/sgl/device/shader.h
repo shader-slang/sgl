@@ -235,6 +235,7 @@ struct SlangSessionDesc {
 
 /// Internal data stored once the slang session has been created.
 struct SlangSessionData : Object {
+    /// Pointer to internal slang session.
     Slang::ComPtr<slang::ISession> slang_session;
 
     /// Set of all currently loaded slang modules.
@@ -335,7 +336,7 @@ private:
     ref<SlangModule> m_nvapi_module;
 
     /// All loaded sgl modules (wrappers around IModule returned from load_module).
-    /// Note: this is a vector, as order of creation matters
+    /// Note: this is a vector, as order of creation matters.
     std::vector<SlangModule*> m_registered_modules;
 
     /// All created sgl programs (via link_program)
@@ -346,10 +347,10 @@ struct SlangModuleDesc {
     /// Required module name
     std::string module_name;
 
-    /// Optional module source. If not specified slang module resolution is used
+    /// Optional module source. If not specified slang module resolution is used.
     std::optional<std::string> source;
 
-    /// If source specified, additional path for compilation
+    /// If source specified, additional path for compilation.
     std::optional<std::filesystem::path> path;
 };
 
@@ -403,7 +404,6 @@ private:
     SlangModuleDesc m_desc;
     ref<SlangModuleData> m_data;
 
-    /// Slang module (owned by the session).
     mutable std::set<SlangEntryPoint*> m_registered_entry_points;
 };
 

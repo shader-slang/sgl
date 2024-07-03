@@ -12,13 +12,13 @@
 #include "sgl/core/object.h"
 #include "sgl/core/enum.h"
 
+#include <slang.h>
+
 #include <exception>
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
-
-#include <slang.h>
 
 namespace sgl {
 
@@ -30,7 +30,7 @@ public:
     HotReload(ref<Device> device);
 
     /// Force immediate recreation of all registered sessions and
-    /// any module/programs they've loaded/linked.
+    /// any modules/programs they've loaded/linked.
     void recreate_all_sessions();
 
     /// Updates internal file system monitor for change detection.
@@ -52,8 +52,7 @@ public:
     uint32_t auto_detect_delay() const;
     void set_auto_detect_delay(uint32_t delay_ms);
 
-    /// Mainly for test, return true if last attempt to recreate sessions
-    /// failed with exception.
+    /// Return true if last attempt to recreate sessions failed with exception.
     bool last_build_failed() const { return m_last_build_failed; }
 
     /// Exclusively for testing, erase all existing file watches
@@ -61,7 +60,6 @@ public:
 
 private:
     void on_file_system_event(std::span<FileSystemWatchEvent> events);
-
     void update_watched_paths_for_session(SlangSession* session);
 
     breakable_ref<Device> m_device;
@@ -69,7 +67,6 @@ private:
     ref<FileSystemWatcher> m_file_system_watcher;
     std::set<SlangSession*> m_all_slang_sessions;
     bool m_last_build_failed;
-
     std::set<std::filesystem::path> m_watched_paths;
 };
 

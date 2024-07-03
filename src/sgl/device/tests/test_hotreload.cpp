@@ -13,7 +13,7 @@
 
 using namespace sgl;
 
-// Writes out a shader with a line in that is outbuffer[tid.x] = <set_to>;
+// Writes out a shader with a line in that is "outbuffer[tid.x] = <set_to>;".
 struct WriteShaderDesc {
     std::filesystem::path path;
     std::string set_to;
@@ -51,7 +51,7 @@ if(tid.x<1024)
     shader.close();
 }
 
-// Writes out a shader module with a function that returns <set_to>
+// Writes out a shader module with a function that returns <set_to>.
 struct WriteModuleDesc {
     std::filesystem::path path;
     std::string func_name{"func"};
@@ -199,13 +199,13 @@ TEST_CASE_GPU("change kernel name and recreate")
     // Re-write the shader, and verify it still returns 1, as hasn't reloaded yet.
     write_shader({.path = abs_path, .set_to = "1", .kernel_name = "main2"});
 
-    // Force a reload, and verify the result is now 2.
+    // Force a reload
     ctx.device->hot_reload()->recreate_all_sessions();
 
     // Hot reload should report error, as entry point name has changed so kernel is invalid
     CHECK(ctx.device->hot_reload()->last_build_failed());
 
-    // Program should still be valid and return 1
+    // Program should still be valid and return 1.
     run_and_verify(ctx, kernel, 1);
 }
 
@@ -226,11 +226,11 @@ TEST_CASE_GPU("change buffer name and fail to use recreated program")
     // Re-write the shader, and verify it still returns 1, as hasn't reloaded yet.
     write_shader({.path = abs_path, .set_to = "2", .param_name = "outbuffer2"});
 
-    // Force a reload, which should succed
+    // Force a reload, which should succeed.
     ctx.device->hot_reload()->recreate_all_sessions();
     CHECK(!ctx.device->hot_reload()->last_build_failed());
 
-    // Verify should fail, as the normal parameter name is now wrong
+    // Verify should throw exception, as the normal parameter name is now wrong.
     CHECK_THROWS(run_and_verify(ctx, kernel, 2));
 }
 
@@ -275,7 +275,7 @@ TEST_CASE_GPU("change program with correct module import and recreate")
     std::filesystem::path abs_module_path = sgl::testing::get_suite_temp_directory() / "goodimportmodule.slang";
     write_module({.path = abs_module_path, .set_to = "2"});
 
-    // Re-write shader with a valid import and check build succeeds
+    // Re-write shader with a valid import and check build succeeds.
     write_shader({.path = abs_path, .set_to = "func()", .imports = {"goodimportmodule"}});
     ctx.device->hot_reload()->recreate_all_sessions();
     CHECK(!ctx.device->hot_reload()->last_build_failed());
@@ -325,7 +325,7 @@ TEST_CASE_GPU("leave program then break the module it imports")
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
     run_and_verify(ctx, kernel, 1);
 
-    // Recreate the module with a new value and recompile
+    // Recreate the module with a new value and expect failed recompile.
     write_module({.path = abs_module_path, .set_to = "blabla"});
     ctx.device->hot_reload()->recreate_all_sessions();
     CHECK(ctx.device->hot_reload()->last_build_failed());
@@ -336,10 +336,10 @@ TEST_CASE_GPU("leave program then break the module it imports")
 
 TEST_CASE_GPU("change program with basic additional source")
 {
-    // Disable auto detection
+    // Disable auto detection.
     ctx.device->hot_reload()->set_auto_detect_changes(false);
 
-    // Create a new session explicitly with no include paths
+    // Create a new session explicitly with no include paths.
     SlangCompilerOptions opts = ctx.device->desc().compiler_options;
     opts.include_paths.clear();
     ref<sgl::SlangSession> session = ctx.device->create_slang_session({
@@ -384,7 +384,7 @@ TEST_CASE_GPU("load module separately from program")
     // Disable auto detection
     ctx.device->hot_reload()->set_auto_detect_changes(false);
 
-    // Create session with module in sub path
+    // Create module in subdirectory.
     std::filesystem::path inc_path = sgl::testing::get_suite_temp_directory() / "sepmod_inc";
     std::filesystem::create_directories(inc_path);
     std::filesystem::path mod_path = inc_path / "mod.slang";
@@ -393,7 +393,7 @@ TEST_CASE_GPU("load module separately from program")
         .set_to = "1",
     });
 
-    // Create a new session explicitly with no include paths
+    // Create a new session with access to the subdirectory.
     SlangCompilerOptions opts = ctx.device->desc().compiler_options;
     opts.include_paths.clear();
     opts.include_paths.push_back(inc_path);
@@ -402,7 +402,7 @@ TEST_CASE_GPU("load module separately from program")
         .add_default_include_paths = true,
     });
 
-    // Write version of shader that reads a value from the module
+    // Write version of shader that reads a value from the module.
     std::filesystem::path abs_path = sgl::testing::get_suite_temp_directory() / "sepmod.slang";
     write_shader({
         .path = abs_path,
@@ -410,13 +410,13 @@ TEST_CASE_GPU("load module separately from program")
         .imports = {"mod"},
     });
 
-    // Load module then program independently and verify result
+    // Load module then program independently and verify result.
     ref<SlangModule> module = session->load_module(mod_path.string());
     ref<ShaderProgram> program = session->load_program(abs_path.string(), {"main"});
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
     run_and_verify(ctx, kernel, 1);
 
-    // Modify the module to return 2 and verify the result
+    // Modify the module to return 2 and verify the result.
     write_module({
         .path = mod_path,
         .set_to = "2",
@@ -485,7 +485,7 @@ TEST_CASE_GPU("create multi directory session and monitor for changes")
         .set_to = "3",
     });
 
-    // Create a new session.
+    // Create a new session with access to both directories.
     SlangCompilerOptions opts = ctx.device->desc().compiler_options;
     opts.include_paths.push_back(inc_path_0);
     opts.include_paths.push_back(inc_path_1);
@@ -547,10 +547,6 @@ TEST_CASE_GPU("create multi directory session and monitor for changes")
         ctx.device->hot_reload()->update();
     }
     run_and_verify(ctx, kernel, 20);
-
-    //
-    //// Hot reload should not report error
-    // CHECK(!ctx.device->hot_reload()->last_build_failed());
 }
 
 
