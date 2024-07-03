@@ -540,6 +540,8 @@ public:
 
     Blitter* _blitter();
 
+    ref<HotReload> hot_reload() { return m_hot_reload; }
+
 private:
     DeviceDesc m_desc;
     DeviceInfo m_info;

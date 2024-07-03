@@ -47,6 +47,10 @@ public:
     bool auto_detect_changes() const { return m_auto_detect_changes; }
     void set_auto_detect_changes(bool val) { m_auto_detect_changes = val; }
 
+    /// Mainly for test, return true if last attempt to recreate sessions
+    /// failed with exception.
+    bool last_build_failed() const { return m_last_build_failed; }
+
 private:
 
     void on_file_system_event(std::span<FileSystemWatchEvent> events);
@@ -55,6 +59,7 @@ private:
     bool m_auto_detect_changes;
     ref<FileSystemWatcher> m_file_system_watcher;
     std::set<SlangSession*> m_all_slang_sessions;
+    bool m_last_build_failed;
 };
 
 } // namespace sgl

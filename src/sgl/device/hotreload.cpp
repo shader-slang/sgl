@@ -9,6 +9,7 @@ namespace sgl {
 HotReload::HotReload(ref<Device> device)
     : m_device(device)
     , m_auto_detect_changes(true)
+    , m_last_build_failed(false)
 {
     // Create file system monitor + hook up change event.
     m_file_system_watcher = make_ref<FileSystemWatcher>();
@@ -64,10 +65,17 @@ void HotReload::recreate_all_sessions()
     // of hot-reload compile errors. Instead, the error should be
     // logged and application carry on as usual.
     try {
+        m_last_build_failed = false;
         for (SlangSession* session : m_all_slang_sessions)
             session->recreate_session();
     } catch (SlangCompileError compile_error) {
+        log_error("Hot reload failed due to compile error");
         log_error(compile_error.what());
+        m_last_build_failed = true;
+    } catch (std::runtime_error runtime_error) {
+        log_error("Hot reload failed due to incompatible shader modification");
+        log_error(runtime_error.what());
+        m_last_build_failed = true;
     }
 }
 
