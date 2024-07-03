@@ -100,12 +100,14 @@ int {1}()
     memset(g_results, 0, sizeof(g_results));
     buffer->get_data(g_results, sizeof(g_results));
 
+    bool all_correct = true;
     for (auto x : g_results) {
         if (expect_success)
-            CHECK_EQ(x, expected_value);
+            all_correct = all_correct && x == (int)expected_value;
         else
-            CHECK_NE(x, expected_value);
+            all_correct = all_correct && x != (int)expected_value;
     }
+    CHECK(all_correct);
 }
 
 TEST_SUITE_BEGIN("hotreload");
