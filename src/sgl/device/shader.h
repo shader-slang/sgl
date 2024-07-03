@@ -404,7 +404,6 @@ private:
     SlangModuleDesc m_desc;
     ref<SlangModuleData> m_data;
 
-    /// Slang module (owned by the session).
     mutable std::set<SlangEntryPoint*> m_registered_entry_points;
 };
 
