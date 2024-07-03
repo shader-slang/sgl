@@ -92,7 +92,6 @@ void HotReload::recreate_all_sessions()
 
 void HotReload::update_watched_paths_for_session(SlangSession* session)
 {
-
     // Iterate over all the dependencies of all modules in the session.
     slang::ISession* slang_session = session->get_slang_session();
     SlangInt module_count = slang_session->getLoadedModuleCount();
