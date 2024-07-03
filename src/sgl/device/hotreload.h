@@ -30,7 +30,7 @@ public:
     HotReload(ref<Device> device);
 
     /// Force immediate recreation of all registered sessions and
-    /// any module/programs they've loaded/linked.
+    /// any modules/programs they've loaded/linked.
     void recreate_all_sessions();
 
     /// Updates internal file system monitor for change detection.
