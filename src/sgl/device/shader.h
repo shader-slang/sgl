@@ -350,7 +350,7 @@ struct SlangModuleDesc {
     /// Optional module source. If not specified slang module resolution is used.
     std::optional<std::string> source;
 
-    /// If source specified, additional path for compilation
+    /// If source specified, additional path for compilation.
     std::optional<std::filesystem::path> path;
 };
 
