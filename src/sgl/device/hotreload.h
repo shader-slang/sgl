@@ -60,7 +60,6 @@ public:
 
 private:
     void on_file_system_event(std::span<FileSystemWatchEvent> events);
-
     void update_watched_paths_for_session(SlangSession* session);
 
     breakable_ref<Device> m_device;
@@ -68,7 +67,6 @@ private:
     ref<FileSystemWatcher> m_file_system_watcher;
     std::set<SlangSession*> m_all_slang_sessions;
     bool m_last_build_failed;
-
     std::set<std::filesystem::path> m_watched_paths;
 };
 
