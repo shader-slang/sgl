@@ -327,7 +327,7 @@ def test_gfx_blend(device_type):
         vert_scale=sgl.float2(0.5),
         rasterizer={ "cull_mode": sgl.CullMode.back },
         blend=sgl.BlendDesc({
-            "alpha_to_coverage_enable": True,
+            "alpha_to_coverage_enable": False,
             "targets": [{
                 "enable_blend": True,
                 "color": {
@@ -602,8 +602,6 @@ def test_raytrace_closest_instance(device_type, mode):
 
     tlas = rtx.create_instances([sgl.float3x4(x) for x in transforms])
     rtx.dispatch_ray_grid(tlas, mode)
-
-    sgl.tev.show(ctx.output_texture, "output")
 
     # Expect full green square, and only 3/4 of red square.
     pixels = ctx.output_texture.to_numpy()
