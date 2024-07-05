@@ -19,7 +19,7 @@ endmacro()
 # d3d12
 
 add_library(d3d12 INTERFACE)
-target_link_libraries(d3d12 INTERFACE dxgi.lib d3d12.lib)
+target_link_libraries(d3d12 INTERFACE dxgi.lib d3d12.lib dxguid.lib)
 
 # nanobind
 
