@@ -66,12 +66,6 @@ float4 fragment_main(V2F v)
     return frag_color;
 }
 
-[shader("fragment")]
-float4 fragment_tex_main(V2F v)
-    : SV_Target
-{
-    return frag_texture.Sample(frag_sampler_state, v.pos.xy, 0);
-}
 
 [shader("compute")]
 [numthreads(16, 16, 1)]
