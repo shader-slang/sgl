@@ -14,7 +14,7 @@ class App:
         )
         self.device = sgl.Device(
             enable_debug_layers=True,
-            compiler_options={"include_paths": [EXAMPLE_DIR]}
+            compiler_options={"include_paths": [EXAMPLE_DIR]},
         )
         self.swapchain = self.device.create_swapchain(
             image_count=3,
