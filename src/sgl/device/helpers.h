@@ -9,7 +9,7 @@
 
 
 namespace sgl {
-    SGL_API std::string BuildSlangFailedMessage(const char* call, SlangResult result);
+SGL_API std::string BuildSlangFailedMessage(const char* call, SlangResult result);
 }
 
 #define SLANG_CALL(call)                                                                                               \

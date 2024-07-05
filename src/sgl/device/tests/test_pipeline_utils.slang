@@ -7,7 +7,7 @@ void clear(uint3 tid: SV_DispatchThreadID, RWTexture2D<float4> render_texture)
     render_texture.GetDimensions(dim.x, dim.y);
     if (any(tid.xy >= dim))
         return;
-    render_texture[tid.xy] = float4(0,0,0,0);
+    render_texture[tid.xy] = float4(0, 0, 0, 0);
 }
 
 [shader("compute")]
@@ -27,16 +27,22 @@ void count(uint3 tid: SV_DispatchThreadID, Texture2D<float4> render_texture, RWB
 
 [shader("compute")]
 [numthreads(16, 16, 1)]
-void setcolor(uint3 tid: SV_DispatchThreadID, RWTexture2D<float4> render_texture, uniform int2 pos, uniform int2 size, uniform float4 color)
+void setcolor(
+    uint3 tid: SV_DispatchThreadID,
+    RWTexture2D<float4> render_texture,
+    uniform int2 pos,
+    uniform int2 size,
+    uniform float4 color
+)
 {
     if (any(tid.xy >= size))
         return;
-    render_texture[tid.xy+pos] = color;
+    render_texture[tid.xy + pos] = color;
 }
 
 
 struct V2F {
-    float4 pos: SV_Position;
+    float4 pos : SV_Position;
 };
 
 float2 vert_offset;
@@ -47,7 +53,7 @@ float vert_z;
 V2F vertex_main(float3 pos: POSITION)
 {
     V2F o;
-    o.pos = float4(pos.xy*vert_scale.xy+vert_offset.xy,vert_z,1);
+    o.pos = float4(pos.xy * vert_scale.xy + vert_offset.xy, vert_z, 1);
     return o;
 }
 
@@ -71,7 +77,14 @@ float4 fragment_tex_main(V2F v)
 
 [shader("compute")]
 [numthreads(16, 16, 1)]
-void raygrid(uint3 tid: SV_DispatchThreadID, RWTexture2D<float4> render_texture, RaytracingAccelerationStructure tlas, uniform int2 pos, uniform int2 size, uniform float dist)
+void raygrid(
+    uint3 tid: SV_DispatchThreadID,
+    RWTexture2D<float4> render_texture,
+    RaytracingAccelerationStructure tlas,
+    uniform int2 pos,
+    uniform int2 size,
+    uniform float dist
+)
 {
     if (any(tid.xy >= size))
         return;
@@ -86,13 +99,12 @@ void raygrid(uint3 tid: SV_DispatchThreadID, RWTexture2D<float4> render_texture,
     q.TraceRayInline(tlas, 0, 0xff, ray);
     q.Proceed();
     if (q.CommittedStatus() == COMMITTED_TRIANGLE_HIT) {
-        float4 color = float4(0,0,0,1);
-        color[q.CommittedInstanceID()%3] = 1;
+        float4 color = float4(0, 0, 0, 1);
+        color[q.CommittedInstanceID() % 3] = 1;
         render_texture[tid.xy] = color;
     } else {
-        render_texture[tid.xy] = float4(0,0,0,1);
+        render_texture[tid.xy] = float4(0, 0, 0, 1);
     }
-
 }
 
 struct Payload {
@@ -108,8 +120,8 @@ void rt_miss(inout Payload payload)
 [shader("closesthit")]
 void rt_closest_hit(inout Payload payload, BuiltInTriangleIntersectionAttributes attribs)
 {
-    float4 col = float4(0,0,0,1);
-    col[InstanceID()%3] = 1;
+    float4 col = float4(0, 0, 0, 1);
+    col[InstanceID() % 3] = 1;
     payload.color = col;
 }
 

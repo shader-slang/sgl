@@ -41,7 +41,7 @@ std::string GetLastGfxLayerError()
     free(pMessage);
     return res;
 #else
-    //TODO: Get useful error information for other platforms if possible
+    // TODO: Get useful error information for other platforms if possible
     return "";
 #endif
 }
