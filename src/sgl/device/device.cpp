@@ -294,9 +294,8 @@ Device::Device(const DeviceDesc& desc)
     ConstructorRefGuard ref_guard(this);
 
     // Create hot reload system before creating any sessions
-    if (m_desc.enable_hot_reload) {
+    if (m_desc.enable_hot_reload)
         m_hot_reload = make_ref<HotReload>(ref<Device>(this));
-    }
 
     SLANG_CALL(slang::createGlobalSession(m_global_session.writeRef()));
 
