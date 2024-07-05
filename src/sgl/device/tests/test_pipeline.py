@@ -347,6 +347,35 @@ def test_gfx_blend(device_type):
     is_pixel_red = np.all(pixels[:,:,:3] == [0.5,0,0], axis=2)
     assert np.sum(is_pixel_red) == int(area/4)
 
+# On Vulkan using 50% alpha coverage we get a checkerboard effect.
+@pytest.mark.parametrize("device_type", [sgl.DeviceType.vulkan])
+def test_gfx_alpha_coverage(device_type):
+    ctx = PipelineTestContext(device_type)
+    gfx = GfxContext(ctx)
+    area = ctx.output_texture.width*ctx.output_texture.height
+
+    # Clear and then draw semi transparent red quad, and should end up
+    # with 1/8 of the pixels red due to alpha coverage.
+    gfx.draw_graphics_pipeline(
+        clear=True,
+        color=sgl.float4(1,0,0,0.5),
+        vert_scale=sgl.float2(0.5),
+        rasterizer={ "cull_mode": sgl.CullMode.back },
+        blend=sgl.BlendDesc({
+            "alpha_to_coverage_enable": True,
+            "targets": [{
+                "enable_blend": True,
+                "color": {
+                    "src_factor": sgl.BlendFactor.src_alpha
+                }
+            }]
+        })
+    )
+    sgl.tev.show(ctx.output_texture, "alpha_coverage")
+    pixels = ctx.output_texture.to_numpy()
+    is_pixel_red = np.all(pixels[:,:,:3] == [0.5,0,0], axis=2)
+    assert np.sum(is_pixel_red) == int(area/8)
+
 class RayContext:
     def __init__(self, ctx: PipelineTestContext) -> None:
         self.ctx = ctx
