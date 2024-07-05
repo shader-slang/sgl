@@ -58,8 +58,6 @@ V2F vertex_main(float3 pos: POSITION)
 }
 
 float4 frag_color;
-Texture2D<float> frag_texture;
-SamplerState frag_sampler_state;
 
 [shader("fragment")]
 float4 fragment_main(V2F v)
