@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Dict, List
 import sgl
 import sys
 import pytest
@@ -30,7 +29,7 @@ ALL_SHADER_MODELS = [
 ]
 
 
-def all_shader_models_from(shader_model: sgl.ShaderModel) -> List[sgl.ShaderModel]:
+def all_shader_models_from(shader_model: sgl.ShaderModel) -> list[sgl.ShaderModel]:
     return ALL_SHADER_MODELS[ALL_SHADER_MODELS.index(shader_model) :]
 
 
@@ -54,8 +53,8 @@ def get_device(type: sgl.DeviceType, use_cache: bool = True) -> sgl.Device:
 
 
 class Context:
-    buffers: Dict[str, sgl.Buffer]
-    textures: Dict[str, sgl.Texture]
+    buffers: dict[str, sgl.Buffer]
+    textures: dict[str, sgl.Texture]
 
     def __init__(self):
         self.buffers = {}
@@ -66,11 +65,11 @@ def dispatch_compute(
     device: sgl.Device,
     path: str,
     entry_point: str,
-    thread_count: List[int],
-    buffers: Dict = {},
-    textures: Dict = {},
-    defines: Dict[str, str] = {},
-    compiler_options: Dict = {},
+    thread_count: list[int],
+    buffers: dict = {},
+    textures: dict = {},
+    defines: dict[str, str] = {},
+    compiler_options: dict = {},
     shader_model: sgl.ShaderModel = sgl.ShaderModel.sm_6_6,
 ) -> Context:
     if shader_model > device.supported_shader_model:
@@ -124,7 +123,7 @@ def dispatch_compute(
         if isinstance(desc, sgl.Texture):
             texture = desc
         else:
-            raise NotImplementedError("Texture creation from Dict not implemented")
+            raise NotImplementedError("Texture creation from dict not implemented")
 
         ctx.textures[name] = texture
 
