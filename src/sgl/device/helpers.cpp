@@ -15,31 +15,35 @@
 namespace sgl {
 
 
-// Reads last error from graphics layer. Ideally should get some data from
-// Vulkan too.
+// Reads last error from graphics layer.
 std::string GetLastGfxLayerError()
 {
 #if SGL_HAS_D3D12
     IDXGIDebug* dxgiDebug = nullptr;
     DXGIGetDebugInterface1(0, IID_PPV_ARGS(&dxgiDebug));
-    if (dxgiDebug) {
-        IDXGIInfoQueue* dxgiInfoQueue = nullptr;
-        dxgiDebug->QueryInterface(IID_PPV_ARGS(&dxgiInfoQueue));
-        if (dxgiInfoQueue) {
-            UINT64 messageCount = dxgiInfoQueue->GetNumStoredMessages(DXGI_DEBUG_ALL);
-            if (messageCount > 0) {
-                SIZE_T messageLength = 0;
-                dxgiInfoQueue->GetMessage(DXGI_DEBUG_ALL, messageCount - 1, nullptr, &messageLength);
-                DXGI_INFO_QUEUE_MESSAGE* pMessage = (DXGI_INFO_QUEUE_MESSAGE*)malloc(messageLength);
-                dxgiInfoQueue->GetMessage(DXGI_DEBUG_ALL, messageCount - 1, pMessage, &messageLength);
-                auto res = std::string(pMessage->pDescription);
-                free(pMessage);
-                return res;
-            }
-        }
-    }
-#endif
+    if (!dxgiDebug)
+        return "";
+
+    IDXGIInfoQueue* dxgiInfoQueue = nullptr;
+    dxgiDebug->QueryInterface(IID_PPV_ARGS(&dxgiInfoQueue));
+    if (!dxgiInfoQueue)
+        return "";
+
+    UINT64 messageCount = dxgiInfoQueue->GetNumStoredMessages(DXGI_DEBUG_ALL);
+    if (messageCount == 0)
+        return "";
+
+    SIZE_T messageLength = 0;
+    dxgiInfoQueue->GetMessage(DXGI_DEBUG_ALL, messageCount - 1, nullptr, &messageLength);
+    DXGI_INFO_QUEUE_MESSAGE* pMessage = (DXGI_INFO_QUEUE_MESSAGE*)malloc(messageLength);
+    dxgiInfoQueue->GetMessage(DXGI_DEBUG_ALL, messageCount - 1, pMessage, &messageLength);
+    auto res = std::string(pMessage->pDescription);
+    free(pMessage);
+    return res;
+#else
+    //TODO: Get useful error information for other platforms if possible
     return "";
+#endif
 }
 
 // Builds the user friendly message that is passed into a slang failure exception,

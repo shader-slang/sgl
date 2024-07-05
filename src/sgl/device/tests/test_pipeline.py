@@ -3,8 +3,6 @@ import sgl
 import pytest
 import numpy as np
 
-#DEV_TYPES = helpers.DEFAULT_DEVICE_TYPES
-DEV_TYPES = [sgl.DeviceType.d3d12]
 
 class PipelineTestContext:
     def __init__(self, device_type, size=128) -> None:
@@ -68,12 +66,12 @@ class PipelineTestContext:
 
         return vertex_buffer, index_buffer, input_layout
 
-@pytest.mark.parametrize("device_type", DEV_TYPES)
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_clear_and_count(device_type):
     ctx = PipelineTestContext(device_type)
     ctx.expect_counts([0,0,0,0])
 
-@pytest.mark.parametrize("device_type", DEV_TYPES)
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_compute_set_square(device_type):
     ctx = PipelineTestContext(device_type)
     prog = ctx.device.load_program("test_pipeline_utils.slang", ["setcolor"])
@@ -86,7 +84,7 @@ def test_compute_set_square(device_type):
     area = size.x*size.y
     ctx.expect_counts([area,0,0,area])
 
-@pytest.mark.parametrize("device_type", DEV_TYPES)
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_compute_set_and_overwrite(device_type):
     ctx = PipelineTestContext(device_type)
     prog = ctx.device.load_program("test_pipeline_utils.slang", ["setcolor"])
@@ -104,7 +102,7 @@ def test_compute_set_and_overwrite(device_type):
     area2 = size2.x*size2.y
     ctx.expect_counts([area1-area2,area2,0,0])
 
-@pytest.mark.parametrize("device_type", DEV_TYPES)
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_gfx_clear(device_type):
     ctx = PipelineTestContext(device_type)
 
@@ -124,7 +122,7 @@ class GfxContext:
         self.framebuffer = ctx.device.create_framebuffer(render_targets=[ctx.output_texture.get_rtv()])
 
     # Draw a quad with the given pipeline and color, optionally clearing to black first.
-    # The quad is [-1,-1]->[1,1] so if offset/scale aren't specified will fill the whole screen
+    # The quad is [-1,-1]->[1,1] so if offset/scale aren't specified will fill the whole screen.
     def draw(self, pipeline, vert_offset=sgl.float2(0,0), vert_scale=sgl.float2(1,1), vert_z=0.0, color=sgl.float4(0,0,0,0), viewport=None, clear=True):
         command_buffer = self.ctx.device.create_command_buffer()
         with command_buffer.encode_render_commands(self.framebuffer) as encoder:
@@ -163,7 +161,7 @@ class GfxContext:
         self.draw(pipeline, color=color, clear=clear, vert_offset=vert_offset, vert_scale=vert_scale, vert_z=vert_z, viewport=viewport)
 
 
-@pytest.mark.parametrize("device_type", DEV_TYPES)
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_gfx_simple_primitive(device_type):
     ctx = PipelineTestContext(device_type)
     gfx = GfxContext(ctx)
@@ -171,7 +169,7 @@ def test_gfx_simple_primitive(device_type):
     area = ctx.output_texture.width*ctx.output_texture.height
     scale = sgl.float2(0.5)
 
-    # Clear and fill red, then verify 1/4 pixels are red and all solid
+    # Clear and fill red, then verify 1/4 pixels are red and all solid.
     gfx.draw_graphics_pipeline(
         color=sgl.float4(1,0,0,1),
         vert_scale=scale,
@@ -179,7 +177,7 @@ def test_gfx_simple_primitive(device_type):
     )
     ctx.expect_counts([int(area/4),0,0,area])
 
-    # Repeat with no culling, so should get same result
+    # Repeat with no culling, so should get same result.
     gfx.draw_graphics_pipeline(
         color=sgl.float4(0,1,0,1),
         vert_scale=scale,
@@ -187,7 +185,7 @@ def test_gfx_simple_primitive(device_type):
     )
     ctx.expect_counts([0,int(area/4),0,area])
 
-    # Repeat with front face culling, so should get all black
+    # Repeat with front face culling, so should get all black.
     gfx.draw_graphics_pipeline(
         color=sgl.float4(1,1,1,1),
         vert_scale=scale,
@@ -195,7 +193,7 @@ def test_gfx_simple_primitive(device_type):
     )
     ctx.expect_counts([0,0,0,area])
 
-@pytest.mark.parametrize("device_type", DEV_TYPES)
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_gfx_viewport(device_type):
     ctx = PipelineTestContext(device_type)
     gfx = GfxContext(ctx)
@@ -203,14 +201,14 @@ def test_gfx_viewport(device_type):
     area = ctx.output_texture.width*ctx.output_texture.height
     scale = sgl.float2(0.5)
 
-    # Clear and fill red, and verify it filled the whole screen
+    # Clear and fill red, and verify it filled the whole screen.
     gfx.draw_graphics_pipeline(
         color=sgl.float4(1,0,0,1),
         rasterizer={ "cull_mode": sgl.CullMode.back }
     )
     ctx.expect_counts([area,0,0,area])
 
-    # Use viewport to clear half the screen
+    # Use viewport to clear half the screen.
     gfx.draw_graphics_pipeline(
         color=sgl.float4(0,1,0,1),
         rasterizer={ "cull_mode": sgl.CullMode.back },
@@ -218,7 +216,7 @@ def test_gfx_viewport(device_type):
     )
     ctx.expect_counts([0,int(area/2),0,area])
 
-    # Same using horiontal clip instead
+    # Same using horiontal clip instead.
     gfx.draw_graphics_pipeline(
         color=sgl.float4(0,1,0,1),
         rasterizer={ "cull_mode": sgl.CullMode.back },
@@ -226,12 +224,12 @@ def test_gfx_viewport(device_type):
     )
     ctx.expect_counts([0,int(area/2),0,area])
 
-@pytest.mark.parametrize("device_type", DEV_TYPES)
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_gfx_depth(device_type):
     ctx = PipelineTestContext(device_type)
     gfx = GfxContext(ctx)
 
-    # Create a depth texture and re-create frame buffer that uses depth
+    # Create a depth texture and re-create frame buffer that uses depth.
     depth_texture = ctx.device.create_texture(
         format=sgl.Format.d32_float,
         width=ctx.output_texture.width,
@@ -316,13 +314,13 @@ def test_gfx_depth(device_type):
     )
     ctx.expect_counts([area,0,0,area])
 
-@pytest.mark.parametrize("device_type", DEV_TYPES)
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_gfx_blend(device_type):
     ctx = PipelineTestContext(device_type)
     gfx = GfxContext(ctx)
     area = ctx.output_texture.width*ctx.output_texture.height
 
-    # Clear and then draw semi transparent red quad, and should get 1/4 dark red pixels
+    # Clear and then draw semi transparent red quad, and should get 1/4 dark red pixels.
     gfx.draw_graphics_pipeline(
         clear=True,
         color=sgl.float4(1,0,0,0.5),
@@ -530,7 +528,7 @@ class RayContext:
             encoder.dispatch_rays(0, shader_table, [self.ctx.output_texture.width, self.ctx.output_texture.height, 1])
         command_buffer.submit()
 
-@pytest.mark.parametrize("device_type", DEV_TYPES)
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 @pytest.mark.parametrize("mode", ['compute','ray'])
 def test_raytrace_simple(device_type, mode):
     ctx = PipelineTestContext(device_type,)
@@ -557,7 +555,7 @@ def test_raytrace_simple(device_type, mode):
     num_red = np.sum(is_pixel_red)
     assert num_red == 4096
 
-@pytest.mark.parametrize("device_type", DEV_TYPES)
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 @pytest.mark.parametrize("mode", ['compute','ray'])
 def test_raytrace_two_instance(device_type, mode):
     ctx = PipelineTestContext(device_type)
@@ -584,7 +582,7 @@ def test_raytrace_two_instance(device_type, mode):
     assert np.sum(is_pixel_red) == 4096
     assert np.sum(is_pixel_green) == 4096
 
-@pytest.mark.parametrize("device_type", DEV_TYPES)
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 @pytest.mark.parametrize("mode", ['compute','ray'])
 def test_raytrace_closest_instance(device_type, mode):
     ctx = PipelineTestContext(device_type)
