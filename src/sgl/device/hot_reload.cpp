@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-#include "hotreload.h"
+#include "hot_reload.h"
 
 #include "sgl/core/file_system_watcher.h"
 #include "sgl/device/shader.h"

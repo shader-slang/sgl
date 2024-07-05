@@ -4,7 +4,7 @@
 #include "sgl/device/device.h"
 #include "sgl/device/shader.h"
 #include "sgl/device/kernel.h"
-#include "sgl/device/hotreload.h"
+#include "sgl/device/hot_reload.h"
 #include <fstream>
 #include <filesystem>
 #include <format>

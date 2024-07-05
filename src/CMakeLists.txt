@@ -91,8 +91,8 @@ target_sources(sgl PRIVATE
     sgl/device/framebuffer.h
     sgl/device/fwd.h
     sgl/device/helpers.h
-    sgl/device/hotreload.h
-    sgl/device/hotreload.cpp
+    sgl/device/hot_reload.h
+    sgl/device/hot_reload.cpp
     sgl/device/input_layout.cpp
     sgl/device/input_layout.h
     sgl/device/kernel.cpp
@@ -517,7 +517,7 @@ if(SGL_BUILD_TESTS)
         sgl/core/tests/test_stream.cpp
         sgl/core/tests/test_string.cpp
         sgl/device/tests/test_device.cpp
-        sgl/device/tests/test_hotreload.cpp
+        sgl/device/tests/test_hot_reload.cpp
         sgl/device/tests/test_formats.cpp
         sgl/device/tests/test_shader.cpp
         sgl/math/tests/test_float16.cpp

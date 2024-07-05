@@ -94,6 +94,10 @@ struct DeviceDesc {
     /// Enable device side printing (adds performance overhead).
     bool enable_print{false};
 
+    /// Enable automatic shader reload in response to file changes.
+    /// Note: Currently windows only.
+    bool enable_hot_reload{true};
+
     /// Adapter LUID to select adapter on which the device will be created.
     std::optional<AdapterLUID> adapter_luid;
 
@@ -103,10 +107,6 @@ struct DeviceDesc {
     /// Path to the shader cache directory (optional).
     /// If a relative path is used, the cache is stored in the application data directory.
     std::optional<std::filesystem::path> shader_cache_path;
-
-    /// Enable automatic shader reload in response to file changes.
-    /// Note: Currently windows only.
-    bool enable_hot_reload{true};
 };
 
 struct DeviceLimits {

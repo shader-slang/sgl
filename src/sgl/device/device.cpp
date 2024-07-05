@@ -23,7 +23,7 @@
 #include "sgl/device/cuda_interop.h"
 #include "sgl/device/print.h"
 #include "sgl/device/blit.h"
-#include "sgl/device/hotreload.h"
+#include "sgl/device/hot_reload.h"
 
 #include "sgl/core/file_system_watcher.h"
 #include "sgl/core/config.h"

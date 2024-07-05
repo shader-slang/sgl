@@ -218,7 +218,7 @@ struct ShaderProgramData;
 
 /// Intermediate structure used during a build that stores new session, module,
 /// program and entry point information. This is populated during a build, then
-/// applied to all built modules/entrypoints/programs at once on success
+/// applied to all built modules/entrypoints/programs at once on success.
 struct SlangSessionBuild {
     ref<SlangSessionData> session;
     std::map<const SlangModule*, ref<SlangModuleData>> modules;
