@@ -9,6 +9,7 @@
 #include "sgl/device/print.h"
 #include "sgl/device/slang_utils.h"
 #include "sgl/device/pipeline.h"
+#include "sgl/device/hot_reload.h"
 
 #include "sgl/core/type_utils.h"
 #include "sgl/core/platform.h"
@@ -158,7 +159,9 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
 {
     ConstructorRefGuard ref_guard(this);
 
-    m_device->_register_slang_session(this);
+    // Register with hot load reload system if enabled.
+    if (m_device->hot_reload())
+        m_device->hot_reload()->_register_slang_session(this);
 
     // Create (but don't compile yet) the NVAPI module
     // We link this to all programs because slang uses NVAPI features while not including NVAPI itself.
@@ -179,7 +182,9 @@ SlangSession::~SlangSession()
     // due to member variable destructor ordering.
     m_nvapi_module.reset();
 
-    m_device->_unregister_slang_session(this);
+    // Unregister with hot load reload system if enabled.
+    if (m_device->hot_reload())
+        m_device->hot_reload()->_unregister_slang_session(this);
 }
 
 void SlangSession::recreate_session()
@@ -586,7 +591,8 @@ void SlangSession::update_module_cache_and_dependencies()
 {
     // Notify hot reload system of potentially changed modules,
     // thus potentially changed dependencies.
-    m_device->_on_session_modules_changed(this);
+    if (m_device->hot_reload())
+        m_device->hot_reload()->_on_session_modules_changed(this);
 
     // Cache newly loaded modules if enabled.
     if (m_data->cache_enabled) {

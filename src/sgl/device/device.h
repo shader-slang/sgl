@@ -535,10 +535,6 @@ public:
 
     std::string to_string() const override;
 
-    void _register_slang_session(SlangSession* session);
-    void _unregister_slang_session(SlangSession* session);
-    void _on_session_modules_changed(SlangSession* session);
-
     Blitter* _blitter();
 
     ref<HotReload> hot_reload() { return m_hot_reload; }

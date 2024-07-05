@@ -1139,24 +1139,6 @@ std::string Device::to_string() const
     );
 }
 
-void Device::_register_slang_session(SlangSession* session)
-{
-    if (m_hot_reload)
-        m_hot_reload->_register_slang_session(session);
-}
-
-void Device::_unregister_slang_session(SlangSession* session)
-{
-    if (m_hot_reload)
-        m_hot_reload->_unregister_slang_session(session);
-}
-
-void Device::_on_session_modules_changed(SlangSession* session)
-{
-    if (m_hot_reload)
-        m_hot_reload->_on_session_modules_changed(session);
-}
-
 Blitter* Device::_blitter()
 {
     if (!m_blitter)
