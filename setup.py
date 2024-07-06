@@ -21,11 +21,11 @@ except ImportError:
 SOURCE_DIR = Path(__file__).parent.resolve()
 
 if sys.platform.startswith("win"):
-    PLATFORM="windows"
+    PLATFORM = "windows"
 elif sys.platform.startswith("linux"):
-    PLATFORM="linux"
+    PLATFORM = "linux"
 elif sys.platform.startswith("darwin"):
-    PLATFORM="macos"
+    PLATFORM = "macos"
 else:
     raise Exception(f"Unsupported platform: {sys.platform}")
 
@@ -40,6 +40,7 @@ CMAKE_PRESET = {
     "linux": "linux-gcc",
     "macos": "macos-clang",
 }[PLATFORM]
+
 
 # A CMakeExtension needs a sourcedir instead of a file list.
 # The name must be the _single_ output extension from the CMake build.
@@ -66,6 +67,7 @@ class CMakeBuild(build_ext):
         env = os.environ.copy()
         if os.name == "nt":
             import setuptools.msvc
+
             env = setuptools.msvc.msvc14_get_vc_env("x64")
 
         build_dir = str(SOURCE_DIR / "build/pip")

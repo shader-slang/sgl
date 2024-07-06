@@ -63,6 +63,7 @@ DEFAULT_EXTENSIONS = "h,cpp,slang,slangh"
 DEFAULT_SLANG_EXTENSIONS = "slang,slangh"
 DEFAULT_CLANG_FORMAT_IGNORE = ".clang-format-ignore"
 
+
 class ExitStatus:
     SUCCESS = 0
     DIFF = 1
@@ -94,6 +95,7 @@ def excludes_from_file(ignore_file):
             raise
     return [excludes, whitelist]
 
+
 def is_child(path, files):
     if path in files:
         return True
@@ -102,6 +104,7 @@ def is_child(path, files):
         if Path(file) in test_path.parents:
             return True
     return False
+
 
 def list_files(files, recursive=False, extensions=None, exclude=None, whitelist=None):
     if extensions is None:
@@ -442,7 +445,7 @@ def main():
         recursive=args.recursive,
         exclude=excludes,
         extensions=args.extensions.split(","),
-        whitelist=whitelist
+        whitelist=whitelist,
     )
 
     if not files:
