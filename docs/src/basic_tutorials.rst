@@ -8,4 +8,3 @@ Basic Tutorials
 
     tutorials/image_io_and_manipulation
     tutorials/compute_shader
-
