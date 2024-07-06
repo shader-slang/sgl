@@ -51,6 +51,12 @@ public:
     template<arithmetic U>
     explicit matrix(std::initializer_list<U> a)
     {
+        SGL_CHECK(
+            a.size() == RowCount * ColCount,
+            "Invalid number of coefficients (expected {}, got {})",
+            RowCount * ColCount,
+            a.size()
+        );
         T* f = &m_rows[0][0];
         for (auto it = a.begin(); it != a.end(); ++it, ++f)
             *f = static_cast<T>(*it);
