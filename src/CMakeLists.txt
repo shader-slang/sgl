@@ -91,6 +91,7 @@ target_sources(sgl PRIVATE
     sgl/device/framebuffer.h
     sgl/device/fwd.h
     sgl/device/helpers.h
+    sgl/device/helpers.cpp
     sgl/device/hot_reload.h
     sgl/device/hot_reload.cpp
     sgl/device/input_layout.cpp
