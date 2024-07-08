@@ -29,7 +29,7 @@ Swapchain::Swapchain(SwapchainDesc desc, WindowHandle window_handle, ref<Device>
     };
 
 #if SGL_WINDOWS
-    gfx::WindowHandle gfx_window_handle = gfx::WindowHandle::FromHwnd(window_handle);
+    gfx::WindowHandle gfx_window_handle = gfx::WindowHandle::FromHwnd(window_handle.hwnd);
 #elif SGL_LINUX
     gfx::WindowHandle gfx_window_handle = gfx::WindowHandle::FromXWindow(window_handle.xdisplay, window_handle.xwindow);
 #elif SGL_MACOS

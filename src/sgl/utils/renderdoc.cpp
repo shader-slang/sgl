@@ -84,7 +84,7 @@ public:
         }
 
 #if SGL_WINDOWS
-        window_handle = window ? window->window_handle() : nullptr;
+        window_handle = window ? window->window_handle().hwnd : nullptr;
 #elif SGL_LINUX
         window_handle = window ? (void*)uintptr_t(window->window_handle().xwindow) : nullptr;
 #else

@@ -8,6 +8,32 @@ SGL_PY_EXPORT(core_platform)
 {
     using namespace sgl::platform;
 
+    nb::class_<sgl::WindowHandle>(m, "WindowHandle", D(WindowHandle))
+#if SGL_WINDOWS
+        .def(
+            "__init__",
+            [](sgl::WindowHandle* self, uintptr_t hwnd) { new (self) sgl::WindowHandle{reinterpret_cast<HWND>(hwnd)}; },
+            "hwnd"_a
+        )
+#elif SGL_LINUX
+        .def(
+            "__init__",
+            [](sgl::WindowHandle* self, uintptr_t xdisplay, uint32_t xwindow) {
+                new (self) sgl::WindowHandle{reinterpret_cast<void*>(xdisplay), xwindow};
+            },
+            "xdisplay"_a,
+            "xwindow"_a
+        )
+#elif SGL_MACOS
+        .def(
+            "__init__",
+            [](sgl::WindowHandle* self, uintptr_t nswindow)
+            { new (self) sgl::WindowHandle{reinterpret_cast<void*>(nswindow)}; },
+            "nswindow"_a
+        )
+#endif
+        ;
+
     nb::module_ platform = m.attr("platform");
 
     nb::class_<FileDialogFilter>(platform, "FileDialogFilter", D(platform, FileDialogFilter))

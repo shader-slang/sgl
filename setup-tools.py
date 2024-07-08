@@ -37,7 +37,7 @@ def is_archive_path(path: Path):
     """
     Returns True if the path is an archive file.
     """
-    ARCHIVE_EXTENSIONS = [".zip", ".tar.gz", ".tar.bz2", ".7z"]
+    ARCHIVE_EXTENSIONS = [".zip", ".tar.gz", ".tar.bz2", ".7z", ".whl"]
     return any(path.name.endswith(ext) for ext in ARCHIVE_EXTENSIONS)
 
 
@@ -92,7 +92,7 @@ def read_sha512_file(path: Path):
         return f.read()
 
 
-def decompress_7za(_7za_path: Path, path: Path, dest_dir: Path, strip: bool):
+def decompress_7za(_7za_path: Path, path: Path, dest_dir: Path, strip: int):
     """
     Decompress the given archive file to the given directory.
     Optionally strip the root directory from the archive.
@@ -114,15 +114,15 @@ def decompress_7za(_7za_path: Path, path: Path, dest_dir: Path, strip: bool):
             shutil.rmtree(str(dirs[0]))
 
 
-def decompress_tar(path: Path, dest_dir: Path, strip: bool):
+def decompress_tar(path: Path, dest_dir: Path, strip: int):
     """
     Decompress the given tar file to the given directory.
     Optionally strip the root directory from the archive.
     """
 
     args = ["tar", "xf", str(path), "-C", str(dest_dir)]
-    if strip:
-        args += ["--strip-components", "1"]
+    if strip > 0:
+        args += ["--strip-components", str(strip)]
 
     print(f"Decompressing {path} ...")
     p = subprocess.run(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -145,8 +145,8 @@ class Context:
 
 class Package:
     def __init__(self):
-        self.name = None
-        self.version = None
+        self.name: str = None
+        self.version: str = None
         self.infos = {}
 
     def setup(self, ctx: Context):
@@ -202,11 +202,19 @@ class Package:
             )
 
     def decompress_to_install_dir(self, ctx: Context):
-        strip = self.info.get("strip", 0)
+        strip = int(self.info.get("strip", 0))
         if is_tar_path(self.download_path):
             decompress_tar(self.download_path, self.install_dir, strip)
         else:
             decompress_7za(ctx._7za_path, self.download_path, self.install_dir, strip)
+        use_sub_dir: Path = self.info.get("use_sub_dir", None)
+        if use_sub_dir:
+            sub_dir = self.install_dir / use_sub_dir
+            tmp_dir = self.install_dir.with_name(self.install_dir.name + "_tmp")
+            if sub_dir.exists():
+                shutil.move(sub_dir, tmp_dir)
+                shutil.rmtree(self.install_dir)
+                shutil.move(tmp_dir, self.install_dir)
 
     def install(self, ctx: Context):
         print(f"Installing package '{self.name}' ...")
@@ -312,6 +320,7 @@ class clang_format(Package):
     def __init__(self):
         self.name = "clang-format"
         self.version = "16"
+        self.version2 = "16.0.6"
         self.infos = {
             "windows-x64": {
                 "url": f"https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-f4f85437/clang-format-{self.version}_windows-amd64.exe",
@@ -325,16 +334,14 @@ class clang_format(Package):
                 "chmod": "+x",
             },
             "macos-x64": {
-                "url": f"https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-f4f85437/clang-format-{self.version}_macosx-amd64",
-                "sha512": "2ba0bf4287d33205352174c4dd431960b802fc0a8f43c90263b47411fc02ea013c0afbd350f5b91b17fa7defc3d567910eb4e80b71d0dda47a1d4de0005bac80",
-                "rename": "clang-format",
-                "chmod": "+x",
+                "url": f"https://files.pythonhosted.org/packages/01/fb/8267d7035ec217df109cfde2164a26121413c3e7cd92896b862ce86b947c/clang_format-{self.version2}-py2.py3-none-macosx_10_9_universal2.whl",
+                "sha512": "705244ca8ba4c3fa9926311deedceebd9afdc6927c8ec38ac3d7083c814788060735b3baa6a8c5d8449737b4f7aedd590471ec18988e4508fc225d0a9a2d4bc9",
+                "use_sub_dir": "clang_format/data/bin",
             },
             "macos-arm64": {
-                "url": f"https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-f4f85437/clang-format-{self.version}_macosx-amd64",
-                "sha512": "2ba0bf4287d33205352174c4dd431960b802fc0a8f43c90263b47411fc02ea013c0afbd350f5b91b17fa7defc3d567910eb4e80b71d0dda47a1d4de0005bac80",
-                "rename": "clang-format",
-                "chmod": "+x",
+                "url": f"https://files.pythonhosted.org/packages/01/fb/8267d7035ec217df109cfde2164a26121413c3e7cd92896b862ce86b947c/clang_format-{self.version2}-py2.py3-none-macosx_10_9_universal2.whl",
+                "sha512": "705244ca8ba4c3fa9926311deedceebd9afdc6927c8ec38ac3d7083c814788060735b3baa6a8c5d8449737b4f7aedd590471ec18988e4508fc225d0a9a2d4bc9",
+                "use_sub_dir": "clang_format/data/bin",
             },
         }
 

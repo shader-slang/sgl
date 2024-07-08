@@ -21,21 +21,20 @@ DECLARE_HANDLE(HWND);
 #endif
 
 namespace sgl {
-#if SGL_WINDOWS
-using WindowHandle = HWND;
-using SharedLibraryHandle = void*; // HANDLE
-#elif SGL_LINUX
+/// Native window handle.
 struct WindowHandle {
+#if SGL_WINDOWS
+    HWND hwnd;
+#elif SGL_LINUX
     void* xdisplay;
     uint32_t xwindow;
-};
-using SharedLibraryHandle = void*;
 #elif SGL_MACOS
-struct WindowHandle {
     void* nswindow;
-};
-using SharedLibraryHandle = void*;
 #endif
+};
+
+/// Shared library handle.
+using SharedLibraryHandle = void*;
 } // namespace sgl
 
 namespace sgl::platform {

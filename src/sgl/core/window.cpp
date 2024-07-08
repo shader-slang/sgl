@@ -397,7 +397,7 @@ WindowHandle Window::window_handle() const
 {
     WindowHandle handle{};
 #if SGL_WINDOWS
-    handle = glfwGetWin32Window(m_window);
+    handle.hwnd = glfwGetWin32Window(m_window);
 #elif SGL_LINUX
     handle.xdisplay = glfwGetX11Display();
     handle.xwindow = glfwGetX11Window(m_window);
