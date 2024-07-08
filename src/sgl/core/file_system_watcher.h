@@ -29,8 +29,6 @@ struct FileSystemWatchDesc {
     /// Directory to monitor.
     std::filesystem::path directory;
 
-    /// Whether to monitor subdirectories.
-    bool recursive{false};
 };
 
 /// Data reported on a given file system event to a file monitored
@@ -115,6 +113,11 @@ private:
 
     /// Time last event was recorded.
     std::chrono::system_clock::time_point m_last_event;
+
+#if SGL_LINUX
+    /// File descriptor for linux inotify watcher.
+    int m_inotify_file_descriptor;
+#endif
 
     /// Releases OS monitoring for a given watch.
     void stop_watch(const std::unique_ptr<FileSystemWatchState>&);

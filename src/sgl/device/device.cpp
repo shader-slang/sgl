@@ -294,8 +294,14 @@ Device::Device(const DeviceDesc& desc)
     ConstructorRefGuard ref_guard(this);
 
     // Create hot reload system before creating any sessions
-    if (m_desc.enable_hot_reload)
+    if (m_desc.enable_hot_reload) {
+        // Check for none-supported platforms.
+#if SGL_WINDOWS || SGL_LINUX
         m_hot_reload = make_ref<HotReload>(ref<Device>(this));
+#else
+        log_warn("Hot reload is currently only supported on windows\n");
+#endif
+    }
 
     SLANG_CALL(slang::createGlobalSession(m_global_session.writeRef()));
 

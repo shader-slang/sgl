@@ -12,6 +12,9 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include <windows.h>
+#elif SGL_LINUX
+#include <sys/inotify.h>
+#include <fcntl.h>
 #endif
 
 namespace sgl {
@@ -22,6 +25,8 @@ struct FileSystemWatchState {
     HANDLE directory_handle;
     char buffer[32 * 1024];
     bool is_shutdown;
+#elif SGL_LINUX
+    int watch_descriptor;
 #endif
     FileSystemWatcher* watcher;
     FileSystemWatchDesc desc;
@@ -99,9 +104,27 @@ void CALLBACK FileIOCompletionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTr
 
 FileSystemWatcher::FileSystemWatcher()
 {
-#if !SGL_WINDOWS
+#if !SGL_WINDOWS && !SGL_LINUX
     // TODO(@ccummings): File system watcher linux support
     SGL_THROW("File system watcher is only implemented on windows platforms");
+#endif
+#if SGL_LINUX
+    m_inotify_file_descriptor = inotify_init();
+    if (m_inotify_file_descriptor < 0) {
+        SGL_THROW("Failed to initialize inotify file descriptor");
+    }
+
+    int flags = fcntl(m_inotify_file_descriptor, F_GETFL, 0);
+    if(flags == -1) {
+        close(m_inotify_file_descriptor);
+        SGL_THROW("Failed to get inotify file descriptor flags");
+    }
+
+    flags |= O_NONBLOCK;
+    if(fcntl(m_inotify_file_descriptor, F_SETFL, flags) == -1) {
+        close(m_inotify_file_descriptor);
+        SGL_THROW("Failed to set inotify file descriptor flags to none-blocking");
+    }
 #endif
 }
 
@@ -110,6 +133,9 @@ FileSystemWatcher::~FileSystemWatcher()
     for (const auto& pair : m_watches) {
         stop_watch(pair.second);
     }
+#if SGL_LINUX
+    close(m_inotify_file_descriptor);
+#endif
 }
 
 uint32_t FileSystemWatcher::add_watch(const FileSystemWatchDesc& desc)
@@ -142,7 +168,6 @@ uint32_t FileSystemWatcher::add_watch(const FileSystemWatchDesc& desc)
     if (state->directory_handle == INVALID_HANDLE_VALUE) {
         SGL_THROW("Failed to open directory for file watcher");
     }
-    BOOL recursive = state->desc.recursive;
     std::memset(&state->overlapped, 0, sizeof(OVERLAPPED));
     state->overlapped.hEvent = this;
     state->is_shutdown = false;
@@ -150,7 +175,7 @@ uint32_t FileSystemWatcher::add_watch(const FileSystemWatchDesc& desc)
             state->directory_handle,
             state->buffer,
             sizeof(state->buffer),
-            recursive,
+            FALSE,
             FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_ATTRIBUTES
                 | FILE_NOTIFY_CHANGE_SIZE | FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_SECURITY,
             NULL,
@@ -158,6 +183,16 @@ uint32_t FileSystemWatcher::add_watch(const FileSystemWatchDesc& desc)
             &FileIOCompletionRoutine
         )) {
         SGL_THROW("ReadDirectoryChangesW failed. Error: {}\n", GetLastError());
+    }
+#elif SGL_LINUX
+    // On linux, add a watch to the inotify file descriptor.
+    state->watch_descriptor = inotify_add_watch(
+        m_inotify_file_descriptor,
+        state->desc.directory.c_str(),
+        IN_CREATE | IN_DELETE | IN_MODIFY | IN_MOVED_FROM | IN_MOVED_TO
+    );
+    if (state->watch_descriptor < 0) {
+        SGL_THROW("Failed to add watch to inotify file descriptor");
     }
 #endif
 
@@ -197,6 +232,8 @@ void FileSystemWatcher::stop_watch(const std::unique_ptr<FileSystemWatchState>& 
     if (!state->is_shutdown)
         SGL_THROW("File system watch failed to shutdown after 500ms");
     CloseHandle(state->directory_handle);
+#elif SGL_LINUX
+    close(state->watch_descriptor);
 #else
     SGL_UNUSED(state);
 #endif
@@ -231,7 +268,45 @@ void FileSystemWatcher::update()
 {
 #if SGL_WINDOWS
     SleepEx(0, TRUE);
+#elif SGL_LINUX
+    // Attempt none-blocking read from inotify, and return if no data.
+    char buffer[4096];
+    int length = read(m_inotify_file_descriptor, buffer, sizeof(buffer));
+    if(length >= 0) {
+        // Iterate over the inotify events and call '_notify_change' on the watcher for each one.
+        int offset = 0;
+        while (offset < length) {
+            auto event = reinterpret_cast<inotify_event*>(buffer+offset);
+            std::filesystem::path path{event->name};
+            FileSystemWatcherChange change = FileSystemWatcherChange::invalid;
+
+            if (event->mask & IN_CREATE) {
+                change = FileSystemWatcherChange::added;
+            } else if (event->mask & IN_DELETE) {
+                change = FileSystemWatcherChange::removed;
+            } else if (event->mask & IN_MODIFY) {
+                change = FileSystemWatcherChange::modified;
+            } else if (event->mask & IN_MOVED_TO) {
+                change = FileSystemWatcherChange::renamed;
+            }
+
+            if (change != FileSystemWatcherChange::invalid) {
+                auto it = std::find_if(
+                    m_watches.begin(),
+                    m_watches.end(),
+                    [event](const auto& pair) { return pair.second->watch_descriptor == event->wd; }
+                );
+                if (it != m_watches.end()) {
+                    _notify_change(it->second.get(), path, change);
+                }
+            }
+            offset += sizeof(struct inotify_event) + event->len;
+        }
+    } else if(errno != EAGAIN && errno != EWOULDBLOCK) {
+        SGL_THROW("Failed to read from inotify file descriptor");
+    }
 #endif
+
     if (m_queued_events.size() > 0) {
         auto duration = std::chrono::system_clock::now() - m_last_event;
         auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();

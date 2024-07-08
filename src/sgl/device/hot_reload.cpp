@@ -9,17 +9,10 @@ namespace sgl {
 HotReload::HotReload(ref<Device> device)
     : m_device(device)
 {
-    // Check for none-supported platforms.
-#if !SGL_WINDOWS
-    log_warning("Hot reload is currently only supported on windows\n");
-    return;
-#endif
-
     // Create file system monitor + hook up change event.
     m_file_system_watcher = make_ref<FileSystemWatcher>();
     m_file_system_watcher->set_on_change([this](std::span<FileSystemWatchEvent> events)
                                          { on_file_system_event(events); });
-
 }
 
 void HotReload::update()
@@ -77,11 +70,11 @@ void HotReload::recreate_all_sessions()
         m_last_build_failed = false;
         for (SlangSession* session : m_all_slang_sessions)
             session->recreate_session();
-    } catch (SlangCompileError compile_error) {
+    } catch (SlangCompileError& compile_error) {
         log_error("Hot reload failed due to compile error");
         log_error(compile_error.what());
         m_last_build_failed = true;
-    } catch (std::runtime_error runtime_error) {
+    } catch (std::runtime_error& runtime_error) {
         log_error("Hot reload failed due to incompatible shader modification");
         log_error(runtime_error.what());
         m_last_build_failed = true;
@@ -108,8 +101,7 @@ void HotReload::update_watched_paths_for_session(SlangSession* session)
                 // If not already monitoring this path, add a watch for it.
                 if (!m_watched_paths.contains(abs_path)) {
                     m_file_system_watcher->add_watch({
-                        .directory = abs_path,
-                        .recursive = false,
+                        .directory = abs_path
                     });
                     m_watched_paths.insert(abs_path);
                 }
