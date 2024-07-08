@@ -100,9 +100,7 @@ void HotReload::update_watched_paths_for_session(SlangSession* session)
 
                 // If not already monitoring this path, add a watch for it.
                 if (!m_watched_paths.contains(abs_path)) {
-                    m_file_system_watcher->add_watch({
-                        .directory = abs_path
-                    });
+                    m_file_system_watcher->add_watch({.directory = abs_path});
                     m_watched_paths.insert(abs_path);
                 }
             }

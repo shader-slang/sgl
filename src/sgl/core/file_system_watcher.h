@@ -28,7 +28,6 @@ struct FileSystemWatchDesc {
 
     /// Directory to monitor.
     std::filesystem::path directory;
-
 };
 
 /// Data reported on a given file system event to a file monitored

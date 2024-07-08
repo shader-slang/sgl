@@ -115,13 +115,13 @@ FileSystemWatcher::FileSystemWatcher()
     }
 
     int flags = fcntl(m_inotify_file_descriptor, F_GETFL, 0);
-    if(flags == -1) {
+    if (flags == -1) {
         close(m_inotify_file_descriptor);
         SGL_THROW("Failed to get inotify file descriptor flags");
     }
 
     flags |= O_NONBLOCK;
-    if(fcntl(m_inotify_file_descriptor, F_SETFL, flags) == -1) {
+    if (fcntl(m_inotify_file_descriptor, F_SETFL, flags) == -1) {
         close(m_inotify_file_descriptor);
         SGL_THROW("Failed to set inotify file descriptor flags to none-blocking");
     }
@@ -272,11 +272,11 @@ void FileSystemWatcher::update()
     // Attempt none-blocking read from inotify, and return if no data.
     char buffer[4096];
     int length = read(m_inotify_file_descriptor, buffer, sizeof(buffer));
-    if(length >= 0) {
+    if (length >= 0) {
         // Iterate over the inotify events and call '_notify_change' on the watcher for each one.
         int offset = 0;
         while (offset < length) {
-            auto event = reinterpret_cast<inotify_event*>(buffer+offset);
+            auto event = reinterpret_cast<inotify_event*>(buffer + offset);
             std::filesystem::path path{event->name};
             FileSystemWatcherChange change = FileSystemWatcherChange::invalid;
 
@@ -302,7 +302,7 @@ void FileSystemWatcher::update()
             }
             offset += sizeof(struct inotify_event) + event->len;
         }
-    } else if(errno != EAGAIN && errno != EWOULDBLOCK) {
+    } else if (errno != EAGAIN && errno != EWOULDBLOCK) {
         SGL_THROW("Failed to read from inotify file descriptor");
     }
 #endif
