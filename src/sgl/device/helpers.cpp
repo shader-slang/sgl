@@ -16,7 +16,7 @@ namespace sgl {
 
 
 // Reads last error from graphics layer.
-std::string GetLastGfxLayerError()
+std::string get_last_gfx_layer_error()
 {
 #if SGL_HAS_D3D12
     IDXGIDebug* dxgiDebug = nullptr;
@@ -48,12 +48,12 @@ std::string GetLastGfxLayerError()
 
 // Builds the user friendly message that is passed into a slang failure exception,
 // used by SLANG_CALL.
-std::string BuildSlangFailedMessage(const char* call, SlangResult result)
+std::string build_slang_failed_message(const char* call, SlangResult result)
 {
     auto msg = std::format("Slang call {} failed with error: {}\n", call, result);
     if (static_cast<uint32_t>(result) >= 0x80000000U) {
-        auto gfx_error = GetLastGfxLayerError();
-        if (gfx_error.length() > 0) {
+        std::string gfx_error = get_last_gfx_layer_error();
+        if (!gfx_error.empty()) {
             msg += "\nLast graphics layer error:\n" + gfx_error;
         }
     }

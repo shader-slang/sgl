@@ -1,18 +1,18 @@
 
 [shader("compute")]
 [numthreads(16, 16, 1)]
-void clear(uint3 tid: SV_DispatchThreadID, RWTexture2D<float4> render_texture)
+void clear(uint2 tid: SV_DispatchThreadID, RWTexture2D<float4> render_texture)
 {
     uint2 dim;
     render_texture.GetDimensions(dim.x, dim.y);
     if (any(tid.xy >= dim))
         return;
-    render_texture[tid.xy] = float4(0, 0, 0, 0);
+    render_texture[tid.xy] = float4(0);
 }
 
 [shader("compute")]
 [numthreads(16, 16, 1)]
-void count(uint3 tid: SV_DispatchThreadID, Texture2D<float4> render_texture, RWByteAddressBuffer count_buffer)
+void count(uint2 tid: SV_DispatchThreadID, Texture2D<float4> render_texture, RWByteAddressBuffer count_buffer)
 {
     uint2 dim;
     render_texture.GetDimensions(dim.x, dim.y);
@@ -28,7 +28,7 @@ void count(uint3 tid: SV_DispatchThreadID, Texture2D<float4> render_texture, RWB
 [shader("compute")]
 [numthreads(16, 16, 1)]
 void setcolor(
-    uint3 tid: SV_DispatchThreadID,
+    uint2 tid: SV_DispatchThreadID,
     RWTexture2D<float4> render_texture,
     uniform int2 pos,
     uniform int2 size,
@@ -45,9 +45,9 @@ struct V2F {
     float4 pos : SV_Position;
 };
 
-float2 vert_offset;
-float2 vert_scale;
-float vert_z;
+uniform float2 vert_offset;
+uniform float2 vert_scale;
+uniform float vert_z;
 
 [shader("vertex")]
 V2F vertex_main(float3 pos: POSITION)
@@ -57,7 +57,7 @@ V2F vertex_main(float3 pos: POSITION)
     return o;
 }
 
-float4 frag_color;
+uniform float4 frag_color;
 
 [shader("fragment")]
 float4 fragment_main(V2F v)
@@ -70,7 +70,7 @@ float4 fragment_main(V2F v)
 [shader("compute")]
 [numthreads(16, 16, 1)]
 void raygrid(
-    uint3 tid: SV_DispatchThreadID,
+    uint2 tid: SV_DispatchThreadID,
     RWTexture2D<float4> render_texture,
     RaytracingAccelerationStructure tlas,
     uniform int2 pos,
@@ -117,8 +117,8 @@ void rt_closest_hit(inout Payload payload, BuiltInTriangleIntersectionAttributes
     payload.color = col;
 }
 
-RWTexture2D<float4> rt_render_texture;
-RaytracingAccelerationStructure rt_tlas;
+uniform RWTexture2D<float4> rt_render_texture;
+uniform RaytracingAccelerationStructure rt_tlas;
 
 [shader("raygeneration")]
 void rt_ray_gen()

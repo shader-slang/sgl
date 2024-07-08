@@ -1,7 +1,11 @@
-import helpers
 import sgl
 import pytest
 import numpy as np
+import sys
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).parent))
+import helpers
 
 
 class PipelineTestContext:
@@ -11,27 +15,41 @@ class PipelineTestContext:
             format=sgl.Format.rgba32_float,
             width=size,
             height=size,
-            usage=sgl.ResourceUsage.unordered_access | sgl.ResourceUsage.shader_resource | sgl.ResourceUsage.render_target,
+            usage=sgl.ResourceUsage.unordered_access
+            | sgl.ResourceUsage.shader_resource
+            | sgl.ResourceUsage.render_target,
             debug_name="render_texture",
         )
         self.count_buffer = self.device.create_buffer(
-            usage=sgl.ResourceUsage.unordered_access | sgl.ResourceUsage.shader_resource,
+            usage=sgl.ResourceUsage.unordered_access
+            | sgl.ResourceUsage.shader_resource,
             size=16,
             debug_name="count_buffer",
             data=np.array([0, 0, 0, 0], dtype=np.uint32),
         )
 
-        self.clear_kernel = self.device.create_compute_kernel(self.device.load_program("test_pipeline_utils.slang", ["clear"]))
-        self.count_kernel = self.device.create_compute_kernel(self.device.load_program("test_pipeline_utils.slang", ["count"]))
+        self.clear_kernel = self.device.create_compute_kernel(
+            self.device.load_program("test_pipeline_utils.slang", ["clear"])
+        )
+        self.count_kernel = self.device.create_compute_kernel(
+            self.device.load_program("test_pipeline_utils.slang", ["count"])
+        )
 
         self.clear()
 
     def clear(self):
-        self.clear_kernel.dispatch(thread_count=[self.output_texture.width, self.output_texture.height, 1], render_texture=self.output_texture)
+        self.clear_kernel.dispatch(
+            thread_count=[self.output_texture.width, self.output_texture.height, 1],
+            render_texture=self.output_texture,
+        )
 
     def count(self):
         self.count_buffer.from_numpy(np.array([0, 0, 0, 0], dtype=np.uint32))
-        self.count_kernel.dispatch(thread_count=[self.output_texture.width, self.output_texture.height, 1], render_texture=self.output_texture, count_buffer=self.count_buffer)
+        self.count_kernel.dispatch(
+            thread_count=[self.output_texture.width, self.output_texture.height, 1],
+            render_texture=self.output_texture,
+            count_buffer=self.count_buffer,
+        )
 
     def expect_counts(self, expected):
         self.count()
@@ -39,8 +57,10 @@ class PipelineTestContext:
         assert np.all(count == expected)
 
     def create_quad_mesh(self):
-        vertices = np.array([-1,-1,-1, 1,-1,-1, -1,1,-1, 1,1,-1], dtype=np.float32)
-        indices = np.array([0,1,2, 1,3,2], dtype=np.uint32)
+        vertices = np.array(
+            [-1, -1, -1, 1, -1, -1, -1, 1, -1, 1, 1, -1], dtype=np.float32
+        )
+        indices = np.array([0, 1, 2, 1, 3, 2], dtype=np.uint32)
 
         vertex_buffer = self.device.create_buffer(
             usage=sgl.ResourceUsage.shader_resource,
@@ -56,7 +76,7 @@ class PipelineTestContext:
                     "offset": 0,
                 },
             ],
-            vertex_streams = [{"stride":12}]
+            vertex_streams=[{"stride": 12}],
         )
         index_buffer = self.device.create_buffer(
             usage=sgl.ResourceUsage.shader_resource,
@@ -66,10 +86,12 @@ class PipelineTestContext:
 
         return vertex_buffer, index_buffer, input_layout
 
+
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_clear_and_count(device_type):
     ctx = PipelineTestContext(device_type)
-    ctx.expect_counts([0,0,0,0])
+    ctx.expect_counts([0, 0, 0, 0])
+
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_compute_set_square(device_type):
@@ -77,12 +99,19 @@ def test_compute_set_square(device_type):
     prog = ctx.device.load_program("test_pipeline_utils.slang", ["setcolor"])
     set_kernel = ctx.device.create_compute_kernel(prog)
 
-    pos = sgl.int2(32,32)
-    size = sgl.int2(16,16)
-    set_kernel.dispatch(thread_count=[ctx.output_texture.width, ctx.output_texture.height, 1], render_texture=ctx.output_texture, pos=pos,size=size,color=sgl.float4(1,0,0,1))
+    pos = sgl.int2(32, 32)
+    size = sgl.int2(16, 16)
+    set_kernel.dispatch(
+        thread_count=[ctx.output_texture.width, ctx.output_texture.height, 1],
+        render_texture=ctx.output_texture,
+        pos=pos,
+        size=size,
+        color=sgl.float4(1, 0, 0, 1),
+    )
 
-    area = size.x*size.y
-    ctx.expect_counts([area,0,0,area])
+    area = size.x * size.y
+    ctx.expect_counts([area, 0, 0, area])
+
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_compute_set_and_overwrite(device_type):
@@ -90,49 +119,85 @@ def test_compute_set_and_overwrite(device_type):
     prog = ctx.device.load_program("test_pipeline_utils.slang", ["setcolor"])
     set_kernel = ctx.device.create_compute_kernel(prog)
 
-    pos1 = sgl.int2(0,0)
-    size1 = sgl.int2(128,128)
-    set_kernel.dispatch(thread_count=[ctx.output_texture.width, ctx.output_texture.height, 1], render_texture=ctx.output_texture, pos=pos1,size=size1,color=sgl.float4(1,0,0,0))
+    pos1 = sgl.int2(0, 0)
+    size1 = sgl.int2(128, 128)
+    set_kernel.dispatch(
+        thread_count=[ctx.output_texture.width, ctx.output_texture.height, 1],
+        render_texture=ctx.output_texture,
+        pos=pos1,
+        size=size1,
+        color=sgl.float4(1, 0, 0, 0),
+    )
 
-    pos2 = sgl.int2(32,32)
-    size2 = sgl.int2(16,16)
-    set_kernel.dispatch(thread_count=[ctx.output_texture.width, ctx.output_texture.height, 1], render_texture=ctx.output_texture, pos=pos2,size=size2,color=sgl.float4(0,1,0,0))
+    pos2 = sgl.int2(32, 32)
+    size2 = sgl.int2(16, 16)
+    set_kernel.dispatch(
+        thread_count=[ctx.output_texture.width, ctx.output_texture.height, 1],
+        render_texture=ctx.output_texture,
+        pos=pos2,
+        size=size2,
+        color=sgl.float4(0, 1, 0, 0),
+    )
 
-    area1 = size1.x*size1.y
-    area2 = size2.x*size2.y
-    ctx.expect_counts([area1-area2,area2,0,0])
+    area1 = size1.x * size1.y
+    area2 = size2.x * size2.y
+    ctx.expect_counts([area1 - area2, area2, 0, 0])
+
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_gfx_clear(device_type):
     ctx = PipelineTestContext(device_type)
 
     command_buffer = ctx.device.create_command_buffer()
-    command_buffer.clear_resource_view(ctx.output_texture.get_rtv(), [1.0, 0.0, 1.0, 0.0])
+    command_buffer.clear_resource_view(
+        ctx.output_texture.get_rtv(), [1.0, 0.0, 1.0, 0.0]
+    )
     command_buffer.submit()
 
-    area = ctx.output_texture.width*ctx.output_texture.height
+    area = ctx.output_texture.width * ctx.output_texture.height
 
-    ctx.expect_counts([area,0,area,0])
+    ctx.expect_counts([area, 0, area, 0])
+
 
 class GfxContext:
     def __init__(self, ctx: PipelineTestContext) -> None:
         self.ctx = ctx
-        self.program = ctx.device.load_program("test_pipeline_utils.slang", ["vertex_main", "fragment_main"])
-        self.vertex_buffer, self.index_buffer, self.input_layout = ctx.create_quad_mesh()
-        self.framebuffer = ctx.device.create_framebuffer(render_targets=[ctx.output_texture.get_rtv()])
+        self.program = ctx.device.load_program(
+            "test_pipeline_utils.slang", ["vertex_main", "fragment_main"]
+        )
+        self.vertex_buffer, self.index_buffer, self.input_layout = (
+            ctx.create_quad_mesh()
+        )
+        self.framebuffer = ctx.device.create_framebuffer(
+            render_targets=[ctx.output_texture.get_rtv()]
+        )
 
     # Draw a quad with the given pipeline and color, optionally clearing to black first.
     # The quad is [-1,-1]->[1,1] so if offset/scale aren't specified will fill the whole screen.
-    def draw(self, pipeline, vert_offset=sgl.float2(0,0), vert_scale=sgl.float2(1,1), vert_z=0.0, color=sgl.float4(0,0,0,0), viewport=None, clear=True):
+    def draw(
+        self,
+        pipeline: sgl.Pipeline,
+        vert_offset=sgl.float2(0, 0),
+        vert_scale=sgl.float2(1, 1),
+        vert_z=0.0,
+        color=sgl.float4(0, 0, 0, 0),
+        viewport: sgl.Viewport = None,
+        clear=True,
+    ):
         command_buffer = self.ctx.device.create_command_buffer()
         with command_buffer.encode_render_commands(self.framebuffer) as encoder:
             if clear:
-                command_buffer.clear_resource_view(self.ctx.output_texture.get_rtv(), [0.0, 0.0, 0.0, 1.0])
+                command_buffer.clear_resource_view(
+                    self.ctx.output_texture.get_rtv(), [0.0, 0.0, 0.0, 1.0]
+                )
             if viewport:
                 encoder.set_viewport_and_scissor_rect(viewport)
             else:
                 encoder.set_viewport_and_scissor_rect(
-                    {"width": self.ctx.output_texture.width, "height": self.ctx.output_texture.height}
+                    {
+                        "width": self.ctx.output_texture.width,
+                        "height": self.ctx.output_texture.height,
+                    }
                 )
             shader_object = encoder.bind_pipeline(pipeline)
             cursor = sgl.ShaderCursor(shader_object)
@@ -143,7 +208,7 @@ class GfxContext:
             encoder.set_vertex_buffer(0, self.vertex_buffer)
             encoder.set_index_buffer(self.index_buffer, sgl.Format.r32_uint, 0)
             encoder.set_primitive_topology(sgl.PrimitiveTopology.triangle_list)
-            encoder.draw_indexed(int(self.index_buffer.size/4))
+            encoder.draw_indexed(int(self.index_buffer.size / 4))
         command_buffer.submit()
 
     # Helper to create pipeline with given set of args + correct program/layouts.
@@ -152,13 +217,30 @@ class GfxContext:
             program=self.program,
             input_layout=self.input_layout,
             framebuffer_layout=self.framebuffer.layout,
-            **kwargs
-         )
+            **kwargs,
+        )
 
     # Helper to both create pipeline and then use it to draw quad.
-    def draw_graphics_pipeline(self, vert_offset=sgl.float2(0,0), vert_scale=sgl.float2(1,1), vert_z=0, color=sgl.float4(0,0,0,0), clear=True, viewport=None, **kwargs):
+    def draw_graphics_pipeline(
+        self,
+        vert_offset=sgl.float2(0, 0),
+        vert_scale=sgl.float2(1, 1),
+        vert_z=0,
+        color=sgl.float4(0, 0, 0, 0),
+        clear=True,
+        viewport: sgl.Viewport = None,
+        **kwargs,
+    ):
         pipeline = self.create_graphics_pipeline(**kwargs)
-        self.draw(pipeline, color=color, clear=clear, vert_offset=vert_offset, vert_scale=vert_scale, vert_z=vert_z, viewport=viewport)
+        self.draw(
+            pipeline,
+            color=color,
+            clear=clear,
+            vert_offset=vert_offset,
+            vert_scale=vert_scale,
+            vert_z=vert_z,
+            viewport=viewport,
+        )
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
@@ -166,63 +248,74 @@ def test_gfx_simple_primitive(device_type):
     ctx = PipelineTestContext(device_type)
     gfx = GfxContext(ctx)
 
-    area = ctx.output_texture.width*ctx.output_texture.height
+    area = ctx.output_texture.width * ctx.output_texture.height
     scale = sgl.float2(0.5)
 
     # Clear and fill red, then verify 1/4 pixels are red and all solid.
     gfx.draw_graphics_pipeline(
-        color=sgl.float4(1,0,0,1),
+        color=sgl.float4(1, 0, 0, 1),
         vert_scale=scale,
-        rasterizer={ "cull_mode": sgl.CullMode.back }
+        rasterizer={"cull_mode": sgl.CullMode.back},
     )
-    ctx.expect_counts([int(area/4),0,0,area])
+    ctx.expect_counts([int(area / 4), 0, 0, area])
 
     # Repeat with no culling, so should get same result.
     gfx.draw_graphics_pipeline(
-        color=sgl.float4(0,1,0,1),
+        color=sgl.float4(0, 1, 0, 1),
         vert_scale=scale,
-        rasterizer={ "cull_mode": sgl.CullMode.none }
+        rasterizer={"cull_mode": sgl.CullMode.none},
     )
-    ctx.expect_counts([0,int(area/4),0,area])
+    ctx.expect_counts([0, int(area / 4), 0, area])
 
     # Repeat with front face culling, so should get all black.
     gfx.draw_graphics_pipeline(
-        color=sgl.float4(1,1,1,1),
+        color=sgl.float4(1, 1, 1, 1),
         vert_scale=scale,
-        rasterizer={ "cull_mode": sgl.CullMode.front }
+        rasterizer={"cull_mode": sgl.CullMode.front},
     )
-    ctx.expect_counts([0,0,0,area])
+    ctx.expect_counts([0, 0, 0, area])
+
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_gfx_viewport(device_type):
     ctx = PipelineTestContext(device_type)
     gfx = GfxContext(ctx)
 
-    area = ctx.output_texture.width*ctx.output_texture.height
+    area = ctx.output_texture.width * ctx.output_texture.height
     scale = sgl.float2(0.5)
 
     # Clear and fill red, and verify it filled the whole screen.
     gfx.draw_graphics_pipeline(
-        color=sgl.float4(1,0,0,1),
-        rasterizer={ "cull_mode": sgl.CullMode.back }
+        color=sgl.float4(1, 0, 0, 1), rasterizer={"cull_mode": sgl.CullMode.back}
     )
-    ctx.expect_counts([area,0,0,area])
+    ctx.expect_counts([area, 0, 0, area])
 
     # Use viewport to clear half the screen.
     gfx.draw_graphics_pipeline(
-        color=sgl.float4(0,1,0,1),
-        rasterizer={ "cull_mode": sgl.CullMode.back },
-        viewport=sgl.Viewport( {"width": int(ctx.output_texture.width/2), "height": ctx.output_texture.height})
+        color=sgl.float4(0, 1, 0, 1),
+        rasterizer={"cull_mode": sgl.CullMode.back},
+        viewport=sgl.Viewport(
+            {
+                "width": int(ctx.output_texture.width / 2),
+                "height": ctx.output_texture.height,
+            }
+        ),
     )
-    ctx.expect_counts([0,int(area/2),0,area])
+    ctx.expect_counts([0, int(area / 2), 0, area])
 
     # Same using horiontal clip instead.
     gfx.draw_graphics_pipeline(
-        color=sgl.float4(0,1,0,1),
-        rasterizer={ "cull_mode": sgl.CullMode.back },
-        viewport=sgl.Viewport( {"width": ctx.output_texture.width, "height": int(ctx.output_texture.height/2)})
+        color=sgl.float4(0, 1, 0, 1),
+        rasterizer={"cull_mode": sgl.CullMode.back},
+        viewport=sgl.Viewport(
+            {
+                "width": ctx.output_texture.width,
+                "height": int(ctx.output_texture.height / 2),
+            }
+        ),
     )
-    ctx.expect_counts([0,int(area/2),0,area])
+    ctx.expect_counts([0, int(area / 2), 0, area])
+
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_gfx_depth(device_type):
@@ -237,58 +330,79 @@ def test_gfx_depth(device_type):
         usage=sgl.ResourceUsage.shader_resource | sgl.ResourceUsage.depth_stencil,
         debug_name="depth_texture",
     )
-    gfx.framebuffer = ctx.device.create_framebuffer(render_targets=[ctx.output_texture.get_rtv()], depth_stencil=depth_texture.get_dsv())
+    gfx.framebuffer = ctx.device.create_framebuffer(
+        render_targets=[ctx.output_texture.get_rtv()],
+        depth_stencil=depth_texture.get_dsv(),
+    )
 
-    area = ctx.output_texture.width*ctx.output_texture.height
+    area = ctx.output_texture.width * ctx.output_texture.height
 
     # Manually clear both buffers and verify results.
     command_buffer = ctx.device.create_command_buffer()
     with command_buffer.encode_render_commands(gfx.framebuffer) as encoder:
-        command_buffer.clear_resource_view(ctx.output_texture.get_rtv(), [0.0, 0.0, 0.0, 1.0])
-        command_buffer.clear_resource_view(depth_texture.get_dsv(), 0.5,0, True, True)
+        command_buffer.clear_resource_view(
+            ctx.output_texture.get_rtv(), [0.0, 0.0, 0.0, 1.0]
+        )
+        command_buffer.clear_resource_view(depth_texture.get_dsv(), 0.5, 0, True, True)
     command_buffer.submit()
-    ctx.expect_counts([0,0,0,area])
+    ctx.expect_counts([0, 0, 0, area])
 
     # Write quad with z=0.25, which is close than the z buffer clear value of 0.5 so should come through.
     gfx.draw_graphics_pipeline(
-        color=sgl.float4(1,0,0,1),
+        color=sgl.float4(1, 0, 0, 1),
         clear=False,
         vert_scale=sgl.float2(0.5),
         vert_z=0.25,
-        rasterizer={ "cull_mode": sgl.CullMode.back },
-        depth_stencil={ "depth_test_enable": True, "depth_write_enable": True, "depth_func": sgl.ComparisonFunc.less }
+        rasterizer={"cull_mode": sgl.CullMode.back},
+        depth_stencil={
+            "depth_test_enable": True,
+            "depth_write_enable": True,
+            "depth_func": sgl.ComparisonFunc.less,
+        },
     )
-    ctx.expect_counts([int(area/4),0,0,area])
+    ctx.expect_counts([int(area / 4), 0, 0, area])
 
     # Write a great big quad at z=0.75, which should do nothing.
     gfx.draw_graphics_pipeline(
-        color=sgl.float4(1,1,1,1),
+        color=sgl.float4(1, 1, 1, 1),
         clear=False,
         vert_z=0.75,
-        rasterizer={ "cull_mode": sgl.CullMode.back },
-        depth_stencil={ "depth_test_enable": True, "depth_write_enable": True, "depth_func": sgl.ComparisonFunc.less }
+        rasterizer={"cull_mode": sgl.CullMode.back},
+        depth_stencil={
+            "depth_test_enable": True,
+            "depth_write_enable": True,
+            "depth_func": sgl.ComparisonFunc.less,
+        },
     )
-    ctx.expect_counts([int(area/4),0,0,area])
+    ctx.expect_counts([int(area / 4), 0, 0, area])
 
     # Write a great big quad at z=0.4, which should overwrite the background but not the foreground.
     gfx.draw_graphics_pipeline(
-        color=sgl.float4(1,1,1,1),
+        color=sgl.float4(1, 1, 1, 1),
         clear=False,
         vert_z=0.4,
-        rasterizer={ "cull_mode": sgl.CullMode.back },
-        depth_stencil={ "depth_test_enable": True, "depth_write_enable": True, "depth_func": sgl.ComparisonFunc.less }
+        rasterizer={"cull_mode": sgl.CullMode.back},
+        depth_stencil={
+            "depth_test_enable": True,
+            "depth_write_enable": True,
+            "depth_func": sgl.ComparisonFunc.less,
+        },
     )
-    ctx.expect_counts([area,area-int(area/4),area-int(area/4),area])
+    ctx.expect_counts([area, area - int(area / 4), area - int(area / 4), area])
 
     # Write a great big quad at z=0.75 with depth func always, which should just blat the lot.
     gfx.draw_graphics_pipeline(
-        color=sgl.float4(0,0,1,1),
+        color=sgl.float4(0, 0, 1, 1),
         clear=False,
         vert_z=0.75,
-        rasterizer={ "cull_mode": sgl.CullMode.back },
-        depth_stencil={ "depth_test_enable": True, "depth_write_enable": True, "depth_func": sgl.ComparisonFunc.always }
+        rasterizer={"cull_mode": sgl.CullMode.back},
+        depth_stencil={
+            "depth_test_enable": True,
+            "depth_write_enable": True,
+            "depth_func": sgl.ComparisonFunc.always,
+        },
     )
-    ctx.expect_counts([0,0,area,area])
+    ctx.expect_counts([0, 0, area, area])
 
     # Quick check that the depth write happened correctly
     dt = depth_texture.to_numpy()
@@ -296,92 +410,109 @@ def test_gfx_depth(device_type):
 
     # Try again at z=0.8, which should do nothing as z write was still enabled with the previous one.
     gfx.draw_graphics_pipeline(
-        color=sgl.float4(1,1,1,1),
+        color=sgl.float4(1, 1, 1, 1),
         clear=False,
         vert_z=0.8,
-        rasterizer={ "cull_mode": sgl.CullMode.back },
-        depth_stencil={ "depth_test_enable": True, "depth_write_enable": True, "depth_func": sgl.ComparisonFunc.less }
+        rasterizer={"cull_mode": sgl.CullMode.back},
+        depth_stencil={
+            "depth_test_enable": True,
+            "depth_write_enable": True,
+            "depth_func": sgl.ComparisonFunc.less,
+        },
     )
-    ctx.expect_counts([0,0,area,area])
+    ctx.expect_counts([0, 0, area, area])
 
     # Write out a full quad at z=0.25, with z write turned off, so should work but not affect z buffer.
     gfx.draw_graphics_pipeline(
-        color=sgl.float4(1,0,0,1),
+        color=sgl.float4(1, 0, 0, 1),
         clear=False,
         vert_z=0.25,
-        rasterizer={ "cull_mode": sgl.CullMode.back },
-        depth_stencil={ "depth_test_enable": True, "depth_write_enable": True, "depth_func": sgl.ComparisonFunc.less }
+        rasterizer={"cull_mode": sgl.CullMode.back},
+        depth_stencil={
+            "depth_test_enable": True,
+            "depth_write_enable": True,
+            "depth_func": sgl.ComparisonFunc.less,
+        },
     )
-    ctx.expect_counts([area,0,0,area])
+    ctx.expect_counts([area, 0, 0, area])
+
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_gfx_blend(device_type):
     ctx = PipelineTestContext(device_type)
     gfx = GfxContext(ctx)
-    area = ctx.output_texture.width*ctx.output_texture.height
+    area = ctx.output_texture.width * ctx.output_texture.height
 
     # Clear and then draw semi transparent red quad, and should get 1/4 dark red pixels.
     gfx.draw_graphics_pipeline(
         clear=True,
-        color=sgl.float4(1,0,0,0.5),
+        color=sgl.float4(1, 0, 0, 0.5),
         vert_scale=sgl.float2(0.5),
-        rasterizer={ "cull_mode": sgl.CullMode.back },
-        blend=sgl.BlendDesc({
-            "alpha_to_coverage_enable": False,
-            "targets": [{
-                "enable_blend": True,
-                "color": {
-                    "src_factor": sgl.BlendFactor.src_alpha,
-                    "dst_factor": sgl.BlendFactor.inv_src_alpha,
-                    "op": sgl.BlendOp.add
-                },
-                "alpha": {
-                    "src_factor": sgl.BlendFactor.zero,
-                    "dst_factor": sgl.BlendFactor.one,
-                    "op": sgl.BlendOp.add
-                }
-            }]
-        })
+        rasterizer={"cull_mode": sgl.CullMode.back},
+        blend=sgl.BlendDesc(
+            {
+                "alpha_to_coverage_enable": False,
+                "targets": [
+                    {
+                        "enable_blend": True,
+                        "color": {
+                            "src_factor": sgl.BlendFactor.src_alpha,
+                            "dst_factor": sgl.BlendFactor.inv_src_alpha,
+                            "op": sgl.BlendOp.add,
+                        },
+                        "alpha": {
+                            "src_factor": sgl.BlendFactor.zero,
+                            "dst_factor": sgl.BlendFactor.one,
+                            "op": sgl.BlendOp.add,
+                        },
+                    }
+                ],
+            }
+        ),
     )
     pixels = ctx.output_texture.to_numpy()
-    is_pixel_red = np.all(pixels[:,:,:3] == [0.5,0,0], axis=2)
-    assert np.sum(is_pixel_red) == int(area/4)
+    is_pixel_red = np.all(pixels[:, :, :3] == [0.5, 0, 0], axis=2)
+    assert np.sum(is_pixel_red) == int(area / 4)
+
 
 # On Vulkan using 50% alpha coverage we get a checkerboard effect.
 @pytest.mark.parametrize("device_type", [sgl.DeviceType.vulkan])
 def test_gfx_alpha_coverage(device_type):
     ctx = PipelineTestContext(device_type)
     gfx = GfxContext(ctx)
-    area = ctx.output_texture.width*ctx.output_texture.height
+    area = ctx.output_texture.width * ctx.output_texture.height
 
     # Clear and then draw semi transparent red quad, and should end up
     # with 1/8 of the pixels red due to alpha coverage.
     gfx.draw_graphics_pipeline(
         clear=True,
-        color=sgl.float4(1,0,0,0.5),
+        color=sgl.float4(1, 0, 0, 0.5),
         vert_scale=sgl.float2(0.5),
-        rasterizer={ "cull_mode": sgl.CullMode.back },
-        blend=sgl.BlendDesc({
-            "alpha_to_coverage_enable": True,
-            "targets": [{
-                "enable_blend": True,
-                "color": {
-                    "src_factor": sgl.BlendFactor.src_alpha
-                }
-            }]
-        })
+        rasterizer={"cull_mode": sgl.CullMode.back},
+        blend=sgl.BlendDesc(
+            {
+                "alpha_to_coverage_enable": True,
+                "targets": [
+                    {
+                        "enable_blend": True,
+                        "color": {"src_factor": sgl.BlendFactor.src_alpha},
+                    }
+                ],
+            }
+        ),
     )
-    sgl.tev.show(ctx.output_texture, "alpha_coverage")
+
     pixels = ctx.output_texture.to_numpy()
-    is_pixel_red = np.all(pixels[:,:,:3] == [0.5,0,0], axis=2)
-    assert np.sum(is_pixel_red) == int(area/8)
+    is_pixel_red = np.all(pixels[:, :, :3] == [0.5, 0, 0], axis=2)
+    assert np.sum(is_pixel_red) == int(area / 8)
+
 
 class RayContext:
     def __init__(self, ctx: PipelineTestContext) -> None:
         self.ctx = ctx
 
-        vertices = np.array([0,0,0, 1,0,0, 0,1,0, 1,1,0], dtype=np.float32)
-        indices = np.array([0,1,2, 1,3,2], dtype=np.uint32)
+        vertices = np.array([0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0], dtype=np.float32)
+        indices = np.array([0, 1, 2, 1, 3, 2], dtype=np.uint32)
 
         vertex_buffer = ctx.device.create_buffer(
             usage=sgl.ResourceUsage.shader_resource,
@@ -418,7 +549,9 @@ class RayContext:
         blas_build_inputs.flags = sgl.AccelerationStructureBuildFlags.none
         blas_build_inputs.geometry_descs = [blas_geometry_desc]
 
-        blas_prebuild_info = ctx.device.get_acceleration_structure_prebuild_info(blas_build_inputs)
+        blas_prebuild_info = ctx.device.get_acceleration_structure_prebuild_info(
+            blas_build_inputs
+        )
 
         blas_scratch_buffer = ctx.device.create_buffer(
             size=blas_prebuild_info.scratch_data_size,
@@ -474,7 +607,9 @@ class RayContext:
         tlas_build_inputs.desc_count = len(instances)
         tlas_build_inputs.instance_descs = instance_buffer.device_address
 
-        tlas_prebuild_info = self.ctx.device.get_acceleration_structure_prebuild_info(tlas_build_inputs)
+        tlas_prebuild_info = self.ctx.device.get_acceleration_structure_prebuild_info(
+            tlas_build_inputs
+        )
 
         tlas_scratch_buffer = self.ctx.device.create_buffer(
             size=tlas_prebuild_info.scratch_data_size,
@@ -505,28 +640,33 @@ class RayContext:
 
         return tlas
 
-    def dispatch_ray_grid(self, tlas, mode):
-        if mode=='compute':
+    def dispatch_ray_grid(self, tlas: sgl.AccelerationStructure, mode: str):
+        if mode == "compute":
             self.dispatch_ray_grid_compute(tlas)
-        elif mode=='ray':
+        elif mode == "ray":
             self.dispatch_ray_grid_rtp(tlas)
         else:
             raise ValueError(f"Unknown mode {mode}")
 
-
-    def dispatch_ray_grid_compute(self,tlas):
+    def dispatch_ray_grid_compute(self, tlas: sgl.AccelerationStructure):
         program = self.ctx.device.load_program("test_pipeline_utils.slang", ["raygrid"])
         kernel = self.ctx.device.create_compute_kernel(program)
         kernel.dispatch(
-            thread_count=[self.ctx.output_texture.width, self.ctx.output_texture.height, 1],
+            thread_count=[
+                self.ctx.output_texture.width,
+                self.ctx.output_texture.height,
+                1,
+            ],
             render_texture=self.ctx.output_texture,
             tlas=tlas,
-            pos = sgl.int2(0,0),
-            size = sgl.int2(self.ctx.output_texture.width, self.ctx.output_texture.height),
-            dist = float(2)
+            pos=sgl.int2(0, 0),
+            size=sgl.int2(
+                self.ctx.output_texture.width, self.ctx.output_texture.height
+            ),
+            dist=float(2),
         )
 
-    def dispatch_ray_grid_rtp(self, tlas):
+    def dispatch_ray_grid_rtp(self, tlas: sgl.AccelerationStructure):
         program = self.ctx.device.load_program(
             "test_pipeline_utils.slang", ["rt_ray_gen", "rt_miss", "rt_closest_hit"]
         )
@@ -554,23 +694,30 @@ class RayContext:
             cursor = sgl.ShaderCursor(shader_object)
             cursor.rt_tlas = tlas
             cursor.rt_render_texture = self.ctx.output_texture
-            encoder.dispatch_rays(0, shader_table, [self.ctx.output_texture.width, self.ctx.output_texture.height, 1])
+            encoder.dispatch_rays(
+                0,
+                shader_table,
+                [self.ctx.output_texture.width, self.ctx.output_texture.height, 1],
+            )
         command_buffer.submit()
 
+
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-@pytest.mark.parametrize("mode", ['compute','ray'])
+@pytest.mark.parametrize("mode", ["compute", "ray"])
 def test_raytrace_simple(device_type, mode):
-    ctx = PipelineTestContext(device_type,)
+    ctx = PipelineTestContext(
+        device_type,
+    )
     rtx = RayContext(ctx)
 
     # Setup instance transform causes the [0-1] quad to cover the top left
     # quarter of the screen. This is basically pixels 0-63, so we scale it up
     # a bit to handle rounding issues. The quad is at z=1 so should be visible.
     tf = sgl.math.mul(
-        sgl.math.matrix_from_translation(sgl.float3(-0.05,-0.05,1)),
-        sgl.math.matrix_from_scaling(sgl.float3(63.1,63.1,1))
-        )
-    tf =  sgl.float3x4(tf)
+        sgl.math.matrix_from_translation(sgl.float3(-0.05, -0.05, 1)),
+        sgl.math.matrix_from_scaling(sgl.float3(63.1, 63.1, 1)),
+    )
+    tf = sgl.float3x4(tf)
     tlas = rtx.create_instances([tf])
 
     # Load and run the ray tracing kernel that fires a grid of rays
@@ -580,64 +727,75 @@ def test_raytrace_simple(device_type, mode):
 
     # Check the 64x64 pixels are now red
     pixels = ctx.output_texture.to_numpy()
-    is_pixel_red = np.all(pixels[:,:,:3] == [1,0,0], axis=2)
+    is_pixel_red = np.all(pixels[:, :, :3] == [1, 0, 0], axis=2)
     num_red = np.sum(is_pixel_red)
     assert num_red == 4096
 
+
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-@pytest.mark.parametrize("mode", ['compute','ray'])
+@pytest.mark.parametrize("mode", ["compute", "ray"])
 def test_raytrace_two_instance(device_type, mode):
     ctx = PipelineTestContext(device_type)
     rtx = RayContext(ctx)
 
     # Ray trace against 2 instances, in top left and bottom right.
-    transforms=[]
-    transforms.append(sgl.math.mul(
-        sgl.math.matrix_from_translation(sgl.float3(-0.05,-0.05,1)),
-        sgl.math.matrix_from_scaling(sgl.float3(63.1,63.1,1))
-        ))
-    transforms.append(sgl.math.mul(
-        sgl.math.matrix_from_translation(sgl.float3(64-0.05,64-0.05,1)),
-        sgl.math.matrix_from_scaling(sgl.float3(63.1,63.1,1))
-        ))
+    transforms = []
+    transforms.append(
+        sgl.math.mul(
+            sgl.math.matrix_from_translation(sgl.float3(-0.05, -0.05, 1)),
+            sgl.math.matrix_from_scaling(sgl.float3(63.1, 63.1, 1)),
+        )
+    )
+    transforms.append(
+        sgl.math.mul(
+            sgl.math.matrix_from_translation(sgl.float3(64 - 0.05, 64 - 0.05, 1)),
+            sgl.math.matrix_from_scaling(sgl.float3(63.1, 63.1, 1)),
+        )
+    )
 
     tlas = rtx.create_instances([sgl.float3x4(x) for x in transforms])
     rtx.dispatch_ray_grid(tlas, mode)
 
     # Expect 2 64x64 squares, with red from 1st instance and green from 2nd.
     pixels = ctx.output_texture.to_numpy()
-    is_pixel_red = np.all(pixels[:,:,:3] == [1,0,0], axis=2)
-    is_pixel_green = np.all(pixels[:,:,:3] == [0,1,0], axis=2)
+    is_pixel_red = np.all(pixels[:, :, :3] == [1, 0, 0], axis=2)
+    is_pixel_green = np.all(pixels[:, :, :3] == [0, 1, 0], axis=2)
     assert np.sum(is_pixel_red) == 4096
     assert np.sum(is_pixel_green) == 4096
 
+
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-@pytest.mark.parametrize("mode", ['compute','ray'])
+@pytest.mark.parametrize("mode", ["compute", "ray"])
 def test_raytrace_closest_instance(device_type, mode):
     ctx = PipelineTestContext(device_type)
     rtx = RayContext(ctx)
 
     # Ray trace against 2 instances, slightly overlapping,
     # with centre one closer.
-    transforms=[]
-    transforms.append(sgl.math.mul(
-        sgl.math.matrix_from_translation(sgl.float3(-0.05,-0.05,1)),
-        sgl.math.matrix_from_scaling(sgl.float3(63.1,63.1,1))
-        ))
-    transforms.append(sgl.math.mul(
-        sgl.math.matrix_from_translation(sgl.float3(32-0.05,32-0.05,0.5)),
-        sgl.math.matrix_from_scaling(sgl.float3(63.1,63.1,1))
-        ))
+    transforms = []
+    transforms.append(
+        sgl.math.mul(
+            sgl.math.matrix_from_translation(sgl.float3(-0.05, -0.05, 1)),
+            sgl.math.matrix_from_scaling(sgl.float3(63.1, 63.1, 1)),
+        )
+    )
+    transforms.append(
+        sgl.math.mul(
+            sgl.math.matrix_from_translation(sgl.float3(32 - 0.05, 32 - 0.05, 0.5)),
+            sgl.math.matrix_from_scaling(sgl.float3(63.1, 63.1, 1)),
+        )
+    )
 
     tlas = rtx.create_instances([sgl.float3x4(x) for x in transforms])
     rtx.dispatch_ray_grid(tlas, mode)
 
     # Expect full green square, and only 3/4 of red square.
     pixels = ctx.output_texture.to_numpy()
-    is_pixel_red = np.all(pixels[:,:,:3] == [1,0,0], axis=2)
-    is_pixel_green = np.all(pixels[:,:,:3] == [0,1,0], axis=2)
+    is_pixel_red = np.all(pixels[:, :, :3] == [1, 0, 0], axis=2)
+    is_pixel_green = np.all(pixels[:, :, :3] == [0, 1, 0], axis=2)
     assert np.sum(is_pixel_red) == 3072
     assert np.sum(is_pixel_green) == 4096
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "-s"])

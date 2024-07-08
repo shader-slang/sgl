@@ -9,13 +9,13 @@
 
 
 namespace sgl {
-SGL_API std::string BuildSlangFailedMessage(const char* call, SlangResult result);
+SGL_API std::string build_slang_failed_message(const char* call, SlangResult result);
 }
 
 #define SLANG_CALL(call)                                                                                               \
     {                                                                                                                  \
         SlangResult result_ = call;                                                                                    \
         if (SLANG_FAILED(result_)) {                                                                                   \
-            SGL_THROW(BuildSlangFailedMessage(#call, result_));                                                        \
+            SGL_THROW(build_slang_failed_message(#call, result_));                                                     \
         }                                                                                                              \
     }
