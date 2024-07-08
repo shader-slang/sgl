@@ -48,8 +48,22 @@ SGL_DICT_TO_DESC_FIELD(enable_conservative_rasterization, bool)
 SGL_DICT_TO_DESC_FIELD(forced_sample_count, uint32_t)
 SGL_DICT_TO_DESC_END()
 
+SGL_DICT_TO_DESC_BEGIN(AspectBlendDesc)
+SGL_DICT_TO_DESC_FIELD(src_factor, BlendFactor)
+SGL_DICT_TO_DESC_FIELD(dst_factor, BlendFactor)
+SGL_DICT_TO_DESC_FIELD(op, BlendOp)
+SGL_DICT_TO_DESC_END()
+
+SGL_DICT_TO_DESC_BEGIN(TargetBlendDesc)
+SGL_DICT_TO_DESC_FIELD(enable_blend, bool)
+SGL_DICT_TO_DESC_FIELD_DICT(color, AspectBlendDesc)
+SGL_DICT_TO_DESC_FIELD_DICT(alpha, AspectBlendDesc)
+SGL_DICT_TO_DESC_FIELD(logic_op, LogicOp)
+SGL_DICT_TO_DESC_FIELD(write_mask, RenderTargetWriteMask)
+SGL_DICT_TO_DESC_END()
+
 SGL_DICT_TO_DESC_BEGIN(BlendDesc)
-SGL_DICT_TO_DESC_FIELD(targets, std::vector<TargetBlendDesc>)
+SGL_DICT_TO_DESC_FIELD_LIST(targets, TargetBlendDesc)
 SGL_DICT_TO_DESC_FIELD(alpha_to_coverage_enable, bool)
 SGL_DICT_TO_DESC_END()
 
@@ -178,12 +192,20 @@ SGL_PY_EXPORT(device_types)
 
     nb::class_<AspectBlendDesc>(m, "AspectBlendDesc", D(AspectBlendDesc))
         .def(nb::init<>())
+        .def(
+            "__init__",
+            [](AspectBlendDesc* self, nb::dict dict) { new (self) AspectBlendDesc(dict_to_AspectBlendDesc(dict)); }
+        )
         .def_rw("src_factor", &AspectBlendDesc::src_factor, D(AspectBlendDesc, src_factor))
         .def_rw("dst_factor", &AspectBlendDesc::dst_factor, D(AspectBlendDesc, dst_factor))
         .def_rw("op", &AspectBlendDesc::op, D(AspectBlendDesc, op));
 
     nb::class_<TargetBlendDesc>(m, "TargetBlendDesc", D(TargetBlendDesc))
         .def(nb::init<>())
+        .def(
+            "__init__",
+            [](TargetBlendDesc* self, nb::dict dict) { new (self) TargetBlendDesc(dict_to_TargetBlendDesc(dict)); }
+        )
         .def_rw("color", &TargetBlendDesc::color, D(TargetBlendDesc, color))
         .def_rw("alpha", &TargetBlendDesc::alpha, D(TargetBlendDesc, alpha))
         .def_rw("enable_blend", &TargetBlendDesc::enable_blend, D(TargetBlendDesc, enable_blend))
@@ -192,6 +214,7 @@ SGL_PY_EXPORT(device_types)
 
     nb::class_<BlendDesc>(m, "BlendDesc", D(BlendDesc))
         .def(nb::init<>())
+        .def("__init__", [](BlendDesc* self, nb::dict dict) { new (self) BlendDesc(dict_to_BlendDesc(dict)); })
         .def_rw("targets", &BlendDesc::targets, D(BlendDesc, targets))
         .def_rw(
             "alpha_to_coverage_enable",

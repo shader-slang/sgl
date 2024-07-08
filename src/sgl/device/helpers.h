@@ -5,10 +5,17 @@
 #include "sgl/core/error.h"
 
 #include <slang-gfx.h>
+#include <format>
+
+
+namespace sgl {
+SGL_API std::string build_slang_failed_message(const char* call, SlangResult result);
+}
 
 #define SLANG_CALL(call)                                                                                               \
     {                                                                                                                  \
         SlangResult result_ = call;                                                                                    \
-        if (SLANG_FAILED(result_))                                                                                     \
-            SGL_THROW("Slang call {} failed with error: {}", #call, result_);                                          \
+        if (SLANG_FAILED(result_)) {                                                                                   \
+            SGL_THROW(build_slang_failed_message(#call, result_));                                                     \
+        }                                                                                                              \
     }
