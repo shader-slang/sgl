@@ -16,6 +16,7 @@ if errorlevel 1 (
 
 echo Fetching dependencies ...
 
+call pip install -r tools/buildrequirements.txt
 call python setup-tools.py
 if errorlevel 1 (
     echo Failed to fetch dependencies!
