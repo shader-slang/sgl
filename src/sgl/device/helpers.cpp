@@ -3,9 +3,9 @@
 
 #include "sgl/core/config.h"
 #include "sgl/core/macros.h"
+#include "sgl/core/format.h"
 
 #include <string>
-#include <format>
 
 #if SGL_HAS_D3D12
 #include <dxgidebug.h>
@@ -50,7 +50,7 @@ std::string get_last_gfx_layer_error()
 // used by SLANG_CALL.
 std::string build_slang_failed_message(const char* call, SlangResult result)
 {
-    auto msg = std::format("Slang call {} failed with error: {}\n", call, result);
+    auto msg = fmt::format("Slang call {} failed with error: {}\n", call, result);
     if (static_cast<uint32_t>(result) >= 0x80000000U) {
         std::string gfx_error = get_last_gfx_layer_error();
         if (!gfx_error.empty()) {

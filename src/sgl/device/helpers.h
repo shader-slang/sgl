@@ -5,7 +5,6 @@
 #include "sgl/core/error.h"
 
 #include <slang-gfx.h>
-#include <format>
 
 
 namespace sgl {

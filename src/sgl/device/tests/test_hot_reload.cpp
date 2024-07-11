@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "testing.h"
+#include "sgl/core/format.h"
 #include "sgl/device/device.h"
 #include "sgl/device/shader.h"
 #include "sgl/device/kernel.h"
 #include "sgl/device/hot_reload.h"
 #include <fstream>
 #include <filesystem>
-#include <format>
 #include <thread>
 #include <chrono>
 
@@ -28,7 +28,7 @@ static void write_shader(const WriteShaderDesc& desc)
         imports += "import " + i + ";\n";
     }
 
-    std::string formatted = std::format(
+    std::string formatted = fmt::format(
         R"SHADER(
 {3}
 RWStructuredBuffer<uint> {0};
@@ -65,7 +65,7 @@ static void write_module(const WriteModuleDesc& desc)
         imports += "import " + i + ";\n";
     }
 
-    std::string formatted = std::format(
+    std::string formatted = fmt::format(
         R"SHADER(
 {0}
 int {1}()
