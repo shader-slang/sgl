@@ -241,7 +241,7 @@ struct SlangSessionData : Object {
     /// Set of all currently loaded slang modules.
     std::set<slang::IModule*> loaded_modules;
 
-    /// Unique session hash
+    /// Unique session hash.
     std::string uid;
 
     /// List of include paths used for resolving module/include paths.
