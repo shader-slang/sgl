@@ -25,6 +25,7 @@ SGL_DICT_TO_DESC_FIELD(type, DeviceType)
 SGL_DICT_TO_DESC_FIELD(enable_debug_layers, bool)
 SGL_DICT_TO_DESC_FIELD(enable_cuda_interop, bool)
 SGL_DICT_TO_DESC_FIELD(enable_print, bool)
+SGL_DICT_TO_DESC_FIELD(enable_hot_reload, bool)
 SGL_DICT_TO_DESC_FIELD(adapter_luid, AdapterLUID)
 SGL_DICT_TO_DESC_FIELD_DICT(compiler_options, SlangCompilerOptions)
 SGL_DICT_TO_DESC_FIELD(shader_cache_path, std::filesystem::path)
@@ -51,6 +52,7 @@ SGL_PY_EXPORT(device_device)
         .def_rw("enable_debug_layers", &DeviceDesc::enable_debug_layers, D(DeviceDesc, enable_debug_layers))
         .def_rw("enable_cuda_interop", &DeviceDesc::enable_cuda_interop, D(DeviceDesc, enable_cuda_interop))
         .def_rw("enable_print", &DeviceDesc::enable_print, D(DeviceDesc, enable_print))
+        .def_rw("enable_hot_reload", &DeviceDesc::enable_hot_reload, D(DeviceDesc, adapter_luid))
         .def_rw("adapter_luid", &DeviceDesc::adapter_luid, D(DeviceDesc, adapter_luid))
         .def_rw("compiler_options", &DeviceDesc::compiler_options, D(DeviceDesc, compiler_options))
         .def_rw("shader_cache_path", &DeviceDesc::shader_cache_path, D(DeviceDesc, shader_cache_path));
@@ -150,6 +152,7 @@ SGL_PY_EXPORT(device_device)
            bool enable_debug_layers,
            bool enable_cuda_interop,
            bool enable_print,
+           bool enable_hot_reload,
            std::optional<AdapterLUID> adapter_luid,
            std::optional<SlangCompilerOptions> compiler_options,
            std::optional<std::filesystem::path> shader_cache_path)
@@ -159,6 +162,7 @@ SGL_PY_EXPORT(device_device)
                 .enable_debug_layers = enable_debug_layers,
                 .enable_cuda_interop = enable_cuda_interop,
                 .enable_print = enable_print,
+                .enable_hot_reload = enable_hot_reload,
                 .adapter_luid = adapter_luid,
                 .compiler_options = compiler_options.value_or(SlangCompilerOptions{}),
                 .shader_cache_path = shader_cache_path,
@@ -168,6 +172,7 @@ SGL_PY_EXPORT(device_device)
         "enable_debug_layers"_a = DeviceDesc().enable_debug_layers,
         "enable_cuda_interop"_a = DeviceDesc().enable_cuda_interop,
         "enable_print"_a = DeviceDesc().enable_print,
+        "enable_hot_reload"_a = true,
         "adapter_luid"_a.none() = nb::none(),
         "compiler_options"_a.none() = nb::none(),
         "shader_cache_path"_a.none() = nb::none(),
@@ -565,6 +570,7 @@ SGL_PY_EXPORT(device_device)
         "cache_path"_a.none() = nb::none(),
         D(Device, create_slang_session)
     );
+    device.def("reload_all_programs", &Device::reload_all_programs, D_NA(Device, reload_all_programs));
     device.def("load_module", &Device::load_module, "module_name"_a, D(Device, load_module));
     device.def(
         "load_module_from_source",

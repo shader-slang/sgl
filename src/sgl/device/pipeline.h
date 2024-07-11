@@ -16,15 +16,16 @@
 #include <slang-gfx.h>
 
 #include <map>
+#include <set>
 
 namespace sgl {
+
 
 /// Pipeline base class.
 class SGL_API Pipeline : public DeviceResource {
     SGL_OBJECT(Pipeline)
 public:
-    Pipeline(ref<Device> device);
-
+    Pipeline(ref<Device> device, ref<ShaderProgram> program);
     virtual ~Pipeline();
 
     gfx::IPipelineState* gfx_pipeline_state() const { return m_gfx_pipeline_state; }
@@ -34,8 +35,19 @@ public:
     /// - Vulkan: VkPipeline
     NativeHandle get_native_handle() const;
 
+    void notify_program_reloaded();
+
 protected:
+    virtual void recreate() = 0;
+
     Slang::ComPtr<gfx::IPipelineState> m_gfx_pipeline_state;
+
+private:
+    /// Pipelines store program (and thus maintain the ref count)
+    /// in their descriptor - this is just so we can register/unregister
+    /// the with program. However due to order of destruction
+    /// this still needs to hold a strong reference.
+    ref<ShaderProgram> m_program;
 };
 
 struct ComputePipelineDesc {
@@ -47,15 +59,19 @@ class SGL_API ComputePipeline : public Pipeline {
 public:
     ComputePipeline(ref<Device> device, ComputePipelineDesc desc);
 
+    const ComputePipelineDesc& desc() const { return m_desc; }
+
     /// Thread group size.
     /// Used to determine the number of thread groups to dispatch.
     uint3 thread_group_size() const { return m_thread_group_size; }
 
     std::string to_string() const override;
 
+protected:
+    virtual void recreate() override;
+
 private:
-    /// Shared reference to shader program to keep reflection data alive.
-    ref<ShaderProgram> m_program;
+    ComputePipelineDesc m_desc;
     uint3 m_thread_group_size;
 };
 
@@ -75,10 +91,18 @@ public:
     GraphicsPipeline(ref<Device> device, GraphicsPipelineDesc desc);
 
     std::string to_string() const override;
+    const GraphicsPipelineDesc& desc() const { return m_desc; }
+
+protected:
+    virtual void recreate() override;
 
 private:
-    /// Shared reference to shader program to keep reflection data alive.
-    ref<ShaderProgram> m_program;
+    GraphicsPipelineDesc m_desc;
+
+    // These are stored to ensure the layouts aren't freed when pipeline
+    // relies on them if it needs to be recreated for hot reload.
+    ref<const InputLayout> m_stored_input_layout;
+    ref<const FramebufferLayout> m_stored_framebuffer_layout;
 };
 
 struct HitGroupDesc {
@@ -104,9 +128,11 @@ public:
 
     std::string to_string() const override;
 
+protected:
+    virtual void recreate() override;
+
 private:
-    /// Shared reference to shader program to keep reflection data alive.
-    ref<ShaderProgram> m_program;
+    RayTracingPipelineDesc m_desc;
 };
 
 } // namespace sgl
