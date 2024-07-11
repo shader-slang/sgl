@@ -105,8 +105,8 @@ void CALLBACK FileIOCompletionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTr
 FileSystemWatcher::FileSystemWatcher()
 {
 #if !SGL_WINDOWS && !SGL_LINUX
-    // TODO(@ccummings): File system watcher linux support
-    SGL_THROW("File system watcher is only implemented on windows platforms");
+    // TODO(@ccummings): File system watcher macOS support
+    SGL_THROW("File system watcher is only implemented on windows and linux platforms");
 #endif
 #if SGL_LINUX
     m_inotify_file_descriptor = inotify_init();
