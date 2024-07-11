@@ -16,7 +16,6 @@ fi
 
 echo "Fetching dependencies ..."
 
-pip install -r tools/buildrequirements.txt
 python setup-tools.py
 if [ $? -ne 0 ]; then
     echo "Failed to fetch dependencies!"
