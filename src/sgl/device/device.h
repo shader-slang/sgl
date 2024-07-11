@@ -96,7 +96,7 @@ struct DeviceDesc {
     bool enable_print{false};
 
     /// Enable automatic shader reload in response to file changes.
-    /// Note: Currently windows only.
+    /// Note: Currently windows and linux only.
     bool enable_hot_reload{true};
 
     /// Adapter LUID to select adapter on which the device will be created.
