@@ -44,9 +44,10 @@ protected:
 
 private:
     /// Pipelines store program (and thus maintain the ref count)
-    /// in their descriptor - this is just so we can
-    /// register/unregister with program.
-    ShaderProgram* m_program;
+    /// in their descriptor - this is just so we can register/unregister
+    /// the with program. However due to order of destruction
+    /// this still needs to hold a strong reference.
+    ref<ShaderProgram> m_program;
 };
 
 struct ComputePipelineDesc {

@@ -223,8 +223,10 @@ void FileSystemWatcher::stop_watch(const std::unique_ptr<FileSystemWatchState>& 
     // On windows, CancelIO.
     // Note: the loop below could be a while(!state->is_shutdown), but making
     // it a fixed number of iterations lets us throw an exception if shutdown fails
+    // Note: on windows this is normally a few milliseconds, but can sometimes
+    // take multiple seconds.
     CancelIo(state->directory_handle);
-    for (int it = 0; it < 100; it++) {
+    for (int it = 0; it < 1000; it++) {
         if (state->is_shutdown)
             break;
         SleepEx(5, TRUE);
