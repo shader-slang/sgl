@@ -29,6 +29,9 @@ To make it easy to build ``sgl`` reliably, an additional setup step is required:
 
 .. code-block:: bash
 
+    # Install Python build prerequisites
+    pip install -r tools/buildrequirements.txt
+
     # On Windows
     setup.bat
 
