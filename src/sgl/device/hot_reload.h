@@ -46,7 +46,7 @@ public:
     /// Return true if last attempt to recreate sessions failed with exception.
     bool last_build_failed() const { return m_last_build_failed; }
 
-     // Internal functions called from session constructor/destructor
+    // Internal functions called from session constructor/destructor
     // to register sessions with hot reload system.
     void _register_slang_session(SlangSession* session);
     void _unregister_slang_session(SlangSession* session);
@@ -61,7 +61,7 @@ private:
     void on_file_system_event(std::span<FileSystemWatchEvent> events);
     void update_watched_paths_for_session(SlangSession* session);
 
-    breakable_ref<Device> m_device;
+    Device* m_device;
     bool m_auto_detect_changes{true};
     ref<FileSystemWatcher> m_file_system_watcher;
     std::set<SlangSession*> m_all_slang_sessions;

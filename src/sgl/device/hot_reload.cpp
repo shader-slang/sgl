@@ -7,7 +7,7 @@
 namespace sgl {
 
 HotReload::HotReload(ref<Device> device)
-    : m_device(device)
+    : m_device(device.get())
 {
     // Create file system monitor + hook up change event.
     m_file_system_watcher = make_ref<FileSystemWatcher>();
