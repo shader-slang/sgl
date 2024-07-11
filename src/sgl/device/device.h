@@ -550,8 +550,7 @@ public:
     std::string to_string() const override;
 
     Blitter* _blitter();
-
-    ref<HotReload> hot_reload() { return m_hot_reload; }
+    HotReload* _hot_reload() { return m_hot_reload; }
 
 private:
     DeviceDesc m_desc;
@@ -604,12 +603,11 @@ private:
 #endif
 
     ref<Blitter> m_blitter;
+    ref<HotReload> m_hot_reload;
 
     bool m_supports_cuda_interop{false};
     ref<cuda::Device> m_cuda_device;
     ref<cuda::ExternalSemaphore> m_cuda_semaphore;
-
-    ref<HotReload> m_hot_reload;
 };
 
 } // namespace sgl
