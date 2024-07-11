@@ -63,7 +63,7 @@ void HotReload::set_auto_detect_delay(uint32_t delay_ms)
 void HotReload::recreate_all_sessions()
 {
     // Iterate over sessions and build each one. This is in a try/catch
-    // statement as we don't want python programs to except as a result
+    // statement as we don't want programs to except as a result
     // of hot-reload compile errors. Instead, the error should be
     // logged and application carry on as usual.
     try {
@@ -92,16 +92,19 @@ void HotReload::update_watched_paths_for_session(SlangSession* session)
         for (SlangInt32 dependency_index = 0; dependency_index < dependency_count; dependency_index++) {
             {
                 // Get the dependency as an FS path, verify it is absolute and turn into directory path.
-                std::filesystem::path abs_path = slang_module->getDependencyFilePath(dependency_index);
-                if (!abs_path.is_absolute()) {
-                    continue;
-                }
-                abs_path = abs_path.parent_path().make_preferred();
+                const char* path = slang_module->getDependencyFilePath(dependency_index);
+                if (path) {
+                    std::filesystem::path abs_path = slang_module->getDependencyFilePath(dependency_index);
+                    if (!abs_path.is_absolute()) {
+                        continue;
+                    }
+                    abs_path = abs_path.parent_path().make_preferred();
 
-                // If not already monitoring this path, add a watch for it.
-                if (!m_watched_paths.contains(abs_path)) {
-                    m_file_system_watcher->add_watch({.directory = abs_path});
-                    m_watched_paths.insert(abs_path);
+                    // If not already monitoring this path, add a watch for it.
+                    if (!m_watched_paths.contains(abs_path)) {
+                        m_file_system_watcher->add_watch({.directory = abs_path});
+                        m_watched_paths.insert(abs_path);
+                    }
                 }
             }
         }

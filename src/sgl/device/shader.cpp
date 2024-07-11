@@ -166,9 +166,12 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
     // Create (but don't compile yet) the NVAPI module
     // We link this to all programs because slang uses NVAPI features while not including NVAPI itself.
     if (SGL_HAS_NVAPI && device->type() == DeviceType::d3d12) {
-        SlangModuleDesc nvapi_desc;
-        nvapi_desc.module_name = "sgl/device/nvapi.slang";
-        m_nvapi_module = make_ref<SlangModule>(ref(this), nvapi_desc);
+        m_nvapi_module = make_ref<SlangModule>(
+            ref(this),
+            SlangModuleDesc{
+                .module_name = "sgl/device/nvapi.slang",
+            }
+        );
         m_nvapi_module->break_strong_reference_to_session();
     }
 
@@ -558,23 +561,6 @@ void SlangSession::_unregister_module(SlangModule* module)
         m_registered_modules.erase(existing);
 }
 
-/*
-void SlangSession::recreate_modules_referencing(const std::set<std::filesystem::path>& paths)
-{
-    int dependencies = 0;
-    for (int i = 0; i < m_slang_session->getLoadedModuleCount(); ++i) {
-        slang::IModule* slang_module = m_slang_session->getLoadedModule(i);
-        std::filesystem::path module_path = slang_module->getFilePath();
-        if (paths.contains(module_path)) {
-            log_info("Hot reload, module {} changed", module_path);
-            dependencies++;
-        }
-    }
-    if (dependencies > 0)
-        recreate_session();
-}
-*/
-
 std::string SlangSession::to_string() const
 {
     return fmt::format(
@@ -812,7 +798,7 @@ ref<SlangEntryPoint> SlangModule::entry_point(std::string_view name, std::span<T
 {
     SlangEntryPointDesc desc;
     desc.name = name;
-    desc.type_conformances = type_conformances;
+    desc.type_conformances.assign(type_conformances.begin(), type_conformances.end());
 
     auto entry_point = make_ref<SlangEntryPoint>(ref(const_cast<SlangModule*>(this)), desc);
 

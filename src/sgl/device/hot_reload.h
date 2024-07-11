@@ -2,13 +2,12 @@
 
 #pragma once
 
-#include "sgl/core/fwd.h"
-
 #include "sgl/device/fwd.h"
 #include "sgl/device/types.h"
 #include "sgl/device/reflection.h"
 #include "sgl/device/device_resource.h"
 
+#include "sgl/core/fwd.h"
 #include "sgl/core/object.h"
 #include "sgl/core/enum.h"
 
@@ -36,14 +35,6 @@ public:
     /// Updates internal file system monitor for change detection.
     void update();
 
-    // Internal functions called from session constructor/destructor
-    // to register sessions with hot reload system.
-    void _register_slang_session(SlangSession* session);
-    void _unregister_slang_session(SlangSession* session);
-
-    // Called from session when modules have updated, meaning dependencies may have changed
-    void _on_session_modules_changed(SlangSession* session);
-
     // Enable/disable auto rebuild in response to file system events.
     bool auto_detect_changes() const { return m_auto_detect_changes; }
     void set_auto_detect_changes(bool val) { m_auto_detect_changes = val; }
@@ -54,6 +45,14 @@ public:
 
     /// Return true if last attempt to recreate sessions failed with exception.
     bool last_build_failed() const { return m_last_build_failed; }
+
+     // Internal functions called from session constructor/destructor
+    // to register sessions with hot reload system.
+    void _register_slang_session(SlangSession* session);
+    void _unregister_slang_session(SlangSession* session);
+
+    // Called from session when modules have updated, meaning dependencies may have changed
+    void _on_session_modules_changed(SlangSession* session);
 
     /// Exclusively for testing, erase all existing file watches
     void _clear_file_watches();

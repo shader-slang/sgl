@@ -319,11 +319,6 @@ public:
     ref<SlangSessionData> _data() { return m_data; }
 
 private:
-    void update_module_cache_and_dependencies();
-    bool write_module_to_cache(slang::IModule* module);
-
-    void create_session(SlangSessionBuild& build);
-
     breakable_ref<Device> m_device;
 
     /// Descriptor containing all info required to build the session.
@@ -341,6 +336,10 @@ private:
 
     /// All created sgl programs (via link_program)
     std::set<ShaderProgram*> m_registered_programs;
+
+    void update_module_cache_and_dependencies();
+    bool write_module_to_cache(slang::IModule* module);
+    void create_session(SlangSessionBuild& build);
 };
 
 struct SlangModuleDesc {
@@ -409,7 +408,7 @@ private:
 
 struct SlangEntryPointDesc {
     std::string name;
-    std::span<TypeConformance> type_conformances;
+    std::vector<TypeConformance> type_conformances;
 };
 struct SlangEntryPointData : Object {
     Slang::ComPtr<slang::IComponentType> slang_entry_point;
