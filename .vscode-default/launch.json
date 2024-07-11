@@ -16,14 +16,13 @@
             "pythonConfig": "default",
             "cppConfig": "default (gdb) Attach"
         },
-       {
+        {
             "name": "Python Debugger: Current File",
             "type": "debugpy",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal"
         },
-
         {
             "name": "Selected CMake Target",
             "type": "cppvsdbg",
