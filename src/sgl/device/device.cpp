@@ -299,7 +299,7 @@ Device::Device(const DeviceDesc& desc)
 #if SGL_WINDOWS || SGL_LINUX
         m_hot_reload = make_ref<HotReload>(ref<Device>(this));
 #else
-        log_warn("Hot reload is currently only supported on windows\n");
+        log_warn("Hot reload is currently only supported on windows and linux\n");
 #endif
     }
 

@@ -485,8 +485,8 @@ ref<ShaderProgram> SlangSession::link_program(
     auto program = make_ref<ShaderProgram>(ref(device()), ref(this), desc);
 
     // Setup build with this session and populate with all relevant
-    // modules (and consequentially their end points), then link and
-    // store the program
+    // modules (and consequentially their entry points), then link and
+    // store the program.
     SlangSessionBuild build;
     build.session = m_data;
     for (auto module : desc.modules) {
