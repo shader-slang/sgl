@@ -319,27 +319,25 @@ class ninja(Package):
 class clang_format(Package):
     def __init__(self):
         self.name = "clang-format"
-        self.version = "16"
-        self.version2 = "16.0.6"
+        self.version = "16.0.6"
         self.infos = {
             "windows-x64": {
-                "url": f"https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-f4f85437/clang-format-{self.version}_windows-amd64.exe",
-                "sha512": "5c9768de9adfdf9c181c42509d7fa3c0fb41f99298665067cafb88ebaa1c3b9992b37f90309def32fe9d256e6a4cde43b3a11ec3616a2b34044480a08e44ba7a",
-                "rename": "clang-format.exe",
+                "url": f"https://files.pythonhosted.org/packages/9b/b0/66c1799ef634511829a4c2c419831f40116196b5f4041055e2bc4ea9645b/clang_format-{self.version}-py2.py3-none-win_amd64.whl",
+                "sha512": "512a95d26a416a555f261e2e1e707f15f66ae5a5d7815559080c0c7e2bb35fedb6d9fa4b02bff1bd71fd1ff29da29207adeb34baabb0ac494418b46f56edf97d",
+                "use_sub_dir": "clang_format/data/bin",
             },
             "linux-x64": {
-                "url": f"https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-f4f85437/clang-format-{self.version}_linux-amd64",
-                "sha512": "b83942b5eda44dcf094e6ae13425ad12a2fa97b106c35eb25863ab11c7bf50854b9660870f645151b65c873011c7feef62f2405dc13d27d0c869b3f3b5dc2cef",
-                "rename": "clang-format",
-                "chmod": "+x",
+                "url": f"https://files.pythonhosted.org/packages/83/47/10591237672762b61099011f04f154d5b46c21b4f88979c92331a04edacb/clang_format-{self.version}-py2.py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+                "sha512": "9dbb215810dbff4f75614928532f2ee88cf527b11b0834adbaa8d4f3a1940ce9aeb6e44475edbf3097f49bdad8a4b9f4d857c74798ff993b0f49a7dee0b033a3",
+                "use_sub_dir": "clang_format/data/bin",
             },
             "macos-x64": {
-                "url": f"https://files.pythonhosted.org/packages/01/fb/8267d7035ec217df109cfde2164a26121413c3e7cd92896b862ce86b947c/clang_format-{self.version2}-py2.py3-none-macosx_10_9_universal2.whl",
+                "url": f"https://files.pythonhosted.org/packages/01/fb/8267d7035ec217df109cfde2164a26121413c3e7cd92896b862ce86b947c/clang_format-{self.version}-py2.py3-none-macosx_10_9_universal2.whl",
                 "sha512": "705244ca8ba4c3fa9926311deedceebd9afdc6927c8ec38ac3d7083c814788060735b3baa6a8c5d8449737b4f7aedd590471ec18988e4508fc225d0a9a2d4bc9",
                 "use_sub_dir": "clang_format/data/bin",
             },
             "macos-arm64": {
-                "url": f"https://files.pythonhosted.org/packages/01/fb/8267d7035ec217df109cfde2164a26121413c3e7cd92896b862ce86b947c/clang_format-{self.version2}-py2.py3-none-macosx_10_9_universal2.whl",
+                "url": f"https://files.pythonhosted.org/packages/01/fb/8267d7035ec217df109cfde2164a26121413c3e7cd92896b862ce86b947c/clang_format-{self.version}-py2.py3-none-macosx_10_9_universal2.whl",
                 "sha512": "705244ca8ba4c3fa9926311deedceebd9afdc6927c8ec38ac3d7083c814788060735b3baa6a8c5d8449737b4f7aedd590471ec18988e4508fc225d0a9a2d4bc9",
                 "use_sub_dir": "clang_format/data/bin",
             },
