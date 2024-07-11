@@ -128,6 +128,9 @@ class Blitter;
 
 class TextureLoader;
 
+// hot_reload.h
+class HotReload;
+
 // cuda_interop.h
 
 namespace cuda {

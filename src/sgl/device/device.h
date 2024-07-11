@@ -8,6 +8,7 @@
 #include "sgl/device/resource.h"
 #include "sgl/device/shader.h"
 
+#include "sgl/core/fwd.h"
 #include "sgl/core/config.h"
 #include "sgl/core/macros.h"
 #include "sgl/core/enum.h"
@@ -26,7 +27,6 @@
 
 namespace sgl {
 
-class Window;
 class DebugPrinter;
 
 /// Adapter LUID (locally unique identifier).
@@ -94,6 +94,10 @@ struct DeviceDesc {
 
     /// Enable device side printing (adds performance overhead).
     bool enable_print{false};
+
+    /// Enable automatic shader reload in response to file changes.
+    /// Note: Currently windows and linux only.
+    bool enable_hot_reload{true};
 
     /// Adapter LUID to select adapter on which the device will be created.
     std::optional<AdapterLUID> adapter_luid;
@@ -364,6 +368,8 @@ public:
         std::optional<SlangLinkOptions> link_options = {}
     );
 
+    void reload_all_programs();
+
     ref<MutableShaderObject> create_mutable_shader_object(const ShaderProgram* shader_program);
 
     ref<MutableShaderObject> create_mutable_shader_object(const TypeLayoutReflection* type_layout);
@@ -545,6 +551,8 @@ public:
 
     Blitter* _blitter();
 
+    ref<HotReload> hot_reload() { return m_hot_reload; }
+
 private:
     DeviceDesc m_desc;
     DeviceInfo m_info;
@@ -600,6 +608,8 @@ private:
     bool m_supports_cuda_interop{false};
     ref<cuda::Device> m_cuda_device;
     ref<cuda::ExternalSemaphore> m_cuda_semaphore;
+
+    ref<HotReload> m_hot_reload;
 };
 
 } // namespace sgl

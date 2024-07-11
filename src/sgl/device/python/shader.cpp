@@ -213,20 +213,20 @@ SGL_PY_EXPORT(device_shader)
         .def_prop_ro("path", &SlangModule::path, D(SlangModule, path))
         .def_prop_ro("layout", &SlangModule::layout, D(SlangModule, layout))
         .def_prop_ro("entry_points", &SlangModule::entry_points, D(SlangModule, entry_points))
-        .def("entry_point", &SlangModule::entry_point, "name"_a, D(SlangModule, entry_point));
+        .def(
+            "entry_point",
+            &SlangModule::entry_point,
+            "name"_a,
+            "type_conformances"_a = std::span<TypeConformance>(),
+            D(SlangModule, entry_point)
+        );
 
     nb::class_<SlangEntryPoint, Object>(m, "SlangEntryPoint", D(SlangEntryPoint))
         .def_prop_ro("name", &SlangEntryPoint::name, D(SlangEntryPoint, name))
         .def_prop_ro("stage", &SlangEntryPoint::stage, D(SlangEntryPoint, stage))
         .def_prop_ro("layout", &SlangEntryPoint::layout, nb::rv_policy::reference_internal, D(SlangEntryPoint, layout))
         .def("rename", &SlangEntryPoint::rename, "new_name"_a, D(SlangEntryPoint, rename))
-        .def("with_name", &SlangEntryPoint::with_name, "new_name"_a, D(SlangEntryPoint, with_name))
-        .def(
-            "with_type_conformances",
-            &SlangEntryPoint::with_type_conformances,
-            "type_conformances"_a,
-            D(SlangEntryPoint, with_type_conformances)
-        );
+        .def("with_name", &SlangEntryPoint::with_name, "new_name"_a, D(SlangEntryPoint, with_name));
 
     nb::class_<ShaderProgram, DeviceResource>(m, "ShaderProgram", D(ShaderProgram))
         .def_prop_ro("layout", &ShaderProgram::layout, nb::rv_policy::reference_internal, D(ShaderProgram, layout))

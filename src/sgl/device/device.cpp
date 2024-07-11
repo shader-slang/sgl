@@ -23,7 +23,9 @@
 #include "sgl/device/cuda_interop.h"
 #include "sgl/device/print.h"
 #include "sgl/device/blit.h"
+#include "sgl/device/hot_reload.h"
 
+#include "sgl/core/file_system_watcher.h"
 #include "sgl/core/config.h"
 #include "sgl/core/error.h"
 #include "sgl/core/window.h"
@@ -290,6 +292,16 @@ Device::Device(const DeviceDesc& desc)
     : m_desc(desc)
 {
     ConstructorRefGuard ref_guard(this);
+
+    // Create hot reload system before creating any sessions
+    if (m_desc.enable_hot_reload) {
+        // Check for none-supported platforms.
+#if SGL_WINDOWS || SGL_LINUX
+        m_hot_reload = make_ref<HotReload>(ref<Device>(this));
+#else
+        log_warn("Hot reload is currently only supported on windows and linux\n");
+#endif
+    }
 
     SLANG_CALL(slang::createGlobalSession(m_global_session.writeRef()));
 
@@ -609,6 +621,12 @@ ref<SlangSession> Device::create_slang_session(SlangSessionDesc desc)
     return make_ref<SlangSession>(ref<Device>(this), std::move(desc));
 }
 
+void Device::reload_all_programs()
+{
+    if (m_hot_reload)
+        m_hot_reload->recreate_all_sessions();
+}
+
 ref<SlangModule> Device::load_module(std::string_view module_name)
 {
     return m_slang_session->load_module(module_name);
@@ -852,6 +870,10 @@ void Device::run_garbage_collection()
     // Release deferred objects that are no longer in use.
     while (m_deferred_release_queue.size() && m_deferred_release_queue.front().fence_value <= current_value)
         m_deferred_release_queue.pop();
+
+    // Update hot reload system if created.
+    if (m_hot_reload)
+        m_hot_reload->update();
 }
 
 ref<MemoryHeap> Device::create_memory_heap(MemoryHeapDesc desc)
