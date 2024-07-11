@@ -43,9 +43,10 @@ protected:
     Slang::ComPtr<gfx::IPipelineState> m_gfx_pipeline_state;
 
 private:
-    /// Pipelines store program in their descriptor - this
-    /// is just so we can register/unregister with program.
-    ref<ShaderProgram> m_program;
+    /// Pipelines store program (and thus maintain the ref count)
+    /// in their descriptor - this is just so we can
+    /// register/unregister with program.
+    ShaderProgram* m_program;
 };
 
 struct ComputePipelineDesc {
