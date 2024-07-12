@@ -172,7 +172,9 @@ FileSystemWatcher::~FileSystemWatcher()
 
 uint32_t FileSystemWatcher::add_watch(const FileSystemWatchDesc& desc)
 {
+#if !SGL_WINDOWS && !SGL_LINUX
     std::lock_guard<std::mutex> lock(m_watches_mutex);
+#endif
 
     // Check watch doesn't already exist
     for (const auto& pair : m_watches) {
@@ -244,7 +246,9 @@ uint32_t FileSystemWatcher::add_watch(const FileSystemWatchDesc& desc)
 
 void FileSystemWatcher::remove_watch(uint32_t id)
 {
+#if !SGL_WINDOWS && !SGL_LINUX
     std::lock_guard<std::mutex> lock(m_watches_mutex);
+#endif
 
     stop_watch(m_watches[id]);
     m_watches.erase(id);
@@ -252,7 +256,9 @@ void FileSystemWatcher::remove_watch(uint32_t id)
 
 void FileSystemWatcher::remove_watch(const std::filesystem::path& directory)
 {
+#if !SGL_WINDOWS && !SGL_LINUX
     std::lock_guard<std::mutex> lock(m_watches_mutex);
+#endif
 
     for (const auto& pair : m_watches) {
         if (pair.second->desc.directory == directory) {
@@ -307,7 +313,9 @@ void FileSystemWatcher::_notify_change(
         .time = now,
     };
     {
+#if !SGL_WINDOWS && !SGL_LINUX
         std::lock_guard<std::mutex> lock(m_queued_events_mutex);
+#endif
         m_queued_events.push_back(event);
     }
     m_last_event = now;
@@ -358,7 +366,9 @@ void FileSystemWatcher::update()
 
     // Process queued events.
     {
+#if !SGL_WINDOWS && !SGL_LINUX
         std::lock_guard<std::mutex> lock(m_queued_events_mutex);
+#endif
         if (m_queued_events.size() > 0) {
             auto duration = std::chrono::system_clock::now() - m_last_event;
             auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
@@ -370,6 +380,7 @@ void FileSystemWatcher::update()
     }
 }
 
+#if !SGL_WINDOWS && !SGL_LINUX
 void FileSystemWatcher::thread_func()
 {
     uint32_t counter = 0;
@@ -404,5 +415,6 @@ void FileSystemWatcher::thread_func()
         }
     }
 }
+#endif
 
 } // namespace sgl

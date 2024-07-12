@@ -110,17 +110,11 @@ private:
     /// Map of id->watch.
     std::map<int, std::unique_ptr<FileSystemWatchState>> m_watches;
 
-    /// Mutex to protect the watch map.
-    std::mutex m_watches_mutex;
-
     /// Watch event callback.
     ChangeCallback m_on_change;
 
     /// Events reported since last call to watch event callback.
     std::vector<FileSystemWatchEvent> m_queued_events;
-
-    /// Mutex to protect the queued events.
-    std::mutex m_queued_events_mutex;
 
     /// Time last event was recorded.
     std::chrono::system_clock::time_point m_last_event;
@@ -131,6 +125,12 @@ private:
 #endif
 
 #if !SGL_WINDOWS && !SGL_LINUX
+    /// Mutex to protect the watch map.
+    std::mutex m_watches_mutex;
+
+    /// Mutex to protect the queued events.
+    std::mutex m_queued_events_mutex;
+
     /// Thread to poll for file system changes.
     std::thread m_thread;
     std::atomic<bool> m_stop_thread{false};
