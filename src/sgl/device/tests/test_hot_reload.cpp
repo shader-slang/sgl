@@ -93,13 +93,13 @@ static void run_and_verify(
     static int g_zeros[1024];
     static int g_results[1024];
     memset(g_zeros, 0, sizeof(g_zeros));
-    ref<Buffer> buffer = ctx.device->create_buffer(
-        {.element_count = 1024,
-         .struct_size = 4,
-         .usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access,
-         .data = g_zeros,
-         .data_size = sizeof(g_zeros)}
-    );
+    ref<Buffer> buffer = ctx.device->create_buffer({
+        .element_count = 1024,
+        .struct_size = 4,
+        .usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access,
+        .data = g_zeros,
+        .data_size = sizeof(g_zeros),
+    });
 
     kernel->dispatch(uint3(1024, 1, 1), [&buffer](ShaderCursor cursor) { cursor["outbuffer"] = buffer; });
 
@@ -116,7 +116,7 @@ static void run_and_verify(
     CHECK(all_correct);
 }
 
-TEST_SUITE_BEGIN("hotreload");
+TEST_SUITE_BEGIN("hot_reload");
 
 TEST_CASE_GPU("verify test case works")
 {
