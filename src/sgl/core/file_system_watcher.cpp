@@ -4,8 +4,7 @@
 
 #include "sgl/core/error.h"
 
-#include <fstream>
-#include <iostream>
+#include <map>
 
 #if SGL_WINDOWS
 #ifndef WIN32_LEAN_AND_MEAN
@@ -15,11 +14,14 @@
 #elif SGL_LINUX
 #include <sys/inotify.h>
 #include <fcntl.h>
+#include <unistd.h>
 #endif
 
 namespace sgl {
 
 struct FileSystemWatchState {
+    FileSystemWatcher* watcher;
+    FileSystemWatchDesc desc;
 #if SGL_WINDOWS
     OVERLAPPED overlapped;
     HANDLE directory_handle;
@@ -28,14 +30,16 @@ struct FileSystemWatchState {
 #elif SGL_LINUX
     int watch_descriptor;
 #endif
-    FileSystemWatcher* watcher;
-    FileSystemWatchDesc desc;
+#if !SGL_WINDOWS && !SGL_LINUX
+    std::map<std::filesystem::path, std::filesystem::file_time_type> files;
+#endif
 };
 
 
 #if SGL_WINDOWS
 // Windows completion routine called with buffer of filesytem events.
-void CALLBACK FileIOCompletionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered, LPOVERLAPPED lpOverlapped)
+static void CALLBACK
+FileIOCompletionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered, LPOVERLAPPED lpOverlapped)
 {
     // Overlapped is pointer to FileSystemWatchState with windows OVERLAPPED structure at start.
     FileSystemWatchState* state = (FileSystemWatchState*)lpOverlapped;
@@ -100,14 +104,32 @@ void CALLBACK FileIOCompletionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTr
         state->is_shutdown = true;
     }
 }
+#endif // SGL_WINDOWS
+
+
+#if !SGL_WINDOWS && !SGL_LINUX
+static std::map<std::filesystem::path, std::filesystem::file_time_type>
+get_directory_files(const std::filesystem::path& directory)
+{
+    if (!std::filesystem::exists(directory))
+        return {};
+
+    std::map<std::filesystem::path, std::filesystem::file_time_type> files;
+    for (const auto& entry : std::filesystem::directory_iterator(directory)) {
+        if (entry.is_regular_file()) {
+            std::filesystem::path rel_path = std::filesystem::relative(entry.path(), directory);
+            std::error_code ec;
+            std::filesystem::file_time_type write_time = std::filesystem::last_write_time(entry.path(), ec);
+            if (!ec)
+                files.emplace(rel_path, write_time);
+        }
+    }
+    return files;
+}
 #endif
 
 FileSystemWatcher::FileSystemWatcher()
 {
-#if !SGL_WINDOWS && !SGL_LINUX
-    // TODO(@ccummings): File system watcher macOS support
-    SGL_THROW("File system watcher is only implemented on windows and linux platforms");
-#endif
 #if SGL_LINUX
     m_inotify_file_descriptor = inotify_init();
     if (m_inotify_file_descriptor < 0) {
@@ -126,6 +148,10 @@ FileSystemWatcher::FileSystemWatcher()
         SGL_THROW("Failed to set inotify file descriptor flags to none-blocking");
     }
 #endif
+
+#if !SGL_WINDOWS && !SGL_LINUX
+    m_thread = std::thread([this]() { thread_func(); });
+#endif
 }
 
 FileSystemWatcher::~FileSystemWatcher()
@@ -136,16 +162,28 @@ FileSystemWatcher::~FileSystemWatcher()
 #if SGL_LINUX
     close(m_inotify_file_descriptor);
 #endif
+
+#if !SGL_WINDOWS && !SGL_LINUX
+    m_stop_thread = true;
+    if (m_thread.joinable())
+        m_thread.join();
+#endif
 }
 
 uint32_t FileSystemWatcher::add_watch(const FileSystemWatchDesc& desc)
 {
+    std::lock_guard<std::mutex> lock(m_watches_mutex);
+
     // Check watch doesn't already exist
     for (const auto& pair : m_watches) {
         if (pair.second->desc.directory == desc.directory) {
             SGL_THROW("A watch already exists for {}.", desc.directory);
         }
     }
+
+    // Check that directory exists.
+    if (!std::filesystem::exists(desc.directory))
+        SGL_THROW("Directory {} does not exist", desc.directory);
 
     // Init a new watcher state object
     uint32_t id = m_next_id++;
@@ -196,18 +234,26 @@ uint32_t FileSystemWatcher::add_watch(const FileSystemWatchDesc& desc)
     }
 #endif
 
+#if !SGL_WINDOWS && !SGL_LINUX
+    state->files = get_directory_files(state->desc.directory);
+#endif
+
     m_watches[id] = std::move(state);
     return id;
 }
 
 void FileSystemWatcher::remove_watch(uint32_t id)
 {
+    std::lock_guard<std::mutex> lock(m_watches_mutex);
+
     stop_watch(m_watches[id]);
     m_watches.erase(id);
 }
 
 void FileSystemWatcher::remove_watch(const std::filesystem::path& directory)
 {
+    std::lock_guard<std::mutex> lock(m_watches_mutex);
+
     for (const auto& pair : m_watches) {
         if (pair.second->desc.directory == directory) {
             stop_watch(pair.second);
@@ -237,8 +283,6 @@ void FileSystemWatcher::stop_watch(const std::unique_ptr<FileSystemWatchState>& 
     CloseHandle(state->directory_handle);
 #elif SGL_LINUX
     close(state->watch_descriptor);
-#else
-    SGL_UNUSED(state);
 #endif
 }
 
@@ -253,8 +297,7 @@ void FileSystemWatcher::_notify_change(
     FileSystemWatcherChange change
 )
 {
-    std::filesystem::path abs_path(state->desc.directory.string() + "/" + path.string());
-    abs_path = std::filesystem::absolute(abs_path);
+    std::filesystem::path abs_path = std::filesystem::absolute(state->desc.directory / path);
 
     auto now = std::chrono::system_clock::now();
     FileSystemWatchEvent event{
@@ -263,7 +306,10 @@ void FileSystemWatcher::_notify_change(
         .change = change,
         .time = now,
     };
-    m_queued_events.push_back(event);
+    {
+        std::lock_guard<std::mutex> lock(m_queued_events_mutex);
+        m_queued_events.push_back(event);
+    }
     m_last_event = now;
 }
 
@@ -272,7 +318,7 @@ void FileSystemWatcher::update()
 #if SGL_WINDOWS
     SleepEx(0, TRUE);
 #elif SGL_LINUX
-    // Attempt none-blocking read from inotify, and return if no data.
+    // Attempt non-blocking read from inotify, and return if no data.
     char buffer[4096];
     int length = read(m_inotify_file_descriptor, buffer, sizeof(buffer));
     if (length >= 0) {
@@ -310,15 +356,53 @@ void FileSystemWatcher::update()
     }
 #endif
 
-    if (m_queued_events.size() > 0) {
-        auto duration = std::chrono::system_clock::now() - m_last_event;
-        auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-        if (millis > m_output_delay_ms) {
-            m_on_change(m_queued_events);
-            m_queued_events.clear();
+    // Process queued events.
+    {
+        std::lock_guard<std::mutex> lock(m_queued_events_mutex);
+        if (m_queued_events.size() > 0) {
+            auto duration = std::chrono::system_clock::now() - m_last_event;
+            auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+            if (millis > m_output_delay_ms) {
+                m_on_change(m_queued_events);
+                m_queued_events.clear();
+            }
         }
     }
 }
 
+void FileSystemWatcher::thread_func()
+{
+    uint32_t counter = 0;
+    while (!m_stop_thread) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        if (counter++ % 10 != 0)
+            continue;
+
+        std::lock_guard<std::mutex> lock(m_watches_mutex);
+        for (const auto& [_, state] : m_watches) {
+            std::map<std::filesystem::path, std::filesystem::file_time_type> files
+                = get_directory_files(state->desc.directory);
+
+            // Detect added and modified files.
+            for (const auto& [path, write_time] : files) {
+                auto it = state->files.find(path);
+                if (it == state->files.end()) {
+                    _notify_change(state.get(), path, FileSystemWatcherChange::added);
+                } else if (it->second != write_time) {
+                    _notify_change(state.get(), path, FileSystemWatcherChange::modified);
+                }
+            }
+            // Detect removed files.
+            for (const auto& [path, write_time] : state->files) {
+                auto it = files.find(path);
+                if (it == files.end()) {
+                    _notify_change(state.get(), path, FileSystemWatcherChange::removed);
+                }
+            }
+
+            state->files = std::move(files);
+        }
+    }
+}
 
 } // namespace sgl
