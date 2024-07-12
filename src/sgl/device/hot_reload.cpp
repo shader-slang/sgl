@@ -79,6 +79,9 @@ void HotReload::recreate_all_sessions()
         log_error(runtime_error.what());
         m_last_build_failed = true;
     }
+
+    // Set has reloaded flag so testing system can detect changes
+    m_has_reloaded = true;
 }
 
 void HotReload::update_watched_paths_for_session(SlangSession* session)

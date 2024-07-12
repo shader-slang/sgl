@@ -223,16 +223,17 @@ void FileSystemWatcher::stop_watch(const std::unique_ptr<FileSystemWatchState>& 
     // On windows, CancelIO.
     // Note: the loop below could be a while(!state->is_shutdown), but making
     // it a fixed number of iterations lets us throw an exception if shutdown fails
-    // Note: on windows this is normally a few milliseconds, but can sometimes
-    // take multiple seconds.
+    // Note: on windows this is normally a few milliseconds, but sometimes it
+    // is failing to report shutdown correctly.
+    // TODO: Look into more robust shutdown detection.
     CancelIo(state->directory_handle);
-    for (int it = 0; it < 1000; it++) {
+    for (int it = 0; it < 100; it++) {
         if (state->is_shutdown)
             break;
         SleepEx(5, TRUE);
     }
     if (!state->is_shutdown)
-        SGL_THROW("File system watch failed to shutdown after 500ms");
+        log_warn("File system watch failed to shutdown after 500ms");
     CloseHandle(state->directory_handle);
 #elif SGL_LINUX
     close(state->watch_descriptor);
