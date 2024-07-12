@@ -15,11 +15,6 @@ HotReload::HotReload(ref<Device> device)
                                          { on_file_system_event(events); });
 }
 
-HotReload::~HotReload()
-{
-    _clear_file_watches();
-}
-
 void HotReload::update()
 {
     // Update file system watcher, which in turn may cause on_file_system_event

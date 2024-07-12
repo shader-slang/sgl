@@ -27,7 +27,6 @@ class SGL_API HotReload : public Object {
     SGL_OBJECT(HotReload)
 public:
     HotReload(ref<Device> device);
-    ~HotReload();
 
     /// Force immediate recreation of all registered sessions and
     /// any modules/programs they've loaded/linked.
