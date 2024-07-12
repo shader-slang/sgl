@@ -117,11 +117,18 @@ get_directory_files(const std::filesystem::path& directory)
     std::map<std::filesystem::path, std::filesystem::file_time_type> files;
     for (const auto& entry : std::filesystem::directory_iterator(directory)) {
         if (entry.is_regular_file()) {
-            std::filesystem::path rel_path = std::filesystem::relative(entry.path(), directory);
             std::error_code ec;
+            std::filesystem::path rel_path = std::filesystem::relative(entry.path(), directory, ec);
+            if (ec) {
+                log_warn("Failed to get relative path for file \"{}\"", entry.path());
+                continue;
+            }
             std::filesystem::file_time_type write_time = std::filesystem::last_write_time(entry.path(), ec);
-            if (!ec)
-                files.emplace(rel_path, write_time);
+            if (ec) {
+                log_warn("Failed to get last write time for file \"{}\"", entry.path());
+                continue;
+            }
+            files.emplace(rel_path, write_time);
         }
     }
     return files;
