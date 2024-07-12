@@ -119,7 +119,7 @@ FileIOCompletionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered, LPOV
                     state->directory_handle,
                     state->buffer,
                     sizeof(state->buffer),
-                    TRUE,
+                    FALSE,
                     FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_ATTRIBUTES
                         | FILE_NOTIFY_CHANGE_SIZE | FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_SECURITY,
                     NULL,
@@ -396,7 +396,7 @@ void FileSystemWatcher::update()
             }
             offset += sizeof(struct inotify_event) + event->len;
         }
-    } else if (errno != EAGAIN && errno != EWOULDBLOCK) {
+    } else if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EBADF) {
         SGL_THROW("Failed to read from inotify file descriptor");
     }
 #endif
