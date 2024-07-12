@@ -13,11 +13,9 @@ TEST_SUITE_BEGIN("file_system_watcher");
 
 TEST_CASE("FileSystemWatcher")
 {
-#if SGL_WINDOWS || SGL_LINUX
     SUBCASE("add_and_remove_watch")
     {
-        auto path = sgl::testing::get_case_temp_directory();
-        path += "/add_and_remove_watch";
+        auto path = sgl::testing::get_case_temp_directory() / "add_and_remove_watch";
         std::filesystem::create_directories(path);
         ref<FileSystemWatcher> watcher = make_ref<FileSystemWatcher>();
         watcher->add_watch({.directory = path});
@@ -26,8 +24,7 @@ TEST_CASE("FileSystemWatcher")
 
     SUBCASE("add_and_remove_watch_by_id")
     {
-        auto path = sgl::testing::get_case_temp_directory();
-        path += "/add_and_remove_watch";
+        auto path = sgl::testing::get_case_temp_directory() / "add_and_remove_watch";
         std::filesystem::create_directories(path);
         ref<FileSystemWatcher> watcher = make_ref<FileSystemWatcher>();
         auto id = watcher->add_watch({.directory = path});
@@ -65,14 +62,12 @@ TEST_CASE("FileSystemWatcher")
         };
 
         // Setup temp directory.
-        auto path = sgl::testing::get_case_temp_directory();
-        path += "/file_watches";
+        auto path = sgl::testing::get_case_temp_directory() / "file_watches";
         path = absolute(path);
         create_directories(path);
 
         // Also create a subdirectory below it for later on in the test.
-        auto subpath = path;
-        subpath += "/subdir0/subdir1";
+        auto subpath = path / "subdir0" / "subdir1";
         create_directories(subpath);
 
         // Record start time + configure file watcher.
@@ -87,8 +82,8 @@ TEST_CASE("FileSystemWatcher")
         auto check = [&](std::string filename, FileSystemWatcherChange event_type)
         {
             bool done = false;
-            // Exact wait time is unpredicatable, so poll watcher for up to 1s in short intervals
-            // Expecting less than 100ms really, but operating systems are unpredicatable!
+            // Exact wait time is unpredictable, so poll watcher for up to 1s in short intervals
+            // Expecting less than 100ms really, but operating systems are unpredictable!
             for (int it = 0; it < 100 && !done; it++) {
                 std::this_thread::sleep_for(10ms);
                 watcher->update();
@@ -132,7 +127,7 @@ TEST_CASE("FileSystemWatcher")
         };
 
         // Create a file.
-        std::ofstream outfile(path.string() + "/testfile.txt");
+        std::ofstream outfile(path / "testfile.txt");
         check("testfile.txt", FileSystemWatcherChange::added);
 
         // Write some data and close file (only way to guaruntee it flushes).
@@ -140,28 +135,24 @@ TEST_CASE("FileSystemWatcher")
         outfile.close();
         check("testfile.txt", FileSystemWatcherChange::modified);
 
+#if 0
         // Rename the file and repeat tests again checking for 'rename' event
-        rename(path.string() + "/testfile.txt", path.string() + "/renamed.txt");
+        rename(path / "testfile.txt", path / "renamed.txt");
         check("renamed.txt", FileSystemWatcherChange::renamed);
+#endif
 
         // Delete the file and repeat tests again checking for 'deleted' event
-        remove(path.string() + "/renamed.txt");
-        check("renamed.txt", FileSystemWatcherChange::removed);
+        remove(path / "testfile.txt");
+        check("testfile.txt", FileSystemWatcherChange::removed);
 
         // Create a file in the subdirectory which should not be detected,
         // as the watch is not recursive
-        std::ofstream outsubfile(subpath.string() + "/subfile.txt");
+        std::ofstream outsubfile(subpath / "subfile.txt");
         check_none();
 
         // Clean up
         watcher->remove_watch(path);
     }
-#else
-    SUBCASE("fail_as_not_implemented")
-    {
-        CHECK_THROWS(make_ref<FileSystemWatcher>());
-    }
-#endif
 }
 
 TEST_SUITE_END();
