@@ -15,6 +15,11 @@ HotReload::HotReload(ref<Device> device)
                                          { on_file_system_event(events); });
 }
 
+HotReload::~HotReload()
+{
+    _clear_file_watches();
+}
+
 void HotReload::update()
 {
     // Update file system watcher, which in turn may cause on_file_system_event
@@ -79,6 +84,9 @@ void HotReload::recreate_all_sessions()
         log_error(runtime_error.what());
         m_last_build_failed = true;
     }
+
+    // Set has reloaded flag so testing system can detect changes
+    m_has_reloaded = true;
 }
 
 void HotReload::update_watched_paths_for_session(SlangSession* session)

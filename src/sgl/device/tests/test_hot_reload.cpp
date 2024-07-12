@@ -431,7 +431,7 @@ TEST_CASE_GPU("change program and auto detect changes")
 {
     // Enable auto detection and wipe any existing monitors to ensure test is from a 'clean slate'.
     ctx.device->_hot_reload()->set_auto_detect_changes(true);
-    ctx.device->_hot_reload()->set_auto_detect_delay(100);
+    ctx.device->_hot_reload()->set_auto_detect_delay(25);
     ctx.device->_hot_reload()->_clear_file_watches();
 
     // Write first version of shader that outputs 1.
@@ -448,8 +448,9 @@ TEST_CASE_GPU("change program and auto detect changes")
     run_and_verify(ctx, kernel, 1);
 
     // Tell the hot reload system to auto detect changes for 500ms.
-    for (int i = 0; i < 5; i++) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    ctx.device->_hot_reload()->_reset_reloaded();
+    for (int i = 0; i < 20 && !ctx.device->_hot_reload()->_has_reloaded(); i++) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(25));
         ctx.device->_hot_reload()->update();
     }
 
@@ -464,7 +465,7 @@ TEST_CASE_GPU("create multi directory session and monitor for changes")
 {
     // Enable auto detection and wipe any existing monitors to ensure test is from a 'clean slate'.
     ctx.device->_hot_reload()->set_auto_detect_changes(true);
-    ctx.device->_hot_reload()->set_auto_detect_delay(100);
+    ctx.device->_hot_reload()->set_auto_detect_delay(25);
     ctx.device->_hot_reload()->_clear_file_watches();
 
     // Create 2 directories, and a module inside each one.
@@ -513,8 +514,9 @@ TEST_CASE_GPU("create multi directory session and monitor for changes")
         .set_to = "mod0func()",
         .imports = {"mod0", "mod1"},
     });
-    for (int i = 0; i < 5; i++) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    ctx.device->_hot_reload()->_reset_reloaded();
+    for (int i = 0; i < 20 && !ctx.device->_hot_reload()->_has_reloaded(); i++) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(25));
         ctx.device->_hot_reload()->update();
     }
     run_and_verify(ctx, kernel, 2);
@@ -525,8 +527,9 @@ TEST_CASE_GPU("create multi directory session and monitor for changes")
         .func_name = "mod0func",
         .set_to = "10",
     });
-    for (int i = 0; i < 15; i++) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    ctx.device->_hot_reload()->_reset_reloaded();
+    for (int i = 0; i < 20 && !ctx.device->_hot_reload()->_has_reloaded(); i++) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(25));
         ctx.device->_hot_reload()->update();
     }
     run_and_verify(ctx, kernel, 10);
@@ -542,8 +545,9 @@ TEST_CASE_GPU("create multi directory session and monitor for changes")
         .func_name = "mod1func",
         .set_to = "20",
     });
-    for (int i = 0; i < 15; i++) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    ctx.device->_hot_reload()->_reset_reloaded();
+    for (int i = 0; i < 20 && !ctx.device->_hot_reload()->_has_reloaded(); i++) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(25));
         ctx.device->_hot_reload()->update();
     }
     run_and_verify(ctx, kernel, 20);
