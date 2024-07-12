@@ -131,7 +131,7 @@ TEST_CASE_GPU("verify test case works")
 TEST_CASE_GPU("change program and recreate")
 {
     // Disable auto detect changes so can test explicit reload.
-    ctx.device->hot_reload()->set_auto_detect_changes(false);
+    ctx.device->_hot_reload()->set_auto_detect_changes(false);
 
     // Write first version of shader that outputs 1.
     std::filesystem::path abs_path = sgl::testing::get_suite_temp_directory() / "changeprog.slang";
@@ -147,17 +147,17 @@ TEST_CASE_GPU("change program and recreate")
     run_and_verify(ctx, kernel, 1);
 
     // Force a reload, and verify the result is now 2.
-    ctx.device->hot_reload()->recreate_all_sessions();
+    ctx.device->_hot_reload()->recreate_all_sessions();
     run_and_verify(ctx, kernel, 2);
 
     // Hot reload should not report error
-    CHECK(!ctx.device->hot_reload()->last_build_failed());
+    CHECK(!ctx.device->_hot_reload()->last_build_failed());
 }
 
 TEST_CASE_GPU("change program with error and recreate")
 {
     // Disable auto detect changes so can test explicit reload.
-    ctx.device->hot_reload()->set_auto_detect_changes(false);
+    ctx.device->_hot_reload()->set_auto_detect_changes(false);
 
     // Write first version of shader that outputs 1.
     std::filesystem::path abs_path = sgl::testing::get_suite_temp_directory() / "changeprogerror.slang";
@@ -173,10 +173,10 @@ TEST_CASE_GPU("change program with error and recreate")
     run_and_verify(ctx, kernel, 1);
 
     // Force a reload
-    ctx.device->hot_reload()->recreate_all_sessions();
+    ctx.device->_hot_reload()->recreate_all_sessions();
 
     // Hot reload should now report error
-    CHECK(ctx.device->hot_reload()->last_build_failed());
+    CHECK(ctx.device->_hot_reload()->last_build_failed());
 
     // Program should still be valid and return 1
     run_and_verify(ctx, kernel, 1);
@@ -185,7 +185,7 @@ TEST_CASE_GPU("change program with error and recreate")
 TEST_CASE_GPU("change kernel name and recreate")
 {
     // Disable auto detect changes so can test explicit reload.
-    ctx.device->hot_reload()->set_auto_detect_changes(false);
+    ctx.device->_hot_reload()->set_auto_detect_changes(false);
 
     // Write first version of shader that outputs 1.
     std::filesystem::path abs_path = sgl::testing::get_suite_temp_directory() / "changekernelname.slang";
@@ -200,10 +200,10 @@ TEST_CASE_GPU("change kernel name and recreate")
     write_shader({.path = abs_path, .set_to = "1", .kernel_name = "main2"});
 
     // Force a reload
-    ctx.device->hot_reload()->recreate_all_sessions();
+    ctx.device->_hot_reload()->recreate_all_sessions();
 
     // Hot reload should report error, as entry point name has changed so kernel is invalid
-    CHECK(ctx.device->hot_reload()->last_build_failed());
+    CHECK(ctx.device->_hot_reload()->last_build_failed());
 
     // Program should still be valid and return 1.
     run_and_verify(ctx, kernel, 1);
@@ -212,7 +212,7 @@ TEST_CASE_GPU("change kernel name and recreate")
 TEST_CASE_GPU("change buffer name and fail to use recreated program")
 {
     // Disable auto detect changes so can test explicit reload.
-    ctx.device->hot_reload()->set_auto_detect_changes(false);
+    ctx.device->_hot_reload()->set_auto_detect_changes(false);
 
     // Write first version of shader that outputs 1.
     std::filesystem::path abs_path = sgl::testing::get_suite_temp_directory() / "changebuffer.slang";
@@ -227,8 +227,8 @@ TEST_CASE_GPU("change buffer name and fail to use recreated program")
     write_shader({.path = abs_path, .set_to = "2", .param_name = "outbuffer2"});
 
     // Force a reload, which should succeed.
-    ctx.device->hot_reload()->recreate_all_sessions();
-    CHECK(!ctx.device->hot_reload()->last_build_failed());
+    ctx.device->_hot_reload()->recreate_all_sessions();
+    CHECK(!ctx.device->_hot_reload()->last_build_failed());
 
     // Verify should throw exception, as the normal parameter name is now wrong.
     CHECK_THROWS(run_and_verify(ctx, kernel, 2));
@@ -237,7 +237,7 @@ TEST_CASE_GPU("change buffer name and fail to use recreated program")
 TEST_CASE_GPU("change program with invalid imports and recreate")
 {
     // Disable auto detect changes so can test explicit reload.
-    ctx.device->hot_reload()->set_auto_detect_changes(false);
+    ctx.device->_hot_reload()->set_auto_detect_changes(false);
 
     // Write first version of shader that outputs 1.
     std::filesystem::path abs_path = sgl::testing::get_suite_temp_directory() / "badimport.slang";
@@ -250,8 +250,8 @@ TEST_CASE_GPU("change program with invalid imports and recreate")
 
     // Re-write shader with an import that doesn't exist and check build fails.
     write_shader({.path = abs_path, .set_to = "1", .imports = {"blabla"}});
-    ctx.device->hot_reload()->recreate_all_sessions();
-    CHECK(ctx.device->hot_reload()->last_build_failed());
+    ctx.device->_hot_reload()->recreate_all_sessions();
+    CHECK(ctx.device->_hot_reload()->last_build_failed());
 
     // Program should still be valid and return 1
     run_and_verify(ctx, kernel, 1);
@@ -260,7 +260,7 @@ TEST_CASE_GPU("change program with invalid imports and recreate")
 TEST_CASE_GPU("change program with correct module import and recreate")
 {
     // Disable auto detect changes so can test explicit reload.
-    ctx.device->hot_reload()->set_auto_detect_changes(false);
+    ctx.device->_hot_reload()->set_auto_detect_changes(false);
 
     // Write first version of shader that outputs 1.
     std::filesystem::path abs_path = sgl::testing::get_suite_temp_directory() / "goodimport.slang";
@@ -277,8 +277,8 @@ TEST_CASE_GPU("change program with correct module import and recreate")
 
     // Re-write shader with a valid import and check build succeeds.
     write_shader({.path = abs_path, .set_to = "func()", .imports = {"goodimportmodule"}});
-    ctx.device->hot_reload()->recreate_all_sessions();
-    CHECK(!ctx.device->hot_reload()->last_build_failed());
+    ctx.device->_hot_reload()->recreate_all_sessions();
+    CHECK(!ctx.device->_hot_reload()->last_build_failed());
 
     // Program should now be valid and return 2.
     run_and_verify(ctx, kernel, 2);
@@ -287,7 +287,7 @@ TEST_CASE_GPU("change program with correct module import and recreate")
 TEST_CASE_GPU("leave program but change the module it imports")
 {
     // Disable auto detect changes so can test explicit reload.
-    ctx.device->hot_reload()->set_auto_detect_changes(false);
+    ctx.device->_hot_reload()->set_auto_detect_changes(false);
 
     // Write first version of shader that outputs 1.
     std::filesystem::path abs_path = sgl::testing::get_suite_temp_directory() / "changeimported.slang";
@@ -302,8 +302,8 @@ TEST_CASE_GPU("leave program but change the module it imports")
 
     // Recreate the module with a new value and recompile
     write_module({.path = abs_module_path, .set_to = "2"});
-    ctx.device->hot_reload()->recreate_all_sessions();
-    CHECK(!ctx.device->hot_reload()->last_build_failed());
+    ctx.device->_hot_reload()->recreate_all_sessions();
+    CHECK(!ctx.device->_hot_reload()->last_build_failed());
 
     // Program should now be valid and return 2.
     run_and_verify(ctx, kernel, 2);
@@ -312,7 +312,7 @@ TEST_CASE_GPU("leave program but change the module it imports")
 TEST_CASE_GPU("leave program then break the module it imports")
 {
     // Disable auto detect changes so can test explicit reload.
-    ctx.device->hot_reload()->set_auto_detect_changes(false);
+    ctx.device->_hot_reload()->set_auto_detect_changes(false);
 
     // Write first version of shader that outputs 1.
     std::filesystem::path abs_path = sgl::testing::get_suite_temp_directory() / "breakimported.slang";
@@ -327,8 +327,8 @@ TEST_CASE_GPU("leave program then break the module it imports")
 
     // Recreate the module with a new value and expect failed recompile.
     write_module({.path = abs_module_path, .set_to = "blabla"});
-    ctx.device->hot_reload()->recreate_all_sessions();
-    CHECK(ctx.device->hot_reload()->last_build_failed());
+    ctx.device->_hot_reload()->recreate_all_sessions();
+    CHECK(ctx.device->_hot_reload()->last_build_failed());
 
     // Program should still be valid and return 1.
     run_and_verify(ctx, kernel, 1);
@@ -337,7 +337,7 @@ TEST_CASE_GPU("leave program then break the module it imports")
 TEST_CASE_GPU("change program with basic additional source")
 {
     // Disable auto detection.
-    ctx.device->hot_reload()->set_auto_detect_changes(false);
+    ctx.device->_hot_reload()->set_auto_detect_changes(false);
 
     // Create a new session explicitly with no include paths.
     SlangCompilerOptions opts = ctx.device->desc().compiler_options;
@@ -374,15 +374,15 @@ TEST_CASE_GPU("change program with basic additional source")
         .set_to = "SOMENUMBER+1",
         .imports = {"addsourcebasicconfig"},
     });
-    ctx.device->hot_reload()->recreate_all_sessions();
-    CHECK(!ctx.device->hot_reload()->last_build_failed());
+    ctx.device->_hot_reload()->recreate_all_sessions();
+    CHECK(!ctx.device->_hot_reload()->last_build_failed());
     run_and_verify(ctx, kernel, 2);
 }
 
 TEST_CASE_GPU("load module separately from program")
 {
     // Disable auto detection
-    ctx.device->hot_reload()->set_auto_detect_changes(false);
+    ctx.device->_hot_reload()->set_auto_detect_changes(false);
 
     // Create module in subdirectory.
     std::filesystem::path inc_path = sgl::testing::get_suite_temp_directory() / "sepmod_inc";
@@ -421,8 +421,8 @@ TEST_CASE_GPU("load module separately from program")
         .path = mod_path,
         .set_to = "2",
     });
-    ctx.device->hot_reload()->recreate_all_sessions();
-    CHECK(!ctx.device->hot_reload()->last_build_failed());
+    ctx.device->_hot_reload()->recreate_all_sessions();
+    CHECK(!ctx.device->_hot_reload()->last_build_failed());
     run_and_verify(ctx, kernel, 2);
 }
 
@@ -430,9 +430,9 @@ TEST_CASE_GPU("load module separately from program")
 TEST_CASE_GPU("change program and auto detect changes")
 {
     // Enable auto detection and wipe any existing monitors to ensure test is from a 'clean slate'.
-    ctx.device->hot_reload()->set_auto_detect_changes(true);
-    ctx.device->hot_reload()->set_auto_detect_delay(100);
-    ctx.device->hot_reload()->_clear_file_watches();
+    ctx.device->_hot_reload()->set_auto_detect_changes(true);
+    ctx.device->_hot_reload()->set_auto_detect_delay(100);
+    ctx.device->_hot_reload()->_clear_file_watches();
 
     // Write first version of shader that outputs 1.
     std::filesystem::path abs_path = sgl::testing::get_suite_temp_directory() / "detectchangeprog.slang";
@@ -450,22 +450,22 @@ TEST_CASE_GPU("change program and auto detect changes")
     // Tell the hot reload system to auto detect changes for 500ms.
     for (int i = 0; i < 5; i++) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        ctx.device->hot_reload()->update();
+        ctx.device->_hot_reload()->update();
     }
 
     // Verify the result is now 2.
     run_and_verify(ctx, kernel, 2);
 
     // Hot reload should not report error.
-    CHECK(!ctx.device->hot_reload()->last_build_failed());
+    CHECK(!ctx.device->_hot_reload()->last_build_failed());
 }
 
 TEST_CASE_GPU("create multi directory session and monitor for changes")
 {
     // Enable auto detection and wipe any existing monitors to ensure test is from a 'clean slate'.
-    ctx.device->hot_reload()->set_auto_detect_changes(true);
-    ctx.device->hot_reload()->set_auto_detect_delay(100);
-    ctx.device->hot_reload()->_clear_file_watches();
+    ctx.device->_hot_reload()->set_auto_detect_changes(true);
+    ctx.device->_hot_reload()->set_auto_detect_delay(100);
+    ctx.device->_hot_reload()->_clear_file_watches();
 
     // Create 2 directories, and a module inside each one.
     std::filesystem::path inc_path_0 = sgl::testing::get_suite_temp_directory() / "md_inc_0";
@@ -515,7 +515,7 @@ TEST_CASE_GPU("create multi directory session and monitor for changes")
     });
     for (int i = 0; i < 5; i++) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        ctx.device->hot_reload()->update();
+        ctx.device->_hot_reload()->update();
     }
     run_and_verify(ctx, kernel, 2);
 
@@ -527,7 +527,7 @@ TEST_CASE_GPU("create multi directory session and monitor for changes")
     });
     for (int i = 0; i < 15; i++) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        ctx.device->hot_reload()->update();
+        ctx.device->_hot_reload()->update();
     }
     run_and_verify(ctx, kernel, 10);
 
@@ -544,7 +544,7 @@ TEST_CASE_GPU("create multi directory session and monitor for changes")
     });
     for (int i = 0; i < 15; i++) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        ctx.device->hot_reload()->update();
+        ctx.device->_hot_reload()->update();
     }
     run_and_verify(ctx, kernel, 20);
 }
