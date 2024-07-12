@@ -20,9 +20,8 @@
 namespace sgl {
 
 struct FileSystemWatchState {
-    FileSystemWatcher* watcher;
-    FileSystemWatchDesc desc;
 #if SGL_WINDOWS
+    // NOTE: Windows relies on the OVERLAPPED structure being the first structure in the state.
     OVERLAPPED overlapped;
     HANDLE directory_handle;
     char buffer[32 * 1024];
@@ -33,8 +32,13 @@ struct FileSystemWatchState {
 #if !SGL_WINDOWS && !SGL_LINUX
     std::map<std::filesystem::path, std::filesystem::file_time_type> files;
 #endif
+    FileSystemWatcher* watcher;
+    FileSystemWatchDesc desc;
 };
 
+#if SGL_WINDOWS
+static_assert(offsetof(FileSystemWatchState, overlapped) == 0);
+#endif
 
 #if SGL_WINDOWS
 // Windows completion routine called with buffer of filesytem events.
@@ -52,7 +56,32 @@ FileIOCompletionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered, LPOV
 
             // Iterate over events, and call '_notify_change' on the watcher for each one.
             do {
+
+                // This is an error that shouldn't happen on windows, but handling it just in case.
+                if ((offset + sizeof(FILE_NOTIFY_INFORMATION)) > dwNumberOfBytesTransfered) {
+                    log_warn("Offset has invalid value and would overrun buffer: {}", offset);
+                    break;
+                }
+
+                // Cast notify information to buffer
                 notify_information = (FILE_NOTIFY_INFORMATION*)((char*)state->buffer + offset);
+
+                // The strings in notify info follow it in the buffer, so use the 'NextEntryOffset'
+                // to check we won't go out of range reading from the buffer
+                if ((offset + notify_information->NextEntryOffset) > dwNumberOfBytesTransfered) {
+                    log_warn("Next offset has invalid value and would overrun buffer: {}", offset);
+                    break;
+                }
+
+                // Additional checks to catch string going out of range
+                size_t fn_offset = reinterpret_cast<char*>(notify_information->FileName) - state->buffer;
+                size_t fn_end = fn_offset + notify_information->FileNameLength;
+                if (fn_end > dwNumberOfBytesTransfered) {
+                    log_warn("Filename would overrun buffer: {}", offset);
+                    break;
+                }
+
+                // Now safely read string
                 std::wstring file_name(
                     notify_information->FileName,
                     notify_information->FileNameLength / sizeof(WCHAR)
@@ -82,6 +111,7 @@ FileIOCompletionRoutine(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered, LPOV
                     state->watcher->_notify_change(state, path, change);
 
                 offset += notify_information->NextEntryOffset;
+
             } while (notify_information->NextEntryOffset != 0);
 
             // Reissue the read request.
