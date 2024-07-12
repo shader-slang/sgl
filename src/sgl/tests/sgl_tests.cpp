@@ -2,12 +2,16 @@
 
 #include "testing.h"
 #include "sgl/sgl.h"
+#include "sgl/device/agility_sdk.h"
 #include "sgl/core/object.h"
 #include "sgl/core/logger.h"
 #include "sgl/core/error.h"
 
 #define DOCTEST_CONFIG_IMPLEMENT
 #include <doctest/doctest.h>
+
+SGL_EXPORT_AGILITY_SDK
+
 
 namespace sgl::testing {
 
