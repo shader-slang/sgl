@@ -32,65 +32,60 @@ endif()
 
 set(SGL_LOCAL_SLANG OFF CACHE BOOL "Use a local build of slang instead of downloading a prebuilt binary")
 set(SGL_LOCAL_SLANG_DIR "${CMAKE_SOURCE_DIR}/../slang" CACHE PATH "Path to a local slang build")
-set(SGL_LOCAL_SLANG_CONFIG "debug" CACHE STRING "Build configuration of the local slang build")
+set(SGL_LOCAL_SLANG_BUILD_DIR "build/Debug" CACHE STRING "Build directory of the local slang build")
 
-set(SLANG_VERSION "2024.1.26")
+set(SLANG_VERSION "2024.1.28")
 set(SLANG_URL_BASE "https://github.com/shader-slang/slang/releases/download/v${SLANG_VERSION}")
 
 if(SGL_WINDOWS)
-    set(SLANG_URL "${SLANG_URL_BASE}/slang-${SLANG_VERSION}-win64.zip")
-    set(SLANG_BIN_PATH "bin/windows-x64/release")
+    set(SLANG_URL "${SLANG_URL_BASE}/slang-${SLANG_VERSION}-windows-x86_64.zip")
 elseif(SGL_LINUX)
     set(SLANG_URL "${SLANG_URL_BASE}/slang-${SLANG_VERSION}-linux-x86_64.tar.gz")
-    set(SLANG_BIN_PATH "bin/linux-x64/release")
 elseif(SGL_MACOS)
     if(CMAKE_APPLE_SILICON_PROCESSOR MATCHES "x86_64")
-        set(SLANG_URL "${SLANG_URL_BASE}/slang-${SLANG_VERSION}-macos-x64.zip")
-        set(SLANG_BIN_PATH "bin/macosx-x64/release")
+        set(SLANG_URL "${SLANG_URL_BASE}/slang-${SLANG_VERSION}-macos-x86_64.zip")
     elseif(CMAKE_APPLE_SILICON_PROCESSOR MATCHES "arm64")
         set(SLANG_URL "${SLANG_URL_BASE}/slang-${SLANG_VERSION}-macos-aarch64.zip")
-        set(SLANG_BIN_PATH "bin/macosx-aarch64/release")
     endif()
 endif()
 
 sgl_download_package(slang ${SLANG_URL})
 
-set(SLANG_INCLUDE_DIR ${slang_SOURCE_DIR})
-set(SLANG_BIN_DIR ${slang_SOURCE_DIR}/${SLANG_BIN_PATH})
+set(SLANG_DIR ${slang_SOURCE_DIR})
+set(SLANG_INCLUDE_DIR ${slang_SOURCE_DIR}/include)
 
 if(SGL_LOCAL_SLANG)
+    set(SLANG_DIR ${SGL_LOCAL_SLANG_DIR}/${SGL_LOCAL_SLANG_BUILD_DIR})
     set(SLANG_INCLUDE_DIR ${SGL_LOCAL_SLANG_DIR})
-    string(REPLACE release ${SGL_LOCAL_SLANG_CONFIG} SLANG_BIN_PATH ${SLANG_BIN_PATH})
-    set(SLANG_BIN_DIR ${SGL_LOCAL_SLANG_DIR}/${SLANG_BIN_PATH})
 endif()
 
 if(SGL_WINDOWS)
     add_library(slang::slang SHARED IMPORTED GLOBAL)
     set_target_properties(slang::slang PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES ${SLANG_INCLUDE_DIR}
-        IMPORTED_IMPLIB ${SLANG_BIN_DIR}/slang.lib
-        IMPORTED_LOCATION ${SLANG_BIN_DIR}/slang.dll
+        IMPORTED_IMPLIB ${SLANG_DIR}/lib/slang.lib
+        IMPORTED_LOCATION ${SLANG_DIR}/bin/slang.dll
     )
-    sgl_copy_binary(${SLANG_BIN_DIR}/slang.dll .)
-    sgl_copy_binary(${SLANG_BIN_DIR}/slang-glslang.dll .)
-    sgl_copy_binary(${SLANG_BIN_DIR}/slang-llvm.dll .)
-    sgl_copy_binary(${SLANG_BIN_DIR}/slang-rt.dll .)
+    sgl_copy_binary(${SLANG_DIR}/bin/slang.dll .)
+    sgl_copy_binary(${SLANG_DIR}/bin/slang-glslang.dll .)
+    sgl_copy_binary(${SLANG_DIR}/bin/slang-llvm.dll .)
+    sgl_copy_binary(${SLANG_DIR}/bin/slang-rt.dll .)
 elseif(SGL_LINUX)
     add_library(slang::slang SHARED IMPORTED GLOBAL)
     set_target_properties(slang::slang PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES ${SLANG_INCLUDE_DIR}
-        IMPORTED_LOCATION ${SLANG_BIN_DIR}/libslang.so
+        IMPORTED_LOCATION ${SLANG_DIR}/lib/libslang.so
     )
-    sgl_copy_binary(${SLANG_BIN_DIR}/libslang.so .)
-    sgl_copy_binary(${SLANG_BIN_DIR}/libslang-glslang.so .)
-    sgl_copy_binary(${SLANG_BIN_DIR}/libslang-llvm.so .)
+    sgl_copy_binary(${SLANG_DIR}/lib/libslang.so .)
+    sgl_copy_binary(${SLANG_DIR}/lib/libslang-glslang.so .)
+    sgl_copy_binary(${SLANG_DIR}/lib/libslang-llvm.so .)
 elseif(SGL_MACOS)
     add_library(slang::slang SHARED IMPORTED GLOBAL)
     set_target_properties(slang::slang PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES ${SLANG_INCLUDE_DIR}
-        IMPORTED_LOCATION ${SLANG_BIN_DIR}/libslang.dylib
+        IMPORTED_LOCATION ${SLANG_DIR}/lib/libslang.dylib
     )
-    sgl_copy_binary(${SLANG_BIN_DIR}/libslang.dylib .)
+    sgl_copy_binary(${SLANG_DIR}/lib/libslang.dylib .)
 endif()
 
 # slang-gfx
@@ -99,24 +94,24 @@ if(SGL_WINDOWS)
     add_library(slang::gfx SHARED IMPORTED GLOBAL)
     set_target_properties(slang::gfx PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES ${SLANG_INCLUDE_DIR}
-        IMPORTED_IMPLIB ${SLANG_BIN_DIR}/gfx.lib
-        IMPORTED_LOCATION ${SLANG_BIN_DIR}/gfx.dll
+        IMPORTED_IMPLIB ${SLANG_DIR}/lib/gfx.lib
+        IMPORTED_LOCATION ${SLANG_DIR}/bin/gfx.dll
     )
-    sgl_copy_binary(${SLANG_BIN_DIR}/gfx.dll .)
+    sgl_copy_binary(${SLANG_DIR}/bin/gfx.dll .)
 elseif(SGL_LINUX)
     add_library(slang::gfx SHARED IMPORTED GLOBAL)
     set_target_properties(slang::gfx PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES ${SLANG_INCLUDE_DIR}
-        IMPORTED_LOCATION ${SLANG_BIN_DIR}/libgfx.so
+        IMPORTED_LOCATION ${SLANG_DIR}/lib/libgfx.so
     )
-    sgl_copy_binary(${SLANG_BIN_DIR}/libgfx.so .)
+    sgl_copy_binary(${SLANG_DIR}/lib/libgfx.so .)
 elseif(SGL_MACOS)
     add_library(slang::gfx SHARED IMPORTED GLOBAL)
     set_target_properties(slang::gfx PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES ${SLANG_INCLUDE_DIR}
-        IMPORTED_LOCATION ${SLANG_BIN_DIR}/libgfx.dylib
+        IMPORTED_LOCATION ${SLANG_DIR}/lib/libgfx.dylib
     )
-    sgl_copy_binary(${SLANG_BIN_DIR}/libgfx.dylib .)
+    sgl_copy_binary(${SLANG_DIR}/lib/libgfx.dylib .)
 endif()
 
 # nvapi
