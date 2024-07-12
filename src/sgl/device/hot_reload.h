@@ -56,6 +56,8 @@ public:
 
     /// Exclusively for testing, erase all existing file watches
     void _clear_file_watches();
+    void _reset_reloaded() { m_has_reloaded = false; }
+    bool _has_reloaded() const { return m_has_reloaded; }
 
 private:
     void on_file_system_event(std::span<FileSystemWatchEvent> events);
@@ -67,6 +69,7 @@ private:
     std::set<SlangSession*> m_all_slang_sessions;
     bool m_last_build_failed{false};
     std::set<std::filesystem::path> m_watched_paths;
+    bool m_has_reloaded;
 };
 
 } // namespace sgl
