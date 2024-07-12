@@ -566,6 +566,11 @@ bool CommandBuffer::set_buffer_state(const Buffer* buffer, ResourceState new_sta
     SGL_CHECK(m_open, "Command buffer is closed");
     SGL_CHECK_NOT_NULL(buffer);
 
+    // In D3D12, it's an error to set resource barriers on upload and readback buffers.
+    // We can skip setting the state in this case.
+    if (buffer->desc().memory_type != MemoryType::device_local && buffer->device()->type() == DeviceType::d3d12)
+        return true;
+
     ResourceStateTracker& state_tracker = buffer->state_tracker();
     SGL_ASSERT(state_tracker.has_global_state());
     ResourceState current_state = state_tracker.global_state();
