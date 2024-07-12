@@ -7,10 +7,13 @@
 #include "sgl/core/enum.h"
 #include "sgl/core/platform.h"
 
-#include <map>
-#include <functional>
-#include <filesystem>
+#include <atomic>
 #include <chrono>
+#include <filesystem>
+#include <functional>
+#include <map>
+#include <mutex>
+#include <thread>
 
 namespace sgl {
 
@@ -95,6 +98,9 @@ public:
     void _notify_change(FileSystemWatchState* state, const std::filesystem::path& path, FileSystemWatcherChange change);
 
 private:
+    /// Releases OS monitoring for a given watch.
+    void stop_watch(const std::unique_ptr<FileSystemWatchState>&);
+
     /// Next unique id to be assigned to a given watch.
     uint32_t m_next_id{1};
 
@@ -118,8 +124,18 @@ private:
     int m_inotify_file_descriptor;
 #endif
 
-    /// Releases OS monitoring for a given watch.
-    void stop_watch(const std::unique_ptr<FileSystemWatchState>&);
+#if !SGL_WINDOWS && !SGL_LINUX
+    /// Mutex to protect the watch map.
+    std::mutex m_watches_mutex;
+
+    /// Mutex to protect the queued events.
+    std::mutex m_queued_events_mutex;
+
+    /// Thread to poll for file system changes.
+    std::thread m_thread;
+    std::atomic<bool> m_stop_thread{false};
+    void thread_func();
+#endif
 };
 
 
