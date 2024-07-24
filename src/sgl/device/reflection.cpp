@@ -250,12 +250,7 @@ ASTCursor::~ASTCursor()
 
 std::string ASTCursor::to_string() const
 {
-    return fmt::format(
-        "ASTCursor(module={}, kind={}, children={})",
-        m_module->name(),
-        kind(),
-        m_decl_ref->getChildrenCount()
-    );
+    return fmt::format("ASTCursor(kind={})", kind());
 }
 
 template<typename T>

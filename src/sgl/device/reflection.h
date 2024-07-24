@@ -1234,6 +1234,8 @@ public:
     ref<ASTCursorFunction> find_first_function(std::string_view name) const { return _find_first_func(name); }
 
     ref<ASTCursorVariable> find_global(std::string_view name) const { return _find_first_variable(name); }
+
+    std::string to_string() const override { return fmt::format("ASTCursorModule(name={})", name()); }
 };
 
 
@@ -1259,6 +1261,8 @@ public:
 
     ref<ASTCursorVariable> find_field(std::string_view name) const { return _find_first_variable(name); }
 
+    std::string to_string() const override { return fmt::format("ASTCursorStruct(name={})", name()); }
+
 private:
     mutable const TypeReflection* m_type_decl{nullptr};
 
@@ -1279,6 +1283,8 @@ public:
 
     ref<ASTCursorVariable> find_parameter(std::string_view name) const { return _find_first_variable(name); }
 
+    std::string to_string() const override { return fmt::format("ASTCursorFunction(name={})", name()); }
+
 private:
     const FunctionReflection* base() const { return detail::from_slang(m_decl_ref->asFunction()); }
 };
@@ -1293,6 +1299,8 @@ public:
 
     const TypeReflection* type() const { return base()->type(); }
 
+    std::string to_string() const override { return fmt::format("ASTCursorVariable(name={})", name()); }
+
 private:
     const VariableReflection* base() const { return detail::from_slang(m_decl_ref->asVariable()); }
 };
@@ -1302,6 +1310,8 @@ class SGL_API ASTCursorGeneric : ASTCursor {
 public:
     ASTCursorGeneric(ref<SlangModule> module, slang::DeclReflection* decl_ref)
         : ASTCursor(module, decl_ref){};
+
+    std::string to_string() const override { return fmt::format("ASTCursorGeneric()"); }
 };
 
 

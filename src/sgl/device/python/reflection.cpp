@@ -140,7 +140,7 @@ SGL_PY_EXPORT(device_reflection)
 
     nb::class_<ASTCursorFunction, ASTCursor>(m, "ASTCursorFunction", D_NA(ASTCursorFunction))
         .def_prop_ro("name", &ASTCursorFunction::name)
-        .def_prop_ro("type", &ASTCursorFunction::function)
+        .def_prop_ro("function", &ASTCursorFunction::function)
         .def_prop_ro("parameters", &ASTCursorFunction::parameters)
         .def("find_parameter", &ASTCursorFunction::find_parameter, "name"_a, D_NA(ASTCursorFunction, name));
 
