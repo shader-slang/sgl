@@ -13,10 +13,18 @@ import helpers
 DEVICES = [sgl.DeviceType.d3d12]
 
 
-def print_ast(cursor, indent=0):
+def print_ast(cursor):
+    print("\n")
+    print("--------------------------------------")
+    print_ast_recurse(cursor)
+    print("--------------------------------------")
+    print("\n")
+
+
+def print_ast_recurse(cursor, indent=0):
     print("  " * indent + f"{cursor}")
     for child in cursor.children:
-        print_ast(child, indent + 1)
+        print_ast_recurse(child, indent + 1)
 
 
 @pytest.mark.parametrize("device_type", DEVICES)
@@ -187,9 +195,9 @@ int foo(int a, float b) {
     )
 
     # Get function.
-    func = module.abstract_syntax_tree.find_first_function("foo")
-    params = func.parameters
-    assert len(func) == 2
+    func_node = module.abstract_syntax_tree.find_first_function("foo")
+    params = func_node.parameters
+    assert len(func_node) == 2
     assert len(params) == 2
 
     # Verify first parameter.
@@ -203,21 +211,21 @@ int foo(int a, float b) {
     assert params[1].name == "b"
 
     # Verify first parameter through search.
-    p = func.find_parameter("a")
+    p = func_node.find_parameter("a")
     assert p is not None
     assert p.kind == sgl.ASTCursor.Kind.variable
     assert isinstance(p, sgl.ASTCursorVariable)
     assert p.name == "a"
 
     # Verify second parameter through search.
-    p = func.find_parameter("b")
+    p = func_node.find_parameter("b")
     assert p is not None
     assert p.kind == sgl.ASTCursor.Kind.variable
     assert isinstance(p, sgl.ASTCursorVariable)
     assert p.name == "b"
 
     # Get function reflection info and verify its return type and parameters.
-    func_reflection = func.function
+    func_reflection = func_node.function
     assert func_reflection.return_type.kind == sgl.TypeReflection.Kind.scalar
     assert func_reflection.return_type.name == "int"
     assert len(func_reflection.parameters) == 2
@@ -241,11 +249,13 @@ void callfoo() {
 """,
     )
 
-    # Get function.
-    # print("")
-    # print("--------------------------------------")
-    # print_ast(module.abstract_syntax_tree)
-    # print("--------------------------------------")
+    # TODO: What should this give us? Currently:
+    # --------------------------------------
+    # ASTCursorModule(name=test_generic_function_with_generic_params)
+    #   ASTCursorGeneric()
+    #     ASTCursor(kind=unsupported)
+    #   ASTCursorFunction(name=callfoo)
+    # --------------------------------------
 
 
 @pytest.mark.parametrize("device_type", DEVICES)
@@ -258,18 +268,202 @@ def test_generic_struct_with_generic_fields(device_type):
 struct Foo<T> {
     T a;
     T b;
-};
+}
+
 struct Foo1 {
-    Foo<int>
+    Foo<int> member;
 }
 """,
     )
 
-    # Get function.
-    # print("")
-    # print("--------------------------------------")
-    # print_ast(module.abstract_syntax_tree)
-    # print("--------------------------------------")
+    # TODO: What should this give us? Currently:
+    # --------------------------------------
+    # ASTCursorModule(name=test_generic_struct_with_generic_fields)
+    #   ASTCursorGeneric()
+    #     ASTCursor(kind=unsupported)
+    #   ASTCursorStruct(name=Foo1)
+    #     ASTCursorVariable(name=member)
+    # --------------------------------------
+
+
+@pytest.mark.parametrize("device_type", DEVICES)
+def test_inout_modifier_params(device_type):
+    device = helpers.get_device(type=device_type)
+
+    module = device.load_module_from_source(
+        "test_inout_modifier_params",
+        r"""
+int foo(in int a, out int b, inout int c) {
+    b = 0;
+    c = 1;
+    return 0;
+}
+""",
+    )
+
+    func_node = module.abstract_syntax_tree.find_first_function("foo")
+    params = func_node.function.parameters
+    assert len(params) == 3
+    assert params[0].has_modifier(sgl.ModifierType.inn)
+    assert params[1].has_modifier(sgl.ModifierType.out)
+    assert params[2].has_modifier(sgl.ModifierType.inout)
+
+
+@pytest.mark.parametrize("device_type", DEVICES)
+def test_differentiable(device_type):
+    device = helpers.get_device(type=device_type)
+    module = device.load_module_from_source(
+        "test_differentiable",
+        r"""
+[Differentiable]
+void foo(in int a, out int b) {
+    b = 0;
+}
+""",
+    )
+    func_node = module.abstract_syntax_tree.find_first_function("foo")
+    assert func_node.function.has_modifier(sgl.ModifierType.differentiable)
+
+
+@pytest.mark.parametrize("device_type", DEVICES)
+def test_globals(device_type):
+    device = helpers.get_device(type=device_type)
+
+    module = device.load_module_from_source(
+        "test_globals",
+        r"""
+int a;
+int b;
+struct Foo {
+    int foo_member;
+}
+Foo foo;
+void myfunc() {
+}
+""",
+    )
+
+    ast = module.abstract_syntax_tree
+
+    globals = ast.globals
+    assert len(globals) == 3
+    assert globals[0].name == "a"
+    assert globals[1].name == "b"
+    assert globals[2].name == "foo"
+
+    global_a = ast.find_global("a")
+    assert global_a is not None
+
+    global_b = ast.find_global("b")
+    assert global_b is not None
+
+    global_foo = ast.find_global("foo")
+    assert global_foo is not None
+
+    functions = ast.functions
+    assert len(functions) == 1
+    assert functions[0].name == "myfunc"
+
+    func = ast.find_first_function("myfunc")
+    assert func is not None
+
+
+@pytest.mark.parametrize("device_type", DEVICES)
+def test_overloads(device_type):
+    device = helpers.get_device(type=device_type)
+
+    module = device.load_module_from_source(
+        "test_overloads",
+        r"""
+void myfunc() {}
+void myfunc(int a) {}
+void myfunc(int a, int b) {}
+void notmyfunc() {}
+""",
+    )
+
+    ast = module.abstract_syntax_tree
+
+    functions = ast.functions
+    assert len(functions) == 4
+    assert functions[0].name == "myfunc"
+    assert functions[1].name == "myfunc"
+    assert functions[2].name == "myfunc"
+    assert functions[3].name == "notmyfunc"
+
+    func = ast.find_first_function("myfunc")
+    assert func is not None
+
+    functions = ast.find_functions("myfunc")
+    assert len(functions) == 3
+    assert functions[0].name == "myfunc"
+    assert functions[1].name == "myfunc"
+    assert functions[2].name == "myfunc"
+
+
+@pytest.mark.parametrize("device_type", DEVICES)
+def test_struct_methods_and_overloads(device_type):
+    device = helpers.get_device(type=device_type)
+
+    module = device.load_module_from_source(
+        "test_struct_methods_and_overloads",
+        r"""
+struct Foo {
+    void myfunc() {}
+    void myfunc(int a) {}
+    void myfunc(int a, int b) {}
+    void notmyfunc() {}
+}
+""",
+    )
+
+    ast = module.abstract_syntax_tree
+
+    foo = ast.structs[0]
+
+    functions = foo.functions
+    assert len(functions) == 4
+    assert functions[0].name == "myfunc"
+    assert functions[1].name == "myfunc"
+    assert functions[2].name == "myfunc"
+    assert functions[3].name == "notmyfunc"
+
+    func = foo.find_first_function("myfunc")
+    assert func is not None
+
+    functions = foo.find_functions("myfunc")
+    assert len(functions) == 3
+    assert functions[0].name == "myfunc"
+    assert functions[1].name == "myfunc"
+    assert functions[2].name == "myfunc"
+
+
+@pytest.mark.parametrize("device_type", DEVICES)
+def test_struct_methods_and_overloads(device_type):
+
+    device = helpers.get_device(type=device_type)
+
+    session = helpers.get_session(
+        device,
+        defines={
+            "NUM_LATENT_DIMS": "8",
+            "NUM_HASHGRID_LEVELS": "4",
+            "NUM_LATENT_DIMS_PER_LEVEL": "2",
+        },
+    )
+
+    module = session.load_module("test_ast_cursor_hashgrid.slang")
+
+    # TODO: What should this give us? Currently:
+    # --------------------------------------
+    # ASTCursorModule(name=test_ast_cursor_hashgrid.slang)
+    #   ASTCursorGeneric()
+    #     ASTCursorVariable(name=C)
+    #     ASTCursorVariable(name=L)
+    #     ASTCursorVariable(name=P)
+    #   ASTCursor(kind=unsupported)
+    #   ASTCursor(kind=unsupported)
+    # --------------------------------------
 
 
 if __name__ == "__main__":
