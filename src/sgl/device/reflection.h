@@ -1151,42 +1151,86 @@ private:
 class SlangModule;
 class SlangSession;
 
+/// Base class for a cursor that can walk the AST of a slang module.
 class SGL_API ASTCursor : Object {
 public:
     ASTCursor(ref<SlangModule> module, slang::DeclReflection* decl_ref);
+    ~ASTCursor();
+
+    /// Different kinds of decl slang can return.
+    enum class Kind {
+        unsupported = SLANG_DECL_KIND_UNSUPPORTED_FOR_REFLECTION,
+        struct_ = SLANG_DECL_KIND_STRUCT,
+        func = SLANG_DECL_KIND_FUNC,
+        module = SLANG_DECL_KIND_MODULE,
+        generic = SLANG_DECL_KIND_GENERIC,
+        variable = SLANG_DECL_KIND_VARIABLE,
+    };
+    SGL_ENUM_INFO(
+        Kind,
+        {
+            {Kind::unsupported, "unsupported"},
+            {Kind::struct_, "struct"},
+            {Kind::func, "func"},
+            {Kind::module, "module"},
+            {Kind::generic, "generic"},
+            {Kind::variable, "variable"},
+        }
+    );
+
+    /// Decl kind (struct/function/module/generic/variable).
+    Kind kind() const { return static_cast<Kind>(m_decl_ref->getKind()); }
+
+    /// List of children of this cursor.
+    std::vector<ref<ASTCursor>> children() const;
+
+    /// Get number of children
+    int32_t child_count() const { return m_decl_ref->getChildrenCount(); }
+
+    /// Index operator to get nth child
+    ref<ASTCursor> operator[](int32_t index) const;
 
     /// Inspects the 'kind' property of decl_ref and returns the correct derived cursor type.
     static ref<ASTCursor> from_decl(ref<SlangModule> module, slang::DeclReflection* decl_ref);
+
+    /// Base cursor type description as string.
+    virtual std::string to_string() const;
 
 private:
     ref<SlangModule> m_module;
     slang::DeclReflection* m_decl_ref;
 };
+SGL_ENUM_REGISTER(ASTCursor::Kind);
 
+/// AST cursor that represents a root module node .
 class SGL_API ASTCursorModule : ASTCursor {
 public:
     ASTCursorModule(ref<SlangModule> module, slang::DeclReflection* decl_ref)
         : ASTCursor(module, decl_ref){};
 };
 
+/// AST cursor that represents a struct.
 class SGL_API ASTCursorStruct : ASTCursor {
 public:
     ASTCursorStruct(ref<SlangModule> module, slang::DeclReflection* decl_ref)
         : ASTCursor(module, decl_ref){};
 };
 
+/// AST cursor that represents a function.
 class SGL_API ASTCursorFunction : ASTCursor {
 public:
     ASTCursorFunction(ref<SlangModule> module, slang::DeclReflection* decl_ref)
         : ASTCursor(module, decl_ref){};
 };
 
+/// AST cursor that represents a variable.
 class SGL_API ASTCursorVariable : ASTCursor {
 public:
     ASTCursorVariable(ref<SlangModule> module, slang::DeclReflection* decl_ref)
         : ASTCursor(module, decl_ref){};
 };
 
+/// AST cursor that represents a generic.
 class SGL_API ASTCursorGeneric : ASTCursor {
 public:
     ASTCursorGeneric(ref<SlangModule> module, slang::DeclReflection* decl_ref)

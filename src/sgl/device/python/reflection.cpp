@@ -108,7 +108,16 @@ SGL_PY_EXPORT(device_reflection)
         .def("__getattr__", [](ReflectionCursor& self, std::string_view name) { return self[name]; })
         .def("__repr__", &ReflectionCursor::to_string);
 
-    nb::class_<ASTCursor>(m, "ASTCursor", D_NA(ASTCursor));
+    nb::class_<ASTCursor, Object> ast_cursor(m, "ASTCursor", D_NA(ASTCursor));
+
+    nb::sgl_enum<ASTCursor::Kind>(ast_cursor, "Kind");
+
+    ast_cursor //
+        .def_prop_ro("kind", &ASTCursor::kind, D_NA(ASTCursor, kind))
+        .def_prop_ro("children", &ASTCursor::children, D_NA(ASTCursor, kind))
+        .def("__len__", [](ASTCursor& self) { return self.child_count(); })
+        .def("__getitem__", [](ASTCursor& self, int index) { return self[index]; })
+        .def("__repr__", &ASTCursor::to_string);
 
     nb::class_<ASTCursorModule, ASTCursor>(m, "ASTCursorModule", D_NA(ASTCursorModule));
     nb::class_<ASTCursorStruct, ASTCursor>(m, "ASTCursorStruct", D_NA(ASTCursorStruct));
