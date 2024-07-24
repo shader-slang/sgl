@@ -1151,6 +1151,10 @@ private:
 class SlangModule;
 class SlangSession;
 
+class ASTCursorVariable;
+class ASTCursorFunction;
+class ASTCursorStruct;
+
 /// Base class for a cursor that can walk the AST of a slang module.
 class SGL_API ASTCursor : Object {
 public:
@@ -1196,9 +1200,18 @@ public:
     /// Base cursor type description as string.
     virtual std::string to_string() const;
 
-private:
+protected:
     ref<SlangModule> m_module;
     slang::DeclReflection* m_decl_ref;
+
+    template<typename T>
+    std::vector<ref<T>> nodes_of_kind(slang::DeclReflection::Kind kind) const;
+
+    // These are kept protected, and only exposed for cursor types for which it makes sense.
+    std::vector<ref<ASTCursorFunction>> _find_func(std::string_view name) const;
+    ref<ASTCursorFunction> _find_first_func(std::string_view name) const;
+    std::vector<ref<ASTCursorVariable>> _find_variable(std::string_view name) const;
+    ref<ASTCursorVariable> _find_first_variable(std::string_view name) const;
 };
 SGL_ENUM_REGISTER(ASTCursor::Kind);
 
@@ -1207,13 +1220,49 @@ class SGL_API ASTCursorModule : ASTCursor {
 public:
     ASTCursorModule(ref<SlangModule> module, slang::DeclReflection* decl_ref)
         : ASTCursor(module, decl_ref){};
+
+    std::string name() const;
+
+    std::vector<ref<ASTCursorVariable>> globals() const;
+
+    std::vector<ref<ASTCursorFunction>> functions() const;
+
+    std::vector<ref<ASTCursorStruct>> structs() const;
+
+    std::vector<ref<ASTCursorFunction>> find_functions(std::string_view name) const { return _find_func(name); }
+
+    ref<ASTCursorFunction> find_first_function(std::string_view name) const { return _find_first_func(name); }
+
+    ref<ASTCursorVariable> find_global(std::string_view name) const { return _find_first_variable(name); }
 };
+
 
 /// AST cursor that represents a struct.
 class SGL_API ASTCursorStruct : ASTCursor {
 public:
     ASTCursorStruct(ref<SlangModule> module, slang::DeclReflection* decl_ref)
         : ASTCursor(module, decl_ref){};
+
+    std::string name() const { return base()->name(); }
+
+    const TypeReflection* type() const { return base(); }
+
+    std::vector<ref<ASTCursorVariable>> fields() const;
+
+    std::vector<ref<ASTCursorFunction>> functions() const;
+
+    std::vector<ref<ASTCursorStruct>> structs() const;
+
+    std::vector<ref<ASTCursorFunction>> find_functions(std::string_view name) const { return _find_func(name); }
+
+    ref<ASTCursorFunction> find_first_function(std::string_view name) const { return _find_first_func(name); }
+
+    ref<ASTCursorVariable> find_field(std::string_view name) const { return _find_first_variable(name); }
+
+private:
+    mutable const TypeReflection* m_type_decl{nullptr};
+
+    const TypeReflection* base() const;
 };
 
 /// AST cursor that represents a function.
@@ -1221,6 +1270,17 @@ class SGL_API ASTCursorFunction : ASTCursor {
 public:
     ASTCursorFunction(ref<SlangModule> module, slang::DeclReflection* decl_ref)
         : ASTCursor(module, decl_ref){};
+
+    std::string name() const { return base()->name(); }
+
+    const FunctionReflection* function() const { return base(); }
+
+    std::vector<ref<ASTCursorVariable>> parameters() const;
+
+    ref<ASTCursorVariable> find_parameter(std::string_view name) const { return _find_first_variable(name); }
+
+private:
+    const FunctionReflection* base() const { return detail::from_slang(m_decl_ref->asFunction()); }
 };
 
 /// AST cursor that represents a variable.
@@ -1228,6 +1288,13 @@ class SGL_API ASTCursorVariable : ASTCursor {
 public:
     ASTCursorVariable(ref<SlangModule> module, slang::DeclReflection* decl_ref)
         : ASTCursor(module, decl_ref){};
+
+    std::string name() const { return base()->name(); }
+
+    const TypeReflection* type() const { return base()->type(); }
+
+private:
+    const VariableReflection* base() const { return detail::from_slang(m_decl_ref->asVariable()); }
 };
 
 /// AST cursor that represents a generic.

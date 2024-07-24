@@ -119,9 +119,34 @@ SGL_PY_EXPORT(device_reflection)
         .def("__getitem__", [](ASTCursor& self, int index) { return self[index]; })
         .def("__repr__", &ASTCursor::to_string);
 
-    nb::class_<ASTCursorModule, ASTCursor>(m, "ASTCursorModule", D_NA(ASTCursorModule));
-    nb::class_<ASTCursorStruct, ASTCursor>(m, "ASTCursorStruct", D_NA(ASTCursorStruct));
-    nb::class_<ASTCursorFunction, ASTCursor>(m, "ASTCursorFunction", D_NA(ASTCursorFunction));
-    nb::class_<ASTCursorVariable, ASTCursor>(m, "ASTCursorVariable", D_NA(ASTCursorVariable));
+    nb::class_<ASTCursorModule, ASTCursor>(m, "ASTCursorModule", D_NA(ASTCursorModule))
+        .def_prop_ro("name", &ASTCursorModule::name)
+        .def_prop_ro("globals", &ASTCursorModule::globals)
+        .def_prop_ro("functions", &ASTCursorModule::functions)
+        .def_prop_ro("structs", &ASTCursorModule::structs)
+        .def("find_functions", &ASTCursorModule::find_functions, "name"_a, D_NA(ASTCursorModule, name))
+        .def("find_first_function", &ASTCursorModule::find_first_function, "name"_a, D_NA(ASTCursorModule, name))
+        .def("find_global", &ASTCursorModule::find_global, "name"_a, D_NA(ASTCursorModule, name));
+
+    nb::class_<ASTCursorStruct, ASTCursor>(m, "ASTCursorStruct", D_NA(ASTCursorStruct))
+        .def_prop_ro("name", &ASTCursorStruct::name)
+        .def_prop_ro("type", &ASTCursorStruct::type)
+        .def_prop_ro("fields", &ASTCursorStruct::fields)
+        .def_prop_ro("functions", &ASTCursorStruct::functions)
+        .def_prop_ro("structs", &ASTCursorStruct::structs)
+        .def("find_functions", &ASTCursorStruct::find_functions, "name"_a, D_NA(ASTCursorStruct, name))
+        .def("find_first_function", &ASTCursorStruct::find_first_function, "name"_a, D_NA(ASTCursorStruct, name))
+        .def("find_field", &ASTCursorStruct::find_field, "name"_a, D_NA(ASTCursorStruct, name));
+
+    nb::class_<ASTCursorFunction, ASTCursor>(m, "ASTCursorFunction", D_NA(ASTCursorFunction))
+        .def_prop_ro("name", &ASTCursorFunction::name)
+        .def_prop_ro("type", &ASTCursorFunction::function)
+        .def_prop_ro("parameters", &ASTCursorFunction::parameters)
+        .def("find_parameter", &ASTCursorFunction::find_parameter, "name"_a, D_NA(ASTCursorFunction, name));
+
+    nb::class_<ASTCursorVariable, ASTCursor>(m, "ASTCursorVariable", D_NA(ASTCursorVariable))
+        .def_prop_ro("name", &ASTCursorVariable::name)
+        .def_prop_ro("type", &ASTCursorVariable::type);
+
     nb::class_<ASTCursorGeneric, ASTCursor>(m, "ASTCursorGeneric", D_NA(ASTCursorGeneric));
 }
