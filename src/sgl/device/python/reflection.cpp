@@ -46,9 +46,20 @@ SGL_PY_EXPORT(device_reflection)
         .def("unwrap_array", &TypeLayoutReflection::unwrap_array)
         .def("__repr__", &TypeLayoutReflection::to_string);
 
-    nb::class_<VariableReflection>(m, "VariableReflection")
+    nb::class_<FunctionReflection>(m, "FunctionReflection")
+        .def_prop_ro("name", &FunctionReflection::name)
+        .def_prop_ro("return_type", &FunctionReflection::return_type)
+        .def_prop_ro("parameters", &FunctionReflection::parameters);
+
+
+    nb::class_<VariableReflection> variable_reflection(m, "VariableReflection");
+
+    nb::sgl_enum<VariableReflection::ModifierType>(variable_reflection, "ModifierType");
+
+    variable_reflection //
         .def_prop_ro("name", &VariableReflection::name)
-        .def_prop_ro("type", &VariableReflection::type);
+        .def_prop_ro("type", &VariableReflection::type)
+        .def("has_modifier", &VariableReflection::has_modifier, "modifier"_a, D_NA(VariableReflection, modifier));
 
     nb::class_<VariableLayoutReflection>(m, "VariableLayoutReflection")
         .def_prop_ro("name", &VariableLayoutReflection::name)
@@ -100,4 +111,12 @@ SGL_PY_EXPORT(device_reflection)
         .def("__getitem__", [](ReflectionCursor& self, int index) { return self[index]; })
         .def("__getattr__", [](ReflectionCursor& self, std::string_view name) { return self[name]; })
         .def("__repr__", &ReflectionCursor::to_string);
+
+    nb::class_<ASTCursor>(m, "ASTCursor", D_NA(ASTCursor));
+
+    nb::class_<ASTCursorModule, ASTCursor>(m, "ASTCursorModule", D_NA(ASTCursorModule));
+    nb::class_<ASTCursorStruct, ASTCursor>(m, "ASTCursorStruct", D_NA(ASTCursorStruct));
+    nb::class_<ASTCursorFunction, ASTCursor>(m, "ASTCursorFunction", D_NA(ASTCursorFunction));
+    nb::class_<ASTCursorVariable, ASTCursor>(m, "ASTCursorVariable", D_NA(ASTCursorVariable));
+    nb::class_<ASTCursorGeneric, ASTCursor>(m, "ASTCursorGeneric", D_NA(ASTCursorGeneric));
 }

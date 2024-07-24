@@ -63,10 +63,12 @@ class ShaderProgram;
 
 class TypeReflection;
 class TypeLayoutReflection;
+class FunctionReflection;
 class VariableReflection;
 class VariableLayoutReflection;
 class ProgramLayout;
 class EntryPointLayout;
+class ASTCursor;
 
 // kernel.h
 

@@ -374,25 +374,41 @@ public:
     /// Repopulates a build structure with reference to internal m_data ptr.
     void populate_build_data(SlangSessionBuild& build_data);
 
+    /// The session from which this module was built.
     SlangSession* session() const { return m_session; }
+
+    /// Descriptor that holds all data required to create this module.
     const SlangModuleDesc& desc() const { return m_desc; }
 
+    /// Module name.
     const std::string& name() const { return m_data->name; }
+
+    /// Module source path. This can be empty if the module was generated from a string.
     const std::filesystem::path& path() const { return m_data->path; }
     const ProgramLayout* layout() const { return ProgramLayout::from_slang(m_data->slang_module->getLayout()); }
 
+    /// Build and return vector of all current entry points in the module.
     std::vector<ref<SlangEntryPoint>> entry_points() const;
+
+    /// Get an entry point, optionally applying type conformances to it.
     ref<SlangEntryPoint> entry_point(
         std::string_view name,
         std::span<TypeConformance> type_conformances = std::span<TypeConformance>()
     ) const;
     bool has_entry_point(std::string_view name) const;
 
+    /// Get AST cursor for traversing this module's abstract syntax tree.
+    ref<ASTCursor> abstract_syntax_tree() const;
+
+    /// Internal slang module.
     slang::IModule* slang_module() const { return m_data->slang_module; }
 
+    /// Text summary of the module.
     std::string to_string() const override;
 
+    /// Unlinks the session reference for modules that are referred to by the session to avoid ref loops.
     void break_strong_reference_to_session() { m_session.break_strong_reference(); }
+
 
     void _register_entry_point(SlangEntryPoint* entry_point) const;
     void _unregister_entry_point(SlangEntryPoint* entry_point) const;
