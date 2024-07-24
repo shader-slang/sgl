@@ -820,10 +820,10 @@ bool SlangModule::has_entry_point(std::string_view name) const
     return slang_entry_point != nullptr;
 }
 
-ref<ASTCursor> SlangModule::abstract_syntax_tree() const
+ref<ASTCursorModule> SlangModule::abstract_syntax_tree() const
 {
     auto result
-        = ASTCursor::from_decl(ref(const_cast<SlangModule*>(this)), m_data->slang_module->getModuleReflection());
+        = make_ref<ASTCursorModule>(ref(const_cast<SlangModule*>(this)), m_data->slang_module->getModuleReflection());
     return std::move(result);
 }
 
