@@ -52,6 +52,16 @@ def get_device(type: sgl.DeviceType, use_cache: bool = True) -> sgl.Device:
     return device
 
 
+def get_session(device: sgl.Device, defines: dict) -> sgl.SlangSession:
+    return device.create_slang_session(
+        compiler_options={
+            "include_paths": [SHADER_DIR],
+            "defines": defines,
+            "debug_info": sgl.SlangDebugInfoLevel.standard,
+        }
+    )
+
+
 class Context:
     buffers: dict[str, sgl.Buffer]
     textures: dict[str, sgl.Texture]
