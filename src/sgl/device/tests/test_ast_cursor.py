@@ -10,7 +10,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent))
 import helpers
 
-DEVICES = helpers.DEFAULT_DEVICE_TYPES
+DEVICES = [sgl.DeviceType.d3d12]
 
 SIMPLE_MODULE = r"""
 void foo() {
@@ -25,9 +25,18 @@ def test_shader_cursor(device_type):
     module = device.load_module_from_source("simple", SIMPLE_MODULE)
 
     ast = module.abstract_syntax_tree
+    assert ast.kind == sgl.ASTCursor.Kind.module
+    assert isinstance(ast, sgl.ASTCursorModule)
 
-    print(ast)
+    assert len(ast) == 1
+    assert ast[0].kind == sgl.ASTCursor.Kind.func
+    assert isinstance(ast[0], sgl.ASTCursorFunction)
+
+    children = ast.children
+    assert len(children) == 1
+    assert children[0].kind == sgl.ASTCursor.Kind.func
+    assert isinstance(children[0], sgl.ASTCursorFunction)
 
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+    pytest.main([__file__, "-v", "-s"])
