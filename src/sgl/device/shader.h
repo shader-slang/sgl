@@ -398,7 +398,7 @@ public:
     bool has_entry_point(std::string_view name) const;
 
     /// Get AST cursor for traversing this module's abstract syntax tree.
-    ref<ASTCursor> abstract_syntax_tree() const;
+    ref<ASTCursorModule> abstract_syntax_tree() const;
 
     /// Internal slang module.
     slang::IModule* slang_module() const { return m_data->slang_module; }
