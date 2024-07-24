@@ -2,6 +2,7 @@
 
 #include "reflection.h"
 
+#include "sgl/device/device.h"
 #include "sgl/device/shader.h"
 
 #include "sgl/core/string.h"
@@ -257,6 +258,79 @@ std::string ASTCursor::to_string() const
     );
 }
 
+template<typename T>
+std::vector<ref<T>> ASTCursor::nodes_of_kind(slang::DeclReflection::Kind kind) const
+{
+    std::vector<ref<T>> res;
+    uint32_t num_children = m_decl_ref->getChildrenCount();
+    for (uint32_t idx = 0; idx < num_children; idx++) {
+        slang::DeclReflection* child_decl_ref = m_decl_ref->getChild(idx);
+        if (!child_decl_ref)
+            SGL_THROW("Slang returned a null decl ref - this should never happen");
+        if (child_decl_ref->getKind() == kind)
+            res.push_back(make_ref<T>(m_module, child_decl_ref));
+    }
+    return res;
+}
+
+std::vector<ref<ASTCursorFunction>> ASTCursor::_find_func(std::string_view name) const
+{
+    std::vector<ref<ASTCursorFunction>> res;
+    uint32_t num_children = m_decl_ref->getChildrenCount();
+    for (uint32_t idx = 0; idx < num_children; idx++) {
+        slang::DeclReflection* child_decl_ref = m_decl_ref->getChild(idx);
+        if (!child_decl_ref)
+            SGL_THROW("Slang returned a null decl ref - this should never happen");
+        if (auto func = child_decl_ref->asFunction())
+            if (func->getName() == name)
+                res.push_back(make_ref<ASTCursorFunction>(m_module, child_decl_ref));
+    }
+    return res;
+}
+
+ref<ASTCursorFunction> ASTCursor::_find_first_func(std::string_view name) const
+{
+    uint32_t num_children = m_decl_ref->getChildrenCount();
+    for (uint32_t idx = 0; idx < num_children; idx++) {
+        slang::DeclReflection* child_decl_ref = m_decl_ref->getChild(idx);
+        if (!child_decl_ref)
+            SGL_THROW("Slang returned a null decl ref - this should never happen");
+        if (auto func = child_decl_ref->asFunction())
+            if (func->getName() == name)
+                return make_ref<ASTCursorFunction>(m_module, child_decl_ref);
+    }
+    return nullptr;
+}
+
+std::vector<ref<ASTCursorVariable>> ASTCursor::_find_variable(std::string_view name) const
+{
+    std::vector<ref<ASTCursorVariable>> res;
+    uint32_t num_children = m_decl_ref->getChildrenCount();
+    for (uint32_t idx = 0; idx < num_children; idx++) {
+        slang::DeclReflection* child_decl_ref = m_decl_ref->getChild(idx);
+        if (!child_decl_ref)
+            SGL_THROW("Slang returned a null decl ref - this should never happen");
+        if (auto var = child_decl_ref->asVariable())
+            if (var->getName() == name)
+                res.push_back(make_ref<ASTCursorVariable>(m_module, child_decl_ref));
+    }
+    return res;
+}
+
+ref<ASTCursorVariable> ASTCursor::_find_first_variable(std::string_view name) const
+{
+    uint32_t num_children = m_decl_ref->getChildrenCount();
+    for (uint32_t idx = 0; idx < num_children; idx++) {
+        slang::DeclReflection* child_decl_ref = m_decl_ref->getChild(idx);
+        if (!child_decl_ref)
+            SGL_THROW("Slang returned a null decl ref - this should never happen");
+        if (auto var = child_decl_ref->asVariable())
+            if (var->getName() == name)
+                return make_ref<ASTCursorVariable>(m_module, child_decl_ref);
+    }
+    return nullptr;
+}
+
 std::vector<ref<ASTCursor>> ASTCursor::children() const
 {
     std::vector<ref<ASTCursor>> res;
@@ -295,6 +369,53 @@ ref<ASTCursor> ASTCursor::from_decl(ref<SlangModule> module, slang::DeclReflecti
     default:
         return make_ref<ASTCursor>(module, decl_ref);
     }
+}
+
+std::string ASTCursorModule::name() const
+{
+    return m_module->name();
+}
+
+std::vector<ref<ASTCursorVariable>> ASTCursorModule::globals() const
+{
+    return nodes_of_kind<ASTCursorVariable>(slang::DeclReflection::Kind::Variable);
+}
+
+std::vector<ref<ASTCursorFunction>> ASTCursorModule::functions() const
+{
+    return nodes_of_kind<ASTCursorFunction>(slang::DeclReflection::Kind::Func);
+}
+
+std::vector<ref<ASTCursorStruct>> ASTCursorModule::structs() const
+{
+    return nodes_of_kind<ASTCursorStruct>(slang::DeclReflection::Kind::Struct);
+}
+
+std::vector<ref<ASTCursorVariable>> ASTCursorStruct::fields() const
+{
+    return nodes_of_kind<ASTCursorVariable>(slang::DeclReflection::Kind::Variable);
+}
+
+std::vector<ref<ASTCursorFunction>> ASTCursorStruct::functions() const
+{
+    return nodes_of_kind<ASTCursorFunction>(slang::DeclReflection::Kind::Func);
+}
+
+std::vector<ref<ASTCursorStruct>> ASTCursorStruct::structs() const
+{
+    return nodes_of_kind<ASTCursorStruct>(slang::DeclReflection::Kind::Struct);
+}
+
+const TypeReflection* ASTCursorStruct::base() const
+{
+    if (!m_type_decl)
+        m_type_decl = detail::from_slang(m_decl_ref->getType(m_module->session()->device()->global_session()));
+    return m_type_decl;
+}
+
+std::vector<ref<ASTCursorVariable>> ASTCursorFunction::parameters() const
+{
+    return nodes_of_kind<ASTCursorVariable>(slang::DeclReflection::Kind::Variable);
 }
 
 } // namespace sgl
