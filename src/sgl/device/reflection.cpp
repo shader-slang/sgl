@@ -242,6 +242,41 @@ ASTCursor::ASTCursor(ref<SlangModule> module, slang::DeclReflection* decl_ref)
 {
 }
 
+ASTCursor::~ASTCursor()
+{
+    // TODO: Remove this when finished debugging destruction of cursors!
+}
+
+std::string ASTCursor::to_string() const
+{
+    return fmt::format(
+        "ASTCursor(module={}, kind={}, children={})",
+        m_module->name(),
+        kind(),
+        m_decl_ref->getChildrenCount()
+    );
+}
+
+std::vector<ref<ASTCursor>> ASTCursor::children() const
+{
+    std::vector<ref<ASTCursor>> res;
+    uint32_t num_children = m_decl_ref->getChildrenCount();
+    for (uint32_t idx = 0; idx < num_children; idx++) {
+        slang::DeclReflection* child_decl_ref = m_decl_ref->getChild(idx);
+        if (!child_decl_ref)
+            SGL_THROW("Slang returned a null decl ref - this should never happen");
+        res.push_back(from_decl(m_module, child_decl_ref));
+    }
+    return res;
+}
+
+ref<ASTCursor> ASTCursor::operator[](int32_t index) const
+{
+    if (index > child_count())
+        SGL_THROW("Index out of range - index={}, child count={}", index, child_count());
+    return from_decl(m_module, m_decl_ref->getChild(index));
+}
+
 ref<ASTCursor> ASTCursor::from_decl(ref<SlangModule> module, slang::DeclReflection* decl_ref)
 {
     // Return correct derived type for the decl type, or just another ASTCursor if
