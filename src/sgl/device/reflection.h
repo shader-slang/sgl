@@ -59,6 +59,39 @@ namespace detail {
     }
 } // namespace detail
 
+
+enum class ModifierType {
+    shared = SLANG_MODIFIER_SHARED,
+    nodiff = SLANG_MODIFIER_NO_DIFF,
+    static_ = SLANG_MODIFIER_STATIC,
+    const_ = SLANG_MODIFIER_CONST,
+    export_ = SLANG_MODIFIER_EXPORT,
+    extern_ = SLANG_MODIFIER_EXTERN,
+    differentiable = SLANG_MODIFIER_DIFFERENTIABLE,
+    mutating = SLANG_MODIFIER_MUTATING,
+    in = SLANG_MODIFIER_IN,
+    out = SLANG_MODIFIER_OUT,
+    inout = SLANG_MODIFIER_INOUT,
+};
+
+SGL_ENUM_INFO(
+    ModifierType,
+    {
+        {ModifierType::shared, "shared"},
+        {ModifierType::nodiff, "nodiff"},
+        {ModifierType::static_, "static"},
+        {ModifierType::const_, "const"},
+        {ModifierType::export_, "export"},
+        {ModifierType::extern_, "extern"},
+        {ModifierType::differentiable, "differentiable"},
+        {ModifierType::mutating, "mutating"},
+        {ModifierType::in, "inn"},
+        {ModifierType::out, "out"},
+        {ModifierType::inout, "inout"},
+    }
+);
+SGL_ENUM_REGISTER(ModifierType);
+
 class SGL_API TypeReflection : private slang::TypeReflection {
 public:
     enum class Kind {
@@ -712,6 +745,13 @@ public:
         return result;
     }
 
+    /// Check if variable has a given modifier (eg 'inout').
+    bool has_modifier(ModifierType modifier) const
+    {
+        return base()->findModifier(static_cast<slang::Modifier::ID>(modifier)) != nullptr;
+    }
+
+
 #if 0
     unsigned int getUserAttributeCount()
     {
@@ -736,37 +776,6 @@ public:
 
 class SGL_API VariableReflection : private slang::VariableReflection {
 public:
-    enum class ModifierType {
-        shared = SLANG_MODIFIER_SHARED,
-        nodiff = SLANG_MODIFIER_NO_DIFF,
-        static_ = SLANG_MODIFIER_STATIC,
-        const_ = SLANG_MODIFIER_CONST,
-        export_ = SLANG_MODIFIER_EXPORT,
-        extern_ = SLANG_MODIFIER_EXTERN,
-        differentiable = SLANG_MODIFIER_DIFFERENTIABLE,
-        mutating = SLANG_MODIFIER_MUTATING,
-        in = SLANG_MODIFIER_IN,
-        out = SLANG_MODIFIER_OUT,
-        inout = SLANG_MODIFIER_INOUT,
-    };
-
-    SGL_ENUM_INFO(
-        ModifierType,
-        {
-            {ModifierType::shared, "shared"},
-            {ModifierType::nodiff, "nodiff"},
-            {ModifierType::static_, "static"},
-            {ModifierType::const_, "const"},
-            {ModifierType::export_, "export"},
-            {ModifierType::extern_, "extern"},
-            {ModifierType::differentiable, "differentiable"},
-            {ModifierType::mutating, "mutating"},
-            {ModifierType::in, "in"},
-            {ModifierType::out, "out"},
-            {ModifierType::inout, "inout"},
-        }
-    );
-
     static const VariableReflection* from_slang(slang::VariableReflection* variable_reflection)
     {
         return detail::from_slang(variable_reflection);
@@ -809,7 +818,6 @@ public:
     }
 #endif
 };
-SGL_ENUM_REGISTER(VariableReflection::ModifierType);
 
 class SGL_API VariableLayoutReflection : private slang::VariableLayoutReflection {
 public:
