@@ -216,6 +216,11 @@ SGL_PY_EXPORT(device_shader)
         .def_prop_ro("path", &SlangModule::path, D(SlangModule, path))
         .def_prop_ro("layout", &SlangModule::layout, D(SlangModule, layout))
         .def_prop_ro("entry_points", &SlangModule::entry_points, D(SlangModule, entry_points))
+        .def_prop_ro(
+            "abstract_syntax_tree",
+            &SlangModule::abstract_syntax_tree,
+            D_NA(SlangModule, abstract_syntax_tree)
+        )
         .def(
             "entry_point",
             &SlangModule::entry_point,

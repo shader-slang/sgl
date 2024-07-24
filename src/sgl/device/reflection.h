@@ -21,12 +21,14 @@ namespace sgl {
 
 class TypeReflection;
 class TypeLayoutReflection;
+class FunctionReflection;
 class VariableReflection;
 class VariableLayoutReflection;
 class EntryPointLayout;
 class ProgramLayout;
 
 namespace detail {
+
     inline const TypeReflection* from_slang(slang::TypeReflection* type_reflection)
     {
         return reinterpret_cast<const TypeReflection*>(type_reflection);
@@ -34,6 +36,10 @@ namespace detail {
     inline const TypeLayoutReflection* from_slang(slang::TypeLayoutReflection* type_layout_reflection)
     {
         return reinterpret_cast<const TypeLayoutReflection*>(type_layout_reflection);
+    }
+    inline const FunctionReflection* from_slang(slang::FunctionReflection* variable_reflection)
+    {
+        return reinterpret_cast<const FunctionReflection*>(variable_reflection);
     }
     inline const VariableReflection* from_slang(slang::VariableReflection* variable_reflection)
     {
@@ -679,8 +685,88 @@ public:
     std::string to_string() const;
 };
 
+class SGL_API FunctionReflection : private slang::FunctionReflection {
+public:
+    /// Cast to non-const base pointer.
+    /// The underlying slang API is not const-correct.
+    slang::FunctionReflection* base() const { return (slang::FunctionReflection*)(this); }
+
+    char const* name() const { return base()->getName(); }
+
+    const TypeReflection* return_type() { return detail::from_slang(base()->getReturnType()); }
+
+    uint32_t parameter_count() const { return base()->getParameterCount(); }
+
+    const VariableReflection* get_parameter_by_index(uint32_t index) const
+    {
+        SGL_CHECK(index < parameter_count(), "Parameter index out of range");
+        return detail::from_slang(base()->getParameterByIndex(index));
+    }
+
+    std::vector<const VariableReflection*> parameters() const
+    {
+        std::vector<const VariableReflection*> result;
+        for (uint32_t i = 0; i < base()->getParameterCount(); ++i) {
+            result.push_back(detail::from_slang(base()->getParameterByIndex(i)));
+        }
+        return result;
+    }
+
+#if 0
+    unsigned int getUserAttributeCount()
+    {
+        return spReflectionFunction_GetUserAttributeCount((SlangReflectionFunction*)this);
+    }
+    UserAttribute* getUserAttributeByIndex(unsigned int index)
+    {
+        return (UserAttribute*)spReflectionFunction_GetUserAttribute((SlangReflectionFunction*)this, index);
+    }
+    UserAttribute* findUserAttributeByName(SlangSession* globalSession, char const* name)
+    {
+        return (UserAttribute*)
+            spReflectionFunction_FindUserAttributeByName((SlangReflectionFunction*)this, globalSession, name);
+    }
+
+    Modifier* findModifier(Modifier::ID id)
+    {
+        return (Modifier*)spReflectionFunction_FindModifier((SlangReflectionFunction*)this, (SlangModifierID)id);
+    }
+#endif
+};
+
 class SGL_API VariableReflection : private slang::VariableReflection {
 public:
+    enum class ModifierType {
+        shared = SLANG_MODIFIER_SHARED,
+        nodiff = SLANG_MODIFIER_NO_DIFF,
+        static_ = SLANG_MODIFIER_STATIC,
+        const_ = SLANG_MODIFIER_CONST,
+        export_ = SLANG_MODIFIER_EXPORT,
+        extern_ = SLANG_MODIFIER_EXTERN,
+        differentiable = SLANG_MODIFIER_DIFFERENTIABLE,
+        mutating = SLANG_MODIFIER_MUTATING,
+        in = SLANG_MODIFIER_IN,
+        out = SLANG_MODIFIER_OUT,
+        inout = SLANG_MODIFIER_INOUT,
+    };
+
+    SGL_ENUM_INFO(
+        ModifierType,
+        {
+            {ModifierType::shared, "shared"},
+            {ModifierType::nodiff, "nodiff"},
+            {ModifierType::static_, "static"},
+            {ModifierType::const_, "const"},
+            {ModifierType::export_, "export"},
+            {ModifierType::extern_, "extern"},
+            {ModifierType::differentiable, "differentiable"},
+            {ModifierType::mutating, "mutating"},
+            {ModifierType::in, "in"},
+            {ModifierType::out, "out"},
+            {ModifierType::inout, "inout"},
+        }
+    );
+
     static const VariableReflection* from_slang(slang::VariableReflection* variable_reflection)
     {
         return detail::from_slang(variable_reflection);
@@ -690,9 +776,17 @@ public:
     /// The underlying slang API is not const-correct.
     slang::VariableReflection* base() const { return (slang::VariableReflection*)(this); }
 
+    /// Variable name.
     const char* name() const { return base()->getName(); }
 
+    /// Variable type reflection.
     const TypeReflection* type() const { return detail::from_slang(base()->getType()); }
+
+    /// Check if variable has a given modifier (eg 'inout').
+    bool has_modifier(ModifierType modifier) const
+    {
+        return base()->findModifier(static_cast<slang::Modifier::ID>(modifier)) != nullptr;
+    }
 
 #if 0
     Modifier* findModifier(Modifier::ID id)
@@ -715,6 +809,7 @@ public:
     }
 #endif
 };
+SGL_ENUM_REGISTER(VariableReflection::ModifierType);
 
 class SGL_API VariableLayoutReflection : private slang::VariableLayoutReflection {
 public:
@@ -1049,5 +1144,51 @@ private:
     const TypeLayoutReflection* m_type_layout{nullptr};
     bool m_valid{false};
 };
+
+class SlangModule;
+class SlangSession;
+
+class SGL_API ASTCursor : Object {
+public:
+    ASTCursor(ref<SlangModule> module, slang::DeclReflection* decl_ref);
+
+    /// Inspects the 'kind' property of decl_ref and returns the correct derived cursor type.
+    static ref<ASTCursor> from_decl(ref<SlangModule> module, slang::DeclReflection* decl_ref);
+
+private:
+    ref<SlangModule> m_module;
+    slang::DeclReflection* m_decl_ref;
+};
+
+class SGL_API ASTCursorModule : ASTCursor {
+public:
+    ASTCursorModule(ref<SlangModule> module, slang::DeclReflection* decl_ref)
+        : ASTCursor(module, decl_ref){};
+};
+
+class SGL_API ASTCursorStruct : ASTCursor {
+public:
+    ASTCursorStruct(ref<SlangModule> module, slang::DeclReflection* decl_ref)
+        : ASTCursor(module, decl_ref){};
+};
+
+class SGL_API ASTCursorFunction : ASTCursor {
+public:
+    ASTCursorFunction(ref<SlangModule> module, slang::DeclReflection* decl_ref)
+        : ASTCursor(module, decl_ref){};
+};
+
+class SGL_API ASTCursorVariable : ASTCursor {
+public:
+    ASTCursorVariable(ref<SlangModule> module, slang::DeclReflection* decl_ref)
+        : ASTCursor(module, decl_ref){};
+};
+
+class SGL_API ASTCursorGeneric : ASTCursor {
+public:
+    ASTCursorGeneric(ref<SlangModule> module, slang::DeclReflection* decl_ref)
+        : ASTCursor(module, decl_ref){};
+};
+
 
 } // namespace sgl

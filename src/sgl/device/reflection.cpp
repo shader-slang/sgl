@@ -236,4 +236,30 @@ std::string ReflectionCursor::to_string() const
     return "ReflectionCursor(null)";
 }
 
+ASTCursor::ASTCursor(ref<SlangModule> module, slang::DeclReflection* decl_ref)
+    : m_module(module)
+    , m_decl_ref(decl_ref)
+{
+}
+
+ref<ASTCursor> ASTCursor::from_decl(ref<SlangModule> module, slang::DeclReflection* decl_ref)
+{
+    // Return correct derived type for the decl type, or just another ASTCursor if
+    // it's an unsupported decl type.
+    switch (decl_ref->getKind()) {
+    case slang::DeclReflection::Kind::Func:
+        return ref((ASTCursor*)new ASTCursorFunction(module, decl_ref));
+    case slang::DeclReflection::Kind::Struct:
+        return ref((ASTCursor*)new ASTCursorStruct(module, decl_ref));
+    case slang::DeclReflection::Kind::Variable:
+        return ref((ASTCursor*)new ASTCursorVariable(module, decl_ref));
+    case slang::DeclReflection::Kind::Module:
+        return ref((ASTCursor*)new ASTCursorModule(module, decl_ref));
+    case slang::DeclReflection::Kind::Generic:
+        return ref((ASTCursor*)new ASTCursorGeneric(module, decl_ref));
+    default:
+        return make_ref<ASTCursor>(module, decl_ref);
+    }
+}
+
 } // namespace sgl
