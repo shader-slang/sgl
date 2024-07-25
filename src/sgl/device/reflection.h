@@ -384,9 +384,18 @@ public:
 
     const char* name() const { return base()->getName(); }
 
-    size_t size() const { return base()->getSize(); }
-    size_t stride() const { return base()->getStride(); }
-    int32_t alignment() const { return base()->getAlignment(); }
+    size_t size(TypeReflection::ParameterCategory category = TypeReflection::ParameterCategory::uniform) const
+    {
+        return base()->getSize(static_cast<SlangParameterCategory>(category));
+    }
+    size_t stride(TypeReflection::ParameterCategory category = TypeReflection::ParameterCategory::uniform) const
+    {
+        return base()->getStride(static_cast<SlangParameterCategory>(category));
+    }
+    int32_t alignment(TypeReflection::ParameterCategory category = TypeReflection::ParameterCategory::uniform) const
+    {
+        return base()->getAlignment(static_cast<SlangParameterCategory>(category));
+    }
 
 #if 0
     size_t getSize(SlangParameterCategory category = SLANG_PARAMETER_CATEGORY_UNIFORM)

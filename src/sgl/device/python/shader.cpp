@@ -2,6 +2,7 @@
 
 #include "nanobind.h"
 
+#include "sgl/device/device.h"
 #include "sgl/device/shader.h"
 #include "sgl/device/reflection.h"
 #include "sgl/device/kernel.h"
@@ -179,6 +180,7 @@ SGL_PY_EXPORT(device_shader)
     using sgl::SlangEntryPoint;
 
     nb::class_<SlangSession, Object>(m, "SlangSession", D(SlangSession))
+        .def_prop_ro("device", &SlangSession::device, D_NA(SlangSession, device))
         .def_prop_ro("desc", &SlangSession::desc, D(SlangSession, desc))
         .def("load_module", &SlangSession::load_module, "module_name"_a, D(SlangSession, load_module))
         .def(
@@ -209,6 +211,7 @@ SGL_PY_EXPORT(device_shader)
         .def("load_source", &SlangSession::load_source, "module_name"_a, D(SlangSession, load_source));
 
     nb::class_<SlangModule, Object>(m, "SlangModule", D(SlangModule))
+        .def_prop_ro("session", &SlangModule::session, D_NA(SlangModule, session))
         .def_prop_ro("name", &SlangModule::name, D(SlangModule, name))
         .def_prop_ro("path", &SlangModule::path, D(SlangModule, path))
         .def_prop_ro("layout", &SlangModule::layout, D(SlangModule, layout))
