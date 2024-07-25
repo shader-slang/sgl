@@ -1187,6 +1187,9 @@ public:
         }
     );
 
+    /// Name of the object this node represents
+    virtual std::string name() const { return ""; }
+
     /// Decl kind (struct/function/module/generic/variable).
     Kind kind() const { return static_cast<Kind>(m_decl_ref->getKind()); }
 
@@ -1213,6 +1216,8 @@ protected:
     std::vector<ref<T>> nodes_of_kind(slang::DeclReflection::Kind kind) const;
 
     // These are kept protected, and only exposed for cursor types for which it makes sense.
+    std::vector<ref<ASTCursorStruct>> _find_struct(std::string_view name) const;
+    ref<ASTCursorStruct> _find_first_struct(std::string_view name) const;
     std::vector<ref<ASTCursorFunction>> _find_func(std::string_view name) const;
     ref<ASTCursorFunction> _find_first_func(std::string_view name) const;
     std::vector<ref<ASTCursorVariable>> _find_variable(std::string_view name) const;
@@ -1226,7 +1231,7 @@ public:
     ASTCursorModule(ref<SlangModule> module, slang::DeclReflection* decl_ref)
         : ASTCursor(module, decl_ref){};
 
-    std::string name() const;
+    std::string name() const override;
 
     std::vector<ref<ASTCursorVariable>> globals() const;
 
@@ -1237,6 +1242,8 @@ public:
     std::vector<ref<ASTCursorFunction>> find_functions(std::string_view name) const { return _find_func(name); }
 
     ref<ASTCursorFunction> find_first_function(std::string_view name) const { return _find_first_func(name); }
+
+    ref<ASTCursorStruct> find_struct(std::string_view name) const { return _find_first_struct(name); }
 
     ref<ASTCursorVariable> find_global(std::string_view name) const { return _find_first_variable(name); }
 
@@ -1250,7 +1257,7 @@ public:
     ASTCursorStruct(ref<SlangModule> module, slang::DeclReflection* decl_ref)
         : ASTCursor(module, decl_ref){};
 
-    std::string name() const { return base()->name(); }
+    std::string name() const override { return base()->name(); }
 
     const TypeReflection* type() const { return base(); }
 
@@ -1263,6 +1270,8 @@ public:
     std::vector<ref<ASTCursorFunction>> find_functions(std::string_view name) const { return _find_func(name); }
 
     ref<ASTCursorFunction> find_first_function(std::string_view name) const { return _find_first_func(name); }
+
+    ref<ASTCursorStruct> find_struct(std::string_view name) const { return _find_first_struct(name); }
 
     ref<ASTCursorVariable> find_field(std::string_view name) const { return _find_first_variable(name); }
 
@@ -1280,7 +1289,7 @@ public:
     ASTCursorFunction(ref<SlangModule> module, slang::DeclReflection* decl_ref)
         : ASTCursor(module, decl_ref){};
 
-    std::string name() const { return base()->name(); }
+    std::string name() const override { return base()->name(); }
 
     const FunctionReflection* function() const { return base(); }
 
@@ -1300,7 +1309,7 @@ public:
     ASTCursorVariable(ref<SlangModule> module, slang::DeclReflection* decl_ref)
         : ASTCursor(module, decl_ref){};
 
-    std::string name() const { return base()->name(); }
+    std::string name() const override { return base()->name(); }
 
     const TypeReflection* type() const { return base()->type(); }
 

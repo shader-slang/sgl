@@ -6,11 +6,13 @@ import numpy as np
 from dataclasses import dataclass
 from typing import Literal
 from pathlib import Path
+from pprint import pprint
+from deepdiff import DeepDiff
 
 sys.path.append(str(Path(__file__).parent))
 import helpers
 
-DEVICES = [sgl.DeviceType.d3d12]
+DEVICES = helpers.DEFAULT_DEVICE_TYPES
 
 
 def print_ast(cursor):
@@ -25,6 +27,24 @@ def print_ast_recurse(cursor, indent=0):
     print("  " * indent + f"{cursor}")
     for child in cursor.children:
         print_ast_recurse(child, indent + 1)
+
+
+def ast_to_dict(cursor: sgl.ASTCursor):
+    res = {
+        "kind": cursor.kind,
+    }
+    if isinstance(cursor, sgl.ASTCursorModule):
+        res["name"] = cursor.name
+    elif isinstance(cursor, sgl.ASTCursorStruct):
+        res["name"] = cursor.name
+    elif isinstance(cursor, sgl.ASTCursorFunction):
+        res["name"] = cursor.name
+    elif isinstance(cursor, sgl.ASTCursorVariable):
+        res["name"] = cursor.name
+        res["type"] = cursor.type.name
+
+    res["children"] = [ast_to_dict(child) for child in cursor.children]
+    return res
 
 
 @pytest.mark.parametrize("device_type", DEVICES)
@@ -109,6 +129,14 @@ struct Foo {
     structs = ast.structs
     assert len(structs) == 1
     struct = structs[0]
+    assert struct.kind == sgl.ASTCursor.Kind.struct
+    assert isinstance(struct, sgl.ASTCursorStruct)
+    assert struct.name == "Foo"
+    assert len(struct) == 2
+
+    # Again by searching for the struct
+    assert len(ast) == 1
+    struct = ast.find_struct("Foo")
     assert struct.kind == sgl.ASTCursor.Kind.struct
     assert isinstance(struct, sgl.ASTCursorStruct)
     assert struct.name == "Foo"
@@ -439,7 +467,7 @@ struct Foo {
 
 
 @pytest.mark.parametrize("device_type", DEVICES)
-def test_struct_methods_and_overloads(device_type):
+def test_ast_cursor_hashgrid(device_type):
 
     device = helpers.get_device(type=device_type)
 
@@ -466,5 +494,325 @@ def test_struct_methods_and_overloads(device_type):
     # --------------------------------------
 
 
+HASHGRID_NO_GENERICS_DUMP = {
+    "children": [
+        {
+            "children": [
+                {
+                    "children": [],
+                    "kind": sgl.ASTCursor.Kind.variable,
+                    "name": "kNumChannels",
+                    "type": "uint",
+                },
+                {
+                    "children": [],
+                    "kind": sgl.ASTCursor.Kind.variable,
+                    "name": "kNumLevels",
+                    "type": "uint",
+                },
+                {
+                    "children": [],
+                    "kind": sgl.ASTCursor.Kind.variable,
+                    "name": "kNumChannelsPerLevel",
+                    "type": "uint",
+                },
+                {
+                    "children": [],
+                    "kind": sgl.ASTCursor.Kind.variable,
+                    "name": "parameters",
+                    "type": "Array",
+                },
+                {
+                    "children": [],
+                    "kind": sgl.ASTCursor.Kind.variable,
+                    "name": "derivatives",
+                    "type": "Array",
+                },
+                {
+                    "children": [],
+                    "kind": sgl.ASTCursor.Kind.variable,
+                    "name": "moments",
+                    "type": "Array",
+                },
+                {
+                    "children": [],
+                    "kind": sgl.ASTCursor.Kind.variable,
+                    "name": "kPi1",
+                    "type": "uint",
+                },
+                {
+                    "children": [],
+                    "kind": sgl.ASTCursor.Kind.variable,
+                    "name": "kPi2",
+                    "type": "uint",
+                },
+                {
+                    "children": [],
+                    "kind": sgl.ASTCursor.Kind.variable,
+                    "name": "resolutions",
+                    "type": "Array",
+                },
+                {
+                    "children": [],
+                    "kind": sgl.ASTCursor.Kind.variable,
+                    "name": "sizes",
+                    "type": "Array",
+                },
+                {
+                    "children": [
+                        {
+                            "children": [],
+                            "kind": sgl.ASTCursor.Kind.variable,
+                            "name": "level",
+                            "type": "uint",
+                        }
+                    ],
+                    "kind": sgl.ASTCursor.Kind.func,
+                    "name": "getBufferSize",
+                },
+                {
+                    "children": [
+                        {
+                            "children": [],
+                            "kind": sgl.ASTCursor.Kind.variable,
+                            "name": "level",
+                            "type": "uint",
+                        },
+                        {
+                            "children": [],
+                            "kind": sgl.ASTCursor.Kind.variable,
+                            "name": "channel",
+                            "type": "uint",
+                        },
+                    ],
+                    "kind": sgl.ASTCursor.Kind.func,
+                    "name": "getTexIdx",
+                },
+                {
+                    "children": [
+                        {
+                            "children": [],
+                            "kind": sgl.ASTCursor.Kind.variable,
+                            "name": "u",
+                            "type": "uint",
+                        },
+                        {
+                            "children": [],
+                            "kind": sgl.ASTCursor.Kind.variable,
+                            "name": "v",
+                            "type": "uint",
+                        },
+                        {
+                            "children": [],
+                            "kind": sgl.ASTCursor.Kind.variable,
+                            "name": "level",
+                            "type": "uint",
+                        },
+                    ],
+                    "kind": sgl.ASTCursor.Kind.func,
+                    "name": "getDenseIndex",
+                },
+                {
+                    "children": [
+                        {
+                            "children": [],
+                            "kind": sgl.ASTCursor.Kind.variable,
+                            "name": "u",
+                            "type": "uint",
+                        },
+                        {
+                            "children": [],
+                            "kind": sgl.ASTCursor.Kind.variable,
+                            "name": "v",
+                            "type": "uint",
+                        },
+                        {
+                            "children": [],
+                            "kind": sgl.ASTCursor.Kind.variable,
+                            "name": "level",
+                            "type": "uint",
+                        },
+                    ],
+                    "kind": sgl.ASTCursor.Kind.func,
+                    "name": "getHashedIndex",
+                },
+                {
+                    "children": [
+                        {
+                            "children": [],
+                            "kind": sgl.ASTCursor.Kind.variable,
+                            "name": "uv",
+                            "type": "vector",
+                        },
+                        {
+                            "children": [],
+                            "kind": sgl.ASTCursor.Kind.variable,
+                            "name": "code",
+                            "type": "Array",
+                        },
+                    ],
+                    "kind": sgl.ASTCursor.Kind.func,
+                    "name": "getCodeBilinear",
+                },
+                {
+                    "children": [
+                        {
+                            "children": [],
+                            "kind": sgl.ASTCursor.Kind.variable,
+                            "name": "level",
+                            "type": "uint",
+                        },
+                        {
+                            "children": [],
+                            "kind": sgl.ASTCursor.Kind.variable,
+                            "name": "channel",
+                            "type": "uint",
+                        },
+                        {
+                            "children": [],
+                            "kind": sgl.ASTCursor.Kind.variable,
+                            "name": "texel",
+                            "type": "vector",
+                        },
+                    ],
+                    "kind": sgl.ASTCursor.Kind.func,
+                    "name": "getParam",
+                },
+                {
+                    "children": [
+                        {
+                            "children": [],
+                            "kind": sgl.ASTCursor.Kind.variable,
+                            "name": "level",
+                            "type": "uint",
+                        },
+                        {
+                            "children": [],
+                            "kind": sgl.ASTCursor.Kind.variable,
+                            "name": "channel",
+                            "type": "uint",
+                        },
+                        {
+                            "children": [],
+                            "kind": sgl.ASTCursor.Kind.variable,
+                            "name": "texel",
+                            "type": "vector",
+                        },
+                        {
+                            "children": [],
+                            "kind": sgl.ASTCursor.Kind.variable,
+                            "name": "d_out",
+                            "type": "float",
+                        },
+                    ],
+                    "kind": sgl.ASTCursor.Kind.func,
+                    "name": "bwd_getParam",
+                },
+                {
+                    "children": [
+                        {
+                            "children": [],
+                            "kind": sgl.ASTCursor.Kind.variable,
+                            "name": "level",
+                            "type": "uint",
+                        },
+                        {
+                            "children": [],
+                            "kind": sgl.ASTCursor.Kind.variable,
+                            "name": "channel",
+                            "type": "uint",
+                        },
+                        {
+                            "children": [],
+                            "kind": sgl.ASTCursor.Kind.variable,
+                            "name": "texel",
+                            "type": "vector",
+                        },
+                        {
+                            "children": [],
+                            "kind": sgl.ASTCursor.Kind.variable,
+                            "name": "p",
+                            "type": "float",
+                        },
+                        {
+                            "children": [],
+                            "kind": sgl.ASTCursor.Kind.variable,
+                            "name": "d",
+                            "type": "float",
+                        },
+                        {
+                            "children": [],
+                            "kind": sgl.ASTCursor.Kind.variable,
+                            "name": "m",
+                            "type": "vector",
+                        },
+                    ],
+                    "kind": sgl.ASTCursor.Kind.func,
+                    "name": "getOptimizerState",
+                },
+                {
+                    "children": [
+                        {
+                            "children": [],
+                            "kind": sgl.ASTCursor.Kind.variable,
+                            "name": "level",
+                            "type": "uint",
+                        },
+                        {
+                            "children": [],
+                            "kind": sgl.ASTCursor.Kind.variable,
+                            "name": "channel",
+                            "type": "uint",
+                        },
+                        {
+                            "children": [],
+                            "kind": sgl.ASTCursor.Kind.variable,
+                            "name": "texel",
+                            "type": "vector",
+                        },
+                        {
+                            "children": [],
+                            "kind": sgl.ASTCursor.Kind.variable,
+                            "name": "p",
+                            "type": "float",
+                        },
+                        {
+                            "children": [],
+                            "kind": sgl.ASTCursor.Kind.variable,
+                            "name": "m",
+                            "type": "vector",
+                        },
+                    ],
+                    "kind": sgl.ASTCursor.Kind.func,
+                    "name": "updateOptimizerState",
+                },
+            ],
+            "kind": sgl.ASTCursor.Kind.struct,
+            "name": "OptimizerHashGrid",
+        },
+        {"children": [], "kind": sgl.ASTCursor.Kind.unsupported},
+        {"children": [], "kind": sgl.ASTCursor.Kind.unsupported},
+    ],
+    "kind": sgl.ASTCursor.Kind.module,
+    "name": "test_ast_cursor_hashgrid_no_generics.slang",
+}
+
+
+@pytest.mark.parametrize("device_type", DEVICES)
+def test_ast_cursor_hashgrid_nogenerics(device_type):
+
+    device = helpers.get_device(type=device_type)
+
+    module = device.load_module("test_ast_cursor_hashgrid_no_generics.slang")
+
+    # print_ast(module.abstract_syntax_tree)
+    dump = ast_to_dict(module.abstract_syntax_tree)
+    diff = DeepDiff(
+        dump,
+        HASHGRID_NO_GENERICS_DUMP,
+    )
+    assert not diff
+
+
 if __name__ == "__main__":
-    pytest.main([__file__, "-v", "-s"])
+    pytest.main([__file__, "-v"])
