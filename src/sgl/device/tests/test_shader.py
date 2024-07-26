@@ -48,6 +48,10 @@ def test_load_module(device_type):
     assert main_fs.name == "main_fs"
     assert main_fs.stage == sgl.ShaderStage.fragment
 
+    # Check back refs to device and session are correct
+    assert module.session == device.slang_session
+    assert module.session.device == device
+
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_load_module_from_source(device_type):
@@ -79,6 +83,10 @@ def test_load_module_from_source(device_type):
     assert main.name == "main"
     assert main.stage == sgl.ShaderStage.compute
     assert main.layout.compute_thread_group_size == [1, 1, 1]
+
+    # Check back refs to device and session are correct
+    assert module.session == device.slang_session
+    assert module.session.device == device
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
