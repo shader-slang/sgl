@@ -316,6 +316,9 @@ struct Foo1 {
 
 @pytest.mark.parametrize("device_type", DEVICES)
 def test_inout_modifier_params(device_type):
+    # TODO: Add this test in once the in/out/inout modifier access is merged.
+    pytest.skip("Skip pending Slang MR")
+
     device = helpers.get_device(type=device_type)
 
     module = device.load_module_from_source(
