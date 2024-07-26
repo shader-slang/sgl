@@ -3,6 +3,7 @@
 #pragma once
 
 #include "sgl/device/types.h"
+#include "sgl/device/fwd.h"
 
 #include "sgl/core/macros.h"
 #include "sgl/core/enum.h"
@@ -18,14 +19,6 @@
 #include <vector>
 
 namespace sgl {
-
-class TypeReflection;
-class TypeLayoutReflection;
-class FunctionReflection;
-class VariableReflection;
-class VariableLayoutReflection;
-class EntryPointLayout;
-class ProgramLayout;
 
 namespace detail {
 
@@ -1156,13 +1149,6 @@ private:
     const TypeLayoutReflection* m_type_layout{nullptr};
     bool m_valid{false};
 };
-
-class SlangModule;
-class SlangSession;
-
-class ASTCursorVariable;
-class ASTCursorFunction;
-class ASTCursorStruct;
 
 /// Base class for a cursor that can walk the AST of a slang module.
 class SGL_API ASTCursor : Object {
