@@ -63,7 +63,7 @@ enum class ModifierType {
     differentiable = SLANG_MODIFIER_DIFFERENTIABLE,
     mutating = SLANG_MODIFIER_MUTATING,
 
-    // TODO: Enable these once pending slang MR is in main branch
+    // TODO: Enable these once pending slang MR is in main branch.
     // in = SLANG_MODIFIER_IN,
     // out = SLANG_MODIFIER_OUT,
     // inout = SLANG_MODIFIER_INOUT,
@@ -81,7 +81,7 @@ SGL_ENUM_INFO(
         {ModifierType::differentiable, "differentiable"},
         {ModifierType::mutating, "mutating"},
 
-        // TODO: Enable these once pending slang MR is in main branch
+        // TODO: Enable these once pending slang MR is in main branch.
         // {ModifierType::in, "inn"},
         // {ModifierType::out, "out"},
         // {ModifierType::inout, "inout"},
@@ -1176,7 +1176,7 @@ public:
         }
     );
 
-    /// Name of the object this node represents
+    /// Name of the object this node represents.
     virtual std::string name() const { return ""; }
 
     /// Decl kind (struct/function/module/generic/variable).
@@ -1185,10 +1185,10 @@ public:
     /// List of children of this cursor.
     std::vector<ref<ASTCursor>> children() const;
 
-    /// Get number of children
+    /// Get number of children.
     int32_t child_count() const { return m_decl_ref->getChildrenCount(); }
 
-    /// Index operator to get nth child
+    /// Index operator to get nth child.
     ref<ASTCursor> operator[](int32_t index) const;
 
     /// Inspects the 'kind' property of decl_ref and returns the correct derived cursor type.
@@ -1214,7 +1214,7 @@ protected:
 };
 SGL_ENUM_REGISTER(ASTCursor::Kind);
 
-/// AST cursor that represents a root module node .
+/// AST cursor that represents a root module node.
 class SGL_API ASTCursorModule : ASTCursor {
 public:
     ASTCursorModule(ref<SlangModule> module, slang::DeclReflection* decl_ref)
