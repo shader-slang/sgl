@@ -69,6 +69,10 @@ class VariableLayoutReflection;
 class ProgramLayout;
 class EntryPointLayout;
 class ASTCursor;
+class ASTCursorVariable;
+class ASTCursorFunction;
+class ASTCursorStruct;
+
 
 // kernel.h
 
