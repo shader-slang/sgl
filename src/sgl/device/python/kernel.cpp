@@ -60,7 +60,7 @@ inline void bind_python_var(ShaderCursor cursor, nb::handle var)
     } else if (nb::isinstance<nb::ndarray<nb::device::cuda>>(var)) {
         cursor.set_cuda_tensor_view(ndarray_to_cuda_tensor_view(nb::cast<nb::ndarray<nb::device::cuda>>(var)));
     } else {
-        SGL_THROW("Unsupported variable type!");
+        SGL_THROW("Unsupported variable type: {}!");
     }
 }
 
