@@ -243,11 +243,6 @@ ASTCursor::ASTCursor(ref<SlangModule> module, slang::DeclReflection* decl_ref)
 {
 }
 
-ASTCursor::~ASTCursor()
-{
-    // TODO: Remove this when finished debugging destruction of cursors!
-}
-
 std::string ASTCursor::to_string() const
 {
     return fmt::format("ASTCursor(kind={})", kind());
