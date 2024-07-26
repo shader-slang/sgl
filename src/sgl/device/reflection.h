@@ -1154,7 +1154,6 @@ private:
 class SGL_API ASTCursor : Object {
 public:
     ASTCursor(ref<SlangModule> module, slang::DeclReflection* decl_ref);
-    ~ASTCursor();
 
     /// Different kinds of decl slang can return.
     enum class Kind {
