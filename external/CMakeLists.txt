@@ -34,7 +34,7 @@ set(SGL_LOCAL_SLANG OFF CACHE BOOL "Use a local build of slang instead of downlo
 set(SGL_LOCAL_SLANG_DIR "${CMAKE_SOURCE_DIR}/../slang" CACHE PATH "Path to a local slang build")
 set(SGL_LOCAL_SLANG_BUILD_DIR "build/Debug" CACHE STRING "Build directory of the local slang build")
 
-set(SLANG_VERSION "2024.1.28")
+set(SLANG_VERSION "2024.1.33")
 set(SLANG_URL_BASE "https://github.com/shader-slang/slang/releases/download/v${SLANG_VERSION}")
 
 if(SGL_WINDOWS)
@@ -56,7 +56,7 @@ set(SLANG_INCLUDE_DIR ${slang_SOURCE_DIR}/include)
 
 if(SGL_LOCAL_SLANG)
     set(SLANG_DIR ${SGL_LOCAL_SLANG_DIR}/${SGL_LOCAL_SLANG_BUILD_DIR})
-    set(SLANG_INCLUDE_DIR ${SGL_LOCAL_SLANG_DIR})
+    set(SLANG_INCLUDE_DIR ${SGL_LOCAL_SLANG_DIR}/include)
 endif()
 
 if(SGL_WINDOWS)
