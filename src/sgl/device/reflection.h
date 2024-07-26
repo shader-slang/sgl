@@ -423,9 +423,9 @@ public:
 
     const char* name() const { return base()->getName(); }
 
-    size_t size() const { return base()->getSize(); }
-    size_t stride() const { return base()->getStride(); }
-    int32_t alignment() const { return base()->getAlignment(); }
+    size_t size() const { return base()->getSize(SlangParameterCategory::SLANG_PARAMETER_CATEGORY_UNIFORM); }
+    size_t stride() const { return base()->getStride(SlangParameterCategory::SLANG_PARAMETER_CATEGORY_UNIFORM); }
+    int32_t alignment() const { return base()->getAlignment(SlangParameterCategory::SLANG_PARAMETER_CATEGORY_UNIFORM); }
 
 #if 0
     size_t getSize(SlangParameterCategory category = SLANG_PARAMETER_CATEGORY_UNIFORM)
@@ -843,10 +843,7 @@ public:
     ParameterCategory getCategoryByIndex(unsigned int index) { return getTypeLayout()->getCategoryByIndex(index); }
 #endif
 
-    size_t offset(SlangParameterCategory category = SLANG_PARAMETER_CATEGORY_UNIFORM) const
-    {
-        return base()->getOffset(category);
-    }
+    size_t offset() const { return base()->getOffset(SlangParameterCategory::SLANG_PARAMETER_CATEGORY_UNIFORM); }
 
 #if 0
     TypeReflection* getType() { return getVariable()->getType(); }
