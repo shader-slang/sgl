@@ -52,6 +52,7 @@ sgl depends on the following third-party libraries, which have their own license
 - [libjpeg-turbo](https://libjpeg-turbo.org/) (BSD)
 - [libpng](http://www.libpng.org/pub/png/libpng.html) (libpng)
 - [nanobind](https://github.com/wjakob/nanobind) (BSD)
+- [NVAPI](https://github.com/NVIDIA/nvapi) (MIT)
 - [OpenEXR](https://openexr.com/en/latest/) (BSD)
 - [pugixml](https://pugixml.org/) (MIT)
 - [RenderDoc API](https://github.com/baldurk/renderdoc) (MIT)

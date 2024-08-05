@@ -116,7 +116,7 @@ endif()
 
 # nvapi
 
-set(NVAPI_COMMIT "fefb094b9011df10e73383b4218f62213378ebb8")
+set(NVAPI_COMMIT "4ba3384657149d63aa193f5a34e20efe1e42bf31")
 
 if(SGL_WINDOWS)
     sgl_download_package(nvapi "https://github.com/NVIDIA/nvapi/archive/${NVAPI_COMMIT}.zip")
