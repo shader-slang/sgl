@@ -33,7 +33,7 @@ def test_format_info_rgb32_float():
     assert info.has_equal_channel_bits() == True
 
 
-def test_format_info_rgb32_float():
+def test_format_info_d32_float_s8_uint():
     info = sgl.get_format_info(sgl.Format.d32_float_s8_uint)
     assert info.format == sgl.Format.d32_float_s8_uint
     assert info.bytes_per_block == 8
@@ -55,7 +55,7 @@ def test_format_info_rgb32_float():
     assert info.is_srgb_format() == False
 
 
-def test_format_info_rgb32_float():
+def test_format_info_bc7_unorm_srgb():
     info = sgl.get_format_info(sgl.Format.bc7_unorm_srgb)
     assert info.format == sgl.Format.bc7_unorm_srgb
     assert info.bytes_per_block == 16
