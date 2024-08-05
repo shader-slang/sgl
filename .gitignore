@@ -1,0 +1,8 @@
+build/
+external/vcpkg
+tools/download
+tools/host
+.vscode/
+
+.DS_Store
+*.pyc

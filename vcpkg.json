@@ -1,0 +1,19 @@
+{
+    "name": "sgl",
+    "version-string": "0.0.1",
+    "dependencies": [
+        "doctest",
+        "fmt",
+        "glfw3",
+        "stb",
+        "vulkan-headers",
+        "bshoshany-thread-pool",
+        "libjpeg-turbo",
+        "libpng",
+        "openexr",
+        "pugixml",
+        "asmjit",
+        "tevclient",
+        "argparse"
+    ]
+}

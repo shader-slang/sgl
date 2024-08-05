@@ -1,0 +1,8 @@
+{
+  "name": "agility-sdk",
+  "version": "1.611.0",
+  "description": "Agility SDK",
+  "homepage": "https://devblogs.microsoft.com/directx/directx12agility/",
+  "supports": "windows and x64",
+  "dependencies": []
+}

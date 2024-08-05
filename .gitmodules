@@ -1,0 +1,12 @@
+[submodule "external/nanobind"]
+	path = external/nanobind
+	url = https://github.com/wjakob/nanobind.git
+[submodule "external/vcpkg"]
+	path = external/vcpkg
+	url = https://github.com/microsoft/vcpkg.git
+[submodule "data"]
+	path = data
+	url = https://github.com/westlicht/sgl-data.git
+[submodule "tutorials"]
+	path = tutorials
+	url = https://github.com/westlicht/sgl-tutorials.git

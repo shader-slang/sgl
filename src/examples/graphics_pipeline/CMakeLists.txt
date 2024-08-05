@@ -1,0 +1,2 @@
+sgl_add_example(graphics_pipeline)
+target_sources(graphics_pipeline PRIVATE graphics_pipeline.cpp)
