@@ -6,7 +6,8 @@ import sgl
 import struct
 import numpy as np
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, Any
+from numpy.typing import DTypeLike
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent))
@@ -29,7 +30,7 @@ class TypeInfo:
     # encoding of read back data
     struct: str
     # numpy dtype
-    dtype: np.dtype
+    dtype: DTypeLike
 
 
 TYPE_INFOS = {
@@ -50,7 +51,7 @@ TYPE_INFOS = {
 class Var:
     kind: Literal["scalar", "vector", "matrix", "array"]
     type: str
-    value: any
+    value: Any
 
 
 TEST_VARS = {
@@ -66,9 +67,9 @@ TEST_VARS = {
     # bool4
     "u_bool4": Var(kind="vector", type="bool", value=[False, True, False, True]),
     # int
-    "u_int": Var(kind="salar", type="int", value=-12345),
-    "u_int_min": Var(kind="salar", type="int", value=INT_MIN),
-    "u_int_max": Var(kind="salar", type="int", value=INT_MAX),
+    "u_int": Var(kind="scalar", type="int", value=-12345),
+    "u_int_min": Var(kind="scalar", type="int", value=INT_MIN),
+    "u_int_max": Var(kind="scalar", type="int", value=INT_MAX),
     # int2
     "u_int2": Var(kind="vector", type="int", value=[-12345, 12345]),
     "u_int2_min": Var(kind="vector", type="int", value=[INT_MIN, INT_MIN]),
