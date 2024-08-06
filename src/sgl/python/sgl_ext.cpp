@@ -11,6 +11,7 @@
 
 SGL_PY_DECLARE(app_app);
 
+SGL_PY_DECLARE(core_binding_tests);
 SGL_PY_DECLARE(core_bitmap);
 SGL_PY_DECLARE(core_crypto);
 SGL_PY_DECLARE(core_input);
@@ -88,6 +89,7 @@ NB_MODULE(sgl_ext, m_)
     SGL_PY_IMPORT(core_timer);
     SGL_PY_IMPORT(core_window);
     SGL_PY_IMPORT(core_struct);
+    SGL_PY_IMPORT(core_binding_tests);
     SGL_PY_IMPORT(core_bitmap);
     SGL_PY_IMPORT(core_crypto);
 

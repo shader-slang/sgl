@@ -13,6 +13,8 @@ target_sources(sgl PRIVATE
     sgl/app/app.cpp
     sgl/app/app.h
 
+    sgl/core/binding_tests.cpp
+    sgl/core/binding_tests.h
     sgl/core/bitmap.cpp
     sgl/core/bitmap.h
     sgl/core/crypto.cpp
@@ -372,6 +374,7 @@ if(SGL_BUILD_PYTHON)
     nanobind_add_module(sgl_ext NB_STATIC LTO
         sgl/python/sgl_ext.cpp
         sgl/app/python/app.cpp
+        sgl/core/python/binding_tests.cpp
         sgl/core/python/bitmap.cpp
         sgl/core/python/crypto.cpp
         sgl/core/python/input.cpp
