@@ -12,22 +12,50 @@ SGL_PY_EXPORT(device_reflection)
 {
     using namespace sgl;
 
-    nb::class_<DeclReflection> decl_reflection(m, "DeclReflection", D_NA(DeclReflection));
+    nb::class_<DeclReflection> decl_reflection(m, "DeclReflection");
 
     nb::sgl_enum<DeclReflection::Kind>(decl_reflection, "Kind");
 
     decl_reflection //
         .def_prop_ro("kind", &DeclReflection::kind, D_NA(DeclReflection, kind))
-        .def_prop_ro("children", &DeclReflection::children, D_NA(DeclReflection, children))
+        .def_prop_ro(
+            "children",
+            &DeclReflection::children,
+            nb::rv_policy::reference_internal,
+            D_NA(DeclReflection, children)
+        )
         .def_prop_ro("child_count", &DeclReflection::child_count, D_NA(DeclReflection, child_count))
         .def_prop_ro("name", &DeclReflection::name)
-        .def("children_of_kind", &DeclReflection::children_of_kind, "kind"_a, D_NA(DeclReflection, children_of_kind))
-        .def("as_type", &DeclReflection::as_type, "device"_a, D_NA(DeclReflection, as_type))
-        .def("as_variable", &DeclReflection::as_variable, D_NA(DeclReflection, as_variable))
-        .def("as_function", &DeclReflection::as_function, D_NA(DeclReflection, as_function))
+        .def(
+            "children_of_kind",
+            &DeclReflection::children_of_kind,
+            nb::rv_policy::reference_internal,
+            "kind"_a,
+            D_NA(DeclReflection, children_of_kind)
+        )
+        .def(
+            "as_type",
+            &DeclReflection::as_type,
+            nb::rv_policy::reference_internal,
+            "device"_a,
+            D_NA(DeclReflection, as_type)
+        )
+        .def(
+            "as_variable",
+            &DeclReflection::as_variable,
+            nb::rv_policy::reference_internal,
+            D_NA(DeclReflection, as_variable)
+        )
+        .def(
+            "as_function",
+            &DeclReflection::as_function,
+            nb::rv_policy::reference_internal,
+            D_NA(DeclReflection, as_function)
+        )
         .def(
             "find_children_of_kind",
             &DeclReflection::find_children_of_kind,
+            nb::rv_policy::reference_internal,
             "kind"_a,
             "child_name"_a,
             D_NA(DeclReflection, find_children_of_kind)
@@ -35,12 +63,17 @@ SGL_PY_EXPORT(device_reflection)
         .def(
             "find_first_child_of_kind",
             &DeclReflection::find_first_child_of_kind,
+            nb::rv_policy::reference_internal,
             "kind"_a,
             "child_name"_a,
             D_NA(DeclReflection, find_first_child_of_kind)
         )
         .def("__len__", [](DeclReflection& self) { return self.child_count(); })
-        .def("__getitem__", [](DeclReflection& self, int index) { return self[index]; })
+        .def(
+            "__getitem__",
+            [](DeclReflection& self, int index) { return self[index]; },
+            nb::rv_policy::reference_internal
+        )
         .def("__repr__", &DeclReflection::to_string);
 
 

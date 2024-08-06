@@ -73,6 +73,16 @@ enum class ModifierType {
     // inout = SLANG_MODIFIER_INOUT,
 };
 
+#if SGL_DEBUG
+#define SGL_REFLECTION_THROW_IF_DESTRUCTED(type_name)                                                                  \
+    ~type_name()                                                                                                       \
+    {                                                                                                                  \
+        SGL_THROW("Reflection object being destructed - this should never happen!");                                   \
+    }
+#else
+#define SGL_REFLECTION_THROW_IF_DESTRUCTED(type_name)
+#endif
+
 SGL_ENUM_INFO(
     ModifierType,
     {
@@ -96,6 +106,8 @@ SGL_ENUM_REGISTER(ModifierType);
 class SGL_API DeclReflection : private slang::DeclReflection {
 
 public:
+    SGL_REFLECTION_THROW_IF_DESTRUCTED(DeclReflection)
+
     /// Cast to non-const base pointer.
     /// The underlying slang API is not const-correct.
     slang::DeclReflection* base() const { return (slang::DeclReflection*)(this); }
@@ -165,6 +177,9 @@ SGL_ENUM_REGISTER(DeclReflection::Kind);
 
 class SGL_API TypeReflection : private slang::TypeReflection {
 public:
+    SGL_REFLECTION_THROW_IF_DESTRUCTED(TypeReflection)
+
+
     enum class Kind {
         none = SLANG_TYPE_KIND_NONE,
         struct_ = SLANG_TYPE_KIND_STRUCT,
@@ -479,6 +494,9 @@ SGL_ENUM_REGISTER(TypeReflection::ParameterCategory);
 
 class SGL_API TypeLayoutReflection : private slang::TypeLayoutReflection {
 public:
+    SGL_REFLECTION_THROW_IF_DESTRUCTED(TypeLayoutReflection)
+
+
     static const TypeLayoutReflection* from_slang(slang::TypeLayoutReflection* type_layout_reflection)
     {
         return detail::from_slang(type_layout_reflection);
@@ -791,6 +809,8 @@ public:
 
 class SGL_API FunctionReflection : private slang::FunctionReflection {
 public:
+    SGL_REFLECTION_THROW_IF_DESTRUCTED(FunctionReflection)
+
     /// Cast to non-const base pointer.
     /// The underlying slang API is not const-correct.
     slang::FunctionReflection* base() const { return (slang::FunctionReflection*)(this); }
@@ -847,6 +867,8 @@ public:
 
 class SGL_API VariableReflection : private slang::VariableReflection {
 public:
+    SGL_REFLECTION_THROW_IF_DESTRUCTED(VariableReflection)
+
     static const VariableReflection* from_slang(slang::VariableReflection* variable_reflection)
     {
         return detail::from_slang(variable_reflection);
@@ -892,6 +914,8 @@ public:
 
 class SGL_API VariableLayoutReflection : private slang::VariableLayoutReflection {
 public:
+    SGL_REFLECTION_THROW_IF_DESTRUCTED(VariableLayoutReflection)
+
     /// Cast to non-const base pointer.
     /// The underlying slang API is not const-correct.
     slang::VariableLayoutReflection* base() const { return (slang::VariableLayoutReflection*)(this); }
@@ -953,6 +977,8 @@ public:
 
 class SGL_API EntryPointLayout : private slang::EntryPointLayout {
 public:
+    SGL_REFLECTION_THROW_IF_DESTRUCTED(EntryPointLayout)
+
     static const EntryPointLayout* from_slang(slang::EntryPointLayout* entry_point_reflection)
     {
         return detail::from_slang(entry_point_reflection);
@@ -1018,6 +1044,8 @@ public:
 
 class SGL_API ProgramLayout : private slang::ProgramLayout {
 public:
+    SGL_REFLECTION_THROW_IF_DESTRUCTED(ProgramLayout)
+
     static const ProgramLayout* from_slang(slang::ProgramLayout* program_layout)
     {
         return detail::from_slang(program_layout);
