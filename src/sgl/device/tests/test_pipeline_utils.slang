@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 
 [shader("compute")]
 [numthreads(16, 16, 1)]

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 [__AttributeUsage(_AttributeTargets.Var)]
 struct rootAttribute { };
 
