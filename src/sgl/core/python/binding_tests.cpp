@@ -13,11 +13,19 @@ SGL_PY_EXPORT(core_binding_tests)
         .def_prop_ro("child_none_const", &BindingTestsRoot::get_child_none_const, D_NA())
         .def("get_child_const", &BindingTestsRoot::get_child_const, D_NA())
         .def("get_child_none_const", &BindingTestsRoot::get_child_none_const, D_NA())
+        .def_prop_ro("child_const_untracked", &BindingTestsRoot::get_child_const_untracked, D_NA())
+        .def_prop_ro(
+            "child_const_untracked_rvref",
+            &BindingTestsRoot::get_child_const_untracked,
+            nb::rv_policy::reference,
+            D_NA()
+        )
 
         .def_prop_ro("rc_child_const", &BindingTestsRoot::get_rc_child_const, D_NA())
         .def_prop_ro("rc_child_none_const", &BindingTestsRoot::get_rc_child_none_const, D_NA())
         .def("get_rc_child_const", &BindingTestsRoot::get_rc_child_const, D_NA())
         .def("get_rc_child_none_const", &BindingTestsRoot::get_rc_child_none_const, D_NA())
+        .def_prop_ro("rc_child_const_untracked", &BindingTestsRoot::get_rc_child_const_untracked, D_NA())
 
         .def_prop_ro(
             "child_const_rvrefinternal",
@@ -131,6 +139,21 @@ SGL_PY_EXPORT(core_binding_tests)
         );
 
 
-    nb::class_<BindingTestsChild>(m, "BindingTestsChild");
+    nb::class_<BindingTestsChild>(m, "BindingTestsChild")
+        .def_prop_ro("child_const", &BindingTestsChild::get_child_const, D_NA())
+        .def_prop_ro("child_const_rvref", &BindingTestsChild::get_child_const, nb::rv_policy::reference, D_NA())
+        .def_prop_ro(
+            "child_const_rvrefinternal",
+            &BindingTestsChild::get_child_const,
+            nb::rv_policy::reference_internal,
+            D_NA()
+        )
+        .def_prop_ro(
+            "child_const_rvtakeownership",
+            &BindingTestsChild::get_child_const,
+            nb::rv_policy::take_ownership,
+            D_NA()
+        );
+
     nb::class_<BindingTestsChildRefCounted, Object>(m, "BindingTestsChildRefCounted");
 }

@@ -56,19 +56,28 @@ std::set<const BindingTestsChildRefCounted*> BindingTestsRoot::m_allocated_ref_c
 BindingTestsRoot::~BindingTestsRoot()
 {
     m_allocated_roots.erase(this);
-    log_info("BindingTestsRoot destruct");
+    // log_info("BindingTestsRoot destruct");
 }
 
 BindingTestsChild::~BindingTestsChild()
 {
-    BindingTestsRoot::on_child_deleted(this);
-    log_info("BindingTestsChild destruct");
+    if (m_root)
+        BindingTestsRoot::on_child_deleted(this);
+    // log_info("BindingTestsChild destruct");
+}
+
+const BindingTestsChild* BindingTestsChild::get_child_const()
+{
+    auto res = new BindingTestsChild(m_root);
+    BindingTestsRoot::m_allocated_children.insert(res);
+    return res;
 }
 
 BindingTestsChildRefCounted::~BindingTestsChildRefCounted()
 {
-    BindingTestsRoot::on_child_deleted(this);
-    log_info("BindingTestsChildRefCounted destruct");
+    if (m_root)
+        BindingTestsRoot::on_child_deleted(this);
+    // log_info("BindingTestsChildRefCounted destruct");
 }
 
 ref<BindingTestsRoot> BindingTestsRoot::init()

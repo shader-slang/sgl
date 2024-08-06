@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
+from typing import Union, cast
 import pytest
 import sgl
+from time import time
 
 
 def test_create_root():
@@ -290,5 +292,166 @@ def test_func_create_ten_raw_children_rvtakeownership():
     assert sgl.BindingTestsRoot.get_child_count() == 0
 
 
+# Ref internal with reversed destruction - behaviour should mimic
+# the single child case - the list keeps the children alive, which
+# keep the parent alive
+def test_func_create_ten_raw_children_rvrefinternal_reverse_destruction():
+    root = sgl.BindingTestsRoot.create()
+    children = root.get_ten_children_rvrefinternal()
+    assert sgl.BindingTestsRoot.get_child_count() == 10
+    assert sgl.BindingTestsRoot.get_root_count() == 1
+
+    root = None
+    assert sgl.BindingTestsRoot.get_child_count() == 10
+    assert sgl.BindingTestsRoot.get_root_count() == 1
+
+    children = None
+    assert sgl.BindingTestsRoot.get_child_count() == 10
+    assert sgl.BindingTestsRoot.get_root_count() == 0
+
+
+# Similar test just setting children to None, to verify the lists's
+# lifetime isn't what matters
+def test_func_create_ten_raw_children_rvrefinternal_reverse_destruction_stepped():
+    root = sgl.BindingTestsRoot.create()
+    children = root.get_ten_children_rvrefinternal()
+    assert sgl.BindingTestsRoot.get_child_count() == 10
+    assert sgl.BindingTestsRoot.get_root_count() == 1
+
+    root = None
+    assert sgl.BindingTestsRoot.get_child_count() == 10
+    assert sgl.BindingTestsRoot.get_root_count() == 1
+
+    for x in range(0, 9):
+        children[x] = cast(sgl.BindingTestsChild, None)
+    assert sgl.BindingTestsRoot.get_child_count() == 10
+    assert sgl.BindingTestsRoot.get_root_count() == 1
+
+    children[9] = cast(sgl.BindingTestsChild, None)
+    assert sgl.BindingTestsRoot.get_child_count() == 10
+    assert sgl.BindingTestsRoot.get_root_count() == 0
+
+
+# Similar test with take ownership, but lifetime of children/root should
+# now be independent
+def test_func_create_ten_raw_children_rvtakeownership_reverse_destruction():
+    root = sgl.BindingTestsRoot.create()
+    children = root.get_ten_children_rvtakeownership()
+    assert sgl.BindingTestsRoot.get_child_count() == 10
+    assert sgl.BindingTestsRoot.get_root_count() == 1
+
+    root = None
+    assert sgl.BindingTestsRoot.get_child_count() == 10
+    assert sgl.BindingTestsRoot.get_root_count() == 0
+
+    children = None
+    assert sgl.BindingTestsRoot.get_child_count() == 0
+    assert sgl.BindingTestsRoot.get_root_count() == 0
+
+
+# Similar test just setting children to None. Should now see child count reduce
+# as increasing number of children are set to None
+def test_func_create_ten_raw_children_rvtakeownership_reverse_destruction_stepped():
+    root = sgl.BindingTestsRoot.create()
+    children = root.get_ten_children_rvtakeownership()
+    assert sgl.BindingTestsRoot.get_child_count() == 10
+    assert sgl.BindingTestsRoot.get_root_count() == 1
+
+    root = None
+    assert sgl.BindingTestsRoot.get_child_count() == 10
+    assert sgl.BindingTestsRoot.get_root_count() == 0
+
+    for x in range(0, 9):
+        children[x] = cast(sgl.BindingTestsChild, None)
+    assert sgl.BindingTestsRoot.get_child_count() == 1
+    assert sgl.BindingTestsRoot.get_root_count() == 0
+
+    children[9] = cast(sgl.BindingTestsChild, None)
+    assert sgl.BindingTestsRoot.get_child_count() == 0
+    assert sgl.BindingTestsRoot.get_root_count() == 0
+
+
+# Simple creation of tree of children, expecting same ref internal
+# behaviour.
+def test_prop_create_raw_child_tree():
+    root = sgl.BindingTestsRoot.create()
+    child = root.child_const
+    assert sgl.BindingTestsRoot.get_child_count() == 1
+    child2 = child.child_const
+    assert sgl.BindingTestsRoot.get_child_count() == 2
+    child3 = child2.child_const
+    assert sgl.BindingTestsRoot.get_child_count() == 3
+    root = None
+    assert sgl.BindingTestsRoot.get_child_count() == 3
+    assert sgl.BindingTestsRoot.get_root_count() == 1
+
+
+# Test the tree creation with destruction of all but the leaf,
+# to verify the root stays alive until the leaf dies
+def test_prop_create_raw_child_tree_reverse_destruction():
+    root = sgl.BindingTestsRoot.create()
+    child = root.child_const
+    assert sgl.BindingTestsRoot.get_child_count() == 1
+    child2 = child.child_const
+    assert sgl.BindingTestsRoot.get_child_count() == 2
+    child3 = child2.child_const
+    assert sgl.BindingTestsRoot.get_child_count() == 3
+    root = None
+    child = None
+    child2 = None
+    assert sgl.BindingTestsRoot.get_child_count() == 3
+    assert sgl.BindingTestsRoot.get_root_count() == 1
+    child3 = None
+    assert sgl.BindingTestsRoot.get_child_count() == 3
+    assert sgl.BindingTestsRoot.get_root_count() == 0
+
+
+def test_perf_rvrefinternal():
+    root = sgl.BindingTestsRoot.create()
+    children: list[Union[sgl.BindingTestsChild, sgl.BindingTestsChildRefCounted]] = []
+
+    start = time()
+    for x in range(0, 10000):
+        children.append(root.child_const_untracked)
+    end1 = time()
+    children.clear()
+    end2 = time()
+    refinternaltotal = end2 - start
+    print(
+        f"RVRefInternal perf: alloc: {end1-start}, free: {end2-end1}, total: {end2-start}"
+    )
+
+    root = sgl.BindingTestsRoot.create()
+    children = []
+
+    start = time()
+    for x in range(0, 10000):
+        children.append(root.child_const_untracked_rvref)
+    end1 = time()
+    children.clear()
+    end2 = time()
+    reftotal = end2 - start
+    print(f"RVRef perf: alloc: {end1-start}, free: {end2-end1}, total: {end2-start}")
+
+    root = sgl.BindingTestsRoot.create()
+    children = []
+
+    start = time()
+    for x in range(0, 10000):
+        children.append(root.rc_child_const_untracked)
+    end1 = time()
+    children.clear()
+    end2 = time()
+    rctotal = end2 - start
+    print(
+        f"RefCounted perf: alloc: {end1-start}, free: {end2-end1}, total: {end2-start}"
+    )
+
+    print(
+        f"Results: RVRefInternal: {refinternaltotal}, RVRef: {reftotal}, RefCounted: {rctotal}"
+    )
+    print(f"Relative: RefInternal/RC: {refinternaltotal/rctotal}")
+
+
 if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+    pytest.main([__file__, "-v", "-s"])

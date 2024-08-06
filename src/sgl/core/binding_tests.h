@@ -64,6 +64,8 @@ public:
 
     ~BindingTestsChild();
 
+    const BindingTestsChild* get_child_const();
+
     BindingTestsRoot* m_root{nullptr};
 };
 
@@ -107,6 +109,11 @@ public:
         }
         return res;
     }
+    const BindingTestsChild* get_child_const_untracked()
+    {
+        auto res = new BindingTestsChild(nullptr);
+        return res;
+    }
 
     ref<const BindingTestsChildRefCounted> get_rc_child_const()
     {
@@ -126,6 +133,11 @@ public:
         for (int i = 0; i < 10; i++) {
             res.push_back(get_rc_child_none_const());
         }
+        return res;
+    }
+    ref<const BindingTestsChildRefCounted> get_rc_child_const_untracked()
+    {
+        auto res = make_ref<const BindingTestsChildRefCounted>(nullptr);
         return res;
     }
 
