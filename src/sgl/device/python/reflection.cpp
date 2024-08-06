@@ -3,6 +3,7 @@
 #include "nanobind.h"
 
 #include "sgl/device/reflection.h"
+#include "sgl/device/device.h"
 #include "sgl/device/shader.h"
 
 NB_MAKE_OPAQUE(std::vector<sgl::ref<sgl::VariableReflection>>)
@@ -10,6 +11,38 @@ NB_MAKE_OPAQUE(std::vector<sgl::ref<sgl::VariableReflection>>)
 SGL_PY_EXPORT(device_reflection)
 {
     using namespace sgl;
+
+    nb::class_<DeclReflection> decl_reflection(m, "DeclReflection", D_NA(DeclReflection));
+
+    nb::sgl_enum<DeclReflection::Kind>(decl_reflection, "Kind");
+
+    decl_reflection //
+        .def_prop_ro("kind", &DeclReflection::kind, D_NA(DeclReflection, kind))
+        .def_prop_ro("children", &DeclReflection::children, D_NA(DeclReflection, children))
+        .def_prop_ro("child_count", &DeclReflection::child_count, D_NA(DeclReflection, child_count))
+        .def_prop_ro("name", &DeclReflection::name)
+        .def("children_of_kind", &DeclReflection::children_of_kind, "kind"_a, D_NA(DeclReflection, children_of_kind))
+        .def("as_type", &DeclReflection::as_type, "device"_a, D_NA(DeclReflection, as_type))
+        .def("as_variable", &DeclReflection::as_variable, D_NA(DeclReflection, as_variable))
+        .def("as_function", &DeclReflection::as_function, D_NA(DeclReflection, as_function))
+        .def(
+            "find_children_of_kind",
+            &DeclReflection::find_children_of_kind,
+            "kind"_a,
+            "child_name"_a,
+            D_NA(DeclReflection, find_children_of_kind)
+        )
+        .def(
+            "find_first_child_of_kind",
+            &DeclReflection::find_first_child_of_kind,
+            "kind"_a,
+            "child_name"_a,
+            D_NA(DeclReflection, find_first_child_of_kind)
+        )
+        .def("__len__", [](DeclReflection& self) { return self.child_count(); })
+        .def("__getitem__", [](DeclReflection& self, int index) { return self[index]; })
+        .def("__repr__", &DeclReflection::to_string);
+
 
     nb::class_<TypeReflection> type_reflection(m, "TypeReflection");
 
@@ -109,45 +142,4 @@ SGL_PY_EXPORT(device_reflection)
         .def("__getitem__", [](ReflectionCursor& self, int index) { return self[index]; })
         .def("__getattr__", [](ReflectionCursor& self, std::string_view name) { return self[name]; })
         .def("__repr__", &ReflectionCursor::to_string);
-
-    nb::class_<ASTCursor, Object> ast_cursor(m, "ASTCursor", D_NA(ASTCursor));
-
-    nb::sgl_enum<ASTCursor::Kind>(ast_cursor, "Kind");
-
-    ast_cursor //
-        .def_prop_ro("name", &ASTCursor::name)
-        .def_prop_ro("kind", &ASTCursor::kind, D_NA(ASTCursor, kind))
-        .def_prop_ro("children", &ASTCursor::children, D_NA(ASTCursor, kind))
-        .def("__len__", [](ASTCursor& self) { return self.child_count(); })
-        .def("__getitem__", [](ASTCursor& self, int index) { return self[index]; })
-        .def("__repr__", &ASTCursor::to_string);
-
-    nb::class_<ASTCursorModule, ASTCursor>(m, "ASTCursorModule", D_NA(ASTCursorModule))
-        .def_prop_ro("globals", &ASTCursorModule::globals)
-        .def_prop_ro("functions", &ASTCursorModule::functions)
-        .def_prop_ro("structs", &ASTCursorModule::structs)
-        .def("find_functions", &ASTCursorModule::find_functions, "name"_a, D_NA(ASTCursorModule, name))
-        .def("find_first_function", &ASTCursorModule::find_first_function, "name"_a, D_NA(ASTCursorModule, name))
-        .def("find_struct", &ASTCursorModule::find_struct, "name"_a, D_NA(ASTCursorModule, name))
-        .def("find_global", &ASTCursorModule::find_global, "name"_a, D_NA(ASTCursorModule, name));
-
-    nb::class_<ASTCursorStruct, ASTCursor>(m, "ASTCursorStruct", D_NA(ASTCursorStruct))
-        .def_prop_ro("type", &ASTCursorStruct::type)
-        .def_prop_ro("fields", &ASTCursorStruct::fields)
-        .def_prop_ro("functions", &ASTCursorStruct::functions)
-        .def_prop_ro("structs", &ASTCursorStruct::structs)
-        .def("find_functions", &ASTCursorStruct::find_functions, "name"_a, D_NA(ASTCursorStruct, name))
-        .def("find_first_function", &ASTCursorStruct::find_first_function, "name"_a, D_NA(ASTCursorStruct, name))
-        .def("find_struct", &ASTCursorStruct::find_struct, "name"_a, D_NA(ASTCursorModule, name))
-        .def("find_field", &ASTCursorStruct::find_field, "name"_a, D_NA(ASTCursorStruct, name));
-
-    nb::class_<ASTCursorFunction, ASTCursor>(m, "ASTCursorFunction", D_NA(ASTCursorFunction))
-        .def_prop_ro("function", &ASTCursorFunction::function)
-        .def_prop_ro("parameters", &ASTCursorFunction::parameters)
-        .def("find_parameter", &ASTCursorFunction::find_parameter, "name"_a, D_NA(ASTCursorFunction, name));
-
-    nb::class_<ASTCursorVariable, ASTCursor>(m, "ASTCursorVariable", D_NA(ASTCursorVariable))
-        .def_prop_ro("type", &ASTCursorVariable::type);
-
-    nb::class_<ASTCursorGeneric, ASTCursor>(m, "ASTCursorGeneric", D_NA(ASTCursorGeneric));
 }

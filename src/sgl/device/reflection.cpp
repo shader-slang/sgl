@@ -20,6 +20,87 @@ std::string c_str_to_string(const char* str)
     return fmt::format("\"{}\"", str);
 }
 
+std::vector<const DeclReflection*> DeclReflection::children() const
+{
+    std::vector<const DeclReflection*> res;
+    int32_t count = child_count();
+    res.reserve(count);
+    for (int32_t i = 0; i < count; i++) {
+        res.push_back(detail::from_slang(base()->getChild(i)));
+    }
+    return res;
+}
+
+std::vector<const DeclReflection*> DeclReflection::children_of_kind(Kind kind) const
+{
+    std::vector<const DeclReflection*> res;
+    int32_t count = child_count();
+    res.reserve(count);
+    for (int32_t i = 0; i < count; i++) {
+        const DeclReflection* child = detail::from_slang(base()->getChild(i));
+        if (child->kind() == kind) {
+            res.push_back(child);
+        }
+    }
+    return res;
+}
+
+std::string DeclReflection::to_string() const
+{
+    std::string str;
+    str += "DeclReflection(\n";
+    str += fmt::format("  kind={},\n", kind());
+    if (kind() == Kind::variable || kind() == Kind::func)
+        str += fmt::format("  name={},\n", name());
+    str += ")";
+    return str;
+}
+
+const TypeReflection* DeclReflection::as_type(Device* device) const
+{
+    return detail::from_slang(base()->getType(device->global_session()));
+}
+
+std::string DeclReflection::name() const
+{
+    switch (kind()) {
+    case Kind::variable:
+        return as_variable()->name();
+    case Kind::func:
+        return as_function()->name();
+    default:
+        SGL_THROW("Invalid decl kind to request name: {}", kind());
+    }
+}
+
+std::vector<const DeclReflection*> DeclReflection::find_children_of_kind(Kind kind, std::string_view child_name) const
+{
+    std::vector<const DeclReflection*> res;
+    int32_t count = child_count();
+    res.reserve(count);
+    for (int32_t i = 0; i < count; i++) {
+        const DeclReflection* child = detail::from_slang(base()->getChild(i));
+        if (child->kind() == kind && child->name() == child_name) {
+            res.push_back(child);
+        }
+    }
+    return res;
+}
+
+const DeclReflection* DeclReflection::find_first_child_of_kind(Kind kind, std::string_view child_name) const
+{
+    std::vector<const DeclReflection*> res;
+    int32_t count = child_count();
+    res.reserve(count);
+    for (int32_t i = 0; i < count; i++) {
+        const DeclReflection* child = detail::from_slang(base()->getChild(i));
+        if (child->kind() == kind && child->name() == child_name) {
+            return child;
+        }
+    }
+    return nullptr;
+}
+
 std::string TypeReflection::to_string() const
 {
     std::string str;
@@ -237,6 +318,8 @@ std::string ReflectionCursor::to_string() const
     return "ReflectionCursor(null)";
 }
 
+#if ASTCURSOR_REMOVE_ME
+
 ASTCursor::ASTCursor(ref<SlangModule> module, slang::DeclReflection* decl_ref)
     : m_module(module)
     , m_decl_ref(decl_ref)
@@ -438,5 +521,7 @@ std::vector<ref<ASTCursorVariable>> ASTCursorFunction::parameters() const
 {
     return nodes_of_kind<ASTCursorVariable>(slang::DeclReflection::Kind::Variable);
 }
+
+#endif
 
 } // namespace sgl

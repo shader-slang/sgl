@@ -22,6 +22,10 @@ namespace sgl {
 
 namespace detail {
 
+    inline const DeclReflection* from_slang(slang::DeclReflection* decl_reflection)
+    {
+        return reinterpret_cast<const DeclReflection*>(decl_reflection);
+    }
     inline const TypeReflection* from_slang(slang::TypeReflection* type_reflection)
     {
         return reinterpret_cast<const TypeReflection*>(type_reflection);
@@ -88,6 +92,76 @@ SGL_ENUM_INFO(
     }
 );
 SGL_ENUM_REGISTER(ModifierType);
+
+class SGL_API DeclReflection : private slang::DeclReflection {
+
+public:
+    /// Cast to non-const base pointer.
+    /// The underlying slang API is not const-correct.
+    slang::DeclReflection* base() const { return (slang::DeclReflection*)(this); }
+
+    /// Different kinds of decl slang can return.
+    enum class Kind {
+        unsupported = SLANG_DECL_KIND_UNSUPPORTED_FOR_REFLECTION,
+        struct_ = SLANG_DECL_KIND_STRUCT,
+        func = SLANG_DECL_KIND_FUNC,
+        module = SLANG_DECL_KIND_MODULE,
+        generic = SLANG_DECL_KIND_GENERIC,
+        variable = SLANG_DECL_KIND_VARIABLE,
+    };
+    SGL_ENUM_INFO(
+        Kind,
+        {
+            {Kind::unsupported, "unsupported"},
+            {Kind::struct_, "struct"},
+            {Kind::func, "func"},
+            {Kind::module, "module"},
+            {Kind::generic, "generic"},
+            {Kind::variable, "variable"},
+        }
+    );
+
+    /// Decl kind (struct/function/module/generic/variable).
+    Kind kind() const { return static_cast<Kind>(base()->getKind()); }
+
+    /// List of children of this cursor.
+    std::vector<const DeclReflection*> children() const;
+
+    /// Get number of children.
+    int32_t child_count() const { return base()->getChildrenCount(); }
+
+    /// Get the name of this decl (if it is of a kind that has a name).
+    /// Note: Currently only works for functions and variables.
+    std::string name() const;
+
+    /// List of children of this cursor of a specific kind.
+    std::vector<const DeclReflection*> children_of_kind(Kind kind) const;
+
+    /// Index operator to get nth child.
+    const DeclReflection* operator[](int32_t index) const { return detail::from_slang(base()->getChild(index)); }
+
+    /// Description as string.
+    std::string to_string() const;
+
+    /// Get type corresponding to this decl ref.
+    /// Note: Device parameter will be removed with future slang update.
+    const TypeReflection* as_type(Device* device) const;
+
+    /// Get variable corresponding to this decl ref.
+    const VariableReflection* as_variable() const { return detail::from_slang(base()->asVariable()); }
+
+    /// Get function corresponding to this decl ref.
+    const FunctionReflection* as_function() const { return detail::from_slang(base()->asFunction()); }
+
+    /// Finds all children of a specific kind with a given name.
+    /// Note: Currently only works for functions and variables.
+    std::vector<const DeclReflection*> find_children_of_kind(Kind kind, std::string_view child_name) const;
+
+    /// Finds the first child of a specific kind with a given name.
+    /// Note: Currently only works for functions and variables.
+    const DeclReflection* find_first_child_of_kind(Kind kind, std::string_view child_name) const;
+};
+SGL_ENUM_REGISTER(DeclReflection::Kind);
 
 class SGL_API TypeReflection : private slang::TypeReflection {
 public:
@@ -1150,6 +1224,7 @@ private:
     bool m_valid{false};
 };
 
+#if ASTCURSOR_REMOVE_ME
 /// Base class for a cursor that can walk the AST of a slang module.
 class SGL_API ASTCursor : Object {
 public:
@@ -1316,6 +1391,6 @@ public:
 
     std::string to_string() const override { return fmt::format("ASTCursorGeneric()"); }
 };
-
+#endif
 
 } // namespace sgl
