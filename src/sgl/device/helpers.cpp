@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+
 #include "helpers.h"
 
 #include "sgl/core/config.h"

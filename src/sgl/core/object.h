@@ -588,7 +588,7 @@ public:
     {
     }
     breakable_ref(ref<T>&& r)
-        : m_strong_ref(r)
+        : m_strong_ref(std::forward<ref<T>>(r))
         , m_weak_ref(m_strong_ref.get())
     {
     }

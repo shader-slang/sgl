@@ -166,7 +166,7 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
 
     // Create (but don't compile yet) the NVAPI module
     // We link this to all programs because slang uses NVAPI features while not including NVAPI itself.
-    if (SGL_HAS_NVAPI && device->type() == DeviceType::d3d12) {
+    if (SGL_HAS_NVAPI && m_device->type() == DeviceType::d3d12) {
         m_nvapi_module = make_ref<SlangModule>(
             ref(this),
             SlangModuleDesc{
