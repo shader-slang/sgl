@@ -8,6 +8,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent))
 import helpers
+from helpers import test_id
 
 # TODO: Due to a bug in "Apple clang", the exception binding in nanobind
 # raises RuntimeError instead of SlangCompileError
@@ -54,7 +55,7 @@ def test_load_module(device_type):
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_load_module_from_source(device_type):
+def test_load_module_from_source(test_id, device_type):
     device = helpers.get_device(type=device_type)
 
     # Compilation errors must raise an exception
@@ -62,7 +63,7 @@ def test_load_module_from_source(device_type):
         SlangCompileError, match="unexpected end of file, expected identifier"
     ):
         device.load_module_from_source(
-            module_name="compile_error_from_source", source="bar"
+            module_name=f"compile_error_from_source_{test_id}", source="bar"
         )
 
     # Loading a valid module must succeed
