@@ -23,8 +23,19 @@ def print_ast(declref: sgl.DeclReflection, device: sgl.Device):
     print("\n")
 
 
+def declref_to_str(declref: sgl.DeclReflection, device: sgl.Device):
+    res = f"{declref.kind}"
+    if declref.kind in [
+        sgl.DeclReflection.Kind.variable,
+        sgl.DeclReflection.Kind.func,
+        sgl.DeclReflection.Kind.struct,
+    ]:
+        res += f": {declref.name}"
+    return res
+
+
 def print_ast_recurse(declref: sgl.DeclReflection, device: sgl.Device, indent=0):
-    print("  " * indent + f"{declref}")
+    print("  " * indent + declref_to_str(declref, device))
     for child in declref.children:
         print_ast_recurse(child, device, indent + 1)
 
