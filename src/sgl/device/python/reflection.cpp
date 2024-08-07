@@ -28,13 +28,7 @@ SGL_PY_EXPORT(device_reflection)
             "kind"_a,
             D_NA(DeclReflection, children_of_kind)
         )
-        .def(
-            "as_type",
-            &DeclReflection::as_type,
-            nb::rv_policy::reference_internal,
-            "device"_a,
-            D_NA(DeclReflection, as_type)
-        )
+        .def("as_type", &DeclReflection::as_type, nb::rv_policy::reference_internal, D_NA(DeclReflection, as_type))
         .def(
             "as_variable",
             &DeclReflection::as_variable,

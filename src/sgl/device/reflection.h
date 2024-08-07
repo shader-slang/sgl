@@ -157,7 +157,7 @@ public:
 
     /// Get type corresponding to this decl ref.
     /// Note: Device parameter will be removed with future slang update.
-    const TypeReflection* as_type(Device* device) const;
+    const TypeReflection* as_type() const;
 
     /// Get variable corresponding to this decl ref.
     const VariableReflection* as_variable() const { return detail::from_slang(base()->asVariable()); }

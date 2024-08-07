@@ -56,9 +56,9 @@ std::string DeclReflection::to_string() const
     return str;
 }
 
-const TypeReflection* DeclReflection::as_type(Device* device) const
+const TypeReflection* DeclReflection::as_type() const
 {
-    return detail::from_slang(base()->getType(device->global_session()));
+    return detail::from_slang(base()->getType());
 }
 
 std::string DeclReflection::name() const
@@ -68,6 +68,8 @@ std::string DeclReflection::name() const
         return as_variable()->name();
     case Kind::func:
         return as_function()->name();
+    case Kind::struct_:
+        return as_type()->name();
     default:
         SGL_THROW("Invalid decl kind to request name: {}", kind());
     }
