@@ -34,7 +34,7 @@ def ast_to_dict(declref: sgl.DeclReflection, device: sgl.Device):
     if declref.kind == sgl.DeclReflection.Kind.module:
         res["name"] = "module"
     elif declref.kind == sgl.DeclReflection.Kind.struct:
-        res["name"] = declref.as_type(device).name
+        res["name"] = declref.name
     elif declref.kind == sgl.DeclReflection.Kind.func:
         res["name"] = declref.name
     elif declref.kind == sgl.DeclReflection.Kind.variable:
@@ -112,7 +112,7 @@ struct Foo {
     assert len(ast) == 1
     struct = ast[0]
     assert struct.kind == sgl.DeclReflection.Kind.struct
-    assert struct.as_type(device).name == "Foo"
+    assert struct.name == "Foo"
     assert len(struct) == 2
 
     # Repeat for list of structs
@@ -120,15 +120,15 @@ struct Foo {
     assert len(structs) == 1
     struct = structs[0]
     assert struct.kind == sgl.DeclReflection.Kind.struct
-    assert struct.as_type(device).name == "Foo"
+    assert struct.name == "Foo"
     assert len(struct) == 2
 
-    # Again by searching for the struct (disabled until type name finding works)
-    # assert len(ast) == 1
-    # struct = ast.find_first_child_of_kind(sgl.DeclReflection.Kind.struct, "Foo")
-    # assert struct.kind == sgl.DeclReflection.Kind.struct
-    # assert struct.as_type(device).name == "Foo"
-    # assert len(struct) == 2
+    # Again by searching for the struct
+    assert len(ast) == 1
+    struct = ast.find_first_child_of_kind(sgl.DeclReflection.Kind.struct, "Foo")
+    assert struct.kind == sgl.DeclReflection.Kind.struct
+    assert struct.name == "Foo"
+    assert len(struct) == 2
 
     # Verify both fields by index
     assert struct[0].kind == sgl.DeclReflection.Kind.variable
@@ -145,7 +145,7 @@ struct Foo {
     assert fields[1].name == "b"
 
     # Verify the struct's type reflection
-    struct_type = struct.as_type(device)
+    struct_type = struct.as_type()
     assert struct_type.kind == sgl.TypeReflection.Kind.struct
     assert struct_type.name == "Foo"
     fields = struct_type.fields
@@ -798,7 +798,7 @@ def test_ast_cursor_hashgrid_nogenerics(device_type):
         dump,
         HASHGRID_NO_GENERICS_DUMP,
     )
-    assert diff
+    assert not diff
 
 
 if __name__ == "__main__":
