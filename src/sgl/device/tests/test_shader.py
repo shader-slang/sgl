@@ -68,7 +68,7 @@ def test_load_module_from_source(test_id, device_type):
 
     # Loading a valid module must succeed
     module = device.load_module_from_source(
-        module_name="module_from_source",
+        module_name=f"module_from_source_{test_id}",
         source="""
         struct Foo {
             uint a;
