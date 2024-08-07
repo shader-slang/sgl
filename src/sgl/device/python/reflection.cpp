@@ -18,12 +18,7 @@ SGL_PY_EXPORT(device_reflection)
 
     decl_reflection //
         .def_prop_ro("kind", &DeclReflection::kind, D_NA(DeclReflection, kind))
-        .def_prop_ro(
-            "children",
-            &DeclReflection::children,
-            nb::rv_policy::reference_internal,
-            D_NA(DeclReflection, children)
-        )
+        .def_prop_ro("children", &DeclReflection::children, D_NA(DeclReflection, children))
         .def_prop_ro("child_count", &DeclReflection::child_count, D_NA(DeclReflection, child_count))
         .def_prop_ro("name", &DeclReflection::name)
         .def(
