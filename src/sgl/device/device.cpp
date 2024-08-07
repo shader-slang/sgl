@@ -515,6 +515,8 @@ Device::~Device()
 #if SGL_HAS_NVAPI
     m_api_dispatcher.reset();
 #endif
+
+    m_hot_reload.reset();
 }
 
 ShaderCacheStats Device::shader_cache_stats() const

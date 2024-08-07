@@ -159,6 +159,9 @@ SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
 {
     ConstructorRefGuard ref_guard(this);
 
+    // Store the global session
+    m_global_session = m_device->global_session();
+
     // Register with hot load reload system if enabled.
     if (m_device->_hot_reload())
         m_device->_hot_reload()->_register_slang_session(this);
@@ -188,6 +191,13 @@ SlangSession::~SlangSession()
     // Unregister with hot load reload system if enabled.
     if (m_device->_hot_reload())
         m_device->_hot_reload()->_unregister_slang_session(this);
+
+    // Clear internal 'data' ptr, which holds reference to the local
+    // slang session and thus allows it to be freed
+    m_data.reset();
+
+    // Finally, allow the global session to be freed
+    m_global_session.setNull();
 }
 
 void SlangSession::recreate_session()
@@ -312,7 +322,7 @@ void SlangSession::create_session(SlangSessionBuild& build)
     uint32_t shader_model_minor = get_shader_model_minor_version(shader_model);
     std::string profile_str = fmt::format("sm_{}_{}", shader_model_major, shader_model_minor);
 
-    target_desc.profile = m_device->global_session()->findProfile(profile_str.c_str());
+    target_desc.profile = m_global_session->findProfile(profile_str.c_str());
     SGL_CHECK(target_desc.profile != SLANG_PROFILE_UNKNOWN, "Unsupported target profile: {}", profile_str);
 
     // Set floating point mode.
@@ -385,7 +395,7 @@ void SlangSession::create_session(SlangSessionBuild& build)
 
     // Use the session descriptor to generate a hash that uniquely identifies the session.
     Slang::ComPtr<ISlangBlob> session_digest;
-    SLANG_CALL(m_device->global_session()->getSessionDescDigest(&session_desc, session_digest.writeRef()));
+    SLANG_CALL(m_global_session->getSessionDescDigest(&session_desc, session_digest.writeRef()));
     data->uid = string::hexlify(session_digest->getBufferPointer(), session_digest->getBufferSize());
 
     // Setup session cache.
@@ -412,7 +422,7 @@ void SlangSession::create_session(SlangSessionBuild& build)
         session_desc.compilerOptionEntryCount = narrow_cast<uint32_t>(slang_session_option_entries.size());
     }
 
-    SLANG_CALL(m_device->global_session()->createSession(session_desc, data->slang_session.writeRef()));
+    SLANG_CALL(m_global_session->createSession(session_desc, data->slang_session.writeRef()));
 
     // Store session.
     build.session = std::move(data);

@@ -337,6 +337,9 @@ private:
     /// All created sgl programs (via link_program)
     std::set<ShaderProgram*> m_registered_programs;
 
+    /// The global session that created this session
+    Slang::ComPtr<slang::IGlobalSession> m_global_session;
+
     void update_module_cache_and_dependencies();
     bool write_module_to_cache(slang::IModule* module);
     void create_session(SlangSessionBuild& build);
