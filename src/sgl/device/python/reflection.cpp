@@ -3,7 +3,6 @@
 #include "nanobind.h"
 
 #include "sgl/device/reflection.h"
-#include "sgl/device/device.h"
 #include "sgl/device/shader.h"
 
 NB_MAKE_OPAQUE(std::vector<sgl::ref<sgl::VariableReflection>>)
