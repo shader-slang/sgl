@@ -1,9 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
-import sys
 import pytest
 import os
-import tempfile
 
 from sgl import (
     Logger,

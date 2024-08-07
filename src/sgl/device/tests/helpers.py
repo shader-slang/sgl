@@ -37,9 +37,10 @@ def all_shader_models_from(shader_model: sgl.ShaderModel) -> list[sgl.ShaderMode
 DEVICE_CACHE = {}
 
 
+# Returns a unique random 16 character string for every variant of every test.
 @pytest.fixture
 def test_id(request):
-    return sha256(request.node.nodeid.encode()).hexdigest()[:8]
+    return sha256(request.node.nodeid.encode()).hexdigest()[:16]
 
 
 def get_device(type: sgl.DeviceType, use_cache: bool = True) -> sgl.Device:
