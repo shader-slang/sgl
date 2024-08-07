@@ -143,7 +143,7 @@ public:
     int32_t child_count() const { return base()->getChildrenCount(); }
 
     /// Get the name of this decl (if it is of a kind that has a name).
-    /// Note: Currently only works for functions and variables.
+    /// Note: Only supported for types, functions and variables
     std::string name() const;
 
     /// List of children of this cursor of a specific kind.
@@ -156,7 +156,6 @@ public:
     std::string to_string() const;
 
     /// Get type corresponding to this decl ref.
-    /// Note: Device parameter will be removed with future slang update.
     const TypeReflection* as_type() const;
 
     /// Get variable corresponding to this decl ref.
@@ -166,11 +165,11 @@ public:
     const FunctionReflection* as_function() const { return detail::from_slang(base()->asFunction()); }
 
     /// Finds all children of a specific kind with a given name.
-    /// Note: Currently only works for functions and variables.
+    /// Note: Only supported for types, functions and variables
     std::vector<const DeclReflection*> find_children_of_kind(Kind kind, std::string_view child_name) const;
 
     /// Finds the first child of a specific kind with a given name.
-    /// Note: Currently only works for functions and variables.
+    /// Note: Only supported for types, functions and variables
     const DeclReflection* find_first_child_of_kind(Kind kind, std::string_view child_name) const;
 };
 SGL_ENUM_REGISTER(DeclReflection::Kind);
