@@ -23,7 +23,6 @@ enum class FileSystemWatcherChange {
     added,
     removed,
     modified,
-    renamed,
 };
 
 /// Init options for FileSystemWatcher.
@@ -124,7 +123,7 @@ private:
     int m_inotify_file_descriptor;
 #endif
 
-#if !SGL_WINDOWS && !SGL_LINUX
+#if !SGL_LINUX
     /// Mutex to protect the watch map.
     std::mutex m_watches_mutex;
 
