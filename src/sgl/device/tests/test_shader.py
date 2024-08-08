@@ -53,6 +53,7 @@ def test_load_module(device_type):
     assert module.session.device == device
 
 
+@pytest.mark.skip("Test crashes due to Slang regression")
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_load_module_from_source(device_type):
     device = helpers.get_device(type=device_type)

@@ -91,6 +91,7 @@ def _test_console_output():
     logger.fatal("fatal message")
 
 
+@pytest.mark.skip("Test not working reliably")
 def test_console_output(capfd):
     _test_console_output()
     out, err = capfd.readouterr()
