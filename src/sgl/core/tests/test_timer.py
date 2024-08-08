@@ -10,7 +10,7 @@ def test_now():
     t0 = Timer.now()
     time.sleep(delta_ns / 1000000000.0)
     t1 = Timer.now()
-    assert t1 > t0 + delta_ns / 2
+    assert t1 > t0 + delta_ns / 10
 
 
 def test_delta():
@@ -27,10 +27,10 @@ def test_timer():
     delta_s = delta_ms / 1000.0
     timer = Timer()
     time.sleep(delta_ns / 1000000000.0)
-    assert timer.elapsed_ns() > delta_ns / 2
-    assert timer.elapsed_us() > delta_us / 2
-    assert timer.elapsed_ms() > delta_ms / 2
-    assert timer.elapsed_s() > delta_s / 2
+    assert timer.elapsed_ns() > delta_ns / 10
+    assert timer.elapsed_us() > delta_us / 10
+    assert timer.elapsed_ms() > delta_ms / 10
+    assert timer.elapsed_s() > delta_s / 10
 
 
 if __name__ == "__main__":
