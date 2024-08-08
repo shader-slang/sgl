@@ -9,7 +9,7 @@
 using namespace sgl;
 
 /// Setup code for the shader test writes out some simple modules.
-static void setup_testshader_files()
+static void setup_testshader_files(const std::filesystem::path& dir)
 {
     // Use local static to ensure setup only occurs once.
     static bool is_done = false;
@@ -17,7 +17,7 @@ static void setup_testshader_files()
         is_done = true;
         // _testshader_simple.slang is a single compute shader + struct.
         {
-            std::ofstream shader("_testshader_simple.slang");
+            std::ofstream shader(dir / "_testshader_simple.slang");
             shader << R"SHADER(
 struct Foo {
     uint a;
@@ -34,7 +34,7 @@ void main_a(uint3 tid : SV_DispatchThreadID, uniform Foo foo)
 
         // _testshader_struct.slang imports sgl.device.print and defines a struct.
         {
-            std::ofstream shader("_testshader_struct.slang");
+            std::ofstream shader(dir / "_testshader_struct.slang");
             shader << R"SHADER(
 import sgl.device.print;
 struct Foo {
@@ -46,7 +46,7 @@ struct Foo {
 
         // _testshader_dependent.slang is a compute shader dependent on _testshader_struct.
         {
-            std::ofstream shader("_testshader_dependent.slang");
+            std::ofstream shader(dir / "_testshader_dependent.slang");
             shader << R"SHADER(
 import _testshader_struct;
 [shader("compute")]
@@ -64,20 +64,22 @@ TEST_SUITE_BEGIN("device");
 
 TEST_CASE_GPU("shader")
 {
+    std::filesystem::path dir = testing::get_case_temp_directory();
+
     // Perform 1-time setup that creates shader files for these test cases.
-    setup_testshader_files();
+    setup_testshader_files(dir);
 
     // Just verify module loads.
     SUBCASE("load module")
     {
-        ref<SlangModule> module = ctx.device->load_module("_testshader_simple.slang");
+        ref<SlangModule> module = ctx.device->load_module((dir / "_testshader_simple.slang").string());
         CHECK(module);
     }
 
     // Load a module with no external dependencies and verify it only depends on itself.
     SUBCASE("single module dependency")
     {
-        ref<SlangModule> module = ctx.device->load_module("_testshader_simple.slang");
+        ref<SlangModule> module = ctx.device->load_module((dir / "_testshader_simple.slang").string());
         CHECK_EQ(module->slang_module()->getDependencyFileCount(), 1);
         std::filesystem::path path0 = module->slang_module()->getDependencyFilePath(0);
         CHECK_EQ(path0.filename(), "_testshader_simple.slang");
@@ -86,7 +88,7 @@ TEST_CASE_GPU("shader")
     // Load a module with a 2-stage dependency chain and verify all 3 dependencies.
     SUBCASE("multi module dependency")
     {
-        ref<SlangModule> module = ctx.device->load_module("_testshader_dependent.slang");
+        ref<SlangModule> module = ctx.device->load_module((dir / "_testshader_dependent.slang").string());
         CHECK_EQ(module->slang_module()->getDependencyFileCount(), 3);
         std::vector<std::filesystem::path> paths{
             module->slang_module()->getDependencyFilePath(0),
