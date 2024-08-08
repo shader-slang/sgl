@@ -6,7 +6,7 @@
 	url = https://github.com/microsoft/vcpkg.git
 [submodule "data"]
 	path = data
-	url = https://github.com/westlicht/sgl-data.git
+	url = https://github.com/shader-slang/sgl-data.git
 [submodule "tutorials"]
 	path = tutorials
-	url = https://github.com/westlicht/sgl-tutorials.git
+	url = https://github.com/shader-slang/sgl-tutorials.git
