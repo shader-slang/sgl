@@ -182,7 +182,7 @@ FileSystemWatcher::FileSystemWatcher()
     flags |= O_NONBLOCK;
     if (fcntl(m_inotify_file_descriptor, F_SETFL, flags) == -1) {
         close(m_inotify_file_descriptor);
-        SGL_THROW("Failed to set inotify file descriptor flags to none-blocking");
+        SGL_THROW("Failed to set inotify file descriptor flags to non-blocking");
     }
 #endif
 
@@ -325,7 +325,7 @@ void FileSystemWatcher::stop_watch(const std::unique_ptr<FileSystemWatchState>& 
         log_warn("File system watch failed to shutdown after 500ms");
     CloseHandle(state->directory_handle);
 #elif SGL_LINUX
-    close(state->watch_descriptor);
+    inotify_rm_watch(m_inotify_file_descriptor, state->watch_descriptor);
 #endif
 }
 
