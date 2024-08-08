@@ -50,7 +50,7 @@ std::string DeclReflection::to_string() const
     std::string str;
     str += "DeclReflection(\n";
     str += fmt::format("  kind={},\n", kind());
-    if (kind() == Kind::variable || kind() == Kind::func)
+    if (kind() == Kind::variable || kind() == Kind::func || kind() == Kind::struct_)
         str += fmt::format("  name={},\n", name());
     str += ")";
     return str;

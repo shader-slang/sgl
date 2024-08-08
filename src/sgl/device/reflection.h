@@ -139,7 +139,7 @@ public:
     int32_t child_count() const { return base()->getChildrenCount(); }
 
     /// Get the name of this decl (if it is of a kind that has a name).
-    /// Note: Only supported for types, functions and variables
+    /// Note: Only supported for types, functions and variables.
     std::string name() const;
 
     /// List of children of this cursor of a specific kind.
@@ -161,11 +161,11 @@ public:
     const FunctionReflection* as_function() const { return detail::from_slang(base()->asFunction()); }
 
     /// Finds all children of a specific kind with a given name.
-    /// Note: Only supported for types, functions and variables
+    /// Note: Only supported for types, functions and variables.
     std::vector<const DeclReflection*> find_children_of_kind(Kind kind, std::string_view child_name) const;
 
     /// Finds the first child of a specific kind with a given name.
-    /// Note: Only supported for types, functions and variables
+    /// Note: Only supported for types, functions and variables.
     const DeclReflection* find_first_child_of_kind(Kind kind, std::string_view child_name) const;
 };
 SGL_ENUM_REGISTER(DeclReflection::Kind);
@@ -836,28 +836,6 @@ public:
     {
         return base()->findModifier(static_cast<slang::Modifier::ID>(modifier)) != nullptr;
     }
-
-
-#if 0
-    unsigned int getUserAttributeCount()
-    {
-        return spReflectionFunction_GetUserAttributeCount((SlangReflectionFunction*)this);
-    }
-    UserAttribute* getUserAttributeByIndex(unsigned int index)
-    {
-        return (UserAttribute*)spReflectionFunction_GetUserAttribute((SlangReflectionFunction*)this, index);
-    }
-    UserAttribute* findUserAttributeByName(SlangSession* globalSession, char const* name)
-    {
-        return (UserAttribute*)
-            spReflectionFunction_FindUserAttributeByName((SlangReflectionFunction*)this, globalSession, name);
-    }
-
-    Modifier* findModifier(Modifier::ID id)
-    {
-        return (Modifier*)spReflectionFunction_FindModifier((SlangReflectionFunction*)this, (SlangModifierID)id);
-    }
-#endif
 };
 
 class SGL_API VariableReflection : private slang::VariableReflection {

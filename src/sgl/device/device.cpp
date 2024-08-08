@@ -509,8 +509,6 @@ Device::~Device()
 
     m_slang_session.reset();
 
-    m_hot_reload.reset();
-
     m_gfx_graphics_queue.setNull();
     m_gfx_device.setNull();
 
