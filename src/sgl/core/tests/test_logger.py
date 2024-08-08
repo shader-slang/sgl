@@ -2,7 +2,7 @@
 
 import pytest
 import os
-
+import tempfile
 from sgl import (
     Logger,
     LoggerOutput,
@@ -83,20 +83,16 @@ def _test_console_output():
     output = ConsoleLoggerOutput(colored=False)
     logger = Logger(level=LogLevel.debug, name="test", use_default_outputs=False)
     logger.add_output(output)
-    logger.log(LogLevel.none, "plain message (console output)")
-    logger.debug("debug message (console output)")
-    logger.info("info message (console output)")
-    logger.warn("warn message (console output)")
-    logger.error("error message (console output)")
-    logger.fatal("fatal message (console output)")
+    logger.log(LogLevel.none, "plain message")
+    logger.debug("debug message")
+    logger.info("info message")
+    logger.warn("warn message")
+    logger.error("error message")
+    logger.fatal("fatal message")
 
 
-# Python is failing to capture stdout/stderr when written to from the sgl c++ side, however
-# it is visibly writing to the console when running the test. As a result, pytest can't
-# detect the console output and the test fails.
-# TODO: Find a way to read c++ stdout/stderr
+@pytest.mark.skip("Test not working reliably")
 def test_console_output(capfd):
-    pytest.skip("Fails to capture stdout/stderr")
     _test_console_output()
     out, err = capfd.readouterr()
     out_lines = out.splitlines()
