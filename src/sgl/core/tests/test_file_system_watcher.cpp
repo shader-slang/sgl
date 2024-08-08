@@ -135,12 +135,6 @@ TEST_CASE("FileSystemWatcher")
         outfile.close();
         check("testfile.txt", FileSystemWatcherChange::modified);
 
-#if 0
-        // Rename the file and repeat tests again checking for 'rename' event
-        rename(path / "testfile.txt", path / "renamed.txt");
-        check("renamed.txt", FileSystemWatcherChange::renamed);
-#endif
-
         // Delete the file and repeat tests again checking for 'deleted' event
         remove(path / "testfile.txt");
         check("testfile.txt", FileSystemWatcherChange::removed);
