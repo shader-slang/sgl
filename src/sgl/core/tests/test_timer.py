@@ -4,6 +4,7 @@ import pytest
 from sgl import Timer
 import time
 
+
 def high_precision_sleep(duration):
     start_time = time.perf_counter()
     while True:
@@ -11,6 +12,7 @@ def high_precision_sleep(duration):
         remaining_time = duration - elapsed_time
         if remaining_time <= 0:
             break
+
 
 def test_now():
     delta_ns = 10000000
