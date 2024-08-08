@@ -307,9 +307,6 @@ struct Foo1 {
 
 @pytest.mark.parametrize("device_type", DEVICES)
 def test_inout_modifier_params(device_type):
-    # TODO: Add this test in once the in/out/inout modifier access is merged.
-    pytest.skip("Skip pending Slang MR")
-
     device = helpers.get_device(type=device_type)
 
     module = device.load_module_from_source(
@@ -326,11 +323,11 @@ int foo(in int a, out int b, inout int c) {
     func_node = module.abstract_syntax_tree.find_first_child_of_kind(
         sgl.DeclReflection.Kind.func, "foo"
     )
-    params = func_node.function.children_of_kind(sgl.DeclReflection.Kind.variable)
+    params = func_node.children_of_kind(sgl.DeclReflection.Kind.variable)
     assert len(params) == 3
-    assert params[0].has_modifier(sgl.ModifierType.inn)
-    assert params[1].has_modifier(sgl.ModifierType.out)
-    assert params[2].has_modifier(sgl.ModifierType.inout)
+    assert params[0].as_variable().has_modifier(sgl.ModifierType.inn)
+    assert params[1].as_variable().has_modifier(sgl.ModifierType.out)
+    assert params[2].as_variable().has_modifier(sgl.ModifierType.inout)
 
 
 @pytest.mark.parametrize("device_type", DEVICES)

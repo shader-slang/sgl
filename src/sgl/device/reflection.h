@@ -66,11 +66,9 @@ enum class ModifierType {
     extern_ = SLANG_MODIFIER_EXTERN,
     differentiable = SLANG_MODIFIER_DIFFERENTIABLE,
     mutating = SLANG_MODIFIER_MUTATING,
-
-    // TODO: Enable these once pending slang MR is in main branch.
-    // in = SLANG_MODIFIER_IN,
-    // out = SLANG_MODIFIER_OUT,
-    // inout = SLANG_MODIFIER_INOUT,
+    in = SLANG_MODIFIER_IN,
+    out = SLANG_MODIFIER_OUT,
+    inout = SLANG_MODIFIER_INOUT,
 };
 
 #if SGL_DEBUG
@@ -94,11 +92,9 @@ SGL_ENUM_INFO(
         {ModifierType::extern_, "extern"},
         {ModifierType::differentiable, "differentiable"},
         {ModifierType::mutating, "mutating"},
-
-        // TODO: Enable these once pending slang MR is in main branch.
-        // {ModifierType::in, "inn"},
-        // {ModifierType::out, "out"},
-        // {ModifierType::inout, "inout"},
+        {ModifierType::in, "inn"},
+        {ModifierType::out, "out"},
+        {ModifierType::inout, "inout"},
     }
 );
 SGL_ENUM_REGISTER(ModifierType);
