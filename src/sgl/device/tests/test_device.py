@@ -29,7 +29,7 @@ def test_create_device(device_type):
 
 
 # Checks fix for alignment issues when creating/accessing a small buffer,
-# followed by creating accessing a texture.
+# followed by creating/accessing a texture.
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_global_buffer_alignment(device_type: sgl.DeviceType):
     device = helpers.get_device(device_type)
@@ -58,7 +58,7 @@ def test_global_buffer_alignment(device_type: sgl.DeviceType):
         data=texture_data,
     )
 
-    # Read it, resulting in temporary allocation in the device's read back heap of 256*256*4*4B
+    # Read it, resulting in temporary allocation in the device's read back heap of 256*256*4*4B.
     val = texture.to_numpy().astype(np.float32).flatten()
     assert np.allclose(val, texture_data, atol=1e-6)
 
