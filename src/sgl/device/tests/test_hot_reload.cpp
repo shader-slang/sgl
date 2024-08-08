@@ -553,5 +553,4 @@ TEST_CASE_GPU("create multi directory session and monitor for changes")
     run_and_verify(ctx, kernel, 20);
 }
 
-
 TEST_SUITE_END();

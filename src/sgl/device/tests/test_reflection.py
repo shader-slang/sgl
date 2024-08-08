@@ -8,6 +8,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent))
 import helpers
+from helpers import test_id
 
 # TODO: Due to a bug in "Apple clang", the exception binding in nanobind
 # raises RuntimeError instead of SlangCompileError
@@ -15,7 +16,7 @@ SlangCompileError = RuntimeError if sys.platform == "darwin" else sgl.SlangCompi
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_type_layout(device_type):
+def test_type_layout(test_id, device_type):
 
     # Only do D3D for now
     if device_type != sgl.DeviceType.d3d12:
@@ -25,7 +26,7 @@ def test_type_layout(device_type):
 
     # Loading a valid module must succeed
     module = device.load_module_from_source(
-        module_name="module_from_source",
+        module_name=f"module_from_source_{test_id}",
         source="""
         struct Foo {
             uint a;

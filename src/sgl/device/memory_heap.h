@@ -100,7 +100,7 @@ public:
      * \param alignment The alignment of the allocation.
      * \return Returns a unique pointer to the allocation.
      */
-    Allocation allocate(DeviceSize size, DeviceSize alignment = 1);
+    Allocation allocate(DeviceSize size, DeviceSize alignment = 16);
 
     /**
      * \brief Execute deferred releases.

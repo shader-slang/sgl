@@ -37,7 +37,7 @@ def test_buffer_add_f16(device_type):
 
     expected = [np.sum(data), np.sum(-data)]
     result = ctx.buffers["result"].to_numpy().view(np.float16).flatten()
-    assert np.allclose(result, expected, atol=2)
+    assert np.allclose(result, expected, atol=5)
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)

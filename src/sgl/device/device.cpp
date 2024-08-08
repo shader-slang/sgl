@@ -906,7 +906,7 @@ void Device::upload_buffer_data(Buffer* buffer, const void* data, size_t size, s
     SGL_CHECK(offset + size <= buffer->size(), "Buffer write is out of bounds");
     SGL_CHECK_NOT_NULL(data);
 
-    auto alloc = m_upload_heap->allocate(size);
+    auto alloc = m_upload_heap->allocate(size, 512);
 
     std::memcpy(alloc->data, data, size);
 
@@ -921,7 +921,7 @@ void Device::read_buffer_data(const Buffer* buffer, void* data, size_t size, siz
     SGL_CHECK(offset + size <= buffer->size(), "Buffer read is out of bounds");
     SGL_CHECK_NOT_NULL(data);
 
-    auto alloc = m_read_back_heap->allocate(size);
+    auto alloc = m_read_back_heap->allocate(size, 512);
 
     CommandBuffer* command_buffer = _begin_shared_command_buffer();
     command_buffer->copy_buffer_region(alloc->buffer, alloc->offset, buffer, offset, size);
@@ -948,7 +948,7 @@ OwnedSubresourceData Device::read_texture_data(const Texture* texture, uint32_t 
     SubresourceLayout layout = texture->get_subresource_layout(subresource);
 
     size_t size = layout.total_size_aligned();
-    auto alloc = m_read_back_heap->allocate(size);
+    auto alloc = m_read_back_heap->allocate(size, 512);
 
     CommandBuffer* command_buffer = _begin_shared_command_buffer();
     command_buffer->copy_texture_to_buffer(
