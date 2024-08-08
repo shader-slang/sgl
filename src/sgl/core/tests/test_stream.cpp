@@ -158,8 +158,10 @@ TEST_CASE("FileStream")
 
     SUBCASE("write")
     {
-        FileStream stream("file_stream_write.bin", FileStream::Mode::write);
-        CHECK_EQ(stream.path(), "file_stream_write.bin");
+        std::filesystem::path path = testing::get_case_temp_directory() / "file_stream_write.bin";
+
+        FileStream stream(path, FileStream::Mode::write);
+        CHECK_EQ(stream.path(), path);
         CHECK_EQ(stream.mode(), FileStream::Mode::write);
         CHECK(stream.is_open());
         CHECK_FALSE(stream.is_readable());
@@ -194,7 +196,7 @@ TEST_CASE("FileStream")
         stream.close();
         CHECK_FALSE(stream.is_open());
 
-        std::ifstream file("file_stream_write.bin", std::ios::binary);
+        std::ifstream file(path, std::ios::binary);
         CHECK(file.is_open());
         file.read(buffer, 12);
         CHECK(std::memcmp(buffer, "12341234abcd", 12) == 0);
@@ -203,12 +205,14 @@ TEST_CASE("FileStream")
 
     SUBCASE("read")
     {
-        std::ofstream file("file_stream_read.bin", std::ios::binary);
+        std::filesystem::path path = testing::get_case_temp_directory() / "file_stream_read.bin";
+
+        std::ofstream file(path, std::ios::binary);
         file.write("12345678abcdefgh", 16);
         file.close();
 
-        FileStream stream("file_stream_read.bin", FileStream::Mode::read);
-        CHECK_EQ(stream.path(), "file_stream_read.bin");
+        FileStream stream(path, FileStream::Mode::read);
+        CHECK_EQ(stream.path(), path);
         CHECK_EQ(stream.mode(), FileStream::Mode::read);
         CHECK(stream.is_open());
         CHECK(stream.is_readable());
@@ -249,12 +253,14 @@ TEST_CASE("MemoryMappedFileStream")
 
     SUBCASE("read")
     {
-        std::ofstream file("memory_mapped_file_stream_read.bin", std::ios::binary);
+        std::filesystem::path path = testing::get_case_temp_directory() / "memory_mapped_file_stream_read.bin";
+
+        std::ofstream file(path, std::ios::binary);
         file.write("12345678abcdefgh", 16);
         file.close();
 
-        MemoryMappedFileStream stream("memory_mapped_file_stream_read.bin");
-        CHECK_EQ(stream.path(), "memory_mapped_file_stream_read.bin");
+        MemoryMappedFileStream stream(path);
+        CHECK_EQ(stream.path(), path);
         CHECK(stream.is_open());
         CHECK(stream.is_readable());
         CHECK_FALSE(stream.is_writable());
