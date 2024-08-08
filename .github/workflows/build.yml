@@ -46,7 +46,7 @@ jobs:
       # Install Python packages.
       - name: Install Python packages
         run: |
-          python -m pip install pytest pytest-github-actions-annotate-failures typing_extensions
+          python -m pip install pytest pytest-github-actions-annotate-failures typing_extensions deepdiff
 
       # Install MSVC.
       - name: Install MSVC
