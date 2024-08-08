@@ -123,7 +123,7 @@ uint32_t FileSystemWatcher::add_watch(const FileSystemWatchDesc& desc)
     state->watch_descriptor = inotify_add_watch(
         m_inotify_file_descriptor,
         state->desc.directory.c_str(),
-        IN_CREATE | IN_DELETE | IN_MODIFY | IN_MOVED_FROM | IN_MOVED_TO
+        IN_CREATE | IN_DELETE | IN_MODIFY
     );
     if (state->watch_descriptor < 0) {
         SGL_THROW("Failed to add watch to inotify file descriptor");
@@ -222,8 +222,6 @@ void FileSystemWatcher::update()
                 change = FileSystemWatcherChange::removed;
             } else if (event->mask & IN_MODIFY) {
                 change = FileSystemWatcherChange::modified;
-            } else if (event->mask & IN_MOVED_TO) {
-                change = FileSystemWatcherChange::renamed;
             }
 
             if (change != FileSystemWatcherChange::invalid) {
