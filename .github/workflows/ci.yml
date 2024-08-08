@@ -1,0 +1,130 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  checks: write
+  id-token: write
+
+jobs:
+  build_and_test:
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows, linux, macos]
+        platform: [x86_64, aarch64]
+        compiler: [msvc, gcc, clang]
+        config: [Debug, Release]
+        python: ["3.10"]
+        exclude:
+          # Exclude macos (no runners available)
+          - { os: macos }
+          # Exclude aarch64 for windows/linux
+          - { os: windows, platform: aarch64 }
+          - { os: linux, platform: aarch64 }
+          # Exclude x86_64 for macos
+          - { os: macos, platform: x86_64 }
+          # Exclude unavailable compilers
+          - { os: windows, compiler: gcc }
+          - { os: windows, compiler: clang }
+          - { os: linux, compiler: msvc }
+          - { os: macos, compiler: msvc }
+          - { os: macos, compiler: gcc }
+          # Skip clang on linux
+          - { os: linux, compiler: clang }
+        include:
+          # Specify common OS specific options
+          - { os: windows, cmake: tools/host/cmake/bin/cmake.exe, setpath: setpath.ps1 }
+          - { os: linux, cmake: tools/host/cmake/bin/cmake, setpath: setpath.sh }
+          # Specify runners
+          - { os: windows, platform: x86_64, runs-on: [self-hosted, Windows, X64] }
+          - { os: linux, platform: x86_64, runs-on: [self-hosted, Linux, X64] }
+          # Specify build presets
+          - { os: windows, compiler: msvc, preset: windows-msvc }
+          - { os: linux, compiler: gcc, preset: linux-gcc }
+          # - { os: linux, compiler: clang, preset: linux-clang }
+
+    env:
+      VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      # Setup Python.
+      - name: Setup Python ${{ matrix.python }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: 'pip'
+
+      # Setup Python environment.
+      - name: Setup Python environment
+        run: |
+          python -m pip install pytest pytest-github-actions-annotate-failures typing_extensions numpy
+
+      # Setup MSVC.
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
+      # Setup (Windows).
+      - name: Setup (Windows)
+        if: ${{ startsWith(matrix.preset, 'windows') }}
+        shell: cmd
+        run: |
+          setup.bat
+
+      # Setup (Linux).
+      - name: Setup (Linux)
+        if: ${{ startsWith(matrix.preset, 'linux') }}
+        shell: bash
+        run: |
+          ./setup.sh
+      # sudo apt install libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev pkg-config
+
+      # Setup (macOS).
+      - name: Setup (macOS)
+        if: ${{ startsWith(matrix.preset, 'macos') }}
+        shell: bash
+        run: |
+          ./setup.sh
+
+      # Setup vcpkg caching.
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      # Configure.
+      - name: Configure
+        run: ${{matrix.cmake}} --preset ${{matrix.preset}}
+
+      # Build.
+      - name: Build
+        run: ${{matrix.cmake}} --build build/${{matrix.preset}} --config ${{matrix.config}}
+
+      # Unit Tests (C++)
+      - name: Unit Tests (C++)
+        run: build/${{matrix.preset}}/bin/${{matrix.config}}/sgl_tests
+
+      # Unit Tests (Python)
+      - name: Unit Tests (Python)
+        run: |
+          . ./build/${{matrix.preset}}/bin/${{matrix.config}}/${{matrix.setpath}}
+          python -m pytest src -r a --junit-xml=pytest-junit.xml
+
+      # Test Report
+      - name: Test Report
+        uses: mikepenz/action-junit-report@v4
+        if: always()
+        with:
+          report_paths: '*-junit.xml'
