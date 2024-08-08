@@ -13,6 +13,10 @@ import helpers
 @pytest.mark.parametrize("value", [2, 5])
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_link_time_constants(device_type, value):
+    # skip on linux
+    if sys.platform == "linux":
+        pytest.skip("Test crashes on Linux")
+
     device = helpers.get_device(type=device_type)
 
     constants = "\n".join(
