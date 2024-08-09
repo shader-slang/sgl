@@ -158,7 +158,7 @@ TEST_CASE("FileStream")
 
     SUBCASE("write")
     {
-        std::filesystem::path path = testing::get_case_temp_directory() / "file_stream_write.bin";
+        auto path = testing::get_case_temp_directory() / "file_stream_write.bin";
 
         FileStream stream(path, FileStream::Mode::write);
         CHECK_EQ(stream.path(), path);
@@ -205,7 +205,7 @@ TEST_CASE("FileStream")
 
     SUBCASE("read")
     {
-        std::filesystem::path path = testing::get_case_temp_directory() / "file_stream_read.bin";
+        auto path = testing::get_case_temp_directory() / "file_stream_read.bin";
 
         std::ofstream file(path, std::ios::binary);
         file.write("12345678abcdefgh", 16);
@@ -253,7 +253,7 @@ TEST_CASE("MemoryMappedFileStream")
 
     SUBCASE("read")
     {
-        std::filesystem::path path = testing::get_case_temp_directory() / "memory_mapped_file_stream_read.bin";
+        auto path = testing::get_case_temp_directory() / "memory_mapped_file_stream_read.bin";
 
         std::ofstream file(path, std::ios::binary);
         file.write("12345678abcdefgh", 16);
