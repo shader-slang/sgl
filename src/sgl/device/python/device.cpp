@@ -619,7 +619,7 @@ SGL_PY_EXPORT(device_device)
         [](Device* self, ref<TypeLayoutReflection> type_layout)
         { return self->create_mutable_shader_object(type_layout); },
         "type_layout"_a,
-        D(Device, create_mutable_shader_object)
+        D(Device, create_mutable_shader_object, 2)
     );
     device.def(
         "create_mutable_shader_object",
