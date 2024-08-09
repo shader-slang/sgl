@@ -3,6 +3,7 @@
 #pragma once
 
 #include "sgl/device/types.h"
+#include "sgl/device/fwd.h"
 
 #include "sgl/core/macros.h"
 #include "sgl/core/enum.h"
@@ -19,14 +20,12 @@
 
 namespace sgl {
 
-class TypeReflection;
-class TypeLayoutReflection;
-class VariableReflection;
-class VariableLayoutReflection;
-class EntryPointLayout;
-class ProgramLayout;
-
 namespace detail {
+
+    inline const DeclReflection* from_slang(slang::DeclReflection* decl_reflection)
+    {
+        return reinterpret_cast<const DeclReflection*>(decl_reflection);
+    }
     inline const TypeReflection* from_slang(slang::TypeReflection* type_reflection)
     {
         return reinterpret_cast<const TypeReflection*>(type_reflection);
@@ -34,6 +33,10 @@ namespace detail {
     inline const TypeLayoutReflection* from_slang(slang::TypeLayoutReflection* type_layout_reflection)
     {
         return reinterpret_cast<const TypeLayoutReflection*>(type_layout_reflection);
+    }
+    inline const FunctionReflection* from_slang(slang::FunctionReflection* variable_reflection)
+    {
+        return reinterpret_cast<const FunctionReflection*>(variable_reflection);
     }
     inline const VariableReflection* from_slang(slang::VariableReflection* variable_reflection)
     {
@@ -53,8 +56,125 @@ namespace detail {
     }
 } // namespace detail
 
+
+enum class ModifierType {
+    shared = SLANG_MODIFIER_SHARED,
+    nodiff = SLANG_MODIFIER_NO_DIFF,
+    static_ = SLANG_MODIFIER_STATIC,
+    const_ = SLANG_MODIFIER_CONST,
+    export_ = SLANG_MODIFIER_EXPORT,
+    extern_ = SLANG_MODIFIER_EXTERN,
+    differentiable = SLANG_MODIFIER_DIFFERENTIABLE,
+    mutating = SLANG_MODIFIER_MUTATING,
+    in = SLANG_MODIFIER_IN,
+    out = SLANG_MODIFIER_OUT,
+    inout = SLANG_MODIFIER_INOUT,
+};
+
+#if SGL_DEBUG
+#define SGL_REFLECTION_THROW_IF_DESTRUCTED(type_name)                                                                  \
+    ~type_name()                                                                                                       \
+    {                                                                                                                  \
+        SGL_THROW("Reflection object being destructed - this should never happen!");                                   \
+    }
+#else
+#define SGL_REFLECTION_THROW_IF_DESTRUCTED(type_name)
+#endif
+
+SGL_ENUM_INFO(
+    ModifierType,
+    {
+        {ModifierType::shared, "shared"},
+        {ModifierType::nodiff, "nodiff"},
+        {ModifierType::static_, "static"},
+        {ModifierType::const_, "const"},
+        {ModifierType::export_, "export"},
+        {ModifierType::extern_, "extern"},
+        {ModifierType::differentiable, "differentiable"},
+        {ModifierType::mutating, "mutating"},
+        {ModifierType::in, "inn"},
+        {ModifierType::out, "out"},
+        {ModifierType::inout, "inout"},
+    }
+);
+SGL_ENUM_REGISTER(ModifierType);
+
+class SGL_API DeclReflection : private slang::DeclReflection {
+
+public:
+    SGL_REFLECTION_THROW_IF_DESTRUCTED(DeclReflection)
+
+    /// Cast to non-const base pointer.
+    /// The underlying slang API is not const-correct.
+    slang::DeclReflection* base() const { return (slang::DeclReflection*)(this); }
+
+    /// Different kinds of decl slang can return.
+    enum class Kind {
+        unsupported = SLANG_DECL_KIND_UNSUPPORTED_FOR_REFLECTION,
+        struct_ = SLANG_DECL_KIND_STRUCT,
+        func = SLANG_DECL_KIND_FUNC,
+        module = SLANG_DECL_KIND_MODULE,
+        generic = SLANG_DECL_KIND_GENERIC,
+        variable = SLANG_DECL_KIND_VARIABLE,
+    };
+    SGL_ENUM_INFO(
+        Kind,
+        {
+            {Kind::unsupported, "unsupported"},
+            {Kind::struct_, "struct"},
+            {Kind::func, "func"},
+            {Kind::module, "module"},
+            {Kind::generic, "generic"},
+            {Kind::variable, "variable"},
+        }
+    );
+
+    /// Decl kind (struct/function/module/generic/variable).
+    Kind kind() const { return static_cast<Kind>(base()->getKind()); }
+
+    /// List of children of this cursor.
+    std::vector<const DeclReflection*> children() const;
+
+    /// Get number of children.
+    int32_t child_count() const { return base()->getChildrenCount(); }
+
+    /// Get the name of this decl (if it is of a kind that has a name).
+    /// Note: Only supported for types, functions and variables.
+    std::string name() const;
+
+    /// List of children of this cursor of a specific kind.
+    std::vector<const DeclReflection*> children_of_kind(Kind kind) const;
+
+    /// Index operator to get nth child.
+    const DeclReflection* operator[](int32_t index) const { return detail::from_slang(base()->getChild(index)); }
+
+    /// Description as string.
+    std::string to_string() const;
+
+    /// Get type corresponding to this decl ref.
+    const TypeReflection* as_type() const;
+
+    /// Get variable corresponding to this decl ref.
+    const VariableReflection* as_variable() const { return detail::from_slang(base()->asVariable()); }
+
+    /// Get function corresponding to this decl ref.
+    const FunctionReflection* as_function() const { return detail::from_slang(base()->asFunction()); }
+
+    /// Finds all children of a specific kind with a given name.
+    /// Note: Only supported for types, functions and variables.
+    std::vector<const DeclReflection*> find_children_of_kind(Kind kind, std::string_view child_name) const;
+
+    /// Finds the first child of a specific kind with a given name.
+    /// Note: Only supported for types, functions and variables.
+    const DeclReflection* find_first_child_of_kind(Kind kind, std::string_view child_name) const;
+};
+SGL_ENUM_REGISTER(DeclReflection::Kind);
+
 class SGL_API TypeReflection : private slang::TypeReflection {
 public:
+    SGL_REFLECTION_THROW_IF_DESTRUCTED(TypeReflection)
+
+
     enum class Kind {
         none = SLANG_TYPE_KIND_NONE,
         struct_ = SLANG_TYPE_KIND_STRUCT,
@@ -369,6 +489,9 @@ SGL_ENUM_REGISTER(TypeReflection::ParameterCategory);
 
 class SGL_API TypeLayoutReflection : private slang::TypeLayoutReflection {
 public:
+    SGL_REFLECTION_THROW_IF_DESTRUCTED(TypeLayoutReflection)
+
+
     static const TypeLayoutReflection* from_slang(slang::TypeLayoutReflection* type_layout_reflection)
     {
         return detail::from_slang(type_layout_reflection);
@@ -679,8 +802,46 @@ public:
     std::string to_string() const;
 };
 
+class SGL_API FunctionReflection : private slang::FunctionReflection {
+public:
+    SGL_REFLECTION_THROW_IF_DESTRUCTED(FunctionReflection)
+
+    /// Cast to non-const base pointer.
+    /// The underlying slang API is not const-correct.
+    slang::FunctionReflection* base() const { return (slang::FunctionReflection*)(this); }
+
+    char const* name() const { return base()->getName(); }
+
+    const TypeReflection* return_type() { return detail::from_slang(base()->getReturnType()); }
+
+    uint32_t parameter_count() const { return base()->getParameterCount(); }
+
+    const VariableReflection* get_parameter_by_index(uint32_t index) const
+    {
+        SGL_CHECK(index < parameter_count(), "Parameter index out of range");
+        return detail::from_slang(base()->getParameterByIndex(index));
+    }
+
+    std::vector<const VariableReflection*> parameters() const
+    {
+        std::vector<const VariableReflection*> result;
+        for (uint32_t i = 0; i < base()->getParameterCount(); ++i) {
+            result.push_back(detail::from_slang(base()->getParameterByIndex(i)));
+        }
+        return result;
+    }
+
+    /// Check if variable has a given modifier (eg 'inout').
+    bool has_modifier(ModifierType modifier) const
+    {
+        return base()->findModifier(static_cast<slang::Modifier::ID>(modifier)) != nullptr;
+    }
+};
+
 class SGL_API VariableReflection : private slang::VariableReflection {
 public:
+    SGL_REFLECTION_THROW_IF_DESTRUCTED(VariableReflection)
+
     static const VariableReflection* from_slang(slang::VariableReflection* variable_reflection)
     {
         return detail::from_slang(variable_reflection);
@@ -690,9 +851,17 @@ public:
     /// The underlying slang API is not const-correct.
     slang::VariableReflection* base() const { return (slang::VariableReflection*)(this); }
 
+    /// Variable name.
     const char* name() const { return base()->getName(); }
 
+    /// Variable type reflection.
     const TypeReflection* type() const { return detail::from_slang(base()->getType()); }
+
+    /// Check if variable has a given modifier (eg 'inout').
+    bool has_modifier(ModifierType modifier) const
+    {
+        return base()->findModifier(static_cast<slang::Modifier::ID>(modifier)) != nullptr;
+    }
 
 #if 0
     Modifier* findModifier(Modifier::ID id)
@@ -718,6 +887,8 @@ public:
 
 class SGL_API VariableLayoutReflection : private slang::VariableLayoutReflection {
 public:
+    SGL_REFLECTION_THROW_IF_DESTRUCTED(VariableLayoutReflection)
+
     /// Cast to non-const base pointer.
     /// The underlying slang API is not const-correct.
     slang::VariableLayoutReflection* base() const { return (slang::VariableLayoutReflection*)(this); }
@@ -779,6 +950,8 @@ public:
 
 class SGL_API EntryPointLayout : private slang::EntryPointLayout {
 public:
+    SGL_REFLECTION_THROW_IF_DESTRUCTED(EntryPointLayout)
+
     static const EntryPointLayout* from_slang(slang::EntryPointLayout* entry_point_reflection)
     {
         return detail::from_slang(entry_point_reflection);
@@ -844,6 +1017,8 @@ public:
 
 class SGL_API ProgramLayout : private slang::ProgramLayout {
 public:
+    SGL_REFLECTION_THROW_IF_DESTRUCTED(ProgramLayout)
+
     static const ProgramLayout* from_slang(slang::ProgramLayout* program_layout)
     {
         return detail::from_slang(program_layout);

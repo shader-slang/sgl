@@ -10,6 +10,7 @@
 #include "sgl/device/slang_utils.h"
 #include "sgl/device/pipeline.h"
 #include "sgl/device/hot_reload.h"
+#include "sgl/device/reflection.h"
 
 #include "sgl/core/type_utils.h"
 #include "sgl/core/platform.h"
@@ -819,6 +820,11 @@ bool SlangModule::has_entry_point(std::string_view name) const
     return slang_entry_point != nullptr;
 }
 
+const DeclReflection* SlangModule::abstract_syntax_tree() const
+{
+    return detail::from_slang(m_data->slang_module->getModuleReflection());
+}
+
 void SlangModule::_register_entry_point(SlangEntryPoint* entry_point) const
 {
     m_registered_entry_points.insert(entry_point);
@@ -842,6 +848,7 @@ std::string SlangModule::to_string() const
         string::indent(string::list_to_string(entry_points()))
     );
 }
+
 
 SlangEntryPoint::SlangEntryPoint(ref<SlangModule> module, const SlangEntryPointDesc& desc)
     : m_module(module)

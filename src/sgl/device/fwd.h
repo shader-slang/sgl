@@ -61,8 +61,10 @@ class ShaderProgram;
 
 // reflection.h
 
+class DeclReflection;
 class TypeReflection;
 class TypeLayoutReflection;
+class FunctionReflection;
 class VariableReflection;
 class VariableLayoutReflection;
 class ProgramLayout;

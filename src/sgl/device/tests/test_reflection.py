@@ -79,6 +79,10 @@ def test_type_layout(test_id, device_type):
     global_buffer_layout = module.layout.globals_type_layout
     constant_buffer_layout = global_buffer_layout.element_type_layout
 
+    # Check 'foo' variable name on one line to verify nanobind
+    # ownership doesn't destry the field straight away.
+    assert constant_buffer_layout.fields[0].name == "foo"
+
     # Get the 'foo' variable from the buffer.
     foo_variable = constant_buffer_layout.fields[0]
     assert foo_variable.name == "foo"
