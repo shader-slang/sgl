@@ -25,9 +25,9 @@ def get_os():
 def get_platform():
     machine = platform.machine()
     if machine == "x86_64" or machine == "AMD64":
-        return "x64"
+        return "x86_64"
     elif machine == "aarch64":
-        return "arm64"
+        return "aarch64"
     else:
         raise NameError(f"Unsupported platform: {machine}")
 
@@ -110,7 +110,7 @@ def main():
         "--os", type=str, action="store", help="OS (windows, linux, macos)"
     )
     parser.add_argument(
-        "--platform", type=str, action="store", help="Platform (x64, arm64)"
+        "--platform", type=str, action="store", help="Platform (x86_64, aarch64)"
     )
     parser.add_argument(
         "--compiler", type=str, action="store", help="Compiler (msvc, gcc, clang)"
@@ -160,7 +160,10 @@ def main():
     # Determine cmake preset.
     preset = args["os"] + "-" + args["compiler"]
     if args["os"] == "macos":
-        preset += "-" + args["platform"]
+        if args["platform"] == "x86_64":
+            preset += "-x64"
+        elif args["platform"] == "aarch64":
+            preset += "-arm64"
     args["preset"] = preset
 
     # Determine binary directory.
