@@ -132,6 +132,8 @@ def configure(args):
     cmd = f"{args.cmake} --preset {args.preset}"
     if "header-validation" in args.flags:
         cmd += " -DSGL_ENABLE_HEADER_VALIDATION=ON"
+    if "coverage" in args.flags:
+        cmd += " -DSGL_ENABLE_COVERAGE=ON"
     run_command(cmd)
 
 

@@ -235,8 +235,8 @@ target_compile_options(sgl
 )
 
 if(SGL_ENABLE_COVERAGE)
-    include(CodeCoverage)
-    append_coverage_compiler_flags_to_target(sgl)
+    target_compile_options(sgl PRIVATE $<$<CXX_COMPILER_ID:GNU>:--coverage -fprofile-abs-path>)
+    target_link_libraries(sgl PRIVATE $<$<CXX_COMPILER_ID:GNU>:gcov>)
 endif()
 
 if(SGL_ENABLE_ASAN)
