@@ -5,12 +5,21 @@ from sgl import Timer
 import time
 
 
+def high_precision_sleep(duration):
+    start_time = time.perf_counter()
+    while True:
+        elapsed_time = time.perf_counter() - start_time
+        remaining_time = duration - elapsed_time
+        if remaining_time <= 0:
+            break
+
+
 def test_now():
     delta_ns = 10000000
     t0 = Timer.now()
-    time.sleep(delta_ns / 1000000000.0)
+    high_precision_sleep(delta_ns / 1000000000.0)
     t1 = Timer.now()
-    assert t1 > t0 + delta_ns / 10
+    assert t1 > t0 + delta_ns * 0.9
 
 
 def test_delta():
@@ -26,11 +35,11 @@ def test_timer():
     delta_ms = delta_us / 1000.0
     delta_s = delta_ms / 1000.0
     timer = Timer()
-    time.sleep(delta_ns / 1000000000.0)
-    assert timer.elapsed_ns() > delta_ns / 10
-    assert timer.elapsed_us() > delta_us / 10
-    assert timer.elapsed_ms() > delta_ms / 10
-    assert timer.elapsed_s() > delta_s / 10
+    high_precision_sleep(delta_ns / 1000000000.0)
+    assert timer.elapsed_ns() > delta_ns * 0.9
+    assert timer.elapsed_us() > delta_us * 0.9
+    assert timer.elapsed_ms() > delta_ms * 0.9
+    assert timer.elapsed_s() > delta_s * 0.9
 
 
 if __name__ == "__main__":
