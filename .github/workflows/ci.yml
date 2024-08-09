@@ -52,6 +52,11 @@ jobs:
 
     env:
       VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+      CI_OS: ${{ matrix.os }}
+      CI_PLATFORM: ${{ matrix.platform }}
+      CI_COMPILER: ${{ matrix.compiler }}
+      CI_CONFIG: ${{ matrix.config }}
+      CI_PYTHON: ${{ matrix.python }}
 
     steps:
       - uses: actions/checkout@v4
@@ -74,27 +79,10 @@ jobs:
       - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@v1
 
-      # Setup (Windows).
-      - name: Setup (Windows)
-        if: ${{ startsWith(matrix.preset, 'windows') }}
-        shell: cmd
-        run: |
-          setup.bat
-
-      # Setup (Linux).
-      - name: Setup (Linux)
-        if: ${{ startsWith(matrix.preset, 'linux') }}
-        shell: bash
-        run: |
-          ./setup.sh
+      # Setup.
+      - name: Setup
+        run: python tools/ci.py setup
       # sudo apt install libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev pkg-config
-
-      # Setup (macOS).
-      - name: Setup (macOS)
-        if: ${{ startsWith(matrix.preset, 'macos') }}
-        shell: bash
-        run: |
-          ./setup.sh
 
       # Setup vcpkg caching.
       - name: Export GitHub Actions cache environment variables
@@ -106,21 +94,19 @@ jobs:
 
       # Configure.
       - name: Configure
-        run: ${{matrix.cmake}} --preset ${{matrix.preset}}
+        run: python tools/ci.py configure
 
       # Build.
       - name: Build
-        run: ${{matrix.cmake}} --build build/${{matrix.preset}} --config ${{matrix.config}}
+        run: python tools/ci.py build
 
       # Unit Tests (C++)
       - name: Unit Tests (C++)
-        run: build/${{matrix.preset}}/bin/${{matrix.config}}/sgl_tests
+        run: python tools/ci.py unit-tests-cpp
 
       # Unit Tests (Python)
       - name: Unit Tests (Python)
-        run: |
-          . ./build/${{matrix.preset}}/bin/${{matrix.config}}/${{matrix.setpath}}
-          python -m pytest src -r a --junit-xml=pytest-junit.xml
+        run: python tools/ci.py unit-tests-python
 
       # Test Report
       - name: Test Report
