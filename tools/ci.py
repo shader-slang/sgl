@@ -11,6 +11,9 @@ import json
 
 
 def get_os():
+    """
+    Return the OS name (windows, linux, macos).
+    """
     platform = sys.platform
     if platform == "win32":
         return "windows"
@@ -23,6 +26,9 @@ def get_os():
 
 
 def get_platform():
+    """
+    Return the platform name (x86_64, aarch64).
+    """
     machine = platform.machine()
     if machine == "x86_64" or machine == "AMD64":
         return "x86_64"
@@ -33,6 +39,9 @@ def get_platform():
 
 
 def get_default_compiler():
+    """
+    Return the default compiler name for the current OS (msvc, gcc, clang).
+    """
     if get_os() == "windows":
         return "msvc"
     elif get_os() == "linux":
@@ -46,16 +55,37 @@ def get_default_compiler():
 def run_command(command, shell=True, env=None):
     if get_os() == "windows":
         command = command.replace("/", "\\")
-    print(f'Running "{command}" ...')
-    sys.stdout.flush()
     if env != None:
         new_env = os.environ.copy()
         new_env.update(env)
         env = new_env
-    result = subprocess.run(command, shell=shell, env=env)
-    if result.returncode != 0:
+    print(f'Running "{command}" ...')
+    sys.stdout.flush()
+
+    process = subprocess.Popen(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        universal_newlines=True,
+        shell=shell,
+        env=env,
+    )
+
+    out = ""
+    while True:
+        nextline = process.stdout.readline()
+        if nextline == "" and process.poll() is not None:
+            break
+        sys.stdout.write(nextline)
+        sys.stdout.flush()
+        out += nextline
+
+    process.communicate()
+    if process.returncode != 0:
         raise RuntimeError(f'Error running "{command}"')
-    return result
+
+    return out
 
 
 def get_changed_env(command):
@@ -107,12 +137,19 @@ def build(args):
 
 
 def unit_test_cpp(args):
-    run_command(f"{args.bin_dir}/sgl_tests -r=console")
+    out = run_command(f"{args.bin_dir}/sgl_tests -r=console,junit")
+    report = "\n".join(
+        filter(lambda line: line.strip().startswith("<"), out.splitlines())
+    )
+    os.makedirs("reports", exist_ok=True)
+    with open("reports/doctest-juint.xml", "w") as f:
+        f.write(report)
 
 
 def unit_test_python(args):
     env = get_python_env(args)
-    run_command(f"pytest src -r a --junit-xml=pytest-junit.xml", env=env)
+    os.makedirs("reports", exist_ok=True)
+    run_command(f"pytest src -r a --junit-xml=reports/pytest-junit.xml", env=env)
 
 
 def main():
