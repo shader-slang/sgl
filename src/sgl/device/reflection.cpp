@@ -64,7 +64,7 @@ std::vector<ref<const DeclReflection>> DeclReflection::children() const
     int32_t count = child_count();
     res.reserve(count);
     for (int32_t i = 0; i < count; i++) {
-        res.push_back(detail::from_slang(m_owner, base()->getChild(i)));
+        res.push_back(detail::from_slang(m_owner, m_target->getChild(i)));
     }
     return res;
 }
@@ -75,7 +75,7 @@ std::vector<ref<const DeclReflection>> DeclReflection::children_of_kind(Kind kin
     int32_t count = child_count();
     res.reserve(count);
     for (int32_t i = 0; i < count; i++) {
-        ref<const DeclReflection> child = detail::from_slang(m_owner, base()->getChild(i));
+        ref<const DeclReflection> child = detail::from_slang(m_owner, m_target->getChild(i));
         if (child->kind() == kind) {
             res.push_back(child);
         }
@@ -96,7 +96,7 @@ std::string DeclReflection::to_string() const
 
 ref<const TypeReflection> DeclReflection::as_type() const
 {
-    return detail::from_slang(m_owner, base()->getType());
+    return detail::from_slang(m_owner, m_target->getType());
 }
 
 std::string DeclReflection::name() const
@@ -120,7 +120,7 @@ DeclReflection::find_children_of_kind(Kind kind, std::string_view child_name) co
     int32_t count = child_count();
     res.reserve(count);
     for (int32_t i = 0; i < count; i++) {
-        ref<const DeclReflection> child = detail::from_slang(m_owner, base()->getChild(i));
+        ref<const DeclReflection> child = detail::from_slang(m_owner, m_target->getChild(i));
         if (child->kind() == kind && child->name() == child_name) {
             res.push_back(child);
         }
@@ -134,7 +134,7 @@ ref<const DeclReflection> DeclReflection::find_first_child_of_kind(Kind kind, st
     int32_t count = child_count();
     res.reserve(count);
     for (int32_t i = 0; i < count; i++) {
-        ref<const DeclReflection> child = detail::from_slang(m_owner, base()->getChild(i));
+        ref<const DeclReflection> child = detail::from_slang(m_owner, m_target->getChild(i));
         if (child->kind() == kind && child->name() == child_name) {
             return child;
         }

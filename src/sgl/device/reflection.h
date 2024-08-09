@@ -85,10 +85,6 @@ public:
         , m_target(target){};
 
 
-    /// Cast to non-const base pointer.
-    /// The underlying slang API is not const-correct.
-    slang::DeclReflection* base() const { return (slang::DeclReflection*)(this); }
-
     /// Different kinds of decl slang can return.
     enum class Kind {
         unsupported = SLANG_DECL_KIND_UNSUPPORTED_FOR_REFLECTION,
@@ -465,10 +461,6 @@ public:
     std::string to_string() const;
 
 private:
-    /// Cast to non-const base pointer.
-    /// The underlying slang API is not const-correct.
-    slang::TypeReflection* base() const { return (slang::TypeReflection*)(this); }
-
     slang::TypeReflection* m_target;
 };
 
@@ -492,9 +484,7 @@ public:
         : BaseReflectionObject(owner)
         , m_target(target){};
 
-    /// Cast to non-const base pointer.
-    /// The underlying slang API is not const-correct.
-    slang::TypeLayoutReflection* base() const { return (slang::TypeLayoutReflection*)(this); }
+    slang::TypeLayoutReflection* get_slang_type_layout() const { return m_target; }
 
     ref<const TypeReflection> type() const { return detail::from_slang(m_owner, m_target->getType()); }
 
@@ -595,10 +585,6 @@ public:
         : BaseReflectionObject(owner)
         , m_target(target){};
 
-    /// Cast to non-const base pointer.
-    /// The underlying slang API is not const-correct.
-    slang::FunctionReflection* base() const { return (slang::FunctionReflection*)(this); }
-
     char const* name() const { return m_target->getName(); }
 
     ref<const TypeReflection> return_type() { return detail::from_slang(m_owner, m_target->getReturnType()); }
@@ -642,10 +628,6 @@ public:
         : BaseReflectionObject(owner)
         , m_target(target){};
 
-    /// Cast to non-const base pointer.
-    /// The underlying slang API is not const-correct.
-    slang::VariableReflection* base() const { return (slang::VariableReflection*)(this); }
-
     /// Variable name.
     const char* name() const { return m_target->getName(); }
 
@@ -667,10 +649,6 @@ public:
     VariableLayoutReflection(ref<const Object> owner, slang::VariableLayoutReflection* target)
         : BaseReflectionObject(owner)
         , m_target(target){};
-
-    /// Cast to non-const base pointer.
-    /// The underlying slang API is not const-correct.
-    slang::VariableLayoutReflection* base() const { return (slang::VariableLayoutReflection*)(this); }
 
     ref<const VariableReflection> variable() const { return detail::from_slang(m_owner, m_target->getVariable()); }
 
@@ -700,10 +678,6 @@ public:
     EntryPointLayout(ref<const Object> owner, slang::EntryPointLayout* target)
         : BaseReflectionObject(owner)
         , m_target(target){};
-
-    /// Cast to non-const base pointer.
-    /// The underlying slang API is not const-correct.
-    slang::EntryPointLayout* base() const { return (slang::EntryPointLayout*)(this); }
 
     const char* name() const { return m_target->getName(); }
 
@@ -753,10 +727,6 @@ public:
     ProgramLayout(ref<const Object> owner, slang::ProgramLayout* target)
         : BaseReflectionObject(owner)
         , m_target(target){};
-
-    /// Cast to non-const base pointer.
-    /// The underlying slang API is not const-correct.
-    slang::ProgramLayout* base() const { return (slang::ProgramLayout*)(this); }
 
     ref<const TypeLayoutReflection> globals_type_layout() const
     {

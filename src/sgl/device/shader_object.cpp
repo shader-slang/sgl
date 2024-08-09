@@ -179,7 +179,10 @@ MutableShaderObject::MutableShaderObject(ref<Device> device, const ShaderProgram
 MutableShaderObject::MutableShaderObject(ref<Device> device, ref<const TypeLayoutReflection> type_layout)
     : ShaderObject(std::move(device), nullptr)
 {
-    m_device->gfx_device()->createMutableShaderObjectFromTypeLayout(type_layout->base(), &m_shader_object);
+    m_device->gfx_device()->createMutableShaderObjectFromTypeLayout(
+        type_layout->get_slang_type_layout(),
+        &m_shader_object
+    );
 }
 
 MutableShaderObject::~MutableShaderObject()
