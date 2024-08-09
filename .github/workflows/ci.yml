@@ -39,19 +39,13 @@ jobs:
           # Skip clang on linux
           - { os: linux, compiler: clang }
         include:
-          # Specify common OS specific options
-          - { os: windows, cmake: tools/host/cmake/bin/cmake.exe, setpath: setpath.ps1 }
-          - { os: linux, cmake: tools/host/cmake/bin/cmake, setpath: setpath.sh }
           # Specify runners
           - { os: windows, platform: x86_64, runs-on: [self-hosted, Windows, X64] }
           - { os: linux, platform: x86_64, runs-on: [self-hosted, Linux, X64] }
-          # Specify build presets
-          - { os: windows, compiler: msvc, preset: windows-msvc }
-          - { os: linux, compiler: gcc, preset: linux-gcc }
-          # - { os: linux, compiler: clang, preset: linux-clang }
 
     env:
       VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+      # Environment variables used by ci.py
       CI_OS: ${{ matrix.os }}
       CI_PLATFORM: ${{ matrix.platform }}
       CI_COMPILER: ${{ matrix.compiler }}
@@ -114,4 +108,4 @@ jobs:
         if: always()
         with:
           report_paths: 'reports/*-junit.xml'
-          check_name: "Unit Test Report (${{ github.jobs[github.job].name }})"
+          check_name: "Unit Test Report"
