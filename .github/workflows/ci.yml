@@ -114,3 +114,4 @@ jobs:
         if: always()
         with:
           report_paths: 'reports/*-junit.xml'
+          check_name: "Unit Test Report (${{ github.jobs[github.job].name }})"
