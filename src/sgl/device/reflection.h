@@ -509,23 +509,6 @@ public:
         return m_target->getAlignment(SlangParameterCategory::SLANG_PARAMETER_CATEGORY_UNIFORM);
     }
 
-#if 0
-    size_t getSize(SlangParameterCategory category = SLANG_PARAMETER_CATEGORY_UNIFORM)
-    {
-        return spReflectionTypeLayout_GetSize((SlangReflectionTypeLayout*)this, category);
-    }
-
-    size_t getStride(SlangParameterCategory category = SLANG_PARAMETER_CATEGORY_UNIFORM)
-    {
-        return spReflectionTypeLayout_GetStride((SlangReflectionTypeLayout*)this, category);
-    }
-
-    int32_t getAlignment(SlangParameterCategory category = SLANG_PARAMETER_CATEGORY_UNIFORM)
-    {
-        return spReflectionTypeLayout_getAlignment((SlangReflectionTypeLayout*)this, category);
-    }
-#endif
-
     uint32_t field_count() const { return m_target->getFieldCount(); }
 
     ref<const VariableLayoutReflection> get_field_by_index(uint32_t index) const
@@ -556,13 +539,6 @@ public:
         return result;
     }
 
-#if 0
-    VariableLayoutReflection* getExplicitCounter()
-    {
-        return (VariableLayoutReflection*)spReflectionTypeLayout_GetExplicitCounter((SlangReflectionTypeLayout*)this);
-    }
-#endif
-
     bool is_array() const { return type()->is_array(); }
 
     ref<const TypeLayoutReflection> unwrap_array() const
@@ -575,10 +551,6 @@ public:
     }
 
     size_t element_count() const { return type()->element_count(); }
-
-#if 0
-    size_t getTotalArrayElementCount() { return getType()->getTotalArrayElementCount(); }
-#endif
 
     size_t element_stride(TypeReflection::ParameterCategory category = TypeReflection::ParameterCategory::uniform) const
     {
@@ -606,196 +578,10 @@ public:
         return static_cast<TypeReflection::ParameterCategory>(m_target->getParameterCategory());
     }
 
-#if 0
-    unsigned int getCategoryCount()
-    {
-        return spReflectionTypeLayout_GetCategoryCount((SlangReflectionTypeLayout*)this);
-    }
-
-    ParameterCategory getCategoryByIndex(unsigned int index)
-    {
-        return (ParameterCategory)spReflectionTypeLayout_GetCategoryByIndex((SlangReflectionTypeLayout*)this, index);
-    }
-
-    unsigned getRowCount() { return getType()->getRowCount(); }
-
-    unsigned getColumnCount() { return getType()->getColumnCount(); }
-
-    TypeReflection::ScalarType getScalarType() { return getType()->getScalarType(); }
-
-    TypeReflection* getResourceResultType() { return getType()->getResourceResultType(); }
-
-    SlangResourceShape getResourceShape() { return getType()->getResourceShape(); }
-
-    SlangResourceAccess getResourceAccess() { return getType()->getResourceAccess(); }
-
-    SlangMatrixLayoutMode getMatrixLayoutMode()
-    {
-        return spReflectionTypeLayout_GetMatrixLayoutMode((SlangReflectionTypeLayout*)this);
-    }
-
-    int getGenericParamIndex() { return spReflectionTypeLayout_getGenericParamIndex((SlangReflectionTypeLayout*)this); }
-
-    TypeLayoutReflection* getPendingDataTypeLayout()
-    {
-        return (TypeLayoutReflection*)spReflectionTypeLayout_getPendingDataTypeLayout((SlangReflectionTypeLayout*)this);
-    }
-
-    VariableLayoutReflection* getSpecializedTypePendingDataVarLayout()
-    {
-        return (VariableLayoutReflection*)spReflectionTypeLayout_getSpecializedTypePendingDataVarLayout(
-            (SlangReflectionTypeLayout*)this
-        );
-    }
-
-    SlangInt getBindingRangeCount()
-    {
-        return spReflectionTypeLayout_getBindingRangeCount((SlangReflectionTypeLayout*)this);
-    }
-
-    BindingType getBindingRangeType(SlangInt index)
-    {
-        return (BindingType)spReflectionTypeLayout_getBindingRangeType((SlangReflectionTypeLayout*)this, index);
-    }
-
-    SlangInt getBindingRangeBindingCount(SlangInt index)
-    {
-        return spReflectionTypeLayout_getBindingRangeBindingCount((SlangReflectionTypeLayout*)this, index);
-    }
-
-    /*
-    SlangInt getBindingRangeIndexOffset(SlangInt index)
-    {
-        return spReflectionTypeLayout_getBindingRangeIndexOffset(
-            (SlangReflectionTypeLayout*) this,
-            index);
-    }
-
-    SlangInt getBindingRangeSpaceOffset(SlangInt index)
-    {
-        return spReflectionTypeLayout_getBindingRangeSpaceOffset(
-            (SlangReflectionTypeLayout*) this,
-            index);
-    }
-    */
-#endif
-
     uint32_t get_field_binding_range_offset(uint32_t field_index) const
     {
         return narrow_cast<uint32_t>(m_target->getFieldBindingRangeOffset(field_index));
     }
-
-#if 0
-    SlangInt getExplicitCounterBindingRangeOffset()
-    {
-        return spReflectionTypeLayout_getExplicitCounterBindingRangeOffset((SlangReflectionTypeLayout*)this);
-    }
-
-    TypeLayoutReflection* getBindingRangeLeafTypeLayout(SlangInt index)
-    {
-        return (TypeLayoutReflection*)
-            spReflectionTypeLayout_getBindingRangeLeafTypeLayout((SlangReflectionTypeLayout*)this, index);
-    }
-
-    VariableReflection* getBindingRangeLeafVariable(SlangInt index)
-    {
-        return (VariableReflection*)
-            spReflectionTypeLayout_getBindingRangeLeafVariable((SlangReflectionTypeLayout*)this, index);
-    }
-
-    SlangInt getBindingRangeDescriptorSetIndex(SlangInt index)
-    {
-        return spReflectionTypeLayout_getBindingRangeDescriptorSetIndex((SlangReflectionTypeLayout*)this, index);
-    }
-
-    SlangInt getBindingRangeFirstDescriptorRangeIndex(SlangInt index)
-    {
-        return spReflectionTypeLayout_getBindingRangeFirstDescriptorRangeIndex((SlangReflectionTypeLayout*)this, index);
-    }
-
-    SlangInt getBindingRangeDescriptorRangeCount(SlangInt index)
-    {
-        return spReflectionTypeLayout_getBindingRangeDescriptorRangeCount((SlangReflectionTypeLayout*)this, index);
-    }
-
-    SlangInt getDescriptorSetCount()
-    {
-        return spReflectionTypeLayout_getDescriptorSetCount((SlangReflectionTypeLayout*)this);
-    }
-
-    SlangInt getDescriptorSetSpaceOffset(SlangInt setIndex)
-    {
-        return spReflectionTypeLayout_getDescriptorSetSpaceOffset((SlangReflectionTypeLayout*)this, setIndex);
-    }
-
-    SlangInt getDescriptorSetDescriptorRangeCount(SlangInt setIndex)
-    {
-        return spReflectionTypeLayout_getDescriptorSetDescriptorRangeCount((SlangReflectionTypeLayout*)this, setIndex);
-    }
-
-    SlangInt getDescriptorSetDescriptorRangeIndexOffset(SlangInt setIndex, SlangInt rangeIndex)
-    {
-        return spReflectionTypeLayout_getDescriptorSetDescriptorRangeIndexOffset(
-            (SlangReflectionTypeLayout*)this,
-            setIndex,
-            rangeIndex
-        );
-    }
-
-    SlangInt getDescriptorSetDescriptorRangeDescriptorCount(SlangInt setIndex, SlangInt rangeIndex)
-    {
-        return spReflectionTypeLayout_getDescriptorSetDescriptorRangeDescriptorCount(
-            (SlangReflectionTypeLayout*)this,
-            setIndex,
-            rangeIndex
-        );
-    }
-
-    BindingType getDescriptorSetDescriptorRangeType(SlangInt setIndex, SlangInt rangeIndex)
-    {
-        return (BindingType)spReflectionTypeLayout_getDescriptorSetDescriptorRangeType(
-            (SlangReflectionTypeLayout*)this,
-            setIndex,
-            rangeIndex
-        );
-    }
-
-    ParameterCategory getDescriptorSetDescriptorRangeCategory(SlangInt setIndex, SlangInt rangeIndex)
-    {
-        return (ParameterCategory)spReflectionTypeLayout_getDescriptorSetDescriptorRangeCategory(
-            (SlangReflectionTypeLayout*)this,
-            setIndex,
-            rangeIndex
-        );
-    }
-
-    SlangInt getSubObjectRangeCount()
-    {
-        return spReflectionTypeLayout_getSubObjectRangeCount((SlangReflectionTypeLayout*)this);
-    }
-
-    SlangInt getSubObjectRangeBindingRangeIndex(SlangInt subObjectRangeIndex)
-    {
-        return spReflectionTypeLayout_getSubObjectRangeBindingRangeIndex(
-            (SlangReflectionTypeLayout*)this,
-            subObjectRangeIndex
-        );
-    }
-
-    SlangInt getSubObjectRangeSpaceOffset(SlangInt subObjectRangeIndex)
-    {
-        return spReflectionTypeLayout_getSubObjectRangeSpaceOffset(
-            (SlangReflectionTypeLayout*)this,
-            subObjectRangeIndex
-        );
-    }
-
-    VariableLayoutReflection* getSubObjectRangeOffset(SlangInt subObjectRangeIndex)
-    {
-        return (VariableLayoutReflection*)
-            spReflectionTypeLayout_getSubObjectRangeOffset((SlangReflectionTypeLayout*)this, subObjectRangeIndex);
-    }
-#endif
 
     std::string to_string() const;
 
@@ -872,27 +658,6 @@ public:
         return m_target->findModifier(static_cast<slang::Modifier::ID>(modifier)) != nullptr;
     }
 
-#if 0
-    Modifier* findModifier(Modifier::ID id)
-    {
-        return (Modifier*)spReflectionVariable_FindModifier((SlangReflectionVariable*)this, (SlangModifierID)id);
-    }
-
-    unsigned int getUserAttributeCount()
-    {
-        return spReflectionVariable_GetUserAttributeCount((SlangReflectionVariable*)this);
-    }
-    UserAttribute* getUserAttributeByIndex(unsigned int index)
-    {
-        return (UserAttribute*)spReflectionVariable_GetUserAttribute((SlangReflectionVariable*)this, index);
-    }
-    UserAttribute* findUserAttributeByName(SlangSession* session, char const* name)
-    {
-        return (UserAttribute*)
-            spReflectionVariable_FindUserAttributeByName((SlangReflectionVariable*)this, session, name);
-    }
-#endif
-
 private:
     slang::VariableReflection* m_target;
 };
@@ -911,56 +676,12 @@ public:
 
     const char* name() const { return m_target->getName(); }
 
-#if 0
-    Modifier* findModifier(Modifier::ID id) { return getVariable()->findModifier(id); }
-#endif
-
     ref<const TypeLayoutReflection> type_layout() const
     {
         return detail::from_slang(m_owner, m_target->getTypeLayout());
     }
 
-#if 0
-    ParameterCategory getCategory() { return getTypeLayout()->getParameterCategory(); }
-
-    unsigned int getCategoryCount() { return getTypeLayout()->getCategoryCount(); }
-
-    ParameterCategory getCategoryByIndex(unsigned int index) { return getTypeLayout()->getCategoryByIndex(index); }
-#endif
-
     size_t offset() const { return m_target->getOffset(SlangParameterCategory::SLANG_PARAMETER_CATEGORY_UNIFORM); }
-
-#if 0
-    TypeReflection* getType() { return getVariable()->getType(); }
-
-    unsigned getBindingIndex() { return spReflectionParameter_GetBindingIndex((SlangReflectionVariableLayout*)this); }
-
-    unsigned getBindingSpace() { return spReflectionParameter_GetBindingSpace((SlangReflectionVariableLayout*)this); }
-
-    size_t getBindingSpace(SlangParameterCategory category)
-    {
-        return spReflectionVariableLayout_GetSpace((SlangReflectionVariableLayout*)this, category);
-    }
-
-    char const* getSemanticName()
-    {
-        return spReflectionVariableLayout_GetSemanticName((SlangReflectionVariableLayout*)this);
-    }
-
-    size_t getSemanticIndex()
-    {
-        return spReflectionVariableLayout_GetSemanticIndex((SlangReflectionVariableLayout*)this);
-    }
-
-    SlangStage getStage() { return spReflectionVariableLayout_getStage((SlangReflectionVariableLayout*)this); }
-
-    VariableLayoutReflection* getPendingDataLayout()
-    {
-        return (VariableLayoutReflection*)spReflectionVariableLayout_getPendingDataLayout(
-            (SlangReflectionVariableLayout*)this
-        );
-    }
-#endif
 
     std::string to_string() const;
 
@@ -1016,25 +737,6 @@ public:
 
     bool uses_any_sample_rate_input() const { return m_target->usesAnySampleRateInput(); }
 
-#if 0
-    VariableLayoutReflection* getVarLayout()
-    {
-        return (VariableLayoutReflection*)spReflectionEntryPoint_getVarLayout((SlangReflectionEntryPoint*)this);
-    }
-
-    TypeLayoutReflection* getTypeLayout() { return getVarLayout()->getTypeLayout(); }
-
-    VariableLayoutReflection* getResultVarLayout()
-    {
-        return (VariableLayoutReflection*)spReflectionEntryPoint_getResultVarLayout((SlangReflectionEntryPoint*)this);
-    }
-
-    bool hasDefaultConstantBuffer()
-    {
-        return spReflectionEntryPoint_hasDefaultConstantBuffer((SlangReflectionEntryPoint*)this) != 0;
-    }
-#endif
-
     std::string to_string() const;
 
 private:
@@ -1085,18 +787,6 @@ public:
 
     uint32_t type_parameter_count() const { return m_target->getTypeParameterCount(); }
 
-#if 0
-    TypeParameterReflection get_type_parameter_by_index(uint32_t index) const
-    {
-        return (TypeParameterReflection*)spReflection_GetTypeParameterByIndex((SlangReflection*)this, index);
-    }
-
-    TypeParameterReflection* findTypeParameter(char const* name)
-    {
-        return (TypeParameterReflection*)spReflection_FindTypeParameter((SlangReflection*)this, name);
-    }
-#endif
-
     uint32_t entry_point_count() const { return narrow_cast<uint32_t>(m_target->getEntryPointCount()); }
 
     ref<const EntryPointLayout> get_entry_point_by_index(uint32_t index) const
@@ -1138,42 +828,6 @@ public:
         }
         return result;
     }
-
-#if 0
-    SlangUInt getGlobalConstantBufferBinding()
-    {
-        return spReflection_getGlobalConstantBufferBinding((SlangReflection*)this);
-    }
-
-    size_t getGlobalConstantBufferSize() { return spReflection_getGlobalConstantBufferSize((SlangReflection*)this); }
-
-    TypeReflection* findTypeByName(const char* name)
-    {
-        return (TypeReflection*)spReflection_FindTypeByName((SlangReflection*)this, name);
-    }
-
-    TypeLayoutReflection* getTypeLayout(TypeReflection* type, LayoutRules rules = LayoutRules::Default)
-    {
-        return (TypeLayoutReflection*)
-            spReflection_GetTypeLayout((SlangReflection*)this, (SlangReflectionType*)type, SlangLayoutRules(rules));
-    }
-
-    TypeReflection* specializeType(
-        TypeReflection* type,
-        SlangInt specializationArgCount,
-        TypeReflection* const* specializationArgs,
-        ISlangBlob** outDiagnostics
-    )
-    {
-        return (TypeReflection*)spReflection_specializeType(
-            (SlangReflection*)this,
-            (SlangReflectionType*)type,
-            specializationArgCount,
-            (SlangReflectionType* const*)specializationArgs,
-            outDiagnostics
-        );
-    }
-#endif
 
     uint32_t hashed_string_count() const { return narrow_cast<uint32_t>(m_target->getHashedStringCount()); }
 
