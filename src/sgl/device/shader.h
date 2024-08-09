@@ -401,7 +401,7 @@ public:
     bool has_entry_point(std::string_view name) const;
 
     /// Get root decl ref for this module
-    const DeclReflection* module_decl() const;
+    ref<const DeclReflection> module_decl() const;
 
     /// Internal slang module.
     slang::IModule* slang_module() const { return m_data->slang_module; }

@@ -285,7 +285,7 @@ SGL_PY_EXPORT(device_device)
                 .size = size,
                 .element_count = element_count,
                 .struct_size = struct_size,
-                .struct_type = resolved_struct_type,
+                .struct_type = ref(resolved_struct_type),
                 .format = format,
                 .usage = usage,
                 .memory_type = memory_type,
