@@ -129,7 +129,10 @@ def setup(args):
 
 
 def configure(args):
-    run_command(f"{args.cmake} --preset {args.preset}")
+    cmd = f"{args.cmake} --preset {args.preset}"
+    if "header-validation" in args.flags:
+        cmd += " -DSGL_ENABLE_HEADER_VALIDATION=ON"
+    run_command(cmd)
 
 
 def build(args):
@@ -169,6 +172,8 @@ def main():
         "--config", type=str, action="store", help="Config (Release, Debug)"
     )
     parser.add_argument("--python", type=str, action="store", help="Python version")
+    parser.add_argument("--flags", type=str, action="store", help="Additional flags")
+
     commands = parser.add_subparsers(
         dest="command", required=True, help="sub-command help"
     )
@@ -194,11 +199,15 @@ def main():
         ("compiler", "CI_COMPILER", get_default_compiler()),
         ("config", "CI_CONFIG", "Debug"),
         ("python", "CI_PYTHON", "3.9"),
+        ("flags", "CI_FLAGS", ""),
     ]
 
     for var, env_var, default_value in VARS:
         if not var in args or args[var] == None:
             args[var] = os.environ[env_var] if env_var in os.environ else default_value
+
+    # Split flags.
+    args["flags"] = args["flags"].split(",") if args["flags"] != "" else []
 
     # Determine cmake executable path.
     args["cmake"] = {
