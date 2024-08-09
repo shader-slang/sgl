@@ -3,6 +3,7 @@
 #include "nanobind.h"
 
 #include "sgl/device/device.h"
+#include "sgl/device/reflection.h"
 #include "sgl/device/sampler.h"
 #include "sgl/device/fence.h"
 #include "sgl/device/resource.h"
@@ -613,14 +614,13 @@ SGL_PY_EXPORT(device_device)
         "shader_program"_a,
         D(Device, create_mutable_shader_object)
     );
-    // device.def(
-    //     "create_mutable_shader_object",
-    //     nb::overload_cast<const TypeLayoutReflection*>([](Device* self, const TypeLayoutReflection* tlr)
-    //                                                    { return self->create_mutable_shader_object(ref(tlr)); }
-    //     ),
-    //     "type_layout"_a,
-    //     D(Device, create_mutable_shader_object, 2)
-    //);
+    device.def(
+        "create_mutable_shader_object",
+        [](Device* self, ref<TypeLayoutReflection> type_layout)
+        { return self->create_mutable_shader_object(type_layout); },
+        "type_layout"_a,
+        D(Device, create_mutable_shader_object)
+    );
     device.def(
         "create_mutable_shader_object",
         nb::overload_cast<ReflectionCursor>(&Device::create_mutable_shader_object),
