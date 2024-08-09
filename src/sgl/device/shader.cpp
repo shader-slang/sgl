@@ -746,7 +746,7 @@ void SlangModule::load(SlangSessionBuild& build_data) const
 
     // Register with debug printer.
     if (m_session->device()->debug_printer()) {
-        const ProgramLayout* layout = ProgramLayout::from_slang(slang_module->getLayout());
+        const ProgramLayout* layout = ProgramLayout::from_slang(ref(this), slang_module->getLayout());
         m_session->device()->debug_printer()->add_hashed_strings(layout->hashed_strings_map());
     }
 
@@ -822,7 +822,7 @@ bool SlangModule::has_entry_point(std::string_view name) const
 
 const DeclReflection* SlangModule::module_decl() const
 {
-    return detail::from_slang(m_data->slang_module->getModuleReflection());
+    return detail::from_slang(ref(this), m_data->slang_module->getModuleReflection());
 }
 
 void SlangModule::_register_entry_point(SlangEntryPoint* entry_point) const
@@ -1015,7 +1015,7 @@ ref<SlangEntryPoint> SlangEntryPoint::with_name(const std::string& name) const
 
 const EntryPointLayout* SlangEntryPoint::layout() const
 {
-    return EntryPointLayout::from_slang(m_data->slang_entry_point->getLayout()->getEntryPointByIndex(0));
+    return EntryPointLayout::from_slang(ref(this), m_data->slang_entry_point->getLayout()->getEntryPointByIndex(0));
 }
 
 std::string SlangEntryPoint::to_string() const

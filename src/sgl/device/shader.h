@@ -385,7 +385,10 @@ public:
 
     /// Module source path. This can be empty if the module was generated from a string.
     const std::filesystem::path& path() const { return m_data->path; }
-    const ProgramLayout* layout() const { return ProgramLayout::from_slang(m_data->slang_module->getLayout()); }
+    const ProgramLayout* layout() const
+    {
+        return ProgramLayout::from_slang(ref(this), m_data->slang_module->getLayout());
+    }
 
     /// Build and return vector of all current entry points in the module.
     std::vector<ref<SlangEntryPoint>> entry_points() const;
@@ -491,7 +494,10 @@ public:
 
     const ShaderProgramDesc& desc() const { return m_desc; }
 
-    const ProgramLayout* layout() const { return ProgramLayout::from_slang(m_data->linked_program->getLayout()); }
+    const ProgramLayout* layout() const
+    {
+        return ProgramLayout::from_slang(ref(this), m_data->linked_program->getLayout());
+    }
 
     ReflectionCursor reflection() const { return ReflectionCursor(this); }
 
