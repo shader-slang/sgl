@@ -114,3 +114,17 @@ jobs:
         with:
           report_paths: 'reports/*-junit.xml'
           check_name: "Unit Test Report"
+
+      # Generate Coverage Report
+      - name: Generate Coverage Report
+        if: contains(matrix.flags, 'coverage')
+        run: python tools/ci.py coverage-report
+
+      # Coverage Report
+      - name: Coverage Report
+        uses: michaelhenry/create-report@v2
+        if: contains(matrix.flags, 'coverage')
+        with:
+          title: "Coverage Report"
+          path: reports/coverage.html
+          format: html

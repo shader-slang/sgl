@@ -159,6 +159,13 @@ def unit_test_python(args):
     run_command(f"pytest src -r a --junit-xml=reports/pytest-junit.xml", env=env)
 
 
+def coverage_report(args):
+    if not "coverage" in args.flags:
+        print("Coverage flag not set, skipping coverage report.")
+    os.makedirs("reports", exist_ok=True)
+    run_command(f"gcovr -r . -f src/sgl --html reports/coverage.xml")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -190,6 +197,10 @@ def main():
 
     parser_test_python = commands.add_parser(
         "unit-test-python", help="run unit tests (python)"
+    )
+
+    parser_coverage_report = commands.add_parser(
+        "coverage-report", help="generate coverage report"
     )
 
     args = parser.parse_args()
@@ -242,6 +253,7 @@ def main():
         "build": build,
         "unit-test-cpp": unit_test_cpp,
         "unit-test-python": unit_test_python,
+        "coverage-report": coverage_report,
     }[args.command](args)
 
     return 0
