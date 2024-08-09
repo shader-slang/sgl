@@ -102,11 +102,11 @@ jobs:
 
       # Unit Tests (C++)
       - name: Unit Tests (C++)
-        run: python tools/ci.py unit-tests-cpp
+        run: python tools/ci.py unit-test-cpp
 
       # Unit Tests (Python)
       - name: Unit Tests (Python)
-        run: python tools/ci.py unit-tests-python
+        run: python tools/ci.py unit-test-python
 
       # Test Report
       - name: Test Report
