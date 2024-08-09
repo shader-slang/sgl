@@ -43,12 +43,14 @@ def get_default_compiler():
         raise NameError(f"Unsupported OS: {get_os()}")
 
 
-def run_command(command, shell=True):
+def run_command(command, shell=True, env=None):
     if get_os() == "windows":
         command = command.replace("/", "\\")
     print(f'Running "{command}" ...')
     sys.stdout.flush()
-    result = subprocess.run(command, shell=shell)
+    if env != None:
+        env = os.environ.copy().update(env)
+    result = subprocess.run(command, shell=shell, env=env)
     if result.returncode != 0:
         raise RuntimeError(f'Error running "{command}"')
     return result
@@ -58,26 +60,33 @@ def get_changed_env(command):
     if get_os() == "windows":
         command = command.replace("/", "\\") + " && set"
     else:
-        command += " && env"
-    result = subprocess.run(command, capture_output=True, text=True, shell=True)
+        command = command + " && env"
+    result = subprocess.run(
+        command,
+        capture_output=True,
+        text=True,
+        shell=True,
+        executable="/bin/bash" if get_os() != "windows" else None,
+    )
     if result.returncode != 0:
         raise NameError(f'Error running "{command}"')
     env_vars = {}
     for line in result.stdout.splitlines():
         if "=" in line:
             key, value = line.split("=", 1)
+            if key in ["_"]:
+                continue
             curr = os.getenv(key)
             if curr is None or curr != value:
                 env_vars[key] = value
     return env_vars
 
 
-def set_python_env_vars(args):
+def get_python_env(args):
     if args.os == "windows":
-        env_vars = get_changed_env(f"{args.bin_dir}/setpath.bat")
+        return get_changed_env(f"{args.bin_dir}/setpath.bat")
     else:
-        env_vars = get_changed_env(f". {args.bin_dir}/setpath.sh")
-    os.environ.update(env_vars)
+        return get_changed_env(f"source {args.bin_dir}/setpath.sh")
 
 
 def setup(args):
@@ -100,8 +109,8 @@ def unit_test_cpp(args):
 
 
 def unit_test_python(args):
-    set_python_env_vars(args)
-    run_command(f"pytest src -r a --junit-xml=pytest-junit.xml")
+    env = get_python_env(args)
+    run_command(f"pytest src -r a --junit-xml=pytest-junit.xml", env=env)
 
 
 def main():
