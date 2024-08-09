@@ -42,8 +42,10 @@ jobs:
           # Specify runners
           - { os: windows, platform: x86_64, runs-on: [self-hosted, Windows, X64] }
           - { os: linux, platform: x86_64, runs-on: [self-hosted, Linux, X64] }
-          # Special build with coverage and header validation
-          - { os: linux, compiler: gcc, config: Debug, flags: "coverage,header-validation" }
+          # Enable header validation for one windows build
+          - { os: windows, compiler: msvc, config: Debug, flags: "header-validation" }
+          # Enable header validation and coverage for one linux build
+          - { os: linux, compiler: gcc, config: Debug, flags: "header-validation,coverage" }
 
     env:
       VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
