@@ -17,37 +17,37 @@ namespace detail {
 
     ref<const DeclReflection> from_slang(ref<const Object> owner, slang::DeclReflection* decl_reflection)
     {
-        return make_ref<const DeclReflection>(owner, decl_reflection);
+        return make_ref<const DeclReflection>(std::move(owner), decl_reflection);
     }
     ref<const TypeReflection> from_slang(ref<const Object> owner, slang::TypeReflection* type_reflection)
     {
-        return make_ref<const TypeReflection>(owner, type_reflection);
+        return make_ref<const TypeReflection>(std::move(owner), type_reflection);
     }
     ref<const TypeLayoutReflection>
     from_slang(ref<const Object> owner, slang::TypeLayoutReflection* type_layout_reflection)
     {
-        return make_ref<const TypeLayoutReflection>(owner, type_layout_reflection);
+        return make_ref<const TypeLayoutReflection>(std::move(owner), type_layout_reflection);
     }
     ref<const FunctionReflection> from_slang(ref<const Object> owner, slang::FunctionReflection* variable_reflection)
     {
-        return make_ref<const FunctionReflection>(owner, variable_reflection);
+        return make_ref<const FunctionReflection>(std::move(owner), variable_reflection);
     }
     ref<const VariableReflection> from_slang(ref<const Object> owner, slang::VariableReflection* variable_reflection)
     {
-        return make_ref<const VariableReflection>(owner, variable_reflection);
+        return make_ref<const VariableReflection>(std::move(owner), variable_reflection);
     }
     ref<const VariableLayoutReflection>
     from_slang(ref<const Object> owner, slang::VariableLayoutReflection* variable_layout_reflection)
     {
-        return make_ref<const VariableLayoutReflection>(owner, variable_layout_reflection);
+        return make_ref<const VariableLayoutReflection>(std::move(owner), variable_layout_reflection);
     }
     ref<const EntryPointLayout> from_slang(ref<const Object> owner, slang::EntryPointLayout* entry_point_reflection)
     {
-        return make_ref<const EntryPointLayout>(owner, entry_point_reflection);
+        return make_ref<const EntryPointLayout>(std::move(owner), entry_point_reflection);
     }
     ref<const ProgramLayout> from_slang(ref<const Object> owner, slang::ProgramLayout* program_layout)
     {
-        return make_ref<const ProgramLayout>(owner, program_layout);
+        return make_ref<const ProgramLayout>(std::move(owner), program_layout);
     }
 } // namespace detail
 

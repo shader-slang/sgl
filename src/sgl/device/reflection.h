@@ -22,16 +22,19 @@ namespace sgl {
 
 namespace detail {
 
-    ref<const DeclReflection> from_slang(ref<const Object> owner, slang::DeclReflection* decl_reflection);
-    ref<const TypeReflection> from_slang(ref<const Object> owner, slang::TypeReflection* type_reflection);
-    ref<const TypeLayoutReflection>
+    SGL_API ref<const DeclReflection> from_slang(ref<const Object> owner, slang::DeclReflection* decl_reflection);
+    SGL_API ref<const TypeReflection> from_slang(ref<const Object> owner, slang::TypeReflection* type_reflection);
+    SGL_API ref<const TypeLayoutReflection>
     from_slang(ref<const Object> owner, slang::TypeLayoutReflection* type_layout_reflection);
-    ref<const FunctionReflection> from_slang(ref<const Object> owner, slang::FunctionReflection* variable_reflection);
-    ref<const VariableReflection> from_slang(ref<const Object> owner, slang::VariableReflection* variable_reflection);
-    ref<const VariableLayoutReflection>
+    SGL_API ref<const FunctionReflection>
+    from_slang(ref<const Object> owner, slang::FunctionReflection* variable_reflection);
+    SGL_API ref<const VariableReflection>
+    from_slang(ref<const Object> owner, slang::VariableReflection* variable_reflection);
+    SGL_API ref<const VariableLayoutReflection>
     from_slang(ref<const Object> owner, slang::VariableLayoutReflection* variable_layout_reflection);
-    ref<const EntryPointLayout> from_slang(ref<const Object> owner, slang::EntryPointLayout* entry_point_reflection);
-    ref<const ProgramLayout> from_slang(ref<const Object> owner, slang::ProgramLayout* program_layout);
+    SGL_API ref<const EntryPointLayout>
+    from_slang(ref<const Object> owner, slang::EntryPointLayout* entry_point_reflection);
+    SGL_API ref<const ProgramLayout> from_slang(ref<const Object> owner, slang::ProgramLayout* program_layout);
 
 } // namespace detail
 
@@ -71,7 +74,7 @@ SGL_ENUM_REGISTER(ModifierID);
 class SGL_API BaseReflectionObject : public Object {
 public:
     BaseReflectionObject(ref<const Object> owner)
-        : m_owner(owner){};
+        : m_owner(std::move(owner)){};
 
 protected:
     ref<const Object> m_owner;
@@ -81,7 +84,7 @@ class SGL_API DeclReflection : public BaseReflectionObject {
 
 public:
     DeclReflection(ref<const Object> owner, slang::DeclReflection* target)
-        : BaseReflectionObject(owner)
+        : BaseReflectionObject(std::move(owner))
         , m_target(target){};
 
 
@@ -366,7 +369,7 @@ public:
     );
 
     TypeReflection(ref<const Object> owner, slang::TypeReflection* target)
-        : BaseReflectionObject(owner)
+        : BaseReflectionObject(std::move(owner))
         , m_target(target){};
 
     Kind kind() const { return static_cast<Kind>(m_target->getKind()); }
@@ -477,11 +480,11 @@ public:
     static ref<const TypeLayoutReflection>
     from_slang(ref<const Object> owner, slang::TypeLayoutReflection* type_layout_reflection)
     {
-        return detail::from_slang(owner, type_layout_reflection);
+        return detail::from_slang(std::move(owner), type_layout_reflection);
     }
 
     TypeLayoutReflection(ref<const Object> owner, slang::TypeLayoutReflection* target)
-        : BaseReflectionObject(owner)
+        : BaseReflectionObject(std::move(owner))
         , m_target(target){};
 
     slang::TypeLayoutReflection* get_slang_type_layout() const { return m_target; }
@@ -582,7 +585,7 @@ private:
 class SGL_API FunctionReflection : public BaseReflectionObject {
 public:
     FunctionReflection(ref<const Object> owner, slang::FunctionReflection* target)
-        : BaseReflectionObject(owner)
+        : BaseReflectionObject(std::move(owner))
         , m_target(target){};
 
     char const* name() const { return m_target->getName(); }
@@ -621,11 +624,11 @@ public:
     static ref<const VariableReflection>
     from_slang(ref<const Object> owner, slang::VariableReflection* variable_reflection)
     {
-        return detail::from_slang(owner, variable_reflection);
+        return detail::from_slang(std::move(owner), variable_reflection);
     }
 
     VariableReflection(ref<const Object> owner, slang::VariableReflection* target)
-        : BaseReflectionObject(owner)
+        : BaseReflectionObject(std::move(owner))
         , m_target(target){};
 
     /// Variable name.
@@ -647,7 +650,7 @@ private:
 class SGL_API VariableLayoutReflection : public BaseReflectionObject {
 public:
     VariableLayoutReflection(ref<const Object> owner, slang::VariableLayoutReflection* target)
-        : BaseReflectionObject(owner)
+        : BaseReflectionObject(std::move(owner))
         , m_target(target){};
 
     ref<const VariableReflection> variable() const { return detail::from_slang(m_owner, m_target->getVariable()); }
@@ -672,11 +675,11 @@ public:
     static ref<const EntryPointLayout>
     from_slang(ref<const Object> owner, slang::EntryPointLayout* entry_point_reflection)
     {
-        return detail::from_slang(owner, entry_point_reflection);
+        return detail::from_slang(std::move(owner), entry_point_reflection);
     }
 
     EntryPointLayout(ref<const Object> owner, slang::EntryPointLayout* target)
-        : BaseReflectionObject(owner)
+        : BaseReflectionObject(std::move(owner))
         , m_target(target){};
 
     const char* name() const { return m_target->getName(); }
@@ -725,7 +728,7 @@ public:
     }
 
     ProgramLayout(ref<const Object> owner, slang::ProgramLayout* target)
-        : BaseReflectionObject(owner)
+        : BaseReflectionObject(std::move(owner))
         , m_target(target){};
 
     ref<const TypeLayoutReflection> globals_type_layout() const
