@@ -138,11 +138,13 @@ def build(args):
 
 def unit_test_cpp(args):
     out = run_command(f"{args.bin_dir}/sgl_tests -r=console,junit")
+    # doctest outputs both regular output and junit xml report on stdout
+    # filter out regular output and write remaining to junit xml file
     report = "\n".join(
         filter(lambda line: line.strip().startswith("<"), out.splitlines())
     )
     os.makedirs("reports", exist_ok=True)
-    with open("reports/doctest-juint.xml", "w") as f:
+    with open("reports/doctest-junit.xml", "w") as f:
         f.write(report)
 
 
