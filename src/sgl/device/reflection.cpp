@@ -15,38 +15,39 @@ namespace sgl {
 
 namespace detail {
 
-    ref<const DeclReflection> from_slang(ref<Object> owner, slang::DeclReflection* decl_reflection)
+    ref<const DeclReflection> from_slang(ref<const Object> owner, slang::DeclReflection* decl_reflection)
     {
-        return make_ref<const DeclReflection>(decl_reflection);
+        return make_ref<const DeclReflection>(owner, decl_reflection);
     }
-    ref<const TypeReflection> from_slang(ref<Object> owner, slang::TypeReflection* type_reflection)
+    ref<const TypeReflection> from_slang(ref<const Object> owner, slang::TypeReflection* type_reflection)
     {
-        return make_ref<const TypeReflection>(type_reflection);
+        return make_ref<const TypeReflection>(owner, type_reflection);
     }
-    ref<const TypeLayoutReflection> from_slang(ref<Object> owner, slang::TypeLayoutReflection* type_layout_reflection)
+    ref<const TypeLayoutReflection>
+    from_slang(ref<const Object> owner, slang::TypeLayoutReflection* type_layout_reflection)
     {
-        return make_ref<const TypeLayoutReflection>(type_layout_reflection);
+        return make_ref<const TypeLayoutReflection>(owner, type_layout_reflection);
     }
-    ref<const FunctionReflection> from_slang(ref<Object> owner, slang::FunctionReflection* variable_reflection)
+    ref<const FunctionReflection> from_slang(ref<const Object> owner, slang::FunctionReflection* variable_reflection)
     {
-        return make_ref<const FunctionReflection>(variable_reflection);
+        return make_ref<const FunctionReflection>(owner, variable_reflection);
     }
-    ref<const VariableReflection> from_slang(ref<Object> owner, slang::VariableReflection* variable_reflection)
+    ref<const VariableReflection> from_slang(ref<const Object> owner, slang::VariableReflection* variable_reflection)
     {
-        return make_ref<const VariableReflection>(variable_reflection);
+        return make_ref<const VariableReflection>(owner, variable_reflection);
     }
     ref<const VariableLayoutReflection>
-    from_slang(ref<Object> owner, slang::VariableLayoutReflection* variable_layout_reflection)
+    from_slang(ref<const Object> owner, slang::VariableLayoutReflection* variable_layout_reflection)
     {
-        return make_ref<const VariableLayoutReflection>(variable_layout_reflection);
+        return make_ref<const VariableLayoutReflection>(owner, variable_layout_reflection);
     }
-    ref<const EntryPointLayout> from_slang(ref<Object> owner, slang::EntryPointLayout* entry_point_reflection)
+    ref<const EntryPointLayout> from_slang(ref<const Object> owner, slang::EntryPointLayout* entry_point_reflection)
     {
-        return make_ref<const EntryPointLayout>(entry_point_reflection);
+        return make_ref<const EntryPointLayout>(owner, entry_point_reflection);
     }
-    ref<const ProgramLayout> from_slang(ref<Object> owner, slang::ProgramLayout* program_layout)
+    ref<const ProgramLayout> from_slang(ref<const Object> owner, slang::ProgramLayout* program_layout)
     {
-        return make_ref<const ProgramLayout>(program_layout);
+        return make_ref<const ProgramLayout>(owner, program_layout);
     }
 } // namespace detail
 
@@ -57,24 +58,24 @@ std::string c_str_to_string(const char* str)
     return fmt::format("\"{}\"", str);
 }
 
-std::vector<const DeclReflection*> DeclReflection::children() const
+std::vector<ref<const DeclReflection>> DeclReflection::children() const
 {
-    std::vector<const DeclReflection*> res;
+    std::vector<ref<const DeclReflection>> res;
     int32_t count = child_count();
     res.reserve(count);
     for (int32_t i = 0; i < count; i++) {
-        res.push_back(detail::from_slang(base()->getChild(i)));
+        res.push_back(detail::from_slang(m_owner, base()->getChild(i)));
     }
     return res;
 }
 
-std::vector<const DeclReflection*> DeclReflection::children_of_kind(Kind kind) const
+std::vector<ref<const DeclReflection>> DeclReflection::children_of_kind(Kind kind) const
 {
-    std::vector<const DeclReflection*> res;
+    std::vector<ref<const DeclReflection>> res;
     int32_t count = child_count();
     res.reserve(count);
     for (int32_t i = 0; i < count; i++) {
-        const DeclReflection* child = detail::from_slang(base()->getChild(i));
+        ref<const DeclReflection> child = detail::from_slang(m_owner, base()->getChild(i));
         if (child->kind() == kind) {
             res.push_back(child);
         }
@@ -93,9 +94,9 @@ std::string DeclReflection::to_string() const
     return str;
 }
 
-const TypeReflection* DeclReflection::as_type() const
+ref<const TypeReflection> DeclReflection::as_type() const
 {
-    return detail::from_slang(base()->getType());
+    return detail::from_slang(m_owner, base()->getType());
 }
 
 std::string DeclReflection::name() const
@@ -112,13 +113,14 @@ std::string DeclReflection::name() const
     }
 }
 
-std::vector<const DeclReflection*> DeclReflection::find_children_of_kind(Kind kind, std::string_view child_name) const
+std::vector<ref<const DeclReflection>>
+DeclReflection::find_children_of_kind(Kind kind, std::string_view child_name) const
 {
-    std::vector<const DeclReflection*> res;
+    std::vector<ref<const DeclReflection>> res;
     int32_t count = child_count();
     res.reserve(count);
     for (int32_t i = 0; i < count; i++) {
-        const DeclReflection* child = detail::from_slang(base()->getChild(i));
+        ref<const DeclReflection> child = detail::from_slang(m_owner, base()->getChild(i));
         if (child->kind() == kind && child->name() == child_name) {
             res.push_back(child);
         }
@@ -126,13 +128,13 @@ std::vector<const DeclReflection*> DeclReflection::find_children_of_kind(Kind ki
     return res;
 }
 
-const DeclReflection* DeclReflection::find_first_child_of_kind(Kind kind, std::string_view child_name) const
+ref<const DeclReflection> DeclReflection::find_first_child_of_kind(Kind kind, std::string_view child_name) const
 {
-    std::vector<const DeclReflection*> res;
+    std::vector<ref<const DeclReflection>> res;
     int32_t count = child_count();
     res.reserve(count);
     for (int32_t i = 0; i < count; i++) {
-        const DeclReflection* child = detail::from_slang(base()->getChild(i));
+        ref<const DeclReflection> child = detail::from_slang(m_owner, base()->getChild(i));
         if (child->kind() == kind && child->name() == child_name) {
             return child;
         }
@@ -278,13 +280,13 @@ ReflectionCursor::ReflectionCursor(const ShaderProgram* shader_program)
 {
 }
 
-ReflectionCursor::ReflectionCursor(const EntryPointLayout* entry_point_layout)
+ReflectionCursor::ReflectionCursor(ref<const EntryPointLayout> entry_point_layout)
     : m_entry_point_layout(entry_point_layout)
     , m_valid(m_entry_point_layout != nullptr)
 {
 }
 
-ReflectionCursor::ReflectionCursor(const TypeLayoutReflection* type_layout)
+ReflectionCursor::ReflectionCursor(ref<const TypeLayoutReflection> type_layout)
     : m_type_layout(type_layout)
     , m_valid(m_type_layout != nullptr)
 {
@@ -314,7 +316,8 @@ ReflectionCursor ReflectionCursor::find_field(std::string_view name) const
             global_field.is_valid())
             return global_field;
         // Try to find an entry point.
-        if (const EntryPointLayout* entry_point_layout = m_shader_program->layout()->find_entry_point_by_name(name)) {
+        if (ref<const EntryPointLayout> entry_point_layout
+            = m_shader_program->layout()->find_entry_point_by_name(name)) {
             return ReflectionCursor(entry_point_layout);
         }
     } else if (m_entry_point_layout) {
