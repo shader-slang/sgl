@@ -540,7 +540,7 @@ public:
         while (type_layout->is_array()) {
             type_layout = type_layout->element_type_layout();
         }
-        return ref<const TypeLayoutReflection>(type_layout);
+        return type_layout;
     }
 
     size_t element_count() const { return type()->element_count(); }
