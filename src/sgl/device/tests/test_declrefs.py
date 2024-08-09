@@ -462,7 +462,7 @@ def test_ast_cursor_hashgrid(device_type):
         },
     )
 
-    module = session.load_module("test_ast_cursor_hashgrid.slang")
+    module = session.load_module("test_declrefs_falcorhashgrid.slang")
 
     # TODO: Setup when generic reflection works.
 

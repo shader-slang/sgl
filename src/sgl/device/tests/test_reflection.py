@@ -113,5 +113,148 @@ def test_type_layout(test_id, device_type):
         assert field.offset == SBUFFER_EXPECTED_FIELDS[field.name][2]
 
 
+MODULE_SOURCE = """
+        uniform int hello;
+        [shader("compute")]
+        [numthreads(1, 1, 1)]
+        void main() {
+        }
+    """
+
+
+@pytest.mark.skip("Crashes due to reflection cursor lifetime issues")
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_cursor_lifetime_global_session(test_id, device_type):
+    device = helpers.get_device(type=device_type)
+
+    module = device.load_module_from_source(
+        module_name=f"module_from_source_{test_id}",
+        source=MODULE_SOURCE,
+    )
+    program = device.link_program([module], [module.entry_point("main")])
+
+    # Get cursor for the program.
+    cursor = sgl.ReflectionCursor(program)
+
+    # Clear all references to program, session and module.
+    program = None
+    module = None
+
+    # Check what happens when accessing the cursor.
+    assert cursor.has_field("hello")
+
+
+@pytest.mark.skip("Crashes due to reflection cursor lifetime issues")
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_cursor_lifetime_new_session(test_id, device_type):
+    device = helpers.get_device(type=device_type)
+
+    # Create a session, and within it a module and program.
+    session = helpers.create_session(device, {})
+    module = session.load_module_from_source(
+        module_name=f"module_from_source_{test_id}",
+        source=MODULE_SOURCE,
+    )
+    program = session.link_program([module], [module.entry_point("main")])
+
+    # Get cursor for the program.
+    cursor = sgl.ReflectionCursor(program)
+
+    # Clear all references to program, session and module.
+    program = None
+    module = None
+    session = None
+
+    # Check what happens when accessing the cursor.
+    assert cursor.has_field("hello")
+
+
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_cursor_child_lifetime(test_id, device_type):
+    device = helpers.get_device(type=device_type)
+
+    # Create a session, and within it a module and program.
+    session = helpers.create_session(device, {})
+    module = session.load_module_from_source(
+        module_name=f"module_from_source_{test_id}",
+        source=MODULE_SOURCE,
+    )
+    program = session.link_program([module], [module.entry_point("main")])
+
+    # Get cursor for the program and go straight to its child field.
+    cursor = sgl.ReflectionCursor(program).find_field("hello")
+
+    # Clear all references to program, session and module.
+    program = None
+    module = None
+    session = None
+
+    # The child field should have kept the module alive.
+    t = cursor.type
+    assert t.name == "int"
+
+
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_module_layout_lifetime(test_id, device_type):
+    device = helpers.get_device(type=device_type)
+
+    # Create a session, and within it a module.
+    session = helpers.create_session(device, {})
+    module = session.load_module_from_source(
+        module_name=f"module_from_source_{test_id}",
+        source=MODULE_SOURCE,
+    )
+    program_layout = module.layout
+
+    # Clear all references to session and module.
+    module = None
+    session = None
+
+    # Globals layout should still be valid, as it will have kept the module alive
+    globals_layout = program_layout.globals_type_layout
+    assert globals_layout.element_type_layout.fields[0].name == "hello"
+
+
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_module_declref_lifetime(test_id, device_type):
+    device = helpers.get_device(type=device_type)
+
+    # Create a session, and within it a module.
+    session = helpers.create_session(device, {})
+    module = session.load_module_from_source(
+        module_name=f"module_from_source_{test_id}",
+        source=MODULE_SOURCE,
+    )
+    module_decl = module.module_decl
+
+    # Clear all references to session and module.
+    module = None
+    session = None
+
+    # Decl ref should still be valid, as it will have kept the module alive
+    children = module_decl.children
+    assert len(children) == 2
+
+
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_module_declref_child_lifetime(test_id, device_type):
+    device = helpers.get_device(type=device_type)
+
+    # Create a session, and within it a module.
+    session = helpers.create_session(device, {})
+    module = session.load_module_from_source(
+        module_name=f"module_from_source_{test_id}",
+        source=MODULE_SOURCE,
+    )
+    var_decl = module.module_decl.children[0]
+
+    # Clear all references to session and module.
+    module = None
+    session = None
+
+    # Decl ref should still be valid, as it will have kept the module alive
+    assert var_decl.name == "hello"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
