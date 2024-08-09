@@ -57,18 +57,18 @@ namespace detail {
 } // namespace detail
 
 
-enum class ModifierType {
-    shared = SLANG_MODIFIER_SHARED,
-    nodiff = SLANG_MODIFIER_NO_DIFF,
-    static_ = SLANG_MODIFIER_STATIC,
-    const_ = SLANG_MODIFIER_CONST,
-    export_ = SLANG_MODIFIER_EXPORT,
-    extern_ = SLANG_MODIFIER_EXTERN,
-    differentiable = SLANG_MODIFIER_DIFFERENTIABLE,
-    mutating = SLANG_MODIFIER_MUTATING,
-    in = SLANG_MODIFIER_IN,
-    out = SLANG_MODIFIER_OUT,
-    inout = SLANG_MODIFIER_INOUT,
+enum class ModifierID {
+    shared = slang::Modifier::ID::Shared,
+    nodiff = slang::Modifier::ID::NoDiff,
+    static_ = slang::Modifier::ID::Static,
+    const_ = slang::Modifier::ID::Const,
+    export_ = slang::Modifier::ID::Export,
+    extern_ = slang::Modifier::ID::Extern,
+    differentiable = slang::Modifier::ID::Differentiable,
+    mutating = slang::Modifier::ID::Mutating,
+    in = slang::Modifier::ID::In,
+    out = slang::Modifier::ID::Out,
+    inout = slang::Modifier::ID::InOut,
 };
 
 #if SGL_DEBUG
@@ -82,22 +82,22 @@ enum class ModifierType {
 #endif
 
 SGL_ENUM_INFO(
-    ModifierType,
+    ModifierID,
     {
-        {ModifierType::shared, "shared"},
-        {ModifierType::nodiff, "nodiff"},
-        {ModifierType::static_, "static"},
-        {ModifierType::const_, "const"},
-        {ModifierType::export_, "export"},
-        {ModifierType::extern_, "extern"},
-        {ModifierType::differentiable, "differentiable"},
-        {ModifierType::mutating, "mutating"},
-        {ModifierType::in, "inn"},
-        {ModifierType::out, "out"},
-        {ModifierType::inout, "inout"},
+        {ModifierID::shared, "shared"},
+        {ModifierID::nodiff, "nodiff"},
+        {ModifierID::static_, "static"},
+        {ModifierID::const_, "const"},
+        {ModifierID::export_, "export"},
+        {ModifierID::extern_, "extern"},
+        {ModifierID::differentiable, "differentiable"},
+        {ModifierID::mutating, "mutating"},
+        {ModifierID::in, "inn"},
+        {ModifierID::out, "out"},
+        {ModifierID::inout, "inout"},
     }
 );
-SGL_ENUM_REGISTER(ModifierType);
+SGL_ENUM_REGISTER(ModifierID);
 
 class SGL_API DeclReflection : private slang::DeclReflection {
 
@@ -136,7 +136,7 @@ public:
     std::vector<const DeclReflection*> children() const;
 
     /// Get number of children.
-    int32_t child_count() const { return base()->getChildrenCount(); }
+    uint32_t child_count() const { return base()->getChildrenCount(); }
 
     /// Get the name of this decl (if it is of a kind that has a name).
     /// Note: Only supported for types, functions and variables.
@@ -146,7 +146,7 @@ public:
     std::vector<const DeclReflection*> children_of_kind(Kind kind) const;
 
     /// Index operator to get nth child.
-    const DeclReflection* operator[](int32_t index) const { return detail::from_slang(base()->getChild(index)); }
+    const DeclReflection* operator[](uint32_t index) const { return detail::from_slang(base()->getChild(index)); }
 
     /// Description as string.
     std::string to_string() const;
@@ -832,7 +832,7 @@ public:
     }
 
     /// Check if variable has a given modifier (eg 'inout').
-    bool has_modifier(ModifierType modifier) const
+    bool has_modifier(ModifierID modifier) const
     {
         return base()->findModifier(static_cast<slang::Modifier::ID>(modifier)) != nullptr;
     }
@@ -858,7 +858,7 @@ public:
     const TypeReflection* type() const { return detail::from_slang(base()->getType()); }
 
     /// Check if variable has a given modifier (eg 'inout').
-    bool has_modifier(ModifierType modifier) const
+    bool has_modifier(ModifierID modifier) const
     {
         return base()->findModifier(static_cast<slang::Modifier::ID>(modifier)) != nullptr;
     }

@@ -820,7 +820,7 @@ bool SlangModule::has_entry_point(std::string_view name) const
     return slang_entry_point != nullptr;
 }
 
-const DeclReflection* SlangModule::abstract_syntax_tree() const
+const DeclReflection* SlangModule::module_decl() const
 {
     return detail::from_slang(m_data->slang_module->getModuleReflection());
 }

@@ -69,7 +69,7 @@ void foo() {
     )
 
     # Get the module AST
-    ast = module.abstract_syntax_tree
+    ast = module.module_decl
     assert ast.kind == sgl.DeclReflection.Kind.module
 
     # Check it has 1 function child
@@ -116,7 +116,7 @@ struct Foo {
     )
 
     # Get the module AST
-    ast = module.abstract_syntax_tree
+    ast = module.module_decl
     assert ast.kind == sgl.DeclReflection.Kind.module
 
     # Check 1 struct child with correct name + number of fields
@@ -192,7 +192,7 @@ struct Foo {
 """,
     )
 
-    struct = module.abstract_syntax_tree[0]
+    struct = module.module_decl[0]
     field = struct[0]
     assert field.name == "a"
     field_variable = field.as_variable()
@@ -216,7 +216,7 @@ int foo(int a, float b) {
     )
 
     # Get function.
-    func_node = module.abstract_syntax_tree.find_first_child_of_kind(
+    func_node = module.module_decl.find_first_child_of_kind(
         sgl.DeclReflection.Kind.func, "foo"
     )
     params = func_node.children_of_kind(sgl.DeclReflection.Kind.variable)
@@ -268,13 +268,7 @@ void callfoo() {
 """,
     )
 
-    # TODO: What should this give us? Currently:
-    # --------------------------------------
-    # ASTCursorModule(name=test_generic_function_with_generic_params)
-    #   ASTCursorGeneric()
-    #     ASTCursor(kind=unsupported)
-    #   ASTCursorFunction(name=callfoo)
-    # --------------------------------------
+    # TODO: Setup when generic reflection works.
 
 
 @pytest.mark.parametrize("device_type", DEVICES)
@@ -295,14 +289,7 @@ struct Foo1 {
 """,
     )
 
-    # TODO: What should this give us? Currently:
-    # --------------------------------------
-    # ASTCursorModule(name=test_generic_struct_with_generic_fields)
-    #   ASTCursorGeneric()
-    #     ASTCursor(kind=unsupported)
-    #   ASTCursorStruct(name=Foo1)
-    #     ASTCursorVariable(name=member)
-    # --------------------------------------
+    # TODO: Setup when generic reflection works.
 
 
 @pytest.mark.parametrize("device_type", DEVICES)
@@ -320,14 +307,14 @@ int foo(in int a, out int b, inout int c) {
 """,
     )
 
-    func_node = module.abstract_syntax_tree.find_first_child_of_kind(
+    func_node = module.module_decl.find_first_child_of_kind(
         sgl.DeclReflection.Kind.func, "foo"
     )
     params = func_node.children_of_kind(sgl.DeclReflection.Kind.variable)
     assert len(params) == 3
-    assert params[0].as_variable().has_modifier(sgl.ModifierType.inn)
-    assert params[1].as_variable().has_modifier(sgl.ModifierType.out)
-    assert params[2].as_variable().has_modifier(sgl.ModifierType.inout)
+    assert params[0].as_variable().has_modifier(sgl.ModifierID.inn)
+    assert params[1].as_variable().has_modifier(sgl.ModifierID.out)
+    assert params[2].as_variable().has_modifier(sgl.ModifierID.inout)
 
 
 @pytest.mark.parametrize("device_type", DEVICES)
@@ -342,10 +329,10 @@ void foo(in int a, out int b) {
 }
 """,
     )
-    func_node = module.abstract_syntax_tree.find_first_child_of_kind(
+    func_node = module.module_decl.find_first_child_of_kind(
         sgl.DeclReflection.Kind.func, "foo"
     )
-    assert func_node.as_function().has_modifier(sgl.ModifierType.differentiable)
+    assert func_node.as_function().has_modifier(sgl.ModifierID.differentiable)
 
 
 @pytest.mark.parametrize("device_type", DEVICES)
@@ -366,7 +353,7 @@ void myfunc() {
 """,
     )
 
-    ast = module.abstract_syntax_tree
+    ast = module.module_decl
 
     globals = ast.children_of_kind(sgl.DeclReflection.Kind.variable)
     assert len(globals) == 3
@@ -405,7 +392,7 @@ void notmyfunc() {}
 """,
     )
 
-    ast = module.abstract_syntax_tree
+    ast = module.module_decl
 
     functions = ast.children_of_kind(sgl.DeclReflection.Kind.func)
     assert len(functions) == 4
@@ -440,7 +427,7 @@ struct Foo {
 """,
     )
 
-    ast = module.abstract_syntax_tree
+    ast = module.module_decl
 
     foo = ast.children_of_kind(sgl.DeclReflection.Kind.struct)[0]
 
@@ -477,16 +464,7 @@ def test_ast_cursor_hashgrid(device_type):
 
     module = session.load_module("test_ast_cursor_hashgrid.slang")
 
-    # TODO: What should this give us? Currently:
-    # --------------------------------------
-    # ASTCursorModule(name=test_ast_cursor_hashgrid.slang)
-    #   ASTCursorGeneric()
-    #     ASTCursorVariable(name=C)
-    #     ASTCursorVariable(name=L)
-    #     ASTCursorVariable(name=P)
-    #   ASTCursor(kind=unsupported)
-    #   ASTCursor(kind=unsupported)
-    # --------------------------------------
+    # TODO: Setup when generic reflection works.
 
 
 HASHGRID_NO_GENERICS_DUMP = {
@@ -800,8 +778,8 @@ def test_ast_cursor_hashgrid_nogenerics(device_type):
 
     module = device.load_module("test_ast_cursor_hashgrid_no_generics.slang")
 
-    # print_ast(module.abstract_syntax_tree, device)
-    dump = ast_to_dict(module.abstract_syntax_tree, device)
+    # print_ast(module.module_decl, device)
+    dump = ast_to_dict(module.module_decl, device)
     diff = DeepDiff(
         dump,
         HASHGRID_NO_GENERICS_DUMP,
