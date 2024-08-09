@@ -50,16 +50,6 @@ enum class ModifierID {
     inout = slang::Modifier::ID::InOut,
 };
 
-#if SGL_DEBUG
-#define SGL_REFLECTION_THROW_IF_DESTRUCTED(type_name)                                                                  \
-    ~type_name()                                                                                                       \
-    {                                                                                                                  \
-        SGL_THROW("Reflection object being destructed - this should never happen!");                                   \
-    }
-#else
-#define SGL_REFLECTION_THROW_IF_DESTRUCTED(type_name)
-#endif
-
 SGL_ENUM_INFO(
     ModifierID,
     {
@@ -90,8 +80,6 @@ protected:
 class SGL_API DeclReflection : public BaseReflectionObject {
 
 public:
-    SGL_REFLECTION_THROW_IF_DESTRUCTED(DeclReflection)
-
     DeclReflection(ref<const Object> owner, slang::DeclReflection* target)
         : BaseReflectionObject(owner)
         , m_target(target){};
@@ -171,9 +159,6 @@ SGL_ENUM_REGISTER(DeclReflection::Kind);
 
 class SGL_API TypeReflection : public BaseReflectionObject {
 public:
-    SGL_REFLECTION_THROW_IF_DESTRUCTED(TypeReflection)
-
-
     enum class Kind {
         none = SLANG_TYPE_KIND_NONE,
         struct_ = SLANG_TYPE_KIND_STRUCT,
@@ -497,9 +482,6 @@ SGL_ENUM_REGISTER(TypeReflection::ParameterCategory);
 
 class SGL_API TypeLayoutReflection : public BaseReflectionObject {
 public:
-    SGL_REFLECTION_THROW_IF_DESTRUCTED(TypeLayoutReflection)
-
-
     static ref<const TypeLayoutReflection>
     from_slang(ref<const Object> owner, slang::TypeLayoutReflection* type_layout_reflection)
     {
@@ -823,8 +805,6 @@ private:
 
 class SGL_API FunctionReflection : public BaseReflectionObject {
 public:
-    SGL_REFLECTION_THROW_IF_DESTRUCTED(FunctionReflection)
-
     FunctionReflection(ref<const Object> owner, slang::FunctionReflection* target)
         : BaseReflectionObject(owner)
         , m_target(target){};
@@ -866,8 +846,6 @@ private:
 
 class SGL_API VariableReflection : public BaseReflectionObject {
 public:
-    SGL_REFLECTION_THROW_IF_DESTRUCTED(VariableReflection)
-
     static ref<const VariableReflection>
     from_slang(ref<const Object> owner, slang::VariableReflection* variable_reflection)
     {
@@ -921,8 +899,6 @@ private:
 
 class SGL_API VariableLayoutReflection : public BaseReflectionObject {
 public:
-    SGL_REFLECTION_THROW_IF_DESTRUCTED(VariableLayoutReflection)
-
     VariableLayoutReflection(ref<const Object> owner, slang::VariableLayoutReflection* target)
         : BaseReflectionObject(owner)
         , m_target(target){};
@@ -994,8 +970,6 @@ private:
 
 class SGL_API EntryPointLayout : public BaseReflectionObject {
 public:
-    SGL_REFLECTION_THROW_IF_DESTRUCTED(EntryPointLayout)
-
     static const EntryPointLayout* from_slang(ref<const Object> owner, slang::EntryPointLayout* entry_point_reflection)
     {
         return detail::from_slang(owner, entry_point_reflection);
@@ -1068,8 +1042,6 @@ private:
 
 class SGL_API ProgramLayout : public BaseReflectionObject {
 public:
-    SGL_REFLECTION_THROW_IF_DESTRUCTED(ProgramLayout)
-
     static const ProgramLayout* from_slang(ref<const Object> owner, slang::ProgramLayout* program_layout)
     {
         return detail::from_slang(owner, program_layout);
