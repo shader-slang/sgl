@@ -1013,7 +1013,7 @@ ref<SlangEntryPoint> SlangEntryPoint::with_name(const std::string& name) const
     return ep;
 }
 
-const EntryPointLayout* SlangEntryPoint::layout() const
+ref<const EntryPointLayout> SlangEntryPoint::layout() const
 {
     return EntryPointLayout::from_slang(ref(this), m_data->slang_entry_point->getLayout()->getEntryPointByIndex(0));
 }

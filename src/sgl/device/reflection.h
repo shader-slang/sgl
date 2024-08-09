@@ -970,7 +970,8 @@ private:
 
 class SGL_API EntryPointLayout : public BaseReflectionObject {
 public:
-    static const EntryPointLayout* from_slang(ref<const Object> owner, slang::EntryPointLayout* entry_point_reflection)
+    static ref<const EntryPointLayout>
+    from_slang(ref<const Object> owner, slang::EntryPointLayout* entry_point_reflection)
     {
         return detail::from_slang(owner, entry_point_reflection);
     }

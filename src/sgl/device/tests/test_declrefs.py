@@ -453,7 +453,7 @@ def test_ast_cursor_hashgrid(device_type):
 
     device = helpers.get_device(type=device_type)
 
-    session = helpers.get_session(
+    session = helpers.create_session(
         device,
         defines={
             "NUM_LATENT_DIMS": "8",
@@ -776,7 +776,7 @@ def test_ast_cursor_hashgrid_nogenerics(device_type):
 
     device = helpers.get_device(type=device_type)
 
-    module = device.load_module("test_ast_cursor_hashgrid_no_generics.slang")
+    module = device.load_module("test_declrefs_falcorhashgrid_nogenerics.slang")
 
     # print_ast(module.module_decl, device)
     dump = ast_to_dict(module.module_decl, device)

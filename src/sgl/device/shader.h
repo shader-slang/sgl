@@ -454,7 +454,7 @@ public:
     const std::string& name() const { return m_data->name; }
     const SlangEntryPointDesc& desc() const { return m_desc; }
     ShaderStage stage() const { return m_data->stage; }
-    const EntryPointLayout* layout() const;
+    ref<const EntryPointLayout> layout() const;
 
     ref<SlangEntryPoint> rename(const std::string& new_name);
 
