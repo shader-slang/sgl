@@ -122,7 +122,7 @@ jobs:
 
       # Coverage Report
       - name: Coverage Report
-        uses: michaelhenry/create-report@v2
+        uses: michaelhenry/create-report
         if: contains(matrix.flags, 'coverage')
         with:
           title: "Coverage Report"
