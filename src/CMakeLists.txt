@@ -234,6 +234,11 @@ target_compile_options(sgl
         >
 )
 
+if(SGL_ENABLE_COVERAGE)
+    include(CodeCoverage)
+    append_coverage_compiler_flags_to_target(sgl)
+endif()
+
 if(SGL_ENABLE_ASAN)
     target_compile_options(sgl
         PUBLIC
