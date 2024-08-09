@@ -39,19 +39,23 @@ jobs:
           # Skip clang on linux
           - { os: linux, compiler: clang }
         include:
-          # Specify common OS specific options
-          - { os: windows, cmake: tools/host/cmake/bin/cmake.exe, setpath: setpath.ps1 }
-          - { os: linux, cmake: tools/host/cmake/bin/cmake, setpath: setpath.sh }
           # Specify runners
           - { os: windows, platform: x86_64, runs-on: [self-hosted, Windows, X64] }
           - { os: linux, platform: x86_64, runs-on: [self-hosted, Linux, X64] }
-          # Specify build presets
-          - { os: windows, compiler: msvc, preset: windows-msvc }
-          - { os: linux, compiler: gcc, preset: linux-gcc }
-          # - { os: linux, compiler: clang, preset: linux-clang }
+          # Enable header validation for one windows build
+          - { os: windows, compiler: msvc, config: Debug, flags: "header-validation" }
+          # Enable header validation and coverage for one linux build
+          - { os: linux, compiler: gcc, config: Debug, flags: "header-validation,coverage" }
 
     env:
       VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+      # Environment variables used by ci.py
+      CI_OS: ${{ matrix.os }}
+      CI_PLATFORM: ${{ matrix.platform }}
+      CI_COMPILER: ${{ matrix.compiler }}
+      CI_CONFIG: ${{ matrix.config }}
+      CI_PYTHON: ${{ matrix.python }}
+      CI_FLAGS: ${{ matrix.flags }}
 
     steps:
       - uses: actions/checkout@v4
@@ -74,27 +78,10 @@ jobs:
       - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@v1
 
-      # Setup (Windows).
-      - name: Setup (Windows)
-        if: ${{ startsWith(matrix.preset, 'windows') }}
-        shell: cmd
-        run: |
-          setup.bat
-
-      # Setup (Linux).
-      - name: Setup (Linux)
-        if: ${{ startsWith(matrix.preset, 'linux') }}
-        shell: bash
-        run: |
-          ./setup.sh
+      # Setup.
+      - name: Setup
+        run: python tools/ci.py setup
       # sudo apt install libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev pkg-config
-
-      # Setup (macOS).
-      - name: Setup (macOS)
-        if: ${{ startsWith(matrix.preset, 'macos') }}
-        shell: bash
-        run: |
-          ./setup.sh
 
       # Setup vcpkg caching.
       - name: Export GitHub Actions cache environment variables
@@ -106,25 +93,37 @@ jobs:
 
       # Configure.
       - name: Configure
-        run: ${{matrix.cmake}} --preset ${{matrix.preset}}
+        run: python tools/ci.py configure
 
       # Build.
       - name: Build
-        run: ${{matrix.cmake}} --build build/${{matrix.preset}} --config ${{matrix.config}}
+        run: python tools/ci.py build
 
       # Unit Tests (C++)
       - name: Unit Tests (C++)
-        run: build/${{matrix.preset}}/bin/${{matrix.config}}/sgl_tests
+        run: python tools/ci.py unit-test-cpp
 
       # Unit Tests (Python)
       - name: Unit Tests (Python)
-        run: |
-          . ./build/${{matrix.preset}}/bin/${{matrix.config}}/${{matrix.setpath}}
-          python -m pytest src -r a --junit-xml=pytest-junit.xml
+        run: python tools/ci.py unit-test-python
 
       # Test Report
       - name: Test Report
         uses: mikepenz/action-junit-report@v4
         if: always()
         with:
-          report_paths: '*-junit.xml'
+          report_paths: 'reports/*-junit.xml'
+          check_name: "Unit Test Report"
+
+      # Generate Coverage Report
+      - name: Generate Coverage Report
+        if: contains(matrix.flags, 'coverage')
+        run: python tools/ci.py coverage-report
+
+      # Coverage Report
+      - name: Coverage Report
+        uses: actions/upload-artifact@v4
+        if: contains(matrix.flags, 'coverage')
+        with:
+          name: coverage-report
+          path: reports/coverage.html

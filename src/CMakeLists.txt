@@ -234,6 +234,16 @@ target_compile_options(sgl
         >
 )
 
+if(SGL_ENABLE_COVERAGE)
+    find_program(GCOV_PATH gcov)
+    if(GCOV_PATH)
+        target_compile_options(sgl PRIVATE $<$<CXX_COMPILER_ID:GNU>:--coverage -fprofile-abs-path>)
+        target_link_libraries(sgl PRIVATE $<$<CXX_COMPILER_ID:GNU>:gcov>)
+    else()
+        message(WARNING "gcov not found! Code coverage will not be available.")
+    endif()
+endif()
+
 if(SGL_ENABLE_ASAN)
     target_compile_options(sgl
         PUBLIC
