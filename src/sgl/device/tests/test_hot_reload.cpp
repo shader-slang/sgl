@@ -120,9 +120,9 @@ TEST_SUITE_BEGIN("hot_reload");
 
 TEST_CASE_GPU("verify test case works")
 {
-    std::filesystem::path abs_path = sgl::testing::get_suite_temp_directory() / "verify.slang";
-    write_shader({.path = abs_path, .set_to = "1"});
-    ref<ShaderProgram> program = ctx.device->load_program(abs_path.string(), {"main"});
+    auto path = testing::get_case_temp_directory() / "verify.slang";
+    write_shader({.path = path, .set_to = "1"});
+    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"main"});
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
     run_and_verify(ctx, kernel, 1);
     run_and_verify(ctx, kernel, 2, false);
@@ -134,16 +134,16 @@ TEST_CASE_GPU("change program and recreate")
     ctx.device->_hot_reload()->set_auto_detect_changes(false);
 
     // Write first version of shader that outputs 1.
-    std::filesystem::path abs_path = sgl::testing::get_suite_temp_directory() / "changeprog.slang";
-    write_shader({.path = abs_path, .set_to = "1"});
+    auto path = testing::get_case_temp_directory() / "changeprog.slang";
+    write_shader({.path = path, .set_to = "1"});
 
     // Load program + kernel, and verify returns 1.
-    ref<ShaderProgram> program = ctx.device->load_program(abs_path.string(), {"main"});
+    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"main"});
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
     run_and_verify(ctx, kernel, 1);
 
     // Re-write the shader, and verify it still returns 1, as hasn't reloaded yet.
-    write_shader({.path = abs_path, .set_to = "2"});
+    write_shader({.path = path, .set_to = "2"});
     run_and_verify(ctx, kernel, 1);
 
     // Force a reload, and verify the result is now 2.
@@ -160,16 +160,16 @@ TEST_CASE_GPU("change program with error and recreate")
     ctx.device->_hot_reload()->set_auto_detect_changes(false);
 
     // Write first version of shader that outputs 1.
-    std::filesystem::path abs_path = sgl::testing::get_suite_temp_directory() / "changeprogerror.slang";
-    write_shader({.path = abs_path, .set_to = "1"});
+    auto path = testing::get_case_temp_directory() / "changeprogerror.slang";
+    write_shader({.path = path, .set_to = "1"});
 
     // Load program + kernel, and verify returns 1.
-    ref<ShaderProgram> program = ctx.device->load_program(abs_path.string(), {"main"});
+    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"main"});
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
     run_and_verify(ctx, kernel, 1);
 
     // Re-write the shader, and verify it still returns 1, as hasn't reloaded yet.
-    write_shader({.path = abs_path, .set_to = "1adsda"});
+    write_shader({.path = path, .set_to = "1adsda"});
     run_and_verify(ctx, kernel, 1);
 
     // Force a reload
@@ -188,16 +188,16 @@ TEST_CASE_GPU("change kernel name and recreate")
     ctx.device->_hot_reload()->set_auto_detect_changes(false);
 
     // Write first version of shader that outputs 1.
-    std::filesystem::path abs_path = sgl::testing::get_suite_temp_directory() / "changekernelname.slang";
-    write_shader({.path = abs_path, .set_to = "1"});
+    auto path = testing::get_case_temp_directory() / "changekernelname.slang";
+    write_shader({.path = path, .set_to = "1"});
 
     // Load program + kernel, and verify returns 1.
-    ref<ShaderProgram> program = ctx.device->load_program(abs_path.string(), {"main"});
+    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"main"});
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
     run_and_verify(ctx, kernel, 1);
 
     // Re-write the shader, and verify it still returns 1, as hasn't reloaded yet.
-    write_shader({.path = abs_path, .set_to = "1", .kernel_name = "main2"});
+    write_shader({.path = path, .set_to = "1", .kernel_name = "main2"});
 
     // Force a reload
     ctx.device->_hot_reload()->recreate_all_sessions();
@@ -215,16 +215,16 @@ TEST_CASE_GPU("change buffer name and fail to use recreated program")
     ctx.device->_hot_reload()->set_auto_detect_changes(false);
 
     // Write first version of shader that outputs 1.
-    std::filesystem::path abs_path = sgl::testing::get_suite_temp_directory() / "changebuffer.slang";
-    write_shader({.path = abs_path, .set_to = "1"});
+    auto path = testing::get_case_temp_directory() / "changebuffer.slang";
+    write_shader({.path = path, .set_to = "1"});
 
     // Load program + kernel, and verify returns 1.
-    ref<ShaderProgram> program = ctx.device->load_program(abs_path.string(), {"main"});
+    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"main"});
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
     run_and_verify(ctx, kernel, 1);
 
     // Re-write the shader, and verify it still returns 1, as hasn't reloaded yet.
-    write_shader({.path = abs_path, .set_to = "2", .param_name = "outbuffer2"});
+    write_shader({.path = path, .set_to = "2", .param_name = "outbuffer2"});
 
     // Force a reload, which should succeed.
     ctx.device->_hot_reload()->recreate_all_sessions();
@@ -240,16 +240,16 @@ TEST_CASE_GPU("change program with invalid imports and recreate")
     ctx.device->_hot_reload()->set_auto_detect_changes(false);
 
     // Write first version of shader that outputs 1.
-    std::filesystem::path abs_path = sgl::testing::get_suite_temp_directory() / "badimport.slang";
-    write_shader({.path = abs_path, .set_to = "1"});
+    auto path = testing::get_case_temp_directory() / "badimport.slang";
+    write_shader({.path = path, .set_to = "1"});
 
     // Load program + kernel, and verify returns 1.
-    ref<ShaderProgram> program = ctx.device->load_program(abs_path.string(), {"main"});
+    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"main"});
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
     run_and_verify(ctx, kernel, 1);
 
     // Re-write shader with an import that doesn't exist and check build fails.
-    write_shader({.path = abs_path, .set_to = "1", .imports = {"blabla"}});
+    write_shader({.path = path, .set_to = "1", .imports = {"blabla"}});
     ctx.device->_hot_reload()->recreate_all_sessions();
     CHECK(ctx.device->_hot_reload()->last_build_failed());
 
@@ -263,20 +263,20 @@ TEST_CASE_GPU("change program with correct module import and recreate")
     ctx.device->_hot_reload()->set_auto_detect_changes(false);
 
     // Write first version of shader that outputs 1.
-    std::filesystem::path abs_path = sgl::testing::get_suite_temp_directory() / "goodimport.slang";
-    write_shader({.path = abs_path, .set_to = "1"});
+    auto path = testing::get_case_temp_directory() / "goodimport.slang";
+    write_shader({.path = path, .set_to = "1"});
 
     // Load program + kernel, and verify returns 1.
-    ref<ShaderProgram> program = ctx.device->load_program(abs_path.string(), {"main"});
+    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"main"});
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
     run_and_verify(ctx, kernel, 1);
 
     // Create a module with a function that returns 2.
-    std::filesystem::path abs_module_path = sgl::testing::get_suite_temp_directory() / "goodimportmodule.slang";
+    std::filesystem::path abs_module_path = testing::get_case_temp_directory() / "goodimportmodule.slang";
     write_module({.path = abs_module_path, .set_to = "2"});
 
     // Re-write shader with a valid import and check build succeeds.
-    write_shader({.path = abs_path, .set_to = "func()", .imports = {"goodimportmodule"}});
+    write_shader({.path = path, .set_to = "func()", .imports = {"goodimportmodule"}});
     ctx.device->_hot_reload()->recreate_all_sessions();
     CHECK(!ctx.device->_hot_reload()->last_build_failed());
 
@@ -290,13 +290,13 @@ TEST_CASE_GPU("leave program but change the module it imports")
     ctx.device->_hot_reload()->set_auto_detect_changes(false);
 
     // Write first version of shader that outputs 1.
-    std::filesystem::path abs_path = sgl::testing::get_suite_temp_directory() / "changeimported.slang";
-    write_shader({.path = abs_path, .set_to = "func()", .imports = {"changeimportedmodule"}});
-    std::filesystem::path abs_module_path = sgl::testing::get_suite_temp_directory() / "changeimportedmodule.slang";
+    auto path = testing::get_case_temp_directory() / "changeimported.slang";
+    write_shader({.path = path, .set_to = "func()", .imports = {"changeimportedmodule"}});
+    std::filesystem::path abs_module_path = testing::get_case_temp_directory() / "changeimportedmodule.slang";
     write_module({.path = abs_module_path, .set_to = "1"});
 
     // Load program + kernel, and verify returns 1.
-    ref<ShaderProgram> program = ctx.device->load_program(abs_path.string(), {"main"});
+    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"main"});
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
     run_and_verify(ctx, kernel, 1);
 
@@ -315,13 +315,13 @@ TEST_CASE_GPU("leave program then break the module it imports")
     ctx.device->_hot_reload()->set_auto_detect_changes(false);
 
     // Write first version of shader that outputs 1.
-    std::filesystem::path abs_path = sgl::testing::get_suite_temp_directory() / "breakimported.slang";
-    write_shader({.path = abs_path, .set_to = "func()", .imports = {"breakimportedmodule"}});
-    std::filesystem::path abs_module_path = sgl::testing::get_suite_temp_directory() / "breakimportedmodule.slang";
+    auto path = testing::get_case_temp_directory() / "breakimported.slang";
+    write_shader({.path = path, .set_to = "func()", .imports = {"breakimportedmodule"}});
+    std::filesystem::path abs_module_path = testing::get_case_temp_directory() / "breakimportedmodule.slang";
     write_module({.path = abs_module_path, .set_to = "1"});
 
     // Load program + kernel, and verify returns 1.
-    ref<ShaderProgram> program = ctx.device->load_program(abs_path.string(), {"main"});
+    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"main"});
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
     run_and_verify(ctx, kernel, 1);
 
@@ -348,7 +348,7 @@ TEST_CASE_GPU("change program with basic additional source")
     });
 
     // Write a teeny 'config' file that predeclares the constant in additional source
-    std::ofstream config_module(sgl::testing::get_suite_temp_directory() / "addsourcebasicconfig.slang");
+    std::ofstream config_module(testing::get_case_temp_directory() / "addsourcebasicconfig.slang");
     config_module << "extern static const uint SOMENUMBER;\n";
     config_module.close();
 
@@ -356,21 +356,21 @@ TEST_CASE_GPU("change program with basic additional source")
     std::string addsource = "export static const uint SOMENUMBER = 1;\n";
 
     // Write first version of shader that reads a value from the additional source.
-    std::filesystem::path abs_path = sgl::testing::get_suite_temp_directory() / "addsourcebasic.slang";
+    auto path = testing::get_case_temp_directory() / "addsourcebasic.slang";
     write_shader({
-        .path = abs_path,
+        .path = path,
         .set_to = "SOMENUMBER",
         .imports = {"addsourcebasicconfig"},
     });
 
     // Load program + kernel with the extra source, and verify returns 1.
-    ref<ShaderProgram> program = ctx.device->load_program(abs_path.string(), {"main"}, addsource);
+    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"main"}, addsource);
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
     run_and_verify(ctx, kernel, 1);
 
     // Modify the shader to add one to the returned number and verify returns 2
     write_shader({
-        .path = abs_path,
+        .path = path,
         .set_to = "SOMENUMBER+1",
         .imports = {"addsourcebasicconfig"},
     });
@@ -385,7 +385,7 @@ TEST_CASE_GPU("load module separately from program")
     ctx.device->_hot_reload()->set_auto_detect_changes(false);
 
     // Create module in subdirectory.
-    std::filesystem::path inc_path = sgl::testing::get_suite_temp_directory() / "sepmod_inc";
+    std::filesystem::path inc_path = testing::get_case_temp_directory() / "sepmod_inc";
     std::filesystem::create_directories(inc_path);
     std::filesystem::path mod_path = inc_path / "mod.slang";
     write_module({
@@ -403,16 +403,16 @@ TEST_CASE_GPU("load module separately from program")
     });
 
     // Write version of shader that reads a value from the module.
-    std::filesystem::path abs_path = sgl::testing::get_suite_temp_directory() / "sepmod.slang";
+    auto path = testing::get_case_temp_directory() / "sepmod.slang";
     write_shader({
-        .path = abs_path,
+        .path = path,
         .set_to = "func()",
         .imports = {"mod"},
     });
 
     // Load module then program independently and verify result.
     ref<SlangModule> module = session->load_module(mod_path.string());
-    ref<ShaderProgram> program = session->load_program(abs_path.string(), {"main"});
+    ref<ShaderProgram> program = session->load_program(path.string(), {"main"});
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
     run_and_verify(ctx, kernel, 1);
 
@@ -435,16 +435,16 @@ TEST_CASE_GPU("change program and auto detect changes")
     ctx.device->_hot_reload()->_clear_file_watches();
 
     // Write first version of shader that outputs 1.
-    std::filesystem::path abs_path = sgl::testing::get_suite_temp_directory() / "detectchangeprog.slang";
-    write_shader({.path = abs_path, .set_to = "1"});
+    auto path = testing::get_case_temp_directory() / "detectchangeprog.slang";
+    write_shader({.path = path, .set_to = "1"});
 
     // Load program + kernel, and verify returns 1.
-    ref<ShaderProgram> program = ctx.device->load_program(abs_path.string(), {"main"});
+    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"main"});
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
     run_and_verify(ctx, kernel, 1);
 
     // Re-write the shader, and verify it still returns 1, as hasn't reloaded yet.
-    write_shader({.path = abs_path, .set_to = "2"});
+    write_shader({.path = path, .set_to = "2"});
     run_and_verify(ctx, kernel, 1);
 
     // Tell the hot reload system to auto detect changes for 500ms.
@@ -469,8 +469,8 @@ TEST_CASE_GPU("create multi directory session and monitor for changes")
     ctx.device->_hot_reload()->_clear_file_watches();
 
     // Create 2 directories, and a module inside each one.
-    std::filesystem::path inc_path_0 = sgl::testing::get_suite_temp_directory() / "md_inc_0";
-    std::filesystem::path inc_path_1 = sgl::testing::get_suite_temp_directory() / "md_inc_1";
+    std::filesystem::path inc_path_0 = testing::get_case_temp_directory() / "md_inc_0";
+    std::filesystem::path inc_path_1 = testing::get_case_temp_directory() / "md_inc_1";
     std::filesystem::create_directories(inc_path_0);
     std::filesystem::create_directories(inc_path_1);
     std::filesystem::path mod_path_0 = inc_path_0 / "mod0.slang";
@@ -496,21 +496,21 @@ TEST_CASE_GPU("create multi directory session and monitor for changes")
     });
 
     // Write first version of shader that imports but doesn't use both modules.
-    std::filesystem::path abs_path = sgl::testing::get_suite_temp_directory() / "multidirchangeprog.slang";
+    auto path = testing::get_case_temp_directory() / "multidirchangeprog.slang";
     write_shader({
-        .path = abs_path,
+        .path = path,
         .set_to = "1",
         .imports = {"mod0", "mod1"},
     });
 
     // Load program + kernel, and verify returns 1.
-    ref<ShaderProgram> program = session->load_program(abs_path.string(), {"main"});
+    ref<ShaderProgram> program = session->load_program(path.string(), {"main"});
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
     run_and_verify(ctx, kernel, 1);
 
     // Re-write the shader to call mod0 and check changes are detected.
     write_shader({
-        .path = abs_path,
+        .path = path,
         .set_to = "mod0func()",
         .imports = {"mod0", "mod1"},
     });
@@ -536,7 +536,7 @@ TEST_CASE_GPU("create multi directory session and monitor for changes")
 
     // Modify shader to use mod1, AND modify mod1, and check.
     write_shader({
-        .path = abs_path,
+        .path = path,
         .set_to = "mod1func()",
         .imports = {"mod0", "mod1"},
     });

@@ -397,8 +397,8 @@ public:
     ) const;
     bool has_entry_point(std::string_view name) const;
 
-    /// Get root decl ref for traversing this module's abstract syntax tree.
-    const DeclReflection* abstract_syntax_tree() const;
+    /// Get root decl ref for this module
+    const DeclReflection* module_decl() const;
 
     /// Internal slang module.
     slang::IModule* slang_module() const { return m_data->slang_module; }

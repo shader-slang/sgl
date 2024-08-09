@@ -106,7 +106,7 @@ SGL_PY_EXPORT(device_reflection)
         .def_prop_ro("parameters", &FunctionReflection::parameters)
         .def("has_modifier", &FunctionReflection::has_modifier, "modifier"_a, D_NA(FunctionReflection, has_modifier));
 
-    nb::sgl_enum<ModifierType>(m, "ModifierType");
+    nb::sgl_enum<ModifierID>(m, "ModifierID");
 
     nb::class_<VariableReflection>(m, "VariableReflection")
         .def_prop_ro("name", &VariableReflection::name)
