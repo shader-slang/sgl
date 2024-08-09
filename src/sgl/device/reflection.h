@@ -412,7 +412,7 @@ public:
     {
         SGL_CHECK(is_array(), "Type is not an array");
         size_t result = 1;
-        const TypeReflection* type = this;
+        ref<const TypeReflection> type = ref(this);
         while (type->is_array()) {
             result *= type->element_count();
             type = type->element_type();
@@ -428,11 +428,11 @@ public:
 
     ref<const TypeReflection> unwrap_array() const
     {
-        const TypeReflection* type = this;
+        ref<const TypeReflection> type = ref(this);
         while (type->is_array()) {
             type = type->element_type();
         }
-        return ref<const TypeReflection>(type);
+        return type;
     }
 
     uint32_t row_count() const { return m_target->getRowCount(); }
@@ -567,7 +567,7 @@ public:
 
     ref<const TypeLayoutReflection> unwrap_array() const
     {
-        const TypeLayoutReflection* type_layout = this;
+        ref<const TypeLayoutReflection> type_layout = ref(this);
         while (type_layout->is_array()) {
             type_layout = type_layout->element_type_layout();
         }
@@ -1042,7 +1042,7 @@ private:
 
 class SGL_API ProgramLayout : public BaseReflectionObject {
 public:
-    static const ProgramLayout* from_slang(ref<const Object> owner, slang::ProgramLayout* program_layout)
+    static ref<const ProgramLayout> from_slang(ref<const Object> owner, slang::ProgramLayout* program_layout)
     {
         return detail::from_slang(owner, program_layout);
     }

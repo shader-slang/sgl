@@ -291,7 +291,7 @@ Buffer::Buffer(ref<Device> device, BufferDesc desc)
 
     // Derive struct size from struct type.
     if (m_desc.struct_type) {
-        const TypeLayoutReflection* type = desc.struct_type->unwrap_array()->element_type_layout();
+        ref<const TypeLayoutReflection> type = m_desc.struct_type->unwrap_array()->element_type_layout();
         SGL_CHECK(type, "Invalid struct type.");
         m_desc.struct_size = type->stride();
         m_desc.struct_type = nullptr;

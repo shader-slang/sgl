@@ -385,7 +385,7 @@ public:
 
     /// Module source path. This can be empty if the module was generated from a string.
     const std::filesystem::path& path() const { return m_data->path; }
-    const ProgramLayout* layout() const
+    ref<const ProgramLayout> layout() const
     {
         return ProgramLayout::from_slang(ref(this), m_data->slang_module->getLayout());
     }
@@ -494,7 +494,7 @@ public:
 
     const ShaderProgramDesc& desc() const { return m_desc; }
 
-    const ProgramLayout* layout() const
+    ref<const ProgramLayout> layout() const
     {
         return ProgramLayout::from_slang(ref(this), m_data->linked_program->getLayout());
     }

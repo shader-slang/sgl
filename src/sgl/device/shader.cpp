@@ -746,7 +746,7 @@ void SlangModule::load(SlangSessionBuild& build_data) const
 
     // Register with debug printer.
     if (m_session->device()->debug_printer()) {
-        const ProgramLayout* layout = ProgramLayout::from_slang(ref(this), slang_module->getLayout());
+        ref<const ProgramLayout> layout = ProgramLayout::from_slang(ref(this), slang_module->getLayout());
         m_session->device()->debug_printer()->add_hashed_strings(layout->hashed_strings_map());
     }
 
