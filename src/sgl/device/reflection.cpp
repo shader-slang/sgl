@@ -13,6 +13,42 @@
 
 namespace sgl {
 
+namespace detail {
+
+    ref<const DeclReflection> from_slang(slang::DeclReflection* decl_reflection)
+    {
+        return make_ref<const DeclReflection>(decl_reflection);
+    }
+    ref<const TypeReflection> from_slang(slang::TypeReflection* type_reflection)
+    {
+        return make_ref<const TypeReflection>(type_reflection);
+    }
+    ref<const TypeLayoutReflection> from_slang(slang::TypeLayoutReflection* type_layout_reflection)
+    {
+        return make_ref<const TypeLayoutReflection>(type_layout_reflection);
+    }
+    ref<const FunctionReflection> from_slang(slang::FunctionReflection* variable_reflection)
+    {
+        return make_ref<const FunctionReflection>(variable_reflection);
+    }
+    ref<const VariableReflection> from_slang(slang::VariableReflection* variable_reflection)
+    {
+        return make_ref<const VariableReflection>(variable_reflection);
+    }
+    ref<const VariableLayoutReflection> from_slang(slang::VariableLayoutReflection* variable_layout_reflection)
+    {
+        return make_ref<const VariableLayoutReflection>(variable_layout_reflection);
+    }
+    ref<const EntryPointLayout> from_slang(slang::EntryPointLayout* entry_point_reflection)
+    {
+        return make_ref<const EntryPointLayout>(entry_point_reflection);
+    }
+    ref<const ProgramLayout> from_slang(slang::ProgramLayout* program_layout)
+    {
+        return make_ref<const ProgramLayout>(program_layout);
+    }
+} // namespace detail
+
 std::string c_str_to_string(const char* str)
 {
     if (!str)

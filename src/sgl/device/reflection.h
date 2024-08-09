@@ -22,38 +22,14 @@ namespace sgl {
 
 namespace detail {
 
-    inline const DeclReflection* from_slang(slang::DeclReflection* decl_reflection)
-    {
-        return reinterpret_cast<const DeclReflection*>(decl_reflection);
-    }
-    inline const TypeReflection* from_slang(slang::TypeReflection* type_reflection)
-    {
-        return reinterpret_cast<const TypeReflection*>(type_reflection);
-    }
-    inline const TypeLayoutReflection* from_slang(slang::TypeLayoutReflection* type_layout_reflection)
-    {
-        return reinterpret_cast<const TypeLayoutReflection*>(type_layout_reflection);
-    }
-    inline const FunctionReflection* from_slang(slang::FunctionReflection* variable_reflection)
-    {
-        return reinterpret_cast<const FunctionReflection*>(variable_reflection);
-    }
-    inline const VariableReflection* from_slang(slang::VariableReflection* variable_reflection)
-    {
-        return reinterpret_cast<const VariableReflection*>(variable_reflection);
-    }
-    inline const VariableLayoutReflection* from_slang(slang::VariableLayoutReflection* variable_layout_reflection)
-    {
-        return reinterpret_cast<const VariableLayoutReflection*>(variable_layout_reflection);
-    }
-    inline const EntryPointLayout* from_slang(slang::EntryPointLayout* entry_point_reflection)
-    {
-        return reinterpret_cast<const EntryPointLayout*>(entry_point_reflection);
-    }
-    inline const ProgramLayout* from_slang(slang::ProgramLayout* program_layout)
-    {
-        return reinterpret_cast<const ProgramLayout*>(program_layout);
-    }
+    ref<const DeclReflection> from_slang(ref<Object> owner, slang::DeclReflection* decl_reflection);
+    ref<const TypeReflection> from_slang(slang::TypeReflection* type_reflection);
+    ref<const TypeLayoutReflection> from_slang(slang::TypeLayoutReflection* type_layout_reflection);
+    ref<const FunctionReflection> from_slang(slang::FunctionReflection* variable_reflection);
+    ref<const VariableReflection> from_slang(slang::VariableReflection* variable_reflection);
+    ref<const VariableLayoutReflection> from_slang(slang::VariableLayoutReflection* variable_layout_reflection);
+    ref<const EntryPointLayout> from_slang(slang::EntryPointLayout* entry_point_reflection);
+    ref<const ProgramLayout> from_slang(slang::ProgramLayout* program_layout);
 } // namespace detail
 
 
@@ -99,7 +75,7 @@ SGL_ENUM_INFO(
 );
 SGL_ENUM_REGISTER(ModifierType);
 
-class SGL_API DeclReflection : private slang::DeclReflection {
+class SGL_API DeclReflection : public Object {
 
 public:
     SGL_REFLECTION_THROW_IF_DESTRUCTED(DeclReflection)
@@ -170,7 +146,7 @@ public:
 };
 SGL_ENUM_REGISTER(DeclReflection::Kind);
 
-class SGL_API TypeReflection : private slang::TypeReflection {
+class SGL_API TypeReflection : public Object {
 public:
     SGL_REFLECTION_THROW_IF_DESTRUCTED(TypeReflection)
 
@@ -487,7 +463,7 @@ SGL_ENUM_REGISTER(TypeReflection::ResourceShape);
 SGL_ENUM_REGISTER(TypeReflection::ResourceAccess);
 SGL_ENUM_REGISTER(TypeReflection::ParameterCategory);
 
-class SGL_API TypeLayoutReflection : private slang::TypeLayoutReflection {
+class SGL_API TypeLayoutReflection : public Object {
 public:
     SGL_REFLECTION_THROW_IF_DESTRUCTED(TypeLayoutReflection)
 
@@ -802,7 +778,7 @@ public:
     std::string to_string() const;
 };
 
-class SGL_API FunctionReflection : private slang::FunctionReflection {
+class SGL_API FunctionReflection : public Object {
 public:
     SGL_REFLECTION_THROW_IF_DESTRUCTED(FunctionReflection)
 
@@ -838,7 +814,7 @@ public:
     }
 };
 
-class SGL_API VariableReflection : private slang::VariableReflection {
+class SGL_API VariableReflection : public Object {
 public:
     SGL_REFLECTION_THROW_IF_DESTRUCTED(VariableReflection)
 
@@ -885,7 +861,7 @@ public:
 #endif
 };
 
-class SGL_API VariableLayoutReflection : private slang::VariableLayoutReflection {
+class SGL_API VariableLayoutReflection : public Object {
 public:
     SGL_REFLECTION_THROW_IF_DESTRUCTED(VariableLayoutReflection)
 
@@ -948,7 +924,7 @@ public:
     std::string to_string() const;
 };
 
-class SGL_API EntryPointLayout : private slang::EntryPointLayout {
+class SGL_API EntryPointLayout : public Object {
 public:
     SGL_REFLECTION_THROW_IF_DESTRUCTED(EntryPointLayout)
 
@@ -1015,7 +991,7 @@ public:
     std::string to_string() const;
 };
 
-class SGL_API ProgramLayout : private slang::ProgramLayout {
+class SGL_API ProgramLayout : public Object {
 public:
     SGL_REFLECTION_THROW_IF_DESTRUCTED(ProgramLayout)
 
