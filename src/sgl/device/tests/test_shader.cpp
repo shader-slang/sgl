@@ -64,7 +64,7 @@ TEST_SUITE_BEGIN("device");
 
 TEST_CASE_GPU("shader")
 {
-    std::filesystem::path dir = testing::get_case_temp_directory();
+    auto dir = testing::get_case_temp_directory();
 
     // Perform 1-time setup that creates shader files for these test cases.
     setup_testshader_files(dir);
@@ -95,7 +95,7 @@ TEST_CASE_GPU("shader")
             module->slang_module()->getDependencyFilePath(1),
             module->slang_module()->getDependencyFilePath(2),
         };
-        std::sort(paths.begin(), paths.end());
+        std::sort(paths.begin(), paths.end(), [](const auto& a, const auto& b) { return a.filename() < b.filename(); });
         CHECK_EQ(paths[0].filename(), "_testshader_dependent.slang");
         CHECK_EQ(paths[1].filename(), "_testshader_struct.slang");
         CHECK_EQ(paths[2].filename(), "print.slang");

@@ -15,7 +15,7 @@ TEST_CASE("FileSystemWatcher")
 {
     SUBCASE("add_and_remove_watch")
     {
-        auto path = sgl::testing::get_case_temp_directory() / "add_and_remove_watch";
+        auto path = testing::get_case_temp_directory() / "add_and_remove_watch";
         std::filesystem::create_directories(path);
         ref<FileSystemWatcher> watcher = make_ref<FileSystemWatcher>();
         watcher->add_watch({.directory = path});
@@ -24,7 +24,7 @@ TEST_CASE("FileSystemWatcher")
 
     SUBCASE("add_and_remove_watch_by_id")
     {
-        auto path = sgl::testing::get_case_temp_directory() / "add_and_remove_watch";
+        auto path = testing::get_case_temp_directory() / "add_and_remove_watch";
         std::filesystem::create_directories(path);
         ref<FileSystemWatcher> watcher = make_ref<FileSystemWatcher>();
         auto id = watcher->add_watch({.directory = path});
@@ -40,7 +40,7 @@ TEST_CASE("FileSystemWatcher")
     SUBCASE("fail_duplicate_watch")
     {
         ref<FileSystemWatcher> watcher = make_ref<FileSystemWatcher>();
-        auto path = sgl::testing::get_case_temp_directory();
+        auto path = testing::get_case_temp_directory();
         watcher->add_watch({.directory = path});
         CHECK_THROWS(watcher->add_watch({.directory = path}));
     }
@@ -62,7 +62,7 @@ TEST_CASE("FileSystemWatcher")
         };
 
         // Setup temp directory.
-        auto path = sgl::testing::get_case_temp_directory() / "file_watches";
+        auto path = testing::get_case_temp_directory() / "file_watches";
         path = absolute(path);
         create_directories(path);
 
