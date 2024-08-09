@@ -163,7 +163,7 @@ def coverage_report(args):
     if not "coverage" in args.flags:
         print("Coverage flag not set, skipping coverage report.")
     os.makedirs("reports", exist_ok=True)
-    run_command(f"gcovr -r . -f src/sgl --html reports/coverage.xml")
+    run_command(f"gcovr -r . -f src/sgl --html reports/coverage.html")
 
 
 def main():
