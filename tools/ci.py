@@ -49,7 +49,9 @@ def run_command(command, shell=True, env=None):
     print(f'Running "{command}" ...')
     sys.stdout.flush()
     if env != None:
-        env = os.environ.copy().update(env)
+        new_env = os.environ.copy()
+        new_env.update(env)
+        env = new_env
     result = subprocess.run(command, shell=shell, env=env)
     if result.returncode != 0:
         raise RuntimeError(f'Error running "{command}"')
