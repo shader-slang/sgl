@@ -157,6 +157,7 @@ inline std::string iterable_to_string(const T& iterable)
         result += string::indent(item->to_string());
         result += ",\n";
     }
+    result += "]";
     return result;
 }
 

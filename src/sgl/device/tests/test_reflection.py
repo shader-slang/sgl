@@ -210,7 +210,7 @@ def test_module_layout_lifetime(test_id, device_type):
     module = None
     session = None
 
-    # Globals layout should still be valid, as it will have kept the module alive
+    # Globals layout should still be valid, as it will have kept the module alive.
     globals_layout = program_layout.globals_type_layout
     assert globals_layout.element_type_layout.fields[0].name == "hello"
 
@@ -231,7 +231,7 @@ def test_module_declref_lifetime(test_id, device_type):
     module = None
     session = None
 
-    # Decl ref should still be valid, as it will have kept the module alive
+    # Decl ref should still be valid, as it will have kept the module alive.
     children = module_decl.children
     assert len(children) == 2
 
@@ -252,7 +252,7 @@ def test_module_declref_child_lifetime(test_id, device_type):
     module = None
     session = None
 
-    # Decl ref should still be valid, as it will have kept the module alive
+    # Decl ref should still be valid, as it will have kept the module alive.
     assert var_decl.name == "hello"
 
 
@@ -276,18 +276,18 @@ def test_list_type_fields(test_id, device_type):
     """,
     )
 
-    # Get and read on 1 line
+    # Get and read on 1 line.
     assert module.module_decl.children[0].as_type().fields[0].name == "a"
     assert module.module_decl.children[0].as_type().fields[1].name == "b"
 
-    # By getting and storing as local
+    # By getting and storing as local.
     var_type = module.module_decl.children[0].as_type()
     fields = var_type.fields
     assert len(fields) == 2
     assert fields[0].name == "a"
     assert fields[1].name == "b"
 
-    # Iterate
+    # Iterate.
     for field in fields:
         assert field.name in ["a", "b"]
 
@@ -306,13 +306,13 @@ def test_list_function_parameters(test_id, device_type):
     """,
     )
 
-    # Get and read on 1 line
+    # Get and read on 1 line.
     func = module.module_decl.children[0].as_function()
     assert func.parameters[0].name == "a"
     assert func.parameters[1].name == "b"
     assert func.parameters[2].name == "c"
 
-    # Iterate
+    # Iterate.
     for p in func.parameters:
         assert p.name in ["a", "b", "c"]
 

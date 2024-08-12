@@ -263,7 +263,7 @@ public:
     /// Get number of children.
     uint32_t child_count() const { return m_target->getChildrenCount(); }
 
-    /// Get a child by index (c++ only).
+    /// Get a child by index.
     ref<const DeclReflection> child(uint32_t index) const
     {
         if (index > child_count())

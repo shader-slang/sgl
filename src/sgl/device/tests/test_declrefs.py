@@ -89,7 +89,7 @@ void foo() {
     assert functions[0].name == "foo"
 
     # Do the same with creating temporary to make sure value semantic list works
-    ast.children_of_kind(sgl.DeclReflection.Kind.func)[0].name
+    assert ast.children_of_kind(sgl.DeclReflection.Kind.func)[0].name == "foo"
 
     # Search for all functions with expected name and verify
     functions = ast.find_children_of_kind(sgl.DeclReflection.Kind.func, "foo")
