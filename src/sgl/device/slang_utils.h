@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <slang.h>
+#include <slang-com-ptr.h>
 
 namespace sgl {
 

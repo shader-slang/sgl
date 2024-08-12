@@ -52,6 +52,9 @@ set(SGL_DISABLE_ASSERTS OFF CACHE BOOL "Disable asserts")
 # Enable/disable precompiled headers.
 set(SGL_ENABLE_PCH OFF CACHE BOOL "Enable precompiled headers")
 
+# Enable/disable code coverage.
+set(SGL_ENABLE_COVERAGE OFF CACHE BOOL "Enable code coverage (gcov)")
+
 # Enable/disable address sanitizer.
 set(SGL_ENABLE_ASAN OFF CACHE BOOL "Enable address sanitizer")
 

@@ -114,7 +114,7 @@ setup(
     author="Simon Kallweit",
     author_email="skallweit@nvidia.com",
     description="A research rendering framework",
-    url="https://github.com/westlicht/sgl",
+    url="https://github.com/shader-slang/sgl",
     license="Apache-2.0",
     long_description=long_description,
     long_description_content_type="text/markdown",

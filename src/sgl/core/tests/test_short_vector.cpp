@@ -116,4 +116,23 @@ TEST_CASE("clear")
     CHECK_EQ(v.capacity(), 4);
 }
 
+TEST_CASE("grow")
+{
+    short_vector<int, 4> v;
+    v.push_back(1);
+    v.push_back(2);
+    v.push_back(3);
+    v.push_back(4);
+    CHECK_EQ(v.size(), 4);
+    CHECK_EQ(v.capacity(), 4);
+    v.push_back(5);
+    v.push_back(6);
+    v.push_back(7);
+    v.push_back(8);
+    CHECK_EQ(v.size(), 8);
+    CHECK_GE(v.capacity(), 8);
+    for (int i = 0; i < 8; ++i)
+        CHECK_EQ(v[i], i + 1);
+}
+
 TEST_SUITE_END();

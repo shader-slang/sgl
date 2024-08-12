@@ -9,6 +9,7 @@
 #include "sgl/core/timer.h"
 
 #include "sgl/device/fwd.h"
+#include "sgl/device/framebuffer.h"
 
 #include <map>
 
