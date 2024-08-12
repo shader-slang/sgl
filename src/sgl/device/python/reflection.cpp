@@ -39,9 +39,6 @@ SGL_PY_EXPORT(device_reflection)
 
     nb::sgl_enum<DeclReflection::Kind>(decl_reflection, "Kind");
 
-    build_list_type<DeclReflectionChildList>(m, "DeclReflectionChildList");
-    build_list_type<DeclReflectionIndexedChildList>(m, "DeclReflectionIndexedChildList");
-
     decl_reflection //
         .def_prop_ro("kind", &DeclReflection::kind, D_NA(DeclReflection, kind))
         .def_prop_ro("children", &DeclReflection::children, D_NA(DeclReflection, children))
@@ -77,7 +74,8 @@ SGL_PY_EXPORT(device_reflection)
         )
         .def("__repr__", &DeclReflection::to_string);
 
-    build_list_type<TypeReflectionFieldList>(m, "TypeReflectionFieldList");
+    build_list_type<DeclReflectionChildList>(m, "DeclReflectionChildList");
+    build_list_type<DeclReflectionIndexedChildList>(m, "DeclReflectionIndexedChildList");
 
     nb::class_<TypeReflection, BaseReflectionObject> type_reflection(m, "TypeReflection");
 
@@ -102,6 +100,8 @@ SGL_PY_EXPORT(device_reflection)
         .def("unwrap_array", &TypeReflection::unwrap_array)
         .def("__repr__", &TypeReflection::to_string);
 
+    build_list_type<TypeReflectionFieldList>(m, "TypeReflectionFieldList");
+
     nb::class_<TypeLayoutReflection, BaseReflectionObject>(m, "TypeLayoutReflection")
         .def_prop_ro("kind", &TypeLayoutReflection::kind)
         .def_prop_ro("name", &TypeLayoutReflection::name)
@@ -123,6 +123,8 @@ SGL_PY_EXPORT(device_reflection)
         .def("has_modifier", &FunctionReflection::has_modifier, "modifier"_a, D_NA(FunctionReflection, has_modifier));
 
     nb::sgl_enum<ModifierID>(m, "ModifierID");
+
+    build_list_type<FunctionReflectionParameterList>(m, "FunctionReflectionParameterList");
 
     nb::class_<VariableReflection, BaseReflectionObject>(m, "VariableReflection")
         .def_prop_ro("name", &VariableReflection::name)
@@ -148,6 +150,8 @@ SGL_PY_EXPORT(device_reflection)
         .def_prop_ro("parameters", &EntryPointLayout::parameters, D_NA(EntryPointLayout, parameters))
         .def("__repr__", &EntryPointLayout::to_string);
 
+    build_list_type<EntryPointLayoutParameterList>(m, "EntryPointLayoutParameterList");
+
     nb::class_<ProgramLayout, BaseReflectionObject> program_layout(m, "ProgramLayout", D(ProgramLayout));
 
     nb::class_<ProgramLayout::HashedString>(program_layout, "HashedString", D(ProgramLayout, HashedString))
@@ -165,6 +169,9 @@ SGL_PY_EXPORT(device_reflection)
         .def_prop_ro("entry_points", &ProgramLayout::entry_points, D(ProgramLayout, entry_points))
         .def_prop_ro("hashed_strings", &ProgramLayout::hashed_strings, D(ProgramLayout, hashed_strings))
         .def("__repr__", &ProgramLayout::to_string);
+
+    build_list_type<ProgramLayoutParameterList>(m, "ProgramLayoutParameterList");
+    build_list_type<ProgramLayoutEntryPointList>(m, "ProgramLayoutEntryPointList");
 
     nb::class_<ReflectionCursor>(m, "ReflectionCursor", D(ReflectionCursor))
         .def(nb::init<const ShaderProgram*>(), "shader_program"_a)

@@ -282,6 +282,16 @@ std::string EntryPointLayout::to_string() const
     );
 }
 
+ProgramLayoutParameterList ProgramLayout::parameters() const
+{
+    return ProgramLayoutParameterList(ref(this));
+}
+
+ProgramLayoutEntryPointList ProgramLayout::entry_points() const
+{
+    return ProgramLayoutEntryPointList(ref(this));
+}
+
 std::string ProgramLayout::to_string() const
 {
     return fmt::format(
@@ -291,8 +301,8 @@ std::string ProgramLayout::to_string() const
         "  entry_points = {}\n"
         ")",
         string::indent(globals_type_layout()->to_string()),
-        string::indent(string::list_to_string(parameters())),
-        string::indent(string::list_to_string(entry_points()))
+        string::indent(string::iterable_to_string(parameters())),
+        string::indent(string::iterable_to_string(entry_points()))
     );
 }
 

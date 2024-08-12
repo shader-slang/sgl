@@ -973,14 +973,7 @@ public:
         return detail::from_slang(m_owner, m_target->getParameterByIndex(index));
     }
 
-    std::vector<ref<const VariableLayoutReflection>> parameters() const
-    {
-        std::vector<ref<const VariableLayoutReflection>> result;
-        for (uint32_t i = 0; i < m_target->getParameterCount(); ++i) {
-            result.push_back(detail::from_slang(m_owner, m_target->getParameterByIndex(i)));
-        }
-        return result;
-    }
+    ProgramLayoutParameterList parameters() const;
 
     uint32_t type_parameter_count() const { return m_target->getTypeParameterCount(); }
 
@@ -1017,14 +1010,7 @@ public:
         return find_entry_point_by_name(name_str.c_str());
     }
 
-    std::vector<ref<const EntryPointLayout>> entry_points() const
-    {
-        std::vector<ref<const EntryPointLayout>> result;
-        for (uint32_t i = 0; i < m_target->getEntryPointCount(); ++i) {
-            result.push_back(detail::from_slang(m_owner, m_target->getEntryPointByIndex(i)));
-        }
-        return result;
-    }
+    ProgramLayoutEntryPointList entry_points() const;
 
     uint32_t hashed_string_count() const { return narrow_cast<uint32_t>(m_target->getHashedStringCount()); }
 
@@ -1069,6 +1055,43 @@ public:
 private:
     slang::ProgramLayout* m_target;
 };
+
+/// ProgramLayout lazy parameter list evaluation.
+class SGL_API ProgramLayoutParameterList : public BaseReflectionList<ProgramLayout, VariableLayoutReflection> {
+
+public:
+    ProgramLayoutParameterList(ref<const ProgramLayout> owner)
+        : BaseReflectionList(std::move(owner)){};
+
+    /// Number of entries in list.
+    uint32_t size() const override { return m_owner->parameter_count(); }
+
+protected:
+    /// Get a specific child.
+    ref<const VariableLayoutReflection> evaluate(uint32_t index) const override
+    {
+        return m_owner->get_parameter_by_index(index);
+    }
+};
+
+/// ProgramLayout lazy entry point list evaluation.
+class SGL_API ProgramLayoutEntryPointList : public BaseReflectionList<ProgramLayout, EntryPointLayout> {
+
+public:
+    ProgramLayoutEntryPointList(ref<const ProgramLayout> owner)
+        : BaseReflectionList(std::move(owner)){};
+
+    /// Number of entries in list.
+    uint32_t size() const override { return m_owner->entry_point_count(); }
+
+protected:
+    /// Get a specific child.
+    ref<const EntryPointLayout> evaluate(uint32_t index) const override
+    {
+        return m_owner->get_entry_point_by_index(index);
+    }
+};
+
 
 class ShaderProgram;
 

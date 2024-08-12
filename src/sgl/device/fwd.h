@@ -75,6 +75,8 @@ class VariableLayoutReflection;
 class EntryPointLayout;
 class EntryPointLayoutParameterList;
 class ProgramLayout;
+class ProgramLayoutParameterList;
+class ProgramLayoutEntryPointList;
 
 // kernel.h
 
