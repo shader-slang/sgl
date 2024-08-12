@@ -41,7 +41,7 @@ TEST_CASE("has_suffix")
     CHECK(string::has_suffix("hello", "LO", false));
 }
 
-TEST_CASE("split_string")
+TEST_CASE("split")
 {
     CHECK_EQ(string::split("hello world", " "), (std::vector<std::string>{"hello", "world"}));
     CHECK_EQ(string::split("hello world", "o"), (std::vector<std::string>{"hell", " w", "rld"}));
@@ -51,7 +51,7 @@ TEST_CASE("split_string")
     CHECK_EQ(string::split("hello world", "e"), (std::vector<std::string>{"h", "llo world"}));
 }
 
-TEST_CASE("join_strings")
+TEST_CASE("join")
 {
     CHECK_EQ(string::join(std::vector<std::string>{"hello", "world"}, " "), "hello world");
     CHECK_EQ(string::join(std::vector<std::string>{"hello", "world"}, "o"), "hellooworld");
@@ -98,6 +98,18 @@ TEST_CASE("format_byte_size")
     CHECK_EQ(string::format_byte_size(1023 * GB), "1023.00 GB");
     CHECK_EQ(string::format_byte_size(TB), "1.00 TB");
     CHECK_EQ(string::format_byte_size(10 * TB), "10.00 TB");
+}
+
+TEST_CASE("format_duration")
+{
+    CHECK_EQ(string::format_duration(0.0), "0.00 ns");
+    CHECK_EQ(string::format_duration(1e-9), "1.00 ns");
+    CHECK_EQ(string::format_duration(1e-6), "1.00 us");
+    CHECK_EQ(string::format_duration(1e-3), "1.00 ms");
+    CHECK_EQ(string::format_duration(1.0), "1.00 s");
+    CHECK_EQ(string::format_duration(60.0), "1.00 m");
+    CHECK_EQ(string::format_duration(3600.0), "1.00 h");
+    CHECK_EQ(string::format_duration(86400.0), "1.00 d");
 }
 
 TEST_CASE("base64")
