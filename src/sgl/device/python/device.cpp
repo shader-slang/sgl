@@ -281,9 +281,9 @@ SGL_PY_EXPORT(device_device)
             // cursor code below needs to ensure it maintains a reference to the type layout if
             // returned, so we attempt to convert to the raw ptr here, and then immediately
             // store it in a local ref counted ptr.
-            const TypeLayoutReflection* _rawptr_resolved_struct_type = nullptr;
-            nb::try_cast(struct_type, _rawptr_resolved_struct_type);
-            ref<const TypeLayoutReflection> resolved_struct_type(_rawptr_resolved_struct_type);
+            const TypeLayoutReflection* resolved_struct_type_ptr = nullptr;
+            nb::try_cast(struct_type, resolved_struct_type_ptr);
+            ref<const TypeLayoutReflection> resolved_struct_type(resolved_struct_type_ptr);
 
             // If this is a reflection cursor, get type layout from it
             ReflectionCursor reflection_cursor;
