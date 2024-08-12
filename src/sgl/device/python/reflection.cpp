@@ -11,6 +11,8 @@ SGL_PY_EXPORT(device_reflection)
 {
     using namespace sgl;
 
+    nb::class_<BaseReflectionObject, Object> base_reflection(m, "BaseReflectionObject");
+
     nb::class_<DeclReflection, BaseReflectionObject> decl_reflection(m, "DeclReflection");
 
     nb::sgl_enum<DeclReflection::Kind>(decl_reflection, "Kind");
