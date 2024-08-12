@@ -3,6 +3,7 @@
 #include "nanobind.h"
 
 #include "sgl/device/device.h"
+#include "sgl/device/reflection.h"
 #include "sgl/device/sampler.h"
 #include "sgl/device/fence.h"
 #include "sgl/device/resource.h"
@@ -275,12 +276,21 @@ SGL_PY_EXPORT(device_device)
             if (data) {
                 SGL_CHECK(is_ndarray_contiguous(*data), "Data is not contiguous.");
             }
-            const TypeLayoutReflection* resolved_struct_type = nullptr;
-            nb::try_cast(struct_type, resolved_struct_type);
+
+            // Note: nanobind can't try cast to a ref counted pointer, however the reflection
+            // cursor code below needs to ensure it maintains a reference to the type layout if
+            // returned, so we attempt to convert to the raw ptr here, and then immediately
+            // store it in a local ref counted ptr.
+            const TypeLayoutReflection* resolved_struct_type_ptr = nullptr;
+            nb::try_cast(struct_type, resolved_struct_type_ptr);
+            ref<const TypeLayoutReflection> resolved_struct_type(resolved_struct_type_ptr);
+
+            // If this is a reflection cursor, get type layout from it
             ReflectionCursor reflection_cursor;
             if (nb::try_cast(struct_type, reflection_cursor)) {
                 resolved_struct_type = reflection_cursor.type_layout();
             }
+
             return self->create_buffer({
                 .size = size,
                 .element_count = element_count,
@@ -606,7 +616,8 @@ SGL_PY_EXPORT(device_device)
     );
     device.def(
         "create_mutable_shader_object",
-        nb::overload_cast<const TypeLayoutReflection*>(&Device::create_mutable_shader_object),
+        [](Device* self, ref<TypeLayoutReflection> type_layout)
+        { return self->create_mutable_shader_object(type_layout); },
         "type_layout"_a,
         D(Device, create_mutable_shader_object, 2)
     );

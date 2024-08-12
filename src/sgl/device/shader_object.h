@@ -23,7 +23,7 @@ class SGL_API ShaderObject : public Object {
 public:
     ShaderObject(ref<Device> device, gfx::IShaderObject* shader_object);
 
-    virtual const TypeLayoutReflection* element_type_layout() const;
+    virtual ref<const TypeLayoutReflection> element_type_layout() const;
 
     virtual uint32_t get_entry_point_count() const;
     virtual ref<ShaderObject> get_entry_point(uint32_t index) = 0;

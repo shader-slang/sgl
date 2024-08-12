@@ -150,7 +150,7 @@ ShaderCursor ShaderCursor::find_field(std::string_view name) const
         // the offset information already in this cursor, plus
         // offsets derived from the field's layout.
         //
-        const VariableLayoutReflection* field_layout = m_type_layout->get_field_by_index(field_index);
+        ref<const VariableLayoutReflection> field_layout = m_type_layout->get_field_by_index(field_index);
         ShaderCursor field_cursor;
 
         // The field cursorwill point into the same parent object.
@@ -390,7 +390,7 @@ inline bool is_acceleration_structure_resource_type(const TypeReflection* type)
 
 void ShaderCursor::set_resource(const ref<ResourceView>& resource_view) const
 {
-    const TypeReflection* type = m_type_layout->unwrap_array()->type();
+    ref<const TypeReflection> type = m_type_layout->unwrap_array()->type();
 
     SGL_CHECK(is_resource_type(type), "\"{}\" cannot bind a resource", m_type_layout->name());
 
@@ -417,7 +417,7 @@ void ShaderCursor::set_resource(const ref<ResourceView>& resource_view) const
 
 void ShaderCursor::set_buffer(const ref<Buffer>& buffer) const
 {
-    const TypeReflection* type = m_type_layout->unwrap_array()->type();
+    ref<const TypeReflection> type = m_type_layout->unwrap_array()->type();
 
     SGL_CHECK(is_buffer_resource_type(type), "\"{}\" cannot bind a buffer", m_type_layout->name());
 
@@ -436,7 +436,7 @@ void ShaderCursor::set_buffer(const ref<Buffer>& buffer) const
 
 void ShaderCursor::set_texture(const ref<Texture>& texture) const
 {
-    const TypeReflection* type = m_type_layout->unwrap_array()->type();
+    ref<const TypeReflection> type = m_type_layout->unwrap_array()->type();
 
     SGL_CHECK(is_texture_resource_type(type), "\"{}\" cannot bind a texture", m_type_layout->name());
 
@@ -455,7 +455,7 @@ void ShaderCursor::set_texture(const ref<Texture>& texture) const
 
 void ShaderCursor::set_sampler(const ref<Sampler>& sampler) const
 {
-    const TypeReflection* type = m_type_layout->unwrap_array()->type();
+    ref<const TypeReflection> type = m_type_layout->unwrap_array()->type();
 
     SGL_CHECK(is_sampler_type(type), "\"{}\" cannot bind a sampler", m_type_layout->name());
 
@@ -464,7 +464,7 @@ void ShaderCursor::set_sampler(const ref<Sampler>& sampler) const
 
 void ShaderCursor::set_acceleration_structure(const ref<AccelerationStructure>& acceleration_structure) const
 {
-    const TypeReflection* type = m_type_layout->type();
+    ref<const TypeReflection> type = m_type_layout->type();
 
     SGL_CHECK(
         is_acceleration_structure_resource_type(type),
@@ -484,7 +484,7 @@ void ShaderCursor::set_data(const void* data, size_t size) const
 
 void ShaderCursor::set_object(const ref<MutableShaderObject>& object) const
 {
-    const TypeReflection* type = m_type_layout->type();
+    ref<const TypeReflection> type = m_type_layout->type();
 
     SGL_CHECK(is_parameter_block(type), "\"{}\" cannot bind an object", m_type_layout->name());
 
@@ -493,7 +493,7 @@ void ShaderCursor::set_object(const ref<MutableShaderObject>& object) const
 
 void ShaderCursor::set_cuda_tensor_view(const cuda::TensorView& tensor_view) const
 {
-    const TypeReflection* type = m_type_layout->unwrap_array()->type();
+    ref<const TypeReflection> type = m_type_layout->unwrap_array()->type();
 
     SGL_CHECK(is_buffer_resource_type(type), "\"{}\" cannot bind a CUDA tensor view", m_type_layout->name());
 
@@ -513,8 +513,8 @@ void ShaderCursor::_set_array(
     size_t element_count
 ) const
 {
-    const TypeReflection* type = m_type_layout->type();
-    const TypeReflection* element_type = m_type_layout->unwrap_array()->type();
+    ref<const TypeReflection> type = m_type_layout->type();
+    ref<const TypeReflection> element_type = m_type_layout->unwrap_array()->type();
     size_t element_size = get_scalar_type_size(element_type->scalar_type());
 
     SGL_CHECK(type->is_array(), "\"{}\" cannot bind an array", m_type_layout->name());
@@ -548,7 +548,7 @@ void ShaderCursor::_set_array(
 
 void ShaderCursor::_set_scalar(const void* data, size_t size, TypeReflection::ScalarType scalar_type) const
 {
-    const TypeReflection* type = m_type_layout->unwrap_array()->type();
+    ref<const TypeReflection> type = m_type_layout->unwrap_array()->type();
 
     SGL_CHECK(type->kind() == TypeReflection::Kind::scalar, "\"{}\" cannot bind a scalar value", m_type_layout->name());
     SGL_CHECK(
@@ -565,7 +565,7 @@ void ShaderCursor::_set_scalar(const void* data, size_t size, TypeReflection::Sc
 void ShaderCursor::_set_vector(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int dimension)
     const
 {
-    const TypeReflection* type = m_type_layout->unwrap_array()->type();
+    ref<const TypeReflection> type = m_type_layout->unwrap_array()->type();
 
     SGL_CHECK(type->kind() == TypeReflection::Kind::vector, "\"{}\" cannot bind a vector value", m_type_layout->name());
     SGL_CHECK(
@@ -594,7 +594,7 @@ void ShaderCursor::_set_matrix(
     int cols
 ) const
 {
-    const TypeReflection* type = m_type_layout->unwrap_array()->type();
+    ref<const TypeReflection> type = m_type_layout->unwrap_array()->type();
 
     SGL_CHECK(type->kind() == TypeReflection::Kind::matrix, "\"{}\" cannot bind a matrix value", m_type_layout->name());
     SGL_CHECK(

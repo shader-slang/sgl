@@ -32,9 +32,9 @@ ShaderObject::ShaderObject(ref<Device> device, gfx::IShaderObject* shader_object
 {
 }
 
-const TypeLayoutReflection* ShaderObject::element_type_layout() const
+ref<const TypeLayoutReflection> ShaderObject::element_type_layout() const
 {
-    return TypeLayoutReflection::from_slang(m_shader_object->getElementTypeLayout());
+    return TypeLayoutReflection::from_slang(ref(this), m_shader_object->getElementTypeLayout());
 }
 
 uint32_t ShaderObject::get_entry_point_count() const
@@ -179,7 +179,10 @@ MutableShaderObject::MutableShaderObject(ref<Device> device, const ShaderProgram
 MutableShaderObject::MutableShaderObject(ref<Device> device, const TypeLayoutReflection* type_layout)
     : ShaderObject(std::move(device), nullptr)
 {
-    m_device->gfx_device()->createMutableShaderObjectFromTypeLayout(type_layout->base(), &m_shader_object);
+    m_device->gfx_device()->createMutableShaderObjectFromTypeLayout(
+        type_layout->get_slang_type_layout(),
+        &m_shader_object
+    );
 }
 
 MutableShaderObject::~MutableShaderObject()

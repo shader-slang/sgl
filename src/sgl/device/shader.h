@@ -385,7 +385,10 @@ public:
 
     /// Module source path. This can be empty if the module was generated from a string.
     const std::filesystem::path& path() const { return m_data->path; }
-    const ProgramLayout* layout() const { return ProgramLayout::from_slang(m_data->slang_module->getLayout()); }
+    ref<const ProgramLayout> layout() const
+    {
+        return ProgramLayout::from_slang(ref(this), m_data->slang_module->getLayout());
+    }
 
     /// Build and return vector of all current entry points in the module.
     std::vector<ref<SlangEntryPoint>> entry_points() const;
@@ -398,7 +401,7 @@ public:
     bool has_entry_point(std::string_view name) const;
 
     /// Get root decl ref for this module
-    const DeclReflection* module_decl() const;
+    ref<const DeclReflection> module_decl() const;
 
     /// Internal slang module.
     slang::IModule* slang_module() const { return m_data->slang_module; }
@@ -451,7 +454,7 @@ public:
     const std::string& name() const { return m_data->name; }
     const SlangEntryPointDesc& desc() const { return m_desc; }
     ShaderStage stage() const { return m_data->stage; }
-    const EntryPointLayout* layout() const;
+    ref<const EntryPointLayout> layout() const;
 
     ref<SlangEntryPoint> rename(const std::string& new_name);
 
@@ -491,7 +494,10 @@ public:
 
     const ShaderProgramDesc& desc() const { return m_desc; }
 
-    const ProgramLayout* layout() const { return ProgramLayout::from_slang(m_data->linked_program->getLayout()); }
+    ref<const ProgramLayout> layout() const
+    {
+        return ProgramLayout::from_slang(ref(this), m_data->linked_program->getLayout());
+    }
 
     ReflectionCursor reflection() const { return ReflectionCursor(this); }
 

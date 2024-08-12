@@ -22,38 +22,20 @@ namespace sgl {
 
 namespace detail {
 
-    inline const DeclReflection* from_slang(slang::DeclReflection* decl_reflection)
-    {
-        return reinterpret_cast<const DeclReflection*>(decl_reflection);
-    }
-    inline const TypeReflection* from_slang(slang::TypeReflection* type_reflection)
-    {
-        return reinterpret_cast<const TypeReflection*>(type_reflection);
-    }
-    inline const TypeLayoutReflection* from_slang(slang::TypeLayoutReflection* type_layout_reflection)
-    {
-        return reinterpret_cast<const TypeLayoutReflection*>(type_layout_reflection);
-    }
-    inline const FunctionReflection* from_slang(slang::FunctionReflection* variable_reflection)
-    {
-        return reinterpret_cast<const FunctionReflection*>(variable_reflection);
-    }
-    inline const VariableReflection* from_slang(slang::VariableReflection* variable_reflection)
-    {
-        return reinterpret_cast<const VariableReflection*>(variable_reflection);
-    }
-    inline const VariableLayoutReflection* from_slang(slang::VariableLayoutReflection* variable_layout_reflection)
-    {
-        return reinterpret_cast<const VariableLayoutReflection*>(variable_layout_reflection);
-    }
-    inline const EntryPointLayout* from_slang(slang::EntryPointLayout* entry_point_reflection)
-    {
-        return reinterpret_cast<const EntryPointLayout*>(entry_point_reflection);
-    }
-    inline const ProgramLayout* from_slang(slang::ProgramLayout* program_layout)
-    {
-        return reinterpret_cast<const ProgramLayout*>(program_layout);
-    }
+    SGL_API ref<const DeclReflection> from_slang(ref<const Object> owner, slang::DeclReflection* decl_reflection);
+    SGL_API ref<const TypeReflection> from_slang(ref<const Object> owner, slang::TypeReflection* type_reflection);
+    SGL_API ref<const TypeLayoutReflection>
+    from_slang(ref<const Object> owner, slang::TypeLayoutReflection* type_layout_reflection);
+    SGL_API ref<const FunctionReflection>
+    from_slang(ref<const Object> owner, slang::FunctionReflection* variable_reflection);
+    SGL_API ref<const VariableReflection>
+    from_slang(ref<const Object> owner, slang::VariableReflection* variable_reflection);
+    SGL_API ref<const VariableLayoutReflection>
+    from_slang(ref<const Object> owner, slang::VariableLayoutReflection* variable_layout_reflection);
+    SGL_API ref<const EntryPointLayout>
+    from_slang(ref<const Object> owner, slang::EntryPointLayout* entry_point_reflection);
+    SGL_API ref<const ProgramLayout> from_slang(ref<const Object> owner, slang::ProgramLayout* program_layout);
+
 } // namespace detail
 
 
@@ -70,16 +52,6 @@ enum class ModifierID {
     out = slang::Modifier::ID::Out,
     inout = slang::Modifier::ID::InOut,
 };
-
-#if SGL_DEBUG
-#define SGL_REFLECTION_THROW_IF_DESTRUCTED(type_name)                                                                  \
-    ~type_name()                                                                                                       \
-    {                                                                                                                  \
-        SGL_THROW("Reflection object being destructed - this should never happen!");                                   \
-    }
-#else
-#define SGL_REFLECTION_THROW_IF_DESTRUCTED(type_name)
-#endif
 
 SGL_ENUM_INFO(
     ModifierID,
@@ -99,14 +71,22 @@ SGL_ENUM_INFO(
 );
 SGL_ENUM_REGISTER(ModifierID);
 
-class SGL_API DeclReflection : private slang::DeclReflection {
+class SGL_API BaseReflectionObject : public Object {
+public:
+    BaseReflectionObject(ref<const Object> owner)
+        : m_owner(std::move(owner)){};
+
+protected:
+    ref<const Object> m_owner;
+};
+
+class SGL_API DeclReflection : public BaseReflectionObject {
 
 public:
-    SGL_REFLECTION_THROW_IF_DESTRUCTED(DeclReflection)
+    DeclReflection(ref<const Object> owner, slang::DeclReflection* target)
+        : BaseReflectionObject(std::move(owner))
+        , m_target(target){};
 
-    /// Cast to non-const base pointer.
-    /// The underlying slang API is not const-correct.
-    slang::DeclReflection* base() const { return (slang::DeclReflection*)(this); }
 
     /// Different kinds of decl slang can return.
     enum class Kind {
@@ -130,51 +110,54 @@ public:
     );
 
     /// Decl kind (struct/function/module/generic/variable).
-    Kind kind() const { return static_cast<Kind>(base()->getKind()); }
+    Kind kind() const { return static_cast<Kind>(m_target->getKind()); }
 
     /// List of children of this cursor.
-    std::vector<const DeclReflection*> children() const;
+    std::vector<ref<const DeclReflection>> children() const;
 
     /// Get number of children.
-    uint32_t child_count() const { return base()->getChildrenCount(); }
+    uint32_t child_count() const { return m_target->getChildrenCount(); }
 
     /// Get the name of this decl (if it is of a kind that has a name).
     /// Note: Only supported for types, functions and variables.
     std::string name() const;
 
     /// List of children of this cursor of a specific kind.
-    std::vector<const DeclReflection*> children_of_kind(Kind kind) const;
+    std::vector<ref<const DeclReflection>> children_of_kind(Kind kind) const;
 
     /// Index operator to get nth child.
-    const DeclReflection* operator[](uint32_t index) const { return detail::from_slang(base()->getChild(index)); }
+    ref<const DeclReflection> operator[](uint32_t index) const
+    {
+        return detail::from_slang(m_owner, m_target->getChild(index));
+    }
 
     /// Description as string.
     std::string to_string() const;
 
     /// Get type corresponding to this decl ref.
-    const TypeReflection* as_type() const;
+    ref<const TypeReflection> as_type() const;
 
     /// Get variable corresponding to this decl ref.
-    const VariableReflection* as_variable() const { return detail::from_slang(base()->asVariable()); }
+    ref<const VariableReflection> as_variable() const { return detail::from_slang(m_owner, m_target->asVariable()); }
 
     /// Get function corresponding to this decl ref.
-    const FunctionReflection* as_function() const { return detail::from_slang(base()->asFunction()); }
+    ref<const FunctionReflection> as_function() const { return detail::from_slang(m_owner, m_target->asFunction()); }
 
     /// Finds all children of a specific kind with a given name.
     /// Note: Only supported for types, functions and variables.
-    std::vector<const DeclReflection*> find_children_of_kind(Kind kind, std::string_view child_name) const;
+    std::vector<ref<const DeclReflection>> find_children_of_kind(Kind kind, std::string_view child_name) const;
 
     /// Finds the first child of a specific kind with a given name.
     /// Note: Only supported for types, functions and variables.
-    const DeclReflection* find_first_child_of_kind(Kind kind, std::string_view child_name) const;
+    ref<const DeclReflection> find_first_child_of_kind(Kind kind, std::string_view child_name) const;
+
+private:
+    slang::DeclReflection* m_target;
 };
 SGL_ENUM_REGISTER(DeclReflection::Kind);
 
-class SGL_API TypeReflection : private slang::TypeReflection {
+class SGL_API TypeReflection : public BaseReflectionObject {
 public:
-    SGL_REFLECTION_THROW_IF_DESTRUCTED(TypeReflection)
-
-
     enum class Kind {
         none = SLANG_TYPE_KIND_NONE,
         struct_ = SLANG_TYPE_KIND_STRUCT,
@@ -385,29 +368,33 @@ public:
         }
     );
 
-    Kind kind() const { return static_cast<Kind>(base()->getKind()); }
+    TypeReflection(ref<const Object> owner, slang::TypeReflection* target)
+        : BaseReflectionObject(std::move(owner))
+        , m_target(target){};
 
-    char const* name() const { return base()->getName(); }
+    Kind kind() const { return static_cast<Kind>(m_target->getKind()); }
+
+    char const* name() const { return m_target->getName(); }
 
     bool is_struct() const { return kind() == Kind::struct_; }
 
     uint32_t field_count() const
     {
         SGL_CHECK(is_struct(), "Type is not a struct");
-        return base()->getFieldCount();
+        return m_target->getFieldCount();
     }
 
-    const VariableReflection* get_field_by_index(uint32_t index) const
+    ref<const VariableReflection> get_field_by_index(uint32_t index) const
     {
         SGL_CHECK(is_struct(), "Type is not a struct");
-        return detail::from_slang(base()->getFieldByIndex(index));
+        return detail::from_slang(m_owner, m_target->getFieldByIndex(index));
     }
 
-    std::vector<const VariableReflection*> fields() const
+    std::vector<ref<const VariableReflection>> fields() const
     {
-        std::vector<const VariableReflection*> result;
-        for (uint32_t i = 0; i < base()->getFieldCount(); ++i) {
-            result.push_back(detail::from_slang(base()->getFieldByIndex(i)));
+        std::vector<ref<const VariableReflection>> result;
+        for (uint32_t i = 0; i < m_target->getFieldCount(); ++i) {
+            result.push_back(detail::from_slang(m_owner, m_target->getFieldByIndex(i)));
         }
         return result;
     }
@@ -417,14 +404,14 @@ public:
     size_t element_count() const
     {
         SGL_CHECK(is_array(), "Type is not an array");
-        return base()->getElementCount();
+        return m_target->getElementCount();
     }
 
     size_t total_element_count() const
     {
         SGL_CHECK(is_array(), "Type is not an array");
         size_t result = 1;
-        const TypeReflection* type = this;
+        ref<const TypeReflection> type = ref(this);
         while (type->is_array()) {
             result *= type->element_count();
             type = type->element_type();
@@ -432,32 +419,35 @@ public:
         return result;
     }
 
-    const TypeReflection* element_type() const
+    ref<const TypeReflection> element_type() const
     {
         SGL_CHECK(is_array(), "Type is not an array");
-        return detail::from_slang(base()->getElementType());
+        return detail::from_slang(m_owner, m_target->getElementType());
     }
 
-    const TypeReflection* unwrap_array() const
+    ref<const TypeReflection> unwrap_array() const
     {
-        const TypeReflection* type = this;
+        ref<const TypeReflection> type = ref(this);
         while (type->is_array()) {
             type = type->element_type();
         }
         return type;
     }
 
-    uint32_t row_count() const { return base()->getRowCount(); }
+    uint32_t row_count() const { return m_target->getRowCount(); }
 
-    uint32_t col_count() const { return base()->getColumnCount(); }
+    uint32_t col_count() const { return m_target->getColumnCount(); }
 
-    ScalarType scalar_type() const { return static_cast<ScalarType>(base()->getScalarType()); }
+    ScalarType scalar_type() const { return static_cast<ScalarType>(m_target->getScalarType()); }
 
-    const TypeReflection* resource_result_type() const { return detail::from_slang(base()->getResourceResultType()); }
+    ref<const TypeReflection> resource_result_type() const
+    {
+        return detail::from_slang(m_owner, m_target->getResourceResultType());
+    }
 
-    ResourceShape resource_shape() const { return static_cast<ResourceShape>(base()->getResourceShape()); }
+    ResourceShape resource_shape() const { return static_cast<ResourceShape>(m_target->getResourceShape()); }
 
-    ResourceAccess resource_access() const { return static_cast<ResourceAccess>(base()->getResourceAccess()); }
+    ResourceAccess resource_access() const { return static_cast<ResourceAccess>(m_target->getResourceAccess()); }
 
 #if 0
     unsigned int getUserAttributeCount() { return spReflectionType_GetUserAttributeCount((SlangReflectionType*)this); }
@@ -474,9 +464,7 @@ public:
     std::string to_string() const;
 
 private:
-    /// Cast to non-const base pointer.
-    /// The underlying slang API is not const-correct.
-    slang::TypeReflection* base() const { return (slang::TypeReflection*)(this); }
+    slang::TypeReflection* m_target;
 };
 
 SGL_ENUM_CLASS_OPERATORS(TypeReflection::ResourceShape);
@@ -487,89 +475,68 @@ SGL_ENUM_REGISTER(TypeReflection::ResourceShape);
 SGL_ENUM_REGISTER(TypeReflection::ResourceAccess);
 SGL_ENUM_REGISTER(TypeReflection::ParameterCategory);
 
-class SGL_API TypeLayoutReflection : private slang::TypeLayoutReflection {
+class SGL_API TypeLayoutReflection : public BaseReflectionObject {
 public:
-    SGL_REFLECTION_THROW_IF_DESTRUCTED(TypeLayoutReflection)
-
-
-    static const TypeLayoutReflection* from_slang(slang::TypeLayoutReflection* type_layout_reflection)
+    static ref<const TypeLayoutReflection>
+    from_slang(ref<const Object> owner, slang::TypeLayoutReflection* type_layout_reflection)
     {
-        return detail::from_slang(type_layout_reflection);
+        return detail::from_slang(std::move(owner), type_layout_reflection);
     }
 
-    /// Cast to non-const base pointer.
-    /// The underlying slang API is not const-correct.
-    slang::TypeLayoutReflection* base() const { return (slang::TypeLayoutReflection*)(this); }
+    TypeLayoutReflection(ref<const Object> owner, slang::TypeLayoutReflection* target)
+        : BaseReflectionObject(std::move(owner))
+        , m_target(target){};
 
-    const TypeReflection* type() const { return detail::from_slang(base()->getType()); }
+    slang::TypeLayoutReflection* get_slang_type_layout() const { return m_target; }
 
-    TypeReflection::Kind kind() const { return static_cast<TypeReflection::Kind>(base()->getKind()); }
+    ref<const TypeReflection> type() const { return detail::from_slang(m_owner, m_target->getType()); }
 
-    const char* name() const { return base()->getName(); }
+    TypeReflection::Kind kind() const { return static_cast<TypeReflection::Kind>(m_target->getKind()); }
 
-    size_t size() const { return base()->getSize(SlangParameterCategory::SLANG_PARAMETER_CATEGORY_UNIFORM); }
-    size_t stride() const { return base()->getStride(SlangParameterCategory::SLANG_PARAMETER_CATEGORY_UNIFORM); }
-    int32_t alignment() const { return base()->getAlignment(SlangParameterCategory::SLANG_PARAMETER_CATEGORY_UNIFORM); }
+    const char* name() const { return m_target->getName(); }
 
-#if 0
-    size_t getSize(SlangParameterCategory category = SLANG_PARAMETER_CATEGORY_UNIFORM)
+    size_t size() const { return m_target->getSize(SlangParameterCategory::SLANG_PARAMETER_CATEGORY_UNIFORM); }
+    size_t stride() const { return m_target->getStride(SlangParameterCategory::SLANG_PARAMETER_CATEGORY_UNIFORM); }
+    int32_t alignment() const
     {
-        return spReflectionTypeLayout_GetSize((SlangReflectionTypeLayout*)this, category);
+        return m_target->getAlignment(SlangParameterCategory::SLANG_PARAMETER_CATEGORY_UNIFORM);
     }
 
-    size_t getStride(SlangParameterCategory category = SLANG_PARAMETER_CATEGORY_UNIFORM)
-    {
-        return spReflectionTypeLayout_GetStride((SlangReflectionTypeLayout*)this, category);
-    }
+    uint32_t field_count() const { return m_target->getFieldCount(); }
 
-    int32_t getAlignment(SlangParameterCategory category = SLANG_PARAMETER_CATEGORY_UNIFORM)
-    {
-        return spReflectionTypeLayout_getAlignment((SlangReflectionTypeLayout*)this, category);
-    }
-#endif
-
-    uint32_t field_count() const { return base()->getFieldCount(); }
-
-    const VariableLayoutReflection* get_field_by_index(uint32_t index) const
+    ref<const VariableLayoutReflection> get_field_by_index(uint32_t index) const
     {
         // TODO field_count() does not always return the right number of fields
         // SGL_CHECK(index < field_count(), "Field index out of range");
-        return detail::from_slang(base()->getFieldByIndex(index));
+        return detail::from_slang(m_owner, m_target->getFieldByIndex(index));
     }
 
     int32_t find_field_index_by_name(const char* name_begin, const char* name_end = nullptr) const
     {
-        return narrow_cast<int32_t>(base()->findFieldIndexByName(name_begin, name_end));
+        return narrow_cast<int32_t>(m_target->findFieldIndexByName(name_begin, name_end));
     }
 
-    const VariableLayoutReflection* find_field_by_name(const char* name_begin, const char* name_end = nullptr) const
+    ref<const VariableLayoutReflection> find_field_by_name(const char* name_begin, const char* name_end = nullptr) const
     {
-        if (auto index = base()->findFieldIndexByName(name_begin, name_end); index >= 0)
-            return detail::from_slang(base()->getFieldByIndex(narrow_cast<unsigned int>(index)));
+        if (auto index = m_target->findFieldIndexByName(name_begin, name_end); index >= 0)
+            return detail::from_slang(m_owner, m_target->getFieldByIndex(narrow_cast<unsigned int>(index)));
         return nullptr;
     }
 
-    std::vector<const VariableLayoutReflection*> fields() const
+    std::vector<ref<const VariableLayoutReflection>> fields() const
     {
-        std::vector<const VariableLayoutReflection*> result;
-        for (uint32_t i = 0; i < base()->getFieldCount(); ++i) {
-            result.push_back(detail::from_slang(base()->getFieldByIndex(i)));
+        std::vector<ref<const VariableLayoutReflection>> result;
+        for (uint32_t i = 0; i < m_target->getFieldCount(); ++i) {
+            result.push_back(detail::from_slang(m_owner, m_target->getFieldByIndex(i)));
         }
         return result;
     }
 
-#if 0
-    VariableLayoutReflection* getExplicitCounter()
-    {
-        return (VariableLayoutReflection*)spReflectionTypeLayout_GetExplicitCounter((SlangReflectionTypeLayout*)this);
-    }
-#endif
-
     bool is_array() const { return type()->is_array(); }
 
-    const TypeLayoutReflection* unwrap_array() const
+    ref<const TypeLayoutReflection> unwrap_array() const
     {
-        const TypeLayoutReflection* type_layout = this;
+        ref<const TypeLayoutReflection> type_layout = ref(this);
         while (type_layout->is_array()) {
             type_layout = type_layout->element_type_layout();
         }
@@ -578,408 +545,162 @@ public:
 
     size_t element_count() const { return type()->element_count(); }
 
-#if 0
-    size_t getTotalArrayElementCount() { return getType()->getTotalArrayElementCount(); }
-#endif
-
     size_t element_stride(TypeReflection::ParameterCategory category = TypeReflection::ParameterCategory::uniform) const
     {
-        return base()->getElementStride(static_cast<SlangParameterCategory>(category));
+        return m_target->getElementStride(static_cast<SlangParameterCategory>(category));
     }
 
-    const TypeLayoutReflection* element_type_layout() const
+    ref<const TypeLayoutReflection> element_type_layout() const
     {
-        return detail::from_slang(base()->getElementTypeLayout());
+        return detail::from_slang(m_owner, m_target->getElementTypeLayout());
     }
 
-    const VariableLayoutReflection* element_var_layout() const
+    ref<const VariableLayoutReflection> element_var_layout() const
     {
-        return detail::from_slang(base()->getElementVarLayout());
+        return detail::from_slang(m_owner, m_target->getElementVarLayout());
     }
 
-    const VariableLayoutReflection* container_var_layout() const
+    ref<const VariableLayoutReflection> container_var_layout() const
     {
-        return detail::from_slang(base()->getContainerVarLayout());
+        return detail::from_slang(m_owner, m_target->getContainerVarLayout());
     }
 
     // How is this type supposed to be bound?
     TypeReflection::ParameterCategory parameter_category() const
     {
-        return static_cast<TypeReflection::ParameterCategory>(base()->getParameterCategory());
+        return static_cast<TypeReflection::ParameterCategory>(m_target->getParameterCategory());
     }
-
-#if 0
-    unsigned int getCategoryCount()
-    {
-        return spReflectionTypeLayout_GetCategoryCount((SlangReflectionTypeLayout*)this);
-    }
-
-    ParameterCategory getCategoryByIndex(unsigned int index)
-    {
-        return (ParameterCategory)spReflectionTypeLayout_GetCategoryByIndex((SlangReflectionTypeLayout*)this, index);
-    }
-
-    unsigned getRowCount() { return getType()->getRowCount(); }
-
-    unsigned getColumnCount() { return getType()->getColumnCount(); }
-
-    TypeReflection::ScalarType getScalarType() { return getType()->getScalarType(); }
-
-    TypeReflection* getResourceResultType() { return getType()->getResourceResultType(); }
-
-    SlangResourceShape getResourceShape() { return getType()->getResourceShape(); }
-
-    SlangResourceAccess getResourceAccess() { return getType()->getResourceAccess(); }
-
-    SlangMatrixLayoutMode getMatrixLayoutMode()
-    {
-        return spReflectionTypeLayout_GetMatrixLayoutMode((SlangReflectionTypeLayout*)this);
-    }
-
-    int getGenericParamIndex() { return spReflectionTypeLayout_getGenericParamIndex((SlangReflectionTypeLayout*)this); }
-
-    TypeLayoutReflection* getPendingDataTypeLayout()
-    {
-        return (TypeLayoutReflection*)spReflectionTypeLayout_getPendingDataTypeLayout((SlangReflectionTypeLayout*)this);
-    }
-
-    VariableLayoutReflection* getSpecializedTypePendingDataVarLayout()
-    {
-        return (VariableLayoutReflection*)spReflectionTypeLayout_getSpecializedTypePendingDataVarLayout(
-            (SlangReflectionTypeLayout*)this
-        );
-    }
-
-    SlangInt getBindingRangeCount()
-    {
-        return spReflectionTypeLayout_getBindingRangeCount((SlangReflectionTypeLayout*)this);
-    }
-
-    BindingType getBindingRangeType(SlangInt index)
-    {
-        return (BindingType)spReflectionTypeLayout_getBindingRangeType((SlangReflectionTypeLayout*)this, index);
-    }
-
-    SlangInt getBindingRangeBindingCount(SlangInt index)
-    {
-        return spReflectionTypeLayout_getBindingRangeBindingCount((SlangReflectionTypeLayout*)this, index);
-    }
-
-    /*
-    SlangInt getBindingRangeIndexOffset(SlangInt index)
-    {
-        return spReflectionTypeLayout_getBindingRangeIndexOffset(
-            (SlangReflectionTypeLayout*) this,
-            index);
-    }
-
-    SlangInt getBindingRangeSpaceOffset(SlangInt index)
-    {
-        return spReflectionTypeLayout_getBindingRangeSpaceOffset(
-            (SlangReflectionTypeLayout*) this,
-            index);
-    }
-    */
-#endif
 
     uint32_t get_field_binding_range_offset(uint32_t field_index) const
     {
-        return narrow_cast<uint32_t>(base()->getFieldBindingRangeOffset(field_index));
+        return narrow_cast<uint32_t>(m_target->getFieldBindingRangeOffset(field_index));
     }
-
-#if 0
-    SlangInt getExplicitCounterBindingRangeOffset()
-    {
-        return spReflectionTypeLayout_getExplicitCounterBindingRangeOffset((SlangReflectionTypeLayout*)this);
-    }
-
-    TypeLayoutReflection* getBindingRangeLeafTypeLayout(SlangInt index)
-    {
-        return (TypeLayoutReflection*)
-            spReflectionTypeLayout_getBindingRangeLeafTypeLayout((SlangReflectionTypeLayout*)this, index);
-    }
-
-    VariableReflection* getBindingRangeLeafVariable(SlangInt index)
-    {
-        return (VariableReflection*)
-            spReflectionTypeLayout_getBindingRangeLeafVariable((SlangReflectionTypeLayout*)this, index);
-    }
-
-    SlangInt getBindingRangeDescriptorSetIndex(SlangInt index)
-    {
-        return spReflectionTypeLayout_getBindingRangeDescriptorSetIndex((SlangReflectionTypeLayout*)this, index);
-    }
-
-    SlangInt getBindingRangeFirstDescriptorRangeIndex(SlangInt index)
-    {
-        return spReflectionTypeLayout_getBindingRangeFirstDescriptorRangeIndex((SlangReflectionTypeLayout*)this, index);
-    }
-
-    SlangInt getBindingRangeDescriptorRangeCount(SlangInt index)
-    {
-        return spReflectionTypeLayout_getBindingRangeDescriptorRangeCount((SlangReflectionTypeLayout*)this, index);
-    }
-
-    SlangInt getDescriptorSetCount()
-    {
-        return spReflectionTypeLayout_getDescriptorSetCount((SlangReflectionTypeLayout*)this);
-    }
-
-    SlangInt getDescriptorSetSpaceOffset(SlangInt setIndex)
-    {
-        return spReflectionTypeLayout_getDescriptorSetSpaceOffset((SlangReflectionTypeLayout*)this, setIndex);
-    }
-
-    SlangInt getDescriptorSetDescriptorRangeCount(SlangInt setIndex)
-    {
-        return spReflectionTypeLayout_getDescriptorSetDescriptorRangeCount((SlangReflectionTypeLayout*)this, setIndex);
-    }
-
-    SlangInt getDescriptorSetDescriptorRangeIndexOffset(SlangInt setIndex, SlangInt rangeIndex)
-    {
-        return spReflectionTypeLayout_getDescriptorSetDescriptorRangeIndexOffset(
-            (SlangReflectionTypeLayout*)this,
-            setIndex,
-            rangeIndex
-        );
-    }
-
-    SlangInt getDescriptorSetDescriptorRangeDescriptorCount(SlangInt setIndex, SlangInt rangeIndex)
-    {
-        return spReflectionTypeLayout_getDescriptorSetDescriptorRangeDescriptorCount(
-            (SlangReflectionTypeLayout*)this,
-            setIndex,
-            rangeIndex
-        );
-    }
-
-    BindingType getDescriptorSetDescriptorRangeType(SlangInt setIndex, SlangInt rangeIndex)
-    {
-        return (BindingType)spReflectionTypeLayout_getDescriptorSetDescriptorRangeType(
-            (SlangReflectionTypeLayout*)this,
-            setIndex,
-            rangeIndex
-        );
-    }
-
-    ParameterCategory getDescriptorSetDescriptorRangeCategory(SlangInt setIndex, SlangInt rangeIndex)
-    {
-        return (ParameterCategory)spReflectionTypeLayout_getDescriptorSetDescriptorRangeCategory(
-            (SlangReflectionTypeLayout*)this,
-            setIndex,
-            rangeIndex
-        );
-    }
-
-    SlangInt getSubObjectRangeCount()
-    {
-        return spReflectionTypeLayout_getSubObjectRangeCount((SlangReflectionTypeLayout*)this);
-    }
-
-    SlangInt getSubObjectRangeBindingRangeIndex(SlangInt subObjectRangeIndex)
-    {
-        return spReflectionTypeLayout_getSubObjectRangeBindingRangeIndex(
-            (SlangReflectionTypeLayout*)this,
-            subObjectRangeIndex
-        );
-    }
-
-    SlangInt getSubObjectRangeSpaceOffset(SlangInt subObjectRangeIndex)
-    {
-        return spReflectionTypeLayout_getSubObjectRangeSpaceOffset(
-            (SlangReflectionTypeLayout*)this,
-            subObjectRangeIndex
-        );
-    }
-
-    VariableLayoutReflection* getSubObjectRangeOffset(SlangInt subObjectRangeIndex)
-    {
-        return (VariableLayoutReflection*)
-            spReflectionTypeLayout_getSubObjectRangeOffset((SlangReflectionTypeLayout*)this, subObjectRangeIndex);
-    }
-#endif
 
     std::string to_string() const;
+
+private:
+    slang::TypeLayoutReflection* m_target;
 };
 
-class SGL_API FunctionReflection : private slang::FunctionReflection {
+class SGL_API FunctionReflection : public BaseReflectionObject {
 public:
-    SGL_REFLECTION_THROW_IF_DESTRUCTED(FunctionReflection)
+    FunctionReflection(ref<const Object> owner, slang::FunctionReflection* target)
+        : BaseReflectionObject(std::move(owner))
+        , m_target(target){};
 
-    /// Cast to non-const base pointer.
-    /// The underlying slang API is not const-correct.
-    slang::FunctionReflection* base() const { return (slang::FunctionReflection*)(this); }
+    char const* name() const { return m_target->getName(); }
 
-    char const* name() const { return base()->getName(); }
+    ref<const TypeReflection> return_type() { return detail::from_slang(m_owner, m_target->getReturnType()); }
 
-    const TypeReflection* return_type() { return detail::from_slang(base()->getReturnType()); }
+    uint32_t parameter_count() const { return m_target->getParameterCount(); }
 
-    uint32_t parameter_count() const { return base()->getParameterCount(); }
-
-    const VariableReflection* get_parameter_by_index(uint32_t index) const
+    ref<const VariableReflection> get_parameter_by_index(uint32_t index) const
     {
         SGL_CHECK(index < parameter_count(), "Parameter index out of range");
-        return detail::from_slang(base()->getParameterByIndex(index));
+        return detail::from_slang(m_owner, m_target->getParameterByIndex(index));
     }
 
-    std::vector<const VariableReflection*> parameters() const
+    std::vector<ref<const VariableReflection>> parameters() const
     {
-        std::vector<const VariableReflection*> result;
-        for (uint32_t i = 0; i < base()->getParameterCount(); ++i) {
-            result.push_back(detail::from_slang(base()->getParameterByIndex(i)));
+        std::vector<ref<const VariableReflection>> result;
+        for (uint32_t i = 0; i < m_target->getParameterCount(); ++i) {
+            result.push_back(detail::from_slang(m_owner, m_target->getParameterByIndex(i)));
         }
         return result;
     }
 
-    /// Check if variable has a given modifier (eg 'inout').
+    /// Check if variable has a given modifier (e.g. 'inout').
     bool has_modifier(ModifierID modifier) const
     {
-        return base()->findModifier(static_cast<slang::Modifier::ID>(modifier)) != nullptr;
+        return m_target->findModifier(static_cast<slang::Modifier::ID>(modifier)) != nullptr;
     }
+
+private:
+    slang::FunctionReflection* m_target;
 };
 
-class SGL_API VariableReflection : private slang::VariableReflection {
+class SGL_API VariableReflection : public BaseReflectionObject {
 public:
-    SGL_REFLECTION_THROW_IF_DESTRUCTED(VariableReflection)
-
-    static const VariableReflection* from_slang(slang::VariableReflection* variable_reflection)
+    static ref<const VariableReflection>
+    from_slang(ref<const Object> owner, slang::VariableReflection* variable_reflection)
     {
-        return detail::from_slang(variable_reflection);
+        return detail::from_slang(std::move(owner), variable_reflection);
     }
 
-    /// Cast to non-const base pointer.
-    /// The underlying slang API is not const-correct.
-    slang::VariableReflection* base() const { return (slang::VariableReflection*)(this); }
+    VariableReflection(ref<const Object> owner, slang::VariableReflection* target)
+        : BaseReflectionObject(std::move(owner))
+        , m_target(target){};
 
     /// Variable name.
-    const char* name() const { return base()->getName(); }
+    const char* name() const { return m_target->getName(); }
 
     /// Variable type reflection.
-    const TypeReflection* type() const { return detail::from_slang(base()->getType()); }
+    ref<const TypeReflection> type() const { return detail::from_slang(m_owner, m_target->getType()); }
 
-    /// Check if variable has a given modifier (eg 'inout').
+    /// Check if variable has a given modifier (e.g. 'inout').
     bool has_modifier(ModifierID modifier) const
     {
-        return base()->findModifier(static_cast<slang::Modifier::ID>(modifier)) != nullptr;
+        return m_target->findModifier(static_cast<slang::Modifier::ID>(modifier)) != nullptr;
     }
 
-#if 0
-    Modifier* findModifier(Modifier::ID id)
-    {
-        return (Modifier*)spReflectionVariable_FindModifier((SlangReflectionVariable*)this, (SlangModifierID)id);
-    }
-
-    unsigned int getUserAttributeCount()
-    {
-        return spReflectionVariable_GetUserAttributeCount((SlangReflectionVariable*)this);
-    }
-    UserAttribute* getUserAttributeByIndex(unsigned int index)
-    {
-        return (UserAttribute*)spReflectionVariable_GetUserAttribute((SlangReflectionVariable*)this, index);
-    }
-    UserAttribute* findUserAttributeByName(SlangSession* session, char const* name)
-    {
-        return (UserAttribute*)
-            spReflectionVariable_FindUserAttributeByName((SlangReflectionVariable*)this, session, name);
-    }
-#endif
+private:
+    slang::VariableReflection* m_target;
 };
 
-class SGL_API VariableLayoutReflection : private slang::VariableLayoutReflection {
+class SGL_API VariableLayoutReflection : public BaseReflectionObject {
 public:
-    SGL_REFLECTION_THROW_IF_DESTRUCTED(VariableLayoutReflection)
+    VariableLayoutReflection(ref<const Object> owner, slang::VariableLayoutReflection* target)
+        : BaseReflectionObject(std::move(owner))
+        , m_target(target){};
 
-    /// Cast to non-const base pointer.
-    /// The underlying slang API is not const-correct.
-    slang::VariableLayoutReflection* base() const { return (slang::VariableLayoutReflection*)(this); }
+    ref<const VariableReflection> variable() const { return detail::from_slang(m_owner, m_target->getVariable()); }
 
-    const VariableReflection* variable() const { return detail::from_slang(base()->getVariable()); }
+    const char* name() const { return m_target->getName(); }
 
-    const char* name() const { return base()->getName(); }
-
-#if 0
-    Modifier* findModifier(Modifier::ID id) { return getVariable()->findModifier(id); }
-#endif
-
-    const TypeLayoutReflection* type_layout() const { return detail::from_slang(base()->getTypeLayout()); }
-
-#if 0
-    ParameterCategory getCategory() { return getTypeLayout()->getParameterCategory(); }
-
-    unsigned int getCategoryCount() { return getTypeLayout()->getCategoryCount(); }
-
-    ParameterCategory getCategoryByIndex(unsigned int index) { return getTypeLayout()->getCategoryByIndex(index); }
-#endif
-
-    size_t offset() const { return base()->getOffset(SlangParameterCategory::SLANG_PARAMETER_CATEGORY_UNIFORM); }
-
-#if 0
-    TypeReflection* getType() { return getVariable()->getType(); }
-
-    unsigned getBindingIndex() { return spReflectionParameter_GetBindingIndex((SlangReflectionVariableLayout*)this); }
-
-    unsigned getBindingSpace() { return spReflectionParameter_GetBindingSpace((SlangReflectionVariableLayout*)this); }
-
-    size_t getBindingSpace(SlangParameterCategory category)
+    ref<const TypeLayoutReflection> type_layout() const
     {
-        return spReflectionVariableLayout_GetSpace((SlangReflectionVariableLayout*)this, category);
+        return detail::from_slang(m_owner, m_target->getTypeLayout());
     }
 
-    char const* getSemanticName()
-    {
-        return spReflectionVariableLayout_GetSemanticName((SlangReflectionVariableLayout*)this);
-    }
-
-    size_t getSemanticIndex()
-    {
-        return spReflectionVariableLayout_GetSemanticIndex((SlangReflectionVariableLayout*)this);
-    }
-
-    SlangStage getStage() { return spReflectionVariableLayout_getStage((SlangReflectionVariableLayout*)this); }
-
-    VariableLayoutReflection* getPendingDataLayout()
-    {
-        return (VariableLayoutReflection*)spReflectionVariableLayout_getPendingDataLayout(
-            (SlangReflectionVariableLayout*)this
-        );
-    }
-#endif
+    size_t offset() const { return m_target->getOffset(SlangParameterCategory::SLANG_PARAMETER_CATEGORY_UNIFORM); }
 
     std::string to_string() const;
+
+private:
+    slang::VariableLayoutReflection* m_target;
 };
 
-class SGL_API EntryPointLayout : private slang::EntryPointLayout {
+class SGL_API EntryPointLayout : public BaseReflectionObject {
 public:
-    SGL_REFLECTION_THROW_IF_DESTRUCTED(EntryPointLayout)
-
-    static const EntryPointLayout* from_slang(slang::EntryPointLayout* entry_point_reflection)
+    static ref<const EntryPointLayout>
+    from_slang(ref<const Object> owner, slang::EntryPointLayout* entry_point_reflection)
     {
-        return detail::from_slang(entry_point_reflection);
+        return detail::from_slang(std::move(owner), entry_point_reflection);
     }
 
-    /// Cast to non-const base pointer.
-    /// The underlying slang API is not const-correct.
-    slang::EntryPointLayout* base() const { return (slang::EntryPointLayout*)(this); }
+    EntryPointLayout(ref<const Object> owner, slang::EntryPointLayout* target)
+        : BaseReflectionObject(std::move(owner))
+        , m_target(target){};
 
-    const char* name() const { return base()->getName(); }
+    const char* name() const { return m_target->getName(); }
 
-    const char* name_override() const { return base()->getNameOverride(); }
+    const char* name_override() const { return m_target->getNameOverride(); }
 
-    ShaderStage stage() const { return static_cast<ShaderStage>(base()->getStage()); }
+    ShaderStage stage() const { return static_cast<ShaderStage>(m_target->getStage()); }
 
-    uint32_t parameter_count() const { return base()->getParameterCount(); }
+    uint32_t parameter_count() const { return m_target->getParameterCount(); }
 
-    const VariableLayoutReflection* get_parameter_by_index(uint32_t index) const
+    ref<const VariableLayoutReflection> get_parameter_by_index(uint32_t index) const
     {
         SGL_CHECK(index < parameter_count(), "Parameter index out of range");
-        return detail::from_slang(base()->getParameterByIndex(index));
+        return detail::from_slang(m_owner, m_target->getParameterByIndex(index));
     }
 
-    std::vector<const VariableLayoutReflection*> parameters() const
+    std::vector<ref<const VariableLayoutReflection>> parameters() const
     {
-        std::vector<const VariableLayoutReflection*> result;
-        for (uint32_t i = 0; i < base()->getParameterCount(); ++i) {
-            result.push_back(detail::from_slang(base()->getParameterByIndex(i)));
+        std::vector<ref<const VariableLayoutReflection>> result;
+        for (uint32_t i = 0; i < m_target->getParameterCount(); ++i) {
+            result.push_back(detail::from_slang(m_owner, m_target->getParameterByIndex(i)));
         }
         return result;
     }
@@ -987,167 +708,101 @@ public:
     uint3 compute_thread_group_size() const
     {
         SlangUInt size[3];
-        base()->getComputeThreadGroupSize(3, size);
+        m_target->getComputeThreadGroupSize(3, size);
         return uint3(narrow_cast<uint32_t>(size[0]), narrow_cast<uint32_t>(size[1]), narrow_cast<uint32_t>(size[2]));
     }
 
-    bool uses_any_sample_rate_input() const { return base()->usesAnySampleRateInput(); }
-
-#if 0
-    VariableLayoutReflection* getVarLayout()
-    {
-        return (VariableLayoutReflection*)spReflectionEntryPoint_getVarLayout((SlangReflectionEntryPoint*)this);
-    }
-
-    TypeLayoutReflection* getTypeLayout() { return getVarLayout()->getTypeLayout(); }
-
-    VariableLayoutReflection* getResultVarLayout()
-    {
-        return (VariableLayoutReflection*)spReflectionEntryPoint_getResultVarLayout((SlangReflectionEntryPoint*)this);
-    }
-
-    bool hasDefaultConstantBuffer()
-    {
-        return spReflectionEntryPoint_hasDefaultConstantBuffer((SlangReflectionEntryPoint*)this) != 0;
-    }
-#endif
+    bool uses_any_sample_rate_input() const { return m_target->usesAnySampleRateInput(); }
 
     std::string to_string() const;
+
+private:
+    slang::EntryPointLayout* m_target;
 };
 
-class SGL_API ProgramLayout : private slang::ProgramLayout {
+class SGL_API ProgramLayout : public BaseReflectionObject {
 public:
-    SGL_REFLECTION_THROW_IF_DESTRUCTED(ProgramLayout)
-
-    static const ProgramLayout* from_slang(slang::ProgramLayout* program_layout)
+    static ref<const ProgramLayout> from_slang(ref<const Object> owner, slang::ProgramLayout* program_layout)
     {
-        return detail::from_slang(program_layout);
+        return detail::from_slang(owner, program_layout);
     }
 
-    /// Cast to non-const base pointer.
-    /// The underlying slang API is not const-correct.
-    slang::ProgramLayout* base() const { return (slang::ProgramLayout*)(this); }
+    ProgramLayout(ref<const Object> owner, slang::ProgramLayout* target)
+        : BaseReflectionObject(std::move(owner))
+        , m_target(target){};
 
-    const TypeLayoutReflection* globals_type_layout() const
+    ref<const TypeLayoutReflection> globals_type_layout() const
     {
-        return detail::from_slang(base()->getGlobalParamsTypeLayout());
+        return detail::from_slang(m_owner, m_target->getGlobalParamsTypeLayout());
     }
 
-    const VariableLayoutReflection* globals_variable_layout() const
+    ref<const VariableLayoutReflection> globals_variable_layout() const
     {
-        return detail::from_slang(base()->getGlobalParamsVarLayout());
+        return detail::from_slang(m_owner, m_target->getGlobalParamsVarLayout());
     }
 
-    uint32_t parameter_count() const { return base()->getParameterCount(); }
+    uint32_t parameter_count() const { return m_target->getParameterCount(); }
 
-    const VariableLayoutReflection* get_parameter_by_index(uint32_t index) const
+    ref<const VariableLayoutReflection> get_parameter_by_index(uint32_t index) const
     {
         SGL_CHECK(index < parameter_count(), "Parameter index out of range");
-        return detail::from_slang(base()->getParameterByIndex(index));
+        return detail::from_slang(m_owner, m_target->getParameterByIndex(index));
     }
 
-    std::vector<const VariableLayoutReflection*> parameters() const
+    std::vector<ref<const VariableLayoutReflection>> parameters() const
     {
-        std::vector<const VariableLayoutReflection*> result;
-        for (uint32_t i = 0; i < base()->getParameterCount(); ++i) {
-            result.push_back(detail::from_slang(base()->getParameterByIndex(i)));
+        std::vector<ref<const VariableLayoutReflection>> result;
+        for (uint32_t i = 0; i < m_target->getParameterCount(); ++i) {
+            result.push_back(detail::from_slang(m_owner, m_target->getParameterByIndex(i)));
         }
         return result;
     }
 
-    uint32_t type_parameter_count() const { return base()->getTypeParameterCount(); }
+    uint32_t type_parameter_count() const { return m_target->getTypeParameterCount(); }
 
-#if 0
-    TypeParameterReflection get_type_parameter_by_index(uint32_t index) const
-    {
-        return (TypeParameterReflection*)spReflection_GetTypeParameterByIndex((SlangReflection*)this, index);
-    }
+    uint32_t entry_point_count() const { return narrow_cast<uint32_t>(m_target->getEntryPointCount()); }
 
-    TypeParameterReflection* findTypeParameter(char const* name)
-    {
-        return (TypeParameterReflection*)spReflection_FindTypeParameter((SlangReflection*)this, name);
-    }
-#endif
-
-    uint32_t entry_point_count() const { return narrow_cast<uint32_t>(base()->getEntryPointCount()); }
-
-    const EntryPointLayout* get_entry_point_by_index(uint32_t index) const
+    ref<const EntryPointLayout> get_entry_point_by_index(uint32_t index) const
     {
         SGL_CHECK(index < entry_point_count(), "Entry point index out of range");
-        return detail::from_slang(base()->getEntryPointByIndex(index));
+        return detail::from_slang(m_owner, m_target->getEntryPointByIndex(index));
     }
 
-    const EntryPointLayout* get_entry_point_by_name(const char* name) const
+    ref<const EntryPointLayout> get_entry_point_by_name(const char* name) const
     {
-        return detail::from_slang(base()->findEntryPointByName(name));
+        return detail::from_slang(m_owner, m_target->findEntryPointByName(name));
     }
 
-    const EntryPointLayout* get_entry_point_by_name(std::string_view name) const
+    ref<const EntryPointLayout> get_entry_point_by_name(std::string_view name) const
     {
         std::string name_str(name);
         return get_entry_point_by_name(name_str.c_str());
     }
 
-    const EntryPointLayout* find_entry_point_by_name(const char* name) const
+    ref<const EntryPointLayout> find_entry_point_by_name(const char* name) const
     {
-        if (auto entry_point = base()->findEntryPointByName(name)) {
-            return detail::from_slang(entry_point);
+        if (auto entry_point = m_target->findEntryPointByName(name)) {
+            return detail::from_slang(m_owner, entry_point);
         }
         return nullptr;
     }
 
-    const EntryPointLayout* find_entry_point_by_name(std::string_view name) const
+    ref<const EntryPointLayout> find_entry_point_by_name(std::string_view name) const
     {
         std::string name_str(name);
         return find_entry_point_by_name(name_str.c_str());
     }
 
-    std::vector<const EntryPointLayout*> entry_points() const
+    std::vector<ref<const EntryPointLayout>> entry_points() const
     {
-        std::vector<const EntryPointLayout*> result;
-        for (uint32_t i = 0; i < base()->getEntryPointCount(); ++i) {
-            result.push_back(detail::from_slang(base()->getEntryPointByIndex(i)));
+        std::vector<ref<const EntryPointLayout>> result;
+        for (uint32_t i = 0; i < m_target->getEntryPointCount(); ++i) {
+            result.push_back(detail::from_slang(m_owner, m_target->getEntryPointByIndex(i)));
         }
         return result;
     }
 
-#if 0
-    SlangUInt getGlobalConstantBufferBinding()
-    {
-        return spReflection_getGlobalConstantBufferBinding((SlangReflection*)this);
-    }
-
-    size_t getGlobalConstantBufferSize() { return spReflection_getGlobalConstantBufferSize((SlangReflection*)this); }
-
-    TypeReflection* findTypeByName(const char* name)
-    {
-        return (TypeReflection*)spReflection_FindTypeByName((SlangReflection*)this, name);
-    }
-
-    TypeLayoutReflection* getTypeLayout(TypeReflection* type, LayoutRules rules = LayoutRules::Default)
-    {
-        return (TypeLayoutReflection*)
-            spReflection_GetTypeLayout((SlangReflection*)this, (SlangReflectionType*)type, SlangLayoutRules(rules));
-    }
-
-    TypeReflection* specializeType(
-        TypeReflection* type,
-        SlangInt specializationArgCount,
-        TypeReflection* const* specializationArgs,
-        ISlangBlob** outDiagnostics
-    )
-    {
-        return (TypeReflection*)spReflection_specializeType(
-            (SlangReflection*)this,
-            (SlangReflectionType*)type,
-            specializationArgCount,
-            (SlangReflectionType* const*)specializationArgs,
-            outDiagnostics
-        );
-    }
-#endif
-
-    uint32_t hashed_string_count() const { return narrow_cast<uint32_t>(base()->getHashedStringCount()); }
+    uint32_t hashed_string_count() const { return narrow_cast<uint32_t>(m_target->getHashedStringCount()); }
 
     struct HashedString {
         std::string string;
@@ -1158,16 +813,16 @@ public:
     {
         SGL_CHECK(index < hashed_string_count(), "Hashed string index out of range");
         size_t size;
-        const char* str = base()->getHashedString(index, &size);
+        const char* str = m_target->getHashedString(index, &size);
         return {std::string(str, str + size), spComputeStringHash(str, size)};
     }
 
     std::vector<HashedString> hashed_strings() const
     {
         std::vector<HashedString> result;
-        for (uint32_t i = 0; i < base()->getHashedStringCount(); ++i) {
+        for (uint32_t i = 0; i < m_target->getHashedStringCount(); ++i) {
             size_t size;
-            const char* str = base()->getHashedString(i, &size);
+            const char* str = m_target->getHashedString(i, &size);
             result.push_back({std::string(str, str + size), spComputeStringHash(str, size)});
         }
         return result;
@@ -1176,9 +831,9 @@ public:
     std::map<uint32_t, std::string> hashed_strings_map() const
     {
         std::map<uint32_t, std::string> result;
-        for (uint32_t i = 0; i < base()->getHashedStringCount(); ++i) {
+        for (uint32_t i = 0; i < m_target->getHashedStringCount(); ++i) {
             size_t size;
-            const char* str = base()->getHashedString(i, &size);
+            const char* str = m_target->getHashedString(i, &size);
             uint32_t hash = spComputeStringHash(str, size);
             result.emplace(hash, std::string(str, str + size));
         }
@@ -1186,6 +841,9 @@ public:
     }
 
     std::string to_string() const;
+
+private:
+    slang::ProgramLayout* m_target;
 };
 
 class ShaderProgram;
@@ -1195,17 +853,17 @@ public:
     ReflectionCursor() = default;
 
     ReflectionCursor(const ShaderProgram* shader_program);
-    ReflectionCursor(const EntryPointLayout* entry_point_layout);
+    ReflectionCursor(ref<const EntryPointLayout> entry_point_layout);
     ReflectionCursor(const TypeLayoutReflection* type_layout);
 
-    const TypeLayoutReflection* type_layout() const { return m_type_layout; }
-    const TypeReflection* type() const { return m_type_layout->type(); }
+    ref<const TypeLayoutReflection> type_layout() const { return m_type_layout; }
+    ref<const TypeReflection> type() const { return m_type_layout->type(); }
 
     bool is_valid() const { return m_valid; }
 
     // operator bool() const { return is_valid(); }
 
-    operator const TypeLayoutReflection*() const { return type_layout(); }
+    operator ref<const TypeLayoutReflection>() const { return type_layout(); }
 
     ReflectionCursor operator[](std::string_view name) const;
     ReflectionCursor operator[](uint32_t index) const;
@@ -1220,8 +878,8 @@ public:
 
 private:
     const ShaderProgram* m_shader_program{nullptr};
-    const EntryPointLayout* m_entry_point_layout{nullptr};
-    const TypeLayoutReflection* m_type_layout{nullptr};
+    ref<const EntryPointLayout> m_entry_point_layout{nullptr};
+    ref<const TypeLayoutReflection> m_type_layout{nullptr};
     bool m_valid{false};
 };
 

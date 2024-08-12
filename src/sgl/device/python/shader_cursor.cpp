@@ -154,7 +154,7 @@ SGL_PY_EXPORT(device_shader_cursor)
 
     auto set_int_field = [](ShaderCursor& self, std::string_view name, nb::int_ value)
     {
-        const TypeReflection* type = self[name].type();
+        ref<const TypeReflection> type = self[name].type();
         SGL_CHECK(type->kind() == TypeReflection::Kind::scalar, "Field \"{}\" is not a scalar type.", name);
         switch (type->scalar_type()) {
         case TypeReflection::ScalarType::int16:
@@ -179,7 +179,7 @@ SGL_PY_EXPORT(device_shader_cursor)
 
     auto set_int_element = [](ShaderCursor& self, int index, nb::int_ value)
     {
-        const TypeReflection* type = self[index].type();
+        ref<const TypeReflection> type = self[index].type();
         SGL_CHECK(type->kind() == TypeReflection::Kind::scalar, "Element {} is not a scalar type.", index);
         switch (type->scalar_type()) {
         case TypeReflection::ScalarType::int16:
@@ -208,7 +208,7 @@ SGL_PY_EXPORT(device_shader_cursor)
 
     auto set_float_field = [](ShaderCursor& self, std::string_view name, nb::float_ value)
     {
-        const TypeReflection* type = self[name].type();
+        ref<const TypeReflection> type = self[name].type();
         SGL_CHECK(type->kind() == TypeReflection::Kind::scalar, "Field \"{}\" is not a scalar type.", name);
         switch (type->scalar_type()) {
         case TypeReflection::ScalarType::float16:
@@ -228,7 +228,7 @@ SGL_PY_EXPORT(device_shader_cursor)
 
     auto set_float_element = [](ShaderCursor& self, int index, nb::float_ value)
     {
-        const TypeReflection* type = self[index].type();
+        ref<const TypeReflection> type = self[index].type();
         SGL_CHECK(type->kind() == TypeReflection::Kind::scalar, "Element {} is not a scalar type.", index);
         switch (type->scalar_type()) {
         case TypeReflection::ScalarType::float16:
@@ -252,7 +252,7 @@ SGL_PY_EXPORT(device_shader_cursor)
 
     auto set_numpy_field = [](ShaderCursor& self, std::string_view name, nb::ndarray<nb::numpy> value)
     {
-        const TypeReflection* type = self[name].type();
+        ref<const TypeReflection> type = self[name].type();
         auto src_scalar_type = dtype_to_scalar_type(value.dtype());
         SGL_CHECK(src_scalar_type, "numpy array has unsupported dtype.");
         SGL_CHECK(is_ndarray_contiguous(value), "numpy array is not contiguous.");

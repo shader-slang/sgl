@@ -21,7 +21,7 @@ public:
     virtual ~Kernel() = default;
 
     ShaderProgram* program() const { return m_program; }
-    ReflectionCursor reflection() const { return ReflectionCursor(m_program); }
+    ReflectionCursor reflection() const { return ReflectionCursor(program()); }
 
 protected:
     Kernel(ref<Device> device, ref<ShaderProgram> program);

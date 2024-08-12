@@ -19,8 +19,8 @@ public:
 
     ShaderCursor(ShaderObject* shader_object);
 
-    const TypeLayoutReflection* type_layout() const { return m_type_layout; }
-    const TypeReflection* type() const { return m_type_layout->type(); }
+    ref<const TypeLayoutReflection> type_layout() const { return m_type_layout; }
+    ref<const TypeReflection> type() const { return m_type_layout->type(); }
 
     ShaderOffset offset() const { return m_offset; }
 
@@ -77,7 +77,7 @@ private:
     void set(const T& value) const;
 
     ShaderObject* m_shader_object{nullptr};
-    const TypeLayoutReflection* m_type_layout{nullptr};
+    ref<const TypeLayoutReflection> m_type_layout{nullptr};
     ShaderOffset m_offset;
 };
 
