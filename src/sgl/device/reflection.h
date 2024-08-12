@@ -71,6 +71,81 @@ SGL_ENUM_INFO(
 );
 SGL_ENUM_REGISTER(ModifierID);
 
+/// Base class for read-only lazy evaluation list. This only maintains
+/// a reference to the parent, and allocates/returns children on demand.
+template<class ParentType, class ChildType>
+class BaseReflectionList {
+
+public:
+    BaseReflectionList(ref<const ParentType> owner)
+        : m_owner(std::move(owner))
+    {
+    }
+
+    BaseReflectionList(const BaseReflectionList& other) noexcept
+        : m_owner(other.m_owner)
+    {
+    }
+
+    BaseReflectionList(BaseReflectionList&& other) noexcept
+        : m_owner(std::move(other.m_owner))
+    {
+    }
+
+    /// Number of entries in list.
+    virtual uint32_t size() const = 0;
+
+    /// Index operator
+    ref<const ChildType> operator[](uint32_t index) { return evaluate(index); }
+
+protected:
+    ref<const ParentType> m_owner;
+
+    /// Evaluate and return a specific child in the parent object.
+    virtual ref<const ChildType> evaluate(uint32_t child_index) const = 0;
+};
+
+/// Base class for read-only lazy evaluation list of search results.
+/// To use it, the search function (eg children_of_kind) fills out the indices of
+/// the children matching the search. The list can then be accessed as usual, and only
+/// allocates/evaluates children as they're requested.
+template<class ParentType, class ChildType>
+class BaseReflectionIndexedList {
+public:
+    BaseReflectionIndexedList(ref<const ParentType> owner, std::vector<uint32_t> indices)
+        : m_owner(std::move(owner))
+        , m_indices(std::move(indices))
+    {
+    }
+
+    BaseReflectionIndexedList(const BaseReflectionIndexedList& other) noexcept
+        : m_owner(other.m_owner)
+        , m_indices(other.m_indices)
+    {
+    }
+
+    BaseReflectionIndexedList(BaseReflectionIndexedList&& other) noexcept
+        : m_owner(std::move(other.m_owner))
+        , m_indices(std::move(other.m_indices))
+    {
+    }
+
+    /// Number of search results in list.
+    uint32_t size() const { return static_cast<uint32_t>(m_indices.size()); }
+
+    /// Index operator
+    ref<const ChildType> operator[](uint32_t index) { return evaluate(m_indices[index]); }
+
+protected:
+    ref<const ParentType> m_owner;
+
+    /// Evaluate and return a specific child in the parent object.
+    virtual ref<const ChildType> evaluate(uint32_t child_index) const = 0;
+
+private:
+    std::vector<uint32_t> m_indices;
+};
+
 class SGL_API BaseReflectionObject : public Object {
 public:
     BaseReflectionObject(ref<const Object> owner)
@@ -81,7 +156,6 @@ protected:
 };
 
 class DeclReflectionChildList;
-class DeclReflectionChildrenByKindIterator;
 class DeclReflectionIndexedChildList;
 
 class SGL_API DeclReflection : public BaseReflectionObject {
@@ -117,7 +191,7 @@ public:
     Kind kind() const { return static_cast<Kind>(m_target->getKind()); }
 
     /// List of children of this cursor.
-    ref<const DeclReflectionChildList> children() const;
+    DeclReflectionChildList children() const;
 
     /// Get number of children.
     uint32_t child_count() const { return m_target->getChildrenCount(); }
@@ -135,8 +209,7 @@ public:
     std::string name() const;
 
     /// List of children of this cursor of a specific kind.
-    // ref<DeclReflectionChildrenByKindIterator> children_of_kind(Kind kind) const;
-    ref<const DeclReflectionIndexedChildList> children_of_kind(Kind kind) const;
+    DeclReflectionIndexedChildList children_of_kind(Kind kind) const;
 
     /// Index operator to get nth child.
     ref<const DeclReflection> operator[](uint32_t index) const
@@ -169,72 +242,31 @@ private:
 };
 SGL_ENUM_REGISTER(DeclReflection::Kind);
 
-class SGL_API DeclReflectionChildList : public Object {
+/// DeclReflection lazy child list evaluation implementation
+class SGL_API DeclReflectionChildList : public BaseReflectionList<DeclReflection, DeclReflection> {
+
 public:
     DeclReflectionChildList(ref<const DeclReflection> owner)
-        : m_owner(owner)
-    {
-    }
+        : BaseReflectionList(std::move(owner)){};
 
-    uint32_t len() const { return m_owner->child_count(); }
+    /// Number of entries in list.
+    uint32_t size() const override { return m_owner->child_count(); }
 
-    ref<const DeclReflection> get(uint32_t index) const { return m_owner->child(index); }
-
-private:
-    ref<const DeclReflection> m_owner;
+protected:
+    /// Get a specific search result.
+    ref<const DeclReflection> evaluate(uint32_t index) const override { return m_owner->child(index); }
 };
 
-class SGL_API DeclReflectionIndexedChildList : public Object {
+/// DeclReflection lazy search result evaluation implementation
+class SGL_API DeclReflectionIndexedChildList : public BaseReflectionIndexedList<DeclReflection, DeclReflection> {
 public:
-    DeclReflectionIndexedChildList(ref<const DeclReflection> owner, std::vector<uint32_t> indices)
-        : m_owner(owner)
-        , m_indices(std::move(indices))
-    {
-    }
+    DeclReflectionIndexedChildList(ref<const DeclReflection> owner, std::vector<uint32_t> results)
+        : BaseReflectionIndexedList(std::move(owner), std::move(results)){};
 
-    uint32_t len() const { return (uint32_t)m_indices.size(); }
-
-    ref<const DeclReflection> get(uint32_t index) const { return m_owner->child(m_indices[index]); }
-
-private:
-    ref<const DeclReflection> m_owner;
-    std::vector<uint32_t> m_indices;
+protected:
+    /// Get a specific search result.
+    ref<const DeclReflection> evaluate(uint32_t index) const override { return m_owner->child(index); }
 };
-
-class SGL_API DeclReflectionChildrenByKindIterator : public Object {
-public:
-    DeclReflectionChildrenByKindIterator(ref<const DeclReflection> owner, DeclReflection::Kind kind)
-        : m_owner(owner)
-        , m_kind(kind)
-    {
-    }
-
-    ref<DeclReflectionChildrenByKindIterator> begin()
-    {
-        m_next_index = 0;
-        m_last_index = m_owner->child_count();
-        return ref(this);
-    }
-
-    ref<const DeclReflection> next()
-    {
-        while (m_next_index < m_last_index) {
-            uint32_t index = m_next_index++;
-            ref<const DeclReflection> child = m_owner->child(index);
-            if (child->kind() == m_kind) {
-                return child;
-            }
-        }
-        return nullptr;
-    }
-
-private:
-    ref<const DeclReflection> m_owner;
-    DeclReflection::Kind m_kind;
-    uint32_t m_next_index{0};
-    uint32_t m_last_index{0};
-};
-
 
 class SGL_API TypeReflection : public BaseReflectionObject {
 public:

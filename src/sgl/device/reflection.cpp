@@ -58,17 +58,12 @@ std::string c_str_to_string(const char* str)
     return fmt::format("\"{}\"", str);
 }
 
-ref<const DeclReflectionChildList> DeclReflection::children() const
+DeclReflectionChildList DeclReflection::children() const
 {
-    return make_ref<const DeclReflectionChildList>(ref(this));
+    return DeclReflectionChildList(ref(this));
 }
 
-// ref < DeclReflectionChildrenByKindIterator> DeclReflection::children_of_kind(Kind kind) const
-//{
-//     return make_ref < DeclReflectionChildrenByKindIterator>(ref(this), kind);
-// }
-
-ref<const DeclReflectionIndexedChildList> DeclReflection::children_of_kind(Kind kind) const
+DeclReflectionIndexedChildList DeclReflection::children_of_kind(Kind kind) const
 {
     std::vector<uint32_t> indices;
     uint32_t count = child_count();
@@ -77,7 +72,7 @@ ref<const DeclReflectionIndexedChildList> DeclReflection::children_of_kind(Kind 
         if (static_cast<Kind>(m_target->getChild(i)->getKind()) == kind)
             indices.push_back(i);
     }
-    return make_ref<const DeclReflectionIndexedChildList>(ref(this), std::move(indices));
+    return DeclReflectionIndexedChildList(ref(this), std::move(indices));
 }
 
 std::string DeclReflection::to_string() const

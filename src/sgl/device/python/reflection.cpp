@@ -7,6 +7,28 @@
 
 NB_MAKE_OPAQUE(std::vector<sgl::ref<sgl::VariableReflection>>)
 
+namespace sgl {
+
+template<class ListT>
+void build_list_type(nanobind::module_& m, const char* type_name)
+{
+    nb::class_<ListT>(m, type_name)
+        .def("__len__", [](ListT& self) { return self.size(); })
+        .def(
+            "__getitem__",
+            [](ListT& self, uint32_t index)
+            {
+                if (index < 0 || index >= self.size())
+                    throw nb::index_error(); // throwing index_error allows this to be used as a python iterator
+                return self[index];
+            }
+
+        );
+}
+
+} // namespace sgl
+
+
 SGL_PY_EXPORT(device_reflection)
 {
     using namespace sgl;
@@ -17,43 +39,8 @@ SGL_PY_EXPORT(device_reflection)
 
     nb::sgl_enum<DeclReflection::Kind>(decl_reflection, "Kind");
 
-    nb::class_<DeclReflectionChildList, Object>(m, "DeclReflectionChildList")
-        .def("__len__", [](DeclReflectionChildList& self) { return self.len(); })
-        .def(
-            "__getitem__",
-            [](DeclReflectionChildList& self, uint32_t index)
-            {
-                if (index < 0 || index >= self.len())
-                    throw nb::index_error();
-                return self.get(index);
-            }
-
-        );
-    nb::class_<DeclReflectionIndexedChildList, Object>(m, "DeclReflectionIndexedChildList")
-        .def("__len__", [](DeclReflectionIndexedChildList& self) { return self.len(); })
-        .def(
-            "__getitem__",
-            [](DeclReflectionIndexedChildList& self, uint32_t index)
-            {
-                if (index < 0 || index >= self.len())
-                    throw nb::index_error();
-                return self.get(index);
-            }
-        );
-
-    nb::class_<DeclReflectionChildrenByKindIterator, Object>(m, "DeclReflectionChildrenByKindIterator")
-        .def("__iter__", [](DeclReflectionChildrenByKindIterator& self) { return self.begin(); })
-        .def(
-            "__next__",
-            [](DeclReflectionChildrenByKindIterator& self)
-            {
-                auto res = self.next();
-                if (res)
-                    return res;
-                else
-                    throw nb::stop_iteration();
-            }
-        );
+    build_list_type<DeclReflectionChildList>(m, "DeclReflectionChildList");
+    build_list_type<DeclReflectionIndexedChildList>(m, "DeclReflectionIndexedChildList");
 
     decl_reflection //
         .def_prop_ro("kind", &DeclReflection::kind, D_NA(DeclReflection, kind))
