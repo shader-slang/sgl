@@ -11,7 +11,7 @@ SGL_PY_EXPORT(device_reflection)
 {
     using namespace sgl;
 
-    nb::class_<DeclReflection, Object> decl_reflection(m, "DeclReflection");
+    nb::class_<DeclReflection, BaseReflectionObject> decl_reflection(m, "DeclReflection");
 
     nb::sgl_enum<DeclReflection::Kind>(decl_reflection, "Kind");
 
@@ -43,7 +43,7 @@ SGL_PY_EXPORT(device_reflection)
         .def("__repr__", &DeclReflection::to_string);
 
 
-    nb::class_<TypeReflection, Object> type_reflection(m, "TypeReflection");
+    nb::class_<TypeReflection, BaseReflectionObject> type_reflection(m, "TypeReflection");
 
     nb::sgl_enum<TypeReflection::Kind>(type_reflection, "Kind");
     nb::sgl_enum<TypeReflection::ScalarType>(type_reflection, "ScalarType");
@@ -66,7 +66,7 @@ SGL_PY_EXPORT(device_reflection)
         .def("unwrap_array", &TypeReflection::unwrap_array)
         .def("__repr__", &TypeReflection::to_string);
 
-    nb::class_<TypeLayoutReflection, Object>(m, "TypeLayoutReflection")
+    nb::class_<TypeLayoutReflection, BaseReflectionObject>(m, "TypeLayoutReflection")
         .def_prop_ro("kind", &TypeLayoutReflection::kind)
         .def_prop_ro("name", &TypeLayoutReflection::name)
         .def_prop_ro("size", &TypeLayoutReflection::size)
@@ -78,7 +78,7 @@ SGL_PY_EXPORT(device_reflection)
         .def("unwrap_array", &TypeLayoutReflection::unwrap_array)
         .def("__repr__", &TypeLayoutReflection::to_string);
 
-    nb::class_<FunctionReflection, Object>(m, "FunctionReflection")
+    nb::class_<FunctionReflection, BaseReflectionObject>(m, "FunctionReflection")
         .def_prop_ro("name", &FunctionReflection::name)
         .def_prop_ro("return_type", &FunctionReflection::return_type)
         .def_prop_ro("parameters", &FunctionReflection::parameters)
@@ -86,19 +86,19 @@ SGL_PY_EXPORT(device_reflection)
 
     nb::sgl_enum<ModifierID>(m, "ModifierID");
 
-    nb::class_<VariableReflection, Object>(m, "VariableReflection")
+    nb::class_<VariableReflection, BaseReflectionObject>(m, "VariableReflection")
         .def_prop_ro("name", &VariableReflection::name)
         .def_prop_ro("type", &VariableReflection::type)
         .def("has_modifier", &VariableReflection::has_modifier, "modifier"_a, D_NA(VariableReflection, has_modifier));
 
-    nb::class_<VariableLayoutReflection, Object>(m, "VariableLayoutReflection")
+    nb::class_<VariableLayoutReflection, BaseReflectionObject>(m, "VariableLayoutReflection")
         .def_prop_ro("name", &VariableLayoutReflection::name)
         .def_prop_ro("variable", &VariableLayoutReflection::variable)
         .def_prop_ro("type_layout", &VariableLayoutReflection::type_layout)
         .def_prop_ro("offset", &VariableLayoutReflection::offset)
         .def("__repr__", &VariableLayoutReflection::to_string);
 
-    nb::class_<EntryPointLayout, Object>(m, "EntryPointLayout", D(EntryPointLayout))
+    nb::class_<EntryPointLayout, BaseReflectionObject>(m, "EntryPointLayout", D(EntryPointLayout))
         .def_prop_ro("name", &EntryPointLayout::name, D(EntryPointLayout, name))
         .def_prop_ro("name_override", &EntryPointLayout::name_override, D(EntryPointLayout, name_override))
         .def_prop_ro("stage", &EntryPointLayout::stage, D(EntryPointLayout, stage))
@@ -110,7 +110,7 @@ SGL_PY_EXPORT(device_reflection)
         .def_prop_ro("parameters", &EntryPointLayout::parameters, D_NA(EntryPointLayout, parameters))
         .def("__repr__", &EntryPointLayout::to_string);
 
-    nb::class_<ProgramLayout, Object> program_layout(m, "ProgramLayout", D(ProgramLayout));
+    nb::class_<ProgramLayout, BaseReflectionObject> program_layout(m, "ProgramLayout", D(ProgramLayout));
 
     nb::class_<ProgramLayout::HashedString>(program_layout, "HashedString", D(ProgramLayout, HashedString))
         .def_ro("string", &ProgramLayout::HashedString::string, D(ProgramLayout, HashedString, string))
