@@ -114,6 +114,8 @@ SGL_PY_EXPORT(device_reflection)
         .def("unwrap_array", &TypeLayoutReflection::unwrap_array)
         .def("__repr__", &TypeLayoutReflection::to_string);
 
+    build_list_type<TypeLayoutReflectionFieldList>(m, "TypeLayoutReflectionFieldList");
+
     nb::class_<FunctionReflection, BaseReflectionObject>(m, "FunctionReflection")
         .def_prop_ro("name", &FunctionReflection::name)
         .def_prop_ro("return_type", &FunctionReflection::return_type)

@@ -167,6 +167,11 @@ std::string TypeReflection::to_string() const
     return str;
 }
 
+TypeLayoutReflectionFieldList TypeLayoutReflection::fields() const
+{
+    return TypeLayoutReflectionFieldList(ref(this));
+}
+
 std::string TypeLayoutReflection::to_string() const
 {
     switch (kind()) {
@@ -183,7 +188,7 @@ std::string TypeLayoutReflection::to_string() const
             kind(),
             size(),
             stride(),
-            string::indent(string::list_to_string(fields()))
+            string::indent(string::iterable_to_string(fields()))
         );
         break;
     case TypeReflection::Kind::resource:
@@ -237,6 +242,11 @@ std::string TypeLayoutReflection::to_string() const
     }
 }
 
+FunctionReflectionParameterList FunctionReflection::parameters() const
+{
+    return FunctionReflectionParameterList(ref(this));
+}
+
 std::string VariableLayoutReflection::to_string() const
 {
     return fmt::format(
@@ -247,6 +257,11 @@ std::string VariableLayoutReflection::to_string() const
         c_str_to_string(name()),
         string::indent(type_layout()->to_string())
     );
+}
+
+EntryPointLayoutParameterList EntryPointLayout::parameters() const
+{
+    return EntryPointLayoutParameterList(ref(this));
 }
 
 std::string EntryPointLayout::to_string() const
@@ -263,7 +278,7 @@ std::string EntryPointLayout::to_string() const
         c_str_to_string(name_override()),
         stage(),
         compute_thread_group_size(),
-        string::indent(string::list_to_string(parameters()))
+        string::indent(string::iterable_to_string(parameters()))
     );
 }
 
