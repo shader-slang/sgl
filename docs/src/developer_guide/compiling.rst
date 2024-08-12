@@ -19,7 +19,7 @@ following command:
 
 .. code-block:: bash
 
-    git clone https://github.com/westlicht/sgl.git
+    git clone https://github.com/shader-slang/sgl.git
 
 
 Setup

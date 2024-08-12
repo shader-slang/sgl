@@ -26,8 +26,8 @@ If you use ``sgl`` in a research project leading to a publication, please cite t
     @software{sgl,
         title = {sgl},
         author = {Simon Kallweit},
-        url = {https://github.com/westlicht/sgl},
-        note = {\url{https://github.com/westlicht/sgl}},
+        url = {https://github.com/shader-slang/sgl},
+        note = {\url{https://github.com/shader-slang/sgl}},
         version = {0.0.1},
         year = {2024}
     }
