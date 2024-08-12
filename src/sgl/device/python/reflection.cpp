@@ -17,6 +17,18 @@ SGL_PY_EXPORT(device_reflection)
 
     nb::sgl_enum<DeclReflection::Kind>(decl_reflection, "Kind");
 
+    nb::class_<DeclReflectionChildList, Object>(m, "DeclReflectionChildList")
+        .def("__len__", [](DeclReflectionChildList& self) { return self.len(); })
+        .def(
+            "__getitem__",
+            [](DeclReflectionChildList& self, uint32_t index)
+            {
+                if (index < 0 || index >= self.len())
+                    throw nb::index_error();
+                return self.get(index);
+            }
+        );
+
     decl_reflection //
         .def_prop_ro("kind", &DeclReflection::kind, D_NA(DeclReflection, kind))
         .def_prop_ro("children", &DeclReflection::children, D_NA(DeclReflection, children))
@@ -41,7 +53,15 @@ SGL_PY_EXPORT(device_reflection)
             D_NA(DeclReflection, find_first_child_of_kind)
         )
         .def("__len__", [](DeclReflection& self) { return self.child_count(); })
-        .def("__getitem__", [](DeclReflection& self, int index) { return self[index]; })
+        .def(
+            "__getitem__",
+            [](DeclReflection& self, uint32_t index)
+            {
+                if (index < 0 || index >= self.child_count())
+                    throw nb::index_error();
+                return self.child(index);
+            }
+        )
         .def("__repr__", &DeclReflection::to_string);
 
 

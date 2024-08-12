@@ -80,6 +80,8 @@ protected:
     ref<const Object> m_owner;
 };
 
+class DeclReflectionChildList;
+
 class SGL_API DeclReflection : public BaseReflectionObject {
 
 public:
@@ -113,10 +115,18 @@ public:
     Kind kind() const { return static_cast<Kind>(m_target->getKind()); }
 
     /// List of children of this cursor.
-    std::vector<ref<const DeclReflection>> children() const;
+    ref<const DeclReflectionChildList> children() const;
 
     /// Get number of children.
     uint32_t child_count() const { return m_target->getChildrenCount(); }
+
+    /// Get a child by index (c++ only).
+    ref<const DeclReflection> child(uint32_t index) const
+    {
+        if (index > child_count())
+            SGL_THROW("Child index out of range: {}", index);
+        return detail::from_slang(m_owner, m_target->getChild(index));
+    }
 
     /// Get the name of this decl (if it is of a kind that has a name).
     /// Note: Only supported for types, functions and variables.
@@ -155,6 +165,21 @@ private:
     slang::DeclReflection* m_target;
 };
 SGL_ENUM_REGISTER(DeclReflection::Kind);
+
+class SGL_API DeclReflectionChildList : public Object {
+public:
+    DeclReflectionChildList(ref<const DeclReflection> owner)
+        : m_owner(owner)
+    {
+    }
+
+    uint32_t len() const { return m_owner->child_count(); }
+
+    ref<const DeclReflection> get(uint32_t index) const { return m_owner->child(index); }
+
+private:
+    ref<const DeclReflection> m_owner;
+};
 
 class SGL_API TypeReflection : public BaseReflectionObject {
 public:
