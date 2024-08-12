@@ -81,6 +81,8 @@ protected:
 };
 
 class DeclReflectionChildList;
+class DeclReflectionChildrenByKindIterator;
+class DeclReflectionIndexedChildList;
 
 class SGL_API DeclReflection : public BaseReflectionObject {
 
@@ -133,7 +135,8 @@ public:
     std::string name() const;
 
     /// List of children of this cursor of a specific kind.
-    std::vector<ref<const DeclReflection>> children_of_kind(Kind kind) const;
+    // ref<DeclReflectionChildrenByKindIterator> children_of_kind(Kind kind) const;
+    ref<const DeclReflectionIndexedChildList> children_of_kind(Kind kind) const;
 
     /// Index operator to get nth child.
     ref<const DeclReflection> operator[](uint32_t index) const
@@ -180,6 +183,58 @@ public:
 private:
     ref<const DeclReflection> m_owner;
 };
+
+class SGL_API DeclReflectionIndexedChildList : public Object {
+public:
+    DeclReflectionIndexedChildList(ref<const DeclReflection> owner, std::vector<uint32_t> indices)
+        : m_owner(owner)
+        , m_indices(std::move(indices))
+    {
+    }
+
+    uint32_t len() const { return (uint32_t)m_indices.size(); }
+
+    ref<const DeclReflection> get(uint32_t index) const { return m_owner->child(m_indices[index]); }
+
+private:
+    ref<const DeclReflection> m_owner;
+    std::vector<uint32_t> m_indices;
+};
+
+class SGL_API DeclReflectionChildrenByKindIterator : public Object {
+public:
+    DeclReflectionChildrenByKindIterator(ref<const DeclReflection> owner, DeclReflection::Kind kind)
+        : m_owner(owner)
+        , m_kind(kind)
+    {
+    }
+
+    ref<DeclReflectionChildrenByKindIterator> begin()
+    {
+        m_next_index = 0;
+        m_last_index = m_owner->child_count();
+        return ref(this);
+    }
+
+    ref<const DeclReflection> next()
+    {
+        while (m_next_index < m_last_index) {
+            uint32_t index = m_next_index++;
+            ref<const DeclReflection> child = m_owner->child(index);
+            if (child->kind() == m_kind) {
+                return child;
+            }
+        }
+        return nullptr;
+    }
+
+private:
+    ref<const DeclReflection> m_owner;
+    DeclReflection::Kind m_kind;
+    uint32_t m_next_index{0};
+    uint32_t m_last_index{0};
+};
+
 
 class SGL_API TypeReflection : public BaseReflectionObject {
 public:

@@ -63,18 +63,21 @@ ref<const DeclReflectionChildList> DeclReflection::children() const
     return make_ref<const DeclReflectionChildList>(ref(this));
 }
 
-std::vector<ref<const DeclReflection>> DeclReflection::children_of_kind(Kind kind) const
+// ref < DeclReflectionChildrenByKindIterator> DeclReflection::children_of_kind(Kind kind) const
+//{
+//     return make_ref < DeclReflectionChildrenByKindIterator>(ref(this), kind);
+// }
+
+ref<const DeclReflectionIndexedChildList> DeclReflection::children_of_kind(Kind kind) const
 {
-    std::vector<ref<const DeclReflection>> res;
-    int32_t count = child_count();
-    res.reserve(count);
-    for (int32_t i = 0; i < count; i++) {
-        ref<const DeclReflection> child = detail::from_slang(m_owner, m_target->getChild(i));
-        if (child->kind() == kind) {
-            res.push_back(child);
-        }
+    std::vector<uint32_t> indices;
+    uint32_t count = child_count();
+    indices.reserve(count);
+    for (uint32_t i = 0; i < count; i++) {
+        if (static_cast<Kind>(m_target->getChild(i)->getKind()) == kind)
+            indices.push_back(i);
     }
-    return res;
+    return make_ref<const DeclReflectionIndexedChildList>(ref(this), std::move(indices));
 }
 
 std::string DeclReflection::to_string() const

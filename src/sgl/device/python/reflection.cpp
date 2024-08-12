@@ -27,6 +27,32 @@ SGL_PY_EXPORT(device_reflection)
                     throw nb::index_error();
                 return self.get(index);
             }
+
+        );
+    nb::class_<DeclReflectionIndexedChildList, Object>(m, "DeclReflectionIndexedChildList")
+        .def("__len__", [](DeclReflectionIndexedChildList& self) { return self.len(); })
+        .def(
+            "__getitem__",
+            [](DeclReflectionIndexedChildList& self, uint32_t index)
+            {
+                if (index < 0 || index >= self.len())
+                    throw nb::index_error();
+                return self.get(index);
+            }
+        );
+
+    nb::class_<DeclReflectionChildrenByKindIterator, Object>(m, "DeclReflectionChildrenByKindIterator")
+        .def("__iter__", [](DeclReflectionChildrenByKindIterator& self) { return self.begin(); })
+        .def(
+            "__next__",
+            [](DeclReflectionChildrenByKindIterator& self)
+            {
+                auto res = self.next();
+                if (res)
+                    return res;
+                else
+                    throw nb::stop_iteration();
+            }
         );
 
     decl_reflection //
