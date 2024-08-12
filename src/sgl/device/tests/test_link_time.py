@@ -17,8 +17,6 @@ from helpers import test_id
 # variables works.
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_link_time_modules_compile(test_id, device_type):
-    pytest.skip("Slang doesn't currently handle numthreads being a link time constant")
-
     device = helpers.get_device(type=device_type)
 
     extra_module = device.load_module_from_source(
@@ -103,7 +101,6 @@ def test_link_time_constant_value(test_id, device_type, value):
 @pytest.mark.parametrize("value", [2, 5])
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_link_time_constants(device_type, value):
-    pytest.skip("Slang doesn't currently handle numthreads being a link time constant")
 
     device = helpers.get_device(type=device_type)
 
