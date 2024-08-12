@@ -48,9 +48,9 @@ TEST_CASE("get_extension_from_path")
 
 TEST_CASE("junction")
 {
-    std::filesystem::path cwd = std::filesystem::current_path();
-    std::filesystem::path target = cwd / "junction_target";
-    std::filesystem::path link = cwd / "junction_link";
+    std::filesystem::path path = sgl::testing::get_case_temp_directory();
+    std::filesystem::path target = path / "junction_target";
+    std::filesystem::path link = path / "junction_link";
 
     // Create junction_target/test
     std::filesystem::create_directories(target / "test");
