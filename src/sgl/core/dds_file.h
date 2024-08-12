@@ -13,7 +13,7 @@ namespace sgl {
 /**
  * \brief Helper class for loading DDS files.
  */
-class DDSFile : public Object {
+class SGL_API DDSFile : public Object {
     SGL_OBJECT(DDSFile)
 public:
     SGL_NON_COPYABLE_AND_MOVABLE(DDSFile);
@@ -71,7 +71,7 @@ public:
     virtual std::string to_string() const override;
 
 private:
-    bool decode_header(const uint8_t* data);
+    bool decode_header(const uint8_t* data, size_t size);
 
     uint8_t* m_data{nullptr};
     size_t m_size{0};

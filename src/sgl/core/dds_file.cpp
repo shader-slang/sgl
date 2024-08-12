@@ -354,8 +354,8 @@ namespace detail {
 
     static_assert(sizeof(HeaderDXT10) == 20, "DDS DX10 Extended Header size mismatch");
 
-    /// Maximum possible size of header.
-    static constexpr size_t MAX_HEADER_SIZE = sizeof(DDS_MAGIC) + sizeof(Header) + sizeof(HeaderDXT10);
+    /// Minimum possible size of the header.
+    static constexpr size_t MIN_HEADER_SIZE = sizeof(DDS_MAGIC) + sizeof(Header);
 
     inline constexpr bool is_dxt10(const Header& header)
     {
@@ -622,13 +622,13 @@ using namespace detail;
 DDSFile::DDSFile(Stream* stream)
 {
     m_size = stream->size();
-    if (m_size < MAX_HEADER_SIZE)
+    if (m_size < MIN_HEADER_SIZE)
         SGL_THROW("DDS file is too small");
 
     m_data = new uint8_t[m_size];
     stream->read(m_data, m_size);
 
-    if (!decode_header(m_data))
+    if (!decode_header(m_data, m_size))
         SGL_THROW("DDS file has invalid header");
 }
 
@@ -697,7 +697,7 @@ std::string DDSFile::to_string() const
     );
 }
 
-bool DDSFile::decode_header(const uint8_t* data)
+bool DDSFile::decode_header(const uint8_t* data, size_t size)
 {
     // First 4 bytes are the magic DDS number
     const uint32_t magic = *reinterpret_cast<const uint32_t*>(data);
@@ -707,6 +707,8 @@ bool DDSFile::decode_header(const uint8_t* data)
     const Header header = *reinterpret_cast<const Header*>(data + sizeof(DDS_MAGIC));
     const PixelFormat& ddspf = header.ddspf;
     bool dxt10 = is_dxt10(header);
+    if (dxt10 && size < sizeof(DDS_MAGIC) + sizeof(Header) + sizeof(HeaderDXT10))
+        return false;
     const HeaderDXT10 dxt10_header = *reinterpret_cast<const HeaderDXT10*>(data + sizeof(DDS_MAGIC) + sizeof(Header));
 
     // Read basic data from the header
