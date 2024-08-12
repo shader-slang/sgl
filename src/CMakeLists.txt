@@ -517,6 +517,7 @@ if(SGL_BUILD_TESTS)
     target_sources(sgl_tests PRIVATE
         sgl/tests/sgl_tests.cpp
         sgl/tests/testing.cpp
+        sgl/core/tests/test_dds_file.cpp
         sgl/core/tests/test_enum.cpp
         sgl/core/tests/test_file_system_watcher.cpp
         sgl/core/tests/test_maths.cpp
