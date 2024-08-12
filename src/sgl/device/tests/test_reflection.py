@@ -256,5 +256,41 @@ def test_module_declref_child_lifetime(test_id, device_type):
     assert var_decl.name == "hello"
 
 
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_list_type_fields(test_id, device_type):
+    device = helpers.get_device(type=device_type)
+
+    # Create a session, and within it a module.
+    session = helpers.create_session(device, {})
+    module = session.load_module_from_source(
+        module_name=f"module_from_source_{test_id}",
+        source="""
+        struct MyType{
+            int a;
+            float b;
+        };
+        [shader("compute")]
+        [numthreads(1, 1, 1)]
+        void main() {
+        }
+    """,
+    )
+
+    # Get and read on 1 line
+    assert module.module_decl.children[0].as_type().fields[0].name == "a"
+    assert module.module_decl.children[0].as_type().fields[1].name == "b"
+
+    # By getting and storing as local
+    var_type = module.module_decl.children[0].as_type()
+    fields = var_type.fields
+    assert len(fields) == 2
+    assert fields[0].name == "a"
+    assert fields[1].name == "b"
+
+    # Iterate
+    for field in fields:
+        assert field.name in ["a", "b"]
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

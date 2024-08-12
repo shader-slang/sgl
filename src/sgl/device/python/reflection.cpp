@@ -77,6 +77,7 @@ SGL_PY_EXPORT(device_reflection)
         )
         .def("__repr__", &DeclReflection::to_string);
 
+    build_list_type<TypeReflectionFieldList>(m, "TypeReflectionFieldList");
 
     nb::class_<TypeReflection, BaseReflectionObject> type_reflection(m, "TypeReflection");
 

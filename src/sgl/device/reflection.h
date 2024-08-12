@@ -231,7 +231,7 @@ public:
 
     /// Finds all children of a specific kind with a given name.
     /// Note: Only supported for types, functions and variables.
-    std::vector<ref<const DeclReflection>> find_children_of_kind(Kind kind, std::string_view child_name) const;
+    DeclReflectionIndexedChildList find_children_of_kind(Kind kind, std::string_view child_name) const;
 
     /// Finds the first child of a specific kind with a given name.
     /// Note: Only supported for types, functions and variables.
@@ -267,6 +267,8 @@ protected:
     /// Get a specific search result.
     ref<const DeclReflection> evaluate(uint32_t index) const override { return m_owner->child(index); }
 };
+
+class TypeReflectionFieldList;
 
 class SGL_API TypeReflection : public BaseReflectionObject {
 public:
@@ -502,14 +504,7 @@ public:
         return detail::from_slang(m_owner, m_target->getFieldByIndex(index));
     }
 
-    std::vector<ref<const VariableReflection>> fields() const
-    {
-        std::vector<ref<const VariableReflection>> result;
-        for (uint32_t i = 0; i < m_target->getFieldCount(); ++i) {
-            result.push_back(detail::from_slang(m_owner, m_target->getFieldByIndex(i)));
-        }
-        return result;
-    }
+    TypeReflectionFieldList fields() const;
 
     bool is_array() const { return kind() == Kind::array; }
 
@@ -586,6 +581,22 @@ SGL_ENUM_REGISTER(TypeReflection::ScalarType);
 SGL_ENUM_REGISTER(TypeReflection::ResourceShape);
 SGL_ENUM_REGISTER(TypeReflection::ResourceAccess);
 SGL_ENUM_REGISTER(TypeReflection::ParameterCategory);
+
+/// TypeReflectionChildList lazy field list evaluation implementation
+class SGL_API TypeReflectionFieldList : public BaseReflectionList<TypeReflection, VariableReflection> {
+
+public:
+    TypeReflectionFieldList(ref<const TypeReflection> owner)
+        : BaseReflectionList(std::move(owner)){};
+
+    /// Number of entries in list.
+    uint32_t size() const override { return m_owner->field_count(); }
+
+protected:
+    /// Get a specific child.
+    ref<const VariableReflection> evaluate(uint32_t index) const override { return m_owner->get_field_by_index(index); }
+};
+
 
 class SGL_API TypeLayoutReflection : public BaseReflectionObject {
 public:

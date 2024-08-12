@@ -104,20 +104,34 @@ std::string DeclReflection::name() const
         SGL_THROW("Invalid decl kind to request name: {}", kind());
     }
 }
-
-std::vector<ref<const DeclReflection>>
-DeclReflection::find_children_of_kind(Kind kind, std::string_view child_name) const
+DeclReflectionIndexedChildList DeclReflection::find_children_of_kind(Kind kind, std::string_view child_name) const
 {
-    std::vector<ref<const DeclReflection>> res;
-    int32_t count = child_count();
-    res.reserve(count);
-    for (int32_t i = 0; i < count; i++) {
-        ref<const DeclReflection> child = detail::from_slang(m_owner, m_target->getChild(i));
-        if (child->kind() == kind && child->name() == child_name) {
-            res.push_back(child);
+    std::string name(child_name);
+    std::vector<uint32_t> indices;
+    uint32_t count = child_count();
+    indices.reserve(count);
+    for (uint32_t i = 0; i < count; i++) {
+        slang::DeclReflection* child = m_target->getChild(i);
+        if (static_cast<Kind>(child->getKind()) == kind) {
+            switch (child->getKind()) {
+            case slang::DeclReflection::Kind::Variable:
+                if (name == child->asVariable()->getName())
+                    indices.push_back(i);
+                break;
+            case slang::DeclReflection::Kind::Func:
+                if (name == child->asFunction()->getName())
+                    indices.push_back(i);
+                break;
+            case slang::DeclReflection::Kind::Struct:
+                if (name == child->getType()->getName())
+                    indices.push_back(i);
+                break;
+            default:
+                SGL_THROW("Invalid decl kind to request name: {}", kind);
+            }
         }
     }
-    return res;
+    return DeclReflectionIndexedChildList(ref(this), std::move(indices));
 }
 
 ref<const DeclReflection> DeclReflection::find_first_child_of_kind(Kind kind, std::string_view child_name) const
@@ -132,6 +146,11 @@ ref<const DeclReflection> DeclReflection::find_first_child_of_kind(Kind kind, st
         }
     }
     return nullptr;
+}
+
+TypeReflectionFieldList TypeReflection::fields() const
+{
+    return TypeReflectionFieldList(ref(this));
 }
 
 std::string TypeReflection::to_string() const
