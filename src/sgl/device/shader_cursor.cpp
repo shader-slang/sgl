@@ -305,12 +305,12 @@ ShaderCursor ShaderCursor::find_entry_point(uint32_t index) const
 // Resource binding
 //
 
-inline bool is_parameter_block(ref<const TypeReflection> type)
+inline bool is_parameter_block(const TypeReflection* type)
 {
     return type->kind() == TypeReflection::Kind::parameter_block;
 }
 
-inline bool is_resource_type(ref<const TypeReflection> type)
+inline bool is_resource_type(const TypeReflection* type)
 {
     switch (type->kind()) {
     case TypeReflection::Kind::constant_buffer:
@@ -325,7 +325,7 @@ inline bool is_resource_type(ref<const TypeReflection> type)
     }
 }
 
-inline bool is_buffer_resource_type(ref<const TypeReflection> type)
+inline bool is_buffer_resource_type(const TypeReflection* type)
 {
     switch (type->kind()) {
     case TypeReflection::Kind::constant_buffer:
@@ -348,7 +348,7 @@ inline bool is_buffer_resource_type(ref<const TypeReflection> type)
     }
 }
 
-inline bool is_texture_resource_type(ref<const TypeReflection> type)
+inline bool is_texture_resource_type(const TypeReflection* type)
 {
     switch (type->kind()) {
     case TypeReflection::Kind::resource:
@@ -367,22 +367,22 @@ inline bool is_texture_resource_type(ref<const TypeReflection> type)
     }
 }
 
-inline bool is_sampler_type(ref<const TypeReflection> type)
+inline bool is_sampler_type(const TypeReflection* type)
 {
     return type->kind() == TypeReflection::Kind::sampler_state;
 }
 
-inline bool is_shader_resource_type(ref<const TypeReflection> type)
+inline bool is_shader_resource_type(const TypeReflection* type)
 {
     return type->resource_access() == TypeReflection::ResourceAccess::read;
 }
 
-inline bool is_unordered_access_type(ref<const TypeReflection> type)
+inline bool is_unordered_access_type(const TypeReflection* type)
 {
     return type->resource_access() == TypeReflection::ResourceAccess::read_write;
 }
 
-inline bool is_acceleration_structure_resource_type(ref<const TypeReflection> type)
+inline bool is_acceleration_structure_resource_type(const TypeReflection* type)
 {
     return type->kind() == TypeReflection::Kind::resource
         && type->resource_shape() == TypeReflection::ResourceShape::acceleration_structure;

@@ -286,7 +286,7 @@ ReflectionCursor::ReflectionCursor(ref<const EntryPointLayout> entry_point_layou
 {
 }
 
-ReflectionCursor::ReflectionCursor(ref<const TypeLayoutReflection> type_layout)
+ReflectionCursor::ReflectionCursor(const TypeLayoutReflection* type_layout)
     : m_type_layout(type_layout)
     , m_valid(m_type_layout != nullptr)
 {
@@ -312,7 +312,8 @@ ReflectionCursor ReflectionCursor::find_field(std::string_view name) const
 {
     if (m_shader_program) {
         // Try to find field in global variables.
-        if (auto global_field = ReflectionCursor(m_shader_program->layout()->globals_type_layout()).find_field(name);
+        if (auto global_field
+            = ReflectionCursor(m_shader_program->layout()->globals_type_layout().get()).find_field(name);
             global_field.is_valid())
             return global_field;
         // Try to find an entry point.
@@ -324,7 +325,7 @@ ReflectionCursor ReflectionCursor::find_field(std::string_view name) const
         // Try to find parameter in entry point.
         for (uint32_t i = 0; i < m_entry_point_layout->parameter_count(); ++i) {
             if (m_entry_point_layout->get_parameter_by_index(i)->name() == name)
-                return ReflectionCursor(m_entry_point_layout->get_parameter_by_index(i)->type_layout());
+                return ReflectionCursor(m_entry_point_layout->get_parameter_by_index(i)->type_layout().get());
         }
     } else if (m_type_layout) {
         // If type is a constant buffer or parameter block, try to find field in element type.
@@ -336,7 +337,7 @@ ReflectionCursor ReflectionCursor::find_field(std::string_view name) const
             int32_t field_index = type_layout->find_field_index_by_name(name.data(), name.data() + name.size());
             if (field_index >= 0) {
                 ref<const VariableLayoutReflection> field_layout = type_layout->get_field_by_index(field_index);
-                return ReflectionCursor(field_layout->type_layout());
+                return ReflectionCursor(field_layout->type_layout().get());
             }
         }
     }

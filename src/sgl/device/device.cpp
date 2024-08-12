@@ -673,7 +673,7 @@ ref<MutableShaderObject> Device::create_mutable_shader_object(const ShaderProgra
     return shader_object;
 }
 
-ref<MutableShaderObject> Device::create_mutable_shader_object(ref<const TypeLayoutReflection> type_layout)
+ref<MutableShaderObject> Device::create_mutable_shader_object(const TypeLayoutReflection* type_layout)
 {
     return make_ref<MutableShaderObject>(ref<Device>(this), type_layout);
 }
@@ -681,7 +681,7 @@ ref<MutableShaderObject> Device::create_mutable_shader_object(ref<const TypeLayo
 ref<MutableShaderObject> Device::create_mutable_shader_object(ReflectionCursor cursor)
 {
     SGL_CHECK(cursor.is_valid(), "Invalid reflection cursor");
-    return create_mutable_shader_object(cursor.type_layout());
+    return create_mutable_shader_object(cursor.type_layout().get());
 }
 
 ref<ComputePipeline> Device::create_compute_pipeline(ComputePipelineDesc desc)

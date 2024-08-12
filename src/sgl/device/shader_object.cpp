@@ -176,7 +176,7 @@ MutableShaderObject::MutableShaderObject(ref<Device> device, const ShaderProgram
     m_device->gfx_device()->createMutableRootShaderObject(shader_program->gfx_shader_program(), &m_shader_object);
 }
 
-MutableShaderObject::MutableShaderObject(ref<Device> device, ref<const TypeLayoutReflection> type_layout)
+MutableShaderObject::MutableShaderObject(ref<Device> device, const TypeLayoutReflection* type_layout)
     : ShaderObject(std::move(device), nullptr)
 {
     m_device->gfx_device()->createMutableShaderObjectFromTypeLayout(

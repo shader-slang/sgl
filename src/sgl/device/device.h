@@ -372,7 +372,7 @@ public:
 
     ref<MutableShaderObject> create_mutable_shader_object(const ShaderProgram* shader_program);
 
-    ref<MutableShaderObject> create_mutable_shader_object(ref<const TypeLayoutReflection> type_layout);
+    ref<MutableShaderObject> create_mutable_shader_object(const TypeLayoutReflection* type_layout);
 
     ref<MutableShaderObject> create_mutable_shader_object(ReflectionCursor cursor);
 

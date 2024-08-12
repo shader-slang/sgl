@@ -854,7 +854,7 @@ public:
 
     ReflectionCursor(const ShaderProgram* shader_program);
     ReflectionCursor(ref<const EntryPointLayout> entry_point_layout);
-    ReflectionCursor(ref<const TypeLayoutReflection> type_layout);
+    ReflectionCursor(const TypeLayoutReflection* type_layout);
 
     ref<const TypeLayoutReflection> type_layout() const { return m_type_layout; }
     ref<const TypeReflection> type() const { return m_type_layout->type(); }

@@ -72,7 +72,7 @@ class SGL_API MutableShaderObject : public ShaderObject {
 public:
     MutableShaderObject(ref<Device> device, gfx::IShaderObject* shader_object);
     MutableShaderObject(ref<Device> device, const ShaderProgram* shader_program);
-    MutableShaderObject(ref<Device> device, ref<const TypeLayoutReflection> type_layout);
+    MutableShaderObject(ref<Device> device, const TypeLayoutReflection* type_layout);
     ~MutableShaderObject();
 
     virtual ref<ShaderObject> get_entry_point(uint32_t index) override;
