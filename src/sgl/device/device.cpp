@@ -569,8 +569,12 @@ void Device::close()
 
 void Device::close_all_devices()
 {
-    std::lock_guard lock(s_devices_mutex);
-    for (Device* device : s_devices)
+    std::vector<Device*> devices;
+    {
+        std::lock_guard lock(s_devices_mutex);
+        devices = s_devices;
+    }
+    for (Device* device : devices)
         device->close();
 }
 
