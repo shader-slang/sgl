@@ -543,16 +543,40 @@ inline void process_texture_desc(TextureDesc& desc)
             SGL_THROW("Invalid texture type.");
             break;
         case ResourceType::texture_1d:
-            SGL_CHECK(desc.width > 0 && desc.height <= 1 && desc.depth <= 1, "Invalid dimensions for 1D texture.");
+            SGL_CHECK(
+                desc.width > 0 && desc.height <= 1 && desc.depth <= 1,
+                "Invalid dimensions (width={}, height={}, depth={}) for 1D texture.",
+                desc.width,
+                desc.height,
+                desc.depth
+            );
             break;
         case ResourceType::texture_2d:
-            SGL_CHECK(desc.width > 0 && desc.height > 0 && desc.depth <= 1, "Invalid dimensions for 2D texture.");
+            SGL_CHECK(
+                desc.width > 0 && desc.height > 0 && desc.depth <= 1,
+                "Invalid dimensions (width={}, height={}, depth={}) for 2D texture.",
+                desc.width,
+                desc.height,
+                desc.depth
+            );
             break;
         case ResourceType::texture_3d:
-            SGL_CHECK(desc.width > 0 && desc.height > 0 && desc.depth > 0, "Invalid dimensions for 3D texture.");
+            SGL_CHECK(
+                desc.width > 0 && desc.height > 0 && desc.depth > 0,
+                "Invalid dimensions (width={}, height={}, depth={}) for 3D texture.",
+                desc.width,
+                desc.height,
+                desc.depth
+            );
             break;
         case ResourceType::texture_cube:
-            SGL_CHECK(desc.width > 0 && desc.height > 0 && desc.depth <= 1, "Invalid dimensions for cube texture.");
+            SGL_CHECK(
+                desc.width > 0 && desc.height > 0 && desc.depth <= 1,
+                "Invalid dimensions (width={}, height={}, depth={}) for cube texture.",
+                desc.width,
+                desc.height,
+                desc.depth
+            );
             break;
         }
     }

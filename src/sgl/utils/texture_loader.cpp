@@ -208,7 +208,7 @@ inline ref<Texture> create_texture(
 )
 {
     if (source_image.bitmap) {
-        const auto& bitmap = source_image.bitmap;
+        const Bitmap* bitmap = source_image.bitmap;
         bool allocate_mips = options.allocate_mips || options.generate_mips;
 
         ResourceUsage usage = options.usage;
@@ -236,7 +236,7 @@ inline ref<Texture> create_texture(
 
         return texture;
     } else if (source_image.dds_file) {
-        const auto& dds_file = source_image.dds_file;
+        const DDSFile* dds_file = source_image.dds_file;
         return device->create_texture({
             .type = get_resource_type(dds_file->type()),
             .format = source_image.format,
@@ -301,7 +301,7 @@ inline ref<Texture> create_texture_array(
 
     for (size_t i = 0; i < source_images.size(); ++i) {
         SourceImage source_image = source_images[i].get();
-        const auto& bitmap = source_image.bitmap;
+        const Bitmap* bitmap = source_image.bitmap;
         if (!bitmap)
             SGL_THROW("Texture array requires all source images to be bitmaps");
 
