@@ -42,6 +42,9 @@ public:
     const uint8_t* data() const { return m_data; }
     size_t size() const { return m_size; }
 
+    const uint8_t* resource_data() const { return m_data + m_header_size; }
+    size_t resource_size() const { return m_size - m_header_size; }
+
     uint32_t dxgi_format() const { return m_dxgi_format; }
     TextureType type() const { return m_type; }
 
