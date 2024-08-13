@@ -62,13 +62,21 @@ class ShaderProgram;
 // reflection.h
 
 class DeclReflection;
+class DeclReflectionChildList;
+class DeclReflectionIndexedChildList;
 class TypeReflection;
+class TypeReflectionFieldList;
 class TypeLayoutReflection;
+class TypeLayoutReflectionFieldList;
 class FunctionReflection;
+class FunctionReflectionParameterList;
 class VariableReflection;
 class VariableLayoutReflection;
-class ProgramLayout;
 class EntryPointLayout;
+class EntryPointLayoutParameterList;
+class ProgramLayout;
+class ProgramLayoutParameterList;
+class ProgramLayoutEntryPointList;
 
 // kernel.h
 

@@ -58,29 +58,21 @@ std::string c_str_to_string(const char* str)
     return fmt::format("\"{}\"", str);
 }
 
-std::vector<ref<const DeclReflection>> DeclReflection::children() const
+DeclReflectionChildList DeclReflection::children() const
 {
-    std::vector<ref<const DeclReflection>> res;
-    int32_t count = child_count();
-    res.reserve(count);
-    for (int32_t i = 0; i < count; i++) {
-        res.push_back(detail::from_slang(m_owner, m_target->getChild(i)));
-    }
-    return res;
+    return DeclReflectionChildList(ref(this));
 }
 
-std::vector<ref<const DeclReflection>> DeclReflection::children_of_kind(Kind kind) const
+DeclReflectionIndexedChildList DeclReflection::children_of_kind(Kind kind) const
 {
-    std::vector<ref<const DeclReflection>> res;
-    int32_t count = child_count();
-    res.reserve(count);
-    for (int32_t i = 0; i < count; i++) {
-        ref<const DeclReflection> child = detail::from_slang(m_owner, m_target->getChild(i));
-        if (child->kind() == kind) {
-            res.push_back(child);
-        }
+    std::vector<uint32_t> indices;
+    uint32_t count = child_count();
+    indices.reserve(count);
+    for (uint32_t i = 0; i < count; i++) {
+        if (static_cast<Kind>(m_target->getChild(i)->getKind()) == kind)
+            indices.push_back(i);
     }
-    return res;
+    return DeclReflectionIndexedChildList(ref(this), std::move(indices));
 }
 
 std::string DeclReflection::to_string() const
@@ -112,20 +104,34 @@ std::string DeclReflection::name() const
         SGL_THROW("Invalid decl kind to request name: {}", kind());
     }
 }
-
-std::vector<ref<const DeclReflection>>
-DeclReflection::find_children_of_kind(Kind kind, std::string_view child_name) const
+DeclReflectionIndexedChildList DeclReflection::find_children_of_kind(Kind kind, std::string_view child_name) const
 {
-    std::vector<ref<const DeclReflection>> res;
-    int32_t count = child_count();
-    res.reserve(count);
-    for (int32_t i = 0; i < count; i++) {
-        ref<const DeclReflection> child = detail::from_slang(m_owner, m_target->getChild(i));
-        if (child->kind() == kind && child->name() == child_name) {
-            res.push_back(child);
+    std::string name(child_name);
+    std::vector<uint32_t> indices;
+    uint32_t count = child_count();
+    indices.reserve(count);
+    for (uint32_t i = 0; i < count; i++) {
+        slang::DeclReflection* child = m_target->getChild(i);
+        if (static_cast<Kind>(child->getKind()) == kind) {
+            switch (child->getKind()) {
+            case slang::DeclReflection::Kind::Variable:
+                if (name == child->asVariable()->getName())
+                    indices.push_back(i);
+                break;
+            case slang::DeclReflection::Kind::Func:
+                if (name == child->asFunction()->getName())
+                    indices.push_back(i);
+                break;
+            case slang::DeclReflection::Kind::Struct:
+                if (name == child->getType()->getName())
+                    indices.push_back(i);
+                break;
+            default:
+                SGL_THROW("Invalid decl kind to request name: {}", kind);
+            }
         }
     }
-    return res;
+    return DeclReflectionIndexedChildList(ref(this), std::move(indices));
 }
 
 ref<const DeclReflection> DeclReflection::find_first_child_of_kind(Kind kind, std::string_view child_name) const
@@ -142,6 +148,11 @@ ref<const DeclReflection> DeclReflection::find_first_child_of_kind(Kind kind, st
     return nullptr;
 }
 
+TypeReflectionFieldList TypeReflection::fields() const
+{
+    return TypeReflectionFieldList(ref(this));
+}
+
 std::string TypeReflection::to_string() const
 {
     std::string str;
@@ -154,6 +165,11 @@ std::string TypeReflection::to_string() const
     // str += fmt::format("  col_count={},\n", col_count());
     str += ")";
     return str;
+}
+
+TypeLayoutReflectionFieldList TypeLayoutReflection::fields() const
+{
+    return TypeLayoutReflectionFieldList(ref(this));
 }
 
 std::string TypeLayoutReflection::to_string() const
@@ -172,7 +188,7 @@ std::string TypeLayoutReflection::to_string() const
             kind(),
             size(),
             stride(),
-            string::indent(string::list_to_string(fields()))
+            string::indent(string::iterable_to_string(fields()))
         );
         break;
     case TypeReflection::Kind::resource:
@@ -226,6 +242,11 @@ std::string TypeLayoutReflection::to_string() const
     }
 }
 
+FunctionReflectionParameterList FunctionReflection::parameters() const
+{
+    return FunctionReflectionParameterList(ref(this));
+}
+
 std::string VariableLayoutReflection::to_string() const
 {
     return fmt::format(
@@ -236,6 +257,11 @@ std::string VariableLayoutReflection::to_string() const
         c_str_to_string(name()),
         string::indent(type_layout()->to_string())
     );
+}
+
+EntryPointLayoutParameterList EntryPointLayout::parameters() const
+{
+    return EntryPointLayoutParameterList(ref(this));
 }
 
 std::string EntryPointLayout::to_string() const
@@ -252,8 +278,18 @@ std::string EntryPointLayout::to_string() const
         c_str_to_string(name_override()),
         stage(),
         compute_thread_group_size(),
-        string::indent(string::list_to_string(parameters()))
+        string::indent(string::iterable_to_string(parameters()))
     );
+}
+
+ProgramLayoutParameterList ProgramLayout::parameters() const
+{
+    return ProgramLayoutParameterList(ref(this));
+}
+
+ProgramLayoutEntryPointList ProgramLayout::entry_points() const
+{
+    return ProgramLayoutEntryPointList(ref(this));
 }
 
 std::string ProgramLayout::to_string() const
@@ -265,8 +301,8 @@ std::string ProgramLayout::to_string() const
         "  entry_points = {}\n"
         ")",
         string::indent(globals_type_layout()->to_string()),
-        string::indent(string::list_to_string(parameters())),
-        string::indent(string::list_to_string(entry_points()))
+        string::indent(string::iterable_to_string(parameters())),
+        string::indent(string::iterable_to_string(entry_points()))
     );
 }
 
