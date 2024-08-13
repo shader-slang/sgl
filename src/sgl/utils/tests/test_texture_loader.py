@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import pytest
+import sgl
 from sgl import TextureLoader, Bitmap, Format, Struct, ResourceState
 import sys
 import numpy as np
@@ -107,6 +108,36 @@ COMPONENT_TYPE_TO_DTYPE = {
     ComponentType.float64: np.float64,
 }
 
+TEST_IMAGE_DIR = sgl.platform.project_directory() / "data" / "test_images"
+TEST_DDS_DIR = TEST_IMAGE_DIR / "dds"
+
+TEST_BITMAP_FILES = [
+    "albert.jpg",
+    "monalisa.jpg",
+]
+
+TEST_DDS_FILES = [
+    "bc1-unorm.dds",
+    "bc1-unorm-srgb.dds",
+    "bc2-unorm.dds",
+    "bc2-unorm-srgb.dds",
+    "bc2-unorm-srgb-tiny.dds",
+    "bc3-unorm.dds",
+    "bc3-unorm-alpha.dds",
+    "bc3-unorm-alpha-tiny.dds",
+    "bc3-unorm-srgb.dds",
+    "bc3-unorm-srgb-odd.dds",
+    "bc3-unorm-srgb-tiny.dds",
+    "bc4-unorm.dds",
+    "bc5-unorm.dds",
+    "bc5-unorm-tiny.dds",
+    "bc6h-uf16.dds",
+    "bc7-unorm.dds",
+    "bc7-unorm-odd.dds",
+    "bc7-unorm-srgb.dds",
+    "bc7-unorm-tiny.dds",
+]
+
 
 def create_test_array(width, height, channels, dtype, type_range):
     img = np.zeros((height, width, channels), dtype)
@@ -123,7 +154,7 @@ def create_test_array(width, height, channels, dtype, type_range):
 
 @pytest.mark.parametrize("format", FORMATS)
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_load_texture_formats(device_type, format):
+def test_load_texture_from_bitmap(device_type, format):
     device = helpers.get_device(type=device_type)
 
     # Check if format is supported
@@ -180,6 +211,48 @@ def test_load_texture_formats(device_type, format):
     data = texture.to_numpy()
     assert data.shape == image.shape
     assert np.allclose(data, image, atol=1e-6)
+
+
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+@pytest.mark.parametrize("filename", TEST_BITMAP_FILES)
+def test_load_texture_from_bitmap_file(device_type, filename):
+    device = helpers.get_device(type=device_type)
+
+    path = TEST_IMAGE_DIR / filename
+
+    loader = TextureLoader(device)
+    texture = loader.load_texture(path)
+
+    bitmap = texture.to_bitmap()
+    bitmap_ref = Bitmap(path).convert(pixel_format=Bitmap.PixelFormat.rgba)
+
+    assert np.all(np.array(bitmap, copy=False) == np.array(bitmap_ref, copy=False))
+
+
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+@pytest.mark.parametrize("filename", TEST_DDS_FILES)
+def test_load_texture_from_dds_file(device_type, filename):
+    device: sgl.Device = helpers.get_device(type=device_type)
+
+    path = TEST_DDS_DIR / filename
+
+    loader = TextureLoader(device)
+    texture = loader.load_texture(path)
+
+    data = {}
+    for subresource in range(texture.subresource_count):
+        mip_level = texture.get_subresource_mip_level(subresource)
+        array_slice = texture.get_subresource_array_slice(subresource)
+        subresource_data = texture.to_numpy(mip_level, array_slice)
+        data[f"subresource_{subresource}"] = subresource_data
+
+    # Uncomment this to dump reference data.
+    # np.savez_compressed(path.with_name(path.stem + "-ref.npz"), **data)
+
+    ref_data = np.load(path.with_name(path.stem + "-ref.npz"))
+    for subresource in range(texture.subresource_count):
+        key = f"subresource_{subresource}"
+        assert np.all(data[key] == ref_data[key])
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
