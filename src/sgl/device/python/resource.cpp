@@ -122,7 +122,7 @@ inline nb::ndarray<nb::numpy> texture_to_numpy(Texture* self, uint32_t mip_level
     SGL_CHECK_LT(array_slice, self->array_size());
 
     uint3 dimensions = self->get_mip_dimensions(mip_level);
-    uint32_t subresource = self->get_subresource_index(array_slice, mip_level);
+    uint32_t subresource = self->get_subresource_index(mip_level, array_slice);
     OwnedSubresourceData subresource_data = self->get_subresource_data(subresource);
 
     size_t size = subresource_data.size;
@@ -156,7 +156,7 @@ inline void texture_from_numpy(Texture* self, nb::ndarray<nb::numpy> data, uint3
     SGL_CHECK_LT(array_slice, self->array_size());
 
     uint3 dimensions = self->get_mip_dimensions(mip_level);
-    uint32_t subresource = self->get_subresource_index(array_slice, mip_level);
+    uint32_t subresource = self->get_subresource_index(mip_level, array_slice);
     SubresourceLayout subresource_layout = self->get_subresource_layout(subresource);
     SubresourceData subresource_data{
         .data = data.data(),
@@ -211,7 +211,9 @@ SGL_PY_EXPORT(device_resource)
 
     nb::sgl_enum<MemoryType>(m, "MemoryType");
 
-    nb::class_<Resource, DeviceResource>(m, "Resource", D(Resource));
+    nb::class_<Resource, DeviceResource>(m, "Resource", D(Resource))
+        .def_prop_ro("type", &Resource::type, D(Resource, type))
+        .def_prop_ro("format", &Resource::format, D(Resource, format));
 
     nb::sgl_enum<ResourceViewType>(m, "ResourceViewType");
 
@@ -235,7 +237,6 @@ SGL_PY_EXPORT(device_resource)
         .def_prop_ro("desc", &Buffer::desc, D(Buffer, desc))
         .def_prop_ro("size", &Buffer::size, D(Buffer, size))
         .def_prop_ro("struct_size", &Buffer::struct_size, D(Buffer, struct_size))
-        .def_prop_ro("format", &Buffer::format, D(Buffer, format))
         .def_prop_ro("device_address", &Buffer::device_address, D(Buffer, device_address))
         .def(
             "get_srv",
@@ -298,7 +299,6 @@ SGL_PY_EXPORT(device_resource)
 
     nb::class_<Texture, Resource>(m, "Texture", D(Texture))
         .def_prop_ro("desc", &Texture::desc, D(Texture, desc))
-        .def_prop_ro("format", &Texture::format, D(Texture, format))
         .def_prop_ro("width", &Texture::width, D(Texture, width))
         .def_prop_ro("height", &Texture::height, D(Texture, height))
         .def_prop_ro("depth", &Texture::depth, D(Texture, depth))
@@ -308,8 +308,8 @@ SGL_PY_EXPORT(device_resource)
         .def(
             "get_subresource_index",
             &Texture::get_subresource_index,
-            "array_slice"_a,
-            "mip_level"_a = 0,
+            "mip_level"_a,
+            "array_slice"_a = 0,
             D(Texture, get_subresource_index)
         )
         .def(

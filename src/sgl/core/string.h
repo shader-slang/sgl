@@ -148,6 +148,26 @@ inline std::string list_to_string(const std::vector<T>& list, std::string_view i
     return list_to_string(std::span{list}, indentation);
 }
 
+template<typename T>
+concept iterable_has_to_string = requires(typename T::iterator t) {
+    {
+        (*t)->to_string()
+    } -> std::convertible_to<std::string>;
+};
+
+template<iterable_has_to_string T>
+inline std::string iterable_to_string(const T& iterable)
+{
+    std::string result = "[\n";
+    for (const auto& item : iterable) {
+        result += "  ";
+        result += string::indent(item->to_string());
+        result += ",\n";
+    }
+    result += "]";
+    return result;
+}
+
 /**
  * Remove leading whitespace.
  * \param str Input string.

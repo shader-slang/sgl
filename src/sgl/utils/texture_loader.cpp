@@ -5,9 +5,12 @@
 #include "sgl/device/device.h"
 #include "sgl/device/command.h"
 #include "sgl/device/blit.h"
+#include "sgl/device/native_formats.h"
 
 #include "sgl/core/error.h"
 #include "sgl/core/bitmap.h"
+#include "sgl/core/dds_file.h"
+#include "sgl/core/file_stream.h"
 #include "sgl/core/timer.h"
 #include "sgl/core/thread.h"
 
@@ -16,6 +19,14 @@
 namespace sgl {
 
 static constexpr size_t BATCH_SIZE = 32;
+
+/// Holds a source image to be uploaded to a texture.
+/// Data can either be a bitmap or a DDS file.
+struct SourceImage {
+    ref<Bitmap> bitmap;
+    ref<DDSFile> dds_file;
+    Format format{Format::unknown};
+};
 
 /**
  * \brief Determine the texture format given a bitmap.
@@ -138,77 +149,123 @@ inline std::pair<Format, bool> determine_texture_format(const Bitmap* bitmap, co
     return {it->second, convert_to_rgba};
 }
 
-inline ref<Bitmap> load_bitmap(const std::filesystem::path& path)
+inline ResourceType get_resource_type(DDSFile::TextureType type)
 {
-    return ref(new Bitmap(path));
+    switch (type) {
+    case DDSFile::TextureType::texture_1d:
+        return ResourceType::texture_1d;
+    case DDSFile::TextureType::texture_2d:
+        return ResourceType::texture_2d;
+    case DDSFile::TextureType::texture_3d:
+        return ResourceType::texture_3d;
+    case DDSFile::TextureType::texture_cube:
+        return ResourceType::texture_cube;
+    default:
+        SGL_THROW("Invalid DDS texture type {}", type);
+    }
 }
 
-inline std::pair<ref<Bitmap>, Format> convert_bitmap(ref<Bitmap> bitmap, const TextureLoader::Options& options)
+inline SourceImage convert_bitmap(ref<Bitmap> bitmap, const TextureLoader::Options& options)
 {
     auto [format, convert_to_rgba] = determine_texture_format(bitmap, options);
-    if (convert_to_rgba)
-        bitmap = bitmap->convert(Bitmap::PixelFormat::rgba, bitmap->component_type(), bitmap->srgb_gamma());
-    return {bitmap, format};
+    return SourceImage{
+        .bitmap = convert_to_rgba
+            ? bitmap->convert(Bitmap::PixelFormat::rgba, bitmap->component_type(), bitmap->srgb_gamma())
+            : bitmap,
+        .format = format,
+    };
 }
 
-inline std::pair<ref<Bitmap>, Format>
-load_and_convert_bitmap(const std::filesystem::path& path, const TextureLoader::Options& options)
+inline SourceImage load_source_image(const std::filesystem::path& path)
 {
-    ref<Bitmap> bitmap = load_bitmap(path);
-    auto [converted_bitmap, format] = convert_bitmap(bitmap, options);
-    bitmap = converted_bitmap;
-    return {bitmap, format};
+    SourceImage source_image;
+    FileStream stream(path, FileStream::Mode::read);
+    if (DDSFile::detect_dds_file(&stream)) {
+        source_image.dds_file = ref(new DDSFile(&stream));
+        source_image.format = get_format(DXGI_FORMAT(source_image.dds_file->dxgi_format()));
+    } else if (Bitmap::detect_file_format(&stream) != Bitmap::FileFormat::unknown) {
+        source_image.bitmap = ref(new Bitmap(&stream));
+    }
+    return source_image;
+}
+
+inline SourceImage
+load_and_convert_source_image(const std::filesystem::path& path, const TextureLoader::Options& options)
+{
+    SourceImage source_image = load_source_image(path);
+    if (source_image.bitmap) {
+        source_image = convert_bitmap(source_image.bitmap, options);
+    }
+    return source_image;
 }
 
 inline ref<Texture> create_texture(
     Device* device,
     Blitter* blitter,
     CommandBuffer* command_buffer,
-    const Bitmap* bitmap,
-    Format format,
+    SourceImage source_image,
     const TextureLoader::Options& options
 )
 {
-    bool allocate_mips = options.allocate_mips || options.generate_mips;
+    if (source_image.bitmap) {
+        const Bitmap* bitmap = source_image.bitmap;
+        bool allocate_mips = options.allocate_mips || options.generate_mips;
 
-    ResourceUsage usage = options.usage;
-    if (options.generate_mips)
-        usage |= ResourceUsage::render_target;
+        ResourceUsage usage = options.usage;
+        if (options.generate_mips)
+            usage |= ResourceUsage::render_target;
 
-    ref<Texture> texture = device->create_texture({
-        .format = format,
-        .width = bitmap->width(),
-        .height = bitmap->height(),
-        .mip_count = allocate_mips ? 0u : 1u,
-        .usage = usage,
-    });
+        ref<Texture> texture = device->create_texture({
+            .format = source_image.format,
+            .width = bitmap->width(),
+            .height = bitmap->height(),
+            .mip_count = allocate_mips ? 0u : 1u,
+            .usage = usage,
+        });
 
-    SubresourceData subresource_data{
-        .data = bitmap->data(),
-        .row_pitch = bitmap->width() * bitmap->bytes_per_pixel(),
-    };
+        SubresourceData subresource_data{
+            .data = bitmap->data(),
+            .row_pitch = bitmap->width() * bitmap->bytes_per_pixel(),
+        };
 
-    command_buffer->upload_texture_data(texture, 0, subresource_data);
-    if (options.generate_mips) {
-        blitter->generate_mips(command_buffer, texture);
-        texture->invalidate_views();
+        command_buffer->upload_texture_data(texture, 0, subresource_data);
+        if (options.generate_mips) {
+            blitter->generate_mips(command_buffer, texture);
+            texture->invalidate_views();
+        }
+
+        return texture;
+    } else if (source_image.dds_file) {
+        const DDSFile* dds_file = source_image.dds_file;
+        return device->create_texture({
+            .type = get_resource_type(dds_file->type()),
+            .format = source_image.format,
+            .width = dds_file->width(),
+            .height = dds_file->height(),
+            .depth = dds_file->depth(),
+            .array_size = dds_file->array_size(),
+            .mip_count = dds_file->mip_count(),
+            .usage = options.usage,
+            .data = dds_file->resource_data(),
+            .data_size = dds_file->resource_size(),
+        });
+    } else {
+        SGL_THROW("Unsupported source image type");
     }
-
-    return texture;
 }
+
 
 inline std::vector<ref<Texture>> create_textures(
     Device* device,
     Blitter* blitter,
-    std::span<std::future<std::pair<ref<Bitmap>, Format>>> bitmap_and_formats,
+    std::span<std::future<SourceImage>> source_images,
     const TextureLoader::Options& options
 )
 {
-    std::vector<ref<Texture>> textures(bitmap_and_formats.size());
+    std::vector<ref<Texture>> textures(source_images.size());
     ref<CommandBuffer> command_buffer = device->create_command_buffer();
-    for (size_t i = 0; i < bitmap_and_formats.size(); ++i) {
-        auto [bitmap, format] = bitmap_and_formats[i].get();
-        textures[i] = create_texture(device, blitter, command_buffer, bitmap, format, options);
+    for (size_t i = 0; i < source_images.size(); ++i) {
+        textures[i] = create_texture(device, blitter, command_buffer, source_images[i].get(), options);
         if (i && (i % BATCH_SIZE == 0)) {
             command_buffer->submit();
             device->run_garbage_collection();
@@ -223,11 +280,11 @@ inline std::vector<ref<Texture>> create_textures(
 inline ref<Texture> create_texture_array(
     Device* device,
     Blitter* blitter,
-    std::span<std::future<std::pair<ref<Bitmap>, Format>>> bitmap_and_formats,
+    std::span<std::future<SourceImage>> source_images,
     const TextureLoader::Options& options
 )
 {
-    SGL_ASSERT(bitmap_and_formats.size() > 0);
+    SGL_ASSERT(source_images.size() > 0);
 
     bool allocate_mips = options.allocate_mips || options.generate_mips;
 
@@ -242,23 +299,27 @@ inline ref<Texture> create_texture_array(
 
     ref<CommandBuffer> command_buffer = device->create_command_buffer();
 
-    for (size_t i = 0; i < bitmap_and_formats.size(); ++i) {
-        auto [bitmap, format] = bitmap_and_formats[i].get();
+    for (size_t i = 0; i < source_images.size(); ++i) {
+        SourceImage source_image = source_images[i].get();
+        const Bitmap* bitmap = source_image.bitmap;
+        if (!bitmap)
+            SGL_THROW("Texture array requires all source images to be bitmaps");
 
         if (i == 0) {
             texture = device->create_texture({
-                .format = format,
+                .format = source_image.format,
                 .width = bitmap->width(),
                 .height = bitmap->height(),
-                .array_size = narrow_cast<uint32_t>(bitmap_and_formats.size()),
+                .array_size = narrow_cast<uint32_t>(source_images.size()),
                 .mip_count = allocate_mips ? 0u : 1u,
                 .usage = usage,
             });
             first_width = bitmap->width();
             first_height = bitmap->height();
-            first_format = format;
+            first_format = source_image.format;
         } else {
-            if (bitmap->width() != first_width || bitmap->height() != first_height || format != first_format)
+            if (bitmap->width() != first_width || bitmap->height() != first_height
+                || source_image.format != first_format)
                 SGL_THROW("Texture array requires all bitmaps to have the same dimensions and format");
         }
 
@@ -300,16 +361,21 @@ TextureLoader::~TextureLoader() = default;
 ref<Texture> TextureLoader::load_texture(const Bitmap* bitmap, std::optional<Options> options_)
 {
     Options options = options_.value_or(Options{});
-    auto [converted_bitmap, format] = convert_bitmap(ref(const_cast<Bitmap*>(bitmap)), options);
+    SourceImage source_image = convert_bitmap(ref(const_cast<Bitmap*>(bitmap)), options);
     ref<CommandBuffer> command_buffer = m_device->create_command_buffer();
-    ref<Texture> texture = create_texture(m_device, m_blitter, command_buffer, converted_bitmap, format, options);
+    ref<Texture> texture = create_texture(m_device, m_blitter, command_buffer, source_image, options);
     command_buffer->submit();
     return texture;
 }
 
-ref<Texture> TextureLoader::load_texture(const std::filesystem::path& path, std::optional<Options> options)
+ref<Texture> TextureLoader::load_texture(const std::filesystem::path& path, std::optional<Options> options_)
 {
-    return load_texture(ref(new Bitmap(path)), options);
+    Options options = options_.value_or(Options{});
+    SourceImage source_image = load_and_convert_source_image(path, options);
+    ref<CommandBuffer> command_buffer = m_device->create_command_buffer();
+    ref<Texture> texture = create_texture(m_device, m_blitter, command_buffer, source_image, options);
+    command_buffer->submit();
+    return texture;
 }
 
 std::vector<ref<Texture>>
@@ -318,12 +384,12 @@ TextureLoader::load_textures(std::span<const Bitmap*> bitmaps, std::optional<Opt
     Options options = options_.value_or(Options{});
 
     // Convert bitmaps in parallel.
-    std::vector<std::future<std::pair<ref<Bitmap>, Format>>> bitmap_and_formats;
-    bitmap_and_formats.reserve(bitmaps.size());
+    std::vector<std::future<SourceImage>> source_images;
+    source_images.reserve(bitmaps.size());
     for (const auto& bitmap : bitmaps)
-        bitmap_and_formats.push_back(thread::do_async(convert_bitmap, ref(const_cast<Bitmap*>(bitmap)), options));
+        source_images.push_back(thread::do_async(convert_bitmap, ref(const_cast<Bitmap*>(bitmap)), options));
 
-    return create_textures(m_device, m_blitter, bitmap_and_formats, options);
+    return create_textures(m_device, m_blitter, source_images, options);
 }
 
 std::vector<ref<Texture>>
@@ -331,13 +397,13 @@ TextureLoader::load_textures(std::span<std::filesystem::path> paths, std::option
 {
     Options options = options_.value_or(Options{});
 
-    // Load & convert bitmaps in parallel.
-    std::vector<std::future<std::pair<ref<Bitmap>, Format>>> bitmap_and_formats;
-    bitmap_and_formats.reserve(paths.size());
+    // Load & convert source images in parallel.
+    std::vector<std::future<SourceImage>> source_images;
+    source_images.reserve(paths.size());
     for (const auto& path : paths)
-        bitmap_and_formats.push_back(thread::do_async(load_and_convert_bitmap, path, options));
+        source_images.push_back(thread::do_async(load_and_convert_source_image, path, options));
 
-    return create_textures(m_device, m_blitter, bitmap_and_formats, options);
+    return create_textures(m_device, m_blitter, source_images, options);
 }
 
 ref<Texture> TextureLoader::load_texture_array(std::span<const Bitmap*> bitmaps, std::optional<Options> options_)
@@ -348,12 +414,12 @@ ref<Texture> TextureLoader::load_texture_array(std::span<const Bitmap*> bitmaps,
     Options options = options_.value_or(Options{});
 
     // Convert bitmaps in parallel.
-    std::vector<std::future<std::pair<ref<Bitmap>, Format>>> bitmap_and_formats;
-    bitmap_and_formats.reserve(bitmaps.size());
+    std::vector<std::future<SourceImage>> source_images;
+    source_images.reserve(bitmaps.size());
     for (const auto& bitmap : bitmaps)
-        bitmap_and_formats.push_back(thread::do_async(convert_bitmap, ref(const_cast<Bitmap*>(bitmap)), options));
+        source_images.push_back(thread::do_async(convert_bitmap, ref(const_cast<Bitmap*>(bitmap)), options));
 
-    return create_texture_array(m_device, m_blitter, bitmap_and_formats, options);
+    return create_texture_array(m_device, m_blitter, source_images, options);
 }
 
 ref<Texture> TextureLoader::load_texture_array(std::span<std::filesystem::path> paths, std::optional<Options> options_)
@@ -363,13 +429,13 @@ ref<Texture> TextureLoader::load_texture_array(std::span<std::filesystem::path> 
 
     Options options = options_.value_or(Options{});
 
-    // Load & convert bitmaps in parallel.
-    std::vector<std::future<std::pair<ref<Bitmap>, Format>>> bitmap_and_formats;
-    bitmap_and_formats.reserve(paths.size());
+    // Load & convert source images in parallel.
+    std::vector<std::future<SourceImage>> source_images;
+    source_images.reserve(paths.size());
     for (const auto& path : paths)
-        bitmap_and_formats.push_back(thread::do_async(load_and_convert_bitmap, path, options));
+        source_images.push_back(thread::do_async(load_and_convert_source_image, path, options));
 
-    return create_texture_array(m_device, m_blitter, bitmap_and_formats, options);
+    return create_texture_array(m_device, m_blitter, source_images, options);
 }
 
 } // namespace sgl

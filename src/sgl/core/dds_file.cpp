@@ -697,6 +697,15 @@ std::string DDSFile::to_string() const
     );
 }
 
+bool DDSFile::detect_dds_file(Stream* stream)
+{
+    size_t pos = stream->tell();
+    uint32_t magic;
+    stream->read(&magic, sizeof(magic));
+    stream->seek(pos);
+    return magic == DDS_MAGIC;
+}
+
 bool DDSFile::decode_header(const uint8_t* data, size_t size)
 {
     // First 4 bytes are the magic DDS number
