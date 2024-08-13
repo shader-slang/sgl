@@ -62,123 +62,128 @@ int main(int argc, const char* argv[])
 
     sgl::static_init();
 
-    ref<Bitmap> input;
+    {
+        ref<Bitmap> input;
 
-    try {
-        input = make_ref<Bitmap>(input_path)->convert(Bitmap::PixelFormat::rgba, Bitmap::ComponentType::float32, false);
-    } catch (const std::exception& e) {
-        fmt::println("Failed to load input image from {}:\n{}", input_path, e.what());
-        return 1;
-    }
+        try {
+            input = make_ref<Bitmap>(input_path)
+                        ->convert(Bitmap::PixelFormat::rgba, Bitmap::ComponentType::float32, false);
+        } catch (const std::exception& e) {
+            fmt::println("Failed to load input image from {}:\n{}", input_path, e.what());
+            return 1;
+        }
 
-    uint32_t w = input->width();
-    uint32_t h = input->height();
+        uint32_t w = input->width();
+        uint32_t h = input->height();
 
-    ref<Device> device = Device::create({
-        .enable_debug_layers = verbose,
-        .compiler_options = {.include_paths = {EXAMPLE_DIR}},
-    });
+        ref<Device> device = Device::create({
+            .enable_debug_layers = verbose,
+            .compiler_options = {.include_paths = {EXAMPLE_DIR}},
+        });
 
-    // Create input texture
-    ref<Texture> input_tex = device->create_texture({
-        .format = Format::rgba32_float,
-        .width = w,
-        .height = h,
-        .mip_count = 1,
-        .usage = ResourceUsage::shader_resource,
-        .data = input->data(),
-        .data_size = input->buffer_size(),
-    });
+        // Create input texture
+        ref<Texture> input_tex = device->create_texture({
+            .format = Format::rgba32_float,
+            .width = w,
+            .height = h,
+            .mip_count = 1,
+            .usage = ResourceUsage::shader_resource,
+            .data = input->data(),
+            .data_size = input->buffer_size(),
+        });
 
-    // Show input texture in tev
-    if (tev)
-        tev::show_async(input_tex, "tinybc-input");
+        // Show input texture in tev
+        if (tev)
+            tev::show_async(input_tex, "tinybc-input");
 
-    // Create decoded texture
-    ref<Texture> decoded_tex = device->create_texture({
-        .format = Format::rgba32_float,
-        .width = w,
-        .height = h,
-        .mip_count = 1,
-        .usage = ResourceUsage::unordered_access,
-    });
+        // Create decoded texture
+        ref<Texture> decoded_tex = device->create_texture({
+            .format = Format::rgba32_float,
+            .width = w,
+            .height = h,
+            .mip_count = 1,
+            .usage = ResourceUsage::unordered_access,
+        });
 
-    std::string constants = fmt::format(
-        "export static const bool USE_ADAM = true;\n"
-        "export static const uint OPT_STEPS = {};\n",
-        opt_steps
-    );
-    ref<ShaderProgram> program = device->load_program("tinybc.slang", {"main"}, constants);
-    ref<ComputeKernel> encoder = device->create_compute_kernel({.program = program});
-
-    uint32_t num_iters = benchmark ? 1000 : 1;
-
-    Timer t;
-
-    // Setup query pool to measure GPU time
-    ref<QueryPool> queries = device->create_query_pool({.type = QueryType::timestamp, .count = num_iters * 2});
-
-    // Compress!
-    ref<CommandBuffer> command_buffer = device->create_command_buffer();
-    for (uint32_t i = 0; i < num_iters; ++i) {
-        command_buffer->write_timestamp(queries, i * 2);
-        encoder->dispatch(
-            uint3(w, h, 1),
-            [&](ShaderCursor cursor)
-            {
-                cursor["input_tex"] = input_tex;
-                cursor["decoded_tex"] = decoded_tex;
-                cursor["lr"] = 0.1f;
-                cursor["adam_beta_1"] = 0.9f;
-                cursor["adam_beta_2"] = 0.999f;
-            },
-            command_buffer
+        std::string constants = fmt::format(
+            "export static const bool USE_ADAM = true;\n"
+            "export static const uint OPT_STEPS = {};\n",
+            opt_steps
         );
-        command_buffer->write_timestamp(queries, i * 2 + 1);
-    }
-    command_buffer->submit();
+        ref<ShaderProgram> program = device->load_program("tinybc.slang", {"main"}, constants);
+        ref<ComputeKernel> encoder = device->create_compute_kernel({.program = program});
 
-    device->wait();
+        uint32_t num_iters = benchmark ? 1000 : 1;
 
-    double total_cpu_time_sec = t.elapsed_s();
+        Timer t;
 
-    std::vector<double> times = queries->get_timestamp_results(0, num_iters * 2);
-    double comp_time_sec = 0.0;
-    for (uint32_t i = 0; i < num_iters; ++i)
-        comp_time_sec += (times[i * 2 + 1] - times[i * 2]);
-    comp_time_sec /= num_iters;
+        // Setup query pool to measure GPU time
+        ref<QueryPool> queries = device->create_query_pool({.type = QueryType::timestamp, .count = num_iters * 2});
 
-    // Calculate and print performance metrics
-    if (benchmark) {
-        double textures_per_sec = 1.0 / comp_time_sec;
-        double giga_texels_per_sec = w * h * textures_per_sec / 1e9;
-        fmt::println("Benchmark:");
-        fmt::println("- Number of optimization steps: {}", opt_steps);
-        fmt::println("- Compression time: {:.4g} ms", comp_time_sec * 1e3);
-        fmt::println("- Compression throughput: {:.4g} GTexels/s", giga_texels_per_sec);
-        fmt::println("- Total CPU time: {:.4g} s", total_cpu_time_sec);
-    }
+        // Compress!
+        ref<CommandBuffer> command_buffer = device->create_command_buffer();
+        for (uint32_t i = 0; i < num_iters; ++i) {
+            command_buffer->write_timestamp(queries, i * 2);
+            encoder->dispatch(
+                uint3(w, h, 1),
+                [&](ShaderCursor cursor)
+                {
+                    cursor["input_tex"] = input_tex;
+                    cursor["decoded_tex"] = decoded_tex;
+                    cursor["lr"] = 0.1f;
+                    cursor["adam_beta_1"] = 0.9f;
+                    cursor["adam_beta_2"] = 0.999f;
+                },
+                command_buffer
+            );
+            command_buffer->write_timestamp(queries, i * 2 + 1);
+        }
+        command_buffer->submit();
 
-    // Calculate and print PSNR
-    ref<Bitmap> decoded = decoded_tex->to_bitmap();
-    double mse = 0.0;
-    const float* input_data = input->data_as<float>();
-    const float* decoded_data = decoded->data_as<float>();
-    for (uint32_t i = 0; i < w * h * 4; ++i)
-        mse += (input_data[i] - decoded_data[i]) * (input_data[i] - decoded_data[i]);
-    mse /= w * h * 4;
-    double psnr = 20.0 * std::log10(1.0 / std::sqrt(mse));
-    fmt::println("PSNR: {:.4g}", psnr);
+        device->wait();
 
-    // Show decoded texture in tev
-    if (tev)
-        tev::show_async(decoded_tex, "tinybc-decoded");
+        double total_cpu_time_sec = t.elapsed_s();
 
-    // Output decoded texture
-    if (output_path) {
-        decoded_tex->to_bitmap()
-            ->convert(Bitmap::PixelFormat::rgb, Bitmap::ComponentType::uint8, true)
-            ->write_async(*output_path);
+        std::vector<double> times = queries->get_timestamp_results(0, num_iters * 2);
+        double comp_time_sec = 0.0;
+        for (uint32_t i = 0; i < num_iters; ++i)
+            comp_time_sec += (times[i * 2 + 1] - times[i * 2]);
+        comp_time_sec /= num_iters;
+
+        // Calculate and print performance metrics
+        if (benchmark) {
+            double textures_per_sec = 1.0 / comp_time_sec;
+            double giga_texels_per_sec = w * h * textures_per_sec / 1e9;
+            fmt::println("Benchmark:");
+            fmt::println("- Number of optimization steps: {}", opt_steps);
+            fmt::println("- Compression time: {:.4g} ms", comp_time_sec * 1e3);
+            fmt::println("- Compression throughput: {:.4g} GTexels/s", giga_texels_per_sec);
+            fmt::println("- Total CPU time: {:.4g} s", total_cpu_time_sec);
+        }
+
+        // Calculate and print PSNR
+        ref<Bitmap> decoded = decoded_tex->to_bitmap();
+        double mse = 0.0;
+        const float* input_data = input->data_as<float>();
+        const float* decoded_data = decoded->data_as<float>();
+        for (uint32_t i = 0; i < w * h * 4; ++i)
+            mse += (input_data[i] - decoded_data[i]) * (input_data[i] - decoded_data[i]);
+        mse /= w * h * 4;
+        double psnr = 20.0 * std::log10(1.0 / std::sqrt(mse));
+        fmt::println("PSNR: {:.4g}", psnr);
+
+        // Show decoded texture in tev
+        if (tev)
+            tev::show_async(decoded_tex, "tinybc-decoded");
+
+        // Output decoded texture
+        if (output_path) {
+            decoded_tex->to_bitmap()
+                ->convert(Bitmap::PixelFormat::rgb, Bitmap::ComponentType::uint8, true)
+                ->write_async(*output_path);
+        }
+
+        device->close();
     }
 
     sgl::static_shutdown();

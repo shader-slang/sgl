@@ -187,6 +187,8 @@ int main()
         );
 
         tev::show(render_texture, "raytracing");
+
+        device->close();
     }
 
     sgl::static_shutdown();

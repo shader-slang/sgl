@@ -879,7 +879,7 @@ struct App {
             frame++;
         }
 
-        device->wait();
+        device->close();
     }
 };
 

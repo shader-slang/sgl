@@ -208,6 +208,8 @@ int main()
         }
 
         tev::show(render_texture, "raytracing_pipeline");
+
+        device->close();
     }
 
     sgl::static_shutdown();

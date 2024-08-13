@@ -96,6 +96,8 @@ int main()
         command_buffer->submit();
 
         tev::show(render_texture, "graphics_pipeline");
+
+        device->close();
     }
 
     sgl::static_shutdown();

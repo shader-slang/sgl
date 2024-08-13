@@ -110,6 +110,8 @@ int main()
             std::vector<uint32_t> data_c = buffer_c->get_elements<uint>();
             log_info("{}", data_c);
         }
+
+        device->close();
     }
 
     sgl::static_shutdown();
