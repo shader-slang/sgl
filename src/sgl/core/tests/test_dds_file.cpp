@@ -3,6 +3,7 @@
 #include "testing.h"
 #include "sgl/core/dds_file.h"
 #include "sgl/core/platform.h"
+#include "sgl/core/memory_stream.h"
 #include "sgl/device/native_formats.h"
 
 using namespace sgl;
@@ -406,6 +407,17 @@ TEST_CASE("formats")
         CHECK_EQ(file.compressed(), item.compressed);
         CHECK_EQ(file.srgb(), item.srgb);
     }
+}
+
+TEST_CASE("detect_dds_file")
+{
+    const uint32_t VALID_MAGIC = 0x20534444;
+    MemoryStream valid_stream(&VALID_MAGIC, sizeof(VALID_MAGIC));
+    CHECK(DDSFile::detect_dds_file(&valid_stream));
+
+    const uint32_t INVALID_MAGIC = 0xffffffff;
+    MemoryStream invalid_stream(&INVALID_MAGIC, sizeof(INVALID_MAGIC));
+    CHECK_FALSE(DDSFile::detect_dds_file(&invalid_stream));
 }
 
 TEST_SUITE_END();

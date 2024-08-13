@@ -144,6 +144,7 @@ ref<ShaderProgram> Blitter::get_program(ProgramKey key)
     source += m_device->slang_session()->load_source("sgl/device/blit.slang");
 
     ref<SlangModule> module = m_device->slang_session()->load_module_from_source("blit", source);
+    module->break_strong_reference_to_session();
     ref<ShaderProgram> program = m_device->slang_session()->link_program(
         {module},
         {
@@ -151,6 +152,7 @@ ref<ShaderProgram> Blitter::get_program(ProgramKey key)
             module->entry_point("fs_main"),
         }
     );
+    program->break_strong_reference_to_device();
 
     m_program_cache[key] = program;
     return program;
@@ -163,7 +165,6 @@ ref<GraphicsPipeline> Blitter::get_pipeline(ProgramKey key, const Framebuffer* f
         return it->second;
 
     ref<ShaderProgram> program = get_program(key);
-    program->break_strong_reference_to_device();
 
     ref<GraphicsPipeline> pipeline = m_device->create_graphics_pipeline({
         .program = program,
