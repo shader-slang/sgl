@@ -149,6 +149,13 @@ inline std::string list_to_string(const std::vector<T>& list, std::string_view i
 }
 
 template<typename T>
+concept iterable_has_to_string = requires(typename T::iterator t) {
+    {
+        (*t)->to_string()
+    } -> std::convertible_to<std::string>;
+};
+
+template<iterable_has_to_string T>
 inline std::string iterable_to_string(const T& iterable)
 {
     std::string result = "[\n";

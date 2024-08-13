@@ -78,6 +78,8 @@ class BaseReflectionList {
 public:
     class Iterator {
     public:
+        using value_type = ref<const ChildType>;
+
         explicit Iterator(const BaseReflectionList* list, uint32_t index)
             : m_list(list)
             , m_index(index)
@@ -104,6 +106,9 @@ public:
         const BaseReflectionList* m_list;
         uint32_t m_index;
     };
+
+    /// Iterator type def for STL
+    using iterator = BaseReflectionList<ParentType, ChildType>::Iterator;
 
     BaseReflectionList(ref<const ParentType> owner)
         : m_owner(std::move(owner))
