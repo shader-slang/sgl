@@ -17,6 +17,11 @@ App::App(AppDesc desc)
     m_device = desc.device ? desc.device : Device::create();
 }
 
+App::~App()
+{
+    m_device->close();
+}
+
 void App::run()
 {
     auto all_windows_should_close = [this]()

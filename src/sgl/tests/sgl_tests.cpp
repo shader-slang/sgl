@@ -2,6 +2,7 @@
 
 #include "testing.h"
 #include "sgl/sgl.h"
+#include "sgl/device/device.h"
 #include "sgl/device/agility_sdk.h"
 #include "sgl/core/object.h"
 #include "sgl/core/logger.h"
@@ -55,6 +56,8 @@ int main(int argc, char** argv)
 
         sgl::testing::static_shutdown();
     }
+
+    sgl::Device::close_all_devices();
 
 #if SGL_ENABLE_OBJECT_TRACKING
     sgl::Logger::get().add_console_output();

@@ -208,6 +208,24 @@ public:
     /// Default slang session.
     SlangSession* slang_session() const { return m_slang_session; }
 
+    /**
+     * \brief Close the device.
+     *
+     * This function should be called before the device is released.
+     * It waits for all pending work to be completed and releases internal
+     * resources, removing all cyclic references that might prevent the device
+     * from being destroyed. After closing the device, no new resources must be
+     * created and no new work must be submitted.
+     *
+     * \note The Python extension will automatically close all open devices
+     * when the interpreter is terminated through an `atexit` handler. If a
+     * device is to be destroyed at runtime, it must be closed explicitly.
+     */
+    void close();
+
+    /// Close all open devices.
+    static void close_all_devices();
+
     // Resource creation
 
     /**
@@ -556,6 +574,8 @@ private:
     DeviceDesc m_desc;
     DeviceInfo m_info;
     ShaderModel m_supported_shader_model{ShaderModel::unknown};
+
+    bool m_closed{false};
 
     bool m_shader_cache_enabled{false};
     std::filesystem::path m_shader_cache_path;

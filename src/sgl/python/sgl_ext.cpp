@@ -142,6 +142,11 @@ NB_MODULE(sgl_ext, m_)
                 // counted objects.
                 nb::gil_scoped_release guard;
                 sgl::thread::wait_for_tasks();
+
+                // Close all devices before shutting down.
+                // This is mostly convenience for the user, as the devices will
+                // be closed automatically when the program exits.
+                sgl::Device::close_all_devices();
             }
         }
     ));

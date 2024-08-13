@@ -194,6 +194,7 @@ SGL_PY_EXPORT(device_device)
     );
 
     device.def_prop_ro("slang_session", &Device::slang_session, D(Device, slang_session));
+    device.def("close", &Device::close, D_NA(Device, close));
     device.def(
         "create_swapchain",
         [](Device* self,

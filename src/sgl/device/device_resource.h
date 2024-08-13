@@ -20,8 +20,6 @@ public:
 
     Device* device() const { return m_device; }
 
-    void break_strong_reference_to_device() { m_device.break_strong_reference(); }
-
     struct MemoryUsage {
         /// The amount of memory in bytes used on the device.
         size_t device{0};
@@ -33,7 +31,7 @@ public:
     virtual MemoryUsage memory_usage() const;
 
 protected:
-    breakable_ref<Device> m_device;
+    ref<Device> m_device;
 };
 
 } // namespace sgl
