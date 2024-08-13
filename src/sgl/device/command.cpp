@@ -965,12 +965,25 @@ void CommandBuffer::copy_texture_to_buffer(
     SGL_CHECK_NOT_NULL(src);
     SGL_CHECK_LT(src_subresource, src->subresource_count());
 
+    const FormatInfo& info = get_format_info(src->format());
+    SGL_CHECK(
+        (src_offset.x % info.block_width == 0) && (src_offset.y % info.block_height == 0),
+        "Source offset must be a multiple of the block size"
+    );
+
     // TODO: set subresource state instead
     set_texture_state(src, ResourceState::copy_source);
     set_buffer_state(dst, ResourceState::copy_destination);
 
-    if (all(extent == uint3(-1)))
+    if (all(extent == uint3(-1))) {
         extent = src->get_mip_dimensions(src->get_subresource_mip_level(src_subresource)) - src_offset;
+    }
+
+    // TODO: in D3D12, the extent must be a multiple of the block size (this should be fixed in gfx instead)
+    if (m_device->type() == DeviceType::d3d12) {
+        extent.x = align_to(info.block_width, extent.x);
+        extent.y = align_to(info.block_height, extent.y);
+    }
 
     gfx::SubresourceRange src_sr = detail::gfx_subresource_range(src, src_subresource);
     get_gfx_resource_command_encoder()->copyTextureToBuffer(
