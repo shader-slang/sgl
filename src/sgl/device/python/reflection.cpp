@@ -10,7 +10,7 @@ NB_MAKE_OPAQUE(std::vector<sgl::ref<sgl::VariableReflection>>)
 namespace sgl {
 
 template<class ListT>
-void build_list_type(nanobind::module_& m, const char* type_name)
+void bind_list_type(nanobind::module_& m, const char* type_name)
 {
     nb::class_<ListT>(m, type_name)
         .def("__len__", [](ListT& self) { return self.size(); })
@@ -18,7 +18,7 @@ void build_list_type(nanobind::module_& m, const char* type_name)
             "__getitem__",
             [](ListT& self, uint32_t index)
             {
-                if (index < 0 || index >= self.size())
+                if (index >= self.size())
                     throw nb::index_error(); // throwing index_error allows this to be used as a python iterator
                 return self[index];
             }
@@ -67,15 +67,15 @@ SGL_PY_EXPORT(device_reflection)
             "__getitem__",
             [](DeclReflection& self, uint32_t index)
             {
-                if (index < 0 || index >= self.child_count())
+                if (index >= self.child_count())
                     throw nb::index_error();
                 return self.child(index);
             }
         )
         .def("__repr__", &DeclReflection::to_string);
 
-    build_list_type<DeclReflectionChildList>(m, "DeclReflectionChildList");
-    build_list_type<DeclReflectionIndexedChildList>(m, "DeclReflectionIndexedChildList");
+    bind_list_type<DeclReflectionChildList>(m, "DeclReflectionChildList");
+    bind_list_type<DeclReflectionIndexedChildList>(m, "DeclReflectionIndexedChildList");
 
     nb::class_<TypeReflection, BaseReflectionObject> type_reflection(m, "TypeReflection");
 
@@ -100,7 +100,7 @@ SGL_PY_EXPORT(device_reflection)
         .def("unwrap_array", &TypeReflection::unwrap_array)
         .def("__repr__", &TypeReflection::to_string);
 
-    build_list_type<TypeReflectionFieldList>(m, "TypeReflectionFieldList");
+    bind_list_type<TypeReflectionFieldList>(m, "TypeReflectionFieldList");
 
     nb::class_<TypeLayoutReflection, BaseReflectionObject>(m, "TypeLayoutReflection")
         .def_prop_ro("kind", &TypeLayoutReflection::kind)
@@ -114,7 +114,7 @@ SGL_PY_EXPORT(device_reflection)
         .def("unwrap_array", &TypeLayoutReflection::unwrap_array)
         .def("__repr__", &TypeLayoutReflection::to_string);
 
-    build_list_type<TypeLayoutReflectionFieldList>(m, "TypeLayoutReflectionFieldList");
+    bind_list_type<TypeLayoutReflectionFieldList>(m, "TypeLayoutReflectionFieldList");
 
     nb::class_<FunctionReflection, BaseReflectionObject>(m, "FunctionReflection")
         .def_prop_ro("name", &FunctionReflection::name)
@@ -124,7 +124,7 @@ SGL_PY_EXPORT(device_reflection)
 
     nb::sgl_enum<ModifierID>(m, "ModifierID");
 
-    build_list_type<FunctionReflectionParameterList>(m, "FunctionReflectionParameterList");
+    bind_list_type<FunctionReflectionParameterList>(m, "FunctionReflectionParameterList");
 
     nb::class_<VariableReflection, BaseReflectionObject>(m, "VariableReflection")
         .def_prop_ro("name", &VariableReflection::name)
@@ -150,7 +150,7 @@ SGL_PY_EXPORT(device_reflection)
         .def_prop_ro("parameters", &EntryPointLayout::parameters, D_NA(EntryPointLayout, parameters))
         .def("__repr__", &EntryPointLayout::to_string);
 
-    build_list_type<EntryPointLayoutParameterList>(m, "EntryPointLayoutParameterList");
+    bind_list_type<EntryPointLayoutParameterList>(m, "EntryPointLayoutParameterList");
 
     nb::class_<ProgramLayout, BaseReflectionObject> program_layout(m, "ProgramLayout", D(ProgramLayout));
 
@@ -170,8 +170,8 @@ SGL_PY_EXPORT(device_reflection)
         .def_prop_ro("hashed_strings", &ProgramLayout::hashed_strings, D(ProgramLayout, hashed_strings))
         .def("__repr__", &ProgramLayout::to_string);
 
-    build_list_type<ProgramLayoutParameterList>(m, "ProgramLayoutParameterList");
-    build_list_type<ProgramLayoutEntryPointList>(m, "ProgramLayoutEntryPointList");
+    bind_list_type<ProgramLayoutParameterList>(m, "ProgramLayoutParameterList");
+    bind_list_type<ProgramLayoutEntryPointList>(m, "ProgramLayoutEntryPointList");
 
     nb::class_<ReflectionCursor>(m, "ReflectionCursor", D(ReflectionCursor))
         .def(nb::init<const ShaderProgram*>(), "shader_program"_a)

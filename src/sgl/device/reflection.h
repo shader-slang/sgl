@@ -75,7 +75,6 @@ SGL_ENUM_REGISTER(ModifierID);
 /// a reference to the parent, and allocates/returns children on demand.
 template<class ParentType, class ChildType>
 class BaseReflectionList {
-
 public:
     class Iterator {
     public:
@@ -125,7 +124,7 @@ public:
     virtual uint32_t size() const = 0;
 
     /// Index operator
-    ref<const ChildType> operator[](uint32_t index) const { return evaluate(index); }
+    virtual ref<const ChildType> operator[](uint32_t index) const { return evaluate(index); }
 
     /// Begin iterator
     Iterator begin() const { return Iterator(this, 0); }
@@ -141,76 +140,35 @@ protected:
 };
 
 /// Base class for read-only lazy evaluation list of search results.
-/// To use it, the search function (eg children_of_kind) fills out the indices of
+/// To use it, the search function (e.g. children_of_kind) fills out the indices of
 /// the children matching the search. The list can then be accessed as usual, and only
 /// allocates/evaluates children as they're requested.
 template<class ParentType, class ChildType>
-class BaseReflectionIndexedList {
+class BaseReflectionIndexedList : public BaseReflectionList<ParentType, ChildType> {
 public:
-    class Iterator {
-    public:
-        explicit Iterator(const BaseReflectionIndexedList* list, uint32_t index)
-            : m_list(list)
-            , m_index(index)
-        {
-        }
-        Iterator& operator++()
-        {
-            if (m_index >= m_list->size())
-                SGL_THROW("Iterator out of range");
-            m_index++;
-            return *this;
-        }
-        Iterator operator++(int)
-        {
-            Iterator retval = *this;
-            ++(*this);
-            return retval;
-        }
-        bool operator==(Iterator other) const { return m_list == other.m_list && m_index == other.m_index; }
-        bool operator!=(Iterator other) const { return !(*this == other); }
-        ref<const ChildType> operator*() const { return (*m_list)[m_index]; }
-
-    private:
-        const BaseReflectionIndexedList* m_list;
-        uint32_t m_index;
-    };
-
     BaseReflectionIndexedList(ref<const ParentType> owner, std::vector<uint32_t> indices)
-        : m_owner(std::move(owner))
+        : BaseReflectionList<ParentType, ChildType>(std::move(owner))
         , m_indices(std::move(indices))
     {
     }
 
     BaseReflectionIndexedList(const BaseReflectionIndexedList& other) noexcept
-        : m_owner(other.m_owner)
+        : BaseReflectionList<ParentType, ChildType>(other.m_owner)
         , m_indices(other.m_indices)
     {
     }
 
     BaseReflectionIndexedList(BaseReflectionIndexedList&& other) noexcept
-        : m_owner(std::move(other.m_owner))
+        : BaseReflectionList<ParentType, ChildType>(std::move(other.m_owner))
         , m_indices(std::move(other.m_indices))
     {
     }
 
     /// Number of search results in list.
-    uint32_t size() const { return static_cast<uint32_t>(m_indices.size()); }
+    uint32_t size() const override { return static_cast<uint32_t>(m_indices.size()); }
 
     /// Index operator
-    ref<const ChildType> operator[](uint32_t index) const { return evaluate(m_indices[index]); }
-
-    /// Begin iterator
-    Iterator begin() const { return Iterator(this, 0); }
-
-    /// End iterator
-    Iterator end() const { return Iterator(this, size()); }
-
-protected:
-    ref<const ParentType> m_owner;
-
-    /// Evaluate and return a specific child in the parent object.
-    virtual ref<const ChildType> evaluate(uint32_t child_index) const = 0;
+    ref<const ChildType> operator[](uint32_t index) const override { return this->evaluate(m_indices[index]); }
 
 private:
     std::vector<uint32_t> m_indices;
@@ -230,7 +188,9 @@ class SGL_API DeclReflection : public BaseReflectionObject {
 public:
     DeclReflection(ref<const Object> owner, slang::DeclReflection* target)
         : BaseReflectionObject(std::move(owner))
-        , m_target(target){};
+        , m_target(target)
+    {
+    }
 
 
     /// Different kinds of decl slang can return.
@@ -311,10 +271,11 @@ SGL_ENUM_REGISTER(DeclReflection::Kind);
 
 /// DeclReflection lazy child list evaluation.
 class SGL_API DeclReflectionChildList : public BaseReflectionList<DeclReflection, DeclReflection> {
-
 public:
     DeclReflectionChildList(ref<const DeclReflection> owner)
-        : BaseReflectionList(std::move(owner)){};
+        : BaseReflectionList(std::move(owner))
+    {
+    }
 
     /// Number of entries in list.
     uint32_t size() const override { return m_owner->child_count(); }
@@ -328,7 +289,9 @@ protected:
 class SGL_API DeclReflectionIndexedChildList : public BaseReflectionIndexedList<DeclReflection, DeclReflection> {
 public:
     DeclReflectionIndexedChildList(ref<const DeclReflection> owner, std::vector<uint32_t> results)
-        : BaseReflectionIndexedList(std::move(owner), std::move(results)){};
+        : BaseReflectionIndexedList(std::move(owner), std::move(results))
+    {
+    }
 
 protected:
     /// Get a specific search result.
@@ -549,7 +512,9 @@ public:
 
     TypeReflection(ref<const Object> owner, slang::TypeReflection* target)
         : BaseReflectionObject(std::move(owner))
-        , m_target(target){};
+        , m_target(target)
+    {
+    }
 
     Kind kind() const { return static_cast<Kind>(m_target->getKind()); }
 
@@ -652,7 +617,9 @@ class SGL_API TypeReflectionFieldList : public BaseReflectionList<TypeReflection
 
 public:
     TypeReflectionFieldList(ref<const TypeReflection> owner)
-        : BaseReflectionList(std::move(owner)){};
+        : BaseReflectionList(std::move(owner))
+    {
+    }
 
     /// Number of entries in list.
     uint32_t size() const override { return m_owner->field_count(); }
@@ -673,7 +640,9 @@ public:
 
     TypeLayoutReflection(ref<const Object> owner, slang::TypeLayoutReflection* target)
         : BaseReflectionObject(std::move(owner))
-        , m_target(target){};
+        , m_target(target)
+    {
+    }
 
     slang::TypeLayoutReflection* get_slang_type_layout() const { return m_target; }
 
@@ -769,7 +738,9 @@ class SGL_API TypeLayoutReflectionFieldList
 
 public:
     TypeLayoutReflectionFieldList(ref<const TypeLayoutReflection> owner)
-        : BaseReflectionList(std::move(owner)){};
+        : BaseReflectionList(std::move(owner))
+    {
+    }
 
     /// Number of entries in list.
     uint32_t size() const override { return m_owner->field_count(); }
@@ -786,7 +757,9 @@ class SGL_API FunctionReflection : public BaseReflectionObject {
 public:
     FunctionReflection(ref<const Object> owner, slang::FunctionReflection* target)
         : BaseReflectionObject(std::move(owner))
-        , m_target(target){};
+        , m_target(target)
+    {
+    }
 
     char const* name() const { return m_target->getName(); }
 
@@ -817,7 +790,9 @@ class SGL_API FunctionReflectionParameterList : public BaseReflectionList<Functi
 
 public:
     FunctionReflectionParameterList(ref<const FunctionReflection> owner)
-        : BaseReflectionList(std::move(owner)){};
+        : BaseReflectionList(std::move(owner))
+    {
+    }
 
     /// Number of entries in list.
     uint32_t size() const override { return m_owner->parameter_count(); }
@@ -840,7 +815,9 @@ public:
 
     VariableReflection(ref<const Object> owner, slang::VariableReflection* target)
         : BaseReflectionObject(std::move(owner))
-        , m_target(target){};
+        , m_target(target)
+    {
+    }
 
     /// Variable name.
     const char* name() const { return m_target->getName(); }
@@ -862,7 +839,9 @@ class SGL_API VariableLayoutReflection : public BaseReflectionObject {
 public:
     VariableLayoutReflection(ref<const Object> owner, slang::VariableLayoutReflection* target)
         : BaseReflectionObject(std::move(owner))
-        , m_target(target){};
+        , m_target(target)
+    {
+    }
 
     ref<const VariableReflection> variable() const { return detail::from_slang(m_owner, m_target->getVariable()); }
 
@@ -891,7 +870,9 @@ public:
 
     EntryPointLayout(ref<const Object> owner, slang::EntryPointLayout* target)
         : BaseReflectionObject(std::move(owner))
-        , m_target(target){};
+        , m_target(target)
+    {
+    }
 
     const char* name() const { return m_target->getName(); }
 
@@ -930,7 +911,9 @@ class SGL_API EntryPointLayoutParameterList : public BaseReflectionList<EntryPoi
 
 public:
     EntryPointLayoutParameterList(ref<const EntryPointLayout> owner)
-        : BaseReflectionList(std::move(owner)){};
+        : BaseReflectionList(std::move(owner))
+    {
+    }
 
     /// Number of entries in list.
     uint32_t size() const override { return m_owner->parameter_count(); }
@@ -953,7 +936,9 @@ public:
 
     ProgramLayout(ref<const Object> owner, slang::ProgramLayout* target)
         : BaseReflectionObject(std::move(owner))
-        , m_target(target){};
+        , m_target(target)
+    {
+    }
 
     ref<const TypeLayoutReflection> globals_type_layout() const
     {
@@ -1061,7 +1046,9 @@ class SGL_API ProgramLayoutParameterList : public BaseReflectionList<ProgramLayo
 
 public:
     ProgramLayoutParameterList(ref<const ProgramLayout> owner)
-        : BaseReflectionList(std::move(owner)){};
+        : BaseReflectionList(std::move(owner))
+    {
+    }
 
     /// Number of entries in list.
     uint32_t size() const override { return m_owner->parameter_count(); }
@@ -1079,7 +1066,9 @@ class SGL_API ProgramLayoutEntryPointList : public BaseReflectionList<ProgramLay
 
 public:
     ProgramLayoutEntryPointList(ref<const ProgramLayout> owner)
-        : BaseReflectionList(std::move(owner)){};
+        : BaseReflectionList(std::move(owner))
+    {
+    }
 
     /// Number of entries in list.
     uint32_t size() const override { return m_owner->entry_point_count(); }
