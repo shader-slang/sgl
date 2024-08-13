@@ -868,6 +868,7 @@ ref<Bitmap> Texture::to_bitmap(uint32_t mip_level, uint32_t array_slice) const
     uint32_t height = get_mip_height(mip_level);
 
     ref<Bitmap> bitmap = ref<Bitmap>(new Bitmap(pixel_format, component_type, width, height));
+    bitmap->set_srgb_gamma(info.is_srgb_format());
 
     // TODO would be better to avoid this extra copy
     SGL_ASSERT(bitmap->buffer_size() == subresource_data.size);
