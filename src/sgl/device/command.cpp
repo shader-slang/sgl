@@ -968,7 +968,11 @@ void CommandBuffer::copy_texture_to_buffer(
     const FormatInfo& info = get_format_info(src->format());
     SGL_CHECK(
         (src_offset.x % info.block_width == 0) && (src_offset.y % info.block_height == 0),
-        "Source offset must be a multiple of the block size"
+        "Source offset ({},{}) must be a multiple of the block size ({}x{})",
+        src_offset.x,
+        src_offset.y,
+        info.block_width,
+        info.block_height
     );
 
     // TODO: set subresource state instead
