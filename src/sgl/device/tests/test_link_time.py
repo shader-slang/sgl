@@ -17,7 +17,6 @@ from helpers import test_id
 # variables works.
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_link_time_modules_compile(test_id, device_type):
-
     if sys.platform == "linux" or sys.platform == "linux2":
         pytest.skip("This test currently crashes on linux")
 
