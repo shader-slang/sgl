@@ -155,19 +155,21 @@ class InsertTypesTransformer(cst.CSTTransformer):
     def __init__(self, discovered_descriptor_types: list[FCDStackInfo]):
         super().__init__()
         self.discovered_descriptor_types = discovered_descriptor_types
-    # On leaving a module, insert the dictionary and union types for any global descriptor types
+
     def leave_Module(
         self, original_node: cst.Module, updated_node: cst.Module
     ) -> cst.Module:
+        # On leaving a module, insert the dictionary and union types for any global descriptor types
         new_body: list[cst.CSTNode] = list(updated_node.body)
         changed = self._insert_descriptor_nodes(None, new_body)
         if changed:
             return updated_node.with_changes(body=new_body)
         return updated_node
-    # On leaving a class, insert the dictionary and union types for any child descriptor types
+
     def leave_ClassDef(  # type: ignore
         self, original_node: cst.ClassDef, updated_node: cst.ClassDef
     ) -> cst.CSTNode:
+        # On leaving a class, insert the dictionary and union types for any child descriptor types
         new_body: list[cst.CSTNode] = list(updated_node.body.body)
         changed = self._insert_descriptor_nodes(original_node, new_body)
         if changed:
@@ -176,11 +178,12 @@ class InsertTypesTransformer(cst.CSTTransformer):
             return updated_node.with_changes(body=class_body)
 
         return updated_node
-    # Finds any descriptor classes that are children of the specified parent (or None for module)
-    # and inserts the dictionary and union types after the corresponding class definition.
+
     def _insert_descriptor_nodes(
         self, original_parent: cst.ClassDef | None, updated_body: list[cst.CSTNode]
     ) -> bool:
+        # Finds any descriptor classes that are children of the specified parent (or None for module)
+        # and inserts the dictionary and union types after the corresponding class definition.
         changed = False
         for desc_type in self.discovered_descriptor_types:
             if desc_type.parent_class_type == original_parent:
@@ -192,8 +195,9 @@ class InsertTypesTransformer(cst.CSTTransformer):
                 )
                 changed = True
         return changed
-    # Generates the dictionary and union types for a descriptor class.
+
     def _build_types_for_descriptor(self, result: FCDStackInfo):
+        # Generates the dictionary and union types for a descriptor class.
 
         # Generate the elements for the dictionary that defines the
         # new TypedDict. This is really just an element with name:annotation
