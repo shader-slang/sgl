@@ -1,3 +1,4 @@
+import argparse
 import re
 from typing import Optional, Union, cast
 import libcst as cst
@@ -662,25 +663,39 @@ def fix_numpy_types(tree: cst.Module) -> cst.Module:
     transformer = FixNumpyArrays()
     return tree.visit(transformer)
 
-tree = load_file(
-    Path(__file__).parent / "../build/windows-vs2022/bin/Debug/python/sgl/__init__.pyi"
-)
-convertable_types = find_convertable_descriptors(tree)
+if __name__ == "__main__":
 
-tree = insert_converted_descriptors(tree, convertable_types)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--file", type=str, action="store", help="Input file")
+    parser.add_argument(
+        "--out",
+        type=str,
+        action="store",
+        help="Out filename (defaults to overwriting input)",
+    )
+    args = vars(parser.parse_args())
+    input_filename = args["file"]
+    output_filename = args["output"]
 
-tree = insert_typing_imports(tree)
+    if not output_filename:
+        output_filename = input_filename
 
-tree = replace_types(tree, convertable_types)
+    # Enable these for testing.
+    # input_filename = str(Path(__file__).parent / "../build/windows-vs2022/bin/Debug/python/sgl/__init__.pyi")
+    # output_filename = input_filename.replace(".pyi", "_2.pyi")
 
-tree = extend_vector_types(tree)
+    tree = load_file(input_filename)
 
-tree = fix_numpy_types(tree)
+    convertable_types = find_convertable_descriptors(tree)
 
-open(
-    Path(__file__).parent
-    / "../build/windows-vs2022/bin/Debug/python/sgl/__init__2.pyi",
-    "w",
-).write(tree.code)
+    tree = insert_converted_descriptors(tree, convertable_types)
 
-pass
+    tree = insert_typing_imports(tree)
+
+    tree = replace_types(tree, convertable_types)
+
+    tree = extend_vector_types(tree)
+
+    tree = fix_numpy_types(tree)
+
+    open(output_filename, "w").write(tree.code)
