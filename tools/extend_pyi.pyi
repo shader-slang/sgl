@@ -1,4 +1,5 @@
-from typing import Optional, Union
+import re
+from typing import Optional, Union, cast
 import libcst as cst
 from pathlib import Path
 from libcst import parse_expression
@@ -41,12 +42,6 @@ DESCRIPTOR_CONVERT_TYPES = {
     "BlendDesc": True,
     "TextureLoader.Options": True,
 }
-
-code = open(
-    Path(__file__).parent / "../build/windows-vs2022/bin/Debug/python/sgl/__init__.pyi"
-).read()
-
-stub_tree = cst.parse_module(code)
 
 # Field in a dictionary that can be used to construct a class.
 class FCDFieldInfo:
@@ -284,7 +279,7 @@ class InsertTypesTransformer(cst.CSTTransformer):
                 cst.Assign(
                     targets=[
                         cst.AssignTarget(
-                            target=cst.Name(f"{result.class_type.name.value}Type")
+                            target=cst.Name(f"{result.class_type.name.value}Param")
                         )
                     ],
                     value=cst.Subscript(
@@ -310,15 +305,19 @@ class InsertTypesTransformer(cst.CSTTransformer):
 
         return type_alias, union_type_alias
 
-# This transformer will replace all function arguments that refer to a descriptor class
-# with the corresponding union type.
-class ReplaceTypesTransformer(cst.CSTTransformer):
-    def __init__(self, discovered_descriptor_types: list[FCDStackInfo]):
+# Helper transformer base class that tracks whether we're within a parameter annotation
+# or a TypedDict call. This is used to determine whether we should be updating type names.
+class BaseParamAnnotationAndTypeDictTransformer(cst.CSTTransformer):
+    def __init__(self):
         super().__init__()
-        self.types_by_full_name = {x.full_name: x for x in discovered_descriptor_types}
         self.in_param = 0
         self.in_annotation = 0
         self.in_typed_dict_call = 0
+
+    def is_in_scope(self):
+        return (self.in_param == 1 and self.in_annotation == 1) or (
+            self.in_typed_dict_call == 1
+        )
 
     def visit_Param(self, node: cst.Param) -> Optional[bool]:
         self.in_param += 1
@@ -357,13 +356,45 @@ class ReplaceTypesTransformer(cst.CSTTransformer):
             self.in_typed_dict_call -= 1
         return updated_node
 
+# Helper to build fully qualified attribute name from an attribute tree.
+def build_attribute_name(node: cst.Attribute):
+    if isinstance(node.value, cst.Attribute):
+        return f"{build_attribute_name(node.value)}.{node.attr.value}"
+    elif isinstance(node.value, cst.Name):
+        return node.value.value + "." + node.attr.value
+    else:
+        raise Exception("Unexpected node type in _build_attribute_name")
+
+# Helper to build an attribute tree from a fully qualified name.
+def build_attribute_tree(full_name: str):
+    parts = full_name.split(".")
+    parts.reverse()
+    return _build_attribute_tree_recurse(parts, 0)
+
+# Internal recursive helper for build_attribute_tree.
+def _build_attribute_tree_recurse(parts: list[str], idx: int):
+    if idx == len(parts) - 1:
+        return cst.Name(parts[idx])
+    return cst.Attribute(
+        value=_build_attribute_tree_recurse(parts, idx + 1),
+        attr=cst.Name(parts[idx]),
+    )
+
+# This transformer will replace parameter annotations or typed dict entries
+# with a new type that appends 'extension'
+class ReplaceTypesTransformer(BaseParamAnnotationAndTypeDictTransformer):
+    def __init__(self, types_by_full_name: set[str], extension: str):
+        super().__init__()
+        self.types_by_full_name = types_by_full_name
+        self.extension = extension
+
     def leave_Name(self, original_node: cst.Name, updated_node: cst.Name) -> cst.Name:
         # If within a parameter annotation or TypedDict call, update type names
-        if (self.in_param == 1 and self.in_annotation == 1) or (
-            self.in_typed_dict_call == 1
-        ):
+        if self.is_in_scope():
             if updated_node.value in self.types_by_full_name:
-                return updated_node.with_changes(value=f"{updated_node.value}Type")
+                return updated_node.with_changes(
+                    value=f"{updated_node.value}{self.extension}"
+                )
         return updated_node
 
     def visit_Attribute(self, node: cst.Attribute) -> Optional[bool]:
@@ -375,105 +406,281 @@ class ReplaceTypesTransformer(cst.CSTTransformer):
         # If within a parameter annotation or TypedDict call, update type names. Attribute version
         # has to be a bit smarter than leave_Name as it needs to reconstruct the full name,
         # match it, and on a match construct a new attribute tree to replace it
-        if (self.in_param == 1 and self.in_annotation == 1) or (
-            self.in_typed_dict_call == 1
-        ):
-            full_name = self._build_attribute_name(updated_node)
+        if self.is_in_scope():
+            full_name = build_attribute_name(updated_node)
             if full_name in self.types_by_full_name:
-                return self._build_attribute_tree(f"{full_name}Type")
+                return build_attribute_tree(f"{full_name}{self.extension}")
 
         return updated_node
 
-    def _build_attribute_name(self, node: cst.Attribute):
-        if isinstance(node.value, cst.Attribute):
-            return f"{self._build_attribute_name(node.value)}.{node.attr.value}"
-        elif isinstance(node.value, cst.Name):
-            return node.value.value + "." + node.attr.value
-        else:
-            raise Exception("Unexpected node type in _build_attribute_name")
-
-    def _build_attribute_tree(self, full_name: str):
-        parts = full_name.split(".")
-        parts.reverse()
-        return self._build_attribute_tree_recurse(parts, 0)
-
-    def _build_attribute_tree_recurse(self, parts: list[str], idx: int):
-        if idx == len(parts) - 1:
-            return cst.Name(parts[idx])
-        return cst.Attribute(
-            value=self._build_attribute_tree_recurse(parts, idx + 1),
-            attr=cst.Name(parts[idx]),
-        )
-
-# Find all descriptor classes that can be constructed from a dictionary.
-find_convertable_types_visitor = FindConvertableToDictionaryTypes()
-stub_tree.visit(find_convertable_types_visitor)
-
-# Sanity check against list of descriptors we expect to convert.
-for result in find_convertable_types_visitor.results:
-    if not result.full_name in DESCRIPTOR_CONVERT_TYPES:
-        raise Exception(
-            f"Discovered descriptor class {result.full_name}, but not in list of types to convert."
-        )
-for conv_type in DESCRIPTOR_CONVERT_TYPES:
-    if not any(
-        result.full_name == conv_type
-        for result in find_convertable_types_visitor.results
-    ):
-        raise Exception(
-            f"Type {conv_type} is in list of types to convert but no corresponding descriptor class was discovered."
-        )
-
-# Filter only results for which DESCRIPTOR_CONVERT_TYPES is true.
-convertable_types = [
-    x
-    for x in find_convertable_types_visitor.results
-    if DESCRIPTOR_CONVERT_TYPES[x.full_name]
-]
-
-# Insert the TypedDict and Union types for the discovered descriptor classes.
-transformer = InsertTypesTransformer(convertable_types)
-new_tree = stub_tree.visit(transformer)
-
-# Insert typing imports - to keep things clean, we insert them after the existing
-# typing import.
-insert_idx = 0
-while insert_idx < len(new_tree.body):
-    bn = new_tree.body[insert_idx]
-    if m.matches(
-        bn, m.SimpleStatementLine(body=(m.ImportFrom(module=m.Name("typing")),))
-    ):
-        break
-    insert_idx += 1
-new_imports = [
-    cst.SimpleStatementLine(
-        body=[
-            cst.ImportFrom(
-                module=cst.Name("typing"),
-                names=[
-                    cst.ImportAlias(name=cst.Name("TypedDict"), asname=None),
-                    cst.ImportAlias(name=cst.Name("Union"), asname=None),
-                    cst.ImportAlias(name=cst.Name("NotRequired"), asname=None),
-                ],
-                whitespace_after_import=cst.SimpleWhitespace("    "),
-            )
+# Creates a set of unions for vector types like uint3 with their implicit sequence type,
+# e.g. Union[uint3,Sequence[int]] and relaces references to the original type with the union.
+class ExtendVectorTypeArgs(BaseParamAnnotationAndTypeDictTransformer):
+    def __init__(self):
+        super().__init__()
+        self.CONVERSIONS = [
+            ("bool1", "bool"),
+            ("bool2", "bool"),
+            ("bool3", "bool"),
+            ("bool4", "bool"),
+            ("float1", "float"),
+            ("float16_t", "float"),
+            ("float16_t1", "float16_t"),
+            ("float16_t2", "float16_t"),
+            ("float16_t3", "float16_t"),
+            ("float16_t4", "float16_t"),
+            ("float2", "float"),
+            ("float2x2", "float"),
+            ("float2x4", "float"),
+            ("float3", "float"),
+            ("float3x3", "float"),
+            ("float3x4", "float"),
+            ("float4", "float"),
+            ("float4x4", "float"),
+            ("int1", "int"),
+            ("int2", "int"),
+            ("int3", "int"),
+            ("int4", "int"),
+            ("quatf", "float"),
+            ("uint1", "int"),
+            ("uint2", "int"),
+            ("uint3", "int"),
+            ("uint4", "int"),
         ]
-    )
-]
-new_tree = new_tree.with_changes(
-    body=list(new_tree.body[:insert_idx])
-    + new_imports
-    + list(new_tree.body[insert_idx:])
-)
+        self.full_names = set([f"math.{x[0]}" for x in self.CONVERSIONS])
 
-# Insert the TypedDict and Union types for the discovered descriptor classes.
-transformer = ReplaceTypesTransformer(convertable_types)
-new_tree = new_tree.visit(transformer)
+    def visit_Attribute(self, node: cst.Attribute) -> Optional[bool]:
+        return False  # don't step into attributes - we just want to treat as fully qualified names
+
+    def leave_Attribute(
+        self, original_node: cst.Attribute, updated_node: cst.Attribute
+    ) -> cst.Attribute:
+        # If within a parameter annotation or TypedDict call, update type names. Attribute version
+        # has to be a bit smarter than leave_Name as it needs to reconstruct the full name,
+        # match it, and on a match construct a new attribute tree to replace it
+        if self.is_in_scope():
+            full_name = build_attribute_name(updated_node)
+            if full_name in self.full_names:
+                return cast(cst.Attribute, cst.Name(f"{updated_node.attr.value}param"))
+
+        return updated_node
+
+    def leave_Module(
+        self, original_node: cst.Module, updated_node: cst.Module
+    ) -> cst.Module:
+        new_union_types: list[cst.CSTNode] = []
+        for conversion in self.CONVERSIONS:
+            type_name = conversion[0]
+            if type_name == "float16_t":
+                type_union = self._union_with_name(
+                    build_attribute_tree(f"math.{type_name}"), conversion[1]
+                )
+            else:
+                type_union = self._union_with_sequence(
+                    build_attribute_tree(f"math.{type_name}"), conversion[1]
+                )
+            new_union_types.append(
+                cst.SimpleStatementLine(
+                    body=[
+                        cst.Assign(
+                            targets=[
+                                cst.AssignTarget(target=cst.Name(type_name + "param"))
+                            ],
+                            value=type_union,
+                        )
+                    ]
+                )
+            )
+
+        # To keep things neat, find the existing typing import.
+        insert_idx = 0
+        while insert_idx < len(tree.body):
+            bn = tree.body[insert_idx]
+            if isinstance(bn, cst.ClassDef):
+                break
+            insert_idx += 1
+
+        # Now add new typing imports after it
+        return updated_node.with_changes(
+            body=list(updated_node.body[:insert_idx])
+            + new_union_types
+            + list(updated_node.body[insert_idx:])
+        )
+
+    def _union_with_name(self, node: cst.Attribute, name: str):
+        return cst.Subscript(
+            value=cst.Name("Union"),
+            slice=[
+                cst.SubscriptElement(slice=cst.Index(value=node)),
+                cst.SubscriptElement(slice=cst.Index(value=cst.Name(name))),
+            ],
+        )
+
+    def _union_with_sequence(self, node: cst.Attribute, sequence_type: str):
+        return cst.Subscript(
+            value=cst.Name("Union"),
+            slice=[
+                cst.SubscriptElement(slice=cst.Index(value=node)),
+                cst.SubscriptElement(
+                    slice=cst.Index(
+                        value=cst.Subscript(
+                            value=cst.Name("Sequence"),
+                            slice=[
+                                cst.SubscriptElement(
+                                    slice=cst.Index(value=cst.Name(sequence_type))
+                                )
+                            ],
+                        )
+                    )
+                ),
+            ],
+        )
+
+# Replaces the 'ArrayLike' type for 'NDArray' for to_numpy functions
+class FixNumpyArrays(cst.CSTTransformer):
+    def __init__(self):
+        super().__init__()
+        self.in_numpy_function = 0
+
+    def visit_FunctionDef(self, node: cst.FunctionDef) -> Optional[bool]:
+        if node.name.value == "to_numpy":
+            self.in_numpy_function += 1
+
+    def leave_FunctionDef(
+        self, original_node: cst.FunctionDef, updated_node: cst.FunctionDef
+    ) -> cst.FunctionDef:
+        if original_node.name.value == "to_numpy":
+            self.in_numpy_function -= 1
+        return updated_node
+
+    def leave_Name(self, original_node: cst.Name, updated_node: cst.Name) -> cst.Name:
+        if self.in_numpy_function > 0 and updated_node.value == "ArrayLike":
+            return updated_node.with_changes(value="NDArray")
+        return updated_node
+
+# Loads a parsed file.
+def load_file(file_path) -> cst.Module:
+    code = open(file_path).read()
+    return cst.parse_module(code)
+
+# Gets convertible descriptor types from tree.
+def find_convertable_descriptors(tree: cst.Module) -> list[FCDStackInfo]:
+    # Find all descriptor classes that can be constructed from a dictionary.
+    find_convertable_types_visitor = FindConvertableToDictionaryTypes()
+    tree.visit(find_convertable_types_visitor)
+
+    # Sanity check against list of descriptors we expect to convert.
+    for result in find_convertable_types_visitor.results:
+        if not result.full_name in DESCRIPTOR_CONVERT_TYPES:
+            raise Exception(
+                f"Discovered descriptor class {result.full_name}, but not in list of types to convert."
+            )
+    for conv_type in DESCRIPTOR_CONVERT_TYPES:
+        if not any(
+            result.full_name == conv_type
+            for result in find_convertable_types_visitor.results
+        ):
+            raise Exception(
+                f"Type {conv_type} is in list of types to convert but no corresponding descriptor class was discovered."
+            )
+
+    # Filter only results for which DESCRIPTOR_CONVERT_TYPES is true.
+    convertable_types = [
+        x
+        for x in find_convertable_types_visitor.results
+        if DESCRIPTOR_CONVERT_TYPES[x.full_name]
+    ]
+    return convertable_types
+
+# Inserts the TypedDict and Union types for the discovered descriptor classes.
+def insert_converted_descriptors(
+    tree: cst.Module, convertable_types: list[FCDStackInfo]
+) -> cst.Module:
+    transformer = InsertTypesTransformer(convertable_types)
+    return tree.visit(transformer)
+
+# Insert typing imports
+def insert_typing_imports(tree: cst.Module) -> cst.Module:
+
+    # To keep things neat, find the existing typing import.
+    insert_idx = 0
+    while insert_idx < len(tree.body):
+        bn = tree.body[insert_idx]
+        if m.matches(
+            bn, m.SimpleStatementLine(body=(m.ImportFrom(module=m.Name("typing")),))
+        ):
+            break
+        insert_idx += 1
+
+    # Now add new typing imports after it
+    new_imports = [
+        cst.SimpleStatementLine(
+            body=[
+                cst.ImportFrom(
+                    module=cst.Name("typing"),
+                    names=[
+                        cst.ImportAlias(name=cst.Name("TypedDict"), asname=None),
+                        cst.ImportAlias(name=cst.Name("Union"), asname=None),
+                        cst.ImportAlias(name=cst.Name("NotRequired"), asname=None),
+                    ],
+                )
+            ]
+        ),
+        cst.SimpleStatementLine(
+            body=[
+                cst.ImportFrom(
+                    module=cst.Attribute(
+                        value=cst.Name("numpy"), attr=cst.Name("typing")
+                    ),
+                    names=[
+                        cst.ImportAlias(name=cst.Name("NDArray"), asname=None),
+                    ],
+                )
+            ]
+        ),
+    ]
+    return tree.with_changes(
+        body=list(tree.body[:insert_idx]) + new_imports + list(tree.body[insert_idx:])
+    )
+
+# Replaces argument and dictionary references to descriptor classes with their new types
+def replace_types(
+    tree: cst.Module, convertable_types: list[FCDStackInfo]
+) -> cst.Module:
+    transformer = ReplaceTypesTransformer(
+        set([x.full_name for x in convertable_types]), "Param"
+    )
+    return tree.visit(transformer)
+
+# Replaces vector types like uint3 with Union[uint3,Sequence[int]]
+def extend_vector_types(tree: cst.Module) -> cst.Module:
+    transformer = ExtendVectorTypeArgs()
+    return tree.visit(transformer)
+
+# Makes to_numpy functions return NDArray
+def fix_numpy_types(tree: cst.Module) -> cst.Module:
+    transformer = FixNumpyArrays()
+    return tree.visit(transformer)
+
+tree = load_file(
+    Path(__file__).parent / "../build/windows-vs2022/bin/Debug/python/sgl/__init__.pyi"
+)
+convertable_types = find_convertable_descriptors(tree)
+
+tree = insert_converted_descriptors(tree, convertable_types)
+
+tree = insert_typing_imports(tree)
+
+tree = replace_types(tree, convertable_types)
+
+tree = extend_vector_types(tree)
+
+tree = fix_numpy_types(tree)
 
 open(
     Path(__file__).parent
     / "../build/windows-vs2022/bin/Debug/python/sgl/__init__2.pyi",
     "w",
-).write(new_tree.code)
+).write(tree.code)
 
 pass
