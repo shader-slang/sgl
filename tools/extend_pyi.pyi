@@ -2,6 +2,7 @@ from typing import Optional, Union
 import libcst as cst
 from pathlib import Path
 from libcst import parse_expression
+import libcst.matchers as m
 
 # List of types we expect to discover that can be constructed from
 # a dictionary. If 'True', a corresponding TypedDict and Union type
@@ -47,44 +48,14 @@ code = open(
 
 stub_tree = cst.parse_module(code)
 
-def name_equals(expression: Optional[cst.BaseExpression], name: str):
-    if isinstance(expression, cst.Name):
-        return expression.value == name  # type: ignore
-    return False
-
-def annotation_name_equals(annotation: Optional[cst.Annotation], name: str):
-    if isinstance(annotation, cst.Annotation):
-        return name_equals(annotation.annotation, name)  # type: ignore
-    return False
-
-def is_setter(node: cst.FunctionDef):
-    for decorator in node.decorators:
-        if (
-            isinstance(decorator.decorator, cst.Attribute)
-            and decorator.decorator.attr.value == "setter"
-        ):
-            return True
-    return False
-
-def insert_nodes_after_class_by_name(
-    body_nodes: list[cst.CSTNode], class_name: str, nodes_to_insert: list[cst.CSTNode]
-):
-    insert_idx = 0
-    while insert_idx < len(body_nodes):
-        bn = body_nodes[insert_idx]
-        if isinstance(bn, cst.ClassDef) and bn.name.value == class_name:
-            break
-        insert_idx += 1
-    insert_idx += 1
-    for x in nodes_to_insert:
-        body_nodes.insert(insert_idx, x)
-        insert_idx += 1
-
+# Field in a dictionary that can be used to construct a class.
 class FCDFieldInfo:
     def __init__(self, name: cst.Name, annotation: cst.BaseExpression):
         self.name = name
         self.annotation = annotation
 
+# Store information about a class discovered by FindConvertableToDictionaryTypes that
+# can be constructed from a dictionary.
 class FCDStackInfo:
     def __init__(
         self,
@@ -98,6 +69,8 @@ class FCDStackInfo:
         self.fields: list[FCDFieldInfo] = []
         self.full_name = full_name
 
+# This visitor will find all classes that have a constructor that takes a single dictionary,
+# and extract its fields by looking for setter functions.
 class FindConvertableToDictionaryTypes(cst.CSTVisitor):
     def __init__(self):
         super().__init__()
@@ -132,7 +105,7 @@ class FindConvertableToDictionaryTypes(cst.CSTVisitor):
                 return False
 
             # Check it's a dictionary
-            if not annotation_name_equals(
+            if not self._annotation_name_equals(
                 func_params.posonly_params[1].annotation, "dict"
             ):
                 return False
@@ -143,14 +116,29 @@ class FindConvertableToDictionaryTypes(cst.CSTVisitor):
             self.results.append(self.stack[-1])
         elif len(self.stack) > 0 and self.stack[-1].valid:
             # Not an init function but this type is a descriptor so want to record the setter types
-            if is_setter(node):
-                # print("  "+node.name.value+":"+stub_tree.code_for_node(node.params.posonly_params[1]))
+            if self._is_setter(node):
                 self.stack[-1].fields.append(
                     FCDFieldInfo(
-                        node.name, node.params.posonly_params[1].annotation.annotation
+                        node.name, node.params.posonly_params[1].annotation.annotation  # type: ignore
                     )
                 )
 
+    def _annotation_name_equals(self, annotation: Optional[cst.Annotation], name: str):
+        if annotation is not None:
+            return m.matches(
+                annotation, m.Annotation(annotation=m.Name(name))  # type: ignore
+            )
+        return False
+
+    def _is_setter(self, node: cst.FunctionDef):
+        for decorator in node.decorators:
+            if m.matches(
+                decorator, m.Decorator(decorator=m.Attribute(attr=m.Name("setter")))
+            ):
+                return True
+        return False
+
+# This transformer will insert the TypedDict and Union types for any descriptor classes
 class InsertTypesTransformer(cst.CSTTransformer):
     def __init__(self, discovered_descriptor_types: list[FCDStackInfo]):
         super().__init__()
@@ -179,6 +167,24 @@ class InsertTypesTransformer(cst.CSTTransformer):
 
         return updated_node
 
+    def _insert_nodes_after_class_by_name(
+        self,
+        body_nodes: list[cst.CSTNode],
+        class_name: str,
+        nodes_to_insert: list[cst.CSTNode],
+    ):
+        # Find the class definition in the body_nodes list and inserts nodes after it
+        insert_idx = 0
+        while insert_idx < len(body_nodes):
+            bn = body_nodes[insert_idx]
+            if m.matches(bn, m.ClassDef(name=m.Name(class_name))):
+                break
+            insert_idx += 1
+        insert_idx += 1
+        for x in nodes_to_insert:
+            body_nodes.insert(insert_idx, x)
+            insert_idx += 1
+
     def _insert_descriptor_nodes(
         self, original_parent: cst.ClassDef | None, updated_body: list[cst.CSTNode]
     ) -> bool:
@@ -188,7 +194,7 @@ class InsertTypesTransformer(cst.CSTTransformer):
         for desc_type in self.discovered_descriptor_types:
             if desc_type.parent_class_type == original_parent:
                 dict_type, union_type = self._build_types_for_descriptor(desc_type)
-                insert_nodes_after_class_by_name(
+                self._insert_nodes_after_class_by_name(
                     updated_body,
                     desc_type.class_type.name.value,
                     [cst.Newline(), dict_type, cst.Newline(), union_type],
@@ -200,18 +206,23 @@ class InsertTypesTransformer(cst.CSTTransformer):
         # Generates the dictionary and union types for a descriptor class.
 
         # Generate the elements for the dictionary that defines the
-        # new TypedDict. This is really just an element with name:annotation
+        # new TypedDict. This is really just an element with name:NotRequired[annotation]
         # for each entry, but looks more complex due to insertion of correct
         # whitespace (each element other than the last adds a newline and
         # 4 spaces after the comma)
         dict_elements: list[cst.DictElement] = []
         for idx in range(len(result.fields)):
             field = result.fields[idx]
+            key = cst.SimpleString(f'"{field.name.value}"')
+            value = cst.Subscript(
+                value=cst.Name("NotRequired"),
+                slice=[cst.SubscriptElement(slice=cst.Index(value=field.annotation))],
+            )
             if idx < len(result.fields) - 1:
                 dict_elements.append(
                     cst.DictElement(
-                        key=cst.SimpleString(f'"{field.name.value}"'),
-                        value=field.annotation,
+                        key=key,
+                        value=value,
                         comma=cst.Comma(
                             whitespace_after=cst.ParenthesizedWhitespace(
                                 last_line=cst.SimpleWhitespace("    "), indent=True
@@ -222,8 +233,8 @@ class InsertTypesTransformer(cst.CSTTransformer):
             else:
                 dict_elements.append(
                     cst.DictElement(
-                        key=cst.SimpleString(f'"{field.name.value}"'),
-                        value=field.annotation,
+                        key=key,
+                        value=value,
                     )
                 )
 
@@ -299,23 +310,165 @@ class InsertTypesTransformer(cst.CSTTransformer):
 
         return type_alias, union_type_alias
 
-findconv = FindConvertableToDictionaryTypes()
-stub_tree.visit(findconv)
+# This transformer will replace all function arguments that refer to a descriptor class
+# with the corresponding union type.
+class ReplaceTypesTransformer(cst.CSTTransformer):
+    def __init__(self, discovered_descriptor_types: list[FCDStackInfo]):
+        super().__init__()
+        self.types_by_full_name = {x.full_name: x for x in discovered_descriptor_types}
+        self.in_param = 0
+        self.in_annotation = 0
+        self.in_typed_dict_call = 0
 
-for result in findconv.results:
+    def visit_Param(self, node: cst.Param) -> Optional[bool]:
+        self.in_param += 1
+
+    def leave_Param(
+        self, original_node: cst.Param, updated_node: cst.Param
+    ) -> cst.Param:
+        self.in_param -= 1
+        return updated_node
+
+    def visit_Annotation(self, node: cst.Annotation) -> Optional[bool]:
+        self.in_annotation += 1
+
+    def leave_Annotation(
+        self, original_node: cst.Annotation, updated_node: cst.Annotation
+    ) -> cst.Annotation:
+        self.in_annotation -= 1
+        return updated_node
+
+    def visit_Call(self, node: cst.Call) -> Optional[bool]:
+        if m.matches(
+            node,
+            m.Call(
+                func=m.Name("TypedDict"),
+            ),
+        ):
+            self.in_typed_dict_call += 1
+
+    def leave_Call(self, original_node: cst.Call, updated_node: cst.Call) -> cst.Call:
+        if m.matches(
+            original_node,
+            m.Call(
+                func=m.Name("TypedDict"),
+            ),
+        ):
+            self.in_typed_dict_call -= 1
+        return updated_node
+
+    def leave_Name(self, original_node: cst.Name, updated_node: cst.Name) -> cst.Name:
+        # If within a parameter annotation or TypedDict call, update type names
+        if (self.in_param == 1 and self.in_annotation == 1) or (
+            self.in_typed_dict_call == 1
+        ):
+            if updated_node.value in self.types_by_full_name:
+                return updated_node.with_changes(value=f"{updated_node.value}Type")
+        return updated_node
+
+    def visit_Attribute(self, node: cst.Attribute) -> Optional[bool]:
+        return False  # don't step into attributes - we just want to treat as fully qualified names
+
+    def leave_Attribute(
+        self, original_node: cst.Attribute, updated_node: cst.Attribute
+    ) -> cst.Attribute:
+        # If within a parameter annotation or TypedDict call, update type names. Attribute version
+        # has to be a bit smarter than leave_Name as it needs to reconstruct the full name,
+        # match it, and on a match construct a new attribute tree to replace it
+        if (self.in_param == 1 and self.in_annotation == 1) or (
+            self.in_typed_dict_call == 1
+        ):
+            full_name = self._build_attribute_name(updated_node)
+            if full_name in self.types_by_full_name:
+                return self._build_attribute_tree(f"{full_name}Type")
+
+        return updated_node
+
+    def _build_attribute_name(self, node: cst.Attribute):
+        if isinstance(node.value, cst.Attribute):
+            return f"{self._build_attribute_name(node.value)}.{node.attr.value}"
+        elif isinstance(node.value, cst.Name):
+            return node.value.value + "." + node.attr.value
+        else:
+            raise Exception("Unexpected node type in _build_attribute_name")
+
+    def _build_attribute_tree(self, full_name: str):
+        parts = full_name.split(".")
+        parts.reverse()
+        return self._build_attribute_tree_recurse(parts, 0)
+
+    def _build_attribute_tree_recurse(self, parts: list[str], idx: int):
+        if idx == len(parts) - 1:
+            return cst.Name(parts[idx])
+        return cst.Attribute(
+            value=self._build_attribute_tree_recurse(parts, idx + 1),
+            attr=cst.Name(parts[idx]),
+        )
+
+# Find all descriptor classes that can be constructed from a dictionary.
+find_convertable_types_visitor = FindConvertableToDictionaryTypes()
+stub_tree.visit(find_convertable_types_visitor)
+
+# Sanity check against list of descriptors we expect to convert.
+for result in find_convertable_types_visitor.results:
     if not result.full_name in DESCRIPTOR_CONVERT_TYPES:
         raise Exception(
             f"Discovered descriptor class {result.full_name}, but not in list of types to convert."
         )
 for conv_type in DESCRIPTOR_CONVERT_TYPES:
-    if not any(result.full_name == conv_type for result in findconv.results):
+    if not any(
+        result.full_name == conv_type
+        for result in find_convertable_types_visitor.results
+    ):
         raise Exception(
             f"Type {conv_type} is in list of types to convert but no corresponding descriptor class was discovered."
         )
 
-transformer = InsertTypesTransformer(findconv.results)
+# Filter only results for which DESCRIPTOR_CONVERT_TYPES is true.
+convertable_types = [
+    x
+    for x in find_convertable_types_visitor.results
+    if DESCRIPTOR_CONVERT_TYPES[x.full_name]
+]
 
+# Insert the TypedDict and Union types for the discovered descriptor classes.
+transformer = InsertTypesTransformer(convertable_types)
 new_tree = stub_tree.visit(transformer)
+
+# Insert typing imports - to keep things clean, we insert them after the existing
+# typing import.
+insert_idx = 0
+while insert_idx < len(new_tree.body):
+    bn = new_tree.body[insert_idx]
+    if m.matches(
+        bn, m.SimpleStatementLine(body=(m.ImportFrom(module=m.Name("typing")),))
+    ):
+        break
+    insert_idx += 1
+new_imports = [
+    cst.SimpleStatementLine(
+        body=[
+            cst.ImportFrom(
+                module=cst.Name("typing"),
+                names=[
+                    cst.ImportAlias(name=cst.Name("TypedDict"), asname=None),
+                    cst.ImportAlias(name=cst.Name("Union"), asname=None),
+                    cst.ImportAlias(name=cst.Name("NotRequired"), asname=None),
+                ],
+                whitespace_after_import=cst.SimpleWhitespace("    "),
+            )
+        ]
+    )
+]
+new_tree = new_tree.with_changes(
+    body=list(new_tree.body[:insert_idx])
+    + new_imports
+    + list(new_tree.body[insert_idx:])
+)
+
+# Insert the TypedDict and Union types for the discovered descriptor classes.
+transformer = ReplaceTypesTransformer(convertable_types)
+new_tree = new_tree.visit(transformer)
 
 open(
     Path(__file__).parent
