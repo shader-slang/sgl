@@ -79,7 +79,7 @@ class FindConvertableToDictionaryTypes(cst.CSTVisitor):
         self.name_stack.append(node.name.value)
         self.stack.append(FCDStackInfo(parent, node, ".".join(self.name_stack)))
 
-    def leave_ClassDef(self, original_node: cst.ClassDef) -> None:  # type: ignore
+    def leave_ClassDef(self, original_node: cst.ClassDef) -> None:
         self.stack.pop()
         self.name_stack.pop()
 
@@ -110,7 +110,7 @@ class FindConvertableToDictionaryTypes(cst.CSTVisitor):
             self.stack[-1].valid = True
             self.results.append(self.stack[-1])
         elif len(self.stack) > 0 and self.stack[-1].valid:
-            # Not an init function but this type is a descriptor so want to record the setter types
+            # Not an init function but this type is a descriptor so want to record the setter types.
             if self._is_setter(node):
                 self.stack[-1].fields.append(
                     FCDFieldInfo(
@@ -133,7 +133,7 @@ class FindConvertableToDictionaryTypes(cst.CSTVisitor):
                 return True
         return False
 
-# This transformer will insert the TypedDict and Union types for any descriptor classes
+# This transformer will insert the TypedDict and Union types for any descriptor classes.
 class InsertTypesTransformer(cst.CSTTransformer):
     def __init__(self, discovered_descriptor_types: list[FCDStackInfo]):
         super().__init__()
@@ -142,17 +142,17 @@ class InsertTypesTransformer(cst.CSTTransformer):
     def leave_Module(
         self, original_node: cst.Module, updated_node: cst.Module
     ) -> cst.Module:
-        # On leaving a module, insert the dictionary and union types for any global descriptor types
+        # On leaving a module, insert the dictionary and union types for any global descriptor types.
         new_body: list[cst.CSTNode] = list(updated_node.body)
         changed = self._insert_descriptor_nodes(None, new_body)
         if changed:
             return updated_node.with_changes(body=new_body)
         return updated_node
 
-    def leave_ClassDef(  # type: ignore
+    def leave_ClassDef(
         self, original_node: cst.ClassDef, updated_node: cst.ClassDef
-    ) -> cst.CSTNode:
-        # On leaving a class, insert the dictionary and union types for any child descriptor types
+    ) -> cst.ClassDef:
+        # On leaving a class, insert the dictionary and union types for any child descriptor types.
         new_body: list[cst.CSTNode] = list(updated_node.body.body)
         changed = self._insert_descriptor_nodes(original_node, new_body)
         if changed:
@@ -168,7 +168,7 @@ class InsertTypesTransformer(cst.CSTTransformer):
         class_name: str,
         nodes_to_insert: list[cst.CSTNode],
     ):
-        # Find the class definition in the body_nodes list and inserts nodes after it
+        # Find the class definition in the body_nodes list and inserts nodes after it.
         insert_idx = 0
         while insert_idx < len(body_nodes):
             bn = body_nodes[insert_idx]
@@ -204,7 +204,7 @@ class InsertTypesTransformer(cst.CSTTransformer):
         # new TypedDict. This is really just an element with name:NotRequired[annotation]
         # for each entry, but looks more complex due to insertion of correct
         # whitespace (each element other than the last adds a newline and
-        # 4 spaces after the comma)
+        # 4 spaces after the comma).
         dict_elements: list[cst.DictElement] = []
         for idx in range(len(result.fields)):
             field = result.fields[idx]
@@ -248,7 +248,7 @@ class InsertTypesTransformer(cst.CSTTransformer):
             ),
         )
 
-        # Wrap the dictionary in a call to 'TypedDict' to create the new type
+        # Wrap the dictionary in a call to 'TypedDict' to create the new type.
         typed_dict_annotation = cst.Call(
             func=cst.Name("TypedDict"),
             args=[
@@ -259,7 +259,7 @@ class InsertTypesTransformer(cst.CSTTransformer):
             ],
         )
 
-        # Store the new TypedDict in a type alias
+        # Store the new TypedDict in a type alias.
         type_alias = cst.SimpleStatementLine(
             body=[
                 cst.Assign(
@@ -273,7 +273,7 @@ class InsertTypesTransformer(cst.CSTTransformer):
             ]
         )
 
-        # Also generate a corresponding union that combines the source type with the new TypedDict
+        # Also generate a corresponding union that combines the source type with the new TypedDict.
         union_type_alias = cst.SimpleStatementLine(
             body=[
                 cst.Assign(
@@ -381,7 +381,7 @@ def _build_attribute_tree_recurse(parts: list[str], idx: int):
     )
 
 # This transformer will replace parameter annotations or typed dict entries
-# with a new type that appends 'extension'
+# with a new type that appends 'extension'.
 class ReplaceTypesTransformer(BaseParamAnnotationAndTypeDictTransformer):
     def __init__(self, types_by_full_name: set[str], extension: str):
         super().__init__()
@@ -389,7 +389,7 @@ class ReplaceTypesTransformer(BaseParamAnnotationAndTypeDictTransformer):
         self.extension = extension
 
     def leave_Name(self, original_node: cst.Name, updated_node: cst.Name) -> cst.Name:
-        # If within a parameter annotation or TypedDict call, update type names
+        # If within a parameter annotation or TypedDict call, update type names.
         if self.is_in_scope():
             if updated_node.value in self.types_by_full_name:
                 return updated_node.with_changes(
@@ -398,14 +398,14 @@ class ReplaceTypesTransformer(BaseParamAnnotationAndTypeDictTransformer):
         return updated_node
 
     def visit_Attribute(self, node: cst.Attribute) -> Optional[bool]:
-        return False  # don't step into attributes - we just want to treat as fully qualified names
+        return False  # don't step into attributes - we just want to treat as fully qualified names.
 
     def leave_Attribute(
         self, original_node: cst.Attribute, updated_node: cst.Attribute
     ) -> cst.Attribute:
         # If within a parameter annotation or TypedDict call, update type names. Attribute version
         # has to be a bit smarter than leave_Name as it needs to reconstruct the full name,
-        # match it, and on a match construct a new attribute tree to replace it
+        # match it, and on a match construct a new attribute tree to replace it.
         if self.is_in_scope():
             full_name = build_attribute_name(updated_node)
             if full_name in self.types_by_full_name:
@@ -457,7 +457,7 @@ class ExtendVectorTypeArgs(BaseParamAnnotationAndTypeDictTransformer):
     ) -> cst.Attribute:
         # If within a parameter annotation or TypedDict call, update type names. Attribute version
         # has to be a bit smarter than leave_Name as it needs to reconstruct the full name,
-        # match it, and on a match construct a new attribute tree to replace it
+        # match it, and on a match construct a new attribute tree to replace it.
         if self.is_in_scope():
             full_name = build_attribute_name(updated_node)
             if full_name in self.full_names:
@@ -536,7 +536,7 @@ class ExtendVectorTypeArgs(BaseParamAnnotationAndTypeDictTransformer):
             ],
         )
 
-# Replaces the 'ArrayLike' type for 'NDArray' for to_numpy functions
+# Replaces the 'ArrayLike' type for 'NDArray' for to_numpy functions.
 class FixNumpyArrays(cst.CSTTransformer):
     def __init__(self):
         super().__init__()
@@ -573,7 +573,7 @@ def find_convertable_descriptors(tree: cst.Module) -> list[FCDStackInfo]:
     for result in find_convertable_types_visitor.results:
         if not result.full_name in DESCRIPTOR_CONVERT_TYPES:
             raise Exception(
-                f"Discovered descriptor class {result.full_name}, but not in list of types to convert."
+                f"Discovered descriptor class {result.full_name}, but not in list of types to convert. Add it to the list in extend_pyi.py."
             )
     for conv_type in DESCRIPTOR_CONVERT_TYPES:
         if not any(
@@ -581,7 +581,7 @@ def find_convertable_descriptors(tree: cst.Module) -> list[FCDStackInfo]:
             for result in find_convertable_types_visitor.results
         ):
             raise Exception(
-                f"Type {conv_type} is in list of types to convert but no corresponding descriptor class was discovered."
+                f"Type {conv_type} is in list of types to convert but no corresponding descriptor class was discovered. Remove it from the list in extend_pyi.py."
             )
 
     # Filter only results for which DESCRIPTOR_CONVERT_TYPES is true.
@@ -612,7 +612,7 @@ def insert_typing_imports(tree: cst.Module) -> cst.Module:
             break
         insert_idx += 1
 
-    # Now add new typing imports after it
+    # Now add new typing imports after it.
     new_imports = [
         cst.SimpleStatementLine(
             body=[
@@ -643,7 +643,7 @@ def insert_typing_imports(tree: cst.Module) -> cst.Module:
         body=list(tree.body[:insert_idx]) + new_imports + list(tree.body[insert_idx:])
     )
 
-# Replaces argument and dictionary references to descriptor classes with their new types
+# Replaces argument and dictionary references to descriptor classes with their new types.
 def replace_types(
     tree: cst.Module, convertable_types: list[FCDStackInfo]
 ) -> cst.Module:
@@ -652,12 +652,12 @@ def replace_types(
     )
     return tree.visit(transformer)
 
-# Replaces vector types like uint3 with Union[uint3,Sequence[int]]
+# Replaces vector types like uint3 with Union[uint3,Sequence[int]].
 def extend_vector_types(tree: cst.Module) -> cst.Module:
     transformer = ExtendVectorTypeArgs()
     return tree.visit(transformer)
 
-# Makes to_numpy functions return NDArray
+# Makes to_numpy functions return NDArray.
 def fix_numpy_types(tree: cst.Module) -> cst.Module:
     transformer = FixNumpyArrays()
     return tree.visit(transformer)
