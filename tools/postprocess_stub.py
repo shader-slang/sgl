@@ -6,7 +6,7 @@ from pathlib import Path
 from libcst import parse_expression
 import libcst.matchers as m
 
-# List of types we expect to discover that can be constructed from
+# List of classes we expect to discover that can be constructed from
 # a dictionary. If 'True', a corresponding TypedDict and Union type
 # will be generated. If 'False', it will be ignored. If a type
 # is discovered but not in this list it will be treated as an error.
@@ -44,14 +44,17 @@ DESCRIPTOR_CONVERT_TYPES = {
     "TextureLoader.Options": True,
 }
 
-# Field in a dictionary that can be used to construct a class.
+
+# Field from a descriptor class that needs to be represented in the
+# corresponding dictionary type.
 class FCDFieldInfo:
     def __init__(self, name: cst.Name, annotation: cst.BaseExpression):
         self.name = name
         self.annotation = annotation
 
-# Store information about a class discovered by FindConvertableToDictionaryTypes that
-# can be constructed from a dictionary.
+
+# A class discovered by FindConvertableToDictionaryTypes that
+# needs to have a corresponding dictionary type.
 class FCDStackInfo:
     def __init__(
         self,
@@ -65,8 +68,10 @@ class FCDStackInfo:
         self.fields: list[FCDFieldInfo] = []
         self.full_name = full_name
 
-# This visitor will find all classes that have a constructor that takes a single dictionary,
-# and extract its fields by looking for setter functions.
+
+# This visitor will find all classes that have a constructor that
+# takes a single dictionary and extracts its fields by
+# looking for setter functions.
 class FindConvertableToDictionaryTypes(cst.CSTVisitor):
     def __init__(self):
         super().__init__()
@@ -86,8 +91,8 @@ class FindConvertableToDictionaryTypes(cst.CSTVisitor):
 
     def visit_FunctionDef(self, node: cst.FunctionDef) -> Optional[bool]:
         if node.name.value == "__init__":
-            # If this is an init function, use to check if this is a type we're interested in.
-            # Function shuld have 2 positional parameters
+            # If this is an init function, use to check if this is a class
+            # we're interested in. Function shuld have 2 positional parameters:
             func_params = node.params
             if (
                 len(func_params.params) != 0
@@ -100,7 +105,7 @@ class FindConvertableToDictionaryTypes(cst.CSTVisitor):
             if func_params.posonly_params[1].name.value != "arg":
                 return False
 
-            # Check it's a dictionary
+            # 2nd parameter should be a dictionary.
             if not self._annotation_name_equals(
                 func_params.posonly_params[1].annotation, "dict"
             ):
@@ -111,7 +116,8 @@ class FindConvertableToDictionaryTypes(cst.CSTVisitor):
             self.stack[-1].valid = True
             self.results.append(self.stack[-1])
         elif len(self.stack) > 0 and self.stack[-1].valid:
-            # Not an init function but this type is a descriptor so want to record the setter types.
+            # Not an init function but we're in a valid descriptor class, so
+            # so we want to record any setter types.
             if self._is_setter(node):
                 self.stack[-1].fields.append(
                     FCDFieldInfo(
@@ -134,7 +140,9 @@ class FindConvertableToDictionaryTypes(cst.CSTVisitor):
                 return True
         return False
 
-# This transformer will insert the TypedDict and Union types for any descriptor classes.
+
+# This transformer will insert the TypedDict and Union types
+# for a given list of descriptor classes.
 class InsertTypesTransformer(cst.CSTTransformer):
     def __init__(self, discovered_descriptor_types: list[FCDStackInfo]):
         super().__init__()
@@ -143,7 +151,7 @@ class InsertTypesTransformer(cst.CSTTransformer):
     def leave_Module(
         self, original_node: cst.Module, updated_node: cst.Module
     ) -> cst.Module:
-        # On leaving a module, insert the dictionary and union types for any global descriptor types.
+        # On leaving a module, insert the dictionary and union types for any global descriptor classes.
         new_body: list[cst.CSTNode] = list(updated_node.body)
         changed = self._insert_descriptor_nodes(None, new_body)
         if changed:
@@ -153,7 +161,7 @@ class InsertTypesTransformer(cst.CSTTransformer):
     def leave_ClassDef(
         self, original_node: cst.ClassDef, updated_node: cst.ClassDef
     ) -> cst.ClassDef:
-        # On leaving a class, insert the dictionary and union types for any child descriptor types.
+        # On leaving a class, insert the dictionary and union types for any child descriptor classes.
         new_body: list[cst.CSTNode] = list(updated_node.body.body)
         changed = self._insert_descriptor_nodes(original_node, new_body)
         if changed:
@@ -306,6 +314,7 @@ class InsertTypesTransformer(cst.CSTTransformer):
 
         return type_alias, union_type_alias
 
+
 # Helper transformer base class that tracks whether we're within a parameter annotation
 # or a TypedDict call. This is used to determine whether we should be updating type names.
 class BaseParamAnnotationAndTypeDictTransformer(cst.CSTTransformer):
@@ -357,6 +366,7 @@ class BaseParamAnnotationAndTypeDictTransformer(cst.CSTTransformer):
             self.in_typed_dict_call -= 1
         return updated_node
 
+
 # Helper to build fully qualified attribute name from an attribute tree.
 def build_attribute_name(node: cst.Attribute):
     if isinstance(node.value, cst.Attribute):
@@ -366,11 +376,13 @@ def build_attribute_name(node: cst.Attribute):
     else:
         raise Exception("Unexpected node type in _build_attribute_name")
 
+
 # Helper to build an attribute tree from a fully qualified name.
 def build_attribute_tree(full_name: str):
     parts = full_name.split(".")
     parts.reverse()
     return _build_attribute_tree_recurse(parts, 0)
+
 
 # Internal recursive helper for build_attribute_tree.
 def _build_attribute_tree_recurse(parts: list[str], idx: int):
@@ -380,6 +392,7 @@ def _build_attribute_tree_recurse(parts: list[str], idx: int):
         value=_build_attribute_tree_recurse(parts, idx + 1),
         attr=cst.Name(parts[idx]),
     )
+
 
 # This transformer will replace parameter annotations or typed dict entries
 # with a new type that appends 'extension'.
@@ -413,6 +426,7 @@ class ReplaceTypesTransformer(BaseParamAnnotationAndTypeDictTransformer):
                 return build_attribute_tree(f"{full_name}{self.extension}")
 
         return updated_node
+
 
 # Creates a set of unions for vector types like uint3 with their implicit sequence type,
 # e.g. Union[uint3,Sequence[int]] and relaces references to the original type with the union.
@@ -537,6 +551,7 @@ class ExtendVectorTypeArgs(BaseParamAnnotationAndTypeDictTransformer):
             ],
         )
 
+
 # Replaces the 'ArrayLike' type for 'NDArray' for to_numpy functions.
 class FixNumpyArrays(cst.CSTTransformer):
     def __init__(self):
@@ -559,10 +574,12 @@ class FixNumpyArrays(cst.CSTTransformer):
             return updated_node.with_changes(value="NDArray")
         return updated_node
 
+
 # Loads a parsed file.
 def load_file(file_path) -> cst.Module:
     code = open(file_path).read()
     return cst.parse_module(code)
+
 
 # Gets convertible descriptor types from tree.
 def find_convertable_descriptors(tree: cst.Module) -> list[FCDStackInfo]:
@@ -593,12 +610,14 @@ def find_convertable_descriptors(tree: cst.Module) -> list[FCDStackInfo]:
     ]
     return convertable_types
 
+
 # Inserts the TypedDict and Union types for the discovered descriptor classes.
 def insert_converted_descriptors(
     tree: cst.Module, convertable_types: list[FCDStackInfo]
 ) -> cst.Module:
     transformer = InsertTypesTransformer(convertable_types)
     return tree.visit(transformer)
+
 
 # Insert typing imports
 def insert_typing_imports(tree: cst.Module) -> cst.Module:
@@ -644,6 +663,7 @@ def insert_typing_imports(tree: cst.Module) -> cst.Module:
         body=list(tree.body[:insert_idx]) + new_imports + list(tree.body[insert_idx:])
     )
 
+
 # Replaces argument and dictionary references to descriptor classes with their new types.
 def replace_types(
     tree: cst.Module, convertable_types: list[FCDStackInfo]
@@ -653,15 +673,18 @@ def replace_types(
     )
     return tree.visit(transformer)
 
+
 # Replaces vector types like uint3 with Union[uint3,Sequence[int]].
 def extend_vector_types(tree: cst.Module) -> cst.Module:
     transformer = ExtendVectorTypeArgs()
     return tree.visit(transformer)
 
+
 # Makes to_numpy functions return NDArray.
 def fix_numpy_types(tree: cst.Module) -> cst.Module:
     transformer = FixNumpyArrays()
     return tree.visit(transformer)
+
 
 if __name__ == "__main__":
 
@@ -675,14 +698,15 @@ if __name__ == "__main__":
     )
     args = vars(parser.parse_args())
     input_filename = args["file"]
-    output_filename = args["output"]
-
-    if not output_filename:
-        output_filename = input_filename
+    output_filename = args.get("out", input_filename)
 
     # Enable these for testing.
     # input_filename = str(Path(__file__).parent / "../build/windows-vs2022/bin/Debug/python/sgl/__init__.pyi")
     # output_filename = input_filename.replace(".pyi", "_2.pyi")
+
+    print("Post processing python stub:")
+    print(f"  Input: {input_filename}")
+    print(f"  Output: {output_filename}")
 
     tree = load_file(input_filename)
 
