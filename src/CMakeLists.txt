@@ -446,12 +446,12 @@ if(SGL_BUILD_PYTHON)
 
     # Post processes stub file in intermediate directory and outputs to
     # build directory.
-    function(postprocessed_nanobind_add_stub stub_file)
+    function(postprocess_stub stub_file)
         add_custom_command(
             OUTPUT ${SGL_OUTPUT_DIRECTORY}/python/sgl/${stub_file}
-            COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/postprocess_stub.py --file=${SGL_STUB_INTERMEDIATE_DIRECTORY}/${stub_file} --out=${SGL_OUTPUT_DIRECTORY}/python/sgl/${stub_file}
+            COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/postprocess_stub.py --file=${SGL_STUB_INTERMEDIATE_DIRECTORY}/${stub_file} --out=${SGL_OUTPUT_DIRECTORY}/python/sgl/${stub_file} --quiet
             DEPENDS ${SGL_STUB_INTERMEDIATE_DIRECTORY}/${stub_file}
-            COMMENT "Processing generated stub file"
+            COMMENT "Post-processing stub ${stub_file}"
         )
         add_custom_target(postprocess_stub_output ALL DEPENDS ${SGL_OUTPUT_DIRECTORY}/python/sgl/${stub_file})
     endfunction()
