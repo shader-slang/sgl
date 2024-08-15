@@ -65,7 +65,7 @@ class PipelineTestContext:
         indices = np.array([0, 1, 2, 1, 3, 2], dtype=np.uint32)
 
         vertex_buffer = self.device.create_buffer(
-            usage=sgl.ResourceUsage.shader_resource,
+            usage=sgl.ResourceUsage.shader_resource | sgl.ResourceUsage.vertex,
             debug_name="vertex_buffer",
             data=vertices,
         )
@@ -81,7 +81,7 @@ class PipelineTestContext:
             vertex_streams=[{"stride": 12}],
         )
         index_buffer = self.device.create_buffer(
-            usage=sgl.ResourceUsage.shader_resource,
+            usage=sgl.ResourceUsage.shader_resource | sgl.ResourceUsage.index,
             debug_name="index_buffer",
             data=indices,
         )
@@ -165,7 +165,7 @@ class GfxContext:
     def __init__(self, ctx: PipelineTestContext) -> None:
         self.ctx = ctx
         self.program = ctx.device.load_program(
-            "test_pipeline_utils.slang", ["vertex_main", "fragment_main"]
+            "test_pipeline_raster.slang", ["vertex_main", "fragment_main"]
         )
         self.vertex_buffer, self.index_buffer, self.input_layout = (
             ctx.create_quad_mesh()
@@ -187,11 +187,11 @@ class GfxContext:
         clear=True,
     ):
         command_buffer = self.ctx.device.create_command_buffer()
+        if clear:
+            command_buffer.clear_resource_view(
+                self.ctx.output_texture.get_rtv(), [0.0, 0.0, 0.0, 1.0]
+            )
         with command_buffer.encode_render_commands(self.framebuffer) as encoder:
-            if clear:
-                command_buffer.clear_resource_view(
-                    self.ctx.output_texture.get_rtv(), [0.0, 0.0, 0.0, 1.0]
-                )
             if viewport:
                 encoder.set_viewport_and_scissor_rect(viewport)
             else:
@@ -341,11 +341,10 @@ def test_gfx_depth(device_type):
 
     # Manually clear both buffers and verify results.
     command_buffer = ctx.device.create_command_buffer()
-    with command_buffer.encode_render_commands(gfx.framebuffer) as encoder:
-        command_buffer.clear_resource_view(
-            ctx.output_texture.get_rtv(), [0.0, 0.0, 0.0, 1.0]
-        )
-        command_buffer.clear_resource_view(depth_texture.get_dsv(), 0.5, 0, True, True)
+    command_buffer.clear_resource_view(
+        ctx.output_texture.get_rtv(), [0.0, 0.0, 0.0, 1.0]
+    )
+    command_buffer.clear_resource_view(depth_texture.get_dsv(), 0.5, 0, True, True)
     command_buffer.submit()
     ctx.expect_counts([0, 0, 0, area])
 
@@ -480,6 +479,9 @@ def test_gfx_blend(device_type):
 # On Vulkan using 50% alpha coverage we get a checkerboard effect.
 @pytest.mark.parametrize("device_type", [sgl.DeviceType.vulkan])
 def test_gfx_alpha_coverage(device_type):
+    if device_type == sgl.DeviceType.vulkan and sys.platform == "darwin":
+        pytest.skip("MoltenVK alpha coverage not working as expected")
+
     ctx = PipelineTestContext(device_type)
     gfx = GfxContext(ctx)
     area = ctx.output_texture.width * ctx.output_texture.height
@@ -511,6 +513,9 @@ def test_gfx_alpha_coverage(device_type):
 
 class RayContext:
     def __init__(self, ctx: PipelineTestContext) -> None:
+        if not "raytracing" in ctx.device.features:
+            pytest.skip("Ray tracing not supported on this device")
+
         self.ctx = ctx
 
         vertices = np.array([0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0], dtype=np.float32)
@@ -651,7 +656,7 @@ class RayContext:
             raise ValueError(f"Unknown mode {mode}")
 
     def dispatch_ray_grid_compute(self, tlas: sgl.AccelerationStructure):
-        program = self.ctx.device.load_program("test_pipeline_utils.slang", ["raygrid"])
+        program = self.ctx.device.load_program("test_pipeline_rt.slang", ["raygrid"])
         kernel = self.ctx.device.create_compute_kernel(program)
         kernel.dispatch(
             thread_count=[
@@ -670,7 +675,7 @@ class RayContext:
 
     def dispatch_ray_grid_rtp(self, tlas: sgl.AccelerationStructure):
         program = self.ctx.device.load_program(
-            "test_pipeline_utils.slang", ["rt_ray_gen", "rt_miss", "rt_closest_hit"]
+            "test_pipeline_rt.slang", ["rt_ray_gen", "rt_miss", "rt_closest_hit"]
         )
         pipeline = self.ctx.device.create_ray_tracing_pipeline(
             program=program,
@@ -707,9 +712,7 @@ class RayContext:
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 @pytest.mark.parametrize("mode", ["compute", "ray"])
 def test_raytrace_simple(device_type, mode):
-    ctx = PipelineTestContext(
-        device_type,
-    )
+    ctx = PipelineTestContext(device_type)
     rtx = RayContext(ctx)
 
     # Setup instance transform causes the [0-1] quad to cover the top left
