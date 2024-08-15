@@ -742,12 +742,18 @@ if __name__ == "__main__":
     )
     args = vars(parser.parse_args())
     input_filename = args["file"]
-    output_filename = args.get("out", input_filename)
+    output_filename = args.get("out")
+    if output_filename is None:
+        output_filename = input_filename
     QUIET = args.get("quiet", False)
 
     # Enable these for testing.
     # input_filename = str(Path(__file__).parent / "../build/windows-vs2022/bin/Debug/python/sgl/__init__.pyi")
     # output_filename = input_filename.replace(".pyi", "_2.pyi")
+
+    # Single message in quiet mode
+    if QUIET:
+        print(f"Post processing {input_filename}")
 
     print_verbose("Post processing python stub:")
     print_verbose(f"  Input: {input_filename}")
