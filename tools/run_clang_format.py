@@ -191,7 +191,7 @@ def run_clang_format_diff_wrapper(args, file):
         raise UnexpectedError("{}: {}: {}".format(file, e.__class__.__name__, e), e)
 
 
-def run_clang_format_diff(args, file) -> tuple[list[str], bytes]:
+def run_clang_format_diff(args, file) -> tuple[list[str], list[str]]:
     ext = os.path.splitext(file)[1][1:]
     is_slang = ext in args.slang_extensions.split(",")
 
@@ -214,7 +214,7 @@ def run_clang_format_diff(args, file) -> tuple[list[str], bytes]:
 
     if args.dry_run:
         print(" ".join(invocation))
-        return [], bytes()
+        return [], []
 
     try:
         proc = subprocess.Popen(
@@ -264,20 +264,21 @@ def run_clang_format_diff(args, file) -> tuple[list[str], bytes]:
 
     original_lines = ins.decode("utf-8").splitlines(keepends=True)
     formatted_lines = outs.decode("utf-8").splitlines(keepends=True)
+    decoded_errs = errs.decode("utf-8").splitlines(keepends=True)
 
     if proc.returncode:
         raise DiffError(
             "Command '{}' returned non-zero exit status {}".format(
                 subprocess.list2cmdline(invocation), proc.returncode
             ),
-            errs,
+            decoded_errs,
         )
 
     if args.in_place and outs != ins:
         open(file, "wb").write(outs)
-        return [], errs
+        return [], decoded_errs
 
-    return make_diff(file, original_lines, formatted_lines), errs
+    return make_diff(file, original_lines, formatted_lines), decoded_errs
 
 
 def bold_red(s):
@@ -488,7 +489,7 @@ def main():
                 pool.terminate()
             break
         else:
-            sys.stderr.writelines(errs)  # type: ignore (TYPINGTODO: errs does seem to be a bytes object)
+            sys.stderr.writelines(errs)
             if outs == []:
                 continue
             if not args.quiet:
