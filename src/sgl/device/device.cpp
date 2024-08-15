@@ -300,15 +300,9 @@ Device::Device(const DeviceDesc& desc)
 {
     ConstructorRefGuard ref_guard(this);
 
-    // Create hot reload system before creating any sessions
-    if (m_desc.enable_hot_reload) {
-        // Check for none-supported platforms.
-#if SGL_WINDOWS || SGL_LINUX
+    // Create hot reload system before creating any sessions.
+    if (m_desc.enable_hot_reload)
         m_hot_reload = make_ref<HotReload>(ref<Device>(this));
-#else
-        log_warn("Hot reload is currently only supported on windows and linux\n");
-#endif
-    }
 
     SLANG_CALL(slang::createGlobalSession(m_global_session.writeRef()));
 
@@ -500,20 +494,13 @@ Device::Device(const DeviceDesc& desc)
 
 Device::~Device()
 {
-    close();
-
-    m_gfx_graphics_queue.setNull();
-    m_gfx_device.setNull();
-
-#if SGL_HAS_NVAPI
-    m_api_dispatcher.reset();
-#endif
-
     // Remove device from global device list.
     {
         std::lock_guard lock(s_devices_mutex);
         s_devices.erase(std::remove(s_devices.begin(), s_devices.end(), this), s_devices.end());
     }
+
+    close();
 }
 
 ShaderCacheStats Device::shader_cache_stats() const
@@ -565,6 +552,14 @@ void Device::close()
     m_deferred_release_queue = {};
 
     m_slang_session.reset();
+    m_hot_reload.reset();
+
+    m_gfx_graphics_queue.setNull();
+    m_gfx_device.setNull();
+
+#if SGL_HAS_NVAPI
+    m_api_dispatcher.reset();
+#endif
 }
 
 void Device::close_all_devices()
