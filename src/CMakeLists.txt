@@ -446,8 +446,8 @@ if(SGL_BUILD_PYTHON)
     function(postprocess_stub stub_file)
         add_custom_command(
             APPEND
-            OUTPUT ${SGL_OUTPUT_DIRECTORY}/python/sgl/${stub_file}
-            COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/postprocess_stub.py --file=${SGL_OUTPUT_DIRECTORY}/python/sgl/${stub_file} --quiet
+            OUTPUT ${stub_file}
+            COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/postprocess_stub.py --file=${stub_file} --quiet
             COMMENT "Post-processing stub ${stub_file}"
         )
     endfunction()
@@ -462,7 +462,7 @@ if(SGL_BUILD_PYTHON)
     )
 
     # Post-process the main stub file and output to build directory.
-    postprocess_stub(__init__.pyi)
+    postprocess_stub(${SGL_OUTPUT_DIRECTORY}/python/sgl/__init__.pyi)
 
     # Generate submodule stub files straight ot build directory
     # as they aren't currently post-processed.
