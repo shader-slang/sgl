@@ -500,7 +500,7 @@ Device::~Device()
         s_devices.erase(std::remove(s_devices.begin(), s_devices.end(), this), s_devices.end());
     }
 
-    close();
+    SGL_CHECK(m_closed, "Device is not close. Call close() before destroying the device.");
 }
 
 ShaderCacheStats Device::shader_cache_stats() const
@@ -536,6 +536,9 @@ void Device::close()
 
     wait();
 
+    // Make sure Device's ref count is not going to zero when releasing resources.
+    inc_ref();
+
     m_closed = true;
 
     m_blitter.reset();
@@ -560,6 +563,8 @@ void Device::close()
 #if SGL_HAS_NVAPI
     m_api_dispatcher.reset();
 #endif
+
+    dec_ref();
 }
 
 void Device::close_all_devices()
