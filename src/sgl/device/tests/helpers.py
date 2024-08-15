@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from hashlib import sha256
+from os import PathLike
+from typing import Any, cast
 import sgl
 import sys
 import pytest
@@ -80,13 +82,13 @@ class Context:
 
 def dispatch_compute(
     device: sgl.Device,
-    path: str,
+    path: PathLike,
     entry_point: str,
     thread_count: list[int],
     buffers: dict = {},
     textures: dict = {},
     defines: dict[str, str] = {},
-    compiler_options: dict = {},
+    compiler_options: "sgl.SlangCompilerOptionsDict" = {},
     shader_model: sgl.ShaderModel = sgl.ShaderModel.sm_6_6,
 ) -> Context:
     if shader_model > device.supported_shader_model:
@@ -107,10 +109,12 @@ def dispatch_compute(
     params = {}
 
     for name, desc in buffers.items():
+        is_global = kernel.reflection.find_field(name).is_valid()
+
         if isinstance(desc, sgl.Buffer):
             buffer = desc
         else:
-            args = {
+            args: Any = {
                 "usage": sgl.ResourceUsage.shader_resource
                 | sgl.ResourceUsage.unordered_access,
             }
@@ -130,7 +134,6 @@ def dispatch_compute(
 
         ctx.buffers[name] = buffer
 
-        is_global = kernel.reflection.find_field(name).is_valid()
         if is_global:
             vars[name] = buffer
         else:

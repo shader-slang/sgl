@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
+# pyright: reportArgumentType=false, reportRedeclaration=false
+
 import pytest
 from sgl import float4, uint4, bool4
 

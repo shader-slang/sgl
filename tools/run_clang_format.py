@@ -191,7 +191,7 @@ def run_clang_format_diff_wrapper(args, file):
         raise UnexpectedError("{}: {}: {}".format(file, e.__class__.__name__, e), e)
 
 
-def run_clang_format_diff(args, file):
+def run_clang_format_diff(args, file) -> tuple[list[str], list[str]]:
     ext = os.path.splitext(file)[1][1:]
     is_slang = ext in args.slang_extensions.split(",")
 
@@ -264,20 +264,21 @@ def run_clang_format_diff(args, file):
 
     original_lines = ins.decode("utf-8").splitlines(keepends=True)
     formatted_lines = outs.decode("utf-8").splitlines(keepends=True)
+    decoded_errs = errs.decode("utf-8").splitlines(keepends=True)
 
     if proc.returncode:
         raise DiffError(
             "Command '{}' returned non-zero exit status {}".format(
                 subprocess.list2cmdline(invocation), proc.returncode
             ),
-            errs,
+            decoded_errs,
         )
 
     if args.in_place and outs != ins:
         open(file, "wb").write(outs)
-        return [], errs
+        return [], decoded_errs
 
-    return make_diff(file, original_lines, formatted_lines), errs
+    return make_diff(file, original_lines, formatted_lines), decoded_errs
 
 
 def bold_red(s):
@@ -403,12 +404,12 @@ def main():
     # https://bugs.python.org/issue14229#msg156446
     signal.signal(signal.SIGINT, signal.SIG_DFL)
     try:
-        signal.SIGPIPE
+        signal.SIGPIPE  # type: ignore (windows)
     except AttributeError:
         # compatibility, SIGPIPE does not exist on Windows
         pass
     else:
-        signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+        signal.signal(signal.SIGPIPE, signal.SIG_DFL)  # type: ignore (windows)
 
     colored_stdout = False
     colored_stderr = False

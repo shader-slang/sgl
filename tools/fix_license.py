@@ -8,7 +8,7 @@ import sys
 import os
 import re
 import argparse
-from typing import List
+from typing import List, Sequence
 from pathlib import Path
 
 PROJECT_DIR = Path(__file__).parent.parent.resolve()
@@ -31,9 +31,9 @@ SPDX_IDENTIFIER_PYTHON = f"# {SPDX_IDENTIFIER}\n\n"
 
 def list_files(
     root: Path,
-    include: List[os.PathLike],
-    exclude: List[os.PathLike],
-    extensions: List[str] = [],
+    include: Sequence[os.PathLike | str],
+    exclude: Sequence[os.PathLike | str],
+    extensions: Sequence[str] = [],
 ):
     # collect files
     files = []

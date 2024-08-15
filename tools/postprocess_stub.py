@@ -129,14 +129,14 @@ class FindConvertableToDictionaryTypes(cst.CSTVisitor):
             if self._is_setter(node):
                 self.stack[-1].fields.append(
                     FCDFieldInfo(
-                        node.name, node.params.posonly_params[1].annotation.annotation  # type: ignore
+                        node.name, node.params.posonly_params[1].annotation.annotation  # type: ignore (bad libcst typing info)
                     )
                 )
 
     def _annotation_name_equals(self, annotation: Optional[cst.Annotation], name: str):
         if annotation is not None:
             return m.matches(
-                annotation, m.Annotation(annotation=m.Name(name))  # type: ignore
+                annotation, m.Annotation(annotation=m.Name(name))  # type: ignore (bad libcst typing info)
             )
         return False
 
@@ -273,6 +273,7 @@ class InsertTypesTransformer(cst.CSTTransformer):
                     value=cst.SimpleString(f'"{result.class_type.name.value}Dict"'),
                 ),
                 cst.Arg(value=dict_def),
+                cst.Arg(keyword=cst.Name("total"), value=cst.Name("False")),
             ],
         )
 
@@ -434,7 +435,9 @@ class ReplaceTypesTransformer(BaseParamAnnotationAndTypeDictTransformer):
             full_name = build_attribute_name(updated_node)
             if full_name in self.types_by_full_name:
                 self.replacements += 1
-                return build_attribute_tree(f"{full_name}{self.extension}")
+                return cast(
+                    cst.Attribute, build_attribute_tree(f"{full_name}{self.extension}")
+                )
 
         return updated_node
 
@@ -539,7 +542,7 @@ class ExtendVectorTypeArgs(BaseParamAnnotationAndTypeDictTransformer):
             + list(updated_node.body[insert_idx:])
         )
 
-    def _union_with_name(self, node: cst.Attribute, name: str):
+    def _union_with_name(self, node: cst.Attribute | cst.Name, name: str):
         return cst.Subscript(
             value=cst.Name("Union"),
             slice=[
@@ -548,7 +551,7 @@ class ExtendVectorTypeArgs(BaseParamAnnotationAndTypeDictTransformer):
             ],
         )
 
-    def _union_with_sequence(self, node: cst.Attribute, sequence_type: str):
+    def _union_with_sequence(self, node: cst.Attribute | cst.Name, sequence_type: str):
         return cst.Subscript(
             value=cst.Name("Union"),
             slice=[

@@ -101,6 +101,10 @@ jobs:
       - name: Build
         run: python tools/ci.py build
 
+      # Typing Checks (Python)
+      - name: Typing Checks (Python)
+        run: python tools/ci.py typing-check-python
+
       # Unit Tests (C++)
       - name: Unit Tests (C++)
         run: python tools/ci.py unit-test-cpp

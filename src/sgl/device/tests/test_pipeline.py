@@ -1,10 +1,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
+from typing import Any, Optional
 import sgl
 import pytest
 import numpy as np
 import sys
 from pathlib import Path
+from numpy.typing import ArrayLike
 
 sys.path.append(str(Path(__file__).parent))
 import helpers
@@ -178,12 +180,12 @@ class GfxContext:
     # The quad is [-1,-1]->[1,1] so if offset/scale aren't specified will fill the whole screen.
     def draw(
         self,
-        pipeline: sgl.Pipeline,
+        pipeline: sgl.GraphicsPipeline,
         vert_offset=sgl.float2(0, 0),
         vert_scale=sgl.float2(1, 1),
         vert_z=0.0,
         color=sgl.float4(0, 0, 0, 0),
-        viewport: sgl.Viewport = None,
+        viewport: Optional[sgl.Viewport] = None,
         clear=True,
     ):
         command_buffer = self.ctx.device.create_command_buffer()
@@ -227,10 +229,10 @@ class GfxContext:
         self,
         vert_offset=sgl.float2(0, 0),
         vert_scale=sgl.float2(1, 1),
-        vert_z=0,
+        vert_z: float = 0,
         color=sgl.float4(0, 0, 0, 0),
         clear=True,
-        viewport: sgl.Viewport = None,
+        viewport: Optional[sgl.Viewport] = None,
         **kwargs,
     ):
         pipeline = self.create_graphics_pipeline(**kwargs)
@@ -589,7 +591,7 @@ class RayContext:
 
         self.blas = blas
 
-    def create_instances(self, instance_transforms: np.ndarray):
+    def create_instances(self, instance_transforms: Any):
 
         instances: list[sgl.RayTracingInstanceDesc] = []
         for i, transform in enumerate(instance_transforms):
