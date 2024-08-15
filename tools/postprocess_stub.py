@@ -129,14 +129,14 @@ class FindConvertableToDictionaryTypes(cst.CSTVisitor):
             if self._is_setter(node):
                 self.stack[-1].fields.append(
                     FCDFieldInfo(
-                        node.name, node.params.posonly_params[1].annotation.annotation  # type: ignore
+                        node.name, node.params.posonly_params[1].annotation.annotation  # type: ignore (bad libcst typing info)
                     )
                 )
 
     def _annotation_name_equals(self, annotation: Optional[cst.Annotation], name: str):
         if annotation is not None:
             return m.matches(
-                annotation, m.Annotation(annotation=m.Name(name))  # type: ignore
+                annotation, m.Annotation(annotation=m.Name(name))  # type: ignore (bad libcst typing info)
             )
         return False
 
@@ -273,6 +273,7 @@ class InsertTypesTransformer(cst.CSTTransformer):
                     value=cst.SimpleString(f'"{result.class_type.name.value}Dict"'),
                 ),
                 cst.Arg(value=dict_def),
+                cst.Arg(keyword=cst.Name("total"), value=cst.Name("False")),
             ],
         )
 

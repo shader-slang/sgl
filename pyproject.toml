@@ -6,3 +6,4 @@ build-backend = "setuptools.build_meta"
 include = ["./src","./tools"]
 extraPaths = ["./src/sgl/device/tests"]
 ignore = ["./tools/host","./tools/download"]
+pythonVersion = "3.10"
