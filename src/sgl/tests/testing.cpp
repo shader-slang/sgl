@@ -95,11 +95,15 @@ void run_gpu_test(void (*func)(GpuTestContext&))
                     .enable_debug_layers = true,
                 };
                 device = Device::create(desc);
-                g_cached_devices[device_type] = device;
+                if (use_cached_device)
+                    g_cached_devices[device_type] = device;
             }
 
             GpuTestContext ctx{.device = device};
             func(ctx);
+
+            if (!use_cached_device)
+                device->close();
         }
     }
 }

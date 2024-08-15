@@ -260,7 +260,6 @@ DebugPrinter::DebugPrinter(Device* device, size_t buffer_size)
         .usage = ResourceUsage::unordered_access,
         .debug_name = "debug_printer_buffer",
     });
-    m_buffer->break_strong_reference_to_device();
 
     m_readback_buffer = m_device->create_buffer({
         .size = buffer_size,
@@ -268,7 +267,6 @@ DebugPrinter::DebugPrinter(Device* device, size_t buffer_size)
         .memory_type = MemoryType::read_back,
         .debug_name = "debug_printer_readback_buffer",
     });
-    m_readback_buffer->break_strong_reference_to_device();
 }
 
 void DebugPrinter::add_hashed_strings(const std::map<uint32_t, std::string>& hashed_strings)

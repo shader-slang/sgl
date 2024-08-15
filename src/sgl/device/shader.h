@@ -307,8 +307,6 @@ public:
 
     std::string to_string() const override;
 
-    void break_strong_reference_to_device() { m_device.break_strong_reference(); }
-
     // Internal functions to link programs+modules to their owning session
     void _register_program(ShaderProgram* program);
     void _unregister_program(ShaderProgram* program);
@@ -319,7 +317,7 @@ public:
     ref<SlangSessionData> _data() { return m_data; }
 
 private:
-    breakable_ref<Device> m_device;
+    ref<Device> m_device;
 
     /// Descriptor containing all info required to build the session.
     SlangSessionDesc m_desc;

@@ -26,7 +26,7 @@ class SGL_API App : Object {
     SGL_OBJECT(App)
 public:
     App(AppDesc desc);
-    virtual ~App() = default;
+    virtual ~App();
 
     Device* device() const { return m_device; }
 

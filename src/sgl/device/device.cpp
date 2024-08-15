@@ -41,9 +41,14 @@
 #include <nvapi.h>
 #endif
 
+#include <mutex>
+
 namespace sgl {
 
 static constexpr size_t TEXTURE_UPLOAD_ALIGNMENT = 512;
+
+static std::vector<Device*> s_devices;
+static std::mutex s_devices_mutex;
 
 class DebugLogger : public gfx::IDebugCallback {
 public:
@@ -295,15 +300,9 @@ Device::Device(const DeviceDesc& desc)
 {
     ConstructorRefGuard ref_guard(this);
 
-    // Create hot reload system before creating any sessions
-    if (m_desc.enable_hot_reload) {
-        // Check for none-supported platforms.
-#if SGL_WINDOWS || SGL_LINUX
+    // Create hot reload system before creating any sessions.
+    if (m_desc.enable_hot_reload)
         m_hot_reload = make_ref<HotReload>(ref<Device>(this));
-#else
-        log_warn("Hot reload is currently only supported on windows and linux\n");
-#endif
-    }
 
     SLANG_CALL(slang::createGlobalSession(m_global_session.writeRef()));
 
@@ -457,11 +456,9 @@ Device::Device(const DeviceDesc& desc)
         .add_default_include_paths = true,
         .cache_path = m_shader_cache_enabled ? std::optional(m_shader_cache_path) : std::nullopt,
     });
-    m_slang_session->break_strong_reference_to_device();
 
     // Create global fence to synchronize command submission.
     m_global_fence = create_fence({.shared = m_desc.enable_cuda_interop});
-    m_global_fence->break_strong_reference_to_device();
 
     // Setup CUDA interop.
     if (m_desc.enable_cuda_interop) {
@@ -477,7 +474,6 @@ Device::Device(const DeviceDesc& desc)
          .page_size = 1024 * 1024 * 4,
          .debug_name = "default_upload_heap"}
     );
-    m_upload_heap->break_strong_reference_to_device();
 
     m_read_back_heap = create_memory_heap(
         {.memory_type = MemoryType::read_back,
@@ -485,38 +481,26 @@ Device::Device(const DeviceDesc& desc)
          .page_size = 1024 * 1024 * 4,
          .debug_name = "default_read_back_heap"}
     );
-    m_read_back_heap->break_strong_reference_to_device();
 
     if (m_desc.enable_print)
         m_debug_printer = std::make_unique<DebugPrinter>(this);
+
+    // Add device to global device list.
+    {
+        std::lock_guard lock(s_devices_mutex);
+        s_devices.push_back(this);
+    }
 }
 
 Device::~Device()
 {
-    wait();
+    // Remove device from global device list.
+    {
+        std::lock_guard lock(s_devices_mutex);
+        s_devices.erase(std::remove(s_devices.begin(), s_devices.end(), this), s_devices.end());
+    }
 
-    m_blitter.reset();
-
-    m_debug_printer.reset();
-
-    m_read_back_heap.reset();
-    m_upload_heap.reset();
-
-    m_global_fence.reset();
-
-    m_current_transient_resource_heap.setNull();
-    m_in_flight_transient_resource_heaps = {};
-    m_transient_resource_heap_pool = {};
-    m_deferred_release_queue = {};
-
-    m_slang_session.reset();
-
-    m_gfx_graphics_queue.setNull();
-    m_gfx_device.setNull();
-
-#if SGL_HAS_NVAPI
-    m_api_dispatcher.reset();
-#endif
+    SGL_CHECK(m_closed, "Device is not close. Call close() before destroying the device.");
 }
 
 ShaderCacheStats Device::shader_cache_stats() const
@@ -541,6 +525,57 @@ ResourceStateSet Device::get_format_supported_resource_states(Format format) con
         if (gfx_state_set.contains(static_cast<gfx::ResourceState>(i)))
             state_set.insert(static_cast<ResourceState>(i));
     return state_set;
+}
+
+void Device::close()
+{
+    if (m_closed)
+        return;
+
+    log_debug("Closing device {}", fmt::ptr(this));
+
+    wait();
+
+    // Make sure Device's ref count is not going to zero when releasing resources.
+    inc_ref();
+
+    m_closed = true;
+
+    m_blitter.reset();
+    m_debug_printer.reset();
+
+    m_read_back_heap.reset();
+    m_upload_heap.reset();
+
+    m_global_fence.reset();
+
+    m_current_transient_resource_heap.setNull();
+    m_in_flight_transient_resource_heaps = {};
+    m_transient_resource_heap_pool = {};
+    m_deferred_release_queue = {};
+
+    m_slang_session.reset();
+    m_hot_reload.reset();
+
+    m_gfx_graphics_queue.setNull();
+    m_gfx_device.setNull();
+
+#if SGL_HAS_NVAPI
+    m_api_dispatcher.reset();
+#endif
+
+    dec_ref();
+}
+
+void Device::close_all_devices()
+{
+    std::vector<Device*> devices;
+    {
+        std::lock_guard lock(s_devices_mutex);
+        devices = s_devices;
+    }
+    for (Device* device : devices)
+        device->close();
 }
 
 ref<Swapchain> Device::create_swapchain(SwapchainDesc desc, Window* window)
@@ -983,6 +1018,10 @@ OwnedSubresourceData Device::read_texture_data(const Texture* texture, uint32_t 
 
 void Device::deferred_release(ISlangUnknown* object)
 {
+    // Skip deferred release when device is already closed (or in the process of being closed).
+    if (m_closed)
+        return;
+
     m_deferred_release_queue.push({
         .fence_value = m_global_fence ? m_global_fence->signaled_value() : 0,
         .object = Slang::ComPtr<ISlangUnknown>(object),

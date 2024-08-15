@@ -23,13 +23,11 @@ Blitter::Blitter(Device* device)
         .min_filter = TextureFilteringMode::linear,
         .mag_filter = TextureFilteringMode::linear,
     });
-    m_linear_sampler->break_strong_reference_to_device();
 
     m_point_sampler = m_device->create_sampler({
         .min_filter = TextureFilteringMode::point,
         .mag_filter = TextureFilteringMode::point,
     });
-    m_point_sampler->break_strong_reference_to_device();
 }
 
 Blitter::~Blitter() { }
@@ -152,7 +150,6 @@ ref<ShaderProgram> Blitter::get_program(ProgramKey key)
             module->entry_point("fs_main"),
         }
     );
-    program->break_strong_reference_to_device();
 
     m_program_cache[key] = program;
     return program;
@@ -170,7 +167,6 @@ ref<GraphicsPipeline> Blitter::get_pipeline(ProgramKey key, const Framebuffer* f
         .program = program,
         .framebuffer_layout = framebuffer->layout(),
     });
-    pipeline->break_strong_reference_to_device();
 
     m_pipeline_cache[{key, framebuffer->layout()->desc()}] = pipeline;
     return pipeline;

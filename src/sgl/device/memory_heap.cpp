@@ -156,7 +156,6 @@ MemoryHeap::PageID MemoryHeap::allocate_page(DeviceSize size)
         .memory_type = m_desc.memory_type,
         .debug_name = fmt::format("{}[page_id={}]", m_desc.debug_name, page_id),
     });
-    buffer->break_strong_reference_to_device();
     m_pages[page_id] = {
         .buffer = buffer,
         .data = buffer->map<uint8_t>(),
