@@ -44,6 +44,14 @@ DESCRIPTOR_CONVERT_TYPES = {
     "TextureLoader.Options": True,
 }
 
+QUIET = False
+
+
+# Helper to print verbose output.
+def print_verbose(*args):
+    if not QUIET:
+        print(*args)
+
 
 # Field from a descriptor class that needs to be represented in the
 # corresponding dictionary type.
@@ -401,11 +409,13 @@ class ReplaceTypesTransformer(BaseParamAnnotationAndTypeDictTransformer):
         super().__init__()
         self.types_by_full_name = types_by_full_name
         self.extension = extension
+        self.replacements = 0
 
     def leave_Name(self, original_node: cst.Name, updated_node: cst.Name) -> cst.Name:
         # If within a parameter annotation or TypedDict call, update type names.
         if self.is_in_scope():
             if updated_node.value in self.types_by_full_name:
+                self.replacements += 1
                 return updated_node.with_changes(
                     value=f"{updated_node.value}{self.extension}"
                 )
@@ -423,6 +433,7 @@ class ReplaceTypesTransformer(BaseParamAnnotationAndTypeDictTransformer):
         if self.is_in_scope():
             full_name = build_attribute_name(updated_node)
             if full_name in self.types_by_full_name:
+                self.replacements += 1
                 return build_attribute_tree(f"{full_name}{self.extension}")
 
         return updated_node
@@ -463,6 +474,8 @@ class ExtendVectorTypeArgs(BaseParamAnnotationAndTypeDictTransformer):
             ("uint4", "int"),
         ]
         self.full_names = set([f"math.{x[0]}" for x in self.CONVERSIONS])
+        self.new_types = 0
+        self.replacements = 0
 
     def visit_Attribute(self, node: cst.Attribute) -> Optional[bool]:
         return False  # don't step into attributes - we just want to treat as fully qualified names
@@ -476,6 +489,7 @@ class ExtendVectorTypeArgs(BaseParamAnnotationAndTypeDictTransformer):
         if self.is_in_scope():
             full_name = build_attribute_name(updated_node)
             if full_name in self.full_names:
+                self.replacements += 1
                 return cast(cst.Attribute, cst.Name(f"{updated_node.attr.value}param"))
 
         return updated_node
@@ -506,6 +520,9 @@ class ExtendVectorTypeArgs(BaseParamAnnotationAndTypeDictTransformer):
                     ]
                 )
             )
+
+        # Store number added
+        self.new_types = len(new_union_types)
 
         # To keep things neat, find the existing typing import.
         insert_idx = 0
@@ -557,6 +574,7 @@ class FixNumpyArrays(cst.CSTTransformer):
     def __init__(self):
         super().__init__()
         self.in_numpy_function = 0
+        self.replacements = 0
 
     def visit_FunctionDef(self, node: cst.FunctionDef) -> Optional[bool]:
         if node.name.value == "to_numpy":
@@ -571,6 +589,7 @@ class FixNumpyArrays(cst.CSTTransformer):
 
     def leave_Name(self, original_node: cst.Name, updated_node: cst.Name) -> cst.Name:
         if self.in_numpy_function > 0 and updated_node.value == "ArrayLike":
+            self.replacements += 1
             return updated_node.with_changes(value="NDArray")
         return updated_node
 
@@ -608,6 +627,9 @@ def find_convertable_descriptors(tree: cst.Module) -> list[FCDStackInfo]:
         for x in find_convertable_types_visitor.results
         if DESCRIPTOR_CONVERT_TYPES[x.full_name]
     ]
+    print_verbose(
+        f"  Found {len(convertable_types)} descriptor types convertable to dictionaries."
+    )
     return convertable_types
 
 
@@ -616,7 +638,9 @@ def insert_converted_descriptors(
     tree: cst.Module, convertable_types: list[FCDStackInfo]
 ) -> cst.Module:
     transformer = InsertTypesTransformer(convertable_types)
-    return tree.visit(transformer)
+    res = tree.visit(transformer)
+    print_verbose(f"  Inserted descriptor dictionaries.")
+    return res
 
 
 # Insert typing imports
@@ -659,9 +683,14 @@ def insert_typing_imports(tree: cst.Module) -> cst.Module:
             ]
         ),
     ]
-    return tree.with_changes(
-        body=list(tree.body[:insert_idx]) + new_imports + list(tree.body[insert_idx:])
+
+    # Construct new body
+    new_body = list(tree.body[:insert_idx]) + new_imports + list(tree.body[insert_idx:])
+    print_verbose(
+        f"  Inserting {len(new_body)-len(tree.body)} import statements at index {insert_idx}."
     )
+
+    return tree.with_changes(body=new_body)
 
 
 # Replaces argument and dictionary references to descriptor classes with their new types.
@@ -671,19 +700,31 @@ def replace_types(
     transformer = ReplaceTypesTransformer(
         set([x.full_name for x in convertable_types]), "Param"
     )
-    return tree.visit(transformer)
+    res = tree.visit(transformer)
+    print_verbose(
+        f"  Replaced {transformer.replacements} type references to descriptor classes."
+    )
+    return res
 
 
 # Replaces vector types like uint3 with Union[uint3,Sequence[int]].
 def extend_vector_types(tree: cst.Module) -> cst.Module:
     transformer = ExtendVectorTypeArgs()
-    return tree.visit(transformer)
+    res = tree.visit(transformer)
+    print_verbose(
+        f"  Added {transformer.new_types} vector types and replaced {transformer.replacements} references to them."
+    )
+    return res
 
 
 # Makes to_numpy functions return NDArray.
 def fix_numpy_types(tree: cst.Module) -> cst.Module:
     transformer = FixNumpyArrays()
-    return tree.visit(transformer)
+    res = tree.visit(transformer)
+    print_verbose(
+        f"  Replaced {transformer.replacements} references to ArrayLike with NDArray in to_numpy functions."
+    )
+    return res
 
 
 if __name__ == "__main__":
@@ -696,17 +737,21 @@ if __name__ == "__main__":
         action="store",
         help="Out filename (defaults to overwriting input)",
     )
+    parser.add_argument(
+        "--quiet", action="store_true", help="Suppress output to console"
+    )
     args = vars(parser.parse_args())
     input_filename = args["file"]
     output_filename = args.get("out", input_filename)
+    QUIET = args.get("quiet", False)
 
     # Enable these for testing.
     # input_filename = str(Path(__file__).parent / "../build/windows-vs2022/bin/Debug/python/sgl/__init__.pyi")
     # output_filename = input_filename.replace(".pyi", "_2.pyi")
 
-    print("Post processing python stub:")
-    print(f"  Input: {input_filename}")
-    print(f"  Output: {output_filename}")
+    print_verbose("Post processing python stub:")
+    print_verbose(f"  Input: {input_filename}")
+    print_verbose(f"  Output: {output_filename}")
 
     tree = load_file(input_filename)
 
