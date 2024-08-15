@@ -34,7 +34,7 @@ def list_files(paths, recursive=False, extensions=[]):
 
 
 def prefix_length(s):
-    m = re.match("(\s+)", s)
+    m = re.match(r"(\s+)", s)
     if m:
         return len(m.group(0))
     return 0

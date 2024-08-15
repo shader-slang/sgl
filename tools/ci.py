@@ -71,6 +71,7 @@ def run_command(command, shell=True, env=None):
         shell=shell,
         env=env,
     )
+    assert process.stdout is not None
 
     out = ""
     while True:
@@ -153,6 +154,11 @@ def unit_test_cpp(args):
         f.write(report)
 
 
+def typing_check_python(args):
+    env = get_python_env(args)
+    run_command(f"pyright", env=env)
+
+
 def unit_test_python(args):
     env = get_python_env(args)
     os.makedirs("reports", exist_ok=True)
@@ -194,6 +200,10 @@ def main():
     parser_build = commands.add_parser("build", help="run cmake build")
 
     parser_test_cpp = commands.add_parser("unit-test-cpp", help="run unit tests (c++)")
+
+    parser_typing_check_python = commands.add_parser(
+        "typing-check-python", help="run pyright typing checks (python)"
+    )
 
     parser_test_python = commands.add_parser(
         "unit-test-python", help="run unit tests (python)"
@@ -252,6 +262,7 @@ def main():
         "configure": configure,
         "build": build,
         "unit-test-cpp": unit_test_cpp,
+        "typing-check-python": typing_check_python,
         "unit-test-python": unit_test_python,
         "coverage-report": coverage_report,
     }[args.command](args)

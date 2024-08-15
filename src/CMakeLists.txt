@@ -441,8 +441,7 @@ if(SGL_BUILD_PYTHON)
         LIBRARY_OUTPUT_DIRECTORY ${SGL_OUTPUT_DIRECTORY}/python/sgl
     )
 
-    # Post processes stub file in intermediate directory and outputs to
-    # build directory.
+    # Post processes (and overwrites) a stub file.
     function(postprocess_stub stub_file)
         add_custom_command(
             APPEND
@@ -452,7 +451,7 @@ if(SGL_BUILD_PYTHON)
         )
     endfunction()
 
-    # Generate main stub file into intermediate directory.
+    # Generate main stub file.
     nanobind_add_stub(
         sgl_stub
         MODULE sgl
@@ -461,11 +460,10 @@ if(SGL_BUILD_PYTHON)
         DEPENDS sgl_ext
     )
 
-    # Post-process the main stub file and output to build directory.
+    # Post-process the main stub file.
     postprocess_stub(${SGL_OUTPUT_DIRECTORY}/python/sgl/__init__.pyi)
 
-    # Generate submodule stub files straight ot build directory
-    # as they aren't currently post-processed.
+    # Generate submodule stub files.
     foreach(submodule IN ITEMS platform thread math ui tev renderdoc)
         string(REPLACE "." "/" submodule_path ${submodule})
         nanobind_add_stub(

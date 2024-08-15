@@ -4,3 +4,4 @@ pytest
 deepdiff
 libcst
 numpy
+pyright

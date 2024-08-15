@@ -434,7 +434,9 @@ class ReplaceTypesTransformer(BaseParamAnnotationAndTypeDictTransformer):
             full_name = build_attribute_name(updated_node)
             if full_name in self.types_by_full_name:
                 self.replacements += 1
-                return build_attribute_tree(f"{full_name}{self.extension}")
+                return cast(
+                    cst.Attribute, build_attribute_tree(f"{full_name}{self.extension}")
+                )
 
         return updated_node
 
@@ -539,7 +541,7 @@ class ExtendVectorTypeArgs(BaseParamAnnotationAndTypeDictTransformer):
             + list(updated_node.body[insert_idx:])
         )
 
-    def _union_with_name(self, node: cst.Attribute, name: str):
+    def _union_with_name(self, node: cst.Attribute | cst.Name, name: str):
         return cst.Subscript(
             value=cst.Name("Union"),
             slice=[
@@ -548,7 +550,7 @@ class ExtendVectorTypeArgs(BaseParamAnnotationAndTypeDictTransformer):
             ],
         )
 
-    def _union_with_sequence(self, node: cst.Attribute, sequence_type: str):
+    def _union_with_sequence(self, node: cst.Attribute | cst.Name, sequence_type: str):
         return cst.Subscript(
             value=cst.Name("Union"),
             slice=[

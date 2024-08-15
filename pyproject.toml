@@ -1,3 +1,8 @@
 [build-system]
 requires = ["setuptools", "wheel", "typing-extensions"]
 build-backend = "setuptools.build_meta"
+
+[tool.pyright]
+include = ["./src","./tools"]
+extraPaths = ["./src/sgl/device/tests"]
+ignore = ["./tools/host","./tools/download"]

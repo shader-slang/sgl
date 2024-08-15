@@ -82,4 +82,4 @@ def process_file(path: Path):
 
 
 for path in sys.argv[1:]:
-    process_file(path)
+    process_file(Path(path))

@@ -191,7 +191,7 @@ def run_clang_format_diff_wrapper(args, file):
         raise UnexpectedError("{}: {}: {}".format(file, e.__class__.__name__, e), e)
 
 
-def run_clang_format_diff(args, file):
+def run_clang_format_diff(args, file) -> tuple[list[str], bytes]:
     ext = os.path.splitext(file)[1][1:]
     is_slang = ext in args.slang_extensions.split(",")
 
@@ -214,7 +214,7 @@ def run_clang_format_diff(args, file):
 
     if args.dry_run:
         print(" ".join(invocation))
-        return [], []
+        return [], bytes()
 
     try:
         proc = subprocess.Popen(
@@ -403,12 +403,12 @@ def main():
     # https://bugs.python.org/issue14229#msg156446
     signal.signal(signal.SIGINT, signal.SIG_DFL)
     try:
-        signal.SIGPIPE
+        signal.SIGPIPE  # type: ignore (windows)
     except AttributeError:
         # compatibility, SIGPIPE does not exist on Windows
         pass
     else:
-        signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+        signal.signal(signal.SIGPIPE, signal.SIG_DFL)  # type: ignore (windows
 
     colored_stdout = False
     colored_stderr = False
@@ -488,7 +488,7 @@ def main():
                 pool.terminate()
             break
         else:
-            sys.stderr.writelines(errs)
+            sys.stderr.writelines(errs)  # type: ignore (TYPINGTODO: errs does seem to be a bytes object)
             if outs == []:
                 continue
             if not args.quiet:
