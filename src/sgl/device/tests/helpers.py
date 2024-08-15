@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from hashlib import sha256
+from os import PathLike
 from typing import Any, cast
 import sgl
 import sys
@@ -81,7 +82,7 @@ class Context:
 
 def dispatch_compute(
     device: sgl.Device,
-    path: str | Path,
+    path: PathLike,
     entry_point: str,
     thread_count: list[int],
     buffers: dict = {},
