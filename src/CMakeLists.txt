@@ -441,14 +441,35 @@ if(SGL_BUILD_PYTHON)
         LIBRARY_OUTPUT_DIRECTORY ${SGL_OUTPUT_DIRECTORY}/python/sgl
     )
 
-    # Generate python stub files.
+    # Where to store intermediate python stub files for sgl.
+    set(SGL_STUB_INTERMEDIATE_DIRECTORY ${SGL_INTERMEDIATE_DIRECTORY}/python/sgl)
+
+    # Post processes stub file in intermediate directory and outputs to
+    # build directory.
+    function(postprocessed_nanobind_add_stub stub_file)
+        add_custom_command(
+            OUTPUT ${SGL_OUTPUT_DIRECTORY}/python/sgl/${stub_file}
+            COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/postprocess_stub.py --file=${SGL_STUB_INTERMEDIATE_DIRECTORY}/${stub_file} --out=${SGL_OUTPUT_DIRECTORY}/python/sgl/${stub_file}
+            DEPENDS ${SGL_STUB_INTERMEDIATE_DIRECTORY}/${stub_file}
+            COMMENT "Processing generated stub file"
+        )
+        add_custom_target(postprocess_stub_output ALL DEPENDS ${SGL_OUTPUT_DIRECTORY}/python/sgl/${stub_file})
+    endfunction()
+
+    # Generate main stub file into intermediate directory.
     nanobind_add_stub(
         sgl_stub
         MODULE sgl
         PYTHON_PATH ${SGL_OUTPUT_DIRECTORY}/python
-        OUTPUT ${SGL_OUTPUT_DIRECTORY}/python/sgl/__init__.pyi
+        OUTPUT ${SGL_STUB_INTERMEDIATE_DIRECTORY}/__init__.pyi
         DEPENDS sgl_ext
     )
+
+    # Post-process the main stub file and output to build directory.
+    postprocess_stub(__init__.pyi)
+
+    # Generate submodule stub files straight ot build directory
+    # as they aren't currently post-processed.
     foreach(submodule IN ITEMS platform thread math ui tev renderdoc)
         string(REPLACE "." "/" submodule_path ${submodule})
         nanobind_add_stub(
