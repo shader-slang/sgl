@@ -229,7 +229,7 @@ class GfxContext:
         self,
         vert_offset=sgl.float2(0, 0),
         vert_scale=sgl.float2(1, 1),
-        vert_z=0,
+        vert_z: float = 0,
         color=sgl.float4(0, 0, 0, 0),
         clear=True,
         viewport: Optional[sgl.Viewport] = None,
@@ -355,7 +355,7 @@ def test_gfx_depth(device_type):
         color=sgl.float4(1, 0, 0, 1),
         clear=False,
         vert_scale=sgl.float2(0.5),
-        vert_z=0.25,  # type: ignore  (TYPINGTODO: work out if vert_z should be float or int)
+        vert_z=0.25,
         rasterizer={"cull_mode": sgl.CullMode.back},
         depth_stencil={
             "depth_test_enable": True,
@@ -369,7 +369,7 @@ def test_gfx_depth(device_type):
     gfx.draw_graphics_pipeline(
         color=sgl.float4(1, 1, 1, 1),
         clear=False,
-        vert_z=0.75,  # type: ignore  (TYPINGTODO: work out if vert_z should be float or int)
+        vert_z=0.75,
         rasterizer={"cull_mode": sgl.CullMode.back},
         depth_stencil={
             "depth_test_enable": True,
@@ -383,7 +383,7 @@ def test_gfx_depth(device_type):
     gfx.draw_graphics_pipeline(
         color=sgl.float4(1, 1, 1, 1),
         clear=False,
-        vert_z=0.4,  # type: ignore  (TYPINGTODO: work out if vert_z should be float or int)
+        vert_z=0.4,
         rasterizer={"cull_mode": sgl.CullMode.back},
         depth_stencil={
             "depth_test_enable": True,
@@ -397,7 +397,7 @@ def test_gfx_depth(device_type):
     gfx.draw_graphics_pipeline(
         color=sgl.float4(0, 0, 1, 1),
         clear=False,
-        vert_z=0.75,  # type: ignore  (TYPINGTODO: work out if vert_z should be float or int)
+        vert_z=0.75,
         rasterizer={"cull_mode": sgl.CullMode.back},
         depth_stencil={
             "depth_test_enable": True,
@@ -415,7 +415,7 @@ def test_gfx_depth(device_type):
     gfx.draw_graphics_pipeline(
         color=sgl.float4(1, 1, 1, 1),
         clear=False,
-        vert_z=0.8,  # type: ignore  (TYPINGTODO: work out if vert_z should be float or int)
+        vert_z=0.8,
         rasterizer={"cull_mode": sgl.CullMode.back},
         depth_stencil={
             "depth_test_enable": True,
@@ -429,7 +429,7 @@ def test_gfx_depth(device_type):
     gfx.draw_graphics_pipeline(
         color=sgl.float4(1, 0, 0, 1),
         clear=False,
-        vert_z=0.25,  # type: ignore  (TYPINGTODO: work out if vert_z should be float or int)
+        vert_z=0.25,
         rasterizer={"cull_mode": sgl.CullMode.back},
         depth_stencil={
             "depth_test_enable": True,
