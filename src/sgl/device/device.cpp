@@ -501,6 +501,13 @@ Device::~Device()
     }
 
     SGL_CHECK(m_closed, "Device is not close. Call close() before destroying the device.");
+
+    m_gfx_graphics_queue.setNull();
+    m_gfx_device.setNull();
+
+#if SGL_HAS_NVAPI
+    m_api_dispatcher.reset();
+#endif
 }
 
 ShaderCacheStats Device::shader_cache_stats() const
@@ -556,13 +563,6 @@ void Device::close()
 
     m_slang_session.reset();
     m_hot_reload.reset();
-
-    m_gfx_graphics_queue.setNull();
-    m_gfx_device.setNull();
-
-#if SGL_HAS_NVAPI
-    m_api_dispatcher.reset();
-#endif
 
     dec_ref();
 }
