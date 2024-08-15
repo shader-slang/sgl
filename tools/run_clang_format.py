@@ -409,7 +409,7 @@ def main():
         # compatibility, SIGPIPE does not exist on Windows
         pass
     else:
-        signal.signal(signal.SIGPIPE, signal.SIG_DFL)  # type: ignore (windows
+        signal.signal(signal.SIGPIPE, signal.SIG_DFL)  # type: ignore (windows)
 
     colored_stdout = False
     colored_stderr = False
