@@ -46,11 +46,11 @@ def test_global_buffer_alignment(device_type: sgl.DeviceType):
     small_buffer.to_numpy()
 
     # Data to populate the texture with.
-    texture_data = np.random.rand(256, 256, 3).astype(np.float32).flatten()
+    texture_data = np.random.rand(256, 256, 4).astype(np.float32).flatten()
 
-    # Create an RGB float texture.
+    # Create an RGBA float texture.
     texture = device.create_texture(
-        format=sgl.Format.rgb32_float,
+        format=sgl.Format.rgba32_float,
         width=256,
         height=256,
         usage=sgl.ResourceUsage.shader_resource,
