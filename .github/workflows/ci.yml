@@ -73,7 +73,8 @@ jobs:
       # Setup Python environment.
       - name: Setup Python environment
         run: |
-          python -m pip install pytest pytest-github-actions-annotate-failures typing_extensions numpy deepdiff
+          python -m pip install -r tools/buildrequirements.txt
+          python -m pip install pytest-github-actions-annotate-failures
 
       # Setup MSVC.
       - name: Setup MSVC
