@@ -1,19 +1,19 @@
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Any, Optional
+from typing import Any, Optional, Sequence
 import sgl
 import pytest
 import numpy as np
 import sys
 from pathlib import Path
-from numpy.typing import ArrayLike
 
 sys.path.append(str(Path(__file__).parent))
 import helpers
 
 
 class PipelineTestContext:
-    def __init__(self, device_type, size=128) -> None:
+    def __init__(self, device_type: sgl.DeviceType, size: int = 128) -> None:
+        super().__init__()
         self.device = helpers.get_device(type=device_type)
         self.output_texture = self.device.create_texture(
             format=sgl.Format.rgba32_float,
@@ -55,7 +55,7 @@ class PipelineTestContext:
             count_buffer=self.count_buffer,
         )
 
-    def expect_counts(self, expected):
+    def expect_counts(self, expected: Sequence[int]):
         self.count()
         count = self.count_buffer.to_numpy().view(np.uint32)
         assert np.all(count == expected)
@@ -92,13 +92,13 @@ class PipelineTestContext:
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_clear_and_count(device_type):
+def test_clear_and_count(device_type: sgl.DeviceType):
     ctx = PipelineTestContext(device_type)
     ctx.expect_counts([0, 0, 0, 0])
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_compute_set_square(device_type):
+def test_compute_set_square(device_type: sgl.DeviceType):
     ctx = PipelineTestContext(device_type)
     prog = ctx.device.load_program("test_pipeline_utils.slang", ["setcolor"])
     set_kernel = ctx.device.create_compute_kernel(prog)
@@ -118,7 +118,7 @@ def test_compute_set_square(device_type):
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_compute_set_and_overwrite(device_type):
+def test_compute_set_and_overwrite(device_type: sgl.DeviceType):
     ctx = PipelineTestContext(device_type)
     prog = ctx.device.load_program("test_pipeline_utils.slang", ["setcolor"])
     set_kernel = ctx.device.create_compute_kernel(prog)
@@ -149,7 +149,7 @@ def test_compute_set_and_overwrite(device_type):
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_gfx_clear(device_type):
+def test_gfx_clear(device_type: sgl.DeviceType):
     ctx = PipelineTestContext(device_type)
 
     command_buffer = ctx.device.create_command_buffer()
@@ -165,6 +165,7 @@ def test_gfx_clear(device_type):
 
 class GfxContext:
     def __init__(self, ctx: PipelineTestContext) -> None:
+        super().__init__()
         self.ctx = ctx
         self.program = ctx.device.load_program(
             "test_pipeline_raster.slang", ["vertex_main", "fragment_main"]
@@ -181,12 +182,12 @@ class GfxContext:
     def draw(
         self,
         pipeline: sgl.GraphicsPipeline,
-        vert_offset=sgl.float2(0, 0),
-        vert_scale=sgl.float2(1, 1),
-        vert_z=0.0,
-        color=sgl.float4(0, 0, 0, 0),
+        vert_offset: sgl.float2 = sgl.float2(0, 0),
+        vert_scale: sgl.float2 = sgl.float2(1, 1),
+        vert_z: float = 0.0,
+        color: sgl.float4 = sgl.float4(0, 0, 0, 0),
         viewport: Optional[sgl.Viewport] = None,
-        clear=True,
+        clear: bool = True,
     ):
         command_buffer = self.ctx.device.create_command_buffer()
         if clear:
@@ -216,7 +217,7 @@ class GfxContext:
         command_buffer.submit()
 
     # Helper to create pipeline with given set of args + correct program/layouts.
-    def create_graphics_pipeline(self, **kwargs):
+    def create_graphics_pipeline(self, **kwargs: Any):
         return self.ctx.device.create_graphics_pipeline(
             program=self.program,
             input_layout=self.input_layout,
@@ -227,13 +228,13 @@ class GfxContext:
     # Helper to both create pipeline and then use it to draw quad.
     def draw_graphics_pipeline(
         self,
-        vert_offset=sgl.float2(0, 0),
-        vert_scale=sgl.float2(1, 1),
+        vert_offset: sgl.float2 = sgl.float2(0, 0),
+        vert_scale: sgl.float2 = sgl.float2(1, 1),
         vert_z: float = 0,
-        color=sgl.float4(0, 0, 0, 0),
-        clear=True,
+        color: sgl.float4 = sgl.float4(0, 0, 0, 0),
+        clear: bool = True,
         viewport: Optional[sgl.Viewport] = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         pipeline = self.create_graphics_pipeline(**kwargs)
         self.draw(
@@ -248,7 +249,7 @@ class GfxContext:
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_gfx_simple_primitive(device_type):
+def test_gfx_simple_primitive(device_type: sgl.DeviceType):
     ctx = PipelineTestContext(device_type)
     gfx = GfxContext(ctx)
 
@@ -281,7 +282,7 @@ def test_gfx_simple_primitive(device_type):
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_gfx_viewport(device_type):
+def test_gfx_viewport(device_type: sgl.DeviceType):
     ctx = PipelineTestContext(device_type)
     gfx = GfxContext(ctx)
 
@@ -322,7 +323,7 @@ def test_gfx_viewport(device_type):
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_gfx_depth(device_type):
+def test_gfx_depth(device_type: sgl.DeviceType):
     ctx = PipelineTestContext(device_type)
     gfx = GfxContext(ctx)
 
@@ -441,7 +442,7 @@ def test_gfx_depth(device_type):
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_gfx_blend(device_type):
+def test_gfx_blend(device_type: sgl.DeviceType):
     ctx = PipelineTestContext(device_type)
     gfx = GfxContext(ctx)
     area = ctx.output_texture.width * ctx.output_texture.height
@@ -480,7 +481,7 @@ def test_gfx_blend(device_type):
 
 # On Vulkan using 50% alpha coverage we get a checkerboard effect.
 @pytest.mark.parametrize("device_type", [sgl.DeviceType.vulkan])
-def test_gfx_alpha_coverage(device_type):
+def test_gfx_alpha_coverage(device_type: sgl.DeviceType):
     if device_type == sgl.DeviceType.vulkan and sys.platform == "darwin":
         pytest.skip("MoltenVK alpha coverage not working as expected")
 
@@ -515,6 +516,7 @@ def test_gfx_alpha_coverage(device_type):
 
 class RayContext:
     def __init__(self, ctx: PipelineTestContext) -> None:
+        super().__init__()
         if not "raytracing" in ctx.device.features:
             pytest.skip("Ray tracing not supported on this device")
 
@@ -713,7 +715,7 @@ class RayContext:
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 @pytest.mark.parametrize("mode", ["compute", "ray"])
-def test_raytrace_simple(device_type, mode):
+def test_raytrace_simple(device_type: sgl.DeviceType, mode: str):
     ctx = PipelineTestContext(device_type)
     rtx = RayContext(ctx)
 
@@ -741,7 +743,7 @@ def test_raytrace_simple(device_type, mode):
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 @pytest.mark.parametrize("mode", ["compute", "ray"])
-def test_raytrace_two_instance(device_type, mode):
+def test_raytrace_two_instance(device_type: sgl.DeviceType, mode: str):
     ctx = PipelineTestContext(device_type)
     rtx = RayContext(ctx)
 
@@ -773,7 +775,7 @@ def test_raytrace_two_instance(device_type, mode):
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 @pytest.mark.parametrize("mode", ["compute", "ray"])
-def test_raytrace_closest_instance(device_type, mode):
+def test_raytrace_closest_instance(device_type: sgl.DeviceType, mode: str):
     ctx = PipelineTestContext(device_type)
     rtx = RayContext(ctx)
 

@@ -1,12 +1,16 @@
 # SPDX-License-Identifier: Apache-2.0
 
+from typing import Optional
 import pytest
 from sgl import Struct, StructConverter
 import struct
 import numpy as np
 import itertools
+import numpy.typing as npt
 
-supported_types = [
+TSupportedType = tuple[str, Struct.Type, npt.DTypeLike]
+
+supported_types: list[TSupportedType] = [
     ("b", Struct.Type.int8, np.int8),
     ("B", Struct.Type.uint8, np.uint8),
     ("h", Struct.Type.int16, np.int16),
@@ -21,14 +25,14 @@ supported_types = [
 ]
 
 
-def from_srgb(x):
+def from_srgb(x: float):
     if x < 0.04045:
         return x / 12.92
     else:
         return ((x + 0.055) / 1.055) ** 2.4
 
 
-def to_srgb(x):
+def to_srgb(x: float):
     if x < 0.0031308:
         return x * 12.92
     else:
@@ -36,10 +40,13 @@ def to_srgb(x):
 
 
 def check_conversion(
-    converter, src_fmt, dst_fmt, src_values, ref_values=None, err_thresh=1e-6
+    converter: StructConverter,
+    src_fmt: str | bytes,
+    dst_fmt: str | bytes,
+    src_values: npt.ArrayLike,
+    ref_values: Optional[npt.ArrayLike] = None,
+    err_thresh: float = 1e-6,
 ):
-    import binascii
-
     # print("\nsrc_values: " + str(src_values))
     src_data = struct.pack(src_fmt, *src_values)
     # print("src_data: " + binascii.hexlify(src_data).decode("utf8"))
@@ -50,8 +57,8 @@ def check_conversion(
     ref = ref_values if ref_values is not None else src_values
     # print("ref: " + str(ref))
     for i in range(len(dst_values)):
-        abs_err = float(dst_values[i]) - float(ref[i])
-        assert np.abs(abs_err / (ref[i] + 1e-6)) < err_thresh
+        abs_err = float(dst_values[i]) - float(ref[i])  # type: ignore (numpy pain)
+        assert np.abs(abs_err / (ref[i] + 1e-6)) < err_thresh  # type: ignore (numpy pain)
 
 
 def test_fields_unpacked():
@@ -115,7 +122,7 @@ def test_fields_packed():
 
 
 @pytest.mark.parametrize("param", supported_types)
-def test_convert_passthrough(param):
+def test_convert_passthrough(param: TSupportedType):
     src = Struct().append("val", param[1])
     dst = Struct().append("val", param[1])
     ss = StructConverter(src, dst)
@@ -128,7 +135,7 @@ def test_convert_passthrough(param):
 
 
 @pytest.mark.parametrize("param", itertools.product(supported_types, repeat=2))
-def test_convert_types(param):
+def test_convert_types(param: tuple[TSupportedType, TSupportedType]):
     p1, p2 = param
     values = list(range(10))
     if Struct.is_signed(p1[1]) and Struct.is_signed(p2[1]):
@@ -158,7 +165,7 @@ def test_convert_types(param):
 
 
 @pytest.mark.parametrize("param", supported_types)
-def test_default_value(param):
+def test_default_value(param: TSupportedType):
     s1 = Struct().append("val1", param[1]).append("val3", param[1])
     s2 = (
         Struct()
@@ -203,7 +210,7 @@ def test_round_and_saturation():
 
 
 @pytest.mark.parametrize("param", supported_types)
-def test_roundtrip_normalization(param):
+def test_roundtrip_normalization(param: TSupportedType):
     s1 = Struct().append("val", param[1], Struct.Flags.normalized)
     s2 = Struct().append("val", Struct.Type.float32)
     s = StructConverter(s1, s2)
@@ -219,7 +226,7 @@ def test_roundtrip_normalization(param):
 
 
 @pytest.mark.parametrize("param", supported_types)
-def test_roundtrip_normalization_int2int(param):
+def test_roundtrip_normalization_int2int(param: TSupportedType):
     if Struct.is_float(param[1]):
         return
     s1_type = Struct.Type.int8 if Struct.is_signed(param[1]) else Struct.Type.uint8

@@ -1,8 +1,11 @@
 # SPDX-License-Identifier: Apache-2.0
 
+from pathlib import Path
+from typing import Any, Optional, Sequence
 import pytest
 from sgl import Bitmap, Struct
 import numpy as np
+import numpy.typing as npt
 
 PIXEL_FORMAT_TO_CHANNELS = {
     Bitmap.PixelFormat.y: 1,
@@ -27,7 +30,13 @@ COMPONENT_TYPE_TO_DTYPE = {
 }
 
 
-def create_test_array(width, height, channels, dtype, type_range):
+def create_test_array(
+    width: int,
+    height: int,
+    channels: int,
+    dtype: npt.DTypeLike,
+    type_range: tuple[float, float],
+):
     img = np.zeros((height, width, channels), dtype)
     for i in range(height):
         for j in range(width):
@@ -41,8 +50,8 @@ def create_test_array(width, height, channels, dtype, type_range):
 
 
 def create_test_image(
-    width,
-    height,
+    width: int,
+    height: int,
     pixel_format: Bitmap.PixelFormat,
     component_type: Bitmap.ComponentType,
 ):
@@ -56,15 +65,15 @@ def create_test_image(
 
 
 def write_read_test(
-    directory,
-    ext,
-    width,
-    height,
-    pixel_format,
-    component_type,
-    quality=None,
-    rtol=None,
-    atol=None,
+    directory: Path,
+    ext: str,
+    width: int,
+    height: int,
+    pixel_format: Bitmap.PixelFormat,
+    component_type: Bitmap.ComponentType,
+    quality: Optional[int] = None,
+    rtol: Optional[float] = None,
+    atol: Optional[float] = None,
 ):
     path = directory / f"test_{width}x{height}_{pixel_format}_{component_type}.{ext}"
 
@@ -148,7 +157,7 @@ EXR_LAYOUTS = [
 
 
 @pytest.mark.parametrize("layout", EXR_LAYOUTS)
-def test_exr_io(tmp_path, layout):
+def test_exr_io(tmp_path: Path, layout: Sequence[Any]):
     extra = layout[4] if len(layout) > 4 else {}
     write_read_test(
         tmp_path, "exr", layout[0], layout[1], layout[2], layout[3], **extra
@@ -162,7 +171,7 @@ BMP_LAYOUTS = [
 
 
 @pytest.mark.parametrize("layout", BMP_LAYOUTS)
-def test_bmp_io(tmp_path, layout):
+def test_bmp_io(tmp_path: Path, layout: Sequence[Any]):
     extra = layout[4] if len(layout) > 4 else {}
     write_read_test(
         tmp_path, "bmp", layout[0], layout[1], layout[2], layout[3], **extra
@@ -177,7 +186,7 @@ TGA_LAYOUTS = [
 
 
 @pytest.mark.parametrize("layout", TGA_LAYOUTS)
-def test_tga_io(tmp_path, layout):
+def test_tga_io(tmp_path: Path, layout: Sequence[Any]):
     extra = layout[4] if len(layout) > 4 else {}
     write_read_test(
         tmp_path, "tga", layout[0], layout[1], layout[2], layout[3], **extra
@@ -199,7 +208,7 @@ PNG_LAYOUTS = [
 
 
 @pytest.mark.parametrize("layout", PNG_LAYOUTS)
-def test_png_io(tmp_path, layout):
+def test_png_io(tmp_path: Path, layout: Sequence[Any]):
     extra = layout[4] if len(layout) > 4 else {}
     write_read_test(
         tmp_path, "png", layout[0], layout[1], layout[2], layout[3], **extra
@@ -220,7 +229,7 @@ JPG_LAYOUTS = [
 
 
 @pytest.mark.parametrize("layout", JPG_LAYOUTS)
-def test_jpg_io(tmp_path, layout):
+def test_jpg_io(tmp_path: Path, layout: Sequence[Any]):
     extra = layout[4] if len(layout) > 4 else {}
     write_read_test(
         tmp_path, "jpg", layout[0], layout[1], layout[2], layout[3], **extra
@@ -233,7 +242,7 @@ HDR_LAYOUTS = [
 
 
 @pytest.mark.parametrize("layout", HDR_LAYOUTS)
-def test_hdr_io(tmp_path, layout):
+def test_hdr_io(tmp_path: Path, layout: Sequence[Any]):
     extra = layout[4] if len(layout) > 4 else {}
     write_read_test(
         tmp_path, "hdr", layout[0], layout[1], layout[2], layout[3], **extra

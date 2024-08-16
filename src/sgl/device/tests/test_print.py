@@ -10,7 +10,7 @@ import helpers
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_print(device_type):
+def test_print(device_type: sgl.DeviceType):
     if sys.platform == "darwin":
         pytest.skip("Printing double/float64 not supported on macOS")
 

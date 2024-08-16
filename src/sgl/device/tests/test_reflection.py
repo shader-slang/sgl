@@ -3,12 +3,11 @@
 import pytest
 import sys
 import sgl
-import struct
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent))
 import helpers
-from helpers import test_id
+from helpers import test_id  # type: ignore (pytest fixture)
 
 # TODO: Due to a bug in "Apple clang", the exception binding in nanobind
 # raises RuntimeError instead of SlangCompileError
@@ -16,7 +15,7 @@ SlangCompileError = RuntimeError if sys.platform == "darwin" else sgl.SlangCompi
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_type_layout(test_id, device_type):
+def test_type_layout(test_id: str, device_type: sgl.DeviceType):
 
     # Only do D3D for now
     if device_type != sgl.DeviceType.d3d12:
@@ -124,7 +123,7 @@ MODULE_SOURCE = """
 
 @pytest.mark.skip("Crashes due to reflection cursor lifetime issues")
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_cursor_lifetime_global_session(test_id, device_type):
+def test_cursor_lifetime_global_session(test_id: str, device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
 
     module = device.load_module_from_source(
@@ -146,7 +145,7 @@ def test_cursor_lifetime_global_session(test_id, device_type):
 
 @pytest.mark.skip("Crashes due to reflection cursor lifetime issues")
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_cursor_lifetime_new_session(test_id, device_type):
+def test_cursor_lifetime_new_session(test_id: str, device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
 
     # Create a session, and within it a module and program.
@@ -170,7 +169,7 @@ def test_cursor_lifetime_new_session(test_id, device_type):
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_cursor_child_lifetime(test_id, device_type):
+def test_cursor_child_lifetime(test_id: str, device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
 
     # Create a session, and within it a module and program.
@@ -195,7 +194,7 @@ def test_cursor_child_lifetime(test_id, device_type):
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_module_layout_lifetime(test_id, device_type):
+def test_module_layout_lifetime(test_id: str, device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
 
     # Create a session, and within it a module.
@@ -216,7 +215,7 @@ def test_module_layout_lifetime(test_id, device_type):
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_module_declref_lifetime(test_id, device_type):
+def test_module_declref_lifetime(test_id: str, device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
 
     # Create a session, and within it a module.
@@ -237,7 +236,7 @@ def test_module_declref_lifetime(test_id, device_type):
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_module_declref_child_lifetime(test_id, device_type):
+def test_module_declref_child_lifetime(test_id: str, device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
 
     # Create a session, and within it a module.
@@ -257,7 +256,7 @@ def test_module_declref_child_lifetime(test_id, device_type):
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_list_type_fields(test_id, device_type):
+def test_list_type_fields(test_id: str, device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
 
     # Create a session, and within it a module.
@@ -293,7 +292,7 @@ def test_list_type_fields(test_id, device_type):
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_list_function_parameters(test_id, device_type):
+def test_list_function_parameters(test_id: str, device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
 
     # Create a session, and within it a module.
@@ -318,7 +317,9 @@ def test_list_function_parameters(test_id, device_type):
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_list_program_layout_params_and_entry_points(test_id, device_type):
+def test_list_program_layout_params_and_entry_points(
+    test_id: str, device_type: sgl.DeviceType
+):
     device = helpers.get_device(type=device_type)
 
     # Create a session, and within it a module.

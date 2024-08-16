@@ -11,12 +11,12 @@ import helpers
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_enumerate_adapters(device_type):
+def test_enumerate_adapters(device_type: sgl.DeviceType):
     print(sgl.Device.enumerate_adapters(type=device_type))
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_create_device(device_type):
+def test_create_device(device_type: sgl.DeviceType):
     device = helpers.get_device(device_type)
 
     assert device.desc.type == device_type

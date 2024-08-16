@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
+from pathlib import Path
+from typing import Any
 import pytest
 import os
-import tempfile
 from sgl import (
     Logger,
     LoggerOutput,
@@ -21,7 +22,7 @@ class CustomLoggerOutput(LoggerOutput):
     def clear(self):
         self.messages = []
 
-    def write(self, level, name, msg):
+    def write(self, level: LogLevel, name: str, msg: str):
         self.messages.append((level, name, msg))
 
 
@@ -92,7 +93,7 @@ def _test_console_output():
 
 
 @pytest.mark.skip("Test not working reliably")
-def test_console_output(capfd):
+def test_console_output(capfd: Any):
     _test_console_output()
     out, err = capfd.readouterr()
     out_lines = out.splitlines()
@@ -107,7 +108,7 @@ def test_console_output(capfd):
     assert err_lines[1].startswith("[FATAL] (test) fatal message")
 
 
-def test_file_output(tmpdir):
+def test_file_output(tmpdir: Path):
     path = os.path.join(tmpdir, "test.log")
     output = FileLoggerOutput(path)
     logger = Logger(level=LogLevel.debug, name="test", use_default_outputs=False)

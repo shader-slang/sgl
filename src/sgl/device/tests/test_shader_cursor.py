@@ -199,7 +199,7 @@ TEST_VARS = {
 }
 
 
-def flatten(values):
+def flatten(values: Any):
     if isinstance(values, list):
         if isinstance(values[0], list):
             return [item for sublist in values for item in sublist]
@@ -208,7 +208,7 @@ def flatten(values):
         return [values]
 
 
-def convert_vector(type, dim, values):
+def convert_vector(type: str, dim: int, values: Any):
     TABLE = {
         ("float16_t", 2): sgl.float16_t2,
         ("float16_t", 3): sgl.float16_t3,
@@ -218,7 +218,7 @@ def convert_vector(type, dim, values):
     return TABLE[key](values) if key in TABLE else values
 
 
-def convert_matrix(type, rows, cols, values):
+def convert_matrix(type: str, rows: int, cols: int, values: Any):
     TABLE = {
         ("float", 2, 2): sgl.float2x2,
         ("float", 3, 3): sgl.float3x3,
@@ -232,7 +232,7 @@ def convert_matrix(type, rows, cols, values):
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 @pytest.mark.parametrize("use_numpy", [False, True])
-def test_shader_cursor(device_type, use_numpy):
+def test_shader_cursor(device_type: sgl.DeviceType, use_numpy: bool):
     if sys.platform == "darwin":
         pytest.skip("Test shader doesn't currently compile on MoltenVK")
 
@@ -305,7 +305,11 @@ def test_shader_cursor(device_type, use_numpy):
 
         cursor[name_or_index] = value
 
-    def write_vars(cursor: sgl.ShaderCursor, vars: dict | list, name_prefix: str = ""):
+    def write_vars(
+        cursor: sgl.ShaderCursor,
+        vars: dict[str, Any] | list[Any],
+        name_prefix: str = "",
+    ):
         if isinstance(vars, dict):
             for key, var in vars.items():
                 if isinstance(var, dict):

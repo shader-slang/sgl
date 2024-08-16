@@ -2,11 +2,10 @@
 
 from hashlib import sha256
 from os import PathLike
-from typing import Any, cast
+from typing import Any, Mapping
 import sgl
 import sys
 import pytest
-from dataclasses import dataclass
 from pathlib import Path
 
 SHADER_DIR = Path(__file__).parent
@@ -41,7 +40,7 @@ DEVICE_CACHE = {}
 
 # Returns a unique random 16 character string for every variant of every test.
 @pytest.fixture
-def test_id(request):
+def test_id(request: Any):
     return sha256(request.node.nodeid.encode()).hexdigest()[:16]
 
 
@@ -61,7 +60,7 @@ def get_device(type: sgl.DeviceType, use_cache: bool = True) -> sgl.Device:
     return device
 
 
-def create_session(device: sgl.Device, defines: dict) -> sgl.SlangSession:
+def create_session(device: sgl.Device, defines: Mapping[str, str]) -> sgl.SlangSession:
     return device.create_slang_session(
         compiler_options={
             "include_paths": [SHADER_DIR],
@@ -76,17 +75,18 @@ class Context:
     textures: dict[str, sgl.Texture]
 
     def __init__(self):
+        super().__init__()
         self.buffers = {}
         self.textures = {}
 
 
 def dispatch_compute(
     device: sgl.Device,
-    path: PathLike,
+    path: PathLike[str],
     entry_point: str,
     thread_count: list[int],
-    buffers: dict = {},
-    textures: dict = {},
+    buffers: dict[str, sgl.Buffer] = {},
+    textures: dict[str, sgl.Texture] = {},
     defines: dict[str, str] = {},
     compiler_options: "sgl.SlangCompilerOptionsDict" = {},
     shader_model: sgl.ShaderModel = sgl.ShaderModel.sm_6_6,
