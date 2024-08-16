@@ -158,6 +158,94 @@ public:
 
 NAMESPACE_END(NB_NAMESPACE)
 
+
+namespace sgl {
+
+/// Helper class passed to GcHelper::traverse() to visit attributes and child objects.
+class GcVisitor {
+public:
+    /// Visit an attribute with the given name.
+    void operator()(const char* name)
+    {
+        if (result != 0)
+            return;
+        nb::object value = nb::getattr(self, name);
+        if (value.is_valid() && !value.is_none()) {
+            result = [&]()
+            {
+                Py_VISIT(value.ptr());
+                return 0;
+            }();
+        }
+    }
+    /// Visit a child object.
+    void operator()(Object* object)
+    {
+        if (result != 0)
+            return;
+        result = [&]()
+        {
+            Py_VISIT(object->self_py());
+            return 0;
+        }();
+    }
+
+private:
+    PyObject* self;
+    visitproc visit;
+    void* arg;
+    int result{0};
+    template<typename T>
+    friend class GcHelperFunctions;
+};
+
+/// Garbage collection helper to be specialized for each object type.
+/// The default implementation does nothing.
+template<typename T>
+struct GcHelper {
+    void traverse(T*, GcVisitor&) { }
+    void clear(T*) { }
+};
+
+/// Implementation of tp_traverse and tp_clear for a given object type.
+template<typename T>
+class GcHelperFunctions {
+public:
+    static int tp_traverse(PyObject* self, visitproc visit, void* arg)
+    {
+        T* object = nb::inst_ptr<T>(self);
+        GcVisitor visitor;
+        visitor.self = self;
+        visitor.visit = visit;
+        visitor.arg = arg;
+        GcHelper<T>{}.traverse(object, visitor);
+        return visitor.result;
+    }
+
+    static int tp_clear(PyObject* self)
+    {
+        T* object = nb::inst_ptr<T>(self);
+        GcHelper<T>{}.clear(object);
+        return 0;
+    }
+
+public:
+    static inline PyType_Slot type_slots[] = {
+        {Py_tp_traverse, (void*)tp_traverse},
+        {Py_tp_clear, (void*)tp_clear},
+        {0, nullptr},
+    };
+};
+
+/// Return Python type slots (tp_traverse, tp_clear) for a given object type.
+template<typename T>
+nb::type_slots gc_helper_type_slots()
+{
+    return nb::type_slots(GcHelperFunctions<T>::type_slots);
+}
+
+}; // namespace sgl
+
 namespace sgl {
 
 template<typename... Args>
