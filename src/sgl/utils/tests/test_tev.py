@@ -7,7 +7,9 @@ pytest.skip("tev required for running these tests", allow_module_level=True)
 
 
 def create_bitmap(
-    width=500, height=500, component_type=sgl.Bitmap.ComponentType.float32
+    width: int = 500,
+    height: int = 500,
+    component_type: sgl.Bitmap.ComponentType = sgl.Bitmap.ComponentType.float32,
 ):
     return sgl.Bitmap(
         pixel_format=sgl.Bitmap.PixelFormat.rgb,

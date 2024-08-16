@@ -770,7 +770,7 @@ HASHGRID_NO_GENERICS_DUMP = {
 
 
 @pytest.mark.parametrize("device_type", DEVICES)
-def test_ast_cursor_hashgrid_nogenerics(device_type):
+def test_ast_cursor_hashgrid_nogenerics(device_type: sgl.DeviceType):
 
     device = helpers.get_device(type=device_type)
 

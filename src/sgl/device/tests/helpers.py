@@ -85,7 +85,7 @@ def dispatch_compute(
     path: PathLike[str],
     entry_point: str,
     thread_count: list[int],
-    buffers: dict[str, sgl.Buffer] = {},
+    buffers: dict[str, Any] = {},
     textures: dict[str, sgl.Texture] = {},
     defines: dict[str, str] = {},
     compiler_options: "sgl.SlangCompilerOptionsDict" = {},

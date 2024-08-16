@@ -5,6 +5,7 @@ import sgl
 from sgl import TextureLoader, Bitmap, Format, Struct, ResourceState
 import sys
 import numpy as np
+import numpy.typing as npt
 import enum
 from dataclasses import dataclass
 from pathlib import Path
@@ -139,7 +140,13 @@ TEST_DDS_FILES = [
 ]
 
 
-def create_test_array(width, height, channels, dtype, type_range):
+def create_test_array(
+    width: int,
+    height: int,
+    channels: int,
+    dtype: npt.DTypeLike,
+    type_range: tuple[float, float],
+):
     img = np.zeros((height, width, channels), dtype)
     for i in range(height):
         for j in range(width):
@@ -154,7 +161,7 @@ def create_test_array(width, height, channels, dtype, type_range):
 
 @pytest.mark.parametrize("format", FORMATS)
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_load_texture_from_bitmap(device_type, format):
+def test_load_texture_from_bitmap(device_type: sgl.DeviceType, format: FormatEntry):
     device = helpers.get_device(type=device_type)
 
     # Check if format is supported
@@ -215,7 +222,7 @@ def test_load_texture_from_bitmap(device_type, format):
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 @pytest.mark.parametrize("filename", TEST_BITMAP_FILES)
-def test_load_texture_from_bitmap_file(device_type, filename):
+def test_load_texture_from_bitmap_file(device_type: sgl.DeviceType, filename: str):
     device = helpers.get_device(type=device_type)
 
     path = TEST_IMAGE_DIR / filename
@@ -231,7 +238,7 @@ def test_load_texture_from_bitmap_file(device_type, filename):
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 @pytest.mark.parametrize("filename", TEST_DDS_FILES)
-def test_load_texture_from_dds_file(device_type, filename):
+def test_load_texture_from_dds_file(device_type: sgl.DeviceType, filename: str):
     device: sgl.Device = helpers.get_device(type=device_type)
 
     path = TEST_DDS_DIR / filename
@@ -256,14 +263,14 @@ def test_load_texture_from_dds_file(device_type, filename):
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_load_textures(device_type):
+def test_load_textures(device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
 
     loader = TextureLoader(device)
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_load_texture_array(device_type):
+def test_load_texture_array(device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
 
     loader = TextureLoader(device)

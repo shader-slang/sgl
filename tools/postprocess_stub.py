@@ -1,9 +1,6 @@
 import argparse
-import re
-from typing import Optional, Union, cast
+from typing import Any, Optional, cast
 import libcst as cst
-from pathlib import Path
-from libcst import parse_expression
 import libcst.matchers as m
 
 # List of classes we expect to discover that can be constructed from
@@ -48,7 +45,7 @@ QUIET = False
 
 
 # Helper to print verbose output.
-def print_verbose(*args):
+def print_verbose(*args: Any):
     if not QUIET:
         print(*args)
 
@@ -57,6 +54,7 @@ def print_verbose(*args):
 # corresponding dictionary type.
 class FCDFieldInfo:
     def __init__(self, name: cst.Name, annotation: cst.BaseExpression):
+        super().__init__()
         self.name = name
         self.annotation = annotation
 
@@ -70,6 +68,7 @@ class FCDStackInfo:
         class_type: cst.ClassDef,
         full_name: str,
     ):
+        super().__init__()
         self.parent_class_type = parent_classs_type
         self.class_type = class_type
         self.valid = False
@@ -135,9 +134,7 @@ class FindConvertableToDictionaryTypes(cst.CSTVisitor):
 
     def _annotation_name_equals(self, annotation: Optional[cst.Annotation], name: str):
         if annotation is not None:
-            return m.matches(
-                annotation, m.Annotation(annotation=m.Name(name))  # type: ignore (bad libcst typing info)
-            )
+            return m.matches(annotation, m.Annotation(annotation=m.Name(name)))
         return False
 
     def _is_setter(self, node: cst.FunctionDef):
@@ -598,7 +595,7 @@ class FixNumpyArrays(cst.CSTTransformer):
 
 
 # Loads a parsed file.
-def load_file(file_path) -> cst.Module:
+def load_file(file_path: str) -> cst.Module:
     code = open(file_path).read()
     return cst.parse_module(code)
 

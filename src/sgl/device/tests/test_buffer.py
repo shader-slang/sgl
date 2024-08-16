@@ -11,7 +11,7 @@ import helpers
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_buffer_init_data(device_type):
+def test_buffer_init_data(device_type: sgl.DeviceType):
     device = helpers.get_device(device_type)
 
     data = np.random.randint(0, 0xFFFFFFFF, size=1024, dtype=np.uint32)
@@ -54,7 +54,7 @@ def test_buffer_init_data(device_type):
     ],
 )
 @pytest.mark.parametrize("size_MB", [128, 1024, 2048, 3072, 4096])
-def test_buffer(device_type, type, size_MB):
+def test_buffer(device_type: sgl.DeviceType, type: str, size_MB: int):
     device = helpers.get_device(device_type)
 
     if device_type == sgl.DeviceType.d3d12 and size_MB > 2048:

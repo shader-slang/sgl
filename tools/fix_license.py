@@ -6,9 +6,8 @@ A utility for adding SPDX license identifer to source files.
 
 import sys
 import os
-import re
 import argparse
-from typing import List, Sequence
+from typing import Any, Sequence
 from pathlib import Path
 
 PROJECT_DIR = Path(__file__).parent.parent.resolve()
@@ -31,12 +30,12 @@ SPDX_IDENTIFIER_PYTHON = f"# {SPDX_IDENTIFIER}\n\n"
 
 def list_files(
     root: Path,
-    include: Sequence[os.PathLike | str],
-    exclude: Sequence[os.PathLike | str],
+    include: Sequence[Path | str],
+    exclude: Sequence[Path | str],
     extensions: Sequence[str] = [],
 ):
     # collect files
-    files = []
+    files: list[str] = []
     for path in include:
         path = os.path.normpath(root / path)
         if os.path.isdir(path):
@@ -54,7 +53,7 @@ def list_files(
     return files
 
 
-def add_spdx_identifier(path, text):
+def add_spdx_identifier(path: str, text: str):
     identifier = (
         SPDX_IDENTIFIER_PYTHON if path.endswith(".py") else SPDX_IDENTIFIER_C_LIKE
     )
@@ -63,7 +62,7 @@ def add_spdx_identifier(path, text):
     return text
 
 
-def run(args):
+def run(args: Any):
     files = list_files(
         root=PROJECT_DIR,
         include=INCLUDE_PATHS,

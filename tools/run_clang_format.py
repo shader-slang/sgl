@@ -48,6 +48,7 @@ import signal
 import subprocess
 import sys
 import traceback
+from typing import Any, Optional, Sequence
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -70,7 +71,7 @@ class ExitStatus:
     TROUBLE = 2
 
 
-def excludes_from_file(ignore_file):
+def excludes_from_file(ignore_file: str):
     excludes = []
     whitelist = []
     try:
@@ -96,7 +97,7 @@ def excludes_from_file(ignore_file):
     return [excludes, whitelist]
 
 
-def is_child(path, files):
+def is_child(path: str, files: list[str]):
     if path in files:
         return True
     test_path = Path(path)
@@ -106,7 +107,13 @@ def is_child(path, files):
     return False
 
 
-def list_files(files, recursive=False, extensions=None, exclude=None, whitelist=None):
+def list_files(
+    files: list[str],
+    recursive: bool = False,
+    extensions: Optional[list[str]] = None,
+    exclude: Optional[list[str]] = None,
+    whitelist: Optional[list[str]] = None,
+):
     if extensions is None:
         extensions = []
     if exclude is None:
@@ -156,7 +163,7 @@ def list_files(files, recursive=False, extensions=None, exclude=None, whitelist=
     return out
 
 
-def make_diff(file, original, reformatted):
+def make_diff(file: str, original: list[str], reformatted: list[str]):
     return list(
         difflib.unified_diff(
             original,
@@ -169,19 +176,19 @@ def make_diff(file, original, reformatted):
 
 
 class DiffError(Exception):
-    def __init__(self, message, errs=None):
+    def __init__(self, message: str, errs: Optional[list[str]] = None):
         super(DiffError, self).__init__(message)
         self.errs = errs or []
 
 
 class UnexpectedError(Exception):
-    def __init__(self, message, exc=None):
+    def __init__(self, message: str, exc: Optional[Exception] = None):
         super(UnexpectedError, self).__init__(message)
         self.formatted_traceback = traceback.format_exc()
         self.exc = exc
 
 
-def run_clang_format_diff_wrapper(args, file):
+def run_clang_format_diff_wrapper(args: Any, file: str):
     try:
         ret = run_clang_format_diff(args, file)
         return ret
@@ -191,7 +198,7 @@ def run_clang_format_diff_wrapper(args, file):
         raise UnexpectedError("{}: {}: {}".format(file, e.__class__.__name__, e), e)
 
 
-def run_clang_format_diff(args, file) -> tuple[list[str], list[str]]:
+def run_clang_format_diff(args: Any, file: str) -> tuple[list[str], list[str]]:
     ext = os.path.splitext(file)[1][1:]
     is_slang = ext in args.slang_extensions.split(",")
 
@@ -281,21 +288,21 @@ def run_clang_format_diff(args, file) -> tuple[list[str], list[str]]:
     return make_diff(file, original_lines, formatted_lines), decoded_errs
 
 
-def bold_red(s):
+def bold_red(s: str):
     return "\x1b[1m\x1b[31m" + s + "\x1b[0m"
 
 
-def colorize(diff_lines):
-    def bold(s):
+def colorize(diff_lines: Sequence[str]):
+    def bold(s: str):
         return "\x1b[1m" + s + "\x1b[0m"
 
-    def cyan(s):
+    def cyan(s: str):
         return "\x1b[36m" + s + "\x1b[0m"
 
-    def green(s):
+    def green(s: str):
         return "\x1b[32m" + s + "\x1b[0m"
 
-    def red(s):
+    def red(s: str):
         return "\x1b[31m" + s + "\x1b[0m"
 
     for line in diff_lines:
@@ -311,16 +318,16 @@ def colorize(diff_lines):
             yield line
 
 
-def print_diff(diff_lines, use_color):
+def print_diff(diff_lines: Sequence[str], use_color: bool):
     if use_color:
-        diff_lines = colorize(diff_lines)
+        diff_lines = list(colorize(diff_lines))
     if sys.version_info[0] < 3:
         sys.stdout.writelines((l.encode("utf-8") for l in diff_lines))
     else:
         sys.stdout.writelines(diff_lines)
 
 
-def print_trouble(prog, message, use_colors):
+def print_trouble(prog: str, message: str, use_colors: bool):
     error_text = "error:"
     if use_colors:
         error_text = bold_red(error_text)

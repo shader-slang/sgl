@@ -7,15 +7,16 @@ import re
 from pathlib import Path
 from enum import Enum
 from io import StringIO
+from typing import Any
 
 
-class Capturing(list):
+class Capturing(list):  # type: ignore (no idea why this inherits from none-typed list!)
     def __enter__(self):
         self._stdout = sys.stdout
         sys.stdout = self._stringio = StringIO()
         return self
 
-    def __exit__(self, *args):
+    def __exit__(self, *args: Any):
         self.extend(self._stringio.getvalue().splitlines())
         del self._stringio  # free up some memory
         sys.stdout = self._stdout

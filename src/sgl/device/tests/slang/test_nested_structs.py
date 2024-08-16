@@ -11,7 +11,7 @@ import helpers
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_cast_float16(device_type):
+def test_cast_float16(device_type: sgl.DeviceType):
     device = helpers.get_device(device_type)
 
     program = device.load_program("slang/test_nested_structs.slang", ["main"])

@@ -8,7 +8,7 @@ import sys
 import os
 import re
 import argparse
-from typing import List
+from typing import Any, List
 
 
 DEFAULT_EXTENSIONS = "h,cpp,slang,slangh"
@@ -17,7 +17,7 @@ DEFAULT_EXTENSIONS = "h,cpp,slang,slangh"
 MIN_BLOCK_COMMENT_LINES = 1
 
 
-def list_files(paths, recursive=False, extensions=[]):
+def list_files(paths: list[str], recursive: bool = False, extensions: list[str] = []):
     files = []
     for path in paths:
         path = os.path.normpath(path)
@@ -33,7 +33,7 @@ def list_files(paths, recursive=False, extensions=[]):
     return files
 
 
-def prefix_length(s):
+def prefix_length(s: str):
     m = re.match(r"(\s+)", s)
     if m:
         return len(m.group(0))
@@ -55,7 +55,7 @@ def format_comment_line(line: str) -> str:
     return line
 
 
-def format_comment(comment: str, is_block_comment) -> str:
+def format_comment(comment: str, is_block_comment: bool) -> str:
     # Determine line ending.
     line_ending = "\r\n" if "\r\n" in comment else "\n"
 
@@ -132,7 +132,7 @@ def format_comments(text: str) -> str:
     return text
 
 
-def run(args):
+def run(args: Any):
     files = list_files(
         args.paths, recursive=args.recursive, extensions=args.extensions.split(",")
     )
