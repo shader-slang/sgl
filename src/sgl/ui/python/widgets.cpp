@@ -7,6 +7,21 @@
 #undef D
 #define D(...) DOC(sgl, ui, __VA_ARGS__)
 
+namespace sgl {
+
+template<>
+struct GcHelper<ui::Widget> {
+    void traverse(ui::Widget* self, GcVisitor& visitor)
+    {
+        visitor("callback");
+        for (auto child : self->children())
+            visitor(child);
+    }
+    void clear(ui::Widget* self) { self->remove_all_children(); }
+};
+
+} // namespace sgl
+
 namespace sgl::ui {
 
 template<typename T>
@@ -110,55 +125,6 @@ static void bind_input(nb::module_ m, const char* name)
 }
 } // namespace sgl::ui
 
-using Widget = sgl::ui::Widget;
-
-// GC traversal and clear functions for the window callbacks.
-// This is used to clean up cyclic references which can easily occur with callbacks.
-// See https://nanobind.readthedocs.io/en/latest/typeslots.html#reference-cycles-involving-functions
-int widget_tp_traverse(PyObject* self, visitproc visit, void* arg)
-{
-    Widget* w = nb::inst_ptr<Widget>(self);
-
-    // Visit nested children
-    for (Widget* wc : w->children()) {
-        PyObject* o = wc->self_py();
-        Py_VISIT(o);
-    }
-
-    // Visit callback functions.
-    // For now we rely on widgets to expose "_get_callback" methods that return the callback function.
-    // It would be better to use the properties but I haven't figured out how to do that yet.
-    nb::handle self_obj = nb::handle(self);
-
-#define VISIT(callback)                                                                                                \
-    {                                                                                                                  \
-        if (nb::hasattr(self_obj, #callback)) {                                                                        \
-            nb::object obj = nb::getattr(self_obj, "_get" #callback);                                                  \
-            Py_VISIT(obj.ptr());                                                                                       \
-        }                                                                                                              \
-    }
-
-    // VISIT(callback);
-
-#undef VISIT
-
-    return 0;
-}
-
-int widget_tp_clear(PyObject* self)
-{
-    Widget* w = nb::inst_ptr<Widget>(self);
-    w->clear_children();
-    return 0;
-}
-
-PyType_Slot widget_type_slots[] = {
-    {Py_tp_traverse, (void*)widget_tp_traverse},
-    {Py_tp_clear, (void*)widget_tp_clear},
-    {0, nullptr},
-};
-
-
 SGL_PY_EXPORT(ui_widgets)
 {
     using namespace sgl;
@@ -166,7 +132,7 @@ SGL_PY_EXPORT(ui_widgets)
 
     nb::module_ ui = m.attr("ui");
 
-    nb::class_<Widget, sgl::Object>(ui, "Widget", nb::type_slots(widget_type_slots), D(Widget))
+    nb::class_<Widget, sgl::Object>(ui, "Widget", gc_helper_type_slots<Widget>(), D(Widget))
         .def_prop_rw("parent", (Widget * (Widget::*)(void)) & Widget::parent, &Widget::set_parent, D(Widget, parent))
         .def_prop_ro("children", &Widget::children, D(Widget, children))
         .def_prop_rw("visible", &Widget::visible, &Widget::set_visible, D(Widget, visible))
