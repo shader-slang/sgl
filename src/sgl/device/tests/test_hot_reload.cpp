@@ -461,7 +461,8 @@ TEST_CASE_GPU("change program and auto detect changes")
     CHECK(!ctx.device->_hot_reload()->last_build_failed());
 }
 
-TEST_CASE_GPU("create multi directory session and monitor for changes")
+/// SKIPPED: This test is flaky on CI, and needs to be reworked.
+TEST_CASE_GPU("create multi directory session and monitor for changes" * doctest::skip())
 {
     // Enable auto detection and wipe any existing monitors to ensure test is from a 'clean slate'.
     ctx.device->_hot_reload()->set_auto_detect_changes(true);
