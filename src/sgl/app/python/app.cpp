@@ -58,13 +58,13 @@ SGL_PY_EXPORT(app_app)
 {
     using namespace sgl;
 
-    nb::class_<AppDesc>(m, "AppDesc")
+    nb::class_<AppDesc>(m, "AppDesc", D(AppDesc))
         .def(nb::init<>())
         .def("__init__", [](AppDesc* self, nb::dict dict) { new (self) AppDesc(dict_to_AppDesc(dict)); })
         .def_rw("device", &AppDesc::device, D(AppDesc, device));
     nb::implicitly_convertible<nb::dict, AppDesc>();
 
-    nb::class_<App, PyApp, Object>(m, "App")
+    nb::class_<App, PyApp, Object>(m, "App", D(App))
         .def(nb::init<AppDesc>())
         .def(
             "__init__",
