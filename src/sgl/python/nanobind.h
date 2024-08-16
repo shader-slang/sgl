@@ -169,6 +169,8 @@ public:
     {
         if (result != 0)
             return;
+        if (!nb::hasattr(self, name))
+            return;
         nb::object value = nb::getattr(self, name);
         if (value.is_valid() && !value.is_none()) {
             result = [&]()
