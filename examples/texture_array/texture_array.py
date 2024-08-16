@@ -35,12 +35,12 @@ class DemoWindow(sgl.AppWindow):
         program = self.device.load_program(str(EXAMPLE_DIR / "draw.slang"), ["main"])
         self.kernel = self.device.create_compute_kernel(program)
 
-        self.render_texture: sgl.Texture = None
+        self.render_texture: sgl.Texture = None  # type: ignore (will be immediately initialized)
 
         self.setup_ui()
 
     def setup_ui(self):
-        window = sgl.ui.Window(self.screen, "Settings", size=(500, 300))
+        window = sgl.ui.Window(self.screen, "Settings", size=sgl.float2(500, 300))
 
         self.layer = sgl.ui.SliderInt(
             window, "Layer", value=0, min=0, max=self.texture.array_size - 1

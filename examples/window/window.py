@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import sgl
-import numpy as np
 from pathlib import Path
 
 EXAMPLE_DIR = Path(__file__).parent
@@ -9,6 +8,7 @@ EXAMPLE_DIR = Path(__file__).parent
 
 class App:
     def __init__(self):
+        super().__init__()
         self.window = sgl.Window(
             width=1920, height=1280, title="Example", resizable=True
         )
@@ -48,7 +48,7 @@ class App:
 
     def setup_ui(self):
         screen = self.ui.screen
-        window = sgl.ui.Window(screen, "Settings", size=(500, 300))
+        window = sgl.ui.Window(screen, "Settings", size=sgl.float2(500, 300))
 
         self.fps_text = sgl.ui.Text(window, "FPS: 0")
 
@@ -104,7 +104,7 @@ class App:
             if event.button == sgl.MouseButton.left:
                 self.mouse_down = False
 
-    def on_resize(self, width, height):
+    def on_resize(self, width: int, height: int):
         self.framebuffers.clear()
         self.device.wait()
         self.swapchain.resize(width, height)
