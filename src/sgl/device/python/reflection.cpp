@@ -40,27 +40,27 @@ SGL_PY_EXPORT(device_reflection)
     nb::sgl_enum<DeclReflection::Kind>(decl_reflection, "Kind");
 
     decl_reflection //
-        .def_prop_ro("kind", &DeclReflection::kind, D_NA(DeclReflection, kind))
-        .def_prop_ro("children", &DeclReflection::children, D_NA(DeclReflection, children))
-        .def_prop_ro("child_count", &DeclReflection::child_count, D_NA(DeclReflection, child_count))
+        .def_prop_ro("kind", &DeclReflection::kind, D(DeclReflection, kind))
+        .def_prop_ro("children", &DeclReflection::children, D(DeclReflection, children))
+        .def_prop_ro("child_count", &DeclReflection::child_count, D(DeclReflection, child_count))
         .def_prop_ro("name", &DeclReflection::name)
-        .def("children_of_kind", &DeclReflection::children_of_kind, "kind"_a, D_NA(DeclReflection, children_of_kind))
-        .def("as_type", &DeclReflection::as_type, D_NA(DeclReflection, as_type))
-        .def("as_variable", &DeclReflection::as_variable, D_NA(DeclReflection, as_variable))
-        .def("as_function", &DeclReflection::as_function, D_NA(DeclReflection, as_function))
+        .def("children_of_kind", &DeclReflection::children_of_kind, "kind"_a, D(DeclReflection, children_of_kind))
+        .def("as_type", &DeclReflection::as_type, D(DeclReflection, as_type))
+        .def("as_variable", &DeclReflection::as_variable, D(DeclReflection, as_variable))
+        .def("as_function", &DeclReflection::as_function, D(DeclReflection, as_function))
         .def(
             "find_children_of_kind",
             &DeclReflection::find_children_of_kind,
             "kind"_a,
             "child_name"_a,
-            D_NA(DeclReflection, find_children_of_kind)
+            D(DeclReflection, find_children_of_kind)
         )
         .def(
             "find_first_child_of_kind",
             &DeclReflection::find_first_child_of_kind,
             "kind"_a,
             "child_name"_a,
-            D_NA(DeclReflection, find_first_child_of_kind)
+            D(DeclReflection, find_first_child_of_kind)
         )
         .def("__len__", [](DeclReflection& self) { return self.child_count(); })
         .def(
@@ -120,7 +120,7 @@ SGL_PY_EXPORT(device_reflection)
         .def_prop_ro("name", &FunctionReflection::name)
         .def_prop_ro("return_type", &FunctionReflection::return_type)
         .def_prop_ro("parameters", &FunctionReflection::parameters)
-        .def("has_modifier", &FunctionReflection::has_modifier, "modifier"_a, D_NA(FunctionReflection, has_modifier));
+        .def("has_modifier", &FunctionReflection::has_modifier, "modifier"_a, D(FunctionReflection, has_modifier));
 
     nb::sgl_enum<ModifierID>(m, "ModifierID");
 
@@ -129,7 +129,7 @@ SGL_PY_EXPORT(device_reflection)
     nb::class_<VariableReflection, BaseReflectionObject>(m, "VariableReflection")
         .def_prop_ro("name", &VariableReflection::name)
         .def_prop_ro("type", &VariableReflection::type)
-        .def("has_modifier", &VariableReflection::has_modifier, "modifier"_a, D_NA(VariableReflection, has_modifier));
+        .def("has_modifier", &VariableReflection::has_modifier, "modifier"_a, D(VariableReflection, has_modifier));
 
     nb::class_<VariableLayoutReflection, BaseReflectionObject>(m, "VariableLayoutReflection")
         .def_prop_ro("name", &VariableLayoutReflection::name)
@@ -147,7 +147,7 @@ SGL_PY_EXPORT(device_reflection)
             &EntryPointLayout::compute_thread_group_size,
             D(EntryPointLayout, compute_thread_group_size)
         )
-        .def_prop_ro("parameters", &EntryPointLayout::parameters, D_NA(EntryPointLayout, parameters))
+        .def_prop_ro("parameters", &EntryPointLayout::parameters, D(EntryPointLayout, parameters))
         .def("__repr__", &EntryPointLayout::to_string);
 
     bind_list_type<EntryPointLayoutParameterList>(m, "EntryPointLayoutParameterList");
