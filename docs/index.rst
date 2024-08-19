@@ -37,6 +37,7 @@ If you use ``sgl`` in a research project leading to a publication, please cite t
 .. toctree::
    :hidden:
 
+   changelog
    self
 
 .. toctree::
