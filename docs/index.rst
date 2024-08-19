@@ -4,7 +4,7 @@ Getting Started
 Installation
 ------------
 
-`sgl` can be installed from `pypi`:
+sgl is available as pre-compiled wheels via PyPi. Installing sgl is as simple as running:
 
 .. code-block:: bash
 
@@ -15,6 +15,7 @@ See :ref:`developer guide <sec-compiling>` for instructions on how to compile fr
 Requirements
 ------------
 
+- **python >= 3.9**
 
 Citation
 --------
