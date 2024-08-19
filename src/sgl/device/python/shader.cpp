@@ -52,7 +52,7 @@ SGL_PY_EXPORT(device_shader)
 {
     using namespace sgl;
 
-    nb::class_<TypeConformance>(m, "TypeConformance", D_NA(TypeConformance))
+    nb::class_<TypeConformance>(m, "TypeConformance", D(TypeConformance))
         .def(nb::init<>())
         .def(nb::init<std::string, std::string, int32_t>(), "type_name"_a, "interface_name"_a, "id"_a = -1)
         .def(
@@ -65,9 +65,9 @@ SGL_PY_EXPORT(device_shader)
                     tuple.size() > 2 ? nb::cast<int32_t>(tuple[2]) : -1};
             }
         )
-        .def_rw("interface_name", &TypeConformance::interface_name, D_NA(TypeConformance, interface_name))
-        .def_rw("type_name", &TypeConformance::type_name, D_NA(TypeConformance, type_name))
-        .def_rw("id", &TypeConformance::id, D_NA(TypeConformance, id))
+        .def_rw("interface_name", &TypeConformance::interface_name, D(TypeConformance, interface_name))
+        .def_rw("type_name", &TypeConformance::type_name, D(TypeConformance, type_name))
+        .def_rw("id", &TypeConformance::id, D(TypeConformance, id))
         .def("__repr__", &TypeConformance::to_string);
     nb::implicitly_convertible<nb::tuple, TypeConformance>();
 
@@ -180,7 +180,7 @@ SGL_PY_EXPORT(device_shader)
     using sgl::SlangEntryPoint;
 
     nb::class_<SlangSession, Object>(m, "SlangSession", D(SlangSession))
-        .def_prop_ro("device", &SlangSession::device, D_NA(SlangSession, device))
+        .def_prop_ro("device", &SlangSession::device, D(SlangSession, device))
         .def_prop_ro("desc", &SlangSession::desc, D(SlangSession, desc))
         .def("load_module", &SlangSession::load_module, "module_name"_a, D(SlangSession, load_module))
         .def(
@@ -211,12 +211,12 @@ SGL_PY_EXPORT(device_shader)
         .def("load_source", &SlangSession::load_source, "module_name"_a, D(SlangSession, load_source));
 
     nb::class_<SlangModule, Object>(m, "SlangModule", D(SlangModule))
-        .def_prop_ro("session", &SlangModule::session, D_NA(SlangModule, session))
+        .def_prop_ro("session", &SlangModule::session, D(SlangModule, session))
         .def_prop_ro("name", &SlangModule::name, D(SlangModule, name))
         .def_prop_ro("path", &SlangModule::path, D(SlangModule, path))
         .def_prop_ro("layout", &SlangModule::layout, D(SlangModule, layout))
         .def_prop_ro("entry_points", &SlangModule::entry_points, D(SlangModule, entry_points))
-        .def_prop_ro("module_decl", &SlangModule::module_decl, D_NA(SlangModule, module_decl))
+        .def_prop_ro("module_decl", &SlangModule::module_decl, D(SlangModule, module_decl))
         .def(
             "entry_point",
             &SlangModule::entry_point,

@@ -190,11 +190,11 @@ SGL_PY_EXPORT(device_device)
         "get_format_supported_resource_states",
         &Device::get_format_supported_resource_states,
         "format"_a,
-        D_NA(Device, get_format_supported_states)
+        D(Device, get_format_supported_resource_states)
     );
 
     device.def_prop_ro("slang_session", &Device::slang_session, D(Device, slang_session));
-    device.def("close", &Device::close, D_NA(Device, close));
+    device.def("close", &Device::close, D(Device, close));
     device.def(
         "create_swapchain",
         [](Device* self,
@@ -251,7 +251,7 @@ SGL_PY_EXPORT(device_device)
         "height"_a = SwapchainDesc().height,
         "image_count"_a = SwapchainDesc().image_count,
         "enable_vsync"_a = SwapchainDesc().enable_vsync,
-        D_NA(Device, create_swapchain, 2)
+        D(Device, create_swapchain, 2)
     );
     device.def(
         "create_swapchain",
@@ -581,7 +581,7 @@ SGL_PY_EXPORT(device_device)
         "cache_path"_a.none() = nb::none(),
         D(Device, create_slang_session)
     );
-    device.def("reload_all_programs", &Device::reload_all_programs, D_NA(Device, reload_all_programs));
+    device.def("reload_all_programs", &Device::reload_all_programs, D(Device, reload_all_programs));
     device.def("load_module", &Device::load_module, "module_name"_a, D(Device, load_module));
     device.def(
         "load_module_from_source",
