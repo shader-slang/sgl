@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools", "wheel", "typing-extensions"]
+requires = ["setuptools", "wheel", "typing-extensions", "libcst"]
 build-backend = "setuptools.build_meta"
 
 [tool.pyright]
