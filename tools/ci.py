@@ -33,7 +33,7 @@ def get_platform():
     machine = platform.machine()
     if machine == "x86_64" or machine == "AMD64":
         return "x86_64"
-    elif machine == "aarch64":
+    elif machine == "aarch64" or machine == "arm64":
         return "aarch64"
     else:
         raise NameError(f"Unsupported platform: {machine}")
