@@ -33,7 +33,7 @@ def get_platform():
     machine = platform.machine()
     if machine == "x86_64" or machine == "AMD64":
         return "x86_64"
-    elif machine == "aarch64":
+    elif machine == "aarch64" or machine == "arm64":
         return "aarch64"
     else:
         raise NameError(f"Unsupported platform: {machine}")
@@ -244,9 +244,9 @@ def main():
     preset = args["os"] + "-" + args["compiler"]
     if args["os"] == "macos":
         if args["platform"] == "x86_64":
-            preset += "-x64"
+            preset = preset.replace("macos", "macos-x64")
         elif args["platform"] == "aarch64":
-            preset += "-arm64"
+            preset = preset.replace("macos", "macos-arm64")
     args["preset"] = preset
 
     # Determine binary directory.

@@ -125,6 +125,8 @@ public:
     {
     }
 
+    virtual ~BaseReflectionList() = default;
+
     /// Number of entries in list.
     virtual uint32_t size() const = 0;
 
@@ -168,6 +170,8 @@ public:
         , m_indices(std::move(other.m_indices))
     {
     }
+
+    virtual ~BaseReflectionIndexedList() = default;
 
     /// Number of search results in list.
     uint32_t size() const override { return static_cast<uint32_t>(m_indices.size()); }
