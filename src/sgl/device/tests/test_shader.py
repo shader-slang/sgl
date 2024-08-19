@@ -3,12 +3,11 @@
 import pytest
 import sys
 import sgl
-import struct
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent))
 import helpers
-from helpers import test_id
+from helpers import test_id  # type: ignore (pytest fixture)
 
 # TODO: Due to a bug in "Apple clang", the exception binding in nanobind
 # raises RuntimeError instead of SlangCompileError
@@ -16,7 +15,7 @@ SlangCompileError = RuntimeError if sys.platform == "darwin" else sgl.SlangCompi
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_load_module(device_type):
+def test_load_module(device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
 
     # Loading non-existing module must raise an exception
@@ -55,7 +54,7 @@ def test_load_module(device_type):
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_load_module_from_source(test_id, device_type):
+def test_load_module_from_source(test_id: str, device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
 
     # Compilation errors must raise an exception
@@ -91,7 +90,7 @@ def test_load_module_from_source(test_id, device_type):
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_load_program(device_type):
+def test_load_program(device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
 
     # Loading non-existing module must raise an exception

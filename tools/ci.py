@@ -8,6 +8,7 @@ import platform
 import argparse
 import subprocess
 import json
+from typing import Any, Optional
 
 
 def get_os():
@@ -52,7 +53,7 @@ def get_default_compiler():
         raise NameError(f"Unsupported OS: {get_os()}")
 
 
-def run_command(command, shell=True, env=None):
+def run_command(command: str, shell: bool = True, env: Optional[dict[str, str]] = None):
     if get_os() == "windows":
         command = command.replace("/", "\\")
     if env != None:
@@ -89,7 +90,7 @@ def run_command(command, shell=True, env=None):
     return out
 
 
-def get_changed_env(command):
+def get_changed_env(command: str):
     if get_os() == "windows":
         command = command.replace("/", "\\") + " && set"
     else:
@@ -115,21 +116,21 @@ def get_changed_env(command):
     return env_vars
 
 
-def get_python_env(args):
+def get_python_env(args: Any):
     if args.os == "windows":
         return get_changed_env(f"{args.bin_dir}/setpath.bat")
     else:
         return get_changed_env(f"source {args.bin_dir}/setpath.sh")
 
 
-def setup(args):
+def setup(args: Any):
     if args.os == "windows":
         run_command("./setup.bat")
     else:
         run_command("./setup.sh")
 
 
-def configure(args):
+def configure(args: Any):
     cmd = f"{args.cmake} --preset {args.preset}"
     if "header-validation" in args.flags:
         cmd += " -DSGL_ENABLE_HEADER_VALIDATION=ON"
@@ -138,11 +139,11 @@ def configure(args):
     run_command(cmd)
 
 
-def build(args):
+def build(args: Any):
     run_command(f"{args.cmake} --build build/{args.preset} --config {args.config}")
 
 
-def unit_test_cpp(args):
+def unit_test_cpp(args: Any):
     out = run_command(f"{args.bin_dir}/sgl_tests -r=console,junit")
     # doctest outputs both regular output and junit xml report on stdout
     # filter out regular output and write remaining to junit xml file
@@ -154,18 +155,18 @@ def unit_test_cpp(args):
         f.write(report)
 
 
-def typing_check_python(args):
+def typing_check_python(args: Any):
     env = get_python_env(args)
     run_command(f"pyright", env=env)
 
 
-def unit_test_python(args):
+def unit_test_python(args: Any):
     env = get_python_env(args)
     os.makedirs("reports", exist_ok=True)
     run_command(f"pytest src -r a --junit-xml=reports/pytest-junit.xml", env=env)
 
 
-def coverage_report(args):
+def coverage_report(args: Any):
     if not "coverage" in args.flags:
         print("Coverage flag not set, skipping coverage report.")
     os.makedirs("reports", exist_ok=True)

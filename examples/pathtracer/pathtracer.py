@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
+from typing import Optional
 import sgl
 import numpy as np
+import numpy.typing as npt
 from pathlib import Path
 from dataclasses import dataclass
 import struct
@@ -11,6 +13,7 @@ EXAMPLE_DIR = Path(__file__).parent
 
 class Camera:
     def __init__(self):
+        super().__init__()
         self.width = 100
         self.height = 100
         self.aspect_ratio = 1.0
@@ -52,6 +55,7 @@ class CameraController:
     MOVE_SHIFT_FACTOR = 10.0
 
     def __init__(self, camera: Camera):
+        super().__init__()
         self.camera = camera
         self.mouse_down = False
         self.mouse_pos = sgl.float2()
@@ -129,12 +133,16 @@ class CameraController:
 
 
 class Material:
-    def __init__(self, base_color=sgl.float3(0.5)):
+    def __init__(self, base_color: "sgl.float3param" = sgl.float3(0.5)):
+        super().__init__()
         self.base_color = base_color
 
 
 class Mesh:
-    def __init__(self, vertices, indices):
+    def __init__(
+        self, vertices: npt.NDArray[np.float32], indices: npt.NDArray[np.uint32]
+    ):
+        super().__init__()
         assert vertices.ndim == 2 and vertices.dtype == np.float32
         assert indices.ndim == 2 and indices.dtype == np.uint32
         self.vertices = vertices
@@ -153,7 +161,7 @@ class Mesh:
         return self.triangle_count * 3
 
     @classmethod
-    def create_quad(cls, size=sgl.float2(1)):
+    def create_quad(cls, size: "sgl.float2param" = sgl.float2(1)):
         vertices = np.array(
             [
                 # position, normal, uv
@@ -175,7 +183,7 @@ class Mesh:
         return Mesh(vertices, indices)
 
     @classmethod
-    def create_cube(cls, size=sgl.float3(1)):
+    def create_cube(cls, size: "sgl.float3param" = sgl.float3(1)):
         vertices = np.array(
             [
                 # position, normal, uv
@@ -237,6 +245,7 @@ class Mesh:
 
 class Transform:
     def __init__(self):
+        super().__init__()
         self.translation = sgl.float3(0)
         self.scaling = sgl.float3(1)
         self.rotation = sgl.float3(0)
@@ -251,6 +260,7 @@ class Transform:
 
 class Stage:
     def __init__(self):
+        super().__init__()
         self.camera = Camera()
         self.materials = []
         self.meshes = []
@@ -292,17 +302,17 @@ class Stage:
         for _ in range(10):
             cube_materials.append(
                 stage.add_material(
-                    Material(base_color=np.random.rand(3).astype(np.float32))
+                    Material(base_color=sgl.float3(np.random.rand(3).astype(np.float32)))  # type: ignore (TYPINGTODO: need explicit np->float conversion)
                 )
             )
         cube_mesh = stage.add_mesh(Mesh.create_cube([0.1, 0.1, 0.1]))
 
         for i in range(1000):
             transform = Transform()
-            transform.translation = (np.random.rand(3) * 2 - 1).astype(np.float32)
+            transform.translation = sgl.float3((np.random.rand(3) * 2 - 1).astype(np.float32))  # type: ignore (TYPINGTODO: need explicit np->float conversion)
             transform.translation[1] += 1
-            transform.scaling = (np.random.rand(3) + 0.5).astype(np.float32)
-            transform.rotation = (np.random.rand(3) * 10).astype(np.float32)
+            transform.scaling = sgl.float3((np.random.rand(3) + 0.5).astype(np.float32))  # type: ignore (TYPINGTODO: need explicit np->float conversion)
+            transform.rotation = sgl.float3((np.random.rand(3) * 10).astype(np.float32))  # type: ignore (TYPINGTODO: need explicit np->float conversion)
             transform.update_matrix()
             cube_transform = stage.add_transform(transform)
             stage.add_instance(
@@ -348,6 +358,7 @@ class Scene:
             return struct.pack("III", self.mesh_id, self.material_id, self.transform_id)
 
     def __init__(self, device: sgl.Device, stage: Stage):
+        super().__init__()
         self.device = device
 
         self.camera = stage.camera
@@ -584,6 +595,7 @@ class Scene:
 
 class PathTracer:
     def __init__(self, device: sgl.Device, scene: Scene):
+        super().__init__()
         self.device = device
         self.scene = scene
 
@@ -611,17 +623,18 @@ class PathTracer:
 
 class Accumulator:
     def __init__(self, device: sgl.Device):
+        super().__init__()
         self.device = device
         self.program = self.device.load_program("accumulator.slang", ["main"])
         self.kernel = self.device.create_compute_kernel(self.program)
-        self.accumulator: sgl.Texture = None
+        self.accumulator: Optional[sgl.Texture] = None
 
     def execute(
         self,
         command_buffer: sgl.CommandBuffer,
         input: sgl.Texture,
         output: sgl.Texture,
-        reset=False,
+        reset: bool = False,
     ):
         if (
             self.accumulator == None
@@ -653,6 +666,7 @@ class Accumulator:
 
 class ToneMapper:
     def __init__(self, device: sgl.Device):
+        super().__init__()
         self.device = device
         self.program = self.device.load_program("tone_mapper.slang", ["main"])
         self.kernel = self.device.create_compute_kernel(self.program)
@@ -674,6 +688,7 @@ class ToneMapper:
 
 class App:
     def __init__(self):
+        super().__init__()
         self.window = sgl.Window(
             width=1920, height=1080, title="PathTracer", resizable=True
         )
@@ -688,9 +703,9 @@ class App:
             enable_vsync=False,
         )
 
-        self.render_texture: sgl.Texture = None
-        self.accum_texture: sgl.Texture = None
-        self.output_texture: sgl.Texture = None
+        self.render_texture: sgl.Texture = None  # type: ignore (will be set immediately)
+        self.accum_texture: sgl.Texture = None  # type: ignore (will be set immediately)
+        self.output_texture: sgl.Texture = None  # type: ignore (will be set immediately)
 
         self.window.on_keyboard_event = self.on_keyboard_event
         self.window.on_mouse_event = self.on_mouse_event
@@ -726,7 +741,7 @@ class App:
     def on_mouse_event(self, event: sgl.MouseEvent):
         self.camera_controller.on_mouse_event(event)
 
-    def on_resize(self, width, height):
+    def on_resize(self, width: int, height: int):
         self.device.wait()
         self.swapchain.resize(width, height)
 

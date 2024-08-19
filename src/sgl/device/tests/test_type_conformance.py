@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
+from typing import Sequence
 import pytest
 import sys
 import sgl
@@ -11,12 +12,12 @@ import helpers
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_type_conformance(device_type):
+def test_type_conformance(device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
 
-    def run(conformances):
+    def run(conformances: Sequence[tuple[str | int, ...]]):
         module = device.load_module("test_type_conformance.slang")
-        entry_point = module.entry_point("main", type_conformances=conformances)
+        entry_point = module.entry_point("main", type_conformances=conformances)  # type: ignore (TYPINGTODO: type_conformances has implicit conversion)
         program = device.link_program(modules=[module], entry_points=[entry_point])
         kernel = device.create_compute_kernel(program)
         result = device.create_buffer(

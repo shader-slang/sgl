@@ -5,7 +5,7 @@ from sgl import Timer
 import time
 
 
-def high_precision_sleep(duration):
+def high_precision_sleep(duration: float):
     start_time = time.perf_counter()
     while True:
         elapsed_time = time.perf_counter() - start_time

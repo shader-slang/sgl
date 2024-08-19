@@ -1,12 +1,7 @@
 import pytest
 import sys
 import sgl
-import struct
-import numpy as np
-from dataclasses import dataclass
-from typing import Literal
 from pathlib import Path
-from pprint import pprint
 from deepdiff import DeepDiff
 
 sys.path.append(str(Path(__file__).parent))
@@ -34,7 +29,7 @@ def declref_to_str(declref: sgl.DeclReflection, device: sgl.Device):
     return res
 
 
-def print_ast_recurse(declref: sgl.DeclReflection, device: sgl.Device, indent=0):
+def print_ast_recurse(declref: sgl.DeclReflection, device: sgl.Device, indent: int = 0):
     print("  " * indent + declref_to_str(declref, device))
     for child in declref.children:
         print_ast_recurse(child, device, indent + 1)
@@ -57,7 +52,7 @@ def ast_to_dict(declref: sgl.DeclReflection, device: sgl.Device):
 
 
 @pytest.mark.parametrize("device_type", DEVICES)
-def test_single_function(device_type):
+def test_single_function(device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
 
     module = device.load_module_from_source(
@@ -105,7 +100,7 @@ void foo() {
 
 
 @pytest.mark.parametrize("device_type", DEVICES)
-def test_struct(device_type):
+def test_struct(device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
 
     module = device.load_module_from_source(
@@ -183,7 +178,7 @@ struct Foo {
 
 
 @pytest.mark.parametrize("device_type", DEVICES)
-def test_struct_with_int_array(device_type):
+def test_struct_with_int_array(device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
 
     module = device.load_module_from_source(
@@ -206,7 +201,7 @@ struct Foo {
 
 
 @pytest.mark.parametrize("device_type", DEVICES)
-def test_function_with_int_params(device_type):
+def test_function_with_int_params(device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
 
     module = device.load_module_from_source(
@@ -256,7 +251,7 @@ int foo(int a, float b) {
 
 
 @pytest.mark.parametrize("device_type", DEVICES)
-def test_generic_function_with_generic_params(device_type):
+def test_generic_function_with_generic_params(device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
 
     module = device.load_module_from_source(
@@ -275,7 +270,7 @@ void callfoo() {
 
 
 @pytest.mark.parametrize("device_type", DEVICES)
-def test_generic_struct_with_generic_fields(device_type):
+def test_generic_struct_with_generic_fields(device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
 
     module = device.load_module_from_source(
@@ -296,7 +291,7 @@ struct Foo1 {
 
 
 @pytest.mark.parametrize("device_type", DEVICES)
-def test_inout_modifier_params(device_type):
+def test_inout_modifier_params(device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
 
     module = device.load_module_from_source(
@@ -321,7 +316,7 @@ int foo(in int a, out int b, inout int c) {
 
 
 @pytest.mark.parametrize("device_type", DEVICES)
-def test_differentiable(device_type):
+def test_differentiable(device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
     module = device.load_module_from_source(
         "test_differentiable",
@@ -339,7 +334,7 @@ void foo(in int a, out int b) {
 
 
 @pytest.mark.parametrize("device_type", DEVICES)
-def test_globals(device_type):
+def test_globals(device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
 
     module = device.load_module_from_source(
@@ -382,7 +377,7 @@ void myfunc() {
 
 
 @pytest.mark.parametrize("device_type", DEVICES)
-def test_overloads(device_type):
+def test_overloads(device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
 
     module = device.load_module_from_source(
@@ -415,7 +410,7 @@ void notmyfunc() {}
 
 
 @pytest.mark.parametrize("device_type", DEVICES)
-def test_struct_methods_and_overloads(device_type):
+def test_struct_methods_and_overloads(device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
 
     module = device.load_module_from_source(
@@ -452,7 +447,7 @@ struct Foo {
 
 
 @pytest.mark.parametrize("device_type", DEVICES)
-def test_ast_cursor_hashgrid(device_type):
+def test_ast_cursor_hashgrid(device_type: sgl.DeviceType):
 
     device = helpers.get_device(type=device_type)
 
@@ -775,7 +770,7 @@ HASHGRID_NO_GENERICS_DUMP = {
 
 
 @pytest.mark.parametrize("device_type", DEVICES)
-def test_ast_cursor_hashgrid_nogenerics(device_type):
+def test_ast_cursor_hashgrid_nogenerics(device_type: sgl.DeviceType):
 
     device = helpers.get_device(type=device_type)
 

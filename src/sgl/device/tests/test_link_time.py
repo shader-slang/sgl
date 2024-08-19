@@ -5,18 +5,17 @@ import sys
 import sgl
 import numpy as np
 from pathlib import Path
-from hashlib import sha256
 
 sys.path.append(str(Path(__file__).parent))
 import helpers
-from helpers import test_id
+from helpers import test_id  # type: ignore (pytest fixture)
 
 
 # Before running more in depth link time tests below, this test simply
 # verifies that the basic linking of 2 modules together with exported
 # variables works.
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_link_time_modules_compile(test_id, device_type):
+def test_link_time_modules_compile(test_id: str, device_type: sgl.DeviceType):
     if sys.platform == "linux" or sys.platform == "linux2" or sys.platform == "darwin":
         pytest.skip("This test currently crashes on linux")
 
@@ -53,7 +52,9 @@ def test_link_time_modules_compile(test_id, device_type):
 # Test modifying just 1 constant value
 @pytest.mark.parametrize("value", [2, 5])
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_link_time_constant_value(test_id, device_type, value):
+def test_link_time_constant_value(
+    test_id: str, device_type: sgl.DeviceType, value: int
+):
     device = helpers.get_device(type=device_type)
 
     constants = (
@@ -103,7 +104,7 @@ def test_link_time_constant_value(test_id, device_type, value):
 # Test with threads and value, using code from a slang file
 @pytest.mark.parametrize("value", [2, 5])
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_link_time_constants(device_type, value):
+def test_link_time_constants(device_type: sgl.DeviceType, value: int):
     if sys.platform == "linux" or sys.platform == "linux2" or sys.platform == "darwin":
         pytest.skip("This test currently crashes on linux")
 
@@ -142,7 +143,7 @@ def test_link_time_constants(device_type, value):
 
 @pytest.mark.parametrize("op", ["AddOp", "SubOp", "MulOp"])
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_link_time_type(device_type, op):
+def test_link_time_type(device_type: sgl.DeviceType, op: str):
     device = helpers.get_device(type=device_type)
 
     constants = "\n".join(

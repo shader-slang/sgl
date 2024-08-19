@@ -15,7 +15,7 @@ ELEMENT_COUNT = 1024
 @pytest.mark.parametrize("view", ["uav", "srv"])
 @pytest.mark.parametrize("shader_model", helpers.ALL_SHADER_MODELS)
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_float64(device_type, shader_model, view):
+def test_float64(device_type: sgl.DeviceType, shader_model: sgl.ShaderModel, view: str):
     device = helpers.get_device(device_type)
 
     np.random.seed(123)
