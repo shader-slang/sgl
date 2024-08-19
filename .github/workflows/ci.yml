@@ -23,29 +23,24 @@ jobs:
         config: [Debug, Release]
         python: ["3.10"]
         exclude:
-          # Exclude macos (no runners available)
-          - { os: macos }
           # Exclude aarch64 for windows/linux
           - { os: windows, platform: aarch64 }
           - { os: linux, platform: aarch64 }
-          # Exclude x86_64 for macos
-          - { os: macos, platform: x86_64 }
           # Exclude unavailable compilers
           - { os: windows, compiler: gcc }
           - { os: windows, compiler: clang }
           - { os: linux, compiler: msvc }
           - { os: macos, compiler: msvc }
           - { os: macos, compiler: gcc }
-          # Skip clang on linux
-          - { os: linux, compiler: clang }
         include:
-          # Specify runners
-          - { os: windows, platform: x86_64, runs-on: [self-hosted, Windows, X64] }
-          - { os: linux, platform: x86_64, runs-on: [self-hosted, Linux, X64] }
-          # Enable header validation for one windows build
-          - { os: windows, compiler: msvc, config: Debug, flags: "header-validation" }
-          # Enable header validation and coverage for one linux build
-          - { os: linux, compiler: gcc, config: Debug, flags: "header-validation,coverage" }
+          # Builds running on self-hosted runners (build + tests + coverage)
+          - { os: windows, compiler: msvc, config: Debug, flags: "unit-test,header-validation", runs-on: [self-hosted, Windows, X64] }
+          - { os: windows, compiler: msvc, config: Release, flags: "unit-test", runs-on: [self-hosted, Windows, X64] }
+          - { os: linux, compiler: gcc, config: Debug, flags: "unit-test,header-validation,coverage", runs-on: [self-hosted, Linux, X64] }
+          - { os: linux, compiler: gcc, config: Release, flags: "unit-test", runs-on: [self-hosted, Linux, X64] }
+          # Additional builds running on GitHub hosted runners (build only)
+          - { os: linux, compiler: clang, runs-on: [ubuntu-latest] }
+          - { os: macos, compiler: clang, runs-on: [macos-latest] }
 
     env:
       VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
@@ -62,6 +57,12 @@ jobs:
         with:
           submodules: recursive
           lfs: true
+
+      # Setup Linux.
+      - name: Setup Linux
+        if: startsWith(matrix.os, 'linux') && !contains(matrix.runs-on, 'self-hosted')
+        run: |
+          sudo apt install -y libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev pkg-config
 
       # Setup Python.
       - name: Setup Python ${{ matrix.python }}
@@ -83,7 +84,6 @@ jobs:
       # Setup.
       - name: Setup
         run: python tools/ci.py setup
-      # sudo apt install libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev pkg-config
 
       # Setup vcpkg caching.
       - name: Export GitHub Actions cache environment variables
@@ -107,16 +107,18 @@ jobs:
 
       # Unit Tests (C++)
       - name: Unit Tests (C++)
+        if: contains(matrix.flags, 'unit-test')
         run: python tools/ci.py unit-test-cpp
 
       # Unit Tests (Python)
       - name: Unit Tests (Python)
+        if: contains(matrix.flags, 'unit-test')
         run: python tools/ci.py unit-test-python
 
-      # Test Report
-      - name: Test Report
+      # Unit Test Report
+      - name: Unit Test Report
         uses: mikepenz/action-junit-report@v4
-        if: always()
+        if: contains(matrix.flags, 'unit-test')
         with:
           report_paths: 'reports/*-junit.xml'
           check_name: "Unit Test Report"
