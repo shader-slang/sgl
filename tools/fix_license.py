@@ -4,6 +4,7 @@
 A utility for adding SPDX license identifer to source files.
 """
 
+from __future__ import annotations
 import sys
 import os
 import argparse

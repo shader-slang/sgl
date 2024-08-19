@@ -53,7 +53,7 @@ def create_test_image(
     width: int,
     height: int,
     pixel_format: Bitmap.PixelFormat,
-    component_type: Bitmap.ComponentType,
+    component_type: Struct.Type,
 ):
     channels = PIXEL_FORMAT_TO_CHANNELS[pixel_format]
     dtype = COMPONENT_TYPE_TO_DTYPE[component_type]
@@ -70,7 +70,7 @@ def write_read_test(
     width: int,
     height: int,
     pixel_format: Bitmap.PixelFormat,
-    component_type: Bitmap.ComponentType,
+    component_type: Struct.Type,
     quality: Optional[int] = None,
     rtol: Optional[float] = None,
     atol: Optional[float] = None,
