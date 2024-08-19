@@ -9,10 +9,10 @@ NB_MAKE_OPAQUE(std::vector<sgl::ref<sgl::VariableReflection>>)
 
 namespace sgl {
 
-template<class ListT>
-void bind_list_type(nanobind::module_& m, const char* type_name)
+template<class ListT, class... Extra>
+void bind_list_type(nanobind::module_& m, const char* type_name, Extra&&... extra)
 {
-    nb::class_<ListT>(m, type_name)
+    nb::class_<ListT>(m, type_name, std::forward<Extra>(extra)...)
         .def("__len__", [](ListT& self) { return self.size(); })
         .def(
             "__getitem__",
@@ -33,11 +33,11 @@ SGL_PY_EXPORT(device_reflection)
 {
     using namespace sgl;
 
-    nb::class_<BaseReflectionObject, Object> base_reflection(m, "BaseReflectionObject");
+    nb::class_<BaseReflectionObject, Object> base_reflection(m, "BaseReflectionObject", D(BaseReflectionObject));
 
-    nb::class_<DeclReflection, BaseReflectionObject> decl_reflection(m, "DeclReflection");
+    nb::class_<DeclReflection, BaseReflectionObject> decl_reflection(m, "DeclReflection", D(DeclReflection));
 
-    nb::sgl_enum<DeclReflection::Kind>(decl_reflection, "Kind");
+    nb::sgl_enum<DeclReflection::Kind>(decl_reflection, "Kind", D(DeclReflection, Kind));
 
     decl_reflection //
         .def_prop_ro("kind", &DeclReflection::kind, D(DeclReflection, kind))
@@ -74,68 +74,92 @@ SGL_PY_EXPORT(device_reflection)
         )
         .def("__repr__", &DeclReflection::to_string);
 
-    bind_list_type<DeclReflectionChildList>(m, "DeclReflectionChildList");
-    bind_list_type<DeclReflectionIndexedChildList>(m, "DeclReflectionIndexedChildList");
+    bind_list_type<DeclReflectionChildList>(m, "DeclReflectionChildList", D(DeclReflectionChildList));
+    bind_list_type<DeclReflectionIndexedChildList>(
+        m,
+        "DeclReflectionIndexedChildList",
+        D(DeclReflectionIndexedChildList)
+    );
 
-    nb::class_<TypeReflection, BaseReflectionObject> type_reflection(m, "TypeReflection");
+    nb::class_<TypeReflection, BaseReflectionObject> type_reflection(m, "TypeReflection", D(TypeReflection));
 
-    nb::sgl_enum<TypeReflection::Kind>(type_reflection, "Kind");
-    nb::sgl_enum<TypeReflection::ScalarType>(type_reflection, "ScalarType");
-    nb::sgl_enum<TypeReflection::ResourceShape>(type_reflection, "ResourceShape");
-    nb::sgl_enum<TypeReflection::ResourceAccess>(type_reflection, "ResourceAccess");
-    nb::sgl_enum<TypeReflection::ParameterCategory>(type_reflection, "ParameterCategory");
+    nb::sgl_enum<TypeReflection::Kind>(type_reflection, "Kind", D(TypeReflection, Kind));
+    nb::sgl_enum<TypeReflection::ScalarType>(type_reflection, "ScalarType", D(TypeReflection, ScalarType));
+    nb::sgl_enum<TypeReflection::ResourceShape>(type_reflection, "ResourceShape", D(TypeReflection, ResourceShape));
+    nb::sgl_enum<TypeReflection::ResourceAccess>(type_reflection, "ResourceAccess", D(TypeReflection, ResourceAccess));
+    nb::sgl_enum<TypeReflection::ParameterCategory>(
+        type_reflection,
+        "ParameterCategory",
+        D(TypeReflection, ParameterCategory)
+    );
 
     type_reflection //
-        .def_prop_ro("kind", &TypeReflection::kind)
-        .def_prop_ro("name", &TypeReflection::name)
-        .def_prop_ro("fields", &TypeReflection::fields)
-        .def_prop_ro("element_count", &TypeReflection::element_count)
-        .def_prop_ro("element_type", &TypeReflection::element_type)
-        .def_prop_ro("row_count", &TypeReflection::row_count)
-        .def_prop_ro("col_count", &TypeReflection::col_count)
-        .def_prop_ro("scalar_type", &TypeReflection::scalar_type)
-        .def_prop_ro("resource_result_type", &TypeReflection::resource_result_type)
-        .def_prop_ro("resource_shape", &TypeReflection::resource_shape)
-        .def_prop_ro("resource_access", &TypeReflection::resource_access)
-        .def("unwrap_array", &TypeReflection::unwrap_array)
+        .def_prop_ro("kind", &TypeReflection::kind, D(TypeReflection, kind))
+        .def_prop_ro("name", &TypeReflection::name, D(TypeReflection, name))
+        .def_prop_ro("fields", &TypeReflection::fields, D(TypeReflection, fields))
+        .def_prop_ro("element_count", &TypeReflection::element_count, D(TypeReflection, element_count))
+        .def_prop_ro("element_type", &TypeReflection::element_type, D(TypeReflection, element_type))
+        .def_prop_ro("row_count", &TypeReflection::row_count, D(TypeReflection, row_count))
+        .def_prop_ro("col_count", &TypeReflection::col_count, D(TypeReflection, col_count))
+        .def_prop_ro("scalar_type", &TypeReflection::scalar_type, D(TypeReflection, scalar_type))
+        .def_prop_ro(
+            "resource_result_type",
+            &TypeReflection::resource_result_type,
+            D(TypeReflection, resource_result_type)
+        )
+        .def_prop_ro("resource_shape", &TypeReflection::resource_shape, D(TypeReflection, resource_shape))
+        .def_prop_ro("resource_access", &TypeReflection::resource_access, D(TypeReflection, resource_access))
+        .def("unwrap_array", &TypeReflection::unwrap_array, D(TypeReflection, unwrap_array))
         .def("__repr__", &TypeReflection::to_string);
 
-    bind_list_type<TypeReflectionFieldList>(m, "TypeReflectionFieldList");
+    bind_list_type<TypeReflectionFieldList>(m, "TypeReflectionFieldList", D(TypeReflectionFieldList));
 
-    nb::class_<TypeLayoutReflection, BaseReflectionObject>(m, "TypeLayoutReflection")
-        .def_prop_ro("kind", &TypeLayoutReflection::kind)
-        .def_prop_ro("name", &TypeLayoutReflection::name)
-        .def_prop_ro("size", &TypeLayoutReflection::size)
-        .def_prop_ro("stride", &TypeLayoutReflection::stride)
-        .def_prop_ro("alignment", &TypeLayoutReflection::alignment)
-        .def_prop_ro("type", &TypeLayoutReflection::type)
-        .def_prop_ro("fields", &TypeLayoutReflection::fields)
-        .def_prop_ro("element_type_layout", &TypeLayoutReflection::element_type_layout)
-        .def("unwrap_array", &TypeLayoutReflection::unwrap_array)
+    nb::class_<TypeLayoutReflection, BaseReflectionObject>(m, "TypeLayoutReflection", D(TypeLayoutReflection))
+        .def_prop_ro("kind", &TypeLayoutReflection::kind, D(TypeLayoutReflection, kind))
+        .def_prop_ro("name", &TypeLayoutReflection::name, D(TypeLayoutReflection, name))
+        .def_prop_ro("size", &TypeLayoutReflection::size, D(TypeLayoutReflection, size))
+        .def_prop_ro("stride", &TypeLayoutReflection::stride, D(TypeLayoutReflection, stride))
+        .def_prop_ro("alignment", &TypeLayoutReflection::alignment, D(TypeLayoutReflection, alignment))
+        .def_prop_ro("type", &TypeLayoutReflection::type, D(TypeLayoutReflection, type))
+        .def_prop_ro("fields", &TypeLayoutReflection::fields, D(TypeLayoutReflection, fields))
+        .def_prop_ro(
+            "element_type_layout",
+            &TypeLayoutReflection::element_type_layout,
+            D(TypeLayoutReflection, element_type_layout)
+        )
+        .def("unwrap_array", &TypeLayoutReflection::unwrap_array, D(TypeLayoutReflection, unwrap_array))
         .def("__repr__", &TypeLayoutReflection::to_string);
 
-    bind_list_type<TypeLayoutReflectionFieldList>(m, "TypeLayoutReflectionFieldList");
+    bind_list_type<TypeLayoutReflectionFieldList>(m, "TypeLayoutReflectionFieldList", D(TypeLayoutReflectionFieldList));
 
-    nb::class_<FunctionReflection, BaseReflectionObject>(m, "FunctionReflection")
-        .def_prop_ro("name", &FunctionReflection::name)
-        .def_prop_ro("return_type", &FunctionReflection::return_type)
-        .def_prop_ro("parameters", &FunctionReflection::parameters)
+    nb::class_<FunctionReflection, BaseReflectionObject>(m, "FunctionReflection", D(FunctionReflection))
+        .def_prop_ro("name", &FunctionReflection::name, D(FunctionReflection, name))
+        .def_prop_ro("return_type", &FunctionReflection::return_type, D(FunctionReflection, return_type))
+        .def_prop_ro("parameters", &FunctionReflection::parameters, D(FunctionReflection, parameters))
         .def("has_modifier", &FunctionReflection::has_modifier, "modifier"_a, D(FunctionReflection, has_modifier));
 
     nb::sgl_enum<ModifierID>(m, "ModifierID");
 
-    bind_list_type<FunctionReflectionParameterList>(m, "FunctionReflectionParameterList");
+    bind_list_type<FunctionReflectionParameterList>(
+        m,
+        "FunctionReflectionParameterList",
+        D(FunctionReflectionParameterList)
+    );
 
     nb::class_<VariableReflection, BaseReflectionObject>(m, "VariableReflection")
-        .def_prop_ro("name", &VariableReflection::name)
-        .def_prop_ro("type", &VariableReflection::type)
+        .def_prop_ro("name", &VariableReflection::name, D(VariableReflection, name))
+        .def_prop_ro("type", &VariableReflection::type, D(VariableReflection, type))
         .def("has_modifier", &VariableReflection::has_modifier, "modifier"_a, D(VariableReflection, has_modifier));
 
-    nb::class_<VariableLayoutReflection, BaseReflectionObject>(m, "VariableLayoutReflection")
-        .def_prop_ro("name", &VariableLayoutReflection::name)
-        .def_prop_ro("variable", &VariableLayoutReflection::variable)
-        .def_prop_ro("type_layout", &VariableLayoutReflection::type_layout)
-        .def_prop_ro("offset", &VariableLayoutReflection::offset)
+    nb::class_<VariableLayoutReflection, BaseReflectionObject>(
+        m,
+        "VariableLayoutReflection",
+        D(VariableLayoutReflection)
+    )
+        .def_prop_ro("name", &VariableLayoutReflection::name, D(VariableLayoutReflection, name))
+        .def_prop_ro("variable", &VariableLayoutReflection::variable, D(VariableLayoutReflection, variable))
+        .def_prop_ro("type_layout", &VariableLayoutReflection::type_layout, D(VariableLayoutReflection, type_layout))
+        .def_prop_ro("offset", &VariableLayoutReflection::offset, D(VariableLayoutReflection, offset))
         .def("__repr__", &VariableLayoutReflection::to_string);
 
     nb::class_<EntryPointLayout, BaseReflectionObject>(m, "EntryPointLayout", D(EntryPointLayout))
@@ -150,7 +174,7 @@ SGL_PY_EXPORT(device_reflection)
         .def_prop_ro("parameters", &EntryPointLayout::parameters, D(EntryPointLayout, parameters))
         .def("__repr__", &EntryPointLayout::to_string);
 
-    bind_list_type<EntryPointLayoutParameterList>(m, "EntryPointLayoutParameterList");
+    bind_list_type<EntryPointLayoutParameterList>(m, "EntryPointLayoutParameterList", D(EntryPointLayoutParameterList));
 
     nb::class_<ProgramLayout, BaseReflectionObject> program_layout(m, "ProgramLayout", D(ProgramLayout));
 
@@ -170,8 +194,8 @@ SGL_PY_EXPORT(device_reflection)
         .def_prop_ro("hashed_strings", &ProgramLayout::hashed_strings, D(ProgramLayout, hashed_strings))
         .def("__repr__", &ProgramLayout::to_string);
 
-    bind_list_type<ProgramLayoutParameterList>(m, "ProgramLayoutParameterList");
-    bind_list_type<ProgramLayoutEntryPointList>(m, "ProgramLayoutEntryPointList");
+    bind_list_type<ProgramLayoutParameterList>(m, "ProgramLayoutParameterList", D(ProgramLayoutParameterList));
+    bind_list_type<ProgramLayoutEntryPointList>(m, "ProgramLayoutEntryPointList", D(ProgramLayoutEntryPointList));
 
     nb::class_<ReflectionCursor>(m, "ReflectionCursor", D(ReflectionCursor))
         .def(nb::init<const ShaderProgram*>(), "shader_program"_a)
