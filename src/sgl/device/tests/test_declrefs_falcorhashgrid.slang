@@ -1,5 +1,4 @@
-struct OptimizerHashGrid<let C : uint, let L : uint, let P : uint>
-{
+struct OptimizerHashGrid<let C : uint, let L : uint, let P : uint> {
     static const uint32_t kNumChannels = C;
     static const uint32_t kNumLevels = L;
     static const uint32_t kNumChannelsPerLevel = P;
@@ -16,10 +15,7 @@ struct OptimizerHashGrid<let C : uint, let L : uint, let P : uint>
 
     uint2 getBufferSize(uint level) { return sizes[level]; }
 
-    uint getTexIdx(uint level, uint channel)
-    {
-        return level * kNumChannelsPerLevel + channel;
-    }
+    uint getTexIdx(uint level, uint channel) { return level * kNumChannelsPerLevel + channel; }
 
     uint2 getDenseIndex(uint u, uint v, uint level) { return uint2(u, v); }
 
@@ -36,23 +32,19 @@ struct OptimizerHashGrid<let C : uint, let L : uint, let P : uint>
 
         uint2 index00, index10, index01, index11;
         [ForceUnroll]
-        for (uint level = 0; level < kNumLevels; level++)
-        {
+        for (uint level = 0; level < kNumLevels; level++) {
             float2 uvScaled = uv * resolutions[level];
             uint u0 = uint(floor(uvScaled.x));
             uint u1 = min(u0 + 1, resolutions[level] - 1);
             uint v0 = uint(floor(uvScaled.y));
             uint v1 = min(v0 + 1, resolutions[level] - 1);
             uint numGridEntries = resolutions[level] * resolutions[level];
-            if (numGridEntries == sizes[level].x * sizes[level].y)
-            {
+            if (numGridEntries == sizes[level].x * sizes[level].y) {
                 index00 = getDenseIndex(u0, v0, level);
                 index10 = getDenseIndex(u1, v0, level);
                 index01 = getDenseIndex(u0, v1, level);
                 index11 = getDenseIndex(u1, v1, level);
-            }
-            else
-            {
+            } else {
                 index00 = getHashedIndex(u0, v0, level);
                 index10 = getHashedIndex(u1, v0, level);
                 index01 = getHashedIndex(u0, v1, level);
@@ -61,15 +53,14 @@ struct OptimizerHashGrid<let C : uint, let L : uint, let P : uint>
 
             float2 uvFrac = frac(uvScaled);
             [ForceUnroll]
-            for (int ch = 0; ch < kNumChannelsPerLevel; ch++)
-            {
+            for (int ch = 0; ch < kNumChannelsPerLevel; ch++) {
                 float code00 = getParam(level, ch, index00);
                 float code10 = getParam(level, ch, index10);
                 float code01 = getParam(level, ch, index01);
                 float code11 = getParam(level, ch, index11);
 
-                code[level * kNumChannelsPerLevel + ch] =
-                    lerp(lerp(code00, code10, uvFrac[0]), lerp(code01, code11, uvFrac[0]), uvFrac[1]);
+                code[level * kNumChannelsPerLevel + ch]
+                    = lerp(lerp(code00, code10, uvFrac[0]), lerp(code01, code11, uvFrac[0]), uvFrac[1]);
             }
         }
     }
