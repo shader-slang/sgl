@@ -1,8 +1,6 @@
-# Slang Graphics Library
+[![docs][1]][2] [![ci][3]][4] [![pypi][5]][6] |
 
-|  Documentation  |      CI       |      PyPI       |
-| :-------------: | :-----------: | :-------------: |
-| [![docs][1]][2] | [![ci][3]][4] | [![pypi][5]][6] |
+# Slang Graphics Library
 
 [1]: https://readthedocs.org/projects/sgl/badge/?version=stable
 [2]: https://sgl.readthedocs.io/en/stable/
@@ -29,7 +27,7 @@ pip install sgl
 
 ### Requirements
 
-- `Python >= 3.8`
+- `python >= 3.9`
 
 ## Documentation
 
