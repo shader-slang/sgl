@@ -25,15 +25,12 @@ If you use ``sgl`` in a research project leading to a publication, please cite t
 .. code-block:: bibtex
 
     @software{sgl,
-        title = {sgl},
-        author = {Simon Kallweit},
-        url = {https://github.com/shader-slang/sgl},
-        note = {\url{https://github.com/shader-slang/sgl}},
+        title = {Slang Graphics Library},
+        author = {Simon Kallweit and Chris Cummings},
+        note = {https://github.com/shader-slang/sgl},
         version = {0.0.1},
-        year = {2024}
+        year = 2024
     }
-
-
 
 .. toctree::
    :hidden:
