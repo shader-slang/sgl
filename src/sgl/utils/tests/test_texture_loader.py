@@ -14,7 +14,7 @@ sys.path.append(str(Path(__file__).parent.parent.parent / "device/tests"))
 import helpers
 
 PixelFormat = Bitmap.PixelFormat
-ComponentType = Bitmap.ComponentType
+ComponentType = Struct.Type
 
 
 class Flags(enum.Flag):

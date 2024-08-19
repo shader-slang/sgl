@@ -1,3 +1,4 @@
+from __future__ import annotations
 import argparse
 from typing import Any, Optional, cast
 import libcst as cst
@@ -215,7 +216,7 @@ class InsertTypesTransformer(cst.CSTTransformer):
         # Generates the dictionary and union types for a descriptor class.
 
         # Generate the elements for the dictionary that defines the
-        # new TypedDict. This is really just an element with name:NotRequired[annotation]
+        # new TypedDict. This is really just an element with name:annotation
         # for each entry, but looks more complex due to insertion of correct
         # whitespace (each element other than the last adds a newline and
         # 4 spaces after the comma).
@@ -223,10 +224,7 @@ class InsertTypesTransformer(cst.CSTTransformer):
         for idx in range(len(result.fields)):
             field = result.fields[idx]
             key = cst.SimpleString(f'"{field.name.value}"')
-            value = cst.Subscript(
-                value=cst.Name("NotRequired"),
-                slice=[cst.SubscriptElement(slice=cst.Index(value=field.annotation))],
-            )
+            value = field.annotation
             if idx < len(result.fields) - 1:
                 dict_elements.append(
                     cst.DictElement(
@@ -665,7 +663,6 @@ def insert_typing_imports(tree: cst.Module) -> cst.Module:
                     names=[
                         cst.ImportAlias(name=cst.Name("TypedDict"), asname=None),
                         cst.ImportAlias(name=cst.Name("Union"), asname=None),
-                        cst.ImportAlias(name=cst.Name("NotRequired"), asname=None),
                     ],
                 )
             ]
