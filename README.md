@@ -6,8 +6,8 @@
 [2]: https://sgl.readthedocs.io/en/stable/
 [3]: https://github.com/shader-slang/sgl/actions/workflows/ci.yml/badge.svg
 [4]: https://github.com/shader-slang/sgl/actions/workflows/ci.yml
-[5]: https://img.shields.io/pypi/v/sgl.svg?color=green
-[6]: https://pypi.org/pypi/sgl
+[5]: https://img.shields.io/pypi/v/nv-sgl.svg?color=green
+[6]: https://pypi.org/pypi/nv-sgl
 
 ## Introduction
 
@@ -22,7 +22,7 @@ TBD
 sgl is available as pre-compiled wheels via PyPI. Installing sgl is as simple as running
 
 ```bash
-pip install sgl
+pip install nv-sgl
 ```
 
 ### Requirements

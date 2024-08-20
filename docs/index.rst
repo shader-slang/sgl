@@ -8,7 +8,7 @@ sgl is available as pre-compiled wheels via PyPi. Installing sgl is as simple as
 
 .. code-block:: bash
 
-    pip install sgl
+    pip install nv-sgl
 
 See :ref:`developer guide <sec-compiling>` for instructions on how to compile from source.
 
