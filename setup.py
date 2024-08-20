@@ -78,6 +78,8 @@ class CMakeBuild(build_ext):
             "-B",
             build_dir,
             "-DCMAKE_DEFAULT_BUILD_TYPE=Release",
+            f"-DPython_ROOT_DIR:PATH={sys.prefix}",
+            f"-DPython_FIND_REGISTRY:STRING=NEVER",
             f"-DCMAKE_INSTALL_PREFIX={extdir}",
             f"-DCMAKE_INSTALL_LIBDIR=sgl",
             f"-DCMAKE_INSTALL_BINDIR=sgl",
@@ -106,14 +108,14 @@ with open("src/sgl/sgl.h") as f:
     version = "{MAJOR}.{MINOR}.{PATCH}".format(**matches)
     print(f"version={version}")
 
-long_description = """sgl."""
+long_description = """TBD"""
 
 setup(
     name="sgl",
     version=version,
     author="Simon Kallweit",
     author_email="skallweit@nvidia.com",
-    description="A research rendering framework",
+    description="Slang Graphics Library",
     url="https://github.com/shader-slang/sgl",
     license="Apache-2.0",
     long_description=long_description,
@@ -121,5 +123,5 @@ setup(
     ext_modules=[CMakeExtension("sgl")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
-    python_requires=">=3.8",
+    python_requires=">=3.9",
 )
