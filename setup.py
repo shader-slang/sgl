@@ -111,7 +111,7 @@ with open("src/sgl/sgl.h") as f:
 long_description = """TBD"""
 
 setup(
-    name="sgl",
+    name="nv-sgl",
     version=version,
     author="Simon Kallweit",
     author_email="skallweit@nvidia.com",
