@@ -90,7 +90,7 @@ message(STATUS "Platform: ${SGL_PLATFORM}")
 # Python
 # -----------------------------------------------------------------------------
 
-find_package(Python 3.8 COMPONENTS Interpreter Development.Module REQUIRED)
+find_package(Python 3.9 COMPONENTS Interpreter Development.Module REQUIRED)
 
 # -----------------------------------------------------------------------------
 # CUDA
