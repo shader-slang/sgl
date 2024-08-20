@@ -293,6 +293,7 @@ target_compile_definitions(sgl
         $<$<PLATFORM_ID:Windows>:UNICODE>   # force character map to unicode
         # MSVC C++ library.
         $<$<CXX_COMPILER_ID:MSVC>:_USE_MATH_DEFINES>
+        $<$<CXX_COMPILER_ID:MSVC>:_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR>
         # $<$<CXX_COMPILER_ID:MSVC>:_SCL_SECURE_NO_WARNINGS>
         # $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>
         # $<$<CXX_COMPILER_ID:MSVC>:_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING>

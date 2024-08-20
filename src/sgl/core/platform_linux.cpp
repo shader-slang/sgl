@@ -14,6 +14,8 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <pwd.h>
+#include <unistd.h>
+#include <linux/limits.h>
 
 #include <regex>
 #include <iostream>

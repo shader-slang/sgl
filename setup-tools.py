@@ -54,12 +54,17 @@ def download_file(url: str, path: Path):
     Download a file from the given URL to the given path.
     """
 
+    last_percent = -1
+
     def progress_hook(count, block_size, total_size):
+        nonlocal last_percent
         if total_size <= 0:
             return
         percent = int(count * block_size * 100 / total_size)
-        sys.stdout.write(f"\r{percent}%")
-        sys.stdout.flush()
+        if percent != last_percent:
+            sys.stdout.write(f"\r{percent}%")
+            sys.stdout.flush()
+            last_percent = percent
 
     try:
         urlretrieve(url, path, reporthook=progress_hook)
