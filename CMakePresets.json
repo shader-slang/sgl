@@ -39,10 +39,6 @@
             "architecture": {
                 "value": "x64",
                 "strategy": "set"
-            },
-            "toolset": {
-                "value": "host=x86",
-                "strategy": "set"
             }
         },
         {
@@ -59,10 +55,6 @@
             "generator": "Ninja Multi-Config",
             "architecture": {
                 "value": "x64",
-                "strategy": "external"
-            },
-            "toolset": {
-                "value": "host=x86,version=14.3",
                 "strategy": "external"
             },
             "cacheVariables": {
