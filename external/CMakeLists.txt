@@ -21,6 +21,27 @@ endmacro()
 add_library(d3d12 INTERFACE)
 target_link_libraries(d3d12 INTERFACE dxgi.lib d3d12.lib dxguid.lib)
 
+# fmt
+
+set(FMT_INSTALL OFF)
+add_subdirectory(fmt)
+
+# vulkan-headers
+
+add_subdirectory(vulkan-headers)
+
+# glfw
+
+set(GLFW_BUILD_EXAMPLES OFF)
+set(GLFW_BUILD_TESTS OFF)
+set(GLFW_BUILD_DOCS OFF)
+set(GLFW_INSTALL OFF)
+add_subdirectory(glfw)
+
+# tevclient
+
+add_subdirectory(tevclient)
+
 # nanobind
 
 if(SGL_BUILD_PYTHON)

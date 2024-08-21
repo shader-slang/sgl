@@ -9,16 +9,12 @@
 
 #include "sgl/device/resource.h"
 
-#if SGL_HAS_TEVCLIENT
 #include <tevclient.h>
-#endif
 
 #include <atomic>
 #include <semaphore>
 
 namespace sgl::tev {
-
-#if SGL_HAS_TEVCLIENT
 
 class ClientPool {
 public:
@@ -69,13 +65,10 @@ private:
     std::vector<std::unique_ptr<tevclient::Client>> m_clients;
 };
 
-#endif // SGL_HAS_TEVCLIENT
-
 bool show(const Bitmap* bitmap, std::string name, std::string host, uint16_t port, uint32_t max_retries)
 {
     SGL_CHECK_NOT_NULL(bitmap);
 
-#if SGL_HAS_TEVCLIENT
     ref<Bitmap> converted;
     if (bitmap->component_type() != Bitmap::ComponentType::float32) {
         log_warn_once(
@@ -159,11 +152,6 @@ bool show(const Bitmap* bitmap, std::string name, std::string host, uint16_t por
     }
 
     return true;
-
-#else
-    SGL_UNUSED(bitmap, name, host, port);
-    SGL_THROW("tev support is not enabled.");
-#endif
 }
 
 bool show(const Texture* texture, std::string name, std::string host, uint16_t port, uint32_t max_retries)

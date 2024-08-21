@@ -294,23 +294,17 @@ endfunction()
 # -----------------------------------------------------------------------------
 
 find_package(doctest REQUIRED)
-find_package(fmt REQUIRED)
-find_package(glfw3 REQUIRED)
 find_package(JPEG)
 ternary(SGL_HAS_JPEG ${JPEG_FOUND} ON OFF)
 find_package(PNG)
 ternary(SGL_HAS_PNG ${PNG_FOUND} ON OFF)
 find_package(OpenEXR CONFIG)
 ternary(SGL_HAS_OPENEXR ${OpenEXR_FOUND} ON OFF)
-find_package(pugixml CONFIG REQUIRED)
 find_package(Stb REQUIRED)
 find_package(asmjit)
 ternary(SGL_HAS_ASMJIT ${asmjit_FOUND} ON OFF)
 add_library(stb INTERFACE)
 target_include_directories(stb INTERFACE ${Stb_INCLUDE_DIR})
-find_package(VulkanHeaders CONFIG REQUIRED)
-find_package(tevclient)
-ternary(SGL_HAS_TEVCLIENT ${tevclient_FOUND} ON OFF)
 
 # -----------------------------------------------------------------------------
 # Embedded resources
@@ -336,7 +330,6 @@ message(STATUS "SGL_HAS_JPEG: ${SGL_HAS_JPEG}")
 message(STATUS "SGL_HAS_PNG: ${SGL_HAS_PNG}")
 message(STATUS "SGL_HAS_OPENEXR: ${SGL_HAS_OPENEXR}")
 message(STATUS "SGL_HAS_ASMJIT: ${SGL_HAS_ASMJIT}")
-message(STATUS "SGL_HAS_TEVCLIENT: ${SGL_HAS_TEVCLIENT}")
 
 add_subdirectory(src)
 
