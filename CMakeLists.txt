@@ -27,8 +27,10 @@ set(CMAKE_INSTALL_RPATH "${SGL_ORIGIN};${SGL_ORIGIN}/../lib")
 
 # Check if this project is the master cmake project (i.e. not included via add_subdirectory).
 set(SGL_MASTER_PROJECT OFF)
+set(SGL_BUILD_STANDALONE_DEFAULT ON)
 if (${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${CMAKE_SOURCE_DIR})
   set(SGL_MASTER_PROJECT ON)
+  set(SGL_BUILD_STANDALONE_DEFAULT OFF)
 endif()
 
 # -----------------------------------------------------------------------------
@@ -42,7 +44,7 @@ set(SGL_BUILD_DOC OFF CACHE BOOL "Build sgl documentation")
 
 # Enable building sgl without external dependencies.
 # This is useful when using sgl through cmake add_subdirectory.
-set(SGL_BUILD_STANDALONE (NOT ${SGL_MASTER_PROJECT}) CACHE BOOL "Build sgl without external dependencies")
+set(SGL_BUILD_STANDALONE ${SGL_BUILD_STANDALONE_DEFAULT} CACHE BOOL "Build sgl without external dependencies")
 
 # Enable linking CUDA driver API dynamically.
 # This allows to build CUDA support without having CUDA SDK installed.
