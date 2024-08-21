@@ -5,7 +5,6 @@
         "libjpeg-turbo",
         "libpng",
         "openexr",
-        "asmjit",
-        "argparse"
+        "asmjit"
     ]
 }
