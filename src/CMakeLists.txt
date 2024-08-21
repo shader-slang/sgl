@@ -307,7 +307,7 @@ target_compile_definitions(sgl
         $<$<PLATFORM_ID:Darwin>:IMGUI_API=__attribute__\(\(visibility\("default"\)\)\)>
         # Linux.
         $<$<PLATFORM_ID:Linux>:__USE_LARGEFILE64>
-        SGL_PROJECT_DIR="${CMAKE_SOURCE_DIR}"
+        SGL_PROJECT_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../"
 )
 
 file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/include/sgl/core/config.h CONTENT
@@ -325,7 +325,6 @@ file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/include/sgl/core/config.h CONTE
 #define SGL_HAS_PNG $<BOOL:${SGL_HAS_PNG}>
 #define SGL_HAS_OPENEXR $<BOOL:${SGL_HAS_OPENEXR}>
 #define SGL_HAS_ASMJIT $<BOOL:${SGL_HAS_ASMJIT}>
-#define SGL_HAS_TEVCLIENT $<BOOL:${SGL_HAS_TEVCLIENT}>
 "
 )
 target_include_directories(sgl PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include)
@@ -339,11 +338,12 @@ target_link_libraries(sgl
         fmt::fmt
         slang::slang slang::gfx
         Vulkan::Headers
+        header_only
         $<$<NOT:$<BOOL:${SGL_USE_DYNAMIC_CUDA}>>:CUDA::cuda_driver>
         sgl_data
     PRIVATE
         git_version
-        glfw stb header_only
+        glfw
         tevclient
         $<$<BOOL:${SGL_HAS_D3D12}>:d3d12>
         $<$<BOOL:${SGL_HAS_AGILITY_SDK}>:agility_sdk>
@@ -559,7 +559,7 @@ if(SGL_BUILD_TESTS)
         sgl/math/tests/test_vector.cpp
     )
     target_include_directories(sgl_tests BEFORE PRIVATE sgl/tests)
-    target_link_libraries(sgl_tests PRIVATE doctest::doctest sgl)
+    target_link_libraries(sgl_tests PRIVATE sgl header_only)
     target_compile_definitions(sgl_tests PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
     set_target_properties(sgl_tests PROPERTIES
@@ -570,7 +570,7 @@ if(SGL_BUILD_TESTS)
     add_test(NAME sgl_tests COMMAND $<TARGET_FILE:sgl_tests>)
 
     if(SGL_BUILD_PYTHON)
-        add_test(NAME python_tests COMMAND ${Python_EXECUTABLE} -m pytest ${CMAKE_SOURCE_DIR}/src)
+        add_test(NAME python_tests COMMAND ${Python_EXECUTABLE} -m pytest ${CMAKE_CURRENT_SOURCE_DIR})
     endif()
 
 endif(SGL_BUILD_TESTS)

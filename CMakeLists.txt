@@ -293,18 +293,14 @@ endfunction()
 # Dependencies
 # -----------------------------------------------------------------------------
 
-find_package(doctest REQUIRED)
 find_package(JPEG)
 ternary(SGL_HAS_JPEG ${JPEG_FOUND} ON OFF)
 find_package(PNG)
 ternary(SGL_HAS_PNG ${PNG_FOUND} ON OFF)
 find_package(OpenEXR CONFIG)
 ternary(SGL_HAS_OPENEXR ${OpenEXR_FOUND} ON OFF)
-find_package(Stb REQUIRED)
 find_package(asmjit)
 ternary(SGL_HAS_ASMJIT ${asmjit_FOUND} ON OFF)
-add_library(stb INTERFACE)
-target_include_directories(stb INTERFACE ${Stb_INCLUDE_DIR})
 
 # -----------------------------------------------------------------------------
 # Embedded resources
@@ -396,6 +392,6 @@ install(
 
 # Install python extension.
 if(SGL_BUILD_PYTHON)
-install(TARGETS sgl_ext LIBRARY DESTINATION sgl)
-install(DIRECTORY ${SGL_OUTPUT_DIRECTORY}/python/sgl/ DESTINATION sgl FILES_MATCHING PATTERN "*.py" PATTERN "*.pyi")
+    install(TARGETS sgl_ext LIBRARY DESTINATION sgl)
+    install(DIRECTORY ${SGL_OUTPUT_DIRECTORY}/python/sgl/ DESTINATION sgl FILES_MATCHING PATTERN "*.py" PATTERN "*.pyi")
 endif()

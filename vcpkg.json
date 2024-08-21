@@ -2,9 +2,6 @@
     "name": "sgl",
     "version-string": "0.1.0",
     "dependencies": [
-        "doctest",
-        "stb",
-        "bshoshany-thread-pool",
         "libjpeg-turbo",
         "libpng",
         "openexr",
