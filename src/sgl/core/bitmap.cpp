@@ -69,11 +69,11 @@ SGL_DISABLE_CLANG_WARNING("-Wdeprecated-declarations")
 #include <stb_image_write.h>
 SGL_DIAGNOSTIC_POP
 
-#if SGL_HAS_PNG
+#if SGL_HAS_LIBPNG
 #include <png.h>
 #endif
 
-#if SGL_HAS_JPEG
+#if SGL_HAS_LIBJPEG
 #include <jpeglib.h>
 #endif
 
@@ -95,9 +95,16 @@ SGL_DIAGNOSTIC_POP
 #include <ImfIO.h>
 #include <ImathBox.h>
 #include <IlmThreadPool.h>
+#else
+#define TINYEXR_IMPLEMENTATION
+#define TINYEXR_USE_MINIZ 0
+#define TINYEXR_USE_STB_ZLIB 1
+#include <tinyexr.h>
 #endif
 
 #include <algorithm>
+#include <map>
+#include <mutex>
 
 SGL_DISABLE_MSVC_WARNING(4611)
 
@@ -231,22 +238,14 @@ void Bitmap::write(Stream* stream, FileFormat format, int quality) const
 
     switch (format) {
     case FileFormat::png:
-#if SGL_HAS_PNG
         if (quality == -1)
             quality = 5;
         write_png(stream, quality);
-#else
-        SGL_THROW("PNG support is not available!");
-#endif
         break;
     case FileFormat::jpg:
-#if SGL_HAS_JPEG
         if (quality == -1)
             quality = 100;
         write_jpg(stream, quality);
-#else
-        SGL_THROW("JPEG support is not available!");
-#endif
         break;
     case FileFormat::bmp:
         write_bmp(stream);
@@ -258,11 +257,7 @@ void Bitmap::write(Stream* stream, FileFormat format, int quality) const
         write_hdr(stream);
         break;
     case FileFormat::exr:
-#if SGL_HAS_OPENEXR
         write_exr(stream, quality);
-#else
-        SGL_THROW("OpenEXR support is not available!");
-#endif
         break;
     default:
         SGL_THROW("Invalid file format!");
@@ -530,18 +525,16 @@ Bitmap::FileFormat Bitmap::detect_file_format(Stream* stream)
         format = FileFormat::bmp;
     } else if (header[0] == '#' && header[1] == '?') {
         format = FileFormat::hdr;
-#if SGL_HAS_JPEG
     } else if (header[0] == 0xFF && header[1] == 0xD8) {
         format = FileFormat::jpg;
-#endif
-#if SGL_HAS_PNG
-    } else if (png_sig_cmp(header, 0, 8) == 0) {
+    } else if (header[0] == 0x89 && header[1] == 0x50 && //
+               header[2] == 0x4E && header[3] == 0x47 && //
+               header[4] == 0x0D && header[5] == 0x0A && //
+               header[6] == 0x1A && header[7] == 0x0A) {
         format = FileFormat::png;
-#endif
-#if SGL_HAS_OPENEXR
-    } else if (Imf::isImfMagic(reinterpret_cast<const char*>(header))) {
+    } else if (header[0] == 0x76 && header[1] == 0x2F && //
+               header[2] == 0x31 && header[3] == 0x01) {
         format = FileFormat::exr;
-#endif
     } else {
         // Check for TGAv1 file
         char spec[10];
@@ -627,18 +620,10 @@ void Bitmap::read(Stream* stream, FileFormat format)
 
     switch (format) {
     case FileFormat::png:
-#if SGL_HAS_PNG
         read_png(stream);
-#else
-        SGL_THROW("PNG support is not available!");
-#endif
         break;
     case FileFormat::jpg:
-#if SGL_HAS_JPEG
         read_jpg(stream);
-#else
-        SGL_THROW("JPEG support is not available!");
-#endif
         break;
     case FileFormat::bmp:
         read_bmp(stream);
@@ -650,11 +635,7 @@ void Bitmap::read(Stream* stream, FileFormat format)
         read_hdr(stream);
         break;
     case FileFormat::exr:
-#if SGL_HAS_OPENEXR
         read_exr(stream);
-#else
-        SGL_THROW("OpenEXR support is not available!");
-#endif
         break;
     default:
         SGL_THROW("Unknown file format!");
@@ -689,12 +670,120 @@ void Bitmap::check_required_format(
 // STB I/O
 // ----------------------------------------------------------------------------
 
+static void stbi_write_func(void* context, void* data, int size)
+{
+    static_cast<Stream*>(context)->write(data, size);
+}
+
+struct StreamReader {
+    Stream* stream;
+    size_t initial_pos;
+    bool is_eof{false};
+    stbi_io_callbacks callbacks;
+
+    StreamReader(Stream* stream)
+        : stream(stream)
+        , initial_pos(stream->tell())
+        , callbacks({.read = &read, .skip = &skip, .eof = &eof})
+    {
+    }
+
+    void reset() { stream->seek(initial_pos); }
+
+    static int read(void* user, char* data, int size)
+    {
+        StreamReader* reader = static_cast<StreamReader*>(user);
+        try {
+            reader->stream->read(data, size);
+            return size;
+        } catch (const EOFException& e) {
+            reader->is_eof = true;
+            return static_cast<int>(e.gcount());
+        }
+    }
+
+    static void skip(void* user, int n)
+    {
+        StreamReader* reader = static_cast<StreamReader*>(user);
+        reader->stream->seek(reader->stream->tell() + n);
+    }
+
+    static int eof(void* user)
+    {
+        StreamReader* reader = static_cast<StreamReader*>(user);
+        return reader->is_eof;
+    }
+};
+
+void Bitmap::read_stb(Stream* stream, const char* format, bool is_srgb, bool is_hdr)
+{
+    StreamReader reader(stream);
+
+    int w, h, c;
+    if (!stbi_info_from_callbacks(&reader.callbacks, &reader, &w, &h, &c))
+        SGL_THROW(fmt::format("Failed to read {} file!", format));
+    reader.reset();
+
+    m_width = w;
+    m_height = h;
+    switch (c) {
+    case 1:
+        m_pixel_format = PixelFormat::y;
+        break;
+    case 2:
+        m_pixel_format = PixelFormat::ya;
+        break;
+    case 3:
+        m_pixel_format = PixelFormat::rgb;
+        break;
+    case 4:
+        m_pixel_format = PixelFormat::rgba;
+        break;
+    default:
+        SGL_THROW("Unsupported number of channels {}!", c);
+    }
+    m_component_type = is_hdr ? ComponentType::float32 : ComponentType::uint8;
+    m_srgb_gamma = is_srgb;
+
+    rebuild_pixel_struct();
+
+    auto fs = dynamic_cast<FileStream*>(stream);
+    log_debug(
+        "Reading {} file \"{}\" ({}x{}, {}, {}) ...",
+        format,
+        fs ? fs->path().string() : "<stream>",
+        m_width,
+        m_height,
+        m_pixel_format,
+        m_component_type
+    );
+
+    void* data = nullptr;
+    switch (m_component_type) {
+    case ComponentType::uint8:
+        data = reinterpret_cast<void*>(stbi_load_from_callbacks(&reader.callbacks, &reader, &w, &h, &c, c));
+        break;
+    case ComponentType::float32:
+        data = reinterpret_cast<void*>(stbi_loadf_from_callbacks(&reader.callbacks, &reader, &w, &h, &c, c));
+        break;
+    default:
+        SGL_THROW("Unsupported component type!", m_component_type);
+    }
+    if (!data)
+        SGL_THROW(fmt::format("Failed to read {} file!", format));
+
+    SGL_ASSERT_EQ(m_width, static_cast<uint32_t>(w));
+    SGL_ASSERT_EQ(m_height, static_cast<uint32_t>(h));
+
+    m_data = std::unique_ptr<uint8_t[]>(reinterpret_cast<uint8_t*>(data));
+    m_owns_data = true;
+}
 
 // ----------------------------------------------------------------------------
 // PNG I/O
 // ----------------------------------------------------------------------------
 
-#if SGL_HAS_PNG
+#if SGL_HAS_LIBPNG
 
 static void png_flush_data(png_structp png_ptr)
 {
@@ -984,13 +1073,47 @@ void Bitmap::write_png(Stream* stream, int compression) const
     // delete[] text;
 }
 
-#endif // SGL_HAS_PNG
+#else // SGL_HAS_LIBPNG
+
+void Bitmap::read_png(Stream* stream)
+{
+    read_stb(stream, "PNG", true, false);
+}
+
+void Bitmap::write_png(Stream* stream, int compression) const
+{
+    check_required_format(
+        "PNG",
+        {PixelFormat::y, PixelFormat::ya, PixelFormat::rgb, PixelFormat::rgba},
+        {ComponentType::uint8}
+    );
+
+    // stb_image_write uses global stbi_write_png_compression_level variable,
+    // so we need to protect it with a mutex.
+    static std::mutex mutex;
+    std::lock_guard<std::mutex> lock(mutex);
+
+    stbi_write_png_compression_level = compression;
+    if (!stbi_write_png_to_func(
+            &stbi_write_func,
+            stream,
+            m_width,
+            m_height,
+            int(channel_count()),
+            data(),
+            int(m_width * channel_count())
+        )) {
+        SGL_THROW("Failed to write PNG file!");
+    }
+}
+
+#endif // SGL_HAS_LIBPNG
 
 // ----------------------------------------------------------------------------
 // JPEG I/O
 // ----------------------------------------------------------------------------
 
-#if SGL_HAS_JPEG
+#if SGL_HAS_LIBJPEG
 
 extern "C" {
 static const size_t jpeg_buffer_size = 0x8000;
@@ -1223,92 +1346,30 @@ void Bitmap::write_jpg(Stream* stream, int quality) const
     jpeg_destroy_compress(&cinfo);
 }
 
-#endif // SGL_HAS_JPEG
+#else // SGL_HAS_LIBJPEG
+
+void Bitmap::read_jpg(Stream* stream)
+{
+    read_stb(stream, "JPEG", true, false);
+}
+
+void Bitmap::write_jpg(Stream* stream, int quality) const
+{
+    check_required_format("JPEG", {PixelFormat::y, PixelFormat::rgb}, {ComponentType::uint8});
+
+    if (!stbi_write_jpg_to_func(&stbi_write_func, stream, m_width, m_height, int(channel_count()), data(), quality))
+        SGL_THROW("Failed to write JPEG file!");
+}
+
+#endif // SGL_HAS_LIBJPEG
 
 // ----------------------------------------------------------------------------
 // BMP I/O
 // ----------------------------------------------------------------------------
 
-static void stbi_write_func(void* context, void* data, int size)
-{
-    static_cast<Stream*>(context)->write(data, size);
-}
-
-struct StreamReader {
-    Stream* stream;
-    size_t initial_pos;
-    bool is_eof{false};
-    stbi_io_callbacks callbacks;
-
-    StreamReader(Stream* stream)
-        : stream(stream)
-        , initial_pos(stream->tell())
-        , callbacks({.read = &read, .skip = &skip, .eof = &eof})
-    {
-    }
-
-    void reset() { stream->seek(initial_pos); }
-
-    static int read(void* user, char* data, int size)
-    {
-        StreamReader* reader = static_cast<StreamReader*>(user);
-        try {
-            reader->stream->read(data, size);
-            return size;
-        } catch (const EOFException& e) {
-            reader->is_eof = true;
-            return static_cast<int>(e.gcount());
-        }
-    }
-
-    static void skip(void* user, int n)
-    {
-        StreamReader* reader = static_cast<StreamReader*>(user);
-        reader->stream->seek(reader->stream->tell() + n);
-    }
-
-    static int eof(void* user)
-    {
-        StreamReader* reader = static_cast<StreamReader*>(user);
-        return reader->is_eof;
-    }
-};
-
 void Bitmap::read_bmp(Stream* stream)
 {
-    StreamReader reader(stream);
-    int w, h, c;
-    if (!stbi_info_from_callbacks(&reader.callbacks, &reader, &w, &h, &c))
-        SGL_THROW("Failed to read BMP file!");
-    reader.reset();
-
-    m_width = w;
-    m_height = h;
-    m_pixel_format = c == 3 ? PixelFormat::rgb : PixelFormat::rgba;
-    m_component_type = ComponentType::uint8;
-    m_srgb_gamma = true;
-
-    rebuild_pixel_struct();
-
-    auto fs = dynamic_cast<FileStream*>(stream);
-    log_debug(
-        "Reading BMP file \"{}\" ({}x{}, {}, {}) ...",
-        fs ? fs->path().string() : "<stream>",
-        m_width,
-        m_height,
-        m_pixel_format,
-        m_component_type
-    );
-
-    uint8_t* data = stbi_load_from_callbacks(&reader.callbacks, &reader, &w, &h, &c, c);
-    if (!data)
-        SGL_THROW("Failed to read BMP file!");
-
-    SGL_ASSERT_EQ(m_width, static_cast<uint32_t>(w));
-    SGL_ASSERT_EQ(m_height, static_cast<uint32_t>(h));
-
-    m_data = std::unique_ptr<uint8_t[]>(data);
-    m_owns_data = true;
+    read_stb(stream, "BMP", true, false);
 }
 
 void Bitmap::write_bmp(Stream* stream) const
@@ -1325,39 +1386,7 @@ void Bitmap::write_bmp(Stream* stream) const
 
 void Bitmap::read_tga(Stream* stream)
 {
-    StreamReader reader(stream);
-    int w, h, c;
-    if (!stbi_info_from_callbacks(&reader.callbacks, &reader, &w, &h, &c))
-        SGL_THROW("Failed to read TGA file!");
-    reader.reset();
-
-    m_width = w;
-    m_height = h;
-    m_pixel_format = c == 1 ? PixelFormat::y : (c == 3 ? PixelFormat::rgb : PixelFormat::rgba);
-    m_component_type = ComponentType::uint8;
-    m_srgb_gamma = true;
-
-    rebuild_pixel_struct();
-
-    auto fs = dynamic_cast<FileStream*>(stream);
-    log_debug(
-        "Reading TGA file \"{}\" ({}x{}, {}, {}) ...",
-        fs ? fs->path().string() : "<stream>",
-        m_width,
-        m_height,
-        m_pixel_format,
-        m_component_type
-    );
-
-    uint8_t* data = stbi_load_from_callbacks(&reader.callbacks, &reader, &w, &h, &c, c);
-    if (!data)
-        SGL_THROW("Failed to read TGA file!");
-
-    SGL_ASSERT_EQ(m_width, static_cast<uint32_t>(w));
-    SGL_ASSERT_EQ(m_height, static_cast<uint32_t>(h));
-
-    m_data = std::unique_ptr<uint8_t[]>(data);
-    m_owns_data = true;
+    read_stb(stream, "TGA", true, false);
 }
 
 void Bitmap::write_tga(Stream* stream) const
@@ -1365,7 +1394,7 @@ void Bitmap::write_tga(Stream* stream) const
     check_required_format("TGA", {PixelFormat::y, PixelFormat::rgb, PixelFormat::rgba}, {ComponentType::uint8});
 
     if (!stbi_write_tga_to_func(&stbi_write_func, stream, m_width, m_height, int(channel_count()), data()))
-        SGL_THROW("Failed to write BMP file!");
+        SGL_THROW("Failed to write TGA file!");
 }
 
 // ----------------------------------------------------------------------------
@@ -1374,39 +1403,7 @@ void Bitmap::write_tga(Stream* stream) const
 
 void Bitmap::read_hdr(Stream* stream)
 {
-    StreamReader reader(stream);
-    int w, h, c;
-    if (!stbi_info_from_callbacks(&reader.callbacks, &reader, &w, &h, &c))
-        SGL_THROW("Failed to read HDR file!");
-    reader.reset();
-
-    m_width = w;
-    m_height = h;
-    m_pixel_format = PixelFormat::rgb;
-    m_component_type = ComponentType::float32;
-    m_srgb_gamma = false;
-
-    rebuild_pixel_struct();
-
-    auto fs = dynamic_cast<FileStream*>(stream);
-    log_debug(
-        "Reading HDR file \"{}\" ({}x{}, {}, {}) ...",
-        fs ? fs->path().string() : "<stream>",
-        m_width,
-        m_height,
-        m_pixel_format,
-        m_component_type
-    );
-
-    float* data = stbi_loadf_from_callbacks(&reader.callbacks, &reader, &w, &h, &c, c);
-    if (!data)
-        SGL_THROW("Failed to read HDR file!");
-
-    SGL_ASSERT_EQ(m_width, static_cast<uint32_t>(w));
-    SGL_ASSERT_EQ(m_height, static_cast<uint32_t>(h));
-
-    m_data = std::unique_ptr<uint8_t[]>(reinterpret_cast<uint8_t*>(data));
-    m_owns_data = true;
+    read_stb(stream, "HDR", false, true);
 }
 
 void Bitmap::write_hdr(Stream* stream) const
@@ -2048,6 +2045,288 @@ void Bitmap::write_exr(Stream* stream, int quality) const
     Imf::OutputFile file(os, header);
     file.setFrameBuffer(framebuffer);
     file.writePixels(static_cast<int>(m_height));
+}
+
+#else // SGL_HAS_OPENEXR
+
+void Bitmap::read_exr(Stream* stream)
+{
+    size_t size = stream->size();
+    std::unique_ptr<uint8_t[]> memory(new uint8_t[size]);
+    stream->read(memory.get(), size);
+
+    EXRVersion version;
+    if (ParseEXRVersionFromMemory(&version, memory.get(), size) != TINYEXR_SUCCESS)
+        SGL_THROW("Failed to parse EXR version!");
+    if (version.multipart)
+        SGL_THROW("EXR multipart files are not supported yet!");
+
+    EXRHeader header;
+    InitEXRHeader(&header);
+    const char* err = nullptr;
+    if (ParseEXRHeaderFromMemory(&header, &version, memory.get(), size, &err) != TINYEXR_SUCCESS) {
+        SGL_THROW(fmt::format("Failed to parse EXR header!\n{}", err));
+        FreeEXRErrorMessage(err);
+    }
+
+    switch (header.pixel_types[0]) {
+    case TINYEXR_PIXELTYPE_UINT:
+        m_component_type = ComponentType::uint32;
+        break;
+    case TINYEXR_PIXELTYPE_HALF:
+        m_component_type = ComponentType::float16;
+        break;
+    case TINYEXR_PIXELTYPE_FLOAT:
+        m_component_type = ComponentType::float32;
+        break;
+    default:
+        SGL_THROW("EXR image contains invalid component type (must be float16, float32 or uint32)");
+    }
+
+    enum { unknown, R, G, B, X, Y, Z, A, RY, BY, CLASS_COUNT };
+
+    // Classification scheme for color channels.
+    auto channel_class = [](std::string name) -> uint8_t
+    {
+        auto it = name.rfind(".");
+        if (it != std::string::npos)
+            name = name.substr(it + 1);
+        name = string::to_lower(name);
+        if (name == "r")
+            return R;
+        if (name == "g")
+            return G;
+        if (name == "b")
+            return B;
+        if (name == "x")
+            return X;
+        if (name == "y")
+            return Y;
+        if (name == "z")
+            return Z;
+        if (name == "ry")
+            return RY;
+        if (name == "by")
+            return BY;
+        if (name == "a")
+            return A;
+        return unknown;
+    };
+
+    // Assign a sorting key to color channels.
+    auto channel_key = [&](std::string name) -> std::string
+    {
+        uint8_t class_ = channel_class(name);
+        if (class_ == unknown)
+            return name;
+        auto it = name.rfind(".");
+        char suffix('0' + class_);
+        if (it != std::string::npos)
+            name = name.substr(0, it) + "." + suffix;
+        else
+            name = suffix;
+        return name;
+    };
+
+    // Order channels based on their name and suffix.
+    bool found[CLASS_COUNT] = {false};
+    std::vector<std::string> channels_sorted;
+    for (int i = 0; i < header.num_channels; ++i) {
+        std::string name(header.channels[i].name);
+        found[channel_class(name)] = true;
+        channels_sorted.push_back(name);
+    }
+    std::sort(
+        channels_sorted.begin(),
+        channels_sorted.end(),
+        [&](auto const& v0, auto const& v1) { return channel_key(v0) < channel_key(v1); }
+    );
+
+    // Create pixel struct.
+    m_pixel_struct = ref(new Struct());
+    for (const auto& name : channels_sorted) {
+        m_pixel_struct->append(name, m_component_type);
+    }
+
+    // Try to detect common pixel formats.
+    m_pixel_format = PixelFormat::multi_channel;
+    bool luminance_chroma_format = false;
+    if (m_pixel_struct->field_count() == 3 && found[R] && found[G] && found[B]) {
+        m_pixel_format = PixelFormat::rgb;
+    } else if (m_pixel_struct->field_count() == 4 && found[R] && found[G] && found[B] && found[A]) {
+        m_pixel_format = PixelFormat::rgba;
+    } else if (m_pixel_struct->field_count() == 3 && found[Y] && found[RY] && found[BY]) {
+        m_pixel_format = PixelFormat::rgb;
+        luminance_chroma_format = true;
+    } else if (m_pixel_struct->field_count() == 4 && found[Y] && found[RY] && found[BY] && found[A]) {
+        m_pixel_format = PixelFormat::rgba;
+        luminance_chroma_format = true;
+    } else if (m_pixel_struct->field_count() == 1 && found[Y]) {
+        m_pixel_format = PixelFormat::y;
+    } else if (m_pixel_struct->field_count() == 2 && found[Y] && found[A]) {
+        m_pixel_format = PixelFormat::ya;
+    }
+
+    m_srgb_gamma = false;
+
+    auto fs = dynamic_cast<FileStream*>(stream);
+    log_debug(
+        "Reading OpenEXR file \"{}\" ({}x{}, {}, {}) ...",
+        fs ? fs->path().string() : "<stream>",
+        m_width,
+        m_height,
+        m_pixel_format,
+        m_component_type
+    );
+
+    EXRImage image;
+    InitEXRImage(&image);
+
+    if (LoadEXRImageFromMemory(&image, &header, memory.get(), size, &err) != TINYEXR_SUCCESS) {
+        FreeEXRErrorMessage(err);
+        FreeEXRHeader(&header);
+        SGL_THROW(fmt::format("Failed to load EXR image!\n{}", err));
+    }
+
+    auto find_channel_index = [&](const std::string& name) -> int
+    {
+        for (int i = 0; i < header.num_channels; ++i)
+            if (header.channels[i].name == name)
+                return i;
+        SGL_THROW(fmt::format("EXR image does not contain channel \"{}\"", name));
+    };
+
+    auto set_suffix = [](std::string& name, const std::string& suffix)
+    {
+        auto it = name.rfind(".");
+        if (it != std::string::npos)
+            name = name.substr(0, it) + "." + suffix;
+        else
+            name = suffix;
+    };
+
+    m_width = header.data_window.max_x - header.data_window.min_x + 1;
+    m_height = header.data_window.max_y - header.data_window.min_y + 1;
+
+    size_t component_size = Struct::type_size(m_component_type);
+    size_t pixel_stride = this->bytes_per_pixel();
+    size_t pixel_count = this->pixel_count();
+    size_t row_stride = pixel_stride * m_width;
+
+    m_data = std::unique_ptr<uint8_t[]>(new uint8_t[row_stride * m_height]);
+    m_owns_data = true;
+
+    for (const auto& field : *m_pixel_struct) {
+        int channel_index = find_channel_index(field.name);
+        const uint8_t* src = image.images[channel_index];
+        uint8_t* dst = uint8_data() + field.offset;
+        if (component_size == 2) {
+            for (size_t j = 0; j < m_width * m_height; ++j) {
+                std::memcpy(dst, src, 2);
+                src += 2;
+                dst += pixel_stride;
+            }
+        } else if (component_size == 4) {
+            for (size_t j = 0; j < m_width * m_height; ++j) {
+                std::memcpy(dst, src, 4);
+                src += 4;
+                dst += pixel_stride;
+            }
+        } else {
+            SGL_THROW("Unsupported component size!");
+        }
+    }
+
+    FreeEXRImage(&image);
+    FreeEXRHeader(&header);
+}
+
+void Bitmap::write_exr(Stream* stream, int quality) const
+{
+    check_required_format(
+        "EXR",
+        {PixelFormat::y, PixelFormat::ya, PixelFormat::rgb, PixelFormat::rgba, PixelFormat::multi_channel},
+        {ComponentType::uint32, ComponentType::float16, ComponentType::float32}
+    );
+
+    EXRHeader header;
+    InitEXRHeader(&header);
+
+    EXRImage image;
+    InitEXRImage(&image);
+
+    int pixel_type = 0;
+    switch (m_component_type) {
+    case ComponentType::uint32:
+        pixel_type = TINYEXR_PIXELTYPE_UINT;
+        break;
+    case ComponentType::float16:
+        pixel_type = TINYEXR_PIXELTYPE_HALF;
+        break;
+    case ComponentType::float32:
+        pixel_type = TINYEXR_PIXELTYPE_FLOAT;
+        break;
+    default:
+        SGL_THROW("Unsupported component type!");
+    }
+
+    std::vector<EXRChannelInfo> channels(channel_count());
+    for (size_t i = 0; i < channel_count(); ++i) {
+        EXRChannelInfo& channel = channels[i];
+        channel.pixel_type = pixel_type;
+        strncpy(channel.name, m_pixel_struct->operator[](i).name.c_str(), sizeof(TEXRChannelInfo::name));
+    }
+
+    std::vector<int> pixel_types(channel_count(), pixel_type);
+
+    header.num_channels = channel_count();
+    header.channels = channels.data();
+    header.pixel_types = pixel_types.data();
+    header.requested_pixel_types = pixel_types.data();
+
+    // Convert interleaved data to planar format.
+    size_t component_size = Struct::type_size(m_component_type);
+    size_t pixel_stride = m_pixel_struct->size();
+    size_t row_stride = pixel_stride * m_width;
+    size_t plane_size = row_stride * m_height;
+
+    std::vector<std::unique_ptr<uint8_t[]>> images(channel_count());
+    std::vector<uint8_t*> image_ptrs(channel_count());
+    for (size_t i = 0; i < channel_count(); ++i) {
+        images[i] = std::unique_ptr<uint8_t[]>(new uint8_t[plane_size]);
+        image_ptrs[i] = images[i].get();
+        const uint8_t* src = uint8_data() + i * component_size;
+        uint8_t* dst = images[i].get();
+        if (component_size == 2) {
+            for (size_t j = 0; j < m_width * m_height; ++j) {
+                std::memcpy(dst, src, 2);
+                src += pixel_stride;
+                dst += 2;
+            }
+        } else if (component_size == 4) {
+            for (size_t j = 0; j < m_width * m_height; ++j) {
+                std::memcpy(dst, src, 4);
+                src += pixel_stride;
+                dst += 4;
+            }
+        } else {
+            SGL_THROW("Unsupported component size!");
+        }
+    }
+
+    image.width = m_width;
+    image.height = m_height;
+    image.num_channels = channel_count();
+    image.images = image_ptrs.data();
+
+    const char* err = nullptr;
+    uint8_t* memory = nullptr;
+    size_t size = SaveEXRImageToMemory(&image, &header, &memory, &err);
+    if (size == 0) {
+        FreeEXRErrorMessage(err);
+        SGL_THROW(fmt::format("Failed to save EXR image!\n{}", err));
+    }
+    stream->write(memory, size);
 }
 
 #endif // SGL_HAS_OPENEXR

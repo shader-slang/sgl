@@ -321,8 +321,8 @@ file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/include/sgl/core/config.h CONTE
 #define SGL_HAS_NVAPI $<BOOL:${SGL_HAS_NVAPI}>
 #define SGL_HAS_AGILITY_SDK $<BOOL:${SGL_HAS_AGILITY_SDK}>
 
-#define SGL_HAS_JPEG $<BOOL:${SGL_HAS_JPEG}>
-#define SGL_HAS_PNG $<BOOL:${SGL_HAS_PNG}>
+#define SGL_HAS_LIBJPEG $<BOOL:${SGL_HAS_LIBJPEG}>
+#define SGL_HAS_LIBPNG $<BOOL:${SGL_HAS_LIBPNG}>
 #define SGL_HAS_OPENEXR $<BOOL:${SGL_HAS_OPENEXR}>
 #define SGL_HAS_ASMJIT $<BOOL:${SGL_HAS_ASMJIT}>
 "
@@ -345,8 +345,8 @@ target_link_libraries(sgl
         $<$<BOOL:${SGL_HAS_AGILITY_SDK}>:agility_sdk>
         # $<$<BOOL:${SGL_HAS_AFTERMATH}>:aftermath>
         $<$<BOOL:${SGL_HAS_NVAPI}>:nvapi>
-        $<$<BOOL:${SGL_HAS_PNG}>:PNG::PNG>
-        $<$<BOOL:${SGL_HAS_JPEG}>:JPEG::JPEG>
+        $<$<BOOL:${SGL_HAS_LIBPNG}>:PNG::PNG>
+        $<$<BOOL:${SGL_HAS_LIBJPEG}>:JPEG::JPEG>
         $<$<BOOL:${SGL_HAS_OPENEXR}>:OpenEXR::OpenEXR>
         $<$<BOOL:${SGL_HAS_ASMJIT}>:asmjit::asmjit>
         # Windows system libraries.
