@@ -35,10 +35,14 @@ endif()
 # Configuration
 # -----------------------------------------------------------------------------
 
-set(SGL_BUILD_PYTHON ON CACHE BOOL "Build sgl Python extension")
-set(SGL_BUILD_EXAMPLES ON CACHE BOOL "Build sgl example applications")
-set(SGL_BUILD_TESTS ON CACHE BOOL "Build sgl tests")
+set(SGL_BUILD_PYTHON ${SGL_MASTER_PROJECT} CACHE BOOL "Build sgl Python extension")
+set(SGL_BUILD_EXAMPLES ${SGL_MASTER_PROJECT} CACHE BOOL "Build sgl example applications")
+set(SGL_BUILD_TESTS ${SGL_MASTER_PROJECT} CACHE BOOL "Build sgl tests")
 set(SGL_BUILD_DOC OFF CACHE BOOL "Build sgl documentation")
+
+# Enable building sgl without external dependencies.
+# This is useful when using sgl through cmake add_subdirectory.
+set(SGL_BUILD_STANDALONE (NOT ${SGL_MASTER_PROJECT}) CACHE BOOL "Build sgl without external dependencies")
 
 # Enable linking CUDA driver API dynamically.
 # This allows to build CUDA support without having CUDA SDK installed.
@@ -293,14 +297,21 @@ endfunction()
 # Dependencies
 # -----------------------------------------------------------------------------
 
-find_package(JPEG)
-ternary(SGL_HAS_LIBJPEG ${JPEG_FOUND} ON OFF)
-find_package(PNG)
-ternary(SGL_HAS_LIBPNG ${PNG_FOUND} ON OFF)
-find_package(OpenEXR CONFIG)
-ternary(SGL_HAS_OPENEXR ${OpenEXR_FOUND} ON OFF)
-find_package(asmjit)
-ternary(SGL_HAS_ASMJIT ${asmjit_FOUND} ON OFF)
+if(SGL_BUILD_STANDALONE)
+    set(SGL_HAS_LIBJPEG OFF)
+    set(SGL_HAS_LIBPNG OFF)
+    set(SGL_HAS_OPENEXR OFF)
+    set(SGL_HAS_ASMJIT OFF)
+else()
+    find_package(JPEG)
+    ternary(SGL_HAS_LIBJPEG ${JPEG_FOUND} ON OFF)
+    find_package(PNG)
+    ternary(SGL_HAS_LIBPNG ${PNG_FOUND} ON OFF)
+    find_package(OpenEXR CONFIG)
+    ternary(SGL_HAS_OPENEXR ${OpenEXR_FOUND} ON OFF)
+    find_package(asmjit)
+    ternary(SGL_HAS_ASMJIT ${asmjit_FOUND} ON OFF)
+endif()
 
 # -----------------------------------------------------------------------------
 # Embedded resources
