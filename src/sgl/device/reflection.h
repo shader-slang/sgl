@@ -529,6 +529,8 @@ public:
 
     char const* name() const { return m_target->getName(); }
 
+    std::string full_name() const;
+
     bool is_struct() const { return kind() == Kind::struct_; }
 
     uint32_t field_count() const

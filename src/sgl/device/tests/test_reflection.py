@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
+from pprint import pprint
 import pytest
 import sys
 import sgl
@@ -346,5 +347,156 @@ def test_list_program_layout_params_and_entry_points(
     assert program.layout.entry_points[1].name == "main2"
 
 
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_function_modifier(test_id: str, device_type: sgl.DeviceType):
+    device = helpers.get_device(type=device_type)
+
+    # Create a session, and within it a module.
+    session = helpers.create_session(device, {})
+    module = session.load_module_from_source(
+        module_name=f"module_from_source_{test_id}",
+        source="""
+        void test1(int a, int b, int c) {
+        }
+        [Differentiable]
+        void test2(int a, int b, int c) {
+        }
+    """,
+    )
+
+    # Get and read on 1 line.
+    func1 = module.module_decl.children[0].as_function()
+    func2 = module.module_decl.children[1].as_function()
+    assert func1.name == "test1"
+    assert func2.name == "test2"
+    assert not func1.has_modifier(sgl.ModifierID.differentiable)
+    assert func2.has_modifier(sgl.ModifierID.differentiable)
+
+
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_parameter_modifier(test_id: str, device_type: sgl.DeviceType):
+    device = helpers.get_device(type=device_type)
+
+    # Create a session, and within it a module.
+    session = helpers.create_session(device, {})
+    module = session.load_module_from_source(
+        module_name=f"module_from_source_{test_id}",
+        source="""
+        void test(inout int a, in int b, no_diff float c) {
+        }
+    """,
+    )
+
+    # Get and read on 1 line.
+    func = module.module_decl.children[0].as_function()
+    assert func.name == "test"
+    assert func.parameters[0].has_modifier(sgl.ModifierID.inout)
+    assert func.parameters[1].has_modifier(sgl.ModifierID.inn)
+    assert func.parameters[2].has_modifier(sgl.ModifierID.nodiff)
+
+
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_full_type_name(test_id: str, device_type: sgl.DeviceType):
+    device = helpers.get_device(type=device_type)
+
+    # Create a session, and within it a module.
+    session = helpers.create_session(device, {})
+    module = session.load_module_from_source(
+        module_name=f"module_from_source_{test_id}",
+        source="""
+        struct A {
+            struct B {
+                float b_val;
+            }
+            float a_val;
+        };
+
+        struct ScalarTypes {
+            bool bool_var;
+            int32_t int32_var;
+            uint32_t uint32_var;
+            int64_t int64_var;
+            uint64_t uint64_var;
+            float16_t float16_var;
+            float32_t float32_var;
+            float64_t float64_var;
+            int8_t int8_var;
+            uint8_t uint8_var;
+            int16_t int16_var;
+            uint16_t uint16_var;
+            int int_var;
+            uint uint_var;
+            half half_var;
+            float float_var;
+            double double_var;
+        }
+
+        struct VectorTypes {
+            vector<float,3> vec_float_3_var;
+            vector<float32_t,3> vec_float32_3_var;
+            float3 float3_var;
+        }
+    """,
+    )
+
+    # Get and read on 1 line.
+    struct_a_decl = module.module_decl.find_first_child_of_kind(
+        sgl.DeclReflection.Kind.struct, "A"
+    )
+    struct_a = struct_a_decl.as_type()
+    assert struct_a.name == "A"
+    assert struct_a.full_name == "A"
+
+    struct_b = struct_a_decl.find_first_child_of_kind(
+        sgl.DeclReflection.Kind.struct, "B"
+    ).as_type()
+    assert struct_b.name == "B"
+    assert struct_b.full_name == "B"
+
+    scalar_types_decl = module.module_decl.find_first_child_of_kind(
+        sgl.DeclReflection.Kind.struct, "ScalarTypes"
+    )
+    scalar_types = scalar_types_decl.as_type()
+    names = [(x.type.name, x.type.full_name, x.name) for x in scalar_types.fields]
+    pprint(names)
+
+    expected = [
+        ("bool", "bool", "bool_var"),
+        ("int", "int", "int32_var"),
+        ("uint", "uint", "uint32_var"),
+        ("int64_t", "int64_t", "int64_var"),
+        ("uint64_t", "uint64_t", "uint64_var"),
+        ("half", "half", "float16_var"),
+        ("float", "float", "float32_var"),
+        ("double", "double", "float64_var"),
+        ("int8_t", "int8_t", "int8_var"),
+        ("uint8_t", "uint8_t", "uint8_var"),
+        ("int16_t", "int16_t", "int16_var"),
+        ("uint16_t", "uint16_t", "uint16_var"),
+        ("int", "int", "int_var"),
+        ("uint", "uint", "uint_var"),
+        ("half", "half", "half_var"),
+        ("float", "float", "float_var"),
+        ("double", "double", "double_var"),
+    ]
+
+    assert names == expected
+
+    vector_types_decl = module.module_decl.find_first_child_of_kind(
+        sgl.DeclReflection.Kind.struct, "VectorTypes"
+    )
+    vector_types = vector_types_decl.as_type()
+    names = [(x.type.name, x.type.full_name, x.name) for x in vector_types.fields]
+    pprint(names)
+
+    expected = [
+        ("vector", "vector<float,3>", "vec_float_3_var"),
+        ("vector", "vector<float,3>", "vec_float32_3_var"),
+        ("vector", "vector<float,3>", "float3_var"),
+    ]
+
+    assert names == expected
+
+
 if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+    pytest.main([__file__, "-v", "-s"])
