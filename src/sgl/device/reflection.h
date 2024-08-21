@@ -693,7 +693,11 @@ public:
 
     TypeLayoutReflectionFieldList fields() const;
 
-    bool is_array() const { return type()->is_array(); }
+    bool is_array() const
+    {
+        auto t = type();
+        return t ? t->is_array() : false;
+    }
 
     ref<const TypeLayoutReflection> unwrap_array() const
     {
@@ -704,7 +708,7 @@ public:
         return type_layout;
     }
 
-    size_t element_count() const { return type()->element_count(); }
+    size_t element_count() const { return m_target->getElementCount(); }
 
     size_t element_stride(TypeReflection::ParameterCategory category = TypeReflection::ParameterCategory::uniform) const
     {

@@ -16,18 +16,18 @@ namespace sgl {
 namespace detail {
 
     template<typename SGLType, typename SlangType>
-    ref<const SGLType> create_reflection_type_from_slang_type(ref<const Object> owner, SlangType* decl_reflection)
+    ref<const SGLType> create_reflection_type_from_slang_type(ref<const Object> owner, SlangType* slang_reflection)
     {
-        if (decl_reflection)
-            return make_ref<const SGLType>(std::move(owner), decl_reflection);
+        if (slang_reflection)
+            return make_ref<const SGLType>(std::move(owner), slang_reflection);
         else
             return nullptr;
     }
 
 #define SGL_FROM_SLANG(type_name)                                                                                      \
-    ref<const type_name> from_slang(ref<const Object> owner, slang::type_name* decl_reflection)                        \
+    ref<const type_name> from_slang(ref<const Object> owner, slang::type_name* slang_reflection)                       \
     {                                                                                                                  \
-        return create_reflection_type_from_slang_type<type_name, slang::type_name>(owner, decl_reflection);            \
+        return create_reflection_type_from_slang_type<type_name, slang::type_name>(owner, slang_reflection);           \
     }
 
     SGL_FROM_SLANG(DeclReflection);
