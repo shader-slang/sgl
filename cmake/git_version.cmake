@@ -95,7 +95,7 @@ function(git_version_setup)
     set_target_properties(git_version_run_check PROPERTIES FOLDER "misc")
 
     add_library(git_version INTERFACE)
-    target_include_directories(git_version INTERFACE ${CMAKE_BINARY_DIR}/git_version)
+    target_include_directories(git_version INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/git_version)
     add_dependencies(git_version git_version_run_check)
 
     git_version_check()

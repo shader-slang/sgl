@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 cmake_policy(SET CMP0077 NEW)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 include(utils)
 
 set(VCPKG_INSTALL_OPTIONS "--no-print-usage" "--allow-unsupported")
@@ -373,15 +373,15 @@ add_dependencies(sgl copy_binary_files)
 
 # Generate setpath scripts.
 if(SGL_WINDOWS)
-    file(GENERATE OUTPUT ${SGL_OUTPUT_DIRECTORY}/setpath.bat INPUT ${CMAKE_SOURCE_DIR}/resources/setpath.bat.in)
-    file(GENERATE OUTPUT ${SGL_OUTPUT_DIRECTORY}/setpath.ps1 INPUT ${CMAKE_SOURCE_DIR}/resources/setpath.ps1.in)
+    file(GENERATE OUTPUT ${SGL_OUTPUT_DIRECTORY}/setpath.bat INPUT ${CMAKE_CURRENT_SOURCE_DIR}/resources/setpath.bat.in)
+    file(GENERATE OUTPUT ${SGL_OUTPUT_DIRECTORY}/setpath.ps1 INPUT ${CMAKE_CURRENT_SOURCE_DIR}/resources/setpath.ps1.in)
 endif()
 
 if(SGL_LINUX OR SGL_MACOS)
-    file(GENERATE OUTPUT ${SGL_OUTPUT_DIRECTORY}/setpath.sh INPUT ${CMAKE_SOURCE_DIR}/resources/setpath.sh.in)
+    file(GENERATE OUTPUT ${SGL_OUTPUT_DIRECTORY}/setpath.sh INPUT ${CMAKE_CURRENT_SOURCE_DIR}/resources/setpath.sh.in)
 endif()
 
-file(GENERATE OUTPUT ${SGL_OUTPUT_DIRECTORY}/python/sgl/__init__.py INPUT ${CMAKE_SOURCE_DIR}/resources/__init__.py)
+file(GENERATE OUTPUT ${SGL_OUTPUT_DIRECTORY}/python/sgl/__init__.py INPUT ${CMAKE_CURRENT_SOURCE_DIR}/resources/__init__.py)
 
 # -----------------------------------------------------------------------------
 # install
@@ -402,5 +402,7 @@ install(
 )
 
 # Install python extension.
+if(SGL_BUILD_PYTHON)
 install(TARGETS sgl_ext LIBRARY DESTINATION sgl)
 install(DIRECTORY ${SGL_OUTPUT_DIRECTORY}/python/sgl/ DESTINATION sgl FILES_MATCHING PATTERN "*.py" PATTERN "*.pyi")
+endif()
