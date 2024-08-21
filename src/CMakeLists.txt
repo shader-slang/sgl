@@ -447,7 +447,7 @@ if(SGL_BUILD_PYTHON)
         add_custom_command(
             APPEND
             OUTPUT ${stub_file}
-            COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/postprocess_stub.py --file=${stub_file} --quiet
+            COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/../tools/postprocess_stub.py --file=${stub_file} --quiet
             COMMENT "Post-processing stub ${stub_file}"
         )
     endfunction()
