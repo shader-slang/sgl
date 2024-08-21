@@ -527,10 +527,13 @@ Bitmap::FileFormat Bitmap::detect_file_format(Stream* stream)
         format = FileFormat::hdr;
     } else if (header[0] == 0xFF && header[1] == 0xD8) {
         format = FileFormat::jpg;
-    } else if (header[0] == 0x89 && header[1] == 0x50 && header[2] == 0x4E && header[3] == 0x47 && header[4] == 0x0D
-               && header[5] == 0x0A && header[6] == 0x1A && header[7] == 0x0A) {
+    } else if (header[0] == 0x89 && header[1] == 0x50 && //
+               header[2] == 0x4E && header[3] == 0x47 && //
+               header[4] == 0x0D && header[5] == 0x0A && //
+               header[6] == 0x1A && header[7] == 0x0A) {
         format = FileFormat::png;
-    } else if (header[0] == 0x76 && header[1] == 0x2F && header[2] == 0x31 && header[3] == 0x01) {
+    } else if (header[0] == 0x76 && header[1] == 0x2F && //
+               header[2] == 0x31 && header[3] == 0x01) {
         format = FileFormat::exr;
     } else {
         // Check for TGAv1 file
