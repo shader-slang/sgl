@@ -439,7 +439,6 @@ def test_full_type_name(test_id: str, device_type: sgl.DeviceType):
     """,
     )
 
-    # Get and read on 1 line.
     struct_a_decl = module.module_decl.find_first_child_of_kind(
         sgl.DeclReflection.Kind.struct, "A"
     )
@@ -458,7 +457,6 @@ def test_full_type_name(test_id: str, device_type: sgl.DeviceType):
     )
     scalar_types = scalar_types_decl.as_type()
     names = [(x.type.name, x.type.full_name, x.name) for x in scalar_types.fields]
-    pprint(names)
 
     expected = [
         ("bool", "bool", "bool_var"),
@@ -487,7 +485,6 @@ def test_full_type_name(test_id: str, device_type: sgl.DeviceType):
     )
     vector_types = vector_types_decl.as_type()
     names = [(x.type.name, x.type.full_name, x.name) for x in vector_types.fields]
-    pprint(names)
 
     expected = [
         ("vector", "vector<float,3>", "vec_float_3_var"),
@@ -496,6 +493,28 @@ def test_full_type_name(test_id: str, device_type: sgl.DeviceType):
     ]
 
     assert names == expected
+
+
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_null_type(test_id: str, device_type: sgl.DeviceType):
+    device = helpers.get_device(type=device_type)
+
+    # Create a session, and within it a module.
+    session = helpers.create_session(device, {})
+    module = session.load_module_from_source(
+        module_name=f"module_from_source_{test_id}",
+        source="""
+        struct A {
+            float a_val;
+        };
+        uniform A myglobal;
+    """,
+    )
+
+    globals_layout = module.layout.globals_type_layout
+    globals_type_layout = globals_layout.element_type_layout
+    invalid_element_type_layout = globals_type_layout.element_type_layout
+    assert invalid_element_type_layout is None
 
 
 if __name__ == "__main__":
