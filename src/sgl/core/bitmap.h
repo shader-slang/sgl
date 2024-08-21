@@ -266,6 +266,8 @@ private:
         std::vector<Bitmap::ComponentType> allowed_component_types
     ) const;
 
+    void read_stb(Stream* stream, const char* format, bool is_srgb, bool is_hdr);
+
     void read_png(Stream* stream);
     void write_png(Stream* stream, int compression) const;
 
