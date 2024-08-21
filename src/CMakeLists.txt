@@ -330,6 +330,10 @@ file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/include/sgl/core/config.h CONTE
 )
 target_include_directories(sgl PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include)
 
+# temporary workaround
+find_path(BSHOSHANY_THREAD_POOL_INCLUDE_DIRS "BS_thread_pool.hpp")
+target_include_directories(sgl PUBLIC ${BSHOSHANY_THREAD_POOL_INCLUDE_DIRS})
+
 target_link_libraries(sgl
     PUBLIC
         fmt::fmt
