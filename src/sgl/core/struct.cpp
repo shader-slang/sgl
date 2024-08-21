@@ -57,11 +57,13 @@ derivative works thereof, in binary and source code form.
 
 #include "sgl/stl/bit.h" // Replace with <bit> when available on all platforms.
 
+#if SGL_HAS_ASMJIT
 #include <asmjit/asmjit.h>
 #if SGL_ARM64
 #include <asmjit/arm.h>
 #include <asmjit/arm/a64assembler.h>
 #include <asmjit/arm/a64compiler.h>
+#endif
 #endif
 
 #include <limits>

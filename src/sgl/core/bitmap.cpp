@@ -59,6 +59,16 @@ derivative works thereof, in binary and source code form.
 
 #include "sgl/stl/bit.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
+SGL_DIAGNOSTIC_PUSH
+SGL_DISABLE_MSVC_WARNING(4996)
+SGL_DISABLE_CLANG_WARNING("-Wdeprecated-declarations")
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
+SGL_DIAGNOSTIC_POP
+
 #if SGL_HAS_PNG
 #include <png.h>
 #endif
@@ -86,12 +96,6 @@ derivative works thereof, in binary and source code form.
 #include <ImathBox.h>
 #include <IlmThreadPool.h>
 #endif
-
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
-
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include <stb_image_write.h>
 
 #include <algorithm>
 
