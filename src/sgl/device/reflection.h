@@ -693,11 +693,7 @@ public:
 
     TypeLayoutReflectionFieldList fields() const;
 
-    bool is_array() const
-    {
-        auto t = type();
-        return t ? t->is_array() : false;
-    }
+    bool is_array() const { return kind() == TypeReflection::Kind::array; }
 
     ref<const TypeLayoutReflection> unwrap_array() const
     {
