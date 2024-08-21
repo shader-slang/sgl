@@ -69,11 +69,11 @@ SGL_DISABLE_CLANG_WARNING("-Wdeprecated-declarations")
 #include <stb_image_write.h>
 SGL_DIAGNOSTIC_POP
 
-#if SGL_HAS_PNG
+#if SGL_HAS_LIBPNG
 #include <png.h>
 #endif
 
-#if SGL_HAS_JPEG
+#if SGL_HAS_LIBJPEG
 #include <jpeglib.h>
 #endif
 
@@ -780,7 +780,7 @@ void Bitmap::read_stb(Stream* stream, const char* format, bool is_srgb, bool is_
 // PNG I/O
 // ----------------------------------------------------------------------------
 
-#if SGL_HAS_PNG
+#if SGL_HAS_LIBPNG
 
 static void png_flush_data(png_structp png_ptr)
 {
@@ -1070,7 +1070,7 @@ void Bitmap::write_png(Stream* stream, int compression) const
     // delete[] text;
 }
 
-#else // SGL_HAS_PNG
+#else // SGL_HAS_LIBPNG
 
 void Bitmap::read_png(Stream* stream)
 {
@@ -1104,13 +1104,13 @@ void Bitmap::write_png(Stream* stream, int compression) const
     }
 }
 
-#endif // SGL_HAS_PNG
+#endif // SGL_HAS_LIBPNG
 
 // ----------------------------------------------------------------------------
 // JPEG I/O
 // ----------------------------------------------------------------------------
 
-#if SGL_HAS_JPEG
+#if SGL_HAS_LIBJPEG
 
 extern "C" {
 static const size_t jpeg_buffer_size = 0x8000;
@@ -1343,7 +1343,7 @@ void Bitmap::write_jpg(Stream* stream, int quality) const
     jpeg_destroy_compress(&cinfo);
 }
 
-#else // SGL_HAS_JPEG
+#else // SGL_HAS_LIBJPEG
 
 void Bitmap::read_jpg(Stream* stream)
 {
@@ -1358,7 +1358,7 @@ void Bitmap::write_jpg(Stream* stream, int quality) const
         SGL_THROW("Failed to write JPEG file!");
 }
 
-#endif // SGL_HAS_JPEG
+#endif // SGL_HAS_LIBJPEG
 
 // ----------------------------------------------------------------------------
 // BMP I/O
