@@ -10,9 +10,6 @@
             "name": "base",
             "description": "Base configuration inherited by all presets.",
             "hidden": true,
-            "environment": {
-                "VCPKG_OVERLAY_PORTS": "${sourceDir}/external/vcpkg-overlay-ports"
-            },
             "cacheVariables": {
                 "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/external/vcpkg/scripts/buildsystems/vcpkg.cmake",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"

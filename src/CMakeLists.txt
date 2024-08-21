@@ -330,6 +330,10 @@ file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/include/sgl/core/config.h CONTE
 )
 target_include_directories(sgl PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include)
 
+# temporary workaround
+find_path(BSHOSHANY_THREAD_POOL_INCLUDE_DIRS "BS_thread_pool.hpp")
+target_include_directories(sgl PUBLIC ${BSHOSHANY_THREAD_POOL_INCLUDE_DIRS})
+
 target_link_libraries(sgl
     PUBLIC
         fmt::fmt
@@ -340,6 +344,7 @@ target_link_libraries(sgl
     PRIVATE
         git_version
         glfw stb header_only
+        tevclient
         $<$<BOOL:${SGL_HAS_D3D12}>:d3d12>
         $<$<BOOL:${SGL_HAS_AGILITY_SDK}>:agility_sdk>
         # $<$<BOOL:${SGL_HAS_AFTERMATH}>:aftermath>
@@ -348,7 +353,6 @@ target_link_libraries(sgl
         $<$<BOOL:${SGL_HAS_JPEG}>:JPEG::JPEG>
         $<$<BOOL:${SGL_HAS_OPENEXR}>:OpenEXR::OpenEXR>
         $<$<BOOL:${SGL_HAS_ASMJIT}>:asmjit::asmjit>
-        $<$<BOOL:${SGL_HAS_TEVCLIENT}>:tevclient::tevclient>
         # Windows system libraries.
         $<$<PLATFORM_ID:Windows>:Dbghelp>
         # $<$<PLATFORM_ID:Windows>:shcore.lib>
