@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
 
-from pprint import pprint
 import pytest
 import sys
 import sgl
