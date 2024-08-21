@@ -56,6 +56,7 @@ sgl depends on the following third-party libraries, which have their own license
 - [Slang](https://github.com/shader-slang/slang) (MIT)
 - [stb](https://github.com/nothings/stb) (MIT)
 - [tevclient](https://github.com/skallweitNV/tevclient) (BSD)
+- [tinyexr](https://github.com/syoyo/tinyexr) (BSD)
 - [vcpkg](https://vcpkg.io/en/) (MIT)
 - [Vulkan-Headers](https://github.com/KhronosGroup/Vulkan-Headers) (MIT)
 
