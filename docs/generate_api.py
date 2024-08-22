@@ -163,8 +163,8 @@ def process_static_method(obj: object, name: str, ctx: Context):
 
 def process_property(obj: object, name: str, ctx: Context):
     ctx.write(f".. py:property:: {name}")
-    read_write = obj.fset != None # type: ignore
-    doc = obj.fget.__doc__.split("\n") # type: ignore
+    read_write = obj.fset != None  # type: ignore
+    doc = obj.fget.__doc__.split("\n")  # type: ignore
     type = doc[0].split("->")[1].strip()
     doc = "\n".join(doc[1:]).strip()
     ctx.write(f"{INDENT}:type: {type}\n")
@@ -200,7 +200,7 @@ def process_class(obj: object, name: str, ctx: Context):
 
     ctx.write("")
     ctx.push(name)
-    base = obj.__base__ # type: ignore
+    base = obj.__base__  # type: ignore
     if base.__name__ != "object":
         ctx.write(f"Base class: :py:class:`{base.__module__}.{base.__name__}`\n")
 
