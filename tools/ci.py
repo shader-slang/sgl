@@ -250,7 +250,7 @@ def main():
     args["preset"] = preset
 
     # Determine binary directory.
-    bin_dir = f"./build/{args['preset']}/bin/{args['config']}"
+    bin_dir = f"./build/{args['preset']}/{args['config']}"
     args["bin_dir"] = bin_dir
 
     print("CI configuration:")
