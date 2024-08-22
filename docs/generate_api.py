@@ -1,7 +1,8 @@
+from __future__ import annotations
 import re
 import importlib
 import json
-from inspect import isclass, ismodule, ismethod, isfunction
+from inspect import isclass, ismodule
 from pathlib import Path
 
 DIR = Path(__file__).parent
@@ -68,10 +69,10 @@ def parse_signature(signature: str):
     return new_signature
 
 
-def split_signature_doc(doc: str):
-    lines = doc.split("\n")
-    signatures = []
-    docs = []
+def split_signature_doc(doc: str | None):
+    lines = doc.split("\n") if doc else []
+    signatures: list[str] = []
+    docs: list[str] = []
     signature_index = 0
     state = 0
     for line in lines:
@@ -101,6 +102,7 @@ def split_signature_doc(doc: str):
 
 class Context:
     def __init__(self):
+        super().__init__()
         self.level = 0
         self.prefix = ""
         self.stack = []
@@ -115,7 +117,7 @@ class Context:
             self.output += f"{INDENT * self.level}{line}\n"
             self.entries[self.current_entry] += f"{INDENT * self.level}{line}\n"
 
-    def push(self, name, indent=True):
+    def push(self, name: str, indent: bool = True):
         self.stack.append((self.level, self.prefix))
         if indent:
             self.level += 1
@@ -124,14 +126,14 @@ class Context:
     def pop(self):
         self.level, self.prefix = self.stack.pop()
 
-    def new_entry(self, name):
+    def new_entry(self, name: str):
         self.current_entry = f"{self.prefix}.{name}"
         if self.current_entry in self.entries:
-            raise "duplicate entry"
+            raise RuntimeError("duplicate entry")
         self.entries[self.current_entry] = ""
 
 
-def process_method(obj, name, ctx: Context):
+def process_method(obj: object, name: str, ctx: Context):
     first = True
     for signature, doc in split_signature_doc(obj.__doc__):
         ctx.write(f".. py:method:: {signature}")
@@ -145,7 +147,7 @@ def process_method(obj, name, ctx: Context):
         first = False
 
 
-def process_static_method(obj, name, ctx: Context):
+def process_static_method(obj: object, name: str, ctx: Context):
     first = True
     for signature, doc in split_signature_doc(obj.__doc__):
         ctx.write(f".. py:staticmethod:: {signature}")
@@ -159,10 +161,10 @@ def process_static_method(obj, name, ctx: Context):
         first = False
 
 
-def process_property(obj, name, ctx: Context):
+def process_property(obj: object, name: str, ctx: Context):
     ctx.write(f".. py:property:: {name}")
-    read_write = obj.fset != None
-    doc = obj.fget.__doc__.split("\n")
+    read_write = obj.fset != None # type: ignore
+    doc = obj.fget.__doc__.split("\n") # type: ignore
     type = doc[0].split("->")[1].strip()
     doc = "\n".join(doc[1:]).strip()
     ctx.write(f"{INDENT}:type: {type}\n")
@@ -172,7 +174,7 @@ def process_property(obj, name, ctx: Context):
     ctx.pop()
 
 
-def process_attribute(obj, name, ctx: Context):
+def process_attribute(obj: object, name: str, ctx: Context):
     ctx.write(f".. py:attribute:: {ctx.prefix}.{name}")
     ctx.write(f"{INDENT}:type: {type(obj).__name__}")
     value = f'"{obj}"' if isinstance(obj, str) else str(obj)
@@ -180,7 +182,7 @@ def process_attribute(obj, name, ctx: Context):
     ctx.write("")
 
 
-def process_class(obj, name, ctx: Context):
+def process_class(obj: object, name: str, ctx: Context):
     ctx.write(f".. py:class:: {ctx.prefix}.{name}")
 
     is_alias = f"{ctx.prefix}.{name}" != f"{obj.__module__}.{obj.__qualname__}"
@@ -198,7 +200,7 @@ def process_class(obj, name, ctx: Context):
 
     ctx.write("")
     ctx.push(name)
-    base = obj.__base__
+    base = obj.__base__ # type: ignore
     if base.__name__ != "object":
         ctx.write(f"Base class: :py:class:`{base.__module__}.{base.__name__}`\n")
 
@@ -240,7 +242,7 @@ def process_class(obj, name, ctx: Context):
     ctx.pop()
 
 
-def process_function(obj, name, ctx: Context):
+def process_function(obj: object, name: str, ctx: Context):
     first = True
     for signature, doc in split_signature_doc(obj.__doc__):
         ctx.write(f".. py:function:: {ctx.prefix}.{signature}")
@@ -254,7 +256,7 @@ def process_function(obj, name, ctx: Context):
         first = False
 
 
-def process_data(obj, name, ctx: Context):
+def process_data(obj: object, name: str, ctx: Context):
     ctx.write(f".. py:data:: {ctx.prefix}.{name}")
     ctx.write(f"{INDENT}:type: {type(obj).__name__}")
     value = f'"{obj}"' if isinstance(obj, str) else str(obj)
@@ -262,7 +264,7 @@ def process_data(obj, name, ctx: Context):
     ctx.write("")
 
 
-def process_module(obj, name, ctx: Context):
+def process_module(obj: object, name: str, ctx: Context):
     ctx.push(name, indent=False)
 
     for cn in obj.__dict__:

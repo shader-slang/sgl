@@ -3,6 +3,7 @@
 import sys
 import shutil
 from pathlib import Path
+from sphinx.application import Sphinx
 
 project = "sgl"
 copyright = "2024, Simon Kallweit, NVIDIA"
@@ -35,7 +36,7 @@ html_theme_options = {
 nbsphinx_execute = "never"
 
 
-def initialize(app):
+def initialize(app: Sphinx):
     # Copy tutorials to src directory.
     print("Copying tutorials to src directory...")
     CURRENT_DIR = Path(__file__).parent
@@ -54,5 +55,5 @@ def initialize(app):
         print("sgl module not available, skipping API documentation generation.")
 
 
-def setup(app):
+def setup(app: Sphinx):
     app.connect("builder-inited", initialize)
