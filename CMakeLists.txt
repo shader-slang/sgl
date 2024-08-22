@@ -41,6 +41,7 @@ set(SGL_BUILD_PYTHON ${SGL_MASTER_PROJECT} CACHE BOOL "Build sgl Python extensio
 set(SGL_BUILD_EXAMPLES ${SGL_MASTER_PROJECT} CACHE BOOL "Build sgl example applications")
 set(SGL_BUILD_TESTS ${SGL_MASTER_PROJECT} CACHE BOOL "Build sgl tests")
 set(SGL_BUILD_DOC OFF CACHE BOOL "Build sgl documentation")
+set(SGL_BINARY_DIR ${CMAKE_BINARY_DIR} CACHE STRING "Binary directory (defaults to CMAKE_BINARY_DIR)")
 
 # Enable building sgl without external dependencies.
 # This is useful when using sgl through cmake add_subdirectory.
@@ -137,8 +138,8 @@ if(NOT SETUP_CONFIGURATION_TYPES)
     endif()
 endif()
 
-set(SGL_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-set(SGL_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(SGL_RUNTIME_OUTPUT_DIRECTORY ${SGL_BINARY_DIR})
+set(SGL_LIBRARY_OUTPUT_DIRECTORY ${SGL_BINARY_DIR})
 
 if(CMAKE_CONFIGURATION_TYPES)
     set(SGL_OUTPUT_DIRECTORY ${SGL_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>)
