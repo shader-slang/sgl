@@ -2,8 +2,8 @@
 
 # Slang Graphics Library
 
-[1]: https://readthedocs.org/projects/sgl/badge/?version=stable
-[2]: https://sgl.readthedocs.io/en/stable/
+[1]: https://readthedocs.org/projects/nv-sgl/badge/?version=latest
+[2]: https://nv-sgl.readthedocs.io/en/latest/
 [3]: https://github.com/shader-slang/sgl/actions/workflows/ci.yml/badge.svg
 [4]: https://github.com/shader-slang/sgl/actions/workflows/ci.yml
 [5]: https://img.shields.io/pypi/v/nv-sgl.svg?color=green
