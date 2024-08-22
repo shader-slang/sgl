@@ -3,6 +3,12 @@
 
 version: 2
 
+submodules:
+  include:
+    - data
+    - tutorials
+  recursive: false
+
 build:
   os: ubuntu-22.04
   tools:
