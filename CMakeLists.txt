@@ -96,7 +96,9 @@ message(STATUS "Platform: ${SGL_PLATFORM}")
 # Python
 # -----------------------------------------------------------------------------
 
-find_package(Python 3.9 COMPONENTS Interpreter Development.Module REQUIRED)
+if(SGL_BUILD_PYTHON)
+    find_package(Python 3.9 COMPONENTS Interpreter Development.Module REQUIRED)
+endif()
 
 # -----------------------------------------------------------------------------
 # CUDA
