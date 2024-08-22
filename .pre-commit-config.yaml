@@ -25,5 +25,6 @@ exclude: |
       .*\.ipynb|
       build/.*|
       external/.*|
-      src/sgl/python/py_doc.h
+      src/sgl/python/py_doc.h|
+      docs/generated/.*|
   )$
