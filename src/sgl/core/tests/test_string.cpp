@@ -11,11 +11,11 @@ TEST_CASE("copy_to_cstr")
 {
     char cstr[16];
     string::copy_to_cstr(cstr, sizeof(cstr), "");
-    CHECK_EQ(cstr, "");
+    CHECK_EQ(std::string_view(cstr), "");
     string::copy_to_cstr(cstr, sizeof(cstr), "hello");
-    CHECK_EQ(cstr, "hello");
+    CHECK_EQ(std::string_view(cstr), "hello");
     string::copy_to_cstr(cstr, sizeof(cstr), "this string will be truncated");
-    CHECK_EQ(cstr, "this string wil");
+    CHECK_EQ(std::string_view(cstr), "this string wil");
 }
 
 TEST_CASE("to_upper")
