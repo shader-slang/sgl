@@ -96,6 +96,7 @@ SGL_PY_EXPORT(device_reflection)
     type_reflection //
         .def_prop_ro("kind", &TypeReflection::kind, D(TypeReflection, kind))
         .def_prop_ro("name", &TypeReflection::name, D(TypeReflection, name))
+        .def_prop_ro("full_name", &TypeReflection::full_name, D_NA(TypeReflection, full_name))
         .def_prop_ro("fields", &TypeReflection::fields, D(TypeReflection, fields))
         .def_prop_ro("element_count", &TypeReflection::element_count, D(TypeReflection, element_count))
         .def_prop_ro("element_type", &TypeReflection::element_type, D(TypeReflection, element_type))

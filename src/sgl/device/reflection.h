@@ -529,6 +529,8 @@ public:
 
     char const* name() const { return m_target->getName(); }
 
+    std::string full_name() const;
+
     bool is_struct() const { return kind() == Kind::struct_; }
 
     uint32_t field_count() const
@@ -691,7 +693,7 @@ public:
 
     TypeLayoutReflectionFieldList fields() const;
 
-    bool is_array() const { return type()->is_array(); }
+    bool is_array() const { return kind() == TypeReflection::Kind::array; }
 
     ref<const TypeLayoutReflection> unwrap_array() const
     {
@@ -702,7 +704,7 @@ public:
         return type_layout;
     }
 
-    size_t element_count() const { return type()->element_count(); }
+    size_t element_count() const { return m_target->getElementCount(); }
 
     size_t element_stride(TypeReflection::ParameterCategory category = TypeReflection::ParameterCategory::uniform) const
     {

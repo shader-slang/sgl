@@ -15,40 +15,32 @@ namespace sgl {
 
 namespace detail {
 
-    ref<const DeclReflection> from_slang(ref<const Object> owner, slang::DeclReflection* decl_reflection)
+    template<typename SGLType, typename SlangType>
+    ref<const SGLType> create_reflection_type_from_slang_type(ref<const Object> owner, SlangType* slang_reflection)
     {
-        return make_ref<const DeclReflection>(std::move(owner), decl_reflection);
+        if (slang_reflection)
+            return make_ref<const SGLType>(std::move(owner), slang_reflection);
+        else
+            return nullptr;
     }
-    ref<const TypeReflection> from_slang(ref<const Object> owner, slang::TypeReflection* type_reflection)
-    {
-        return make_ref<const TypeReflection>(std::move(owner), type_reflection);
+
+#define SGL_FROM_SLANG(type_name)                                                                                      \
+    ref<const type_name> from_slang(ref<const Object> owner, slang::type_name* slang_reflection)                       \
+    {                                                                                                                  \
+        return create_reflection_type_from_slang_type<type_name, slang::type_name>(owner, slang_reflection);           \
     }
-    ref<const TypeLayoutReflection>
-    from_slang(ref<const Object> owner, slang::TypeLayoutReflection* type_layout_reflection)
-    {
-        return make_ref<const TypeLayoutReflection>(std::move(owner), type_layout_reflection);
-    }
-    ref<const FunctionReflection> from_slang(ref<const Object> owner, slang::FunctionReflection* variable_reflection)
-    {
-        return make_ref<const FunctionReflection>(std::move(owner), variable_reflection);
-    }
-    ref<const VariableReflection> from_slang(ref<const Object> owner, slang::VariableReflection* variable_reflection)
-    {
-        return make_ref<const VariableReflection>(std::move(owner), variable_reflection);
-    }
-    ref<const VariableLayoutReflection>
-    from_slang(ref<const Object> owner, slang::VariableLayoutReflection* variable_layout_reflection)
-    {
-        return make_ref<const VariableLayoutReflection>(std::move(owner), variable_layout_reflection);
-    }
-    ref<const EntryPointLayout> from_slang(ref<const Object> owner, slang::EntryPointLayout* entry_point_reflection)
-    {
-        return make_ref<const EntryPointLayout>(std::move(owner), entry_point_reflection);
-    }
-    ref<const ProgramLayout> from_slang(ref<const Object> owner, slang::ProgramLayout* program_layout)
-    {
-        return make_ref<const ProgramLayout>(std::move(owner), program_layout);
-    }
+
+    SGL_FROM_SLANG(DeclReflection);
+    SGL_FROM_SLANG(TypeReflection);
+    SGL_FROM_SLANG(TypeLayoutReflection);
+    SGL_FROM_SLANG(FunctionReflection);
+    SGL_FROM_SLANG(VariableReflection);
+    SGL_FROM_SLANG(VariableLayoutReflection);
+    SGL_FROM_SLANG(EntryPointLayout);
+    SGL_FROM_SLANG(ProgramLayout);
+
+#undef SGL_FROM_SLANG
+
 } // namespace detail
 
 std::string c_str_to_string(const char* str)
@@ -146,6 +138,13 @@ ref<const DeclReflection> DeclReflection::find_first_child_of_kind(Kind kind, st
         }
     }
     return nullptr;
+}
+
+std::string TypeReflection::full_name() const
+{
+    Slang::ComPtr<ISlangBlob> blob;
+    m_target->getFullName(blob.writeRef());
+    return std::string((const char*)blob->getBufferPointer());
 }
 
 TypeReflectionFieldList TypeReflection::fields() const
