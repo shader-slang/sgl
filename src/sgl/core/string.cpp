@@ -9,6 +9,13 @@
 
 namespace sgl::string {
 
+void copy_to_cstr(char* dst, size_t dst_len, std::string_view src)
+{
+    size_t len = std::min(dst_len - 1, src.size());
+    std::memcpy(dst, src.data(), len);
+    dst[len] = '\0';
+}
+
 std::string to_lower(std::string_view str)
 {
     std::string result(str.size(), 0);

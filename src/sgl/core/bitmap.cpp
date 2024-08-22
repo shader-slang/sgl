@@ -96,10 +96,13 @@ SGL_DIAGNOSTIC_POP
 #include <ImathBox.h>
 #include <IlmThreadPool.h>
 #else
+SGL_DIAGNOSTIC_PUSH
+SGL_DISABLE_MSVC_WARNING(4245 4706 4702)
 #define TINYEXR_IMPLEMENTATION
 #define TINYEXR_USE_MINIZ 0
 #define TINYEXR_USE_STB_ZLIB 1
 #include <tinyexr.h>
+SGL_DIAGNOSTIC_POP
 #endif
 
 #include <algorithm>
@@ -2066,7 +2069,7 @@ void Bitmap::read_exr(Stream* stream)
     const char* err = nullptr;
     if (ParseEXRHeaderFromMemory(&header, &version, memory.get(), size, &err) != TINYEXR_SUCCESS) {
         SGL_THROW(fmt::format("Failed to parse EXR header!\n{}", err));
-        FreeEXRErrorMessage(err);
+        // FreeEXRErrorMessage(err);
     }
 
     switch (header.pixel_types[0]) {
@@ -2243,6 +2246,8 @@ void Bitmap::read_exr(Stream* stream)
 
 void Bitmap::write_exr(Stream* stream, int quality) const
 {
+    SGL_UNUSED(quality);
+
     check_required_format(
         "EXR",
         {PixelFormat::y, PixelFormat::ya, PixelFormat::rgb, PixelFormat::rgba, PixelFormat::multi_channel},
@@ -2274,7 +2279,7 @@ void Bitmap::write_exr(Stream* stream, int quality) const
     for (size_t i = 0; i < channel_count(); ++i) {
         EXRChannelInfo& channel = channels[i];
         channel.pixel_type = pixel_type;
-        strncpy(channel.name, m_pixel_struct->operator[](i).name.c_str(), sizeof(TEXRChannelInfo::name));
+        string::copy_to_cstr(channel.name, sizeof(EXRChannelInfo::name), m_pixel_struct->operator[](i).name);
     }
 
     std::vector<int> pixel_types(channel_count(), pixel_type);

@@ -7,6 +7,17 @@ using namespace sgl;
 
 TEST_SUITE_BEGIN("string");
 
+TEST_CASE("copy_to_cstr")
+{
+    char cstr[16];
+    string::copy_to_cstr(cstr, sizeof(cstr), "");
+    CHECK_EQ(cstr, "");
+    string::copy_to_cstr(cstr, sizeof(cstr), "hello");
+    CHECK_EQ(cstr, "hello");
+    string::copy_to_cstr(cstr, sizeof(cstr), "this string will be truncated");
+    CHECK_EQ(cstr, "this string wil");
+}
+
 TEST_CASE("to_upper")
 {
     CHECK_EQ(string::to_upper("hello"), "HELLO");

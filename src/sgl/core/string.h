@@ -13,6 +13,15 @@
 namespace sgl::string {
 
 /**
+ * Copy a string to a C-style string buffer.
+ * Truncates the input string if it doesn't fit the buffer and always null-terminates the buffer.
+ * \param dst C-style string buffer.
+ * \param dst_len Length of the buffer.
+ * \param src Input string.
+ */
+SGL_API void copy_to_cstr(char* dst, size_t dst_len, std::string_view src);
+
+/**
  * Convert a string to lower case.
  * \param str Input string.
  * \return Lower case string.
