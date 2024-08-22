@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 struct OptimizerHashGrid {
     static const uint32_t kNumChannels = 8;
     static const uint32_t kNumLevels = 4;

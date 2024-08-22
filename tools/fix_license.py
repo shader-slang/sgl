@@ -55,10 +55,10 @@ def list_files(
 
 
 def add_spdx_identifier(path: str, text: str):
-    identifier = (
-        SPDX_IDENTIFIER_PYTHON if path.endswith(".py") else SPDX_IDENTIFIER_C_LIKE
-    )
-    if not text.startswith(identifier):
+    if not SPDX_IDENTIFIER in text:
+        identifier = (
+            SPDX_IDENTIFIER_PYTHON if path.endswith(".py") else SPDX_IDENTIFIER_C_LIKE
+        )
         return identifier + text
     return text
 
