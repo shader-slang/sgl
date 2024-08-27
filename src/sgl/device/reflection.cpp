@@ -15,12 +15,21 @@ namespace sgl {
 
 namespace detail {
 
+    static std::map<void*, const BaseReflectionObject*> g_slang_reflection_to_sgl_reflection;
+
     template<typename SGLType, typename SlangType>
     ref<const SGLType> create_reflection_type_from_slang_type(ref<const Object> owner, SlangType* slang_reflection)
     {
-        if (slang_reflection)
-            return make_ref<const SGLType>(std::move(owner), slang_reflection);
-        else
+        if (slang_reflection) {
+            auto it = g_slang_reflection_to_sgl_reflection.find(slang_reflection);
+            if (it != g_slang_reflection_to_sgl_reflection.end()) {
+                return ref((const SGLType*)it->second);
+            } else {
+                auto res = make_ref<const SGLType>(std::move(owner), slang_reflection);
+                g_slang_reflection_to_sgl_reflection[slang_reflection] = res.get();
+                return res;
+            }
+        } else
             return nullptr;
     }
 
@@ -41,6 +50,10 @@ namespace detail {
 
 #undef SGL_FROM_SLANG
 
+    void on_slang_wrapper_destroyed(void* slang_reflection)
+    {
+        g_slang_reflection_to_sgl_reflection.erase(slang_reflection);
+    }
 } // namespace detail
 
 std::string c_str_to_string(const char* str)
