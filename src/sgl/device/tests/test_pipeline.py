@@ -517,7 +517,7 @@ def test_gfx_alpha_coverage(device_type: sgl.DeviceType):
 class RayContext:
     def __init__(self, ctx: PipelineTestContext) -> None:
         super().__init__()
-        if not "raytracing" in ctx.device.features:
+        if not "ray-tracing" in ctx.device.features:
             pytest.skip("Ray tracing not supported on this device")
 
         self.ctx = ctx
