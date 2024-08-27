@@ -184,7 +184,7 @@ private:
     std::vector<uint32_t> m_indices;
 };
 
-class BaseReflectionObject : public Object {
+class SGL_API BaseReflectionObject : public Object {
 public:
     BaseReflectionObject(ref<const Object> owner)
         : m_owner(std::move(owner))
