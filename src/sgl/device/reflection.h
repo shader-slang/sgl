@@ -36,6 +36,7 @@ namespace detail {
     from_slang(ref<const Object> owner, slang::EntryPointLayout* entry_point_reflection);
     SGL_API ref<const ProgramLayout> from_slang(ref<const Object> owner, slang::ProgramLayout* program_layout);
 
+    SGL_API void on_slang_wrapper_destroyed(void* slang_reflection);
 } // namespace detail
 
 
@@ -186,18 +187,33 @@ private:
 class SGL_API BaseReflectionObject : public Object {
 public:
     BaseReflectionObject(ref<const Object> owner)
-        : m_owner(std::move(owner)){};
+        : m_owner(std::move(owner))
+    {
+    }
 
 protected:
     ref<const Object> m_owner;
 };
 
-class SGL_API DeclReflection : public BaseReflectionObject {
+template<class SlangType>
+class SGL_API BaseReflectionObjectImpl : public BaseReflectionObject {
+public:
+    BaseReflectionObjectImpl(ref<const Object> owner, SlangType* target)
+        : BaseReflectionObject(std::move(owner))
+        , m_target(target)
+    {
+    }
+    ~BaseReflectionObjectImpl() { detail::on_slang_wrapper_destroyed(m_target); }
+
+protected:
+    SlangType* m_target;
+};
+
+class SGL_API DeclReflection : public BaseReflectionObjectImpl<slang::DeclReflection> {
 
 public:
     DeclReflection(ref<const Object> owner, slang::DeclReflection* target)
-        : BaseReflectionObject(std::move(owner))
-        , m_target(target)
+        : BaseReflectionObjectImpl(std::move(owner), target)
     {
     }
 
@@ -272,9 +288,6 @@ public:
     /// Finds the first child of a specific kind with a given name.
     /// Note: Only supported for types, functions and variables.
     ref<const DeclReflection> find_first_child_of_kind(Kind kind, std::string_view child_name) const;
-
-private:
-    slang::DeclReflection* m_target;
 };
 SGL_ENUM_REGISTER(DeclReflection::Kind);
 
@@ -307,7 +320,7 @@ protected:
     ref<const DeclReflection> evaluate(uint32_t index) const override { return m_owner->child(index); }
 };
 
-class SGL_API TypeReflection : public BaseReflectionObject {
+class SGL_API TypeReflection : public BaseReflectionObjectImpl<slang::TypeReflection> {
 public:
     enum class Kind {
         none = SLANG_TYPE_KIND_NONE,
@@ -520,8 +533,7 @@ public:
     );
 
     TypeReflection(ref<const Object> owner, slang::TypeReflection* target)
-        : BaseReflectionObject(std::move(owner))
-        , m_target(target)
+        : BaseReflectionObjectImpl(std::move(owner), target)
     {
     }
 
@@ -610,9 +622,6 @@ public:
 #endif
 
     std::string to_string() const;
-
-private:
-    slang::TypeReflection* m_target;
 };
 
 SGL_ENUM_CLASS_OPERATORS(TypeReflection::ResourceShape);
@@ -641,7 +650,7 @@ protected:
 };
 
 
-class SGL_API TypeLayoutReflection : public BaseReflectionObject {
+class SGL_API TypeLayoutReflection : public BaseReflectionObjectImpl<slang::TypeLayoutReflection> {
 public:
     static ref<const TypeLayoutReflection>
     from_slang(ref<const Object> owner, slang::TypeLayoutReflection* type_layout_reflection)
@@ -650,8 +659,7 @@ public:
     }
 
     TypeLayoutReflection(ref<const Object> owner, slang::TypeLayoutReflection* target)
-        : BaseReflectionObject(std::move(owner))
-        , m_target(target)
+        : BaseReflectionObjectImpl(std::move(owner), target)
     {
     }
 
@@ -738,9 +746,6 @@ public:
     }
 
     std::string to_string() const;
-
-private:
-    slang::TypeLayoutReflection* m_target;
 };
 
 /// TypeLayoutReflection lazy field list evaluation.
@@ -764,11 +769,10 @@ protected:
     }
 };
 
-class SGL_API FunctionReflection : public BaseReflectionObject {
+class SGL_API FunctionReflection : public BaseReflectionObjectImpl<slang::FunctionReflection> {
 public:
     FunctionReflection(ref<const Object> owner, slang::FunctionReflection* target)
-        : BaseReflectionObject(std::move(owner))
-        , m_target(target)
+        : BaseReflectionObjectImpl(std::move(owner), target)
     {
     }
 
@@ -791,9 +795,6 @@ public:
     {
         return m_target->findModifier(static_cast<slang::Modifier::ID>(modifier)) != nullptr;
     }
-
-private:
-    slang::FunctionReflection* m_target;
 };
 
 /// FunctionReflection lazy parameter list evaluation.
@@ -816,7 +817,7 @@ protected:
     }
 };
 
-class SGL_API VariableReflection : public BaseReflectionObject {
+class SGL_API VariableReflection : public BaseReflectionObjectImpl<slang::VariableReflection> {
 public:
     static ref<const VariableReflection>
     from_slang(ref<const Object> owner, slang::VariableReflection* variable_reflection)
@@ -825,8 +826,7 @@ public:
     }
 
     VariableReflection(ref<const Object> owner, slang::VariableReflection* target)
-        : BaseReflectionObject(std::move(owner))
-        , m_target(target)
+        : BaseReflectionObjectImpl(std::move(owner), target)
     {
     }
 
@@ -841,16 +841,12 @@ public:
     {
         return m_target->findModifier(static_cast<slang::Modifier::ID>(modifier)) != nullptr;
     }
-
-private:
-    slang::VariableReflection* m_target;
 };
 
-class SGL_API VariableLayoutReflection : public BaseReflectionObject {
+class SGL_API VariableLayoutReflection : public BaseReflectionObjectImpl<slang::VariableLayoutReflection> {
 public:
     VariableLayoutReflection(ref<const Object> owner, slang::VariableLayoutReflection* target)
-        : BaseReflectionObject(std::move(owner))
-        , m_target(target)
+        : BaseReflectionObjectImpl(std::move(owner), target)
     {
     }
 
@@ -866,12 +862,9 @@ public:
     size_t offset() const { return m_target->getOffset(SlangParameterCategory::SLANG_PARAMETER_CATEGORY_UNIFORM); }
 
     std::string to_string() const;
-
-private:
-    slang::VariableLayoutReflection* m_target;
 };
 
-class SGL_API EntryPointLayout : public BaseReflectionObject {
+class SGL_API EntryPointLayout : public BaseReflectionObjectImpl<slang::EntryPointLayout> {
 public:
     static ref<const EntryPointLayout>
     from_slang(ref<const Object> owner, slang::EntryPointLayout* entry_point_reflection)
@@ -880,8 +873,7 @@ public:
     }
 
     EntryPointLayout(ref<const Object> owner, slang::EntryPointLayout* target)
-        : BaseReflectionObject(std::move(owner))
-        , m_target(target)
+        : BaseReflectionObjectImpl(std::move(owner), target)
     {
     }
 
@@ -911,9 +903,6 @@ public:
     bool uses_any_sample_rate_input() const { return m_target->usesAnySampleRateInput(); }
 
     std::string to_string() const;
-
-private:
-    slang::EntryPointLayout* m_target;
 };
 
 
@@ -938,7 +927,7 @@ protected:
 };
 
 
-class SGL_API ProgramLayout : public BaseReflectionObject {
+class SGL_API ProgramLayout : public BaseReflectionObjectImpl<slang::ProgramLayout> {
 public:
     static ref<const ProgramLayout> from_slang(ref<const Object> owner, slang::ProgramLayout* program_layout)
     {
@@ -946,8 +935,7 @@ public:
     }
 
     ProgramLayout(ref<const Object> owner, slang::ProgramLayout* target)
-        : BaseReflectionObject(std::move(owner))
-        , m_target(target)
+        : BaseReflectionObjectImpl(std::move(owner), target)
     {
     }
 
@@ -1047,9 +1035,6 @@ public:
     }
 
     std::string to_string() const;
-
-private:
-    slang::ProgramLayout* m_target;
 };
 
 /// ProgramLayout lazy parameter list evaluation.

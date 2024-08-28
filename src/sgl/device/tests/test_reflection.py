@@ -395,6 +395,26 @@ def test_parameter_modifier(test_id: str, device_type: sgl.DeviceType):
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_return_value_modifier(test_id: str, device_type: sgl.DeviceType):
+    device = helpers.get_device(type=device_type)
+
+    # Create a session, and within it a module.
+    session = helpers.create_session(device, {})
+    module = session.load_module_from_source(
+        module_name=f"module_from_source_{test_id}",
+        source="""
+        no_diff int test(int a) {
+        }
+    """,
+    )
+
+    # Get and read on 1 line.
+    func = module.module_decl.children[0].as_function()
+    assert func.name == "test"
+    assert func.has_modifier(sgl.ModifierID.nodiff)
+
+
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_full_type_name(test_id: str, device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
 
@@ -514,6 +534,40 @@ def test_null_type(test_id: str, device_type: sgl.DeviceType):
     globals_type_layout = globals_layout.element_type_layout
     invalid_element_type_layout = globals_type_layout.element_type_layout
     assert invalid_element_type_layout is None
+
+
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_deduplication(test_id: str, device_type: sgl.DeviceType):
+    device = helpers.get_device(type=device_type)
+
+    # Create a session, and within it a module.
+    session = helpers.create_session(device, {})
+    module = session.load_module_from_source(
+        module_name=f"module_from_source_{test_id}",
+        source="""
+        void funca(int p0, int p1) {}
+        void funcb() {}
+    """,
+    )
+
+    # Load the 2 functions, loading (a) twice.
+    funca = module.module_decl.children[0].as_function()
+    funcb = module.module_decl.children[1].as_function()
+    funca_again = module.module_decl.children[0].as_function()
+
+    # Check that the same function is returned.
+    assert funca is funca_again
+    assert funca is not funcb
+
+    # Double check using explicit python object ids.
+    assert id(funca) == id(funca_again)
+    assert id(funca) != id(funcb)
+
+    # Check that the parameters are the same.
+    params_a = funca.parameters
+    params_a_again = funca_again.parameters
+    for p, p_again in zip([x for x in params_a], [y for y in params_a_again]):
+        assert p is p_again
 
 
 if __name__ == "__main__":
