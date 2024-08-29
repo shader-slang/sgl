@@ -4,6 +4,7 @@
 
 #include "sgl/math/matrix.h"
 #include "sgl/core/traits.h"
+#include "sgl/math/python/primitivetype.h"
 
 #include <array>
 #include <type_traits>
@@ -100,6 +101,28 @@ void bind_matrix_type(nb::module_& m, const char* name)
     mat.def("set_row", &T::set_row, "row"_a, "value"_a);
     mat.def("get_col", &T::get_col, "col"_a);
     mat.def("set_col", &T::set_col, "col"_a, "value"_a);
+
+    mat.def_prop_ro(
+        "shape",
+        (
+            [](const T& self)
+            {
+                SGL_UNUSED(self);
+                return nb::make_tuple(rows, cols);
+            }
+        )
+    );
+
+    mat.def_prop_ro(
+        "element_type",
+        (
+            [](const T& self)
+            {
+                SGL_UNUSED(self);
+                return PrimitiveType<value_type>::python_type();
+            }
+        )
+    );
 
     // Conversion
 

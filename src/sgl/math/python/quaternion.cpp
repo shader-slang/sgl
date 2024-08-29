@@ -4,6 +4,7 @@
 
 #include "sgl/math/quaternion.h"
 #include "sgl/core/traits.h"
+#include "sgl/math/python/primitivetype.h"
 
 #include <array>
 #include <type_traits>
@@ -35,6 +36,28 @@ void bind_quaternion_type(nb::module_& m, const char* name)
 
     quat.def("__getitem__", [](const T& self, int i) { return self[i]; });
     quat.def("__setitem__", [](T& self, int i, value_type v) { self[i] = v; });
+
+    quat.def_prop_ro(
+        "shape",
+        (
+            [](const T& self)
+            {
+                SGL_UNUSED(self);
+                return nb::make_tuple(4);
+            }
+        )
+    );
+
+    quat.def_prop_ro(
+        "element_type",
+        (
+            [](const T& self)
+            {
+                SGL_UNUSED(self);
+                return PrimitiveType<value_type>::python_type();
+            }
+        )
+    );
 
     // Conversion
 

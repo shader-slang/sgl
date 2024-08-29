@@ -4,6 +4,7 @@
 
 #include "sgl/math/vector.h"
 #include "sgl/core/traits.h"
+#include "sgl/math/python/primitivetype.h"
 
 #include <array>
 #include <type_traits>
@@ -70,6 +71,28 @@ void bind_vector_type(nb::module_& m, const char* name)
                 throw nb::index_error();
             self[i] = v;
         }
+    );
+
+    vec.def_prop_ro(
+        "shape",
+        (
+            [](const T& self)
+            {
+                SGL_UNUSED(self);
+                return nb::make_tuple(dimension);
+            }
+        )
+    );
+
+    vec.def_prop_ro(
+        "element_type",
+        (
+            [](const T& self)
+            {
+                SGL_UNUSED(self);
+                return nb::handle(PrimitiveType<value_type>::python_type());
+            }
+        )
     );
 
     // Conversion
