@@ -22,6 +22,10 @@ struct PrimitiveType<int> {
     static PyObject* python_type() { return (PyObject*)&PyLong_Type; }
 };
 template<>
+struct PrimitiveType<uint32_t> {
+    static PyObject* python_type() { return (PyObject*)&PyLong_Type; }
+};
+template<>
 struct PrimitiveType<bool> {
     static PyObject* python_type() { return (PyObject*)&PyBool_Type; }
 };

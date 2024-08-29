@@ -54,7 +54,7 @@ void bind_quaternion_type(nb::module_& m, const char* name)
             [](const T& self)
             {
                 SGL_UNUSED(self);
-                return PrimitiveType<value_type>::python_type();
+                return nb::handle(PrimitiveType<value_type>::python_type());
             }
         )
     );
