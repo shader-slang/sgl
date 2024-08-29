@@ -39,24 +39,20 @@ void bind_quaternion_type(nb::module_& m, const char* name)
 
     quat.def_prop_ro(
         "shape",
-        (
-            [](const T& self)
-            {
-                SGL_UNUSED(self);
-                return nb::make_tuple(4);
-            }
-        )
+        [](const T& self)
+        {
+            SGL_UNUSED(self);
+            return nb::make_tuple(4);
+        }
     );
 
     quat.def_prop_ro(
         "element_type",
-        (
-            [](const T& self)
-            {
-                SGL_UNUSED(self);
-                return nb::handle(PrimitiveType<value_type>::python_type());
-            }
-        )
+        [](const T& self)
+        {
+            SGL_UNUSED(self);
+            return nb::handle(PrimitiveType<value_type>::python_type());
+        }
     );
 
     // Conversion

@@ -104,24 +104,20 @@ void bind_matrix_type(nb::module_& m, const char* name)
 
     mat.def_prop_ro(
         "shape",
-        (
-            [](const T& self)
-            {
-                SGL_UNUSED(self);
-                return nb::make_tuple(rows, cols);
-            }
-        )
+        [rows, cols](const T& self)
+        {
+            SGL_UNUSED(self);
+            return nb::make_tuple(rows, cols);
+        }
     );
 
     mat.def_prop_ro(
         "element_type",
-        (
-            [](const T& self)
-            {
-                SGL_UNUSED(self);
-                return nb::handle(PrimitiveType<value_type>::python_type());
-            }
-        )
+        [](const T& self)
+        {
+            SGL_UNUSED(self);
+            return nb::handle(PrimitiveType<value_type>::python_type());
+        }
     );
 
     // Conversion
