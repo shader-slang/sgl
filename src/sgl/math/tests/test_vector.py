@@ -2,7 +2,28 @@
 
 from __future__ import annotations
 import pytest
-from sgl import float4, uint4, bool4
+from sgl import (
+    bool1,
+    bool2,
+    bool3,
+    float1,
+    float16_t1,
+    float16_t2,
+    float16_t3,
+    float16_t4,
+    float2,
+    float3,
+    float4,
+    int1,
+    int2,
+    int3,
+    int4,
+    uint1,
+    uint2,
+    uint3,
+    uint4,
+    bool4,
+)
 
 
 def eq(a: float4 | uint4 | bool4, b: float4 | uint4 | bool4):
@@ -122,6 +143,52 @@ def test_uint4_logical_ops():
     # assert eq(uint4(1, 2, 3, 4) > uint4(2, 3, 4, 5), bool4(False, False, False, False))
     # assert eq(uint4(1, 2, 3, 4) > uint4(3, 4, 5, 6), bool4(False, False, False, False))
     # assert eq(uint4(1, 2, 3, 4) > uint4(4, 5, 6, 7), bool4(False, False, False, False))
+
+
+def test_element_types():
+    assert float1(1).element_type == float
+    assert float2(1, 2).element_type == float
+    assert float3(1, 2, 3).element_type == float
+    assert float4(1, 2, 3, 4).element_type == float
+    assert float16_t1().element_type == float
+    assert float16_t2().element_type == float
+    assert float16_t3().element_type == float
+    assert float16_t4().element_type == float
+    assert int1(1).element_type == int
+    assert int2(1, 2).element_type == int
+    assert int3(1, 2, 3).element_type == int
+    assert int4(1, 2, 3, 4).element_type == int
+    assert uint1(1).element_type == int
+    assert uint2(1, 2).element_type == int
+    assert uint3(1, 2, 3).element_type == int
+    assert uint4(1, 2, 3, 4).element_type == int
+    assert bool1(True).element_type == bool
+    assert bool2(True, False).element_type == bool
+    assert bool3(True, False, True).element_type == bool
+    assert bool4(True, False, True, False).element_type == bool
+
+
+def test_shapes():
+    assert float1(1).shape == (1,)
+    assert float2(1, 2).shape == (2,)
+    assert float3(1, 2, 3).shape == (3,)
+    assert float4(1, 2, 3, 4).shape == (4,)
+    assert float16_t1().shape == (1,)
+    assert float16_t2().shape == (2,)
+    assert float16_t3().shape == (3,)
+    assert float16_t4().shape == (4,)
+    assert int1(1).shape == (1,)
+    assert int2(1, 2).shape == (2,)
+    assert int3(1, 2, 3).shape == (3,)
+    assert int4(1, 2, 3, 4).shape == (4,)
+    assert uint1(1).shape == (1,)
+    assert uint2(1, 2).shape == (2,)
+    assert uint3(1, 2, 3).shape == (3,)
+    assert uint4(1, 2, 3, 4).shape == (4,)
+    assert bool1(True).shape == (1,)
+    assert bool2(True, False).shape == (2,)
+    assert bool3(True, False, True).shape == (3,)
+    assert bool4(True, False, True, False).shape == (4,)
 
 
 if __name__ == "__main__":
