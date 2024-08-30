@@ -715,7 +715,13 @@ void SlangModule::load(SlangSessionBuild& build_data) const
     // Load module either from resolved name or source depending on whether source specified
     if (!desc.source.has_value()) {
         std::string resolved_name = session_data->resolve_module_name(desc.module_name);
-        slang_module = session_data->slang_session->loadModule(resolved_name.c_str(), diagnostics.writeRef());
+        try {
+            slang_module = session_data->slang_session->loadModule(resolved_name.c_str(), diagnostics.writeRef());
+        } catch (...) {
+            throw SlangCompileError(
+                fmt::format("Failed to load slang module \"{}\" due to internal slang error", desc.module_name)
+            );
+        }
         if (!slang_module) {
             std::string msg
                 = append_diagnostics(fmt::format("Failed to load slang module \"{}\"", desc.module_name), diagnostics);
@@ -726,12 +732,19 @@ void SlangModule::load(SlangSessionBuild& build_data) const
         static uint32_t id = 0;
         std::string source_str = fmt::format("// {}\n{}", id++, desc.source);
 
-        slang_module = session_data->slang_session->loadModuleFromSourceString(
-            std::string{desc.module_name}.c_str(),
-            desc.path ? desc.path->string().c_str() : nullptr,
-            source_str.c_str(),
-            diagnostics.writeRef()
-        );
+        try {
+            slang_module = session_data->slang_session->loadModuleFromSourceString(
+                std::string{desc.module_name}.c_str(),
+                desc.path ? desc.path->string().c_str() : nullptr,
+                source_str.c_str(),
+                diagnostics.writeRef()
+            );
+        } catch (...) {
+            throw SlangCompileError(fmt::format(
+                "Failed to load slang module \"{}\" from source due to internal slang error",
+                desc.module_name
+            ));
+        }
         if (!slang_module) {
             std::string msg = append_diagnostics(
                 fmt::format("Failed to load slang module \"{}\" from source", desc.module_name),
