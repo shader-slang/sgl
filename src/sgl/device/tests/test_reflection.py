@@ -570,5 +570,76 @@ def test_deduplication(test_id: str, device_type: sgl.DeviceType):
         assert p is p_again
 
 
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_find_type_by_name(test_id: str, device_type: sgl.DeviceType):
+    device = helpers.get_device(type=device_type)
+
+    # Create a session, and within it a module.
+    session = helpers.create_session(device, {})
+    module = session.load_module_from_source(
+        module_name=f"module_from_source_{test_id}",
+        source="""
+        struct Hello {
+            int a;
+            void func2() {}
+        }
+    """,
+    )
+
+    # Get and read on 1 line.
+    t = module.layout.find_type_by_name("Hello")
+    assert t is not None
+    assert t.name == "Hello"
+    f2 = module.layout.find_function_by_name_in_type(t, "func2")
+    assert f2 is not None
+    assert f2.name == "func2"
+
+
+@pytest.mark.skip("Pending slang fix.")
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_find_func_by_name(test_id: str, device_type: sgl.DeviceType):
+    device = helpers.get_device(type=device_type)
+
+    # Create a session, and within it a module.
+    session = helpers.create_session(device, {})
+    module = session.load_module_from_source(
+        module_name=f"module_from_source_{test_id}",
+        source="""
+        void func() {}
+    """,
+    )
+
+    # Get and read on 1 line.
+    f1 = module.layout.find_function_by_name("func")
+    assert f1 is not None
+    assert f1.name == "func"
+
+
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_get_type_layout(test_id: str, device_type: sgl.DeviceType):
+    device = helpers.get_device(type=device_type)
+
+    # Create a session, and within it a module.
+    session = helpers.create_session(device, {})
+    module = session.load_module_from_source(
+        module_name=f"module_from_source_{test_id}",
+        source="""
+        struct Hello {
+            int a;
+            void func2() {}
+        }
+        void func() {}
+    """,
+    )
+
+    # Get and read on 1 line.
+    t = module.layout.find_type_by_name("Hello")
+    assert t is not None
+    assert t.name == "Hello"
+    tl = module.layout.get_type_layout(t)
+    assert tl is not None
+    assert tl.name == "Hello"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
