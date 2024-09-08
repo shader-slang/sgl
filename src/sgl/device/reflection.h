@@ -937,8 +937,8 @@ public:
     }
 
     enum class LayoutRules {
-        default_ = slang::LayoutRules::Default,
-        metal_argument_buffer_tier2 = slang::LayoutRules::MetalArgumentBufferTier2
+        default_ = SLANG_LAYOUT_RULES_DEFAULT,
+        metal_argument_buffer_tier2 = SLANG_LAYOUT_RULES_METAL_ARGUMENT_BUFFER_TIER_2
     };
     SGL_ENUM_INFO(
         LayoutRules,
