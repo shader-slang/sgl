@@ -1034,7 +1034,10 @@ public:
     /// Get corresponding type layout from a given type.
     ref<const TypeLayoutReflection> get_type_layout(TypeReflection* type, LayoutRules rules = LayoutRules::default_)
     {
-        return detail::from_slang(m_owner, m_target->getTypeLayout(type->slang_target(), (slang::LayoutRules)rules));
+        return detail::from_slang(
+            m_owner,
+            m_target->getTypeLayout(type->slang_target(), static_cast<slang::LayoutRules>(rules))
+        );
     }
 
     uint32_t hashed_string_count() const { return narrow_cast<uint32_t>(m_target->getHashedStringCount()); }
