@@ -620,7 +620,6 @@ def test_find_generic_type_by_name(test_id: str, device_type: sgl.DeviceType):
     assert a.type.name == "int"
 
 
-@pytest.mark.skip("Pending bug fix for slang find function by name")
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_find_func_by_name(test_id: str, device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
@@ -630,7 +629,7 @@ def test_find_func_by_name(test_id: str, device_type: sgl.DeviceType):
     module = session.load_module_from_source(
         module_name=f"module_from_source_{test_id}",
         source=r"""
-        int func()
+        int test()
         {
             return 0;
         }
@@ -638,9 +637,9 @@ def test_find_func_by_name(test_id: str, device_type: sgl.DeviceType):
     )
 
     # Find and verify the function.
-    f1 = module.layout.find_function_by_name("func")
+    f1 = module.layout.find_function_by_name("test")
     assert f1 is not None
-    assert f1.name == "func"
+    assert f1.name == "test"
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
@@ -656,7 +655,7 @@ def test_get_type_layout(test_id: str, device_type: sgl.DeviceType):
             int a;
             void func2() {}
         }
-        void func() {}
+        void test() {}
     """,
     )
 
