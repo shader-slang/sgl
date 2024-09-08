@@ -578,7 +578,7 @@ def test_find_type_by_name(test_id: str, device_type: sgl.DeviceType):
     session = helpers.create_session(device, {})
     module = session.load_module_from_source(
         module_name=f"module_from_source_{test_id}",
-        source="""
+        source=r"""
         struct Hello {
             int a;
             void func2() {}
@@ -586,7 +586,7 @@ def test_find_type_by_name(test_id: str, device_type: sgl.DeviceType):
     """,
     )
 
-    # Get and read on 1 line.
+    # Find and verify the type and its internal function.
     t = module.layout.find_type_by_name("Hello")
     assert t is not None
     assert t.name == "Hello"
@@ -595,7 +595,31 @@ def test_find_type_by_name(test_id: str, device_type: sgl.DeviceType):
     assert f2.name == "func2"
 
 
-@pytest.mark.skip("Pending slang fix.")
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_find_generic_type_by_name(test_id: str, device_type: sgl.DeviceType):
+    device = helpers.get_device(type=device_type)
+
+    # Create a session, and within it a module.
+    session = helpers.create_session(device, {})
+    module = session.load_module_from_source(
+        module_name=f"module_from_source_{test_id}",
+        source=r"""
+        struct Hello<T> {
+            T a;
+            void func2() {}
+        }
+    """,
+    )
+
+    # Find and verify the type specialized with int.
+    t = module.layout.find_type_by_name("Hello<int>")
+    assert t is not None
+    assert t.name == "Hello"
+    a = t.fields[0]
+    assert a.name == "a"
+    assert a.type.name == "int"
+
+
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_find_func_by_name(test_id: str, device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
@@ -604,12 +628,15 @@ def test_find_func_by_name(test_id: str, device_type: sgl.DeviceType):
     session = helpers.create_session(device, {})
     module = session.load_module_from_source(
         module_name=f"module_from_source_{test_id}",
-        source="""
-        void func() {}
+        source=r"""
+        int func()
+        {
+            return 0;
+        }
     """,
     )
 
-    # Get and read on 1 line.
+    # Find and verify the function.
     f1 = module.layout.find_function_by_name("func")
     assert f1 is not None
     assert f1.name == "func"

@@ -1031,6 +1031,7 @@ public:
         return detail::from_slang(m_owner, m_target->findFunctionByNameInType(type->slang_target(), name));
     }
 
+    /// Get corresponding type layout from a given type.
     ref<const TypeLayoutReflection> get_type_layout(TypeReflection* type, LayoutRules rules = LayoutRules::default_)
     {
         return detail::from_slang(m_owner, m_target->getTypeLayout(type->slang_target(), (slang::LayoutRules)rules));
