@@ -620,6 +620,7 @@ def test_find_generic_type_by_name(test_id: str, device_type: sgl.DeviceType):
     assert a.type.name == "int"
 
 
+@pytest.mark.skip("Pending bug fix for slang find function by name")
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_find_func_by_name(test_id: str, device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
@@ -659,13 +660,14 @@ def test_get_type_layout(test_id: str, device_type: sgl.DeviceType):
     """,
     )
 
-    # Get and read on 1 line.
+    # Get type and convert to type layout.
     t = module.layout.find_type_by_name("Hello")
     assert t is not None
     assert t.name == "Hello"
     tl = module.layout.get_type_layout(t)
     assert tl is not None
     assert tl.name == "Hello"
+    assert tl.size == 4
 
 
 if __name__ == "__main__":
