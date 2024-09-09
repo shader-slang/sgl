@@ -8,7 +8,6 @@ from pathlib import Path
 try:
     from setuptools import Extension, setup
     from setuptools.command.build_ext import build_ext
-    from setuptools.msvc import EnvironmentInfo
 except ImportError:
     print(
         "The preferred way to invoke 'setup.py' is via pip, as in 'pip "
@@ -66,10 +65,9 @@ class CMakeBuild(build_ext):
         # Setup environment variables
         env = os.environ.copy()
         if os.name == "nt":
-            import setuptools.msvc
+            import msvc
 
-            msvcenv = setuptools.msvc.EnvironmentInfo("x64")
-            env.update(msvcenv.return_env())
+            env = msvc.msvc14_get_vc_env("x64")
 
         build_dir = str(SOURCE_DIR / "build/pip")
 
