@@ -124,5 +124,34 @@ def test_load_program(device_type: sgl.DeviceType):
     )
 
 
+ERROR_PROGRAM = r"""
+struct TestBuffer {
+    RWStructuredBuffer<int> val;
+    __subscript(int x, int y)->int
+    {
+        get { return val[x * 3 + y]; }
+        set { val[x * 3 + y] = newValue; }
+    }
+}
+TestBuffer test;
+
+[shader("compute")]
+[numthreads(32, 1, 1)]
+void main(uint3 dispatchThreadID: SV_DispatchThreadID) {
+    test[1,1] = 1;
+}
+"""
+
+
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_subscript_error(test_id: str, device_type: sgl.DeviceType):
+    device = helpers.get_device(type=device_type)
+    # Loading a valid module must succeed
+    module = device.load_module_from_source(
+        module_name=f"subscript_error_{test_id}",
+        source=ERROR_PROGRAM,
+    )
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
