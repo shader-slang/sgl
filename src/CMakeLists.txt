@@ -68,9 +68,13 @@ target_sources(sgl PRIVATE
     sgl/core/window.h
 
     sgl/device/agility_sdk.h
+    sgl/device/base_cursor.cpp
+    sgl/device/base_cursor.h
     sgl/device/blit.cpp
     sgl/device/blit.h
     sgl/device/blit.slang
+    sgl/device/buffer_cursor.cpp
+    sgl/device/buffer_cursor.h
     sgl/device/command.cpp
     sgl/device/command.h
     sgl/device/cuda_api.cpp
@@ -79,6 +83,8 @@ target_sources(sgl PRIVATE
     sgl/device/cuda_interop.h
     sgl/device/cuda_utils.cpp
     sgl/device/cuda_utils.h
+    sgl/device/cursor_utils.cpp
+    sgl/device/cursor_utils.h
     sgl/device/device_resource.cpp
     sgl/device/device_resource.h
     sgl/device/device.cpp

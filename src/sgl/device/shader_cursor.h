@@ -5,6 +5,7 @@
 #include "sgl/device/fwd.h"
 #include "sgl/device/shader_offset.h"
 #include "sgl/device/reflection.h"
+#include "sgl/device/base_cursor.h"
 
 #include "sgl/core/config.h"
 #include "sgl/core/macros.h"
@@ -13,14 +14,11 @@
 
 namespace sgl {
 
-class SGL_API ShaderCursor {
+class SGL_API ShaderCursor : public BaseCursor {
 public:
     ShaderCursor() = default;
 
     ShaderCursor(ShaderObject* shader_object);
-
-    ref<const TypeLayoutReflection> type_layout() const { return m_type_layout; }
-    ref<const TypeReflection> type() const { return m_type_layout->type(); }
 
     ShaderOffset offset() const { return m_offset; }
 

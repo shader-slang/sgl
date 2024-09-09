@@ -5,6 +5,7 @@
 #include "sgl/device/shader_object.h"
 #include "sgl/device/resource.h"
 #include "sgl/device/cuda_interop.h"
+#include "sgl/device/cursor_utils.h"
 
 #include "sgl/core/error.h"
 
@@ -13,78 +14,12 @@
 
 namespace sgl {
 
-// Helper class for checking if implicit conversion between scalar types is allowed.
-// Note that only conversion between types of the same size is allowed.
-struct ScalarConversionTable {
-    static_assert(size_t(TypeReflection::ScalarType::COUNT) < 32, "Not enough bits to represent all scalar types");
-    constexpr ScalarConversionTable()
-    {
-        for (uint32_t i = 0; i < uint32_t(TypeReflection::ScalarType::COUNT); ++i)
-            table[i] = 1 << i;
-
-        auto add_conversion = [&](TypeReflection::ScalarType from, auto... to)
-        {
-            uint32_t flags{0};
-            ((flags |= 1 << uint32_t(to)), ...);
-            table[uint32_t(from)] |= flags;
-        };
-
-        using ST = TypeReflection::ScalarType;
-        add_conversion(ST::int32, ST::uint32, ST::bool_);
-        add_conversion(ST::uint32, ST::int32, ST::bool_);
-        add_conversion(ST::int64, ST::uint64);
-        add_conversion(ST::uint64, ST::int64);
-        add_conversion(ST::int8, ST::uint8);
-        add_conversion(ST::uint8, ST::int8);
-        add_conversion(ST::int16, ST::uint16);
-        add_conversion(ST::uint16, ST::int16);
-    }
-
-    constexpr bool allow_conversion(TypeReflection::ScalarType from, TypeReflection::ScalarType to) const
-    {
-        return (table[uint32_t(from)] & (1 << uint32_t(to))) != 0;
-    }
-
-    uint32_t table[size_t(TypeReflection::ScalarType::COUNT)]{};
-};
-
-inline bool allow_scalar_conversion(TypeReflection::ScalarType from, TypeReflection::ScalarType to)
-{
-    static constexpr ScalarConversionTable table;
-    return table.allow_conversion(from, to);
-}
-
-inline size_t get_scalar_type_size(TypeReflection::ScalarType type)
-{
-    switch (type) {
-    case TypeReflection::ScalarType::int8:
-    case TypeReflection::ScalarType::uint8:
-        return 1;
-    case TypeReflection::ScalarType::int16:
-    case TypeReflection::ScalarType::uint16:
-    case TypeReflection::ScalarType::float16:
-        return 2;
-    case TypeReflection::ScalarType::bool_:
-    case TypeReflection::ScalarType::int32:
-    case TypeReflection::ScalarType::uint32:
-    case TypeReflection::ScalarType::float32:
-        return 4;
-    case TypeReflection::ScalarType::int64:
-    case TypeReflection::ScalarType::uint64:
-    case TypeReflection::ScalarType::float64:
-        return 8;
-    default:
-        return 0;
-    }
-}
-
 ShaderCursor::ShaderCursor(ShaderObject* shader_object)
-    : m_shader_object(shader_object)
-    , m_type_layout(shader_object->element_type_layout())
+    : BaseCursor(shader_object->element_type_layout())
+    , m_shader_object(shader_object)
     , m_offset(ShaderOffset::zero())
 {
     SGL_ASSERT(m_shader_object);
-    SGL_ASSERT(m_type_layout);
     SGL_ASSERT(m_offset.is_valid());
 }
 
@@ -513,26 +448,10 @@ void ShaderCursor::_set_array(
     size_t element_count
 ) const
 {
-    ref<const TypeReflection> type = m_type_layout->type();
     ref<const TypeReflection> element_type = m_type_layout->unwrap_array()->type();
     size_t element_size = get_scalar_type_size(element_type->scalar_type());
 
-    SGL_CHECK(type->is_array(), "\"{}\" cannot bind an array", m_type_layout->name());
-    SGL_CHECK(
-        allow_scalar_conversion(scalar_type, element_type->scalar_type()),
-        "\"{}\" expects scalar type {} (no implicit conversion from type {})",
-        m_type_layout->name(),
-        element_type->scalar_type(),
-        scalar_type
-    );
-    SGL_CHECK(
-        element_count <= type->element_count(),
-        "\"{}\" expects an array with at most {} elements (got {})",
-        m_type_layout->name(),
-        type->element_count(),
-        element_count
-    );
-    SGL_ASSERT(element_count * element_size == size);
+    check_array(size, scalar_type, element_count);
 
     size_t stride = m_type_layout->element_stride();
     if (element_size == stride) {
@@ -548,41 +467,14 @@ void ShaderCursor::_set_array(
 
 void ShaderCursor::_set_scalar(const void* data, size_t size, TypeReflection::ScalarType scalar_type) const
 {
-    ref<const TypeReflection> type = m_type_layout->unwrap_array()->type();
-
-    SGL_CHECK(type->kind() == TypeReflection::Kind::scalar, "\"{}\" cannot bind a scalar value", m_type_layout->name());
-    SGL_CHECK(
-        allow_scalar_conversion(scalar_type, type->scalar_type()),
-        "\"{}\" expects scalar type {} (no implicit conversion from type {})",
-        m_type_layout->name(),
-        type->scalar_type(),
-        scalar_type
-    );
-
+    check_scalar(size, scalar_type);
     m_shader_object->set_data(m_offset, data, size);
 }
 
 void ShaderCursor::_set_vector(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int dimension)
     const
 {
-    ref<const TypeReflection> type = m_type_layout->unwrap_array()->type();
-
-    SGL_CHECK(type->kind() == TypeReflection::Kind::vector, "\"{}\" cannot bind a vector value", m_type_layout->name());
-    SGL_CHECK(
-        type->col_count() == uint32_t(dimension),
-        "\"{}\" expects a vector with dimension {} (got dimension {})",
-        m_type_layout->name(),
-        type->col_count(),
-        dimension
-    );
-    SGL_CHECK(
-        allow_scalar_conversion(scalar_type, type->scalar_type()),
-        "\"{}\" expects a vector with scalar type {} (no implicit conversion from type {})",
-        m_type_layout->name(),
-        type->scalar_type(),
-        scalar_type
-    );
-
+    check_vector(size, scalar_type, dimension);
     m_shader_object->set_data(m_offset, data, size);
 }
 
@@ -594,26 +486,7 @@ void ShaderCursor::_set_matrix(
     int cols
 ) const
 {
-    ref<const TypeReflection> type = m_type_layout->unwrap_array()->type();
-
-    SGL_CHECK(type->kind() == TypeReflection::Kind::matrix, "\"{}\" cannot bind a matrix value", m_type_layout->name());
-    SGL_CHECK(
-        type->row_count() == uint32_t(rows) && type->col_count() == uint32_t(cols),
-        "\"{}\" expects a matrix with dimension {}x{} (got dimension {}x{})",
-        m_type_layout->name(),
-        type->row_count(),
-        type->col_count(),
-        rows,
-        cols
-    );
-    SGL_CHECK(
-        allow_scalar_conversion(scalar_type, type->scalar_type()),
-        "\"{}\" expects a matrix with scalar type {} (no implicit conversion from type {})",
-        m_type_layout->name(),
-        type->scalar_type(),
-        scalar_type
-    );
-
+    check_matrix(size, scalar_type, rows, cols);
     if (rows > 1) {
         // each row is aligned to 16 bytes
         size_t row_size = size / rows;
