@@ -66,7 +66,7 @@ class CMakeBuild(build_ext):
         env = os.environ.copy()
         if os.name == "nt":
             sys.path.append(str(Path(__file__).parent / "tools"))
-            import msvc
+            import msvc  # type: ignore
 
             env = msvc.msvc14_get_vc_env("x64")
 
