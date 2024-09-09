@@ -205,6 +205,8 @@ public:
     }
     ~BaseReflectionObjectImpl() { detail::on_slang_wrapper_destroyed(m_target); }
 
+    SlangType* slang_target() const { return m_target; }
+
 protected:
     SlangType* m_target;
 };
@@ -995,6 +997,34 @@ public:
     }
 
     ProgramLayoutEntryPointList entry_points() const;
+
+    /// Find a given type by name. Handles generic specilization if generic
+    /// variable values are provided.
+    ref<const TypeReflection> find_type_by_name(const char* name) const
+    {
+        return detail::from_slang(m_owner, m_target->findTypeByName(name));
+    }
+
+    /// Find a given function by name. Handles generic specilization if generic
+    /// variable values are provided.
+    ref<const FunctionReflection> find_function_by_name(const char* name)
+    {
+        return detail::from_slang(m_owner, m_target->findFunctionByName(name));
+    }
+
+    /// Find a given function in a type by name. Handles generic specilization if generic
+    /// variable values are provided.
+    ref<const FunctionReflection> find_function_by_name_in_type(TypeReflection* type, const char* name)
+    {
+        return detail::from_slang(m_owner, m_target->findFunctionByNameInType(type->slang_target(), name));
+    }
+
+    /// Get corresponding type layout from a given type.
+    ref<const TypeLayoutReflection> get_type_layout(TypeReflection* type)
+    {
+        // TODO: Once device is available via session reference, pass metal layout rules for metal target
+        return detail::from_slang(m_owner, m_target->getTypeLayout(type->slang_target(), slang::LayoutRules::Default));
+    }
 
     uint32_t hashed_string_count() const { return narrow_cast<uint32_t>(m_target->getHashedStringCount()); }
 

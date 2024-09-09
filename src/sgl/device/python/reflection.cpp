@@ -192,6 +192,21 @@ SGL_PY_EXPORT(device_reflection)
         )
         .def_prop_ro("parameters", &ProgramLayout::parameters, D(ProgramLayout, parameters))
         .def_prop_ro("entry_points", &ProgramLayout::entry_points, D(ProgramLayout, entry_points))
+        .def("find_type_by_name", &ProgramLayout::find_type_by_name, "name"_a, D_NA(ProgramLayout, find_type_by_name))
+        .def(
+            "find_function_by_name",
+            &ProgramLayout::find_function_by_name,
+            "name"_a,
+            D_NA(ProgramLayout, find_function_by_name)
+        )
+        .def(
+            "find_function_by_name_in_type",
+            &ProgramLayout::find_function_by_name_in_type,
+            "type"_a,
+            "name"_a,
+            D_NA(ProgramLayout, find_function_by_name_in_type)
+        )
+        .def("get_type_layout", &ProgramLayout::get_type_layout, "type"_a, D_NA(ProgramLayout, get_type_layout))
         .def_prop_ro("hashed_strings", &ProgramLayout::hashed_strings, D(ProgramLayout, hashed_strings))
         .def("__repr__", &ProgramLayout::to_string);
 
