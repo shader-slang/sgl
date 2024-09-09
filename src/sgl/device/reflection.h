@@ -936,18 +936,6 @@ public:
         return detail::from_slang(owner, program_layout);
     }
 
-    enum class LayoutRules {
-        default_ = SLANG_LAYOUT_RULES_DEFAULT,
-        metal_argument_buffer_tier2 = SLANG_LAYOUT_RULES_METAL_ARGUMENT_BUFFER_TIER_2
-    };
-    SGL_ENUM_INFO(
-        LayoutRules,
-        {
-            {LayoutRules::default_, "default"},
-            {LayoutRules::metal_argument_buffer_tier2, "metal_argument_buffer_tier2"},
-        }
-    );
-
     ProgramLayout(ref<const Object> owner, slang::ProgramLayout* target)
         : BaseReflectionObjectImpl(std::move(owner), target)
     {
@@ -1032,12 +1020,10 @@ public:
     }
 
     /// Get corresponding type layout from a given type.
-    ref<const TypeLayoutReflection> get_type_layout(TypeReflection* type, LayoutRules rules = LayoutRules::default_)
+    ref<const TypeLayoutReflection> get_type_layout(TypeReflection* type)
     {
-        return detail::from_slang(
-            m_owner,
-            m_target->getTypeLayout(type->slang_target(), static_cast<slang::LayoutRules>(rules))
-        );
+        // TODO: Once device is available via session reference, pass metal layout rules for metal target
+        return detail::from_slang(m_owner, m_target->getTypeLayout(type->slang_target(), slang::LayoutRules::Default));
     }
 
     uint32_t hashed_string_count() const { return narrow_cast<uint32_t>(m_target->getHashedStringCount()); }
@@ -1080,7 +1066,6 @@ public:
 
     std::string to_string() const;
 };
-SGL_ENUM_REGISTER(ProgramLayout::LayoutRules);
 
 /// ProgramLayout lazy parameter list evaluation.
 class SGL_API ProgramLayoutParameterList : public BaseReflectionList<ProgramLayout, VariableLayoutReflection> {
