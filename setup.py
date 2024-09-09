@@ -68,7 +68,8 @@ class CMakeBuild(build_ext):
         if os.name == "nt":
             import setuptools.msvc
 
-            env = setuptools.msvc.msvc14_get_vc_env("x64")
+            msvcenv = setuptools.msvc.EnvironmentInfo("x64")
+            env.update(msvcenv.return_env())
 
         build_dir = str(SOURCE_DIR / "build/pip")
 
