@@ -5,7 +5,7 @@
 #include "sgl/device/fwd.h"
 #include "sgl/device/shader_offset.h"
 #include "sgl/device/reflection.h"
-#include "sgl/device/base_cursor.h"
+#include "sgl/device/cursor_utils.h"
 
 #include "sgl/core/config.h"
 #include "sgl/core/macros.h"
@@ -16,7 +16,7 @@ namespace sgl {
 
 /// Represents a single element of a given type in a block of memory, and
 /// provides read/write tools to access its members via reflection.
-class SGL_API BufferElementCursor : public BaseCursor {
+class SGL_API BufferElementCursor : public Object {
 public:
     BufferElementCursor() = default;
 
@@ -80,6 +80,7 @@ private:
     void write_data(size_t offset, const void* data, size_t size) const;
     void read_data(size_t offset, void* data, size_t size) const;
 
+    ref<const TypeLayoutReflection> m_type_layout;
     uint8_t* m_buffer{nullptr};
     size_t m_size{0};
     size_t m_offset{0};
@@ -112,7 +113,7 @@ public:
     std::span<uint8_t> data() { return {m_buffer, m_size}; }
 
 private:
-    ref<const TypeLayoutReflection> m_type_layout{nullptr};
+    ref<const TypeLayoutReflection> m_type_layout;
     uint8_t* m_buffer{nullptr};
     size_t m_size{0};
     bool m_owner{false};

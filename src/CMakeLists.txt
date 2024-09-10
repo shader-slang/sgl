@@ -68,8 +68,6 @@ target_sources(sgl PRIVATE
     sgl/core/window.h
 
     sgl/device/agility_sdk.h
-    sgl/device/base_cursor.cpp
-    sgl/device/base_cursor.h
     sgl/device/blit.cpp
     sgl/device/blit.h
     sgl/device/blit.slang
@@ -400,8 +398,8 @@ if(SGL_BUILD_PYTHON)
         sgl/core/python/thread.cpp
         sgl/core/python/timer.cpp
         sgl/core/python/window.cpp
-        sgl/device/python/base_cursor.cpp
         sgl/device/python/command.cpp
+        sgl/device/python/cursor_shared.h
         sgl/device/python/device_resource.cpp
         sgl/device/python/device.cpp
         sgl/device/python/fence.cpp

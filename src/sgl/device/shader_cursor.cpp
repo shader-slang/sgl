@@ -15,7 +15,7 @@
 namespace sgl {
 
 ShaderCursor::ShaderCursor(ShaderObject* shader_object)
-    : BaseCursor(shader_object->element_type_layout())
+    : m_type_layout(shader_object->element_type_layout())
     , m_shader_object(shader_object)
     , m_offset(ShaderOffset::zero())
 {
@@ -95,6 +95,9 @@ ShaderCursor ShaderCursor::find_field(std::string_view name) const
         // The type being pointed to is the tyep of the field.
         //
         field_cursor.m_type_layout = field_layout->type_layout();
+        if (field_cursor.m_type_layout->kind() == TypeReflection::Kind::struct_) {
+            log_info("struct");
+        }
 
         // The byte offset is the current offset plus the relative offset of the field.
         // The offset in binding ranges is computed similarly.
@@ -449,9 +452,9 @@ void ShaderCursor::_set_array(
 ) const
 {
     ref<const TypeReflection> element_type = m_type_layout->unwrap_array()->type();
-    size_t element_size = get_scalar_type_size(element_type->scalar_type());
+    size_t element_size = detail::get_scalar_type_size(element_type->scalar_type());
 
-    check_array(size, scalar_type, element_count);
+    detail::check_array(m_type_layout, size, scalar_type, element_count);
 
     size_t stride = m_type_layout->element_stride();
     if (element_size == stride) {
@@ -467,14 +470,14 @@ void ShaderCursor::_set_array(
 
 void ShaderCursor::_set_scalar(const void* data, size_t size, TypeReflection::ScalarType scalar_type) const
 {
-    check_scalar(size, scalar_type);
+    detail::check_scalar(m_type_layout, size, scalar_type);
     m_shader_object->set_data(m_offset, data, size);
 }
 
 void ShaderCursor::_set_vector(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int dimension)
     const
 {
-    check_vector(size, scalar_type, dimension);
+    detail::check_vector(m_type_layout, size, scalar_type, dimension);
     m_shader_object->set_data(m_offset, data, size);
 }
 
@@ -486,7 +489,7 @@ void ShaderCursor::_set_matrix(
     int cols
 ) const
 {
-    check_matrix(size, scalar_type, rows, cols);
+    detail::check_matrix(m_type_layout, size, scalar_type, rows, cols);
     if (rows > 1) {
         // each row is aligned to 16 bytes
         size_t row_size = size / rows;

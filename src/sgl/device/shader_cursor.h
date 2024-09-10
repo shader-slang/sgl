@@ -5,7 +5,7 @@
 #include "sgl/device/fwd.h"
 #include "sgl/device/shader_offset.h"
 #include "sgl/device/reflection.h"
-#include "sgl/device/base_cursor.h"
+#include "sgl/device/cursor_utils.h"
 
 #include "sgl/core/config.h"
 #include "sgl/core/macros.h"
@@ -14,7 +14,7 @@
 
 namespace sgl {
 
-class SGL_API ShaderCursor : public BaseCursor {
+class SGL_API ShaderCursor : public Object {
 public:
     ShaderCursor() = default;
 
@@ -27,6 +27,9 @@ public:
     std::string to_string() const;
 
     ShaderCursor dereference() const;
+
+    ref<const TypeLayoutReflection> type_layout() const { return m_type_layout; }
+    ref<const TypeReflection> type() const { return m_type_layout->type(); }
 
     //
     // Navigation
@@ -74,8 +77,8 @@ public:
     void _set_matrix(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int rows, int cols) const;
 
 private:
+    ref<const TypeLayoutReflection> m_type_layout;
     ShaderObject* m_shader_object{nullptr};
-    ref<const TypeLayoutReflection> m_type_layout{nullptr};
     ShaderOffset m_offset;
 };
 
