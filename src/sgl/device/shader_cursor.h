@@ -5,6 +5,7 @@
 #include "sgl/device/fwd.h"
 #include "sgl/device/shader_offset.h"
 #include "sgl/device/reflection.h"
+#include "sgl/device/cursor_utils.h"
 
 #include "sgl/core/config.h"
 #include "sgl/core/macros.h"
@@ -19,9 +20,6 @@ public:
 
     ShaderCursor(ShaderObject* shader_object);
 
-    ref<const TypeLayoutReflection> type_layout() const { return m_type_layout; }
-    ref<const TypeReflection> type() const { return m_type_layout->type(); }
-
     ShaderOffset offset() const { return m_offset; }
 
     bool is_valid() const { return m_offset.is_valid(); }
@@ -29,6 +27,9 @@ public:
     std::string to_string() const;
 
     ShaderCursor dereference() const;
+
+    ref<const TypeLayoutReflection> type_layout() const { return m_type_layout; }
+    ref<const TypeReflection> type() const { return m_type_layout->type(); }
 
     //
     // Navigation
@@ -67,17 +68,17 @@ public:
         set(value);
     }
 
+    template<typename T>
+    void set(const T& value) const;
+
     void _set_array(const void* data, size_t size, TypeReflection::ScalarType scalar_type, size_t element_count) const;
     void _set_scalar(const void* data, size_t size, TypeReflection::ScalarType scalar_type) const;
     void _set_vector(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int dimension) const;
     void _set_matrix(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int rows, int cols) const;
 
 private:
-    template<typename T>
-    void set(const T& value) const;
-
+    ref<const TypeLayoutReflection> m_type_layout;
     ShaderObject* m_shader_object{nullptr};
-    ref<const TypeLayoutReflection> m_type_layout{nullptr};
     ShaderOffset m_offset;
 };
 
