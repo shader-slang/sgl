@@ -103,11 +103,18 @@ public:
 
     ~BufferCursor();
 
-    BufferElementCursor operator[](uint32_t index) const;
+    ref<const TypeLayoutReflection> type_layout() const { return m_type_layout; }
+    ref<const TypeReflection> type() const { return m_type_layout->type(); }
 
-    size_t element_count() const { return m_size / element_size(); }
+    BufferElementCursor find_element(uint32_t index) const;
+
+    BufferElementCursor operator[](uint32_t index) { return find_element(index); }
+
+    size_t element_count() const { return size() / element_size(); }
 
     size_t element_size() const { return m_type_layout->size(); }
+
+    size_t size() const { return m_size; }
 
     std::span<const uint8_t> data() const { return {m_buffer, m_size}; }
     std::span<uint8_t> data() { return {m_buffer, m_size}; }

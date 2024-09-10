@@ -399,7 +399,7 @@ BufferCursor::~BufferCursor()
     m_buffer = nullptr;
 }
 
-BufferElementCursor BufferCursor::operator[](uint32_t index) const
+BufferElementCursor BufferCursor::find_element(uint32_t index) const
 {
     SGL_CHECK(index < element_count(), "Index {} out of range in buffer with element count {}", index, element_count());
     BufferElementCursor element_cursor;

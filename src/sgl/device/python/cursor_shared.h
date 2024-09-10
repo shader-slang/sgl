@@ -59,16 +59,16 @@ template<typename CursorType>
 inline void bind_traversable_cursor(nanobind::class_<CursorType>& cursor)
 {
     cursor //
-        .def_prop_ro("type_layout", &ShaderCursor::type_layout, D(ShaderCursor, type_layout))
-        .def_prop_ro("type", &ShaderCursor::type, D(ShaderCursor, type))
-        .def("is_valid", &ShaderCursor::is_valid, D(ShaderCursor, is_valid))
-        .def("find_field", &CursorType::find_field, "name"_a, D(ShaderCursor, find_field))
-        .def("find_element", &CursorType::find_element, "index"_a, D(ShaderCursor, find_element))
-        .def("has_field", &ShaderCursor::has_field, "name"_a, D(ShaderCursor, has_field))
-        .def("has_element", &ShaderCursor::has_element, "index"_a, D(ShaderCursor, has_element))
-        .def("__getitem__", [](ShaderCursor& self, std::string_view name) { return self[name]; })
-        .def("__getitem__", [](ShaderCursor& self, int index) { return self[index]; })
-        .def("__getattr__", [](ShaderCursor& self, std::string_view name) { return self[name]; });
+        .def_prop_ro("type_layout", &CursorType::type_layout, D_NA(CursorType, type_layout))
+        .def_prop_ro("type", &CursorType::type, D_NA(CursorType, type))
+        .def("is_valid", &CursorType::is_valid, D_NA(CursorType, is_valid))
+        .def("find_field", &CursorType::find_field, "name"_a, D_NA(CursorType, find_field))
+        .def("find_element", &CursorType::find_element, "index"_a, D_NA(CursorType, find_element))
+        .def("has_field", &CursorType::has_field, "name"_a, D_NA(CursorType, has_field))
+        .def("has_element", &CursorType::has_element, "index"_a, D_NA(CursorType, has_element))
+        .def("__getitem__", [](CursorType& self, std::string_view name) { return self[name]; })
+        .def("__getitem__", [](CursorType& self, int index) { return self[index]; })
+        .def("__getattr__", [](CursorType& self, std::string_view name) { return self[name]; });
 }
 
 template<typename CursorType>

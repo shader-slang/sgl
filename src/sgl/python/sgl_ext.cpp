@@ -22,6 +22,7 @@ SGL_PY_DECLARE(core_thread);
 SGL_PY_DECLARE(core_timer);
 SGL_PY_DECLARE(core_window);
 
+SGL_PY_DECLARE(device_buffer_cursor);
 SGL_PY_DECLARE(device_command);
 SGL_PY_DECLARE(device_device_resource);
 SGL_PY_DECLARE(device_device);
@@ -109,6 +110,7 @@ NB_MODULE(sgl_ext, m_)
     SGL_PY_IMPORT(device_raytracing);
     SGL_PY_IMPORT(device_reflection);
     SGL_PY_IMPORT(device_shader);
+    SGL_PY_IMPORT(device_buffer_cursor);
     SGL_PY_IMPORT(device_shader_object);
     SGL_PY_IMPORT(device_shader_cursor);
     SGL_PY_IMPORT(device_framebuffer);
