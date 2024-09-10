@@ -16,7 +16,7 @@ namespace sgl {
 
 /// Represents a single element of a given type in a block of memory, and
 /// provides read/write tools to access its members via reflection.
-class SGL_API BufferElementCursor : public Object {
+class SGL_API BufferElementCursor {
 public:
     BufferElementCursor() = default;
 
@@ -90,7 +90,7 @@ private:
 
 /// Represents a list of elements in a block of memory, and provides
 /// simple interface to get a BufferElementCursor for each one.
-class SGL_API BufferCursor : public Object {
+class SGL_API BufferCursor {
 public:
     BufferCursor() = default;
 

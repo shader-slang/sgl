@@ -115,9 +115,9 @@ void BufferElementCursor::_set_array(
 ) const
 {
     ref<const TypeReflection> element_type = m_type_layout->unwrap_array()->type();
-    size_t element_size = detail::get_scalar_type_size(element_type->scalar_type());
+    size_t element_size = cursor_utils::get_scalar_type_size(element_type->scalar_type());
 
-    detail::check_array(m_type_layout, size, scalar_type, element_count);
+    cursor_utils::check_array(m_type_layout, size, scalar_type, element_count);
 
     size_t stride = m_type_layout->element_stride();
     if (element_size == stride) {
@@ -139,9 +139,9 @@ void BufferElementCursor::_get_array(
 ) const
 {
     ref<const TypeReflection> element_type = m_type_layout->unwrap_array()->type();
-    size_t element_size = detail::get_scalar_type_size(element_type->scalar_type());
+    size_t element_size = cursor_utils::get_scalar_type_size(element_type->scalar_type());
 
-    detail::check_array(m_type_layout, size, scalar_type, element_count);
+    cursor_utils::check_array(m_type_layout, size, scalar_type, element_count);
 
     size_t stride = m_type_layout->element_stride();
     if (element_size == stride) {
@@ -156,13 +156,13 @@ void BufferElementCursor::_get_array(
 }
 void BufferElementCursor::_set_scalar(const void* data, size_t size, TypeReflection::ScalarType scalar_type) const
 {
-    detail::check_scalar(m_type_layout, size, scalar_type);
+    cursor_utils::check_scalar(m_type_layout, size, scalar_type);
     write_data(m_offset, data, size);
 }
 
 void BufferElementCursor::_get_scalar(void* data, size_t size, TypeReflection::ScalarType scalar_type) const
 {
-    detail::check_scalar(m_type_layout, size, scalar_type);
+    cursor_utils::check_scalar(m_type_layout, size, scalar_type);
     read_data(m_offset, data, size);
 }
 
@@ -173,14 +173,14 @@ void BufferElementCursor::_set_vector(
     int dimension
 ) const
 {
-    detail::check_vector(m_type_layout, size, scalar_type, dimension);
+    cursor_utils::check_vector(m_type_layout, size, scalar_type, dimension);
     write_data(m_offset, data, size);
 }
 
 void BufferElementCursor::_get_vector(void* data, size_t size, TypeReflection::ScalarType scalar_type, int dimension)
     const
 {
-    detail::check_vector(m_type_layout, size, scalar_type, dimension);
+    cursor_utils::check_vector(m_type_layout, size, scalar_type, dimension);
     read_data(m_offset, data, size);
 }
 
@@ -192,7 +192,7 @@ void BufferElementCursor::_set_matrix(
     int cols
 ) const
 {
-    detail::check_matrix(m_type_layout, size, scalar_type, rows, cols);
+    cursor_utils::check_matrix(m_type_layout, size, scalar_type, rows, cols);
     if (rows > 1) {
         // each row is aligned to 16 bytes
         size_t row_size = size / rows;
@@ -214,7 +214,7 @@ void BufferElementCursor::_get_matrix(
     int cols
 ) const
 {
-    detail::check_matrix(m_type_layout, size, scalar_type, rows, cols);
+    cursor_utils::check_matrix(m_type_layout, size, scalar_type, rows, cols);
     if (rows > 1) {
         // each row is aligned to 16 bytes
         size_t row_size = size / rows;

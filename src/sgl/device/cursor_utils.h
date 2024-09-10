@@ -5,7 +5,7 @@
 
 namespace sgl {
 
-namespace detail {
+namespace cursor_utils {
     bool allow_scalar_conversion(TypeReflection::ScalarType from, TypeReflection::ScalarType to);
 
     size_t get_scalar_type_size(TypeReflection::ScalarType type);
@@ -33,7 +33,7 @@ namespace detail {
         int rows,
         int cols
     );
-} // namespace detail
+} // namespace cursor_utils
 
 /// Dummy type to represent traits of an arbitrary value type usable by cursors
 struct _AnyCursorValue { };

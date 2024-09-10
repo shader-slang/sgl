@@ -14,7 +14,7 @@
 
 namespace sgl {
 
-class SGL_API ShaderCursor : public Object {
+class SGL_API ShaderCursor {
 public:
     ShaderCursor() = default;
 

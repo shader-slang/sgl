@@ -2,7 +2,7 @@
 
 namespace sgl {
 
-namespace detail {
+namespace cursor_utils {
 
     // Helper class for checking if implicit conversion between scalar types is allowed.
     // Note that only conversion between types of the same size is allowed.
@@ -182,7 +182,7 @@ namespace detail {
     }
 
 
-} // namespace detail
+} // namespace cursor_utils
 
 
 } // namespace sgl
