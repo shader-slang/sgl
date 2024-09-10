@@ -377,7 +377,7 @@ void BufferElementCursor::read_data(size_t offset, void* data, size_t size) cons
 }
 
 BufferCursor::BufferCursor(ref<TypeLayoutReflection> layout, void* data, size_t size)
-    : BaseCursor(std::move(layout))
+    : m_type_layout(std::move(layout))
     , m_buffer((uint8_t*)data)
     , m_size(size)
     , m_owner(false)
@@ -385,7 +385,7 @@ BufferCursor::BufferCursor(ref<TypeLayoutReflection> layout, void* data, size_t 
 }
 
 BufferCursor::BufferCursor(ref<TypeLayoutReflection> layout, size_t element_count)
-    : BaseCursor(std::move(layout))
+    : m_type_layout(std::move(layout))
 {
     m_size = element_count * m_type_layout->element_stride();
     m_buffer = new uint8_t[m_size];

@@ -63,6 +63,9 @@ public:
     template<typename T>
     void get(T& value) const;
 
+    template<typename T>
+    void set(const T& value) const;
+
     void _set_array(const void* data, size_t size, TypeReflection::ScalarType scalar_type, size_t element_count) const;
     void _set_scalar(const void* data, size_t size, TypeReflection::ScalarType scalar_type) const;
     void _set_vector(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int dimension) const;
@@ -74,10 +77,6 @@ public:
     void _get_matrix(void* data, size_t size, TypeReflection::ScalarType scalar_type, int rows, int cols) const;
 
 private:
-    template<typename T>
-    void set(const T& value) const;
-
-
     void write_data(size_t offset, const void* data, size_t size) const;
     void read_data(size_t offset, void* data, size_t size) const;
 
@@ -90,7 +89,7 @@ private:
 
 /// Represents a list of elements in a block of memory, and provides
 /// simple interface to get a BufferElementCursor for each one.
-class SGL_API BufferCursor : public BaseCursor {
+class SGL_API BufferCursor : public Object {
 public:
     BufferCursor() = default;
 
@@ -113,6 +112,7 @@ public:
     std::span<uint8_t> data() { return {m_buffer, m_size}; }
 
 private:
+    ref<const TypeLayoutReflection> m_type_layout{nullptr};
     uint8_t* m_buffer{nullptr};
     size_t m_size{0};
     bool m_owner{false};

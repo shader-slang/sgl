@@ -65,15 +65,15 @@ public:
         set(value);
     }
 
+    template<typename T>
+    void set(const T& value) const;
+
     void _set_array(const void* data, size_t size, TypeReflection::ScalarType scalar_type, size_t element_count) const;
     void _set_scalar(const void* data, size_t size, TypeReflection::ScalarType scalar_type) const;
     void _set_vector(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int dimension) const;
     void _set_matrix(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int rows, int cols) const;
 
 private:
-    template<typename T>
-    void set(const T& value) const;
-
     ShaderObject* m_shader_object{nullptr};
     ref<const TypeLayoutReflection> m_type_layout{nullptr};
     ShaderOffset m_offset;

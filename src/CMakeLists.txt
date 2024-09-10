@@ -400,6 +400,7 @@ if(SGL_BUILD_PYTHON)
         sgl/core/python/thread.cpp
         sgl/core/python/timer.cpp
         sgl/core/python/window.cpp
+        sgl/device/python/base_cursor.cpp
         sgl/device/python/command.cpp
         sgl/device/python/device_resource.cpp
         sgl/device/python/device.cpp

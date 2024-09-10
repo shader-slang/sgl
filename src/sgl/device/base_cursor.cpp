@@ -3,6 +3,7 @@
 
 namespace sgl {
 
+
 BaseCursor::BaseCursor(ref<const TypeLayoutReflection> layout)
     : m_type_layout(std::move(layout))
 {
