@@ -434,7 +434,7 @@ BufferElementCursor BufferCursor::find_element(uint32_t index)
     BufferElementCursor element_cursor;
     element_cursor.m_buffer = ref(this);
     element_cursor.m_type_layout = m_element_type_layout;
-    element_cursor.m_offset = index * element_size();
+    element_cursor.m_offset = index * m_element_type_layout->stride();
     return element_cursor;
 }
 

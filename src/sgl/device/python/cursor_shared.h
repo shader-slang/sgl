@@ -148,6 +148,8 @@ inline void bind_writable_cursor_basic_types(nanobind::class_<CursorType>& curso
         SGL_CHECK(type->kind() == TypeReflection::Kind::scalar, "Element {} is not a scalar type.", index);
         switch (type->scalar_type()) {
         case TypeReflection::ScalarType::int16:
+            self[index] = nb::cast<int16_t>(value);
+            break;
         case TypeReflection::ScalarType::int32:
             self[index] = nb::cast<int32_t>(value);
             break;
@@ -155,6 +157,8 @@ inline void bind_writable_cursor_basic_types(nanobind::class_<CursorType>& curso
             self[index] = nb::cast<int64_t>(value);
             break;
         case TypeReflection::ScalarType::uint16:
+            self[index] = nb::cast<uint16_t>(value);
+            break;
         case TypeReflection::ScalarType::uint32:
             self[index] = nb::cast<uint32_t>(value);
             break;

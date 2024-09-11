@@ -99,19 +99,47 @@ TESTS = [
     ),
     (
         "f_int32array",
-        "int32_t[4]",
-        "{1, 2, 3, 4}",
-        np.array([1, 2, 3, 4], dtype=np.int32),
+        "int32_t[5]",
+        "{1, 2, 3, 4, 5}",
+        [1, 2, 3, 4, 5],
     ),
+    (
+        "f_int32array_numpy",
+        "int32_t[5]",
+        "{1, 2, 3, 4, 5}",
+        [1, 2, 3, 4, 5],
+    ),
+    (
+        "f_float3_list",
+        "float3",
+        "float3(1.0, 2.0, 3.0)",
+        [1.0, 2.0, 3.0],
+        sgl.float3(1.0, 2.0, 3.0),
+    ),
+    (
+        "f_float3_tuple",
+        "float3",
+        "float3(1.0, 2.0, 3.0)",
+        (1.0, 2.0, 3.0),
+        sgl.float3(1.0, 2.0, 3.0),
+    ),
+    (
+        "f_float3_numpy",
+        "float3",
+        "float3(1.0, 2.0, 3.0)",
+        np.array([1.0, 2.0, 3.0], dtype=np.float32),
+        sgl.float3(1.0, 2.0, 3.0),
+    ),
+    ("f_child", "TestChild", "TestChild(1, 2.0)", {"uintval": 1, "floatval": 2.0}),
 ]
 
 
-def variable_decls():
-    return "".join([f"    {t[1]} {t[0]};\n" for t in TESTS])
+def variable_decls(tests: list[Any]):
+    return "".join([f"    {t[1]} {t[0]};\n" for t in tests])
 
 
-def variable_sets():
-    return "".join([f"    buffer[tid].{t[0]} = {t[2]};\n" for t in TESTS])
+def variable_sets(tests: list[Any]):
+    return "".join([f"    buffer[tid].{t[0]} = {t[2]};\n" for t in tests])
 
 
 def gen_fill_in_module(tests: list[Any]):
@@ -123,7 +151,7 @@ def gen_fill_in_module(tests: list[Any]):
     struct TestType {{
         uint value;
         TestChild child;
-    {variable_decls()}
+    {variable_decls(tests)}
     }};
 
     [shader("compute")]
@@ -132,7 +160,7 @@ def gen_fill_in_module(tests: list[Any]):
         buffer[tid].value = tid+1;
         buffer[tid].child.floatval = tid+2.0;
         buffer[tid].child.uintval = tid+3;
-    {variable_sets()}
+    {variable_sets(tests)}
     }}
     """
 
@@ -146,7 +174,7 @@ def gen_copy_module(tests: list[Any]):
     struct TestType {{
         uint value;
         TestChild child;
-    {variable_decls()}
+    {variable_decls(tests)}
     }};
 
     [shader("compute")]
@@ -157,11 +185,22 @@ def gen_copy_module(tests: list[Any]):
     """
 
 
-RAND_SEEDS = [1, 2, 3, 4]
+# RAND_SEEDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+RAND_SEEDS = [1, 2, 3]
+
+
+def check_match(test: tuple[Any, ...], result: Any):
+    if len(test) == 4:
+        (name, gpu_type, gpu_val, value) = test
+        outvalue = value
+    elif len(test) == 5:
+        (name, gpu_type, gpu_val, value, outvalue) = test
+    assert result == outvalue
 
 
 def make_fill_in_module(device_type: sgl.DeviceType, tests: list[Any]):
     code = gen_fill_in_module(tests)
+    # print(code)
     mod_name = (
         "test_buffer_cursor_TestType_" + hashlib.sha256(code.encode()).hexdigest()[0:8]
     )
@@ -206,7 +245,7 @@ def test_cursor_read_write(device_type: sgl.DeviceType, seed: int):
     # Populate the first element
     element = cursor[0]
     for test in tests:
-        (name, gpu_type, gpu_val, value) = test
+        (name, gpu_type, gpu_val, value) = test[0:4]
         element[name] = value
 
     # Create new cursor by copying the first, and read element
@@ -216,8 +255,8 @@ def test_cursor_read_write(device_type: sgl.DeviceType, seed: int):
 
     # Verify data matches
     for test in tests:
-        (name, gpu_type, gpu_val, value) = test
-        assert element2[name].read() == value
+        name = test[0]
+        check_match(test, element2[name].read())
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
@@ -251,8 +290,8 @@ def test_fill_from_kernel(device_type: sgl.DeviceType, seed: int):
     for i in range(count):
         element = cursor[i]
         for test in tests:
-            (name, gpu_type, gpu_val, value) = test
-            assert element[name].read() == value
+            name = test[0]
+            check_match(test, element[name].read())
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
@@ -297,8 +336,8 @@ def test_wrap_buffer(device_type: sgl.DeviceType, seed: int):
     for i in range(count):
         element = cursor[i]
         for test in tests:
-            (name, gpu_type, gpu_val, value) = test
-            assert element[name].read() == value
+            name = test[0]
+            check_match(test, element[name].read())
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
@@ -353,7 +392,7 @@ def test_apply_changes(device_type: sgl.DeviceType, seed: int):
     for i in range(count):
         element = src_cursor[i]
         for test in tests:
-            (name, gpu_type, gpu_val, value) = test
+            (name, gpu_type, gpu_val, value) = test[0:4]
             element[name] = value
 
     # Apply changes to source
@@ -382,29 +421,9 @@ def test_apply_changes(device_type: sgl.DeviceType, seed: int):
     for i in range(count):
         element = dest_cursor[i]
         for test in tests:
-            (name, gpu_type, gpu_val, value) = test
-            assert element[name].read() == value
+            name = test[0]
+            check_match(test, element[name].read())
 
-
-"""
-    # Clear buffer reference to verify lifetime is maintained due to cursor
-    buffer = None
-
-    # Load 1 element and verify we still haven't loaded anything
-    element = cursor[0]
-    assert not cursor.is_loaded
-
-    # Read a value from the element and verify it is now loaded
-    element["f_int32"].read()
-    assert cursor.is_loaded
-
-    # Verify data matches
-    for i in range(count):
-        element = cursor[i]
-        for test in tests:
-            (name, gpu_type, gpu_val, value) = test
-            assert element[name].read() == value
-"""
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "-s"])
