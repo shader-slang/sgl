@@ -59,6 +59,7 @@ BufferElementCursor BufferElementCursor::find_field(std::string_view name) const
         BufferElementCursor field_cursor;
 
         field_cursor.m_buffer = m_buffer;
+        field_cursor.m_size = m_size;
         field_cursor.m_type_layout = field_layout->type_layout();
         field_cursor.m_offset = m_offset + field_layout->offset();
 
@@ -80,6 +81,8 @@ BufferElementCursor BufferElementCursor::find_element(uint32_t index) const
     switch (m_type_layout->kind()) {
     case TypeReflection::Kind::array: {
         BufferElementCursor element_cursor;
+        element_cursor.m_buffer = m_buffer;
+        element_cursor.m_size = m_size;
         element_cursor.m_type_layout = m_type_layout->element_type_layout();
         element_cursor.m_offset = m_offset + index * m_type_layout->element_stride();
         return element_cursor;
@@ -88,6 +91,8 @@ BufferElementCursor BufferElementCursor::find_element(uint32_t index) const
     case TypeReflection::Kind::vector:
     case TypeReflection::Kind::matrix: {
         BufferElementCursor field_cursor;
+        field_cursor.m_buffer = m_buffer;
+        field_cursor.m_size = m_size;
         field_cursor.m_type_layout = m_type_layout->element_type_layout();
         field_cursor.m_offset = m_offset + m_type_layout->element_stride() * index;
         return field_cursor;
@@ -194,12 +199,11 @@ void BufferElementCursor::_set_matrix(
 {
     cursor_utils::check_matrix(m_type_layout, size, scalar_type, rows, cols);
     if (rows > 1) {
-        // each row is aligned to 16 bytes
         size_t row_size = size / rows;
         size_t offset = m_offset;
         for (int row = 0; row < rows; ++row) {
             write_data(offset, reinterpret_cast<const uint8_t*>(data) + row * row_size, row_size);
-            offset += 16;
+            offset += row_size;
         }
     } else {
         write_data(m_offset, data, size);
@@ -216,12 +220,11 @@ void BufferElementCursor::_get_matrix(
 {
     cursor_utils::check_matrix(m_type_layout, size, scalar_type, rows, cols);
     if (rows > 1) {
-        // each row is aligned to 16 bytes
         size_t row_size = size / rows;
         size_t offset = m_offset;
         for (int row = 0; row < rows; ++row) {
             read_data(offset, reinterpret_cast<uint8_t*>(data) + row * row_size, row_size);
-            offset += 16;
+            offset += row_size;
         }
     } else {
         read_data(m_offset, data, size);
@@ -269,12 +272,19 @@ void BufferElementCursor::_get_matrix(
         _get_matrix(&value, sizeof(value), TypeReflection::ScalarType::scalar_type, type::rows, type::cols);           \
     }
 
+GETSET_SCALAR(int8_t, int8);
+GETSET_SCALAR(uint8_t, uint8);
+GETSET_SCALAR(int16_t, int16);
+GETSET_SCALAR(uint16_t, uint16);
+
 GETSET_SCALAR(int, int32);
+GETSET_VECTOR(int1, int32);
 GETSET_VECTOR(int2, int32);
 GETSET_VECTOR(int3, int32);
 GETSET_VECTOR(int4, int32);
 
 GETSET_SCALAR(uint, uint32);
+GETSET_VECTOR(uint1, uint32);
 GETSET_VECTOR(uint2, uint32);
 GETSET_VECTOR(uint3, uint32);
 GETSET_VECTOR(uint4, uint32);
@@ -283,11 +293,13 @@ GETSET_SCALAR(int64_t, int64);
 GETSET_SCALAR(uint64_t, uint64);
 
 GETSET_SCALAR(float16_t, float16);
+GETSET_VECTOR(float16_t1, float16);
 GETSET_VECTOR(float16_t2, float16);
 GETSET_VECTOR(float16_t3, float16);
 GETSET_VECTOR(float16_t4, float16);
 
 GETSET_SCALAR(float, float32);
+GETSET_VECTOR(float1, float32);
 GETSET_VECTOR(float2, float32);
 GETSET_VECTOR(float3, float32);
 GETSET_VECTOR(float4, float32);
@@ -320,6 +332,20 @@ SGL_API void BufferElementCursor::get(bool& value) const
     uint v;
     _get_scalar(&v, sizeof(v), TypeReflection::ScalarType::bool_);
     value = v != 0;
+}
+
+template<>
+SGL_API void BufferElementCursor::set(const bool1& value) const
+{
+    uint1 v(value.x ? 1 : 0);
+    _set_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 1);
+}
+template<>
+SGL_API void BufferElementCursor::get(bool1& value) const
+{
+    uint1 v;
+    _get_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 1);
+    value = bool1(v.x != 0);
 }
 
 template<>
@@ -387,7 +413,7 @@ BufferCursor::BufferCursor(ref<TypeLayoutReflection> layout, void* data, size_t 
 BufferCursor::BufferCursor(ref<TypeLayoutReflection> layout, size_t element_count)
     : m_type_layout(std::move(layout))
 {
-    m_size = element_count * m_type_layout->element_stride();
+    m_size = element_count * m_type_layout->stride();
     m_buffer = new uint8_t[m_size];
     m_owner = true;
 }
@@ -404,6 +430,7 @@ BufferElementCursor BufferCursor::find_element(uint32_t index) const
     SGL_CHECK(index < element_count(), "Index {} out of range in buffer with element count {}", index, element_count());
     BufferElementCursor element_cursor;
     element_cursor.m_buffer = m_buffer;
+    element_cursor.m_size = m_size;
     element_cursor.m_type_layout = m_type_layout;
     element_cursor.m_offset = index * element_size();
     return element_cursor;

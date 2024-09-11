@@ -59,8 +59,8 @@ template<typename CursorType>
 inline void bind_traversable_cursor(nanobind::class_<CursorType>& cursor)
 {
     cursor //
-        .def_prop_ro("type_layout", &CursorType::type_layout, D_NA(CursorType, type_layout))
-        .def_prop_ro("type", &CursorType::type, D_NA(CursorType, type))
+        .def_prop_ro("_type_layout", &CursorType::type_layout, D_NA(CursorType, type_layout))
+        .def_prop_ro("_type", &CursorType::type, D_NA(CursorType, type))
         .def("is_valid", &CursorType::is_valid, D_NA(CursorType, is_valid))
         .def("find_field", &CursorType::find_field, "name"_a, D_NA(CursorType, find_field))
         .def("find_element", &CursorType::find_element, "index"_a, D_NA(CursorType, find_element))
@@ -68,7 +68,8 @@ inline void bind_traversable_cursor(nanobind::class_<CursorType>& cursor)
         .def("has_element", &CursorType::has_element, "index"_a, D_NA(CursorType, has_element))
         .def("__getitem__", [](CursorType& self, std::string_view name) { return self[name]; })
         .def("__getitem__", [](CursorType& self, int index) { return self[index]; })
-        .def("__getattr__", [](CursorType& self, std::string_view name) { return self[name]; });
+        // note: __getattr__ should not except if field is not found
+        .def("__getattr__", [](CursorType& self, std::string_view name) { return self.find_field(name); });
 }
 
 template<typename CursorType>
@@ -80,18 +81,22 @@ inline void bind_writable_cursor_basic_types(nanobind::class_<CursorType>& curso
     cursor.def("__setattr__", [](CursorType& self, std::string_view name, type value) { self[name] = value; });
 
     def_setter(bool);
+    def_setter(bool1);
     def_setter(bool2);
     def_setter(bool3);
     def_setter(bool4);
 
+    def_setter(uint1);
     def_setter(uint2);
     def_setter(uint3);
     def_setter(uint4);
 
+    def_setter(int1);
     def_setter(int2);
     def_setter(int3);
     def_setter(int4);
 
+    def_setter(float1);
     def_setter(float2);
     def_setter(float3);
     def_setter(float4);
@@ -114,6 +119,8 @@ inline void bind_writable_cursor_basic_types(nanobind::class_<CursorType>& curso
         SGL_CHECK(type->kind() == TypeReflection::Kind::scalar, "Field \"{}\" is not a scalar type.", name);
         switch (type->scalar_type()) {
         case TypeReflection::ScalarType::int16:
+            self[name] = nb::cast<int16_t>(value);
+            break;
         case TypeReflection::ScalarType::int32:
             self[name] = nb::cast<int32_t>(value);
             break;
@@ -121,6 +128,8 @@ inline void bind_writable_cursor_basic_types(nanobind::class_<CursorType>& curso
             self[name] = nb::cast<int64_t>(value);
             break;
         case TypeReflection::ScalarType::uint16:
+            self[name] = nb::cast<uint16_t>(value);
+            break;
         case TypeReflection::ScalarType::uint32:
             self[name] = nb::cast<uint32_t>(value);
             break;

@@ -74,27 +74,33 @@ concept TraversableCursor = requires(T obj, std::string_view name_idx, uint32_t 
 
 /// Concept that defines the requirements for a cursor that can be read from.
 template<typename T>
-concept ReadableCursor
-    = requires(T obj, const void* data, size_t size, TypeReflection::ScalarType scalar_type, size_t element_count) {
-          {
-              obj.template get<_AnyCursorValue>({})
-          } -> std::same_as<void>; // Ensure set() method exists
-          {
-              obj.template as<_AnyCursorValue>()
-          } -> std::same_as<_AnyCursorValue>;
-          {
-              obj._get_array(data, size, scalar_type, element_count)
-          } -> std::same_as<void>;
-          {
-              obj._get_scalar(data, size, scalar_type)
-          } -> std::same_as<void>;
-          {
-              obj._get_vector(data, size, scalar_type, 0)
-          } -> std::same_as<void>;
-          {
-              obj._get_matrix(data, size, scalar_type, 0, 0)
-          } -> std::same_as<void>;
-      };
+concept ReadableCursor = requires(
+    T obj,
+    void* data,
+    size_t size,
+    TypeReflection::ScalarType scalar_type,
+    size_t element_count,
+    _AnyCursorValue& val
+) {
+    {
+        obj.template get<_AnyCursorValue>(val)
+    } -> std::same_as<void>; // Ensure set() method exists
+    {
+        obj.template as<_AnyCursorValue>()
+    } -> std::same_as<_AnyCursorValue>;
+    {
+        obj._get_array(data, size, scalar_type, element_count)
+    } -> std::same_as<void>;
+    {
+        obj._get_scalar(data, size, scalar_type)
+    } -> std::same_as<void>;
+    {
+        obj._get_vector(data, size, scalar_type, 0)
+    } -> std::same_as<void>;
+    {
+        obj._get_matrix(data, size, scalar_type, 0, 0)
+    } -> std::same_as<void>;
+};
 
 /// Concept that defines the requirements for a cursor that can be written to.
 template<typename T>
