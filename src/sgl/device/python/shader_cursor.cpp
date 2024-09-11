@@ -9,7 +9,7 @@
 #include "sgl/device/raytracing.h"
 #include "sgl/device/cuda_interop.h"
 
-#include "sgl/device/python/cursor_shared.h"
+#include "sgl/device/python/cursor_utils.h"
 
 SGL_PY_EXPORT(device_shader_cursor)
 {

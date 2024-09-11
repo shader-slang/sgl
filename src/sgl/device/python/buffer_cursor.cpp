@@ -6,18 +6,22 @@
 
 #include "sgl/device/buffer_cursor.h"
 
-#include "sgl/device/python/cursor_shared.h"
+#include "sgl/device/python/cursor_utils.h"
 
 #include "sgl/core/string.h"
 
 namespace sgl {
+
 namespace detail {
 
+    /// Enforces properties needed for converting to/from vector.
     template<typename T>
     concept IsSpecializationOfVector = requires {
         T::dimension;
         typename T::value_type;
     };
+
+    /// Enforces properties needed for converting to/from matrix.
     template<typename T>
     concept IsSpecializationOfMatrix = requires {
         T::rows;
@@ -25,6 +29,7 @@ namespace detail {
         typename T::value_type;
     };
 
+    /// Read scalar value from buffer element cursor and convert to Python object.
     template<typename ValType>
     inline nb::object _read_scalar(const BufferElementCursor& self)
     {
@@ -33,6 +38,7 @@ namespace detail {
         return nb::cast(res);
     }
 
+    /// Write scalar value to buffer element cursor from Python object.
     template<typename ValType>
     inline void _write_scalar(BufferElementCursor& self, nb::object nbval)
     {
@@ -40,6 +46,7 @@ namespace detail {
         self.set(val);
     }
 
+    /// Read vector value from buffer element cursor and convert to Python object.
     template<typename ValType>
         requires IsSpecializationOfVector<ValType>
     inline nb::object _read_vector(const BufferElementCursor& self)
@@ -49,15 +56,19 @@ namespace detail {
         return nb::cast(res);
     }
 
+    /// Write vector value to buffer element cursor from Python object
     template<typename ValType>
         requires IsSpecializationOfVector<ValType>
     inline void _write_vector(BufferElementCursor& self, nb::object nbval)
     {
         if (nb::isinstance<ValType>(nbval)) {
+            // A vector of the correct type - just convert it.
             auto val = nb::cast<ValType>(nbval);
             self.set(val);
         } else if (nb::isinstance<nb::ndarray<nb::numpy>>(nbval)) {
+            // A numpy array. Reinterpret numpy memory as vector type.
             auto nbarray = nb::cast<nb::ndarray<nb::numpy>>(nbval);
+            SGL_CHECK(is_ndarray_contiguous(nbarray), "data is not contiguous");
             SGL_CHECK(nbarray.ndim() == 1 || nbarray.ndim() == 2, "numpy array must have 1 or 2 dimensions.");
             size_t dimension = 1;
             for (size_t i = 0; i < nbarray.ndim(); ++i)
@@ -67,6 +78,7 @@ namespace detail {
             auto val = *reinterpret_cast<const ValType*>(nbarray.data());
             self.set(val);
         } else if (nb::isinstance<nb::sequence>(nbval)) {
+            // A list or tuple. Attempt to cast each element of list to element of vector.
             auto seq = nb::cast<nb::sequence>(nbval);
             SGL_CHECK(nb::len(seq) == ValType::dimension, "sequence has wrong dimension.");
             ValType val;
@@ -79,6 +91,7 @@ namespace detail {
         }
     }
 
+    /// Read matrix value from buffer element cursor and convert to Python object.
     template<typename ValType>
         requires IsSpecializationOfMatrix<ValType>
     inline nb::object _read_matrix(const BufferElementCursor& self)
@@ -88,20 +101,19 @@ namespace detail {
         return nb::cast(res);
     }
 
+    /// Write matrix value to buffer element cursor from Python object.
     template<typename ValType>
         requires IsSpecializationOfMatrix<ValType>
     inline void _write_matrix(BufferElementCursor& self, nb::object nbval)
     {
         if (nb::isinstance<ValType>(nbval)) {
+            // Matrix of correct type
             auto val = nb::cast<ValType>(nbval);
             self.set(val);
         } else if (nb::isinstance<nb::ndarray<nb::numpy>>(nbval)) {
-            auto nbarray = nb::cast<nb::ndarray<nb::numpy>>(nbval);
-            SGL_CHECK(nbarray.ndim() == 2, "numpy array must have 2 dimensions.");
-            SGL_CHECK(narrow_cast<int>(nbarray.shape(0)) == ValType::rows, "numpy array has wrong number of rows.");
-            SGL_CHECK(narrow_cast<int>(nbarray.shape(1)) == ValType::cols, "numpy array has wrong number of cols.");
-            SGL_CHECK(nbarray.nbytes() == sizeof(ValType), "numpy array has wrong size.");
-            auto val = *reinterpret_cast<const ValType*>(nbarray.data());
+            // A numpy array. We have a python cast from numpy->matrix,
+            // so can just call it here to convert properly.
+            auto val = nb::cast<ValType>(nbval);
             self.set(val);
         } else {
             SGL_THROW("Expected numpy array or matrix");
@@ -126,6 +138,7 @@ namespace detail {
     write_matrix[(int)TypeReflection::ScalarType::scalar_type][c_type::rows][c_type::cols]                             \
         = [](BufferElementCursor& self, nb::object nbval) { _write_matrix<c_type>(self, nbval); };
 
+    /// Table of converters based on slang scalar type and shape.
     struct Converters {
         std::function<nb::object(const BufferElementCursor&)> read_scalar[(int)TypeReflection::ScalarType::COUNT];
         std::function<nb::object(const BufferElementCursor&)> read_vector[(int)TypeReflection::ScalarType::COUNT][5];
@@ -134,9 +147,9 @@ namespace detail {
         std::function<void(BufferElementCursor&, nb::object)> write_vector[(int)TypeReflection::ScalarType::COUNT][5];
         std::function<void(BufferElementCursor&, nb::object)> write_matrix[(int)TypeReflection::ScalarType::COUNT][5]
                                                                           [5];
-
         Converters()
         {
+            // Initialize all entries to an error function that throws an exception.
             auto read_err_func = [](const BufferElementCursor&)
             {
                 if (true) { // avoid 'unreachable code' warnings
@@ -145,7 +158,6 @@ namespace detail {
                 return nb::none();
             };
             auto write_err_func = [](const BufferElementCursor&, nb::object) { SGL_THROW("Unsupported element type"); };
-
             for (int i = 0; i < (int)TypeReflection::ScalarType::COUNT; i++) {
                 read_scalar[i] = read_err_func;
                 write_scalar[i] = write_err_func;
@@ -159,6 +171,7 @@ namespace detail {
                 }
             }
 
+            // Register converters for all supported scalar types.
             scalar_case(bool, bool_);
             scalar_case(int8_t, int8);
             scalar_case(uint8_t, uint8);
@@ -174,6 +187,7 @@ namespace detail {
             scalar_case(intptr_t, intptr);
             scalar_case(uintptr_t, uintptr);
 
+            // Register converters for all supported vector types.
             vector_case(bool1, bool_);
             vector_case(float1, float32);
             vector_case(int1, int32);
@@ -191,6 +205,7 @@ namespace detail {
             vector_case(int4, int32);
             vector_case(uint4, uint32);
 
+            // Register converters for all supported matrix types.
             matrix_case(float2x2, float32);
             matrix_case(float3x3, float32);
             matrix_case(float2x4, float32);
@@ -200,6 +215,9 @@ namespace detail {
     };
     static Converters _conv;
 
+    /// Read function inspects the slang type and attempts to convert it
+    /// to a matching python type. For structs and arrays, generates
+    /// a nested dictionary or list and recurses.
     nb::object read(const BufferElementCursor& self)
     {
         if (!self.is_valid())
@@ -236,6 +254,9 @@ namespace detail {
         SGL_THROW("Unsupported element type");
     }
 
+    /// Write function inspects the slang type and uses it to try
+    /// and convert a Python input to the correct c++ type. For structs
+    /// and arrays, expects a dict, sequence type or numpy array.
     void write(BufferElementCursor& self, nb::object nbval)
     {
         if (!self.is_valid())
@@ -256,6 +277,7 @@ namespace detail {
             );
         }
         case TypeReflection::Kind::struct_: {
+            // Expect a dict for a slang struct.
             if (nb::isinstance<nb::dict>(nbval)) {
                 auto dict = nb::cast<nb::dict>(nbval);
                 for (uint32_t i = 0; i < type->field_count(); i++) {
@@ -269,12 +291,14 @@ namespace detail {
             }
         }
         case TypeReflection::Kind::array: {
+            // Expect numpy array or sequence for a slang array.
             if (nb::isinstance<nb::ndarray<nb::numpy>>(nbval)) {
                 // TODO: Should be able to do better job of interpreting nb array values by reading
                 // data type and extracting individual elements.
                 auto nbarray = nb::cast<nb::ndarray<nb::numpy>>(nbval);
                 SGL_CHECK(nbarray.ndim() == 1, "numpy array must have 1 dimension.");
                 SGL_CHECK(nbarray.shape(0) == type->element_count(), "numpy array is the wrong length.");
+                SGL_CHECK(is_ndarray_contiguous(nbarray), "data is not contiguous");
                 self._set_array(
                     nbarray.data(),
                     nbarray.nbytes(),
@@ -282,11 +306,12 @@ namespace detail {
                     narrow_cast<int>(nbarray.shape(0))
                 );
                 return;
-            } else if (nb::isinstance<nb::list>(nbval)) {
-                auto list = nb::cast<nb::list>(nbval);
+            } else if (nb::isinstance<nb::sequence>(nbval)) {
+                auto seq = nb::cast<nb::sequence>(nbval);
+                SGL_CHECK(nb::len(seq) == type->element_count(), "sequence is the wrong length.");
                 for (uint32_t i = 0; i < type->element_count(); i++) {
                     auto child = self[i];
-                    write(child, list[i]);
+                    write(child, seq[i]);
                 }
                 return;
             } else {
@@ -324,6 +349,8 @@ SGL_PY_EXPORT(device_buffer_cursor)
             "__dir__",
             [](const BufferElementCursor& self)
             {
+                // Overridden dir function contains the fields we want to expose,
+                // plus the fields of the struct (if it is one).
                 SGL_UNUSED(self);
                 std::vector<std::string> attributes;
                 attributes.push_back("_offset");
@@ -342,6 +369,8 @@ SGL_PY_EXPORT(device_buffer_cursor)
             "__repr__",
             [](const BufferElementCursor& self)
             {
+                // __repr__ function basically reads the value into a nanobind object and
+                // calls its __repr__ function.
                 auto val = nb::cast<std::string>(detail::read(self).attr("__repr__")());
                 if (self.is_valid())
                     val += fmt::format(" [{}]", self.type()->full_name());
@@ -349,8 +378,11 @@ SGL_PY_EXPORT(device_buffer_cursor)
             }
         );
 
+    // Bind traversal functions.
     bind_traversable_cursor(buffer_element_cursor);
 
+    // __setitem__ and __setattr__ functions are overloaded to allow direct setting
+    // of fields and elements.
     buffer_element_cursor //
         .def(
             "__setattr__",
@@ -362,9 +394,7 @@ SGL_PY_EXPORT(device_buffer_cursor)
             "name"_a,
             "val"_a,
             D_NA(BufferElementCursor, write)
-        );
-
-    buffer_element_cursor //
+        )
         .def(
             "__setitem__",
             [](BufferElementCursor& self, std::string_view name, nb::object nbval)
@@ -375,9 +405,7 @@ SGL_PY_EXPORT(device_buffer_cursor)
             "index"_a,
             "val"_a,
             D_NA(BufferElementCursor, write)
-        );
-
-    buffer_element_cursor //
+        )
         .def(
             "__setitem__",
             [](BufferElementCursor& self, int index, nb::object nbval)
@@ -390,21 +418,21 @@ SGL_PY_EXPORT(device_buffer_cursor)
             D_NA(BufferElementCursor, write)
         );
 
+    // Explicit read/write value functions.
     buffer_element_cursor //
         .def(
             "write",
             [](BufferElementCursor& self, nb::object nbval) { detail::write(self, nbval); },
             "val"_a,
             D_NA(BufferElementCursor, write)
-        );
-
-    buffer_element_cursor //
+        )
         .def(
             "read",
             [](BufferElementCursor& self) { return detail::read(self); },
             D_NA(BufferElementCursor, read)
         );
 
+    // Interface to simpler root cursor object that maps to the larger buffer.
     nb::class_<BufferCursor, Object>(m, "BufferCursor", D_NA(BufferCursor)) //
         .def(
             nb::init<ref<TypeLayoutReflection>, size_t>(),
@@ -466,6 +494,9 @@ SGL_PY_EXPORT(device_buffer_cursor)
             "__dir__",
             [](BufferCursor& self)
             {
+                // Overridden dir function contains the fields we want to expose,
+                // plus a set of [x:y] fields so it shows up in the VS watch
+                // window elegantly (only up to field 1000).
                 size_t first = 0;
                 std::vector<std::string> attributes;
                 attributes.push_back("element_type_layout");
@@ -487,6 +518,9 @@ SGL_PY_EXPORT(device_buffer_cursor)
             "__getattr__",
             [](BufferCursor& self, std::string_view name)
             {
+                // Overridden getattr by name function checks if one
+                // of the [x:y] accessors is being used and returns the
+                // corresponding array of elements if so.
                 if (name[0] == '[' && name[name.length() - 1] == ']') {
                     uint32_t first = 0;
                     uint32_t last = 0;

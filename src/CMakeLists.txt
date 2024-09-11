@@ -400,7 +400,7 @@ if(SGL_BUILD_PYTHON)
         sgl/core/python/window.cpp
         sgl/device/python/command.cpp
         sgl/device/python/buffer_cursor.cpp
-        sgl/device/python/cursor_shared.h
+        sgl/device/python/cursor_utils.h
         sgl/device/python/device_resource.cpp
         sgl/device/python/device.cpp
         sgl/device/python/fence.cpp
