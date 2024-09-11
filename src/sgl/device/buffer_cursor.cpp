@@ -14,10 +14,9 @@
 
 namespace sgl {
 
-BufferElementCursor::BufferElementCursor(ref<TypeLayoutReflection> layout, void* data, size_t size)
+BufferElementCursor::BufferElementCursor(ref<TypeLayoutReflection> layout, ref<BufferCursor> owner)
     : m_type_layout(std::move(layout))
-    , m_buffer((uint8_t*)data)
-    , m_size(size)
+    , m_buffer(std::move(owner))
     , m_offset(0)
 {
 }
@@ -59,7 +58,6 @@ BufferElementCursor BufferElementCursor::find_field(std::string_view name) const
         BufferElementCursor field_cursor;
 
         field_cursor.m_buffer = m_buffer;
-        field_cursor.m_size = m_size;
         field_cursor.m_type_layout = field_layout->type_layout();
         field_cursor.m_offset = m_offset + field_layout->offset();
 
@@ -82,7 +80,6 @@ BufferElementCursor BufferElementCursor::find_element(uint32_t index) const
     case TypeReflection::Kind::array: {
         BufferElementCursor element_cursor;
         element_cursor.m_buffer = m_buffer;
-        element_cursor.m_size = m_size;
         element_cursor.m_type_layout = m_type_layout->element_type_layout();
         element_cursor.m_offset = m_offset + index * m_type_layout->element_stride();
         return element_cursor;
@@ -92,7 +89,6 @@ BufferElementCursor BufferElementCursor::find_element(uint32_t index) const
     case TypeReflection::Kind::matrix: {
         BufferElementCursor field_cursor;
         field_cursor.m_buffer = m_buffer;
-        field_cursor.m_size = m_size;
         field_cursor.m_type_layout = m_type_layout->element_type_layout();
         field_cursor.m_offset = m_offset + m_type_layout->element_stride() * index;
         return field_cursor;
@@ -105,7 +101,7 @@ BufferElementCursor BufferElementCursor::find_element(uint32_t index) const
     return {};
 }
 
-void BufferElementCursor::set_data(const void* data, size_t size) const
+void BufferElementCursor::set_data(const void* data, size_t size)
 {
     if (m_type_layout->parameter_category() != TypeReflection::ParameterCategory::uniform)
         SGL_THROW("\"{}\" cannot bind data", m_type_layout->name());
@@ -117,7 +113,7 @@ void BufferElementCursor::_set_array(
     size_t size,
     TypeReflection::ScalarType scalar_type,
     size_t element_count
-) const
+)
 {
     ref<const TypeReflection> element_type = m_type_layout->unwrap_array()->type();
     size_t element_size = cursor_utils::get_scalar_type_size(element_type->scalar_type());
@@ -159,7 +155,7 @@ void BufferElementCursor::_get_array(
         }
     }
 }
-void BufferElementCursor::_set_scalar(const void* data, size_t size, TypeReflection::ScalarType scalar_type) const
+void BufferElementCursor::_set_scalar(const void* data, size_t size, TypeReflection::ScalarType scalar_type)
 {
     cursor_utils::check_scalar(m_type_layout, size, scalar_type);
     write_data(m_offset, data, size);
@@ -176,7 +172,7 @@ void BufferElementCursor::_set_vector(
     size_t size,
     TypeReflection::ScalarType scalar_type,
     int dimension
-) const
+)
 {
     cursor_utils::check_vector(m_type_layout, size, scalar_type, dimension);
     write_data(m_offset, data, size);
@@ -195,7 +191,7 @@ void BufferElementCursor::_set_matrix(
     TypeReflection::ScalarType scalar_type,
     int rows,
     int cols
-) const
+)
 {
     cursor_utils::check_matrix(m_type_layout, size, scalar_type, rows, cols);
     if (rows > 1) {
@@ -238,7 +234,7 @@ void BufferElementCursor::_get_matrix(
 
 #define GETSET_SCALAR(type, scalar_type)                                                                               \
     template<>                                                                                                         \
-    SGL_API void BufferElementCursor::set(const type& value) const                                                     \
+    SGL_API void BufferElementCursor::set(const type& value)                                                           \
     {                                                                                                                  \
         _set_scalar(&value, sizeof(value), TypeReflection::ScalarType::scalar_type);                                   \
     }                                                                                                                  \
@@ -250,7 +246,7 @@ void BufferElementCursor::_get_matrix(
 
 #define GETSET_VECTOR(type, scalar_type)                                                                               \
     template<>                                                                                                         \
-    SGL_API void BufferElementCursor::set(const type& value) const                                                     \
+    SGL_API void BufferElementCursor::set(const type& value)                                                           \
     {                                                                                                                  \
         _set_vector(&value, sizeof(value), TypeReflection::ScalarType::scalar_type, type::dimension);                  \
     }                                                                                                                  \
@@ -262,7 +258,7 @@ void BufferElementCursor::_get_matrix(
 
 #define GETSET_MATRIX(type, scalar_type)                                                                               \
     template<>                                                                                                         \
-    SGL_API void BufferElementCursor::set(const type& value) const                                                     \
+    SGL_API void BufferElementCursor::set(const type& value)                                                           \
     {                                                                                                                  \
         _set_matrix(&value, sizeof(value), TypeReflection::ScalarType::scalar_type, type::rows, type::cols);           \
     }                                                                                                                  \
@@ -321,7 +317,7 @@ GETSET_SCALAR(double, float64);
 // Note that this applies to our boolN vectors as well, which are currently 1B per element.
 
 template<>
-SGL_API void BufferElementCursor::set(const bool& value) const
+SGL_API void BufferElementCursor::set(const bool& value)
 {
     uint v = value ? 1 : 0;
     _set_scalar(&v, sizeof(v), TypeReflection::ScalarType::bool_);
@@ -335,7 +331,7 @@ SGL_API void BufferElementCursor::get(bool& value) const
 }
 
 template<>
-SGL_API void BufferElementCursor::set(const bool1& value) const
+SGL_API void BufferElementCursor::set(const bool1& value)
 {
     uint1 v(value.x ? 1 : 0);
     _set_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 1);
@@ -349,7 +345,7 @@ SGL_API void BufferElementCursor::get(bool1& value) const
 }
 
 template<>
-SGL_API void BufferElementCursor::set(const bool2& value) const
+SGL_API void BufferElementCursor::set(const bool2& value)
 {
     uint2 v = {value.x ? 1 : 0, value.y ? 1 : 0};
     _set_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 2);
@@ -363,7 +359,7 @@ SGL_API void BufferElementCursor::get(bool2& value) const
 }
 
 template<>
-SGL_API void BufferElementCursor::set(const bool3& value) const
+SGL_API void BufferElementCursor::set(const bool3& value)
 {
     uint3 v = {value.x ? 1 : 0, value.y ? 1 : 0, value.z ? 1 : 0};
     _set_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 3);
@@ -377,7 +373,7 @@ SGL_API void BufferElementCursor::get(bool3& value) const
 }
 
 template<>
-SGL_API void BufferElementCursor::set(const bool4& value) const
+SGL_API void BufferElementCursor::set(const bool4& value)
 {
     uint4 v = {value.x ? 1 : 0, value.y ? 1 : 0, value.z ? 1 : 0, value.w ? 1 : 0};
     _set_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 4);
@@ -390,31 +386,38 @@ SGL_API void BufferElementCursor::get(bool4& value) const
     value = {v.x != 0, v.y != 0, v.z != 0, v.w != 0};
 }
 
-void BufferElementCursor::write_data(size_t offset, const void* data, size_t size) const
+void BufferElementCursor::write_data(size_t offset, const void* data, size_t size)
 {
-    SGL_CHECK(offset + size <= m_size, "Buffer overflow");
-    memcpy(m_buffer + offset, data, size);
+    m_buffer->write_data(offset, data, size);
 }
 
 void BufferElementCursor::read_data(size_t offset, void* data, size_t size) const
 {
-    SGL_CHECK(offset + size <= m_size, "Buffer overflow");
-    memcpy(data, m_buffer + offset, size);
+    m_buffer->read_data(offset, data, size);
 }
 
-BufferCursor::BufferCursor(ref<TypeLayoutReflection> layout, void* data, size_t size)
-    : m_type_layout(std::move(layout))
+BufferCursor::BufferCursor(ref<TypeLayoutReflection> element_layout, void* data, size_t size)
+    : m_element_type_layout(std::move(element_layout))
     , m_buffer((uint8_t*)data)
     , m_size(size)
     , m_owner(false)
 {
 }
 
-BufferCursor::BufferCursor(ref<TypeLayoutReflection> layout, size_t element_count)
-    : m_type_layout(std::move(layout))
+BufferCursor::BufferCursor(ref<TypeLayoutReflection> element_layout, size_t element_count)
+    : m_element_type_layout(std::move(element_layout))
 {
-    m_size = element_count * m_type_layout->stride();
+    m_size = element_count * m_element_type_layout->stride();
     m_buffer = new uint8_t[m_size];
+    m_owner = true;
+}
+
+BufferCursor::BufferCursor(ref<TypeLayoutReflection> element_layout, ref<Buffer> resource)
+    : m_element_type_layout(std::move(element_layout))
+{
+    m_resource = std::move(resource);
+    m_size = m_resource->size();
+    m_buffer = nullptr;
     m_owner = true;
 }
 
@@ -425,15 +428,62 @@ BufferCursor::~BufferCursor()
     m_buffer = nullptr;
 }
 
-BufferElementCursor BufferCursor::find_element(uint32_t index) const
+BufferElementCursor BufferCursor::find_element(uint32_t index)
 {
     SGL_CHECK(index < element_count(), "Index {} out of range in buffer with element count {}", index, element_count());
     BufferElementCursor element_cursor;
-    element_cursor.m_buffer = m_buffer;
-    element_cursor.m_size = m_size;
-    element_cursor.m_type_layout = m_type_layout;
+    element_cursor.m_buffer = ref(this);
+    element_cursor.m_type_layout = m_element_type_layout;
     element_cursor.m_offset = index * element_size();
     return element_cursor;
 }
+
+void BufferCursor::write_data(size_t offset, const void* data, size_t size)
+{
+    if (!m_buffer) {
+        // Load data on demand if haven't done so yet.
+        SGL_CHECK(m_resource, "Buffer resource not set");
+        load();
+    }
+
+    SGL_CHECK(offset + size <= m_size, "Buffer overflow");
+    memcpy(m_buffer + offset, data, size);
+}
+
+void BufferCursor::read_data(size_t offset, void* data, size_t size) const
+{
+    if (!m_buffer) {
+        // Load data on demand if haven't done so yet.
+        // (note: treating local buffer as cache, so allowing call
+        // to load_from_device to it even from const function).
+        SGL_CHECK(m_resource, "Buffer resource not set");
+        const_cast<BufferCursor*>(this)->load();
+    }
+
+    SGL_CHECK(offset + size <= m_size, "Buffer overflow");
+    memcpy(data, m_buffer + offset, size);
+}
+
+void BufferCursor::load()
+{
+    if (m_resource) {
+        if (!m_buffer) {
+            m_buffer = new uint8_t[m_size];
+        }
+        if (m_resource->memory_type() != MemoryType::upload) {
+            m_resource->get_data(m_buffer, m_size);
+        }
+    }
+}
+
+void BufferCursor::apply()
+{
+    if (m_resource && m_buffer) {
+        if (m_resource->memory_type() != MemoryType::read_back) {
+            m_resource->set_data(m_buffer, m_size);
+        }
+    }
+}
+
 
 } // namespace sgl

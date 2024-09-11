@@ -16,6 +16,10 @@ class Device;
 struct SwapchainDesc;
 class Swapchain;
 
+// buffer_cursor.h
+class BufferCursor;
+class BufferElementCursor;
+
 // resource.h
 
 class Resource;

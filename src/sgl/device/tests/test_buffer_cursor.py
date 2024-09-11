@@ -97,6 +97,12 @@ TESTS = [
             ]
         ),
     ),
+    (
+        "f_int32array",
+        "int32_t[4]",
+        "{1, 2, 3, 4}",
+        np.array([1, 2, 3, 4], dtype=np.int32),
+    ),
 ]
 
 
@@ -108,7 +114,7 @@ def variable_sets():
     return "".join([f"    buffer[tid].{t[0]} = {t[2]};\n" for t in TESTS])
 
 
-def gen_module(tests: list[Any]):
+def gen_fill_in_module(tests: list[Any]):
     return f"""
     struct TestChild {{
         uint uintval;
@@ -131,21 +137,51 @@ def gen_module(tests: list[Any]):
     """
 
 
-RAND_SEEDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+def gen_copy_module(tests: list[Any]):
+    return f"""
+    struct TestChild {{
+        uint uintval;
+        float floatval;
+    }}
+    struct TestType {{
+        uint value;
+        TestChild child;
+    {variable_decls()}
+    }};
+
+    [shader("compute")]
+    [numthreads(1, 1, 1)]
+    void main(uint tid: SV_DispatchThreadID, StructuredBuffer<TestType> src, RWStructuredBuffer<TestType> dest) {{
+        dest[tid] = src[tid];
+    }}
+    """
 
 
-def make_test_type_module(device_type: sgl.DeviceType, tests: list[Any]):
+RAND_SEEDS = [1, 2, 3, 4]
 
-    code = gen_module(tests)
+
+def make_fill_in_module(device_type: sgl.DeviceType, tests: list[Any]):
+    code = gen_fill_in_module(tests)
     mod_name = (
         "test_buffer_cursor_TestType_" + hashlib.sha256(code.encode()).hexdigest()[0:8]
     )
-
     device = helpers.get_device(type=device_type)
     module = device.load_module_from_source(mod_name, code)
-
     prog = device.link_program([module], [module.entry_point("main")])
+    buffer_layout = module.layout.get_type_layout(
+        module.layout.find_type_by_name("StructuredBuffer<TestType>")
+    )
+    return (device.create_compute_kernel(prog), buffer_layout)
 
+
+def make_copy_module(device_type: sgl.DeviceType, tests: list[Any]):
+    code = gen_copy_module(tests)
+    mod_name = (
+        "test_buffer_cursor_FillIn_" + hashlib.sha256(code.encode()).hexdigest()[0:8]
+    )
+    device = helpers.get_device(type=device_type)
+    module = device.load_module_from_source(mod_name, code)
+    prog = device.link_program([module], [module.entry_point("main")])
     buffer_layout = module.layout.get_type_layout(
         module.layout.find_type_by_name("StructuredBuffer<TestType>")
     )
@@ -162,7 +198,7 @@ def test_cursor_read_write(device_type: sgl.DeviceType, seed: int):
     random.shuffle(tests)
 
     # Create the module and buffer layout
-    (kernel, buffer_layout) = make_test_type_module(device_type, tests)
+    (kernel, buffer_layout) = make_fill_in_module(device_type, tests)
 
     # Create a buffer cursor with its own data
     cursor = sgl.BufferCursor(buffer_layout.element_type_layout, 1)
@@ -194,7 +230,7 @@ def test_fill_from_kernel(device_type: sgl.DeviceType, seed: int):
     random.shuffle(tests)
 
     # Create the module and buffer layout
-    (kernel, buffer_layout) = make_test_type_module(device_type, tests)
+    (kernel, buffer_layout) = make_fill_in_module(device_type, tests)
 
     # Make a buffer with 128 elements
     count = 128
@@ -218,6 +254,157 @@ def test_fill_from_kernel(device_type: sgl.DeviceType, seed: int):
             (name, gpu_type, gpu_val, value) = test
             assert element[name].read() == value
 
+
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+@pytest.mark.parametrize("seed", RAND_SEEDS)
+def test_wrap_buffer(device_type: sgl.DeviceType, seed: int):
+
+    # Randomize the order of the tests
+    tests = TESTS.copy()
+    random.seed(seed)
+    random.shuffle(tests)
+
+    # Create the module and buffer layout
+    (kernel, buffer_layout) = make_fill_in_module(device_type, tests)
+
+    # Make a buffer with 128 elements and a cursor to wrap it
+    count = 128
+    buffer = kernel.device.create_buffer(
+        element_count=count,
+        struct_type=buffer_layout,
+        usage=sgl.ResourceUsage.shader_resource | sgl.ResourceUsage.unordered_access,
+    )
+    cursor = sgl.BufferCursor(buffer_layout.element_type_layout, buffer)
+
+    # Cursor shouldn't have read data from buffer yet
+    assert not cursor.is_loaded
+
+    # Dispatch the kernel
+    kernel.dispatch([count, 1, 1], buffer=buffer)
+
+    # Clear buffer reference to verify lifetime is maintained due to cursor
+    buffer = None
+
+    # Load 1 element and verify we still haven't loaded anything
+    element = cursor[0]
+    assert not cursor.is_loaded
+
+    # Read a value from the element and verify it is now loaded
+    element["f_int32"].read()
+    assert cursor.is_loaded
+
+    # Verify data matches
+    for i in range(count):
+        element = cursor[i]
+        for test in tests:
+            (name, gpu_type, gpu_val, value) = test
+            assert element[name].read() == value
+
+
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_cursor_lifetime(device_type: sgl.DeviceType):
+
+    # Create the module and buffer layout
+    (kernel, buffer_layout) = make_fill_in_module(device_type, TESTS)
+
+    # Create a buffer cursor with its own data
+    cursor = sgl.BufferCursor(buffer_layout.element_type_layout, 1)
+
+    # Get element
+    element = cursor[0]
+
+    # Null the cursor
+    cursor = None
+
+    # Ensure we can still write to the element (as it shoudl be holding a reference to the cursor)
+    element["f_int32"] = 123
+
+
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+@pytest.mark.parametrize("seed", RAND_SEEDS)
+def test_apply_changes(device_type: sgl.DeviceType, seed: int):
+
+    # Randomize the order of the tests
+    tests = TESTS.copy()
+    random.seed(seed)
+    random.shuffle(tests)
+
+    # Create the module and buffer layout
+    (kernel, buffer_layout) = make_copy_module(device_type, tests)
+
+    # Make a buffer with 128 elements and a cursor to wrap it
+    count = 128
+    src = kernel.device.create_buffer(
+        element_count=count,
+        struct_type=buffer_layout,
+        usage=sgl.ResourceUsage.shader_resource | sgl.ResourceUsage.unordered_access,
+        data=np.zeros(buffer_layout.element_type_layout.stride * count, dtype=np.uint8),
+    )
+    dest = kernel.device.create_buffer(
+        element_count=count,
+        struct_type=buffer_layout,
+        usage=sgl.ResourceUsage.shader_resource | sgl.ResourceUsage.unordered_access,
+        data=np.zeros(buffer_layout.element_type_layout.stride * count, dtype=np.uint8),
+    )
+    src_cursor = sgl.BufferCursor(buffer_layout.element_type_layout, src)
+    dest_cursor = sgl.BufferCursor(buffer_layout.element_type_layout, dest)
+
+    # Populate source cursor
+    for i in range(count):
+        element = src_cursor[i]
+        for test in tests:
+            (name, gpu_type, gpu_val, value) = test
+            element[name] = value
+
+    # Apply changes to source
+    src_cursor.apply()
+
+    # Load the dest cursor - this should end up with it containing 0s as its not been written
+    dest_cursor.load()
+
+    # Verify 0s
+    for i in range(count):
+        element = dest_cursor[i]
+        assert element["f_int32"].read() == 0
+
+    # Dispatch the kernel
+    kernel.dispatch([count, 1, 1], src=src, dest=dest)
+
+    # Verify still 0s as we've not refreshed the cursor yet!
+    for i in range(count):
+        element = dest_cursor[i]
+        assert element["f_int32"].read() == 0
+
+    # Refresh the buffer
+    dest_cursor.load()
+
+    # Verify data in dest buffer matches
+    for i in range(count):
+        element = dest_cursor[i]
+        for test in tests:
+            (name, gpu_type, gpu_val, value) = test
+            assert element[name].read() == value
+
+
+"""
+    # Clear buffer reference to verify lifetime is maintained due to cursor
+    buffer = None
+
+    # Load 1 element and verify we still haven't loaded anything
+    element = cursor[0]
+    assert not cursor.is_loaded
+
+    # Read a value from the element and verify it is now loaded
+    element["f_int32"].read()
+    assert cursor.is_loaded
+
+    # Verify data matches
+    for i in range(count):
+        element = cursor[i]
+        for test in tests:
+            (name, gpu_type, gpu_val, value) = test
+            assert element[name].read() == value
+"""
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "-s"])
