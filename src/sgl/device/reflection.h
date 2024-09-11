@@ -549,13 +549,13 @@ public:
 
     uint32_t field_count() const
     {
-        // SGL_CHECK(is_struct(), "Type is not a struct");
+        SGL_CHECK(is_struct(), "Type is not a struct");
         return m_target->getFieldCount();
     }
 
     ref<const VariableReflection> get_field_by_index(uint32_t index) const
     {
-        // SGL_CHECK(is_struct(), "Type is not a struct");
+        SGL_CHECK(is_struct(), "Type is not a struct");
         return detail::from_slang(m_owner, m_target->getFieldByIndex(index));
     }
 
@@ -565,13 +565,13 @@ public:
 
     size_t element_count() const
     {
-        // SGL_CHECK(is_array(), "Type is not an array");
+        SGL_CHECK(is_array(), "Type is not an array");
         return m_target->getElementCount();
     }
 
     size_t total_element_count() const
     {
-        // SGL_CHECK(is_array(), "Type is not an array");
+        SGL_CHECK(is_array(), "Type is not an array");
         size_t result = 1;
         ref<const TypeReflection> type = ref(this);
         while (type->is_array()) {
@@ -583,7 +583,7 @@ public:
 
     ref<const TypeReflection> element_type() const
     {
-        // SGL_CHECK(is_array(), "Type is not an array");
+        SGL_CHECK(is_array(), "Type is not an array");
         return detail::from_slang(m_owner, m_target->getElementType());
     }
 
