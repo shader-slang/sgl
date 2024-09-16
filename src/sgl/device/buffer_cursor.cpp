@@ -274,18 +274,23 @@ GETSET_SCALAR(int16_t, int16);
 GETSET_SCALAR(uint16_t, uint16);
 
 GETSET_SCALAR(int, int32);
-GETSET_SCALAR(long, int32);
 GETSET_VECTOR(int1, int32);
 GETSET_VECTOR(int2, int32);
 GETSET_VECTOR(int3, int32);
 GETSET_VECTOR(int4, int32);
 
 GETSET_SCALAR(uint, uint32);
-GETSET_SCALAR(unsigned long, uint32);
 GETSET_VECTOR(uint1, uint32);
 GETSET_VECTOR(uint2, uint32);
 GETSET_VECTOR(uint3, uint32);
 GETSET_VECTOR(uint4, uint32);
+
+// MACOS treats these as separate types to int/uint, so they need to be
+// provided as extra overloads for linking to succeed.
+#ifdef SGL_MACOS
+GETSET_SCALAR(long, int32);
+GETSET_SCALAR(unsigned long, uint32);
+#endif
 
 GETSET_SCALAR(int64_t, int64);
 GETSET_SCALAR(uint64_t, uint64);
