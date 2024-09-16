@@ -274,12 +274,14 @@ GETSET_SCALAR(int16_t, int16);
 GETSET_SCALAR(uint16_t, uint16);
 
 GETSET_SCALAR(int, int32);
+GETSET_SCALAR(long, int32);
 GETSET_VECTOR(int1, int32);
 GETSET_VECTOR(int2, int32);
 GETSET_VECTOR(int3, int32);
 GETSET_VECTOR(int4, int32);
 
 GETSET_SCALAR(uint, uint32);
+GETSET_SCALAR(unsigned long, uint32);
 GETSET_VECTOR(uint1, uint32);
 GETSET_VECTOR(uint2, uint32);
 GETSET_VECTOR(uint3, uint32);
