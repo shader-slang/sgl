@@ -287,7 +287,7 @@ GETSET_VECTOR(uint4, uint32);
 
 // MACOS treats these as separate types to int/uint, so they need to be
 // provided as extra overloads for linking to succeed.
-#ifdef SGL_MACOS
+#if SGL_MACOS
 GETSET_SCALAR(long, int32);
 GETSET_SCALAR(unsigned long, uint32);
 #endif
