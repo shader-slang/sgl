@@ -19,6 +19,7 @@ ShaderCursor::ShaderCursor(ShaderObject* shader_object)
     , m_shader_object(shader_object)
     , m_offset(ShaderOffset::zero())
 {
+    SGL_ASSERT(m_type_layout);
     SGL_ASSERT(m_shader_object);
     SGL_ASSERT(m_offset.is_valid());
 }
@@ -95,9 +96,6 @@ ShaderCursor ShaderCursor::find_field(std::string_view name) const
         // The type being pointed to is the tyep of the field.
         //
         field_cursor.m_type_layout = field_layout->type_layout();
-        if (field_cursor.m_type_layout->kind() == TypeReflection::Kind::struct_) {
-            log_info("struct");
-        }
 
         // The byte offset is the current offset plus the relative offset of the field.
         // The offset in binding ranges is computed similarly.
@@ -564,12 +562,19 @@ SGL_API void ShaderCursor::set(const ref<AccelerationStructure>& value) const
         _set_matrix(&value, sizeof(value), TypeReflection::ScalarType::scalar_type, type::rows, type::cols);           \
     }
 
+SET_SCALAR(int8_t, int8);
+SET_SCALAR(uint8_t, uint8);
+SET_SCALAR(int16_t, int16);
+SET_SCALAR(uint16_t, uint16);
+
 SET_SCALAR(int, int32);
+SET_VECTOR(int1, int32);
 SET_VECTOR(int2, int32);
 SET_VECTOR(int3, int32);
 SET_VECTOR(int4, int32);
 
 SET_SCALAR(uint, uint32);
+SET_VECTOR(uint1, uint32);
 SET_VECTOR(uint2, uint32);
 SET_VECTOR(uint3, uint32);
 SET_VECTOR(uint4, uint32);
@@ -578,11 +583,13 @@ SET_SCALAR(int64_t, int64);
 SET_SCALAR(uint64_t, uint64);
 
 SET_SCALAR(float16_t, float16);
+SET_VECTOR(float16_t1, float16);
 SET_VECTOR(float16_t2, float16);
 SET_VECTOR(float16_t3, float16);
 SET_VECTOR(float16_t4, float16);
 
 SET_SCALAR(float, float32);
+SET_VECTOR(float1, float32);
 SET_VECTOR(float2, float32);
 SET_VECTOR(float3, float32);
 SET_VECTOR(float4, float32);
@@ -608,6 +615,13 @@ SGL_API void ShaderCursor::set(const bool& value) const
 {
     uint v = value ? 1 : 0;
     _set_scalar(&v, sizeof(v), TypeReflection::ScalarType::bool_);
+}
+
+template<>
+SGL_API void ShaderCursor::set(const bool1& value) const
+{
+    uint1 v(value.x ? 1 : 0);
+    _set_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 1);
 }
 
 template<>

@@ -404,6 +404,7 @@ public:
     size_t size() const { return m_desc.size; }
     size_t struct_size() const { return m_desc.struct_size; }
     Format format() const override { return m_desc.format; }
+    MemoryType memory_type() const { return m_desc.memory_type; }
 
     /// Map the whole buffer.
     /// Only available for buffers created with \c MemoryType::upload or \c MemoryType::read_back.

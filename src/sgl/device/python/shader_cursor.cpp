@@ -9,7 +9,7 @@
 #include "sgl/device/raytracing.h"
 #include "sgl/device/cuda_interop.h"
 
-#include "sgl/device/python/cursor_shared.h"
+#include "sgl/device/python/cursor_utils.h"
 
 SGL_PY_EXPORT(device_shader_cursor)
 {
@@ -25,7 +25,7 @@ SGL_PY_EXPORT(device_shader_cursor)
 
     shader_cursor //
         .def(nb::init<ShaderObject*>(), "shader_object"_a, D(ShaderCursor, ShaderCursor))
-        .def_prop_ro("offset", &ShaderCursor::offset, D(ShaderCursor, offset))
+        .def_prop_ro("_offset", &ShaderCursor::offset, D(ShaderCursor, offset))
         .def("dereference", &ShaderCursor::dereference, D(ShaderCursor, dereference))
         .def("find_entry_point", &ShaderCursor::find_entry_point, "index"_a, D(ShaderCursor, find_entry_point))
         .def("set_object", &ShaderCursor::set_object, "object"_a, D(ShaderCursor, set_object))
