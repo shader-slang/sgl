@@ -194,16 +194,7 @@ void BufferElementCursor::_set_matrix(
 )
 {
     cursor_utils::check_matrix(m_type_layout, size, scalar_type, rows, cols);
-    if (rows > 1) {
-        size_t row_size = size / rows;
-        size_t offset = m_offset;
-        for (int row = 0; row < rows; ++row) {
-            write_data(offset, reinterpret_cast<const uint8_t*>(data) + row * row_size, row_size);
-            offset += row_size;
-        }
-    } else {
-        write_data(m_offset, data, size);
-    }
+    write_data(m_offset, data, size);
 }
 
 void BufferElementCursor::_get_matrix(
@@ -215,16 +206,7 @@ void BufferElementCursor::_get_matrix(
 ) const
 {
     cursor_utils::check_matrix(m_type_layout, size, scalar_type, rows, cols);
-    if (rows > 1) {
-        size_t row_size = size / rows;
-        size_t offset = m_offset;
-        for (int row = 0; row < rows; ++row) {
-            read_data(offset, reinterpret_cast<uint8_t*>(data) + row * row_size, row_size);
-            offset += row_size;
-        }
-    } else {
-        read_data(m_offset, data, size);
-    }
+    read_data(m_offset, data, size);
 }
 
 
