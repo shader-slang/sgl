@@ -12,6 +12,7 @@
 
 namespace sgl {
 
+/// Helper to convert from numpy type mask to slang scalar type.
 inline std::optional<TypeReflection::ScalarType> dtype_to_scalar_type(nb::dlpack::dtype dtype)
 {
     switch (dtype.code) {
@@ -52,6 +53,277 @@ inline std::optional<TypeReflection::ScalarType> dtype_to_scalar_type(nb::dlpack
     }
     return {};
 }
+
+/// Enforces properties needed for converting to/from vector.
+template<typename T>
+concept IsSpecializationOfVector = requires {
+    T::dimension;
+    typename T::value_type;
+};
+
+/// Enforces properties needed for converting to/from matrix.
+template<typename T>
+concept IsSpecializationOfMatrix = requires {
+    T::rows;
+    T::cols;
+    typename T::value_type;
+};
+
+#define scalar_case(c_type, scalar_type)                                                                               \
+    read_scalar[(int)TypeReflection::ScalarType::scalar_type]                                                          \
+        = [](const CursorType& self) { return _read_scalar<c_type>(self); };
+
+#define vector_case(c_type, scalar_type)                                                                               \
+    read_vector[(int)TypeReflection::ScalarType::scalar_type][c_type::dimension]                                       \
+        = [](const CursorType& self) { return _read_vector<c_type>(self); };
+
+#define matrix_case(c_type, scalar_type)                                                                               \
+    read_matrix[(int)TypeReflection::ScalarType::scalar_type][c_type::rows][c_type::cols]                              \
+        = [](const CursorType& self) { return _read_matrix<c_type>(self); };
+
+/// Table of converters based on slang scalar type and shape.
+template<typename CursorType>
+struct ReadConverterTable {
+    std::function<nb::object(const CursorType&)> read_scalar[(int)TypeReflection::ScalarType::COUNT];
+    std::function<nb::object(const CursorType&)> read_vector[(int)TypeReflection::ScalarType::COUNT][5];
+    std::function<nb::object(const CursorType&)> read_matrix[(int)TypeReflection::ScalarType::COUNT][5][5];
+    ReadConverterTable()
+    {
+        // Initialize all entries to an error function that throws an exception.
+        auto read_err_func = [](const CursorType&)
+        {
+            if (true) { // avoid 'unreachable code' warnings
+                SGL_THROW("Unsupported element type");
+            }
+            return nb::none();
+        };
+        for (int i = 0; i < (int)TypeReflection::ScalarType::COUNT; i++) {
+            read_scalar[i] = read_err_func;
+            for (int j = 0; j < 5; ++j) {
+                read_vector[i][j] = read_err_func;
+                for (int k = 0; k < 5; ++k) {
+                    read_matrix[i][j][k] = read_err_func;
+                }
+            }
+        }
+
+        // Register converters for all supported scalar types.
+        scalar_case(bool, bool_);
+        scalar_case(int8_t, int8);
+        scalar_case(uint8_t, uint8);
+        scalar_case(int16_t, int16);
+        scalar_case(uint16_t, uint16);
+        scalar_case(int32_t, int32);
+        scalar_case(uint32_t, uint32);
+        scalar_case(int64_t, int64);
+        scalar_case(uint64_t, uint64);
+        scalar_case(float16_t, float16);
+        scalar_case(float, float32);
+        scalar_case(double, float64);
+        scalar_case(intptr_t, intptr);
+        scalar_case(uintptr_t, uintptr);
+
+        // Register converters for all supported vector types.
+        vector_case(bool1, bool_);
+        vector_case(float1, float32);
+        vector_case(int1, int32);
+        vector_case(uint1, uint32);
+        vector_case(bool2, bool_);
+        vector_case(float2, float32);
+        vector_case(int2, int32);
+        vector_case(uint2, uint32);
+        vector_case(bool3, bool_);
+        vector_case(float3, float32);
+        vector_case(int3, int32);
+        vector_case(uint3, uint32);
+        vector_case(bool4, bool_);
+        vector_case(float4, float32);
+        vector_case(int4, int32);
+        vector_case(uint4, uint32);
+
+        // Register converters for all supported matrix types.
+        matrix_case(float2x2, float32);
+        matrix_case(float3x3, float32);
+        matrix_case(float2x4, float32);
+        matrix_case(float3x4, float32);
+        matrix_case(float4x4, float32);
+    }
+
+
+    /// Read scalar value from buffer element cursor and convert to Python object.
+    template<typename ValType>
+    inline static nb::object _read_scalar(const CursorType& self)
+    {
+        ValType res;
+        self.get(res);
+        return nb::cast(res);
+    }
+
+    /// Read vector value from buffer element cursor and convert to Python object.
+    template<typename ValType>
+        requires IsSpecializationOfVector<ValType>
+    inline static nb::object _read_vector(const CursorType& self)
+    {
+        ValType res;
+        self.get(res);
+        return nb::cast(res);
+    }
+
+    /// Read matrix value from buffer element cursor and convert to Python object.
+    template<typename ValType>
+        requires IsSpecializationOfMatrix<ValType>
+    inline static nb::object _read_matrix(const CursorType& self)
+    {
+        ValType res;
+        self.get(res);
+        return nb::cast(res);
+    }
+};
+
+#undef scalar_case
+#undef vector_case
+#undef matrix_case
+
+#define scalar_case(c_type, scalar_type)                                                                               \
+    write_scalar[(int)TypeReflection::ScalarType::scalar_type]                                                         \
+        = [](CursorType& self, nb::object nbval) { _write_scalar<c_type>(self, nbval); };
+
+#define vector_case(c_type, scalar_type)                                                                               \
+    write_vector[(int)TypeReflection::ScalarType::scalar_type][c_type::dimension]                                      \
+        = [](CursorType& self, nb::object nbval) { _write_vector<c_type>(self, nbval); };
+
+#define matrix_case(c_type, scalar_type)                                                                               \
+    write_matrix[(int)TypeReflection::ScalarType::scalar_type][c_type::rows][c_type::cols]                             \
+        = [](CursorType& self, nb::object nbval) { _write_matrix<c_type>(self, nbval); };
+
+/// Table of converters based on slang scalar type and shape.
+template<typename CursorType>
+struct WriteConverterTable {
+    std::function<void(CursorType&, nb::object)> write_scalar[(int)TypeReflection::ScalarType::COUNT];
+    std::function<void(CursorType&, nb::object)> write_vector[(int)TypeReflection::ScalarType::COUNT][5];
+    std::function<void(CursorType&, nb::object)> write_matrix[(int)TypeReflection::ScalarType::COUNT][5][5];
+    WriteConverterTable()
+    {
+        // Initialize all entries to an error function that throws an exception.
+        auto write_err_func = [](const CursorType&, nb::object) { SGL_THROW("Unsupported element type"); };
+        for (int i = 0; i < (int)TypeReflection::ScalarType::COUNT; i++) {
+            write_scalar[i] = write_err_func;
+            for (int j = 0; j < 5; ++j) {
+                write_vector[i][j] = write_err_func;
+                for (int k = 0; k < 5; ++k) {
+                    write_matrix[i][j][k] = write_err_func;
+                }
+            }
+        }
+
+        // Register converters for all supported scalar types.
+        scalar_case(bool, bool_);
+        scalar_case(int8_t, int8);
+        scalar_case(uint8_t, uint8);
+        scalar_case(int16_t, int16);
+        scalar_case(uint16_t, uint16);
+        scalar_case(int32_t, int32);
+        scalar_case(uint32_t, uint32);
+        scalar_case(int64_t, int64);
+        scalar_case(uint64_t, uint64);
+        scalar_case(float16_t, float16);
+        scalar_case(float, float32);
+        scalar_case(double, float64);
+        scalar_case(intptr_t, intptr);
+        scalar_case(uintptr_t, uintptr);
+
+        // Register converters for all supported vector types.
+        vector_case(bool1, bool_);
+        vector_case(float1, float32);
+        vector_case(int1, int32);
+        vector_case(uint1, uint32);
+        vector_case(bool2, bool_);
+        vector_case(float2, float32);
+        vector_case(int2, int32);
+        vector_case(uint2, uint32);
+        vector_case(bool3, bool_);
+        vector_case(float3, float32);
+        vector_case(int3, int32);
+        vector_case(uint3, uint32);
+        vector_case(bool4, bool_);
+        vector_case(float4, float32);
+        vector_case(int4, int32);
+        vector_case(uint4, uint32);
+
+        // Register converters for all supported matrix types.
+        matrix_case(float2x2, float32);
+        matrix_case(float3x3, float32);
+        matrix_case(float2x4, float32);
+        matrix_case(float3x4, float32);
+        matrix_case(float4x4, float32);
+    }
+
+    /// Write scalar value to buffer element cursor from Python object.
+    template<typename ValType>
+    inline static void _write_scalar(CursorType& self, nb::object nbval)
+    {
+        auto val = nb::cast<ValType>(nbval);
+        self.set(val);
+    }
+
+    /// Write vector value to buffer element cursor from Python object
+    template<typename ValType>
+        requires IsSpecializationOfVector<ValType>
+    inline static void _write_vector(CursorType& self, nb::object nbval)
+    {
+        if (nb::isinstance<ValType>(nbval)) {
+            // A vector of the correct type - just convert it.
+            auto val = nb::cast<ValType>(nbval);
+            self.set(val);
+        } else if (nb::isinstance<nb::ndarray<nb::numpy>>(nbval)) {
+            // A numpy array. Reinterpret numpy memory as vector type.
+            auto nbarray = nb::cast<nb::ndarray<nb::numpy>>(nbval);
+            SGL_CHECK(is_ndarray_contiguous(nbarray), "data is not contiguous");
+            SGL_CHECK(nbarray.ndim() == 1 || nbarray.ndim() == 2, "numpy array must have 1 or 2 dimensions.");
+            size_t dimension = 1;
+            for (size_t i = 0; i < nbarray.ndim(); ++i)
+                dimension *= nbarray.shape(i);
+            SGL_CHECK(dimension == ValType::dimension, "numpy array has wrong dimension.");
+            SGL_CHECK(nbarray.nbytes() == sizeof(ValType), "numpy array has wrong size.");
+            auto val = *reinterpret_cast<const ValType*>(nbarray.data());
+            self.set(val);
+        } else if (nb::isinstance<nb::sequence>(nbval)) {
+            // A list or tuple. Attempt to cast each element of list to element of vector.
+            auto seq = nb::cast<nb::sequence>(nbval);
+            SGL_CHECK(nb::len(seq) == ValType::dimension, "sequence has wrong dimension.");
+            ValType val;
+            for (int i = 0; i < ValType::dimension; i++) {
+                val[i] = nb::cast<typename ValType::value_type>(seq[i]);
+            }
+            self.set(val);
+        } else {
+            SGL_THROW("Expected numpy array or vector");
+        }
+    }
+
+    /// Write matrix value to buffer element cursor from Python object.
+    template<typename ValType>
+        requires IsSpecializationOfMatrix<ValType>
+    inline static void _write_matrix(CursorType& self, nb::object nbval)
+    {
+        if (nb::isinstance<ValType>(nbval)) {
+            // Matrix of correct type
+            auto val = nb::cast<ValType>(nbval);
+            self.set(val);
+        } else if (nb::isinstance<nb::ndarray<nb::numpy>>(nbval)) {
+            // A numpy array. We have a python cast from numpy->matrix,
+            // so can just call it here to convert properly.
+            auto val = nb::cast<ValType>(nbval);
+            self.set(val);
+        } else {
+            SGL_THROW("Expected numpy array or matrix");
+        }
+    }
+};
+
+#undef scalar_case
+#undef vector_case
+#undef matrix_case
 
 
 template<typename CursorType>

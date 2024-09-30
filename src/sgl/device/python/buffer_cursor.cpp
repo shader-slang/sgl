@@ -14,206 +14,9 @@ namespace sgl {
 
 namespace detail {
 
-    /// Enforces properties needed for converting to/from vector.
-    template<typename T>
-    concept IsSpecializationOfVector = requires {
-        T::dimension;
-        typename T::value_type;
-    };
 
-    /// Enforces properties needed for converting to/from matrix.
-    template<typename T>
-    concept IsSpecializationOfMatrix = requires {
-        T::rows;
-        T::cols;
-        typename T::value_type;
-    };
-
-    /// Read scalar value from buffer element cursor and convert to Python object.
-    template<typename ValType>
-    inline nb::object _read_scalar(const BufferElementCursor& self)
-    {
-        ValType res;
-        self.get(res);
-        return nb::cast(res);
-    }
-
-    /// Write scalar value to buffer element cursor from Python object.
-    template<typename ValType>
-    inline void _write_scalar(BufferElementCursor& self, nb::object nbval)
-    {
-        auto val = nb::cast<ValType>(nbval);
-        self.set(val);
-    }
-
-    /// Read vector value from buffer element cursor and convert to Python object.
-    template<typename ValType>
-        requires IsSpecializationOfVector<ValType>
-    inline nb::object _read_vector(const BufferElementCursor& self)
-    {
-        ValType res;
-        self.get(res);
-        return nb::cast(res);
-    }
-
-    /// Write vector value to buffer element cursor from Python object
-    template<typename ValType>
-        requires IsSpecializationOfVector<ValType>
-    inline void _write_vector(BufferElementCursor& self, nb::object nbval)
-    {
-        if (nb::isinstance<ValType>(nbval)) {
-            // A vector of the correct type - just convert it.
-            auto val = nb::cast<ValType>(nbval);
-            self.set(val);
-        } else if (nb::isinstance<nb::ndarray<nb::numpy>>(nbval)) {
-            // A numpy array. Reinterpret numpy memory as vector type.
-            auto nbarray = nb::cast<nb::ndarray<nb::numpy>>(nbval);
-            SGL_CHECK(is_ndarray_contiguous(nbarray), "data is not contiguous");
-            SGL_CHECK(nbarray.ndim() == 1 || nbarray.ndim() == 2, "numpy array must have 1 or 2 dimensions.");
-            size_t dimension = 1;
-            for (size_t i = 0; i < nbarray.ndim(); ++i)
-                dimension *= nbarray.shape(i);
-            SGL_CHECK(dimension == ValType::dimension, "numpy array has wrong dimension.");
-            SGL_CHECK(nbarray.nbytes() == sizeof(ValType), "numpy array has wrong size.");
-            auto val = *reinterpret_cast<const ValType*>(nbarray.data());
-            self.set(val);
-        } else if (nb::isinstance<nb::sequence>(nbval)) {
-            // A list or tuple. Attempt to cast each element of list to element of vector.
-            auto seq = nb::cast<nb::sequence>(nbval);
-            SGL_CHECK(nb::len(seq) == ValType::dimension, "sequence has wrong dimension.");
-            ValType val;
-            for (int i = 0; i < ValType::dimension; i++) {
-                val[i] = nb::cast<typename ValType::value_type>(seq[i]);
-            }
-            self.set(val);
-        } else {
-            SGL_THROW("Expected numpy array or vector");
-        }
-    }
-
-    /// Read matrix value from buffer element cursor and convert to Python object.
-    template<typename ValType>
-        requires IsSpecializationOfMatrix<ValType>
-    inline nb::object _read_matrix(const BufferElementCursor& self)
-    {
-        ValType res;
-        self.get(res);
-        return nb::cast(res);
-    }
-
-    /// Write matrix value to buffer element cursor from Python object.
-    template<typename ValType>
-        requires IsSpecializationOfMatrix<ValType>
-    inline void _write_matrix(BufferElementCursor& self, nb::object nbval)
-    {
-        if (nb::isinstance<ValType>(nbval)) {
-            // Matrix of correct type
-            auto val = nb::cast<ValType>(nbval);
-            self.set(val);
-        } else if (nb::isinstance<nb::ndarray<nb::numpy>>(nbval)) {
-            // A numpy array. We have a python cast from numpy->matrix,
-            // so can just call it here to convert properly.
-            auto val = nb::cast<ValType>(nbval);
-            self.set(val);
-        } else {
-            SGL_THROW("Expected numpy array or matrix");
-        }
-    }
-
-#define scalar_case(c_type, scalar_type)                                                                               \
-    read_scalar[(int)TypeReflection::ScalarType::scalar_type]                                                          \
-        = [](const BufferElementCursor& self) { return _read_scalar<c_type>(self); };                                  \
-    write_scalar[(int)TypeReflection::ScalarType::scalar_type]                                                         \
-        = [](BufferElementCursor& self, nb::object nbval) { _write_scalar<c_type>(self, nbval); };
-
-#define vector_case(c_type, scalar_type)                                                                               \
-    read_vector[(int)TypeReflection::ScalarType::scalar_type][c_type::dimension]                                       \
-        = [](const BufferElementCursor& self) { return _read_vector<c_type>(self); };                                  \
-    write_vector[(int)TypeReflection::ScalarType::scalar_type][c_type::dimension]                                      \
-        = [](BufferElementCursor& self, nb::object nbval) { _write_vector<c_type>(self, nbval); };
-
-#define matrix_case(c_type, scalar_type)                                                                               \
-    read_matrix[(int)TypeReflection::ScalarType::scalar_type][c_type::rows][c_type::cols]                              \
-        = [](const BufferElementCursor& self) { return _read_matrix<c_type>(self); };                                  \
-    write_matrix[(int)TypeReflection::ScalarType::scalar_type][c_type::rows][c_type::cols]                             \
-        = [](BufferElementCursor& self, nb::object nbval) { _write_matrix<c_type>(self, nbval); };
-
-    /// Table of converters based on slang scalar type and shape.
-    struct Converters {
-        std::function<nb::object(const BufferElementCursor&)> read_scalar[(int)TypeReflection::ScalarType::COUNT];
-        std::function<nb::object(const BufferElementCursor&)> read_vector[(int)TypeReflection::ScalarType::COUNT][5];
-        std::function<nb::object(const BufferElementCursor&)> read_matrix[(int)TypeReflection::ScalarType::COUNT][5][5];
-        std::function<void(BufferElementCursor&, nb::object)> write_scalar[(int)TypeReflection::ScalarType::COUNT];
-        std::function<void(BufferElementCursor&, nb::object)> write_vector[(int)TypeReflection::ScalarType::COUNT][5];
-        std::function<void(BufferElementCursor&, nb::object)> write_matrix[(int)TypeReflection::ScalarType::COUNT][5]
-                                                                          [5];
-        Converters()
-        {
-            // Initialize all entries to an error function that throws an exception.
-            auto read_err_func = [](const BufferElementCursor&)
-            {
-                if (true) { // avoid 'unreachable code' warnings
-                    SGL_THROW("Unsupported element type");
-                }
-                return nb::none();
-            };
-            auto write_err_func = [](const BufferElementCursor&, nb::object) { SGL_THROW("Unsupported element type"); };
-            for (int i = 0; i < (int)TypeReflection::ScalarType::COUNT; i++) {
-                read_scalar[i] = read_err_func;
-                write_scalar[i] = write_err_func;
-                for (int j = 0; j < 5; ++j) {
-                    read_vector[i][j] = read_err_func;
-                    write_vector[i][j] = write_err_func;
-                    for (int k = 0; k < 5; ++k) {
-                        read_matrix[i][j][k] = read_err_func;
-                        write_matrix[i][j][k] = write_err_func;
-                    }
-                }
-            }
-
-            // Register converters for all supported scalar types.
-            scalar_case(bool, bool_);
-            scalar_case(int8_t, int8);
-            scalar_case(uint8_t, uint8);
-            scalar_case(int16_t, int16);
-            scalar_case(uint16_t, uint16);
-            scalar_case(int32_t, int32);
-            scalar_case(uint32_t, uint32);
-            scalar_case(int64_t, int64);
-            scalar_case(uint64_t, uint64);
-            scalar_case(float16_t, float16);
-            scalar_case(float, float32);
-            scalar_case(double, float64);
-            scalar_case(intptr_t, intptr);
-            scalar_case(uintptr_t, uintptr);
-
-            // Register converters for all supported vector types.
-            vector_case(bool1, bool_);
-            vector_case(float1, float32);
-            vector_case(int1, int32);
-            vector_case(uint1, uint32);
-            vector_case(bool2, bool_);
-            vector_case(float2, float32);
-            vector_case(int2, int32);
-            vector_case(uint2, uint32);
-            vector_case(bool3, bool_);
-            vector_case(float3, float32);
-            vector_case(int3, int32);
-            vector_case(uint3, uint32);
-            vector_case(bool4, bool_);
-            vector_case(float4, float32);
-            vector_case(int4, int32);
-            vector_case(uint4, uint32);
-
-            // Register converters for all supported matrix types.
-            matrix_case(float2x2, float32);
-            matrix_case(float3x3, float32);
-            matrix_case(float2x4, float32);
-            matrix_case(float3x4, float32);
-            matrix_case(float4x4, float32);
-        }
-    };
-    static Converters _conv;
+    static ReadConverterTable<BufferElementCursor> _readconv;
+    static WriteConverterTable<BufferElementCursor> _writeconv;
 
     /// Read function inspects the slang type and attempts to convert it
     /// to a matching python type. For structs and arrays, generates
@@ -225,13 +28,13 @@ namespace detail {
         auto type = self.type();
         switch (type->kind()) {
         case TypeReflection::Kind::scalar: {
-            return detail::_conv.read_scalar[(int)type->scalar_type()](self);
+            return detail::_readconv.read_scalar[(int)type->scalar_type()](self);
         }
         case TypeReflection::Kind::vector: {
-            return detail::_conv.read_vector[(int)type->scalar_type()][type->col_count()](self);
+            return detail::_readconv.read_vector[(int)type->scalar_type()][type->col_count()](self);
         }
         case TypeReflection::Kind::matrix: {
-            return detail::_conv.read_matrix[(int)type->scalar_type()][type->row_count()][type->col_count()](self);
+            return detail::_readconv.read_matrix[(int)type->scalar_type()][type->row_count()][type->col_count()](self);
         }
         case TypeReflection::Kind::struct_: {
             nb::dict res;
@@ -265,13 +68,13 @@ namespace detail {
         auto type = self.type();
         switch (type->kind()) {
         case TypeReflection::Kind::scalar: {
-            return detail::_conv.write_scalar[(int)type->scalar_type()](self, nbval);
+            return detail::_writeconv.write_scalar[(int)type->scalar_type()](self, nbval);
         }
         case TypeReflection::Kind::vector: {
-            return detail::_conv.write_vector[(int)type->scalar_type()][type->col_count()](self, nbval);
+            return detail::_writeconv.write_vector[(int)type->scalar_type()][type->col_count()](self, nbval);
         }
         case TypeReflection::Kind::matrix: {
-            return detail::_conv.write_matrix[(int)type->scalar_type()][type->row_count()][type->col_count()](
+            return detail::_writeconv.write_matrix[(int)type->scalar_type()][type->row_count()][type->col_count()](
                 self,
                 nbval
             );
