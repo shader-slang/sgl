@@ -53,6 +53,7 @@ SGL_PY_DECLARE(ui);
 SGL_PY_DECLARE(ui_widgets);
 
 SGL_PY_DECLARE(utils_renderdoc);
+SGL_PY_DECLARE(utils_slangpy);
 SGL_PY_DECLARE(utils_tev);
 SGL_PY_DECLARE(utils_texture_loader);
 
@@ -126,6 +127,8 @@ NB_MODULE(sgl_ext, m_)
 
     m.def_submodule("renderdoc", "RenderDoc module");
     SGL_PY_IMPORT(utils_renderdoc);
+    m.def_submodule("slangpy", "SlangPy module");
+    SGL_PY_IMPORT(utils_slangpy);
     m.def_submodule("tev", "tev image viewer module");
     SGL_PY_IMPORT(utils_tev);
     SGL_PY_IMPORT(utils_texture_loader);
