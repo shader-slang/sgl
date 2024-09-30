@@ -178,6 +178,45 @@ struct ReadConverterTable {
         self.get(res);
         return nb::cast(res);
     }
+
+    /// Read function inspects the slang type and attempts to convert it
+    /// to a matching python type. For structs and arrays, generates
+    /// a nested dictionary or list and recurses.
+    nb::object read(const CursorType& self)
+    {
+        if (!self.is_valid())
+            return nb::none();
+        auto type = self.type();
+        switch (type->kind()) {
+        case TypeReflection::Kind::scalar: {
+            return read_scalar[(int)type->scalar_type()](self);
+        }
+        case TypeReflection::Kind::vector: {
+            return read_vector[(int)type->scalar_type()][type->col_count()](self);
+        }
+        case TypeReflection::Kind::matrix: {
+            return read_matrix[(int)type->scalar_type()][type->row_count()][type->col_count()](self);
+        }
+        case TypeReflection::Kind::struct_: {
+            nb::dict res;
+            for (uint32_t i = 0; i < type->field_count(); i++) {
+                auto field = type->get_field_by_index(i);
+                res[field->name()] = read(self[field->name()]);
+            }
+            return res;
+        }
+        case TypeReflection::Kind::array: {
+            nb::list res;
+            for (uint32_t i = 0; i < type->element_count(); i++) {
+                res.append(read(self[i]));
+            }
+            return res;
+        }
+        default:
+            break;
+        }
+        SGL_THROW("Unsupported element type");
+    }
 };
 
 #undef scalar_case
@@ -319,6 +358,73 @@ struct WriteConverterTable {
             SGL_THROW("Expected numpy array or matrix");
         }
     }
+
+    /// Write function inspects the slang type and uses it to try
+    /// and convert a Python input to the correct c++ type. For structs
+    /// and arrays, expects a dict, sequence type or numpy array.
+    void write(CursorType& self, nb::object nbval)
+    {
+        if (!self.is_valid())
+            return;
+
+        auto type = self.type();
+        switch (type->kind()) {
+        case TypeReflection::Kind::scalar: {
+            return write_scalar[(int)type->scalar_type()](self, nbval);
+        }
+        case TypeReflection::Kind::vector: {
+            return write_vector[(int)type->scalar_type()][type->col_count()](self, nbval);
+        }
+        case TypeReflection::Kind::matrix: {
+            return write_matrix[(int)type->scalar_type()][type->row_count()][type->col_count()](self, nbval);
+        }
+        case TypeReflection::Kind::struct_: {
+            // Expect a dict for a slang struct.
+            if (nb::isinstance<nb::dict>(nbval)) {
+                auto dict = nb::cast<nb::dict>(nbval);
+                for (uint32_t i = 0; i < type->field_count(); i++) {
+                    auto field = type->get_field_by_index(i);
+                    auto child = self[field->name()];
+                    write(child, dict[field->name()]);
+                }
+                return;
+            } else {
+                SGL_THROW("Expected dict");
+            }
+        }
+        case TypeReflection::Kind::array: {
+            // Expect numpy array or sequence for a slang array.
+            if (nb::isinstance<nb::ndarray<nb::numpy>>(nbval)) {
+                // TODO: Should be able to do better job of interpreting nb array values by reading
+                // data type and extracting individual elements.
+                auto nbarray = nb::cast<nb::ndarray<nb::numpy>>(nbval);
+                SGL_CHECK(nbarray.ndim() == 1, "numpy array must have 1 dimension.");
+                SGL_CHECK(nbarray.shape(0) == type->element_count(), "numpy array is the wrong length.");
+                SGL_CHECK(is_ndarray_contiguous(nbarray), "data is not contiguous");
+                self._set_array(
+                    nbarray.data(),
+                    nbarray.nbytes(),
+                    type->element_type()->scalar_type(),
+                    narrow_cast<int>(nbarray.shape(0))
+                );
+                return;
+            } else if (nb::isinstance<nb::sequence>(nbval)) {
+                auto seq = nb::cast<nb::sequence>(nbval);
+                SGL_CHECK(nb::len(seq) == type->element_count(), "sequence is the wrong length.");
+                for (uint32_t i = 0; i < type->element_count(); i++) {
+                    auto child = self[i];
+                    write(child, seq[i]);
+                }
+                return;
+            } else {
+                SGL_THROW("Expected list");
+            }
+        }
+        default:
+            break;
+        }
+        SGL_THROW("Unsupported element type");
+    }
 };
 
 #undef scalar_case
@@ -342,6 +448,66 @@ inline void bind_traversable_cursor(nanobind::class_<CursorType>& cursor)
         .def("__getitem__", [](CursorType& self, int index) { return self[index]; })
         // note: __getattr__ should not except if field is not found
         .def("__getattr__", [](CursorType& self, std::string_view name) { return self.find_field(name); });
+}
+
+template<typename CursorType>
+inline void bind_writable_cursor(WriteConverterTable<CursorType>& table, nanobind::class_<CursorType>& cursor)
+{
+    // __setitem__ and __setattr__ functions are overloaded to allow direct setting
+    // of fields and elements.
+    cursor //
+        .def(
+            "__setattr__",
+            [&table](CursorType& self, std::string_view name, nb::object nbval)
+            {
+                auto child = self[name];
+                table.write(child, nbval);
+            },
+            "name"_a,
+            "val"_a,
+            D_NA(CursorType, write)
+        )
+        .def(
+            "__setitem__",
+            [&table](CursorType& self, std::string_view name, nb::object nbval)
+            {
+                auto child = self[name];
+                table.write(child, nbval);
+            },
+            "index"_a,
+            "val"_a,
+            D_NA(CursorType, write)
+        )
+        .def(
+            "__setitem__",
+            [&table](CursorType& self, int index, nb::object nbval)
+            {
+                auto child = self[index];
+                table.write(child, nbval);
+            },
+            "index"_a,
+            "val"_a,
+            D_NA(CursorType, write)
+        )
+        .def(
+            "write",
+            [&table](CursorType& self, nb::object nbval) { table.write(self, nbval); },
+            "val"_a,
+            D_NA(CursorType, write)
+        );
+}
+
+template<typename CursorType>
+inline void bind_readable_cursor(ReadConverterTable<CursorType>& table, nanobind::class_<CursorType>& cursor)
+{
+    // __setitem__ and __setattr__ functions are overloaded to allow direct setting
+    // of fields and elements.
+    cursor //
+        .def(
+            "read",
+            [&table](CursorType& self) { return table.read(self); },
+            D_NA(CursorType, read)
+        );
 }
 
 template<typename CursorType>

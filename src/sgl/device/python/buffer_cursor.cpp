@@ -11,122 +11,9 @@
 #include "sgl/core/string.h"
 
 namespace sgl {
-
 namespace detail {
-
-
     static ReadConverterTable<BufferElementCursor> _readconv;
     static WriteConverterTable<BufferElementCursor> _writeconv;
-
-    /// Read function inspects the slang type and attempts to convert it
-    /// to a matching python type. For structs and arrays, generates
-    /// a nested dictionary or list and recurses.
-    nb::object read(const BufferElementCursor& self)
-    {
-        if (!self.is_valid())
-            return nb::none();
-        auto type = self.type();
-        switch (type->kind()) {
-        case TypeReflection::Kind::scalar: {
-            return detail::_readconv.read_scalar[(int)type->scalar_type()](self);
-        }
-        case TypeReflection::Kind::vector: {
-            return detail::_readconv.read_vector[(int)type->scalar_type()][type->col_count()](self);
-        }
-        case TypeReflection::Kind::matrix: {
-            return detail::_readconv.read_matrix[(int)type->scalar_type()][type->row_count()][type->col_count()](self);
-        }
-        case TypeReflection::Kind::struct_: {
-            nb::dict res;
-            for (uint32_t i = 0; i < type->field_count(); i++) {
-                auto field = type->get_field_by_index(i);
-                res[field->name()] = read(self[field->name()]);
-            }
-            return res;
-        }
-        case TypeReflection::Kind::array: {
-            nb::list res;
-            for (uint32_t i = 0; i < type->element_count(); i++) {
-                res.append(read(self[i]));
-            }
-            return res;
-        }
-        default:
-            break;
-        }
-        SGL_THROW("Unsupported element type");
-    }
-
-    /// Write function inspects the slang type and uses it to try
-    /// and convert a Python input to the correct c++ type. For structs
-    /// and arrays, expects a dict, sequence type or numpy array.
-    void write(BufferElementCursor& self, nb::object nbval)
-    {
-        if (!self.is_valid())
-            return;
-
-        auto type = self.type();
-        switch (type->kind()) {
-        case TypeReflection::Kind::scalar: {
-            return detail::_writeconv.write_scalar[(int)type->scalar_type()](self, nbval);
-        }
-        case TypeReflection::Kind::vector: {
-            return detail::_writeconv.write_vector[(int)type->scalar_type()][type->col_count()](self, nbval);
-        }
-        case TypeReflection::Kind::matrix: {
-            return detail::_writeconv.write_matrix[(int)type->scalar_type()][type->row_count()][type->col_count()](
-                self,
-                nbval
-            );
-        }
-        case TypeReflection::Kind::struct_: {
-            // Expect a dict for a slang struct.
-            if (nb::isinstance<nb::dict>(nbval)) {
-                auto dict = nb::cast<nb::dict>(nbval);
-                for (uint32_t i = 0; i < type->field_count(); i++) {
-                    auto field = type->get_field_by_index(i);
-                    auto child = self[field->name()];
-                    write(child, dict[field->name()]);
-                }
-                return;
-            } else {
-                SGL_THROW("Expected dict");
-            }
-        }
-        case TypeReflection::Kind::array: {
-            // Expect numpy array or sequence for a slang array.
-            if (nb::isinstance<nb::ndarray<nb::numpy>>(nbval)) {
-                // TODO: Should be able to do better job of interpreting nb array values by reading
-                // data type and extracting individual elements.
-                auto nbarray = nb::cast<nb::ndarray<nb::numpy>>(nbval);
-                SGL_CHECK(nbarray.ndim() == 1, "numpy array must have 1 dimension.");
-                SGL_CHECK(nbarray.shape(0) == type->element_count(), "numpy array is the wrong length.");
-                SGL_CHECK(is_ndarray_contiguous(nbarray), "data is not contiguous");
-                self._set_array(
-                    nbarray.data(),
-                    nbarray.nbytes(),
-                    type->element_type()->scalar_type(),
-                    narrow_cast<int>(nbarray.shape(0))
-                );
-                return;
-            } else if (nb::isinstance<nb::sequence>(nbval)) {
-                auto seq = nb::cast<nb::sequence>(nbval);
-                SGL_CHECK(nb::len(seq) == type->element_count(), "sequence is the wrong length.");
-                for (uint32_t i = 0; i < type->element_count(); i++) {
-                    auto child = self[i];
-                    write(child, seq[i]);
-                }
-                return;
-            } else {
-                SGL_THROW("Expected list");
-            }
-        }
-        default:
-            break;
-        }
-        SGL_THROW("Unsupported element type");
-    }
-
 } // namespace detail
 } // namespace sgl
 
@@ -174,7 +61,7 @@ SGL_PY_EXPORT(device_buffer_cursor)
             {
                 // __repr__ function basically reads the value into a nanobind object and
                 // calls its __repr__ function.
-                auto val = nb::cast<std::string>(detail::read(self).attr("__repr__")());
+                auto val = nb::cast<std::string>(detail::_readconv.read(self).attr("__repr__")());
                 if (self.is_valid())
                     val += fmt::format(" [{}]", self.type()->full_name());
                 return val;
@@ -184,56 +71,9 @@ SGL_PY_EXPORT(device_buffer_cursor)
     // Bind traversal functions.
     bind_traversable_cursor(buffer_element_cursor);
 
-    // __setitem__ and __setattr__ functions are overloaded to allow direct setting
-    // of fields and elements.
-    buffer_element_cursor //
-        .def(
-            "__setattr__",
-            [](BufferElementCursor& self, std::string_view name, nb::object nbval)
-            {
-                auto child = self[name];
-                detail::write(child, nbval);
-            },
-            "name"_a,
-            "val"_a,
-            D_NA(BufferElementCursor, write)
-        )
-        .def(
-            "__setitem__",
-            [](BufferElementCursor& self, std::string_view name, nb::object nbval)
-            {
-                auto child = self[name];
-                detail::write(child, nbval);
-            },
-            "index"_a,
-            "val"_a,
-            D_NA(BufferElementCursor, write)
-        )
-        .def(
-            "__setitem__",
-            [](BufferElementCursor& self, int index, nb::object nbval)
-            {
-                auto child = self[index];
-                detail::write(child, nbval);
-            },
-            "index"_a,
-            "val"_a,
-            D_NA(BufferElementCursor, write)
-        );
-
-    // Explicit read/write value functions.
-    buffer_element_cursor //
-        .def(
-            "write",
-            [](BufferElementCursor& self, nb::object nbval) { detail::write(self, nbval); },
-            "val"_a,
-            D_NA(BufferElementCursor, write)
-        )
-        .def(
-            "read",
-            [](BufferElementCursor& self) { return detail::read(self); },
-            D_NA(BufferElementCursor, read)
-        );
+    // Bind read and write functions
+    bind_readable_cursor(detail::_readconv, buffer_element_cursor);
+    bind_writable_cursor(detail::_writeconv, buffer_element_cursor);
 
     // Interface to simpler root cursor object that maps to the larger buffer.
     nb::class_<BufferCursor, Object>(m, "BufferCursor", D_NA(BufferCursor)) //
