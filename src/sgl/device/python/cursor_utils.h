@@ -126,18 +126,22 @@ struct ReadConverterTable {
         // Register converters for all supported vector types.
         vector_case(bool1, bool_);
         vector_case(float1, float32);
+        vector_case(float16_t1, float16);
         vector_case(int1, int32);
         vector_case(uint1, uint32);
         vector_case(bool2, bool_);
         vector_case(float2, float32);
+        vector_case(float16_t2, float16);
         vector_case(int2, int32);
         vector_case(uint2, uint32);
         vector_case(bool3, bool_);
         vector_case(float3, float32);
+        vector_case(float16_t3, float16);
         vector_case(int3, int32);
         vector_case(uint3, uint32);
         vector_case(bool4, bool_);
         vector_case(float4, float32);
+        vector_case(float16_t4, float16);
         vector_case(int4, int32);
         vector_case(uint4, uint32);
 
@@ -274,18 +278,22 @@ struct WriteConverterTable {
         // Register converters for all supported vector types.
         vector_case(bool1, bool_);
         vector_case(float1, float32);
+        vector_case(float16_t1, float16);
         vector_case(int1, int32);
         vector_case(uint1, uint32);
         vector_case(bool2, bool_);
         vector_case(float2, float32);
+        vector_case(float16_t2, float16);
         vector_case(int2, int32);
         vector_case(uint2, uint32);
         vector_case(bool3, bool_);
         vector_case(float3, float32);
+        vector_case(float16_t3, float16);
         vector_case(int3, int32);
         vector_case(uint3, uint32);
         vector_case(bool4, bool_);
         vector_case(float4, float32);
+        vector_case(float16_t4, float16);
         vector_case(int4, int32);
         vector_case(uint4, uint32);
 
@@ -305,6 +313,37 @@ struct WriteConverterTable {
         self.set(val);
     }
 
+    /// Default implementation of write vector from numpy array.
+    template<typename ValType>
+        requires IsSpecializationOfVector<ValType>
+    inline static void _write_vector_from_numpy(CursorType& self, nb::ndarray<nb::numpy> nbarray)
+    {
+        SGL_CHECK(nbarray.nbytes() == sizeof(ValType), "numpy array has wrong size.");
+        auto val = *reinterpret_cast<const ValType*>(nbarray.data());
+        self.set(val);
+    }
+
+    /// Version of vector write specifically for bool vectors (which are stored as uint32_t)
+    template<typename ValType>
+        requires IsSpecializationOfVector<ValType>
+    inline static void _write_bool_vector_from_numpy(CursorType& self, nb::ndarray<nb::numpy> nbarray)
+    {
+        SGL_CHECK(nbarray.nbytes() == ValType::dimension * 4, "numpy array has wrong size.");
+        self._set_vector(nbarray.data(), nbarray.nbytes(), TypeReflection::ScalarType::bool_, ValType::dimension);
+    }
+
+    /// Use specialization for each bool type
+#define bool_vector_case(c_type)                                                                                       \
+    template<>                                                                                                         \
+    inline void _write_vector_from_numpy<c_type>(CursorType & self, nb::ndarray<nb::numpy> nbarray)                    \
+    {                                                                                                                  \
+        _write_bool_vector_from_numpy<c_type>(self, nbarray);                                                          \
+    }
+    bool_vector_case(bool1);
+    bool_vector_case(bool2);
+    bool_vector_case(bool3);
+    bool_vector_case(bool4);
+
     /// Write vector value to buffer element cursor from Python object
     template<typename ValType>
         requires IsSpecializationOfVector<ValType>
@@ -316,16 +355,14 @@ struct WriteConverterTable {
             self.set(val);
         } else if (nb::isinstance<nb::ndarray<nb::numpy>>(nbval)) {
             // A numpy array. Reinterpret numpy memory as vector type.
-            auto nbarray = nb::cast<nb::ndarray<nb::numpy>>(nbval);
+            nb::ndarray<nb::numpy> nbarray = nb::cast<nb::ndarray<nb::numpy>>(nbval);
             SGL_CHECK(is_ndarray_contiguous(nbarray), "data is not contiguous");
             SGL_CHECK(nbarray.ndim() == 1 || nbarray.ndim() == 2, "numpy array must have 1 or 2 dimensions.");
             size_t dimension = 1;
             for (size_t i = 0; i < nbarray.ndim(); ++i)
                 dimension *= nbarray.shape(i);
             SGL_CHECK(dimension == ValType::dimension, "numpy array has wrong dimension.");
-            SGL_CHECK(nbarray.nbytes() == sizeof(ValType), "numpy array has wrong size.");
-            auto val = *reinterpret_cast<const ValType*>(nbarray.data());
-            self.set(val);
+            _write_vector_from_numpy<ValType>(self, nbarray);
         } else if (nb::isinstance<nb::sequence>(nbval)) {
             // A list or tuple. Attempt to cast each element of list to element of vector.
             auto seq = nb::cast<nb::sequence>(nbval);

@@ -11,6 +11,12 @@
 
 #include "sgl/device/python/cursor_utils.h"
 
+namespace sgl {
+namespace detail {
+    static WriteConverterTable<ShaderCursor> _writeconv;
+} // namespace detail
+} // namespace sgl
+
 SGL_PY_EXPORT(device_shader_cursor)
 {
     using namespace sgl;
@@ -51,8 +57,6 @@ SGL_PY_EXPORT(device_shader_cursor)
         );
 
     bind_traversable_cursor(shader_cursor);
-    bind_writable_cursor_basic_types(shader_cursor);
-
 #define def_setter(type)                                                                                               \
     shader_cursor.def(                                                                                                 \
         "__setitem__",                                                                                                 \
@@ -78,4 +82,6 @@ SGL_PY_EXPORT(device_shader_cursor)
     shader_cursor.def("__setitem__", set_cuda_tensor_field);
     shader_cursor.def("__setitem__", set_cuda_tensor_element);
     shader_cursor.def("__setattr__", set_cuda_tensor_field);
+
+    bind_writable_cursor(detail::_writeconv, shader_cursor);
 }
