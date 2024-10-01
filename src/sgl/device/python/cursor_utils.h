@@ -396,6 +396,14 @@ struct WriteConverterTable {
         }
     }
 
+    /// Virtual for writing none-basic value types
+    virtual bool write_value(CursorType& self, nb::object nbval)
+    {
+        SGL_UNUSED(self);
+        SGL_UNUSED(nbval);
+        return false;
+    }
+
     /// Write function inspects the slang type and uses it to try
     /// and convert a Python input to the correct c++ type. For structs
     /// and arrays, expects a dict, sequence type or numpy array.
@@ -457,8 +465,11 @@ struct WriteConverterTable {
                 SGL_THROW("Expected list");
             }
         }
-        default:
-            break;
+        default: {
+            // In default case call the virtual write_value, and fail if it returns false.
+            if (write_value(self, nbval))
+                return;
+        }
         }
         SGL_THROW("Unsupported element type");
     }
@@ -525,6 +536,16 @@ inline void bind_writable_cursor(WriteConverterTable<CursorType>& table, nanobin
             "index"_a,
             "val"_a,
             D_NA(CursorType, write)
+        )
+        .def(
+            "set_data",
+            [](CursorType& self, nb::ndarray<nb::device::cpu> data)
+            {
+                SGL_CHECK(is_ndarray_contiguous(data), "data is not contiguous");
+                self.set_data(data.data(), data.nbytes());
+            },
+            "data"_a,
+            D(ShaderCursor, set_data)
         )
         .def(
             "write",

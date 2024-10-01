@@ -13,7 +13,60 @@
 
 namespace sgl {
 namespace detail {
-    static WriteConverterTable<ShaderCursor> _writeconv;
+
+    class ShaderCursorWriteConverterTable : public WriteConverterTable<ShaderCursor> {
+        bool write_value(ShaderCursor& self, nb::object nbval) override
+        {
+            if (WriteConverterTable<ShaderCursor>::write_value(self, nbval))
+                return true;
+
+            ref<MutableShaderObject> msoref;
+            if (nb::try_cast(nbval, msoref)) {
+                self.set_object(msoref);
+                return true;
+            }
+
+            ref<ResourceView> rvref;
+            if (nb::try_cast(nbval, rvref)) {
+                self.set_resource(rvref);
+                return true;
+            }
+
+            ref<Buffer> bufref;
+            if (nb::try_cast(nbval, bufref)) {
+                self.set_buffer(bufref);
+                return true;
+            }
+
+            ref<Texture> texref;
+            if (nb::try_cast(nbval, texref)) {
+                self.set_texture(texref);
+                return true;
+            }
+
+            ref<Sampler> samplerref;
+            if (nb::try_cast(nbval, samplerref)) {
+                self.set_sampler(samplerref);
+                return true;
+            }
+
+            ref<AccelerationStructure> asref;
+            if (nb::try_cast(nbval, asref)) {
+                self.set_acceleration_structure(asref);
+                return true;
+            }
+
+            nb::ndarray<nb::device::cuda> cudaarray;
+            if (nb::try_cast(nbval, cudaarray)) {
+                self.set_cuda_tensor_view(ndarray_to_cuda_tensor_view(cudaarray));
+                return true;
+            }
+
+            return false;
+        }
+    };
+
+    static ShaderCursorWriteConverterTable _writeconv;
 } // namespace detail
 } // namespace sgl
 
@@ -33,55 +86,9 @@ SGL_PY_EXPORT(device_shader_cursor)
         .def(nb::init<ShaderObject*>(), "shader_object"_a, D(ShaderCursor, ShaderCursor))
         .def_prop_ro("_offset", &ShaderCursor::offset, D(ShaderCursor, offset))
         .def("dereference", &ShaderCursor::dereference, D(ShaderCursor, dereference))
-        .def("find_entry_point", &ShaderCursor::find_entry_point, "index"_a, D(ShaderCursor, find_entry_point))
-        .def("set_object", &ShaderCursor::set_object, "object"_a, D(ShaderCursor, set_object))
-        .def("set_resource", &ShaderCursor::set_resource, "resource_view"_a, D(ShaderCursor, set_resource))
-        .def("set_buffer", &ShaderCursor::set_buffer, "buffer"_a, D(ShaderCursor, set_buffer))
-        .def("set_texture", &ShaderCursor::set_texture, "texture"_a, D(ShaderCursor, set_texture))
-        .def("set_sampler", &ShaderCursor::set_sampler, "sampler"_a, D(ShaderCursor, set_sampler))
-        .def(
-            "set_acceleration_structure",
-            &ShaderCursor::set_acceleration_structure,
-            "acceleration_structure"_a,
-            D(ShaderCursor, set_acceleration_structure)
-        )
-        .def(
-            "set_data",
-            [](ShaderCursor& self, nb::ndarray<nb::device::cpu> data)
-            {
-                SGL_CHECK(is_ndarray_contiguous(data), "data is not contiguous");
-                self.set_data(data.data(), data.nbytes());
-            },
-            "data"_a,
-            D(ShaderCursor, set_data)
-        );
+        .def("find_entry_point", &ShaderCursor::find_entry_point, "index"_a, D(ShaderCursor, find_entry_point));
 
     bind_traversable_cursor(shader_cursor);
-#define def_setter(type)                                                                                               \
-    shader_cursor.def(                                                                                                 \
-        "__setitem__",                                                                                                 \
-        [](ShaderCursor& self, std::string_view name, type value) { self[name] = value; }                              \
-    );                                                                                                                 \
-    shader_cursor.def("__setattr__", [](ShaderCursor& self, std::string_view name, type value) { self[name] = value; });
-
-    def_setter(ref<MutableShaderObject>);
-    def_setter(ref<ResourceView>);
-    def_setter(ref<Buffer>);
-    def_setter(ref<Texture>);
-    def_setter(ref<Sampler>);
-    def_setter(ref<AccelerationStructure>);
-
-#undef def_setter
-
-    auto set_cuda_tensor_field = [](ShaderCursor& self, std::string_view name, nb::ndarray<nb::device::cuda> ndarray)
-    { self[name].set_cuda_tensor_view(ndarray_to_cuda_tensor_view(ndarray)); };
-
-    auto set_cuda_tensor_element = [](ShaderCursor& self, int index, nb::ndarray<nb::device::cuda> ndarray)
-    { self[index].set_cuda_tensor_view(ndarray_to_cuda_tensor_view(ndarray)); };
-
-    shader_cursor.def("__setitem__", set_cuda_tensor_field);
-    shader_cursor.def("__setitem__", set_cuda_tensor_element);
-    shader_cursor.def("__setattr__", set_cuda_tensor_field);
 
     bind_writable_cursor(detail::_writeconv, shader_cursor);
 }
