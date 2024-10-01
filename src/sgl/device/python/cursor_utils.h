@@ -247,6 +247,8 @@ struct WriteConverterTable {
     std::function<void(CursorType&, nb::object)> write_scalar[(int)TypeReflection::ScalarType::COUNT];
     std::function<void(CursorType&, nb::object)> write_vector[(int)TypeReflection::ScalarType::COUNT][5];
     std::function<void(CursorType&, nb::object)> write_matrix[(int)TypeReflection::ScalarType::COUNT][5][5];
+    std::vector<const char*> stack;
+
     WriteConverterTable()
     {
         // Initialize all entries to an error function that throws an exception.
@@ -398,7 +400,7 @@ struct WriteConverterTable {
         }
     }
 
-    /// Virtual for writing none-basic value types
+    /// Virtual for writing none-basic value types.
     virtual bool write_value(CursorType& self, nb::object nbval)
     {
         SGL_UNUSED(self);
@@ -411,12 +413,26 @@ struct WriteConverterTable {
     /// and arrays, expects a dict, sequence type or numpy array.
     void write(CursorType& self, nb::object nbval)
     {
+        stack.clear();
+        try {
+            write_internal(self, nbval);
+        } catch (std::exception err) {
+            SGL_THROW("{}: {}", build_error(), err.what());
+        }
+    }
+
+private:
+    std::string build_error() { return fmt::format("{}", fmt::join(stack, ".")); }
+
+    void write_internal(CursorType& self, nb::object nbval)
+    {
         if (!self.is_valid())
             return;
 
         ref<const TypeLayoutReflection> type_layout = self.type_layout();
+        auto kind = type_layout->kind();
 
-        switch (type_layout->kind()) {
+        switch (kind) {
         case TypeReflection::Kind::scalar: {
             auto type = type_layout->type();
             SGL_ASSERT(type);
@@ -432,15 +448,25 @@ struct WriteConverterTable {
             SGL_ASSERT(type);
             return write_matrix[(int)type->scalar_type()][type->row_count()][type->col_count()](self, nbval);
         }
+        case TypeReflection::Kind::constant_buffer:
+        case TypeReflection::Kind::parameter_block:
         case TypeReflection::Kind::struct_: {
+            // Unwrap constant buffers or parameter blocks
+            if (kind != TypeReflection::Kind::struct_)
+                type_layout = type_layout->element_type_layout();
+
             // Expect a dict for a slang struct.
             if (nb::isinstance<nb::dict>(nbval)) {
                 auto dict = nb::cast<nb::dict>(nbval);
                 for (uint32_t i = 0; i < type_layout->field_count(); i++) {
                     auto field = type_layout->get_field_by_index(i);
-                    auto child = self[field->name()];
-                    if (dict.contains(field->name()))
-                        write(child, dict[field->name()]);
+                    const char* name = field->name();
+                    auto child = self[name];
+                    if (dict.contains(name)) {
+                        stack.push_back(name);
+                        write_internal(child, dict[name]);
+                        stack.pop_back();
+                    }
                 }
                 return;
             } else {
@@ -468,7 +494,9 @@ struct WriteConverterTable {
                 SGL_CHECK(nb::len(seq) == type_layout->element_count(), "sequence is the wrong length.");
                 for (uint32_t i = 0; i < type_layout->element_count(); i++) {
                     auto child = self[i];
-                    write(child, seq[i]);
+                    stack.push_back("[]");
+                    write_internal(child, seq[i]);
+                    stack.pop_back();
                 }
                 return;
             } else {
