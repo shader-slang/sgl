@@ -88,13 +88,7 @@ public:
     ReadConverterTable()
     {
         // Initialize all entries to an error function that throws an exception.
-        auto read_err_func = [](const CursorType&)
-        {
-            if (true) { // avoid 'unreachable code' warnings
-                SGL_THROW("Unsupported element type");
-            }
-            return nb::none();
-        };
+        auto read_err_func = [](const CursorType&) -> nb::object { SGL_THROW("Unsupported element type"); };
         for (int i = 0; i < (int)TypeReflection::ScalarType::COUNT; i++) {
             m_read_scalar[i] = read_err_func;
             for (int j = 0; j < 5; ++j) {
@@ -159,7 +153,7 @@ public:
         m_stack.clear();
         try {
             return read_internal(self);
-        } catch (std::exception err) {
+        } catch (const std::exception& err) {
             SGL_THROW("{}: {}", build_error(), err.what());
         }
     }
@@ -345,7 +339,7 @@ public:
         m_stack.clear();
         try {
             write_internal(self, nbval);
-        } catch (std::exception err) {
+        } catch (const std::exception& err) {
             SGL_THROW("{}: {}", build_error(), err.what());
         }
     }

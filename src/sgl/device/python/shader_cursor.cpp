@@ -10,50 +10,44 @@
 #include "sgl/device/cuda_interop.h"
 
 #include "sgl/device/python/cursor_utils.h"
+#include <typeindex>
 
 namespace sgl {
 namespace detail {
 
     class ShaderCursorWriteConverterTable : public WriteConverterTable<ShaderCursor> {
+    public:
+#define add_type(c_type_name, set_func_name)                                                                           \
+    m_write_table[typeid(c_type_name)] = [](ShaderCursor& self, nb::object nbval)                                      \
+    {                                                                                                                  \
+        self.set_func_name(nb::cast<ref<c_type_name>>(nbval));                                                         \
+        return true;                                                                                                   \
+    };
+
+        ShaderCursorWriteConverterTable()
+            : WriteConverterTable<ShaderCursor>()
+        {
+            add_type(MutableShaderObject, set_object);
+            add_type(ResourceView, set_resource);
+            add_type(Buffer, set_buffer);
+            add_type(Texture, set_texture);
+            add_type(Sampler, set_sampler);
+            add_type(AccelerationStructure, set_acceleration_structure);
+        }
+
+
         bool write_value(ShaderCursor& self, nb::object nbval) override
         {
             if (WriteConverterTable<ShaderCursor>::write_value(self, nbval))
                 return true;
 
-            ref<MutableShaderObject> msoref;
-            if (nb::try_cast(nbval, msoref)) {
-                self.set_object(msoref);
-                return true;
-            }
-
-            ref<ResourceView> rvref;
-            if (nb::try_cast(nbval, rvref)) {
-                self.set_resource(rvref);
-                return true;
-            }
-
-            ref<Buffer> bufref;
-            if (nb::try_cast(nbval, bufref)) {
-                self.set_buffer(bufref);
-                return true;
-            }
-
-            ref<Texture> texref;
-            if (nb::try_cast(nbval, texref)) {
-                self.set_texture(texref);
-                return true;
-            }
-
-            ref<Sampler> samplerref;
-            if (nb::try_cast(nbval, samplerref)) {
-                self.set_sampler(samplerref);
-                return true;
-            }
-
-            ref<AccelerationStructure> asref;
-            if (nb::try_cast(nbval, asref)) {
-                self.set_acceleration_structure(asref);
-                return true;
+            nb::handle type = nbval.type();
+            if (nb::type_check(type)) {
+                const std::type_info& ti = nb::type_info(type);
+                auto it = m_write_table.find(ti);
+                if (it != m_write_table.end()) {
+                    return it->second(self, nbval);
+                }
             }
 
             nb::ndarray<nb::device::cuda> cudaarray;
@@ -64,6 +58,9 @@ namespace detail {
 
             return false;
         }
+
+    private:
+        std::unordered_map<std::type_index, std::function<bool(ShaderCursor&, nb::object)>> m_write_table;
     };
 
     static ShaderCursorWriteConverterTable _writeconv;
