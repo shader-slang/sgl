@@ -257,6 +257,10 @@ private:
     m_write_vector[(int)TypeReflection::ScalarType::scalar_type][c_type::dimension]                                    \
         = [](CursorType& self, nb::object nbval) { _write_vector<c_type>(self, nbval); };
 
+#define bool_vector_case(c_type, scalar_type)                                                                          \
+    m_write_vector[(int)TypeReflection::ScalarType::scalar_type][c_type::dimension]                                    \
+        = [](CursorType& self, nb::object nbval) { _write_bool_vector<c_type>(self, nbval); };
+
 #define matrix_case(c_type, scalar_type)                                                                               \
     m_write_matrix[(int)TypeReflection::ScalarType::scalar_type][c_type::rows][c_type::cols]                           \
         = [](CursorType& self, nb::object nbval) { _write_matrix<c_type>(self, nbval); };
@@ -296,22 +300,22 @@ public:
         scalar_case(uintptr_t, uintptr);
 
         // Register converters for all supported vector types.
-        vector_case(bool1, bool_);
+        bool_vector_case(bool1, bool_);
         vector_case(float1, float32);
         vector_case(float16_t1, float16);
         vector_case(int1, int32);
         vector_case(uint1, uint32);
-        vector_case(bool2, bool_);
+        bool_vector_case(bool2, bool_);
         vector_case(float2, float32);
         vector_case(float16_t2, float16);
         vector_case(int2, int32);
         vector_case(uint2, uint32);
-        vector_case(bool3, bool_);
+        bool_vector_case(bool3, bool_);
         vector_case(float3, float32);
         vector_case(float16_t3, float16);
         vector_case(int3, int32);
         vector_case(uint3, uint32);
-        vector_case(bool4, bool_);
+        bool_vector_case(bool4, bool_);
         vector_case(float4, float32);
         vector_case(float16_t4, float16);
         vector_case(int4, int32);
@@ -505,6 +509,39 @@ private:
         }
     }
 
+    /// Bespoke vector implementation for bools.
+    template<typename ValType>
+        requires IsSpecializationOfVector<ValType>
+    inline static void _write_bool_vector(CursorType& self, nb::object nbval)
+    {
+        if (nb::isinstance<ValType>(nbval)) {
+            // A vector of the correct type - just convert it.
+            auto val = nb::cast<ValType>(nbval);
+            self.set(val);
+        } else if (nb::isinstance<nb::ndarray<nb::numpy>>(nbval)) {
+            // A numpy array. Reinterpret numpy memory as vector type.
+            nb::ndarray<nb::numpy> nbarray = nb::cast<nb::ndarray<nb::numpy>>(nbval);
+            SGL_CHECK(is_ndarray_contiguous(nbarray), "data is not contiguous");
+            SGL_CHECK(nbarray.ndim() == 1 || nbarray.ndim() == 2, "numpy array must have 1 or 2 dimensions.");
+            size_t dimension = 1;
+            for (size_t i = 0; i < nbarray.ndim(); ++i)
+                dimension *= nbarray.shape(i);
+            SGL_CHECK(dimension == ValType::dimension, "numpy array has wrong dimension.");
+            _write_bool_vector_from_numpy<ValType>(self, nbarray);
+        } else if (nb::isinstance<nb::sequence>(nbval)) {
+            // A list or tuple. Attempt to cast each element of list to element of vector.
+            auto seq = nb::cast<nb::sequence>(nbval);
+            SGL_CHECK(nb::len(seq) == ValType::dimension, "sequence has wrong dimension.");
+            ValType val;
+            for (int i = 0; i < ValType::dimension; i++) {
+                val[i] = nb::cast<typename ValType::value_type>(seq[i]);
+            }
+            self.set(val);
+        } else {
+            SGL_THROW("Expected numpy array or vector");
+        }
+    }
+
     /// Write matrix value to buffer element cursor from Python object.
     template<typename ValType>
         requires IsSpecializationOfMatrix<ValType>
@@ -525,41 +562,9 @@ private:
     }
 };
 
-
-template<typename CursorType>
-template<>
-inline void
-WriteConverterTable<CursorType>::_write_vector_from_numpy<bool1>(CursorType& self, nb::ndarray<nb::numpy> nbarray)
-{
-    _write_bool_vector_from_numpy<bool1>(self, nbarray);
-}
-
-template<typename CursorType>
-template<>
-inline void
-WriteConverterTable<CursorType>::_write_vector_from_numpy<bool2>(CursorType& self, nb::ndarray<nb::numpy> nbarray)
-{
-    _write_bool_vector_from_numpy<bool1>(self, nbarray);
-}
-
-template<typename CursorType>
-template<>
-inline void
-WriteConverterTable<CursorType>::_write_vector_from_numpy<bool3>(CursorType& self, nb::ndarray<nb::numpy> nbarray)
-{
-    _write_bool_vector_from_numpy<bool1>(self, nbarray);
-}
-
-template<typename CursorType>
-template<>
-inline void
-WriteConverterTable<CursorType>::_write_vector_from_numpy<bool4>(CursorType& self, nb::ndarray<nb::numpy> nbarray)
-{
-    _write_bool_vector_from_numpy<bool1>(self, nbarray);
-}
-
 #undef scalar_case
 #undef vector_case
+#undef bool_vector_case
 #undef matrix_case
 
 
