@@ -68,6 +68,12 @@ namespace detail {
 
     static ShaderCursorWriteConverterTable _writeconv;
 } // namespace detail
+
+void write_shader_cursor(ShaderCursor& cursor, nb::object value)
+{
+    detail::_writeconv.write(cursor, value);
+}
+
 } // namespace sgl
 
 SGL_PY_EXPORT(device_shader_cursor)

@@ -191,33 +191,35 @@ struct ReadConverterTable {
         if (!self.is_valid())
             return nb::none();
         auto type = self.type();
-        switch (type->kind()) {
-        case TypeReflection::Kind::scalar: {
-            return read_scalar[(int)type->scalar_type()](self);
-        }
-        case TypeReflection::Kind::vector: {
-            return read_vector[(int)type->scalar_type()][type->col_count()](self);
-        }
-        case TypeReflection::Kind::matrix: {
-            return read_matrix[(int)type->scalar_type()][type->row_count()][type->col_count()](self);
-        }
-        case TypeReflection::Kind::struct_: {
-            nb::dict res;
-            for (uint32_t i = 0; i < type->field_count(); i++) {
-                auto field = type->get_field_by_index(i);
-                res[field->name()] = read(self[field->name()]);
+        if (type) {
+            switch (type->kind()) {
+            case TypeReflection::Kind::scalar: {
+                return read_scalar[(int)type->scalar_type()](self);
             }
-            return res;
-        }
-        case TypeReflection::Kind::array: {
-            nb::list res;
-            for (uint32_t i = 0; i < type->element_count(); i++) {
-                res.append(read(self[i]));
+            case TypeReflection::Kind::vector: {
+                return read_vector[(int)type->scalar_type()][type->col_count()](self);
             }
-            return res;
-        }
-        default:
-            break;
+            case TypeReflection::Kind::matrix: {
+                return read_matrix[(int)type->scalar_type()][type->row_count()][type->col_count()](self);
+            }
+            case TypeReflection::Kind::struct_: {
+                nb::dict res;
+                for (uint32_t i = 0; i < type->field_count(); i++) {
+                    auto field = type->get_field_by_index(i);
+                    res[field->name()] = read(self[field->name()]);
+                }
+                return res;
+            }
+            case TypeReflection::Kind::array: {
+                nb::list res;
+                for (uint32_t i = 0; i < type->element_count(); i++) {
+                    res.append(read(self[i]));
+                }
+                return res;
+            }
+            default:
+                break;
+            }
         }
         SGL_THROW("Unsupported element type");
     }
@@ -412,25 +414,33 @@ struct WriteConverterTable {
         if (!self.is_valid())
             return;
 
-        auto type = self.type();
-        switch (type->kind()) {
+        ref<const TypeLayoutReflection> type_layout = self.type_layout();
+
+        switch (type_layout->kind()) {
         case TypeReflection::Kind::scalar: {
+            auto type = type_layout->type();
+            SGL_ASSERT(type);
             return write_scalar[(int)type->scalar_type()](self, nbval);
         }
         case TypeReflection::Kind::vector: {
+            auto type = type_layout->type();
+            SGL_ASSERT(type);
             return write_vector[(int)type->scalar_type()][type->col_count()](self, nbval);
         }
         case TypeReflection::Kind::matrix: {
+            auto type = type_layout->type();
+            SGL_ASSERT(type);
             return write_matrix[(int)type->scalar_type()][type->row_count()][type->col_count()](self, nbval);
         }
         case TypeReflection::Kind::struct_: {
             // Expect a dict for a slang struct.
             if (nb::isinstance<nb::dict>(nbval)) {
                 auto dict = nb::cast<nb::dict>(nbval);
-                for (uint32_t i = 0; i < type->field_count(); i++) {
-                    auto field = type->get_field_by_index(i);
+                for (uint32_t i = 0; i < type_layout->field_count(); i++) {
+                    auto field = type_layout->get_field_by_index(i);
                     auto child = self[field->name()];
-                    write(child, dict[field->name()]);
+                    if (dict.contains(field->name()))
+                        write(child, dict[field->name()]);
                 }
                 return;
             } else {
@@ -444,19 +454,19 @@ struct WriteConverterTable {
                 // data type and extracting individual elements.
                 auto nbarray = nb::cast<nb::ndarray<nb::numpy>>(nbval);
                 SGL_CHECK(nbarray.ndim() == 1, "numpy array must have 1 dimension.");
-                SGL_CHECK(nbarray.shape(0) == type->element_count(), "numpy array is the wrong length.");
+                SGL_CHECK(nbarray.shape(0) == type_layout->element_count(), "numpy array is the wrong length.");
                 SGL_CHECK(is_ndarray_contiguous(nbarray), "data is not contiguous");
                 self._set_array(
                     nbarray.data(),
                     nbarray.nbytes(),
-                    type->element_type()->scalar_type(),
+                    type_layout->element_type_layout()->type()->scalar_type(),
                     narrow_cast<int>(nbarray.shape(0))
                 );
                 return;
             } else if (nb::isinstance<nb::sequence>(nbval)) {
                 auto seq = nb::cast<nb::sequence>(nbval);
-                SGL_CHECK(nb::len(seq) == type->element_count(), "sequence is the wrong length.");
-                for (uint32_t i = 0; i < type->element_count(); i++) {
+                SGL_CHECK(nb::len(seq) == type_layout->element_count(), "sequence is the wrong length.");
+                for (uint32_t i = 0; i < type_layout->element_count(); i++) {
                     auto child = self[i];
                     write(child, seq[i]);
                 }
@@ -465,12 +475,14 @@ struct WriteConverterTable {
                 SGL_THROW("Expected list");
             }
         }
-        default: {
-            // In default case call the virtual write_value, and fail if it returns false.
-            if (write_value(self, nbval))
-                return;
+        default:
+            break;
         }
-        }
+
+        // In default case call the virtual write_value, and fail if it returns false.
+        if (write_value(self, nbval))
+            return;
+
         SGL_THROW("Unsupported element type");
     }
 };
