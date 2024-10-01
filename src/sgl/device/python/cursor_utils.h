@@ -472,18 +472,6 @@ private:
         self._set_vector(nbarray.data(), nbarray.nbytes(), TypeReflection::ScalarType::bool_, ValType::dimension);
     }
 
-    /// Use specialization for each bool type
-#define bool_vector_case(c_type)                                                                                       \
-    template<>                                                                                                         \
-    inline void _write_vector_from_numpy<c_type>(CursorType & self, nb::ndarray<nb::numpy> nbarray)                    \
-    {                                                                                                                  \
-        _write_bool_vector_from_numpy<c_type>(self, nbarray);                                                          \
-    }
-    bool_vector_case(bool1);
-    bool_vector_case(bool2);
-    bool_vector_case(bool3);
-    bool_vector_case(bool4);
-
     /// Write vector value to buffer element cursor from Python object
     template<typename ValType>
         requires IsSpecializationOfVector<ValType>
@@ -536,6 +524,39 @@ private:
         }
     }
 };
+
+
+template<typename CursorType>
+template<>
+inline void
+WriteConverterTable<CursorType>::_write_vector_from_numpy<bool1>(CursorType& self, nb::ndarray<nb::numpy> nbarray)
+{
+    _write_bool_vector_from_numpy<bool1>(self, nbarray);
+}
+
+template<typename CursorType>
+template<>
+inline void
+WriteConverterTable<CursorType>::_write_vector_from_numpy<bool2>(CursorType& self, nb::ndarray<nb::numpy> nbarray)
+{
+    _write_bool_vector_from_numpy<bool1>(self, nbarray);
+}
+
+template<typename CursorType>
+template<>
+inline void
+WriteConverterTable<CursorType>::_write_vector_from_numpy<bool3>(CursorType& self, nb::ndarray<nb::numpy> nbarray)
+{
+    _write_bool_vector_from_numpy<bool1>(self, nbarray);
+}
+
+template<typename CursorType>
+template<>
+inline void
+WriteConverterTable<CursorType>::_write_vector_from_numpy<bool4>(CursorType& self, nb::ndarray<nb::numpy> nbarray)
+{
+    _write_bool_vector_from_numpy<bool1>(self, nbarray);
+}
 
 #undef scalar_case
 #undef vector_case
