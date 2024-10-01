@@ -70,23 +70,21 @@ concept IsSpecializationOfMatrix = requires {
 };
 
 #define scalar_case(c_type, scalar_type)                                                                               \
-    read_scalar[(int)TypeReflection::ScalarType::scalar_type]                                                          \
+    m_read_scalar[(int)TypeReflection::ScalarType::scalar_type]                                                        \
         = [](const CursorType& self) { return _read_scalar<c_type>(self); };
 
 #define vector_case(c_type, scalar_type)                                                                               \
-    read_vector[(int)TypeReflection::ScalarType::scalar_type][c_type::dimension]                                       \
+    m_read_vector[(int)TypeReflection::ScalarType::scalar_type][c_type::dimension]                                     \
         = [](const CursorType& self) { return _read_vector<c_type>(self); };
 
 #define matrix_case(c_type, scalar_type)                                                                               \
-    read_matrix[(int)TypeReflection::ScalarType::scalar_type][c_type::rows][c_type::cols]                              \
+    m_read_matrix[(int)TypeReflection::ScalarType::scalar_type][c_type::rows][c_type::cols]                            \
         = [](const CursorType& self) { return _read_matrix<c_type>(self); };
 
 /// Table of converters based on slang scalar type and shape.
 template<typename CursorType>
-struct ReadConverterTable {
-    std::function<nb::object(const CursorType&)> read_scalar[(int)TypeReflection::ScalarType::COUNT];
-    std::function<nb::object(const CursorType&)> read_vector[(int)TypeReflection::ScalarType::COUNT][5];
-    std::function<nb::object(const CursorType&)> read_matrix[(int)TypeReflection::ScalarType::COUNT][5][5];
+class ReadConverterTable {
+public:
     ReadConverterTable()
     {
         // Initialize all entries to an error function that throws an exception.
@@ -98,11 +96,11 @@ struct ReadConverterTable {
             return nb::none();
         };
         for (int i = 0; i < (int)TypeReflection::ScalarType::COUNT; i++) {
-            read_scalar[i] = read_err_func;
+            m_read_scalar[i] = read_err_func;
             for (int j = 0; j < 5; ++j) {
-                read_vector[i][j] = read_err_func;
+                m_read_vector[i][j] = read_err_func;
                 for (int k = 0; k < 5; ++k) {
-                    read_matrix[i][j][k] = read_err_func;
+                    m_read_matrix[i][j][k] = read_err_func;
                 }
             }
         }
@@ -153,6 +151,69 @@ struct ReadConverterTable {
         matrix_case(float4x4, float32);
     }
 
+    /// Read function inspects the slang type and attempts to convert it
+    /// to a matching python type. For structs and arrays, generates
+    /// a nested dictionary or list and recurses.
+    nb::object read(const CursorType& self)
+    {
+        m_stack.clear();
+        try {
+            return read_internal(self);
+        } catch (std::exception err) {
+            SGL_THROW("{}: {}", build_error(), err.what());
+        }
+    }
+
+private:
+    std::function<nb::object(const CursorType&)> m_read_scalar[(int)TypeReflection::ScalarType::COUNT];
+    std::function<nb::object(const CursorType&)> m_read_vector[(int)TypeReflection::ScalarType::COUNT][5];
+    std::function<nb::object(const CursorType&)> m_read_matrix[(int)TypeReflection::ScalarType::COUNT][5][5];
+    std::vector<const char*> m_stack;
+
+    std::string build_error() { return fmt::format("{}", fmt::join(m_stack, ".")); }
+
+    nb::object read_internal(const CursorType& self)
+    {
+        if (!self.is_valid())
+            return nb::none();
+        auto type = self.type();
+        if (type) {
+            switch (type->kind()) {
+            case TypeReflection::Kind::scalar: {
+                return m_read_scalar[(int)type->scalar_type()](self);
+            }
+            case TypeReflection::Kind::vector: {
+                return m_read_vector[(int)type->scalar_type()][type->col_count()](self);
+            }
+            case TypeReflection::Kind::matrix: {
+                return m_read_matrix[(int)type->scalar_type()][type->row_count()][type->col_count()](self);
+            }
+            case TypeReflection::Kind::struct_: {
+                nb::dict res;
+                for (uint32_t i = 0; i < type->field_count(); i++) {
+                    auto field = type->get_field_by_index(i);
+                    const char* name = field->name();
+                    m_stack.push_back(name);
+                    res[name] = read_internal(self[name]);
+                    m_stack.pop_back();
+                }
+                return res;
+            }
+            case TypeReflection::Kind::array: {
+                nb::list res;
+                m_stack.push_back("[]");
+                for (uint32_t i = 0; i < type->element_count(); i++) {
+                    res.append(read_internal(self[i]));
+                }
+                m_stack.pop_back();
+                return res;
+            }
+            default:
+                break;
+            }
+        }
+        SGL_THROW("Unsupported element type");
+    }
 
     /// Read scalar value from buffer element cursor and convert to Python object.
     template<typename ValType>
@@ -182,47 +243,6 @@ struct ReadConverterTable {
         self.get(res);
         return nb::cast(res);
     }
-
-    /// Read function inspects the slang type and attempts to convert it
-    /// to a matching python type. For structs and arrays, generates
-    /// a nested dictionary or list and recurses.
-    nb::object read(const CursorType& self)
-    {
-        if (!self.is_valid())
-            return nb::none();
-        auto type = self.type();
-        if (type) {
-            switch (type->kind()) {
-            case TypeReflection::Kind::scalar: {
-                return read_scalar[(int)type->scalar_type()](self);
-            }
-            case TypeReflection::Kind::vector: {
-                return read_vector[(int)type->scalar_type()][type->col_count()](self);
-            }
-            case TypeReflection::Kind::matrix: {
-                return read_matrix[(int)type->scalar_type()][type->row_count()][type->col_count()](self);
-            }
-            case TypeReflection::Kind::struct_: {
-                nb::dict res;
-                for (uint32_t i = 0; i < type->field_count(); i++) {
-                    auto field = type->get_field_by_index(i);
-                    res[field->name()] = read(self[field->name()]);
-                }
-                return res;
-            }
-            case TypeReflection::Kind::array: {
-                nb::list res;
-                for (uint32_t i = 0; i < type->element_count(); i++) {
-                    res.append(read(self[i]));
-                }
-                return res;
-            }
-            default:
-                break;
-            }
-        }
-        SGL_THROW("Unsupported element type");
-    }
 };
 
 #undef scalar_case
@@ -230,35 +250,31 @@ struct ReadConverterTable {
 #undef matrix_case
 
 #define scalar_case(c_type, scalar_type)                                                                               \
-    write_scalar[(int)TypeReflection::ScalarType::scalar_type]                                                         \
+    m_write_scalar[(int)TypeReflection::ScalarType::scalar_type]                                                       \
         = [](CursorType& self, nb::object nbval) { _write_scalar<c_type>(self, nbval); };
 
 #define vector_case(c_type, scalar_type)                                                                               \
-    write_vector[(int)TypeReflection::ScalarType::scalar_type][c_type::dimension]                                      \
+    m_write_vector[(int)TypeReflection::ScalarType::scalar_type][c_type::dimension]                                    \
         = [](CursorType& self, nb::object nbval) { _write_vector<c_type>(self, nbval); };
 
 #define matrix_case(c_type, scalar_type)                                                                               \
-    write_matrix[(int)TypeReflection::ScalarType::scalar_type][c_type::rows][c_type::cols]                             \
+    m_write_matrix[(int)TypeReflection::ScalarType::scalar_type][c_type::rows][c_type::cols]                           \
         = [](CursorType& self, nb::object nbval) { _write_matrix<c_type>(self, nbval); };
 
 /// Table of converters based on slang scalar type and shape.
 template<typename CursorType>
-struct WriteConverterTable {
-    std::function<void(CursorType&, nb::object)> write_scalar[(int)TypeReflection::ScalarType::COUNT];
-    std::function<void(CursorType&, nb::object)> write_vector[(int)TypeReflection::ScalarType::COUNT][5];
-    std::function<void(CursorType&, nb::object)> write_matrix[(int)TypeReflection::ScalarType::COUNT][5][5];
-    std::vector<const char*> stack;
-
+class WriteConverterTable {
+public:
     WriteConverterTable()
     {
         // Initialize all entries to an error function that throws an exception.
         auto write_err_func = [](const CursorType&, nb::object) { SGL_THROW("Unsupported element type"); };
         for (int i = 0; i < (int)TypeReflection::ScalarType::COUNT; i++) {
-            write_scalar[i] = write_err_func;
+            m_write_scalar[i] = write_err_func;
             for (int j = 0; j < 5; ++j) {
-                write_vector[i][j] = write_err_func;
+                m_write_vector[i][j] = write_err_func;
                 for (int k = 0; k < 5; ++k) {
-                    write_matrix[i][j][k] = write_err_func;
+                    m_write_matrix[i][j][k] = write_err_func;
                 }
             }
         }
@@ -308,6 +324,126 @@ struct WriteConverterTable {
         matrix_case(float3x4, float32);
         matrix_case(float4x4, float32);
     }
+
+    /// Virtual for writing none-basic value types.
+    virtual bool write_value(CursorType& self, nb::object nbval)
+    {
+        SGL_UNUSED(self);
+        SGL_UNUSED(nbval);
+        return false;
+    }
+
+    /// Write function inspects the slang type and uses it to try
+    /// and convert a Python input to the correct c++ type. For structs
+    /// and arrays, expects a dict, sequence type or numpy array.
+    void write(CursorType& self, nb::object nbval)
+    {
+        m_stack.clear();
+        try {
+            write_internal(self, nbval);
+        } catch (std::exception err) {
+            SGL_THROW("{}: {}", build_error(), err.what());
+        }
+    }
+
+private:
+    std::function<void(CursorType&, nb::object)> m_write_scalar[(int)TypeReflection::ScalarType::COUNT];
+    std::function<void(CursorType&, nb::object)> m_write_vector[(int)TypeReflection::ScalarType::COUNT][5];
+    std::function<void(CursorType&, nb::object)> m_write_matrix[(int)TypeReflection::ScalarType::COUNT][5][5];
+    std::vector<const char*> m_stack;
+
+    std::string build_error() { return fmt::format("{}", fmt::join(m_stack, ".")); }
+
+    void write_internal(CursorType& self, nb::object nbval)
+    {
+        if (!self.is_valid())
+            return;
+
+        ref<const TypeLayoutReflection> type_layout = self.type_layout();
+        auto kind = type_layout->kind();
+
+        switch (kind) {
+        case TypeReflection::Kind::scalar: {
+            auto type = type_layout->type();
+            SGL_ASSERT(type);
+            return m_write_scalar[(int)type->scalar_type()](self, nbval);
+        }
+        case TypeReflection::Kind::vector: {
+            auto type = type_layout->type();
+            SGL_ASSERT(type);
+            return m_write_vector[(int)type->scalar_type()][type->col_count()](self, nbval);
+        }
+        case TypeReflection::Kind::matrix: {
+            auto type = type_layout->type();
+            SGL_ASSERT(type);
+            return m_write_matrix[(int)type->scalar_type()][type->row_count()][type->col_count()](self, nbval);
+        }
+        case TypeReflection::Kind::constant_buffer:
+        case TypeReflection::Kind::parameter_block:
+        case TypeReflection::Kind::struct_: {
+            // Unwrap constant buffers or parameter blocks
+            if (kind != TypeReflection::Kind::struct_)
+                type_layout = type_layout->element_type_layout();
+
+            // Expect a dict for a slang struct.
+            if (nb::isinstance<nb::dict>(nbval)) {
+                auto dict = nb::cast<nb::dict>(nbval);
+                for (uint32_t i = 0; i < type_layout->field_count(); i++) {
+                    auto field = type_layout->get_field_by_index(i);
+                    const char* name = field->name();
+                    auto child = self[name];
+                    if (dict.contains(name)) {
+                        m_stack.push_back(name);
+                        write_internal(child, dict[name]);
+                        m_stack.pop_back();
+                    }
+                }
+                return;
+            } else {
+                SGL_THROW("Expected dict");
+            }
+        }
+        case TypeReflection::Kind::array: {
+            // Expect numpy array or sequence for a slang array.
+            if (nb::isinstance<nb::ndarray<nb::numpy>>(nbval)) {
+                // TODO: Should be able to do better job of interpreting nb array values by reading
+                // data type and extracting individual elements.
+                auto nbarray = nb::cast<nb::ndarray<nb::numpy>>(nbval);
+                SGL_CHECK(nbarray.ndim() == 1, "numpy array must have 1 dimension.");
+                SGL_CHECK(nbarray.shape(0) == type_layout->element_count(), "numpy array is the wrong length.");
+                SGL_CHECK(is_ndarray_contiguous(nbarray), "data is not contiguous");
+                self._set_array(
+                    nbarray.data(),
+                    nbarray.nbytes(),
+                    type_layout->element_type_layout()->type()->scalar_type(),
+                    narrow_cast<int>(nbarray.shape(0))
+                );
+                return;
+            } else if (nb::isinstance<nb::sequence>(nbval)) {
+                auto seq = nb::cast<nb::sequence>(nbval);
+                SGL_CHECK(nb::len(seq) == type_layout->element_count(), "sequence is the wrong length.");
+                m_stack.push_back("[]");
+                for (uint32_t i = 0; i < type_layout->element_count(); i++) {
+                    auto child = self[i];
+                    write_internal(child, seq[i]);
+                }
+                m_stack.pop_back();
+                return;
+            } else {
+                SGL_THROW("Expected list");
+            }
+        }
+        default:
+            break;
+        }
+
+        // In default case call the virtual write_value, and fail if it returns false.
+        if (write_value(self, nbval))
+            return;
+
+        SGL_THROW("Unsupported element type");
+    }
+
 
     /// Write scalar value to buffer element cursor from Python object.
     template<typename ValType>
@@ -398,120 +534,6 @@ struct WriteConverterTable {
         } else {
             SGL_THROW("Expected numpy array or matrix");
         }
-    }
-
-    /// Virtual for writing none-basic value types.
-    virtual bool write_value(CursorType& self, nb::object nbval)
-    {
-        SGL_UNUSED(self);
-        SGL_UNUSED(nbval);
-        return false;
-    }
-
-    /// Write function inspects the slang type and uses it to try
-    /// and convert a Python input to the correct c++ type. For structs
-    /// and arrays, expects a dict, sequence type or numpy array.
-    void write(CursorType& self, nb::object nbval)
-    {
-        stack.clear();
-        try {
-            write_internal(self, nbval);
-        } catch (std::exception err) {
-            SGL_THROW("{}: {}", build_error(), err.what());
-        }
-    }
-
-private:
-    std::string build_error() { return fmt::format("{}", fmt::join(stack, ".")); }
-
-    void write_internal(CursorType& self, nb::object nbval)
-    {
-        if (!self.is_valid())
-            return;
-
-        ref<const TypeLayoutReflection> type_layout = self.type_layout();
-        auto kind = type_layout->kind();
-
-        switch (kind) {
-        case TypeReflection::Kind::scalar: {
-            auto type = type_layout->type();
-            SGL_ASSERT(type);
-            return write_scalar[(int)type->scalar_type()](self, nbval);
-        }
-        case TypeReflection::Kind::vector: {
-            auto type = type_layout->type();
-            SGL_ASSERT(type);
-            return write_vector[(int)type->scalar_type()][type->col_count()](self, nbval);
-        }
-        case TypeReflection::Kind::matrix: {
-            auto type = type_layout->type();
-            SGL_ASSERT(type);
-            return write_matrix[(int)type->scalar_type()][type->row_count()][type->col_count()](self, nbval);
-        }
-        case TypeReflection::Kind::constant_buffer:
-        case TypeReflection::Kind::parameter_block:
-        case TypeReflection::Kind::struct_: {
-            // Unwrap constant buffers or parameter blocks
-            if (kind != TypeReflection::Kind::struct_)
-                type_layout = type_layout->element_type_layout();
-
-            // Expect a dict for a slang struct.
-            if (nb::isinstance<nb::dict>(nbval)) {
-                auto dict = nb::cast<nb::dict>(nbval);
-                for (uint32_t i = 0; i < type_layout->field_count(); i++) {
-                    auto field = type_layout->get_field_by_index(i);
-                    const char* name = field->name();
-                    auto child = self[name];
-                    if (dict.contains(name)) {
-                        stack.push_back(name);
-                        write_internal(child, dict[name]);
-                        stack.pop_back();
-                    }
-                }
-                return;
-            } else {
-                SGL_THROW("Expected dict");
-            }
-        }
-        case TypeReflection::Kind::array: {
-            // Expect numpy array or sequence for a slang array.
-            if (nb::isinstance<nb::ndarray<nb::numpy>>(nbval)) {
-                // TODO: Should be able to do better job of interpreting nb array values by reading
-                // data type and extracting individual elements.
-                auto nbarray = nb::cast<nb::ndarray<nb::numpy>>(nbval);
-                SGL_CHECK(nbarray.ndim() == 1, "numpy array must have 1 dimension.");
-                SGL_CHECK(nbarray.shape(0) == type_layout->element_count(), "numpy array is the wrong length.");
-                SGL_CHECK(is_ndarray_contiguous(nbarray), "data is not contiguous");
-                self._set_array(
-                    nbarray.data(),
-                    nbarray.nbytes(),
-                    type_layout->element_type_layout()->type()->scalar_type(),
-                    narrow_cast<int>(nbarray.shape(0))
-                );
-                return;
-            } else if (nb::isinstance<nb::sequence>(nbval)) {
-                auto seq = nb::cast<nb::sequence>(nbval);
-                SGL_CHECK(nb::len(seq) == type_layout->element_count(), "sequence is the wrong length.");
-                for (uint32_t i = 0; i < type_layout->element_count(); i++) {
-                    auto child = self[i];
-                    stack.push_back("[]");
-                    write_internal(child, seq[i]);
-                    stack.pop_back();
-                }
-                return;
-            } else {
-                SGL_THROW("Expected list");
-            }
-        }
-        default:
-            break;
-        }
-
-        // In default case call the virtual write_value, and fail if it returns false.
-        if (write_value(self, nbval))
-            return;
-
-        SGL_THROW("Unsupported element type");
     }
 };
 
