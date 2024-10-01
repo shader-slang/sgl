@@ -87,6 +87,12 @@ def test_buffer(device_type: sgl.DeviceType, type: str, size_MB: int):
         usage=sgl.ResourceUsage.shader_resource | sgl.ResourceUsage.unordered_access,
     )
 
+    # check we can get usage
+    assert (
+        device_buffer.desc.usage
+        == sgl.ResourceUsage.shader_resource | sgl.ResourceUsage.unordered_access
+    )
+
     element_count = device_buffer.size // element_size
     check_count = 1024
     check_offsets = [
