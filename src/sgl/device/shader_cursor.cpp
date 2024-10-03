@@ -579,6 +579,13 @@ SET_VECTOR(uint2, uint32);
 SET_VECTOR(uint3, uint32);
 SET_VECTOR(uint4, uint32);
 
+// MACOS treats these as separate types to int/uint, so they need to be
+// provided as extra overloads for linking to succeed.
+#if SGL_MACOS
+SET_SCALAR(long, int32);
+SET_SCALAR(unsigned long, uint32);
+#endif
+
 SET_SCALAR(int64_t, int64);
 SET_SCALAR(uint64_t, uint64);
 
