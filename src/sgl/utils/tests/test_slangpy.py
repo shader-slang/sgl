@@ -3,6 +3,7 @@
 from enum import Enum
 import pytest
 import sgl
+import sgl.slangpy
 
 
 class TypeTest:
@@ -32,7 +33,7 @@ class VarTest:
 def test_create_var():
     v = VarTest()
 
-    bv = sgl.slangpy.BoundVariableRuntime(v)
+    bv = sgl.slangpy.AccessType.read
 
 
 if __name__ == "__main__":

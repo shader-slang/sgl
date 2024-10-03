@@ -429,6 +429,7 @@ if(SGL_BUILD_PYTHON)
         sgl/ui/python/ui.cpp
         sgl/ui/python/widgets.cpp
         sgl/utils/python/renderdoc.cpp
+        sgl/utils/python/slangpy.h
         sgl/utils/python/slangpy.cpp
         sgl/utils/python/tev.cpp
         sgl/utils/python/texture_loader.cpp

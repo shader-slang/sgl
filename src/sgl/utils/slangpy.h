@@ -31,33 +31,103 @@ SGL_ENUM_INFO(
 );
 SGL_ENUM_REGISTER(AccessType);
 
-class SGL_API NativeType : public Object {
-public:
-protected:
-};
-
-class SGL_API BoundVariableRuntime : public Object {
-public:
-protected:
-};
-
-class SGL_API BoundCallRuntime : public Object {
-public:
-    BoundCallRuntime() { }
-
-    BoundCallRuntime(
-        std::vector<ref<BoundVariableRuntime>>& args,
-        std::map<std::string, ref<BoundVariableRuntime>>& kwargs
-    )
+enum class CallMode { prim = 0, bwds = 1, fwds = 2 };
+SGL_ENUM_INFO(
+    CallMode,
     {
-        m_args = args;
-        m_kwargs = kwargs;
+        {CallMode::prim, "prim"},
+        {CallMode::bwds, "bwds"},
+        {CallMode::fwds, "fwds"},
+    }
+);
+SGL_ENUM_REGISTER(CallMode);
+
+
+class SGL_API Shape {
+public:
+    Shape() = default;
+
+    /// Constructor from optional 'tuple'.
+    Shape(const std::optional<std::vector<int>>& shape)
+        : m_shape(shape)
+    {
     }
 
-protected:
-    std::vector<ref<BoundVariableRuntime>> m_args;
-    std::map<std::string, ref<BoundVariableRuntime>> m_kwargs;
+    /// Copy constructor.
+    Shape(const Shape& other)
+        : m_shape(other.m_shape)
+    {
+    }
+
+    /// Move constructor.
+    Shape(Shape&& other) noexcept
+        : m_shape(std::move(other.m_shape))
+    {
+    }
+
+    /// Add operator combines the 2 shapes.
+    Shape operator+(const Shape& other) const
+    {
+        auto& this_vec = as_vector();
+        auto& other_vec = other.as_vector();
+        std::vector<int> combined = this_vec;
+        combined.insert(combined.end(), other_vec.begin(), other_vec.end());
+        return Shape(combined);
+    }
+
+    /// Assignment operator.
+    Shape& operator=(const Shape& other)
+    {
+        m_shape = other.m_shape;
+        return *this;
+    }
+
+    /// Indexers.
+    int operator[](size_t i) const { return as_vector()[i]; }
+    int& operator[](size_t i) { return as_vector()[i]; }
+
+    /// Access to internal vector.
+    std::vector<int>& as_vector()
+    {
+        if (!m_shape) {
+            SGL_THROW("Shape is invalid");
+        }
+        return *m_shape;
+    }
+
+    /// Const access to internal vector.
+    const std::vector<int>& as_vector() const
+    {
+        if (!m_shape) {
+            SGL_THROW("Shape is invalid");
+        }
+        return *m_shape;
+    }
+
+    /// Check if shape is valid (if the std::optional has a value).
+    bool valid() const { return m_shape.has_value(); }
+
+    /// Get size (i.e. number of dimensions) of shape.
+    size_t size() const { return as_vector().size(); }
+
+private:
+    std::optional<std::vector<int>> m_shape;
 };
 
+class SGL_API CallContext : Object {
+public:
+    CallContext(ref<Device> device, const Shape& call_shape)
+        : m_device(std::move(device))
+        , m_call_shape(call_shape)
+    {
+    }
+
+    Device* device() const { return m_device.get(); }
+    const Shape& call_shape() const { return m_call_shape; }
+
+private:
+    ref<Device> m_device;
+    Shape m_call_shape;
+};
 
 } // namespace sgl::slangpy
