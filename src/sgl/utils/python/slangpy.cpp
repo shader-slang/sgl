@@ -465,7 +465,19 @@ SGL_PY_EXPORT(utils_slangpy)
         D_NA(slangpy, hash_signature)
     );
 
-    nb::exception<NativeBoundVariableException>(slangpy, "NativeBoundVariableException");
+    nb::register_exception_translator(
+        [](const std::exception_ptr& p, void* /* unused */)
+        {
+            try {
+                std::rethrow_exception(p);
+            } catch (const NativeBoundVariableException& e) {
+                nb::dict data;
+                data["message"] = e.message();
+                data["source"] = e.source();
+                PyErr_SetObject(PyExc_ValueError, data.ptr());
+            }
+        }
+    );
 
     nb::class_<NativeType, PyNativeType, Object>(slangpy, "NativeType") //
         .def(
@@ -478,6 +490,7 @@ SGL_PY_EXPORT(utils_slangpy)
             "element_type",
             &NativeType::element_type,
             &NativeType::set_element_type,
+            nb::arg().none(),
             D_NA(NativeType, element_type)
         )
         .def_prop_rw(

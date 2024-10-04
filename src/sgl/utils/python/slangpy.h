@@ -28,7 +28,7 @@ public:
     virtual const char* what() const noexcept override { return m_message.c_str(); }
 
     const std::string& message() const { return m_message; }
-    NativeBoundVariableRuntime* source() const { return m_source; }
+    ref<NativeBoundVariableRuntime> source() const { return m_source; }
 
 private:
     std::string m_message;
