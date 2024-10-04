@@ -43,6 +43,8 @@ public:
     void set_name(const std::string& name) { m_name = name; }
     ref<NativeType> element_type() const { return m_element_type; }
     void set_element_type(const ref<NativeType>& element_type) { m_element_type = element_type; }
+    Shape concrete_shape() const { return m_concrete_shape; }
+    void set_concrete_shape(const Shape& concrete_shape) { m_concrete_shape = concrete_shape; }
 
     virtual int get_byte_size(nb::object value) const
     {
@@ -58,6 +60,9 @@ public:
 
     virtual Shape get_shape(nb::object value) const
     {
+        if (m_concrete_shape.valid())
+            return m_concrete_shape;
+
         auto et = element_type();
         if (!et) {
             return get_container_shape(value);
@@ -98,6 +103,7 @@ public:
 private:
     std::string m_name;
     ref<NativeType> m_element_type;
+    Shape m_concrete_shape;
 };
 
 struct PyNativeType : public NativeType {

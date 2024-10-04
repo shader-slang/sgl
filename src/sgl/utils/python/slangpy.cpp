@@ -13,6 +13,10 @@
 
 #include "sgl/utils/python/slangpy.h"
 
+namespace sgl {
+extern void write_shader_cursor(ShaderCursor& cursor, nb::object value);
+}
+
 namespace sgl::slangpy {
 
 void NativeBoundVariableRuntime::populate_call_shape(std::vector<int>& call_shape, nb::object value)
@@ -28,9 +32,11 @@ void NativeBoundVariableRuntime::populate_call_shape(std::vector<int>& call_shap
         if (!m_transform.valid()) {
             throw NativeBoundVariableException("Transform shape is not set.", ref(this));
         }
-        auto& tf = m_transform.as_vector();
+        auto tf = m_transform.as_vector();
         size_t csl = call_shape.size();
-        auto& shape = m_python_type->get_shape(value).as_vector();
+
+        m_shape = m_python_type->get_shape(value);
+        auto shape = m_shape.as_vector();
 
         for (size_t i = 0; i < tf.size(); ++i) {
             int shape_dim = shape[i];
@@ -187,8 +193,26 @@ nb::object NativeCallData::append_to(ref<CommandBuffer> command_buffer, nb::args
     return exec(command_buffer.get(), args, kwargs);
 }
 
+void log_nb(nb::handle o)
+{
+    nb::dict d;
+    if (nb::try_cast(o, d)) {
+        for (auto [k, v] : d) {
+            log_info("{}: {{\n", nb::str(k).c_str());
+            log_nb(v);
+            log_info("}}\n");
+        }
+    } else {
+        log_info("{}\n", nb::str(o).c_str());
+    }
+}
+
 nb::object NativeCallData::exec(CommandBuffer* command_buffer, nb::args args, nb::kwargs kwargs)
 {
+    SGL_UNUSED(command_buffer);
+    SGL_UNUSED(args);
+    SGL_UNUSED(kwargs);
+#if true
     nb::dict call_data;
 
     // rv_node handling would depend on specific implementation
@@ -197,22 +221,34 @@ nb::object NativeCallData::exec(CommandBuffer* command_buffer, nb::args args, nb
     nb::list unpacked_args = unpack_args(args);
     nb::dict unpacked_kwargs = unpack_kwargs(kwargs);
 
+    // log_nb(kwargs);
+    // log_nb(unpacked_kwargs);
+
     // Calculate call shape
     Shape call_shape = m_runtime->calculate_call_shape(m_call_dimensionality, unpacked_args, unpacked_kwargs);
     m_last_call_shape = call_shape;
 
+
     // Setup context
-    CallContext context(m_device, call_shape);
+    auto context = make_ref<CallContext>(m_device, call_shape);
 
     // Allocate return value if needed
-    // Implementation depends on specifics
+    if (!command_buffer && m_call_mode == CallMode::prim) {
+        ref<NativeBoundVariableRuntime> rv_node = m_runtime->find_kwarg("_result");
+        if (rv_node && (!kwargs.contains("_result") || kwargs["_result"].is_none())) {
+            nb::object output = rv_node->get_python_type()->create_output(context);
+            kwargs["_result"] = output;
+            unpacked_kwargs["_result"] = output;
+            rv_node->populate_call_shape(call_shape.as_vector(), output);
+        }
+    }
 
-    m_runtime->write_calldata_pre_dispatch(&context, call_data, unpacked_args, unpacked_kwargs);
+    m_runtime->write_calldata_pre_dispatch(context, call_data, unpacked_args, unpacked_kwargs);
 
     // Calculate total threads and strides
     int total_threads = 1;
     std::vector<int> strides;
-    auto& cs = call_shape.as_vector();
+    auto cs = call_shape.as_vector();
     for (auto it = cs.rbegin(); it != cs.rend(); ++it) {
         strides.push_back(total_threads);
         total_threads *= *it;
@@ -235,7 +271,8 @@ nb::object NativeCallData::exec(CommandBuffer* command_buffer, nb::args args, nb
     }
 
     // Dispatch the kernel
-    m_kernel->dispatch(uint3(total_threads, 1, 1), vars, command_buffer);
+    auto bind_vars = [&](ShaderCursor cursor) { write_shader_cursor(cursor, vars); };
+    m_kernel->dispatch(uint3(total_threads, 1, 1), bind_vars, command_buffer);
 
     // If command_buffer is not null, return early
     if (command_buffer != nullptr) {
@@ -248,7 +285,7 @@ nb::object NativeCallData::exec(CommandBuffer* command_buffer, nb::args args, nb
     }
 
     // Read call data post dispatch
-    m_runtime->read_call_data_post_dispatch(&context, call_data, unpacked_args, unpacked_kwargs);
+    m_runtime->read_call_data_post_dispatch(context, call_data, unpacked_args, unpacked_kwargs);
 
     // Pack updated 'this' values back
     for (size_t i = 0; i < args.size(); ++i) {
@@ -262,10 +299,10 @@ nb::object NativeCallData::exec(CommandBuffer* command_buffer, nb::args args, nb
     if (m_call_mode == CallMode::prim) {
         auto rv_node_it = m_runtime->find_kwarg("_result");
         if (rv_node_it && !unpacked_kwargs["_result"].is_none()) {
-            return rv_node_it->read_output(&context, unpacked_kwargs["_result"]);
+            return rv_node_it->read_output(context, unpacked_kwargs["_result"]);
         }
     }
-
+#endif
     return nb::none();
 }
 
@@ -443,6 +480,12 @@ SGL_PY_EXPORT(utils_slangpy)
             &NativeType::set_element_type,
             D_NA(NativeType, element_type)
         )
+        .def_prop_rw(
+            "concrete_shape",
+            &NativeType::concrete_shape,
+            &NativeType::set_concrete_shape,
+            D_NA(NativeType, concrete_shape)
+        )
         .def("get_byte_size", &NativeType::get_byte_size, D_NA(NativeType, get_byte_size))
         .def("get_container_shape", &NativeType::get_container_shape, D_NA(NativeType, get_container_shape))
         .def("get_shape", &NativeType::get_shape, "value"_a = nb::none(), D_NA(NativeType, get_shape))
@@ -579,7 +622,7 @@ SGL_PY_EXPORT(utils_slangpy)
             D_NA(NativeCallData, add_before_dispatch_hook)
         )
         .def(
-            "add_after_dispatch_hooks",
+            "add_after_dispatch_hook",
             &NativeCallData::add_after_dispatch_hooks,
             D_NA(NativeCallData, add_after_dispatch_hooks)
         )
@@ -639,16 +682,50 @@ SGL_PY_EXPORT(utils_slangpy)
         .def_prop_ro("concrete", &Shape::concrete, D_NA(Shape, concrete))
         .def(
             "as_tuple",
-            [](Shape& self) { return nb::make_tuple(self.as_vector()); },
+            [](Shape& self)
+            {
+                std::vector<int>& v = self.as_vector();
+                nb::list py_list;
+                for (const int& item : v) {
+                    py_list.append(item);
+                }
+                return nb::tuple(py_list);
+            },
             D_NA(Shape, as_tuple)
         )
         .def(
             "as_list",
-            [](Shape& self) { return nb::list(nb::make_tuple(self.as_vector())); },
+            [](Shape& self) { return self.as_vector(); },
+            nb::rv_policy::reference_internal,
             D_NA(Shape, as_list)
         )
         .def("__repr__", &Shape::to_string, D_NA(Shape, to_string))
-        .def("__str__", &Shape::to_string, D_NA(Shape, to_string));
+        .def("__str__", &Shape::to_string, D_NA(Shape, to_string))
+        .def(
+            "__eq__",
+            [](const Shape& self, nb::object other)
+            {
+                if (nb::isinstance<Shape>(other)) {
+                    return self.as_vector() == nb::cast<Shape>(other).as_vector();
+                }
+
+                std::vector<int> v;
+                if (nb::try_cast(other, v)) {
+                    return self.as_vector() == v;
+                }
+
+                return false;
+            },
+            D_NA(Shape, operator==)
+        );
+
+    /* def __eq__(self, value
+                   : object)
+                ->bool : if isinstance (value, Shape)
+            : return self.shape
+            == value.shape else : return self.shape
+            == value*/
+
 
     nb::class_<CallContext, Object>(slangpy, "CallContext") //
         .def(
@@ -657,10 +734,15 @@ SGL_PY_EXPORT(utils_slangpy)
             nb::arg("call_shape"),
             D_NA(CallContext, CallContext)
         )
-        .def(
+        .def_prop_ro(
             "device",
             [](const CallContext& self) -> Device* { return self.device(); },
             D_NA(CallContext, device)
         )
-        .def("call_shape", &CallContext::call_shape, nb::rv_policy::reference_internal, D_NA(CallContext, call_shape));
+        .def_prop_ro(
+            "call_shape",
+            &CallContext::call_shape,
+            nb::rv_policy::reference_internal,
+            D_NA(CallContext, call_shape)
+        );
 }
