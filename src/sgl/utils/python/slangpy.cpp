@@ -433,11 +433,16 @@ SGL_PY_EXPORT(utils_slangpy)
     nb::class_<NativeType, PyNativeType, Object>(slangpy, "NativeType") //
         .def(
             "__init__",
-            [](NativeType& self) { new (&self) NativeType(); },
+            [](NativeType& self) { new (&self) PyNativeType(); },
             D_NA(NativeType, NativeType)
         )
-        .def("name", &NativeType::name, D_NA(NativeType, name))
-        .def("element_type", &NativeType::element_type, D_NA(NativeType, element_type))
+        .def_prop_rw("name", &NativeType::name, &NativeType::set_name, D_NA(NativeType, name))
+        .def_prop_rw(
+            "element_type",
+            &NativeType::element_type,
+            &NativeType::set_element_type,
+            D_NA(NativeType, element_type)
+        )
         .def("get_byte_size", &NativeType::get_byte_size, D_NA(NativeType, get_byte_size))
         .def("get_container_shape", &NativeType::get_container_shape, D_NA(NativeType, get_container_shape))
         .def("get_shape", &NativeType::get_shape, "value"_a = nb::none(), D_NA(NativeType, get_shape))
@@ -598,10 +603,12 @@ SGL_PY_EXPORT(utils_slangpy)
                 } else if (args.size() == 1) {
                     if (args[0].is_none()) {
                         new (&self) Shape(std::nullopt);
+                    } else if (nb::isinstance<nb::tuple>(args[0])) {
+                        new (&self) Shape(nb::cast<std::vector<int>>(args[0]));
                     } else if (nb::isinstance<Shape>(args[0])) {
                         new (&self) Shape(nb::cast<Shape>(args[0]));
                     } else {
-                        new (&self) Shape(nb::cast<std::vector<int>>(args[0]));
+                        new (&self) Shape(nb::cast<std::vector<int>>(args));
                     }
                 } else {
                     new (&self) Shape(nb::cast<std::vector<int>>(args));
@@ -618,12 +625,18 @@ SGL_PY_EXPORT(utils_slangpy)
         )
         .def(
             "__getitem__",
-            [](const Shape& self, size_t i) -> int { return self[i]; },
+            [](const Shape& self, size_t i) -> int
+            {
+                if (i >= self.size())
+                    throw nb::index_error(); // throwing index_error allows this to be used as a python iterator
+                return self[i];
+            },
             nb::arg("index"),
             D_NA(Shape, operator[])
         )
         .def("__len__", &Shape::size, D_NA(Shape, size))
         .def_prop_ro("valid", &Shape::valid, D_NA(Shape, valid))
+        .def_prop_ro("concrete", &Shape::concrete, D_NA(Shape, concrete))
         .def(
             "as_tuple",
             [](Shape& self) { return nb::make_tuple(self.as_vector()); },
@@ -633,7 +646,9 @@ SGL_PY_EXPORT(utils_slangpy)
             "as_list",
             [](Shape& self) { return nb::list(nb::make_tuple(self.as_vector())); },
             D_NA(Shape, as_list)
-        );
+        )
+        .def("__repr__", &Shape::to_string, D_NA(Shape, to_string))
+        .def("__str__", &Shape::to_string, D_NA(Shape, to_string));
 
     nb::class_<CallContext, Object>(slangpy, "CallContext") //
         .def(

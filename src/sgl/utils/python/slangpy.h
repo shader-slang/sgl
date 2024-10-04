@@ -39,8 +39,10 @@ class NativeType : public Object {
 public:
     virtual ~NativeType() = default;
 
-    virtual std::string name() const { return ""; }
-    virtual ref<NativeType> element_type() const { return nullptr; }
+    std::string name() const { return m_name; }
+    void set_name(const std::string& name) { m_name = name; }
+    ref<NativeType> element_type() const { return m_element_type; }
+    void set_element_type(const ref<NativeType>& element_type) { m_element_type = element_type; }
 
     virtual int get_byte_size(nb::object value) const
     {
@@ -92,32 +94,35 @@ public:
         SGL_UNUSED(data);
         return nb::none();
     };
+
+private:
+    std::string m_name;
+    ref<NativeType> m_element_type;
 };
+
 struct PyNativeType : public NativeType {
     NB_TRAMPOLINE(NativeType, 9);
 
-    virtual std::string name() const { NB_OVERRIDE(name); }
-    virtual ref<NativeType> element_type() const { NB_OVERRIDE(element_type); }
+    int get_byte_size(nb::object value) const override { NB_OVERRIDE(get_byte_size, value); }
 
-    virtual int get_byte_size(nb::object value) const { NB_OVERRIDE(get_byte_size, value); }
+    Shape get_container_shape(nb::object value) const override { NB_OVERRIDE(get_container_shape, value); }
 
-    virtual Shape get_container_shape(nb::object value) const { NB_OVERRIDE(get_container_shape, value); }
+    Shape get_shape(nb::object value) const override { NB_OVERRIDE(get_shape, value); }
 
-    virtual Shape get_shape(nb::object value) const { NB_OVERRIDE(get_shape, value); }
-
-    virtual nb::object create_calldata(CallContext* context, NativeBoundVariableRuntime* binding, nb::object data) const
+    nb::object
+    create_calldata(CallContext* context, NativeBoundVariableRuntime* binding, nb::object data) const override
     {
         NB_OVERRIDE(create_calldata, context, binding, data);
     }
 
-    virtual void
-    read_calldata(CallContext* context, NativeBoundVariableRuntime* binding, nb::object data, nb::object result) const
+    void read_calldata(CallContext* context, NativeBoundVariableRuntime* binding, nb::object data, nb::object result)
+        const override
     {
         NB_OVERRIDE(read_calldata, context, binding, data, result);
     }
 
-    virtual nb::object create_output(CallContext* context) const { NB_OVERRIDE(create_output, context); }
-    virtual nb::object read_output(CallContext* context, nb::object data) const
+    nb::object create_output(CallContext* context) const override { NB_OVERRIDE(create_output, context); }
+    nb::object read_output(CallContext* context, nb::object data) const override
     {
         NB_OVERRIDE(read_output, context, data);
     }

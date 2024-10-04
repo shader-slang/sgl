@@ -110,6 +110,26 @@ public:
     /// Get size (i.e. number of dimensions) of shape.
     size_t size() const { return as_vector().size(); }
 
+    /// Check if concrete shape (no dimensions are -1).
+    bool concrete() const
+    {
+        for (auto dim : as_vector()) {
+            if (dim == -1) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /// Convert to string
+    std::string to_string() const
+    {
+        if (!m_shape) {
+            return "[invalid]";
+        }
+        return fmt::format("[{}]", fmt::join(as_vector(), ", "));
+    }
+
 private:
     std::optional<std::vector<int>> m_shape;
 };
