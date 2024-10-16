@@ -22,30 +22,44 @@ namespace sgl::slangpy {
 void NativeBoundVariableRuntime::populate_call_shape(std::vector<int>& call_shape, nb::object value)
 {
     if (m_children) {
+        // We have children, so load each child value and recurse down the tree.
         for (auto& [name, child_ref] : *m_children) {
-            nb::object child_value = value[name.c_str()];
             if (child_ref) {
+                nb::object child_value = value[name.c_str()];
                 child_ref->populate_call_shape(call_shape, child_value);
             }
         }
     } else if (!value.is_none()) {
+        // We are a leaf node, so we can populate the call shape.
         if (!m_transform.valid()) {
             throw NativeBoundVariableException("Transform shape is not set.", ref(this));
         }
+
+        // Read the transform and call shape size.
         auto tf = m_transform.as_vector();
         size_t csl = call_shape.size();
 
+        // Get the shape of the value.
         m_shape = m_python_type->get_shape(value);
-        auto shape = m_shape.as_vector();
 
+        // Apply this shape to the overall call shape.
+        auto shape = m_shape.as_vector();
         for (size_t i = 0; i < tf.size(); ++i) {
             int shape_dim = shape[i];
             int call_idx = tf[i];
 
+            // If the call index loaded from the transform is
+            // out of bounds, this dimension is a sub-element index,
+            // so ignore it.
             if (call_idx >= static_cast<int>(csl)) {
                 continue;
             }
 
+            // Apply the new dimension to the call shape.
+            //- if it's the same, we're fine
+            //- if current call shape == 1, shape_dim != 1, call is expanded
+            //- if current call shape != 1, shape_dim == 1, shape is broadcast
+            //- if current call shape != 1, shape_dim != 1, it's a mismatch
             int& cs = call_shape[call_idx];
             if (cs != shape_dim) {
                 if (cs != 1 && shape_dim != 1) {
@@ -69,10 +83,12 @@ void NativeBoundVariableRuntime::write_call_data_pre_dispatch(
 )
 {
     if (m_children) {
+        // We have children, so generate call data for each child and
+        // store in a dictionary, then store the dictionary as the call data.
         nb::dict cd_val;
         for (auto& [name, child_ref] : *m_children) {
-            nb::object child_value = value[name.c_str()];
             if (child_ref) {
+                nb::object child_value = value[name.c_str()];
                 child_ref->write_call_data_pre_dispatch(context, cd_val, child_value);
             }
         }
@@ -80,6 +96,7 @@ void NativeBoundVariableRuntime::write_call_data_pre_dispatch(
             call_data[m_variable_name.c_str()] = cd_val;
         }
     } else {
+        // We are a leaf node, so generate and store call data for this node.
         nb::object cd_val = m_python_type->create_calldata(context, this, value);
         if (!cd_val.is_none()) {
             call_data[m_variable_name.c_str()] = cd_val;
@@ -93,20 +110,25 @@ void NativeBoundVariableRuntime::read_call_data_post_dispatch(
     nb::object value
 )
 {
+    // Bail if the call data does not contain the variable name.
     if (!call_data.contains(m_variable_name.c_str())) {
         return;
     }
-    auto cd_val = call_data[m_variable_name.c_str()];
 
+    // Get the call data value.
+    auto cd_val = call_data[m_variable_name.c_str()];
     if (m_children) {
+        // We have children, so the call data value should be a dictionary
+        // containing the call data for each child.
         auto dict = nb::cast<nb::dict>(cd_val);
         for (auto& [name, child_ref] : *m_children) {
-            nb::object child_value = value[name.c_str()];
             if (child_ref) {
+                nb::object child_value = value[name.c_str()];
                 child_ref->read_call_data_post_dispatch(context, dict, child_value);
             }
         }
     } else {
+        // We are a leaf node, so the read call data.
         m_python_type->read_calldata(context, this, value, cd_val);
     }
 }
@@ -114,19 +136,21 @@ void NativeBoundVariableRuntime::read_call_data_post_dispatch(
 nb::object NativeBoundVariableRuntime::read_output(CallContext* context, nb::object data)
 {
     if (m_children) {
+        // We have children, so read the output for each child and store in a dictionary.
         nb::dict res;
         for (auto& [name, child_ref] : *m_children) {
             if (res.contains(name.c_str())) {
-                nb::object child_data = data[child_ref->m_name.c_str()];
                 if (child_ref) {
+                    nb::object child_data = data[child_ref->m_name.c_str()];
                     res[name.c_str()] = child_ref->read_output(context, child_data);
                 }
             }
         }
         return res;
     } else {
+        // We are a leaf node, so read the output if the variable was writable.
         if (m_access.first == AccessType::write || m_access.first == AccessType::readwrite) {
-            return m_python_type->read_output(context, data);
+            return m_python_type->read_output(context, this, data);
         }
         return nb::none();
     }
@@ -134,16 +158,23 @@ nb::object NativeBoundVariableRuntime::read_output(CallContext* context, nb::obj
 
 Shape NativeBoundCallRuntime::calculate_call_shape(int call_dimensionality, nb::list args, nb::dict kwargs)
 {
+    // Setup initial call shape of correct dimensionality, with all dimensions set to 1.
     std::vector<int> call_shape(call_dimensionality, 1);
+
+    // Populate call shape for each positional argument.
     for (size_t idx = 0; idx < args.size(); ++idx) {
         m_args[idx]->populate_call_shape(call_shape, args[idx]);
     }
+
+    // Populate call shape for each keyword argument.
     for (auto [key, value] : kwargs) {
         auto it = m_kwargs.find(nb::str(key).c_str());
         if (it != m_kwargs.end()) {
             it->second->populate_call_shape(call_shape, nb::cast<nb::object>(value));
         }
     }
+
+    // Return finalized shape.
     return Shape(call_shape);
 }
 
@@ -154,9 +185,12 @@ void NativeBoundCallRuntime::write_calldata_pre_dispatch(
     nb::dict kwargs
 )
 {
+    // Write call data for each positional argument.
     for (size_t idx = 0; idx < args.size(); ++idx) {
         m_args[idx]->write_call_data_pre_dispatch(context, call_data, args[idx]);
     }
+
+    // Write call data for each keyword argument.
     for (auto [key, value] : kwargs) {
         auto it = m_kwargs.find(nb::str(key).c_str());
         if (it != m_kwargs.end()) {
@@ -172,9 +206,12 @@ void NativeBoundCallRuntime::read_call_data_post_dispatch(
     nb::dict kwargs
 )
 {
+    // Read call data for each positional argument.
     for (size_t idx = 0; idx < args.size(); ++idx) {
         m_args[idx]->read_call_data_post_dispatch(context, call_data, args[idx]);
     }
+
+    // Read call data for each keyword argument.
     for (auto [key, value] : kwargs) {
         auto it = m_kwargs.find(nb::str(key).c_str());
         if (it != m_kwargs.end()) {
@@ -193,59 +230,35 @@ nb::object NativeCallData::append_to(ref<CommandBuffer> command_buffer, nb::args
     return exec(command_buffer.get(), args, kwargs);
 }
 
-void log_nb(nb::handle o)
-{
-    nb::dict d;
-    if (nb::try_cast(o, d)) {
-        for (auto [k, v] : d) {
-            log_info("{}: {{\n", nb::str(k).c_str());
-            log_nb(v);
-            log_info("}}\n");
-        }
-    } else {
-        log_info("{}\n", nb::str(o).c_str());
-    }
-}
-
 nb::object NativeCallData::exec(CommandBuffer* command_buffer, nb::args args, nb::kwargs kwargs)
 {
-    SGL_UNUSED(command_buffer);
-    SGL_UNUSED(args);
-    SGL_UNUSED(kwargs);
-#if true
-    nb::dict call_data;
-
-    // rv_node handling would depend on specific implementation
-
-    // Unpack args and kwargs
+    // Unpack args and kwargs.
     nb::list unpacked_args = unpack_args(args);
     nb::dict unpacked_kwargs = unpack_kwargs(kwargs);
 
-    // log_nb(kwargs);
-    // log_nb(unpacked_kwargs);
-
-    // Calculate call shape
+    // Calculate call shape.
     Shape call_shape = m_runtime->calculate_call_shape(m_call_dimensionality, unpacked_args, unpacked_kwargs);
     m_last_call_shape = call_shape;
 
-
-    // Setup context
+    // Setup context.
     auto context = make_ref<CallContext>(m_device, call_shape);
 
-    // Allocate return value if needed
+    // Allocate return value if needed.
     if (!command_buffer && m_call_mode == CallMode::prim) {
         ref<NativeBoundVariableRuntime> rv_node = m_runtime->find_kwarg("_result");
         if (rv_node && (!kwargs.contains("_result") || kwargs["_result"].is_none())) {
-            nb::object output = rv_node->get_python_type()->create_output(context);
+            nb::object output = rv_node->get_python_type()->create_output(context, rv_node.get());
             kwargs["_result"] = output;
             unpacked_kwargs["_result"] = output;
             rv_node->populate_call_shape(call_shape.as_vector(), output);
         }
     }
 
+    // Write uniforms to call data.
+    nb::dict call_data;
     m_runtime->write_calldata_pre_dispatch(context, call_data, unpacked_args, unpacked_kwargs);
 
-    // Calculate total threads and strides
+    // Calculate total threads and strides.
     int total_threads = 1;
     std::vector<int> strides;
     auto cs = call_shape.as_vector();
@@ -261,33 +274,33 @@ nb::object NativeCallData::exec(CommandBuffer* command_buffer, nb::args args, nb
     }
     call_data["_thread_count"] = uint3(total_threads, 1, 1);
 
-    // Merge sets
+    // Copy user provided vars and insert call data.
     nb::dict vars = nb::dict(m_vars);
     vars["call_data"] = call_data;
 
-    // Execute before dispatch hooks
+    // Execute before dispatch hooks.
     for (auto& hook : m_before_dispatch_hooks) {
         hook(vars);
     }
 
-    // Dispatch the kernel
+    // Dispatch the kernel.
     auto bind_vars = [&](ShaderCursor cursor) { write_shader_cursor(cursor, vars); };
     m_kernel->dispatch(uint3(total_threads, 1, 1), bind_vars, command_buffer);
 
-    // If command_buffer is not null, return early
+    // If command_buffer is not null, return early.
     if (command_buffer != nullptr) {
         return nanobind::none();
     }
 
-    // Execute after dispatch hooks
+    // Execute after dispatch hooks.
     for (auto& hook : m_after_dispatch_hooks) {
         hook(vars);
     }
 
-    // Read call data post dispatch
+    // Read call data post dispatch.
     m_runtime->read_call_data_post_dispatch(context, call_data, unpacked_args, unpacked_kwargs);
 
-    // Pack updated 'this' values back
+    // Pack updated 'this' values back.
     for (size_t i = 0; i < args.size(); ++i) {
         pack_arg(args[i], unpacked_args[i]);
     }
@@ -295,14 +308,13 @@ nb::object NativeCallData::exec(CommandBuffer* command_buffer, nb::args args, nb
         pack_arg(nb::cast<nb::object>(v), unpacked_kwargs[k]);
     }
 
-    // Handle return value based on call mode
+    // Handle return value based on call mode.
     if (m_call_mode == CallMode::prim) {
         auto rv_node_it = m_runtime->find_kwarg("_result");
         if (rv_node_it && !unpacked_kwargs["_result"].is_none()) {
             return rv_node_it->read_output(context, unpacked_kwargs["_result"]);
         }
     }
-#endif
     return nb::none();
 }
 
@@ -328,10 +340,12 @@ nb::object NativeCallData::unpack_arg(nb::object arg)
 {
     auto obj = arg;
 
+    // If object has 'get_this', read it.
     if (nb::hasattr(obj, "get_this")) {
         obj = nb::getattr(obj, "get_this")();
     }
 
+    // Recursively unpack dictionaries.
     nb::dict d;
     if (nb::try_cast(obj, d)) {
         nb::dict res;
@@ -341,6 +355,7 @@ nb::object NativeCallData::unpack_arg(nb::object arg)
         obj = res;
     }
 
+    // Recursively unpack lists.
     nb::list l;
     if (nb::try_cast(obj, l)) {
         nb::list res;
@@ -350,15 +365,18 @@ nb::object NativeCallData::unpack_arg(nb::object arg)
         obj = res;
     }
 
+    // Return unpacked object.
     return obj;
 }
 
 void NativeCallData::pack_arg(nanobind::object arg, nanobind::object unpacked_arg)
 {
+    // If object has 'update_this', update it.
     if (nb::hasattr(arg, "update_this")) {
         nb::getattr(arg, "update_this")(unpacked_arg);
     }
 
+    // Recursively pack dictionaries.
     nb::dict d;
     if (nb::try_cast(arg, d)) {
         for (auto [k, v] : d) {
@@ -366,6 +384,7 @@ void NativeCallData::pack_arg(nanobind::object arg, nanobind::object unpacked_ar
         }
     }
 
+    // Recursively pack lists.
     nb::list l;
     if (nb::try_cast(arg, l)) {
         for (size_t i = 0; i < l.size(); ++i) {
