@@ -21,7 +21,7 @@ class NativeBoundVariableRuntime;
 /// originated.
 class NativeBoundVariableException : public std::exception {
 public:
-    NativeBoundVariableException(const std::string& message, ref<NativeBoundVariableRuntime> source = nullptr)
+    NativeBoundVariableException(std::string_view message, ref<NativeBoundVariableRuntime> source = nullptr)
         : m_message(message)
         , m_source(std::move(source))
     {
@@ -46,13 +46,13 @@ public:
     std::string name() const { return m_name; }
 
     /// Set the name of the type
-    void set_name(const std::string& name) { m_name = name; }
+    void set_name(std::string_view name) { m_name = name; }
 
     /// Get the element type (eg vector<float,3> -> float).
     ref<NativeType> element_type() const { return m_element_type; }
 
     /// Set the element type.
-    void set_element_type(const ref<NativeType>& element_type) { m_element_type = element_type; }
+    void set_element_type(ref<NativeType> element_type) { m_element_type = std::move(element_type); }
 
     /// Get the concrete shape of the type. For none-concrete types such as buffers,
     /// this will return an invalid shape.
@@ -122,7 +122,7 @@ public:
         return nb::none();
     };
 
-    /// For types can create_output, read the data allocated in create_output and
+    /// For types that can create_output, read the data allocated in create_output and
     /// return the python object to be provided to the user.
     virtual nb::object read_output(CallContext* context, NativeBoundVariableRuntime* binding, nb::object data) const
     {
@@ -211,13 +211,13 @@ public:
     std::string get_name() const { return m_name; }
 
     /// Set the name.
-    void set_name(const std::string& name) { m_name = name; }
+    void set_name(std::string_view name) { m_name = name; }
 
     /// Get the uniform variable name.
     std::string get_variable_name() const { return m_variable_name; }
 
     /// Set the uniform variable name.
-    void set_variable_name(const std::string& variable_name) { m_variable_name = variable_name; }
+    void set_variable_name(std::string_view variable_name) { m_variable_name = variable_name; }
 
     /// Get children (for structs).
     std::optional<std::map<std::string, ref<NativeBoundVariableRuntime>>> get_children() const { return m_children; }

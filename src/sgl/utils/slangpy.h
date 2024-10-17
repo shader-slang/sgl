@@ -2,14 +2,14 @@
 
 #pragma once
 
-#include <vector>
-#include <map>
-
 #include "sgl/core/macros.h"
 #include "sgl/core/fwd.h"
 #include "sgl/core/object.h"
 #include "sgl/core/enum.h"
 #include "sgl/device/fwd.h"
+
+#include <vector>
+#include <map>
 
 namespace sgl::slangpy {
 

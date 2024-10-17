@@ -23,7 +23,7 @@ void NativeBoundVariableRuntime::populate_call_shape(std::vector<int>& call_shap
 {
     if (m_children) {
         // We have children, so load each child value and recurse down the tree.
-        for (auto& [name, child_ref] : *m_children) {
+        for (const auto& [name, child_ref] : *m_children) {
             if (child_ref) {
                 nb::object child_value = value[name.c_str()];
                 child_ref->populate_call_shape(call_shape, child_value);
@@ -86,7 +86,7 @@ void NativeBoundVariableRuntime::write_call_data_pre_dispatch(
         // We have children, so generate call data for each child and
         // store in a dictionary, then store the dictionary as the call data.
         nb::dict cd_val;
-        for (auto& [name, child_ref] : *m_children) {
+        for (const auto& [name, child_ref] : *m_children) {
             if (child_ref) {
                 nb::object child_value = value[name.c_str()];
                 child_ref->write_call_data_pre_dispatch(context, cd_val, child_value);
@@ -121,7 +121,7 @@ void NativeBoundVariableRuntime::read_call_data_post_dispatch(
         // We have children, so the call data value should be a dictionary
         // containing the call data for each child.
         auto dict = nb::cast<nb::dict>(cd_val);
-        for (auto& [name, child_ref] : *m_children) {
+        for (const auto& [name, child_ref] : *m_children) {
             if (child_ref) {
                 nb::object child_value = value[name.c_str()];
                 child_ref->read_call_data_post_dispatch(context, dict, child_value);
@@ -138,7 +138,7 @@ nb::object NativeBoundVariableRuntime::read_output(CallContext* context, nb::obj
     if (m_children) {
         // We have children, so read the output for each child and store in a dictionary.
         nb::dict res;
-        for (auto& [name, child_ref] : *m_children) {
+        for (const auto& [name, child_ref] : *m_children) {
             if (res.contains(name.c_str())) {
                 if (child_ref) {
                     nb::object child_data = data[child_ref->m_name.c_str()];
@@ -279,7 +279,7 @@ nb::object NativeCallData::exec(CommandBuffer* command_buffer, nb::args args, nb
     vars["call_data"] = call_data;
 
     // Execute before dispatch hooks.
-    for (auto& hook : m_before_dispatch_hooks) {
+    for (const auto& hook : m_before_dispatch_hooks) {
         hook(vars);
     }
 
@@ -293,7 +293,7 @@ nb::object NativeCallData::exec(CommandBuffer* command_buffer, nb::args args, nb
     }
 
     // Execute after dispatch hooks.
-    for (auto& hook : m_after_dispatch_hooks) {
+    for (const auto& hook : m_after_dispatch_hooks) {
         hook(vars);
     }
 
