@@ -64,7 +64,7 @@ jobs:
       - name: Setup Linux
         if: startsWith(matrix.os, 'linux') && !contains(matrix.runs-on, 'self-hosted')
         run: |
-          sudo apt install -y libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev pkg-config
+          sudo apt update && sudo apt install -y libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev pkg-config
 
       # Setup Python.
       - name: Setup Python ${{ matrix.python }}
