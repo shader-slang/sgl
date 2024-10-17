@@ -960,7 +960,7 @@ def test_specialize_partially_generic_function_with_implicit_cast(
     f2 = f1.specialize_with_arg_types(
         [
             module.layout.find_type_by_name("float3"),
-            module.layout.find_type_by_name("int"),
+            module.layout.find_type_by_name("float"),
         ]
     )
     assert f2 is not None
