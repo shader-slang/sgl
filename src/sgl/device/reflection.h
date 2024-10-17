@@ -804,7 +804,10 @@ public:
     }
 
     /// Specialize a generic or interface based function with a set of concrete
-    /// argument types.
+    /// argument types. Calling on a none-generic/interface function will simply
+    /// validate all argument types can be implicitly converted to their respective
+    /// parameter types. Where a function contains multiple overloads, specialize
+    /// will identify the correct overload based on the arguments.
     ref<const FunctionReflection> specialize_with_arg_types(const std::vector<ref<TypeReflection>>& types) const
     {
         std::vector<slang::TypeReflection*> slang_types;
@@ -818,7 +821,8 @@ public:
         );
     }
 
-    /// Check whether a function has overloads.
+    /// Check whether this function object represents a group of overloaded functions,
+    /// accessible via the overloads list.
     bool is_overloaded() const { return m_target->isOverloaded(); }
 
     /// Get number of available overloads of this function.
