@@ -74,6 +74,7 @@ class TypeLayoutReflection;
 class TypeLayoutReflectionFieldList;
 class FunctionReflection;
 class FunctionReflectionParameterList;
+class FunctionReflectionOverloadList;
 class VariableReflection;
 class VariableLayoutReflection;
 class EntryPointLayout;

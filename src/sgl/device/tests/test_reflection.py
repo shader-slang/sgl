@@ -669,5 +669,305 @@ def test_get_type_layout(test_id: str, device_type: sgl.DeviceType):
     assert tl.size == 4
 
 
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_basic_function_overloads(test_id: str, device_type: sgl.DeviceType):
+    device = helpers.get_device(type=device_type)
+
+    # Create a session, and within it a module.
+    session = helpers.create_session(device, {})
+    module = session.load_module_from_source(
+        module_name=f"module_from_source_{test_id}",
+        source=r"""
+        int foo()
+        {
+            return 0;
+        }
+        int bar()
+        {
+            return 0;
+        }
+        int bar(int i)
+        {
+            return 0;
+        }
+        int hi(float i)
+        {
+            return 0;
+        }
+        int hi(int i)
+        {
+            return 0;
+        }
+    """,
+    )
+
+    # Find and verify the function.
+    f1 = module.layout.find_function_by_name("foo")
+    assert f1 is not None
+    assert not f1.is_overloaded
+    assert len(f1.overloads) == 0
+
+    # Find and verify the function.
+    f1 = module.layout.find_function_by_name("bar")
+    assert f1 is not None
+    assert f1.is_overloaded
+    assert len(f1.overloads) == 2
+    overloads = [x for x in f1.overloads]
+    assert len(overloads[0].parameters) != len(overloads[1].parameters)
+
+    # Find and verify the function.
+    f1 = module.layout.find_function_by_name("hi")
+    assert f1 is not None
+    assert f1.is_overloaded
+    assert len(f1.overloads) == 2
+    assert len(f1.parameters) == 0
+    overloads = [x for x in f1.overloads]
+    assert len(overloads[0].parameters) == 1
+    assert len(overloads[1].parameters) == 1
+
+
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_specialize_concrete_function(test_id: str, device_type: sgl.DeviceType):
+    device = helpers.get_device(type=device_type)
+
+    # Create a session, and within it a module.
+    session = helpers.create_session(device, {})
+    module = session.load_module_from_source(
+        module_name=f"module_from_source_{test_id}",
+        source=r"""
+        int foo(float3 val)
+        {
+            return 0;
+        }
+    """,
+    )
+
+    # Find and verify the generic function.
+    f1 = module.layout.find_function_by_name("foo")
+    assert f1 is not None
+    assert not f1.is_overloaded
+    assert len(f1.overloads) == 0
+    assert len(f1.parameters) == 1
+    assert f1.parameters[0].name == "val"
+    assert f1.parameters[0].type.full_name == "vector<float,3>"
+
+    # Specialize the function with int.
+    f2 = f1.specialize_with_arg_types([module.layout.find_type_by_name("float3")])
+    assert f2 is not None
+    assert not f2.is_overloaded
+    assert len(f2.overloads) == 0
+    assert len(f2.parameters) == 1
+    assert f2.parameters[0].name == "val"
+    assert f2.parameters[0].type.full_name == "vector<float,3>"
+
+
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_specialize_interface_function(test_id: str, device_type: sgl.DeviceType):
+    device = helpers.get_device(type=device_type)
+
+    # Create a session, and within it a module.
+    session = helpers.create_session(device, {})
+    module = session.load_module_from_source(
+        module_name=f"module_from_source_{test_id}",
+        source=r"""
+        int foo(IFloat val)
+        {
+            return 0;
+        }
+    """,
+    )
+
+    # Find and verify the generic function.
+    f1 = module.layout.find_function_by_name("foo")
+    assert f1 is not None
+    assert not f1.is_overloaded
+    assert len(f1.overloads) == 0
+    assert len(f1.parameters) == 1
+    assert f1.parameters[0].name == "val"
+    assert f1.parameters[0].type.name == "IFloat"
+
+    # Specialize the function with int.
+    f2 = f1.specialize_with_arg_types([module.layout.find_type_by_name("float")])
+    assert f2 is not None
+    assert not f2.is_overloaded
+    assert len(f2.overloads) == 0
+    assert len(f2.parameters) == 1
+    assert f2.parameters[0].name == "val"
+    assert f2.parameters[0].type.full_name == "float"
+
+
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_specialize_generic_function(test_id: str, device_type: sgl.DeviceType):
+    device = helpers.get_device(type=device_type)
+
+    # Create a session, and within it a module.
+    session = helpers.create_session(device, {})
+    module = session.load_module_from_source(
+        module_name=f"module_from_source_{test_id}",
+        source=r"""
+        int foo<T>(T val)
+        {
+            return 0;
+        }
+    """,
+    )
+
+    # Find and verify the generic function.
+    f1 = module.layout.find_function_by_name("foo")
+    assert f1 is not None
+    assert not f1.is_overloaded
+    assert len(f1.overloads) == 0
+    assert len(f1.parameters) == 1
+    assert f1.parameters[0].name == "val"
+    assert f1.parameters[0].type.name == "T"
+
+    # Specialize the function with int.
+    f2 = f1.specialize_with_arg_types([module.layout.find_type_by_name("float3")])
+    assert f2 is not None
+    assert not f2.is_overloaded
+    assert len(f2.overloads) == 0
+    assert len(f2.parameters) == 1
+    assert f2.parameters[0].name == "val"
+    assert f2.parameters[0].type.full_name == "vector<float,3>"
+
+
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_specialize_partially_generic_function(
+    test_id: str, device_type: sgl.DeviceType
+):
+    device = helpers.get_device(type=device_type)
+
+    # Create a session, and within it a module.
+    session = helpers.create_session(device, {})
+    module = session.load_module_from_source(
+        module_name=f"module_from_source_{test_id}",
+        source=r"""
+        int foo<T>(T val, float3 val2)
+        {
+            return 0;
+        }
+    """,
+    )
+
+    # Find and verify the generic function.
+    f1 = module.layout.find_function_by_name("foo")
+    assert f1 is not None
+    assert not f1.is_overloaded
+    assert len(f1.overloads) == 0
+    assert len(f1.parameters) == 2
+    assert f1.parameters[0].name == "val"
+    assert f1.parameters[0].type.name == "T"
+    assert f1.parameters[1].name == "val2"
+    assert f1.parameters[1].type.full_name == "vector<float,3>"
+
+    # Specialize the function with int.
+    f2 = f1.specialize_with_arg_types(
+        [
+            module.layout.find_type_by_name("float3"),
+            module.layout.find_type_by_name("float3"),
+        ]
+    )
+    assert f2 is not None
+    assert not f2.is_overloaded
+    assert len(f2.overloads) == 0
+    assert len(f2.parameters) == 2
+    assert f2.parameters[0].name == "val"
+    assert f2.parameters[0].type.full_name == "vector<float,3>"
+    assert f2.parameters[1].name == "val2"
+    assert f2.parameters[1].type.full_name == "vector<float,3>"
+
+
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_fail_specialize_partially_generic_function(
+    test_id: str, device_type: sgl.DeviceType
+):
+    device = helpers.get_device(type=device_type)
+
+    # Create a session, and within it a module.
+    session = helpers.create_session(device, {})
+    module = session.load_module_from_source(
+        module_name=f"module_from_source_{test_id}",
+        source=r"""
+        int foo<T>(T val, float3 val2)
+        {
+            return 0;
+        }
+    """,
+    )
+
+    # Find and verify the generic function.
+    f1 = module.layout.find_function_by_name("foo")
+    assert f1 is not None
+    assert not f1.is_overloaded
+    assert len(f1.overloads) == 0
+    assert len(f1.parameters) == 2
+    assert f1.parameters[0].name == "val"
+    assert f1.parameters[0].type.name == "T"
+    assert f1.parameters[1].name == "val2"
+    assert f1.parameters[1].type.full_name == "vector<float,3>"
+
+    # Specialize the function with int.
+    f2 = f1.specialize_with_arg_types(
+        [
+            module.layout.find_type_by_name("float3"),
+            module.layout.find_type_by_name("float2"),
+        ]
+    )
+    assert f2 is not None
+    assert not f2.is_overloaded
+    assert len(f2.overloads) == 0
+    assert len(f2.parameters) == 2
+    assert f2.parameters[0].name == "val"
+    assert f2.parameters[0].type.full_name == "vector<float,3>"
+    assert f2.parameters[1].name == "val2"
+    assert f2.parameters[1].type.full_name == "vector<float,3>"
+
+
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_specialize_partially_generic_function_with_implicit_cast(
+    test_id: str, device_type: sgl.DeviceType
+):
+    device = helpers.get_device(type=device_type)
+
+    # Create a session, and within it a module.
+    session = helpers.create_session(device, {})
+    module = session.load_module_from_source(
+        module_name=f"module_from_source_{test_id}",
+        source=r"""
+        int foo<T>(T val, float3 val2)
+        {
+            return 0;
+        }
+    """,
+    )
+
+    # Find and verify the generic function.
+    f1 = module.layout.find_function_by_name("foo")
+    assert f1 is not None
+    assert not f1.is_overloaded
+    assert len(f1.overloads) == 0
+    assert len(f1.parameters) == 2
+    assert f1.parameters[0].name == "val"
+    assert f1.parameters[0].type.name == "T"
+    assert f1.parameters[1].name == "val2"
+    assert f1.parameters[1].type.full_name == "vector<float,3>"
+
+    # Specialize the function with int.
+    f2 = f1.specialize_with_arg_types(
+        [
+            module.layout.find_type_by_name("float3"),
+            module.layout.find_type_by_name("int"),
+        ]
+    )
+    assert f2 is not None
+    assert not f2.is_overloaded
+    assert len(f2.overloads) == 0
+    assert len(f2.parameters) == 2
+    assert f2.parameters[0].name == "val"
+    assert f2.parameters[0].type.full_name == "vector<float,3>"
+    assert f2.parameters[1].name == "val2"
+    assert f2.parameters[1].type.full_name == "vector<float,3>"
+
+
 if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+    pytest.main([__file__, "-v", "-s"])

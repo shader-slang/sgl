@@ -778,25 +778,60 @@ public:
     {
     }
 
+    /// Function name.
     char const* name() const { return m_target->getName(); }
 
+    /// Function return type.
     ref<const TypeReflection> return_type() { return detail::from_slang(m_owner, m_target->getReturnType()); }
 
+    /// Number of function parameters.
     uint32_t parameter_count() const { return m_target->getParameterCount(); }
 
+    /// Get a single parameter.
     ref<const VariableReflection> get_parameter_by_index(uint32_t index) const
     {
         SGL_CHECK(index < parameter_count(), "Parameter index out of range");
         return detail::from_slang(m_owner, m_target->getParameterByIndex(index));
     }
 
+    /// List of all function parameters.
     FunctionReflectionParameterList parameters() const;
 
-    /// Check if variable has a given modifier (e.g. 'inout').
+    /// Check if the function has a given modifier (e.g. 'differentiable').
     bool has_modifier(ModifierID modifier) const
     {
         return m_target->findModifier(static_cast<slang::Modifier::ID>(modifier)) != nullptr;
     }
+
+    /// Specialize a generic or interface based function with a set of concrete
+    /// argument types.
+    ref<const FunctionReflection> specialize_with_arg_types(const std::vector<ref<TypeReflection>>& types) const
+    {
+        std::vector<slang::TypeReflection*> slang_types;
+        slang_types.reserve(types.size());
+        for (const auto& type : types)
+            slang_types.push_back(type->slang_target());
+
+        return detail::from_slang(
+            m_owner,
+            m_target->specializeWithArgTypes((uint32_t)slang_types.size(), &slang_types[0])
+        );
+    }
+
+    /// Check whether a function has overloads.
+    bool is_overloaded() const { return m_target->isOverloaded(); }
+
+    /// Get number of available overloads of this function.
+    uint32_t overload_count() const { return is_overloaded() ? m_target->getOverloadCount() : 0; }
+
+    /// Get a given overload of this function.
+    ref<const FunctionReflection> get_overload_by_index(uint32_t index) const
+    {
+        return detail::from_slang(m_owner, m_target->getOverload(index));
+    }
+
+    /// List of all overloads of this function.
+    FunctionReflectionOverloadList overloads() const;
 };
 
 /// FunctionReflection lazy parameter list evaluation.
@@ -816,6 +851,26 @@ protected:
     ref<const VariableReflection> evaluate(uint32_t index) const override
     {
         return m_owner->get_parameter_by_index(index);
+    }
+};
+
+/// FunctionReflection lazy overload list evaluation.
+class SGL_API FunctionReflectionOverloadList : public BaseReflectionList<FunctionReflection, FunctionReflection> {
+
+public:
+    FunctionReflectionOverloadList(ref<const FunctionReflection> owner)
+        : BaseReflectionList(std::move(owner))
+    {
+    }
+
+    /// Number of entries in list.
+    uint32_t size() const override { return m_owner->overload_count(); }
+
+protected:
+    /// Get a specific child.
+    ref<const FunctionReflection> evaluate(uint32_t index) const override
+    {
+        return m_owner->get_overload_by_index(index);
     }
 };
 

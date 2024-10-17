@@ -137,7 +137,15 @@ SGL_PY_EXPORT(device_reflection)
         .def_prop_ro("name", &FunctionReflection::name, D(FunctionReflection, name))
         .def_prop_ro("return_type", &FunctionReflection::return_type, D(FunctionReflection, return_type))
         .def_prop_ro("parameters", &FunctionReflection::parameters, D(FunctionReflection, parameters))
-        .def("has_modifier", &FunctionReflection::has_modifier, "modifier"_a, D(FunctionReflection, has_modifier));
+        .def("has_modifier", &FunctionReflection::has_modifier, "modifier"_a, D(FunctionReflection, has_modifier))
+        .def(
+            "specialize_with_arg_types",
+            &FunctionReflection::specialize_with_arg_types,
+            "types"_a,
+            D_NA(FunctionReflection, specialize_with_arg_types)
+        )
+        .def_prop_ro("is_overloaded", &FunctionReflection::is_overloaded, D_NA(FunctionReflection, is_overloaded))
+        .def_prop_ro("overloads", &FunctionReflection::overloads, D_NA(FunctionReflection, overloads));
 
     nb::sgl_enum<ModifierID>(m, "ModifierID");
 
@@ -145,6 +153,11 @@ SGL_PY_EXPORT(device_reflection)
         m,
         "FunctionReflectionParameterList",
         D(FunctionReflectionParameterList)
+    );
+    bind_list_type<FunctionReflectionOverloadList>(
+        m,
+        "FunctionReflectionOverloadList",
+        D_NA(FunctionReflectionOverloadList)
     );
 
     nb::class_<VariableReflection, BaseReflectionObject>(m, "VariableReflection")
