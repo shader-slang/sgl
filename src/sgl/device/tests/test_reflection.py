@@ -974,4 +974,4 @@ def test_specialize_partially_generic_function_with_implicit_cast(
 
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-v", "-s"])
+    pytest.main([__file__, "-v"])
