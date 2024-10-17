@@ -29,7 +29,7 @@ public:
 
     virtual const char* what() const noexcept override { return m_message.c_str(); }
 
-    const std::string& message() const { return m_message; }
+    std::string_view message() const { return m_message; }
     ref<NativeBoundVariableRuntime> source() const { return m_source; }
 
 private:
@@ -43,7 +43,7 @@ public:
     virtual ~NativeType() = default;
 
     /// Get the name of the type (eg 'int', 'vector<float,3>', 'Foo').
-    std::string name() const { return m_name; }
+    std::string_view name() const { return m_name; }
 
     /// Set the name of the type
     void set_name(std::string_view name) { m_name = name; }
@@ -208,13 +208,13 @@ public:
     void set_shape(const Shape& shape) { m_shape = shape; }
 
     /// Get the name.
-    std::string get_name() const { return m_name; }
+    std::string_view get_name() const { return m_name; }
 
     /// Set the name.
     void set_name(std::string_view name) { m_name = name; }
 
     /// Get the uniform variable name.
-    std::string get_variable_name() const { return m_variable_name; }
+    std::string_view get_variable_name() const { return m_variable_name; }
 
     /// Set the uniform variable name.
     void set_variable_name(std::string_view variable_name) { m_variable_name = variable_name; }
