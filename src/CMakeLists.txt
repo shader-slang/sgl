@@ -164,6 +164,8 @@ target_sources(sgl PRIVATE
 
     sgl/utils/renderdoc.cpp
     sgl/utils/renderdoc.h
+    sgl/utils/slangpy.cpp
+    sgl/utils/slangpy.h
     sgl/utils/tev.cpp
     sgl/utils/tev.h
     sgl/utils/texture_loader.cpp
@@ -427,6 +429,8 @@ if(SGL_BUILD_PYTHON)
         sgl/ui/python/ui.cpp
         sgl/ui/python/widgets.cpp
         sgl/utils/python/renderdoc.cpp
+        sgl/utils/python/slangpy.h
+        sgl/utils/python/slangpy.cpp
         sgl/utils/python/tev.cpp
         sgl/utils/python/texture_loader.cpp
     )
@@ -471,7 +475,7 @@ if(SGL_BUILD_PYTHON)
     postprocess_stub(${SGL_OUTPUT_DIRECTORY}/python/sgl/__init__.pyi)
 
     # Generate submodule stub files.
-    foreach(submodule IN ITEMS platform thread math ui tev renderdoc)
+    foreach(submodule IN ITEMS platform thread math ui tev renderdoc slangpy)
         string(REPLACE "." "/" submodule_path ${submodule})
         nanobind_add_stub(
             sgl_${submodule}_stub

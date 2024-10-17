@@ -419,7 +419,13 @@ private:
                 return;
             } else if (nb::isinstance<nb::sequence>(nbval)) {
                 auto seq = nb::cast<nb::sequence>(nbval);
-                SGL_CHECK(nb::len(seq) == type_layout->element_count(), "sequence is the wrong length.");
+                SGL_CHECK(
+                    nb::len(seq) == type_layout->element_count(),
+                    "sequence is the wrong length accessing type {}: {} != {}.",
+                    type_layout->type()->full_name(),
+                    nb::len(seq),
+                    type_layout->element_count()
+                );
                 m_stack.push_back("[]");
                 for (uint32_t i = 0; i < type_layout->element_count(); i++) {
                     auto child = self[i];
