@@ -726,6 +726,7 @@ def test_basic_function_overloads(test_id: str, device_type: sgl.DeviceType):
     assert len(overloads[1].parameters) == 1
 
 
+@pytest.mark.skip(reason="Crashes slang")
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_specialize_concrete_function(test_id: str, device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
@@ -761,6 +762,7 @@ def test_specialize_concrete_function(test_id: str, device_type: sgl.DeviceType)
     assert f2.parameters[0].type.full_name == "vector<float,3>"
 
 
+@pytest.mark.skip(reason="Crashes slang")
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_specialize_interface_function(test_id: str, device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
@@ -877,6 +879,7 @@ def test_specialize_partially_generic_function(
     assert f2.parameters[1].type.full_name == "vector<float,3>"
 
 
+@pytest.mark.skip(reason="Crashes slang")
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_fail_specialize_partially_generic_function(
     test_id: str, device_type: sgl.DeviceType
@@ -923,6 +926,7 @@ def test_fail_specialize_partially_generic_function(
     assert f2.parameters[1].type.full_name == "vector<float,3>"
 
 
+@pytest.mark.skip(reason="Crashes slang")
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_specialize_partially_generic_function_with_implicit_cast(
     test_id: str, device_type: sgl.DeviceType
