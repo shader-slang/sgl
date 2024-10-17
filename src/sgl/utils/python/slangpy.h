@@ -258,13 +258,13 @@ public:
     NativeBoundCallRuntime() = default;
 
     /// Get positional arguments.
-    std::vector<ref<NativeBoundVariableRuntime>> get_args() const { return m_args; }
+    const std::vector<ref<NativeBoundVariableRuntime>>& get_args() const { return m_args; }
 
     /// Set positional arguments.
     void set_args(const std::vector<ref<NativeBoundVariableRuntime>>& args) { m_args = args; }
 
     /// Get keyword arguments.
-    std::map<std::string, ref<NativeBoundVariableRuntime>> get_kwargs() const { return m_kwargs; }
+    const std::map<std::string, ref<NativeBoundVariableRuntime>>& get_kwargs() const { return m_kwargs; }
 
     /// Set keyword arguments.
     void set_kwargs(const std::map<std::string, ref<NativeBoundVariableRuntime>>& kwargs) { m_kwargs = kwargs; }
