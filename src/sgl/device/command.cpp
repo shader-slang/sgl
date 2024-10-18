@@ -658,7 +658,8 @@ bool CommandBuffer::set_texture_subresource_state(
         return set_texture_state(texture, new_state);
 
     SGL_CHECK(range.mip_level + mip_count <= texture->mip_count(), "Invalid mip level range");
-    SGL_CHECK(range.base_array_layer + layer_count <= texture->array_size(), "Invalid array layer range");
+
+    SGL_CHECK(range.base_array_layer + layer_count <= texture->layer_count(), "Invalid array layer range");
 
     // Change state on each subresource.
     ResourceStateTracker& state_tracker = texture->state_tracker();

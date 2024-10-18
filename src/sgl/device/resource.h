@@ -583,10 +583,9 @@ public:
 
     uint32_t array_size() const { return m_desc.array_size; }
     uint32_t mip_count() const { return m_desc.mip_count; }
-    uint32_t subresource_count() const
-    {
-        return array_size() * mip_count() * (type() == ResourceType::texture_cube ? 6 : 1);
-    }
+    uint32_t layer_count() const { return array_size() * (type() == ResourceType::texture_cube ? 6 : 1); }
+
+    uint32_t subresource_count() const { return layer_count() * mip_count(); }
 
     uint32_t get_subresource_index(uint32_t mip_level, uint32_t array_slice) const
     {
