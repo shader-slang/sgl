@@ -98,9 +98,15 @@ void HotReload::update_watched_paths_for_session(SlangSession* session)
                 // Get the dependency as an FS path, verify it is absolute and turn into directory path.
                 const char* path = slang_module->getDependencyFilePath(dependency_index);
                 if (path) {
-                    std::filesystem::path abs_path = slang_module->getDependencyFilePath(dependency_index);
+                    std::filesystem::path abs_path = path;
                     if (!abs_path.is_absolute()) {
-                        continue;
+                        // IModule::getDependencyFilePath can return relative file paths for shaders
+                        // that are in the current working directory.
+                        // If the path is not absolute, we also try to resolve it against cwd to turn it into
+                        // absolute path. The returned path can also be a non-file, e.g. for string modules.
+                        if (!std::filesystem::exists(abs_path))
+                            continue;
+                        abs_path = std::filesystem::absolute(abs_path);
                     }
                     abs_path = abs_path.parent_path().make_preferred();
 
