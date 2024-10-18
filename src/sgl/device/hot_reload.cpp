@@ -101,11 +101,9 @@ void HotReload::update_watched_paths_for_session(SlangSession* session)
                     std::filesystem::path abs_path = path;
                     if (!abs_path.is_absolute()) {
                         // IModule::getDependencyFilePath can return relative file paths for shaders
-                        // that are in the current working directory, as reported in
-                        // https://github.com/shader-slang/slang/issues/5332
-                        // We look for ./abs_path if the path is not absolute, to determine if the string
-                        // references a file in cwd, or a string based module.
-                        abs_path = "." / abs_path;
+                        // that are in the current working directory.
+                        // If the path is not absolute, we also try to resolve it against cwd to turn it into
+                        // absolute path. The returned path can also be a non-file, e.g. for string modules.
                         if (!std::filesystem::exists(abs_path))
                             continue;
                         abs_path = std::filesystem::absolute(abs_path);
