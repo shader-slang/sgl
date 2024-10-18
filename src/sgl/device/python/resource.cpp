@@ -119,7 +119,7 @@ static const char* __doc_sgl_texture_to_numpy = R"doc()doc";
 inline nb::ndarray<nb::numpy> texture_to_numpy(Texture* self, uint32_t mip_level, uint32_t array_slice)
 {
     SGL_CHECK_LT(mip_level, self->mip_count());
-    SGL_CHECK_LT(array_slice, self->array_size());
+    SGL_CHECK_LT(array_slice, self->layer_count());
 
     uint3 dimensions = self->get_mip_dimensions(mip_level);
     uint32_t subresource = self->get_subresource_index(mip_level, array_slice);
@@ -153,7 +153,7 @@ inline void texture_from_numpy(Texture* self, nb::ndarray<nb::numpy> data, uint3
 {
     SGL_CHECK(is_ndarray_contiguous(data), "numpy array is not contiguous");
     SGL_CHECK_LT(mip_level, self->mip_count());
-    SGL_CHECK_LT(array_slice, self->array_size());
+    SGL_CHECK_LT(array_slice, self->layer_count());
 
     uint3 dimensions = self->get_mip_dimensions(mip_level);
     uint32_t subresource = self->get_subresource_index(mip_level, array_slice);
