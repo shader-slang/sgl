@@ -1014,13 +1014,20 @@ public:
 
     /// Find a given function in a type by name. Handles generic specilization if generic
     /// variable values are provided.
-    ref<const FunctionReflection> find_function_by_name_in_type(TypeReflection* type, const char* name)
+    ref<const FunctionReflection> find_function_by_name_in_type(const TypeReflection* type, const char* name)
     {
         return detail::from_slang(m_owner, m_target->findFunctionByNameInType(type->slang_target(), name));
     }
 
+    /// Test whether a type is a sub type of another type. Handles both
+    /// struct inheritance and interface implementation.
+    bool is_sub_type(const TypeReflection* sub_type, const TypeReflection* super_type)
+    {
+        return m_target->isSubType(sub_type->slang_target(), super_type->slang_target());
+    }
+
     /// Get corresponding type layout from a given type.
-    ref<const TypeLayoutReflection> get_type_layout(TypeReflection* type)
+    ref<const TypeLayoutReflection> get_type_layout(const TypeReflection* type)
     {
         // TODO: Once device is available via session reference, pass metal layout rules for metal target
         return detail::from_slang(m_owner, m_target->getTypeLayout(type->slang_target(), slang::LayoutRules::Default));
