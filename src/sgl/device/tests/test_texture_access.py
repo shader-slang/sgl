@@ -158,10 +158,22 @@ def test_shader_read_write_texture(
                 device.link_program([module], [module.entry_point("copy_color")])
             )
 
+            srv = src_tex.get_srv(mip)
+            assert srv.subresource_range.base_array_layer == 0
+            assert srv.subresource_range.layer_count == 1
+            assert srv.subresource_range.mip_level == mip
+            assert srv.subresource_range.mip_count == src_tex.mip_count - mip
+
+            uav = dest_tex.get_uav(mip)
+            assert uav.subresource_range.base_array_layer == 0
+            assert uav.subresource_range.layer_count == 1
+            assert uav.subresource_range.mip_level == mip
+            assert uav.subresource_range.mip_count == dest_tex.mip_count - mip
+
             copy_kernel.dispatch(
                 [src_tex.width, src_tex.height, src_tex.depth],
-                src=src_tex.get_srv(mip),
-                dest=dest_tex.get_uav(mip),
+                src=srv,
+                dest=uav,
             )
         else:
 
@@ -171,11 +183,10 @@ def test_shader_read_write_texture(
         void copy_color(
             uint{dims} tid: SV_DispatchThreadID,
             Texture{dims}DArray<float4> src,
-            RWTexture{dims}DArray<float4> dest,
-            uniform uint slice
+            RWTexture{dims}DArray<float4> dest
         )
         {{
-            uint{dims+1} idx = uint{dims+1}(tid, slice);
+            uint{dims+1} idx = uint{dims+1}(tid, 0);
             dest[idx] = src[idx];
         }}
         """
@@ -187,11 +198,20 @@ def test_shader_read_write_texture(
                 device.link_program([module], [module.entry_point("copy_color")])
             )
             for i in range(0, slices):
+                srv = src_tex.get_srv(mip_level=mip, base_array_layer=i, layer_count=1)
+                assert srv.subresource_range.base_array_layer == i
+                assert srv.subresource_range.layer_count == 1
+                assert srv.subresource_range.mip_level == mip
+                assert srv.subresource_range.mip_count == src_tex.mip_count - mip
+
+                uav = dest_tex.get_uav(mip_level=mip, base_array_layer=i, layer_count=1)
+                assert uav.subresource_range.base_array_layer == i
+                assert uav.subresource_range.layer_count == 1
+                assert uav.subresource_range.mip_level == mip
+                assert uav.subresource_range.mip_count == dest_tex.mip_count - mip
+
                 copy_kernel.dispatch(
-                    [src_tex.width, src_tex.height, src_tex.depth],
-                    src=src_tex.get_srv(mip),
-                    dest=dest_tex.get_uav(mip),
-                    slice=i,
+                    [src_tex.width, src_tex.height, src_tex.depth], src=srv, dest=uav
                 )
 
     # Read back data and compare

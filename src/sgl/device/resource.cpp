@@ -258,15 +258,14 @@ std::string ResourceView::to_string() const
         "ResourceView(\n"
         "  type = {},\n"
         "  format = {},\n"
-        "  buffer_range = (offset={}, size={}),\n"
-        // "  subresource_range = {},\n"
+        "  buffer_range = {},\n"
+        "  subresource_range = {},\n"
         "  resource = {}\n"
         ")",
         m_desc.type,
         m_desc.format,
-        m_desc.buffer_range.offset,
-        m_desc.buffer_range.size,
-        // m_desc.subresource_range,
+        m_desc.buffer_range.to_string(),
+        m_desc.subresource_range.to_string(),
         string::indent(m_resource ? m_resource->to_string() : "null")
     );
 }
