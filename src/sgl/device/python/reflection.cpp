@@ -207,6 +207,7 @@ SGL_PY_EXPORT(device_reflection)
             D_NA(ProgramLayout, find_function_by_name_in_type)
         )
         .def("get_type_layout", &ProgramLayout::get_type_layout, "type"_a, D_NA(ProgramLayout, get_type_layout))
+        .def("is_sub_type", &ProgramLayout::is_sub_type, "sub_type"_a, "super_type"_a, D_NA(ProgramLayout, is_sub_type))
         .def_prop_ro("hashed_strings", &ProgramLayout::hashed_strings, D(ProgramLayout, hashed_strings))
         .def("__repr__", &ProgramLayout::to_string);
 
