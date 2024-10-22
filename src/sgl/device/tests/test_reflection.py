@@ -691,20 +691,23 @@ def test_is_sub_type(test_id: str, device_type: sgl.DeviceType):
     """,
     )
 
-    i = module.layout.find_type_by_name("IHello")
-    assert i is not None
-    assert i.name == "IHello"
-
     t = module.layout.find_type_by_name("Hello")
     assert t is not None
     assert t.name == "Hello"
 
+    # t should be a sub type of itself.
+    assert module.layout.is_sub_type(t, t)
+
+    # t should be a sub type of its interface.
+    i = module.layout.find_type_by_name("IHello")
+    assert i is not None
+    assert i.name == "IHello"
     assert module.layout.is_sub_type(t, i)
 
+    # t should be a sub type of its extension.
     i2 = module.layout.find_type_by_name("IHello2")
     assert i2 is not None
     assert i2.name == "IHello2"
-
     assert module.layout.is_sub_type(t, i)
 
 
