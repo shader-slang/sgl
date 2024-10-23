@@ -192,6 +192,8 @@ struct BufferRange {
     uint64_t size{ALL};
 
     auto operator<=>(const BufferRange&) const = default;
+
+    std::string to_string() const { return fmt::format("BufferRange(offset={}, size={}", offset, size); }
 };
 
 enum class TextureAspect : uint32_t {
@@ -205,6 +207,22 @@ enum class TextureAspect : uint32_t {
     plane2 = static_cast<uint32_t>(gfx::TextureAspect::Plane2),
     depth_stencil = depth | stencil,
 };
+SGL_ENUM_INFO(
+    TextureAspect,
+    {
+        {TextureAspect::default_, "default_"},
+        {TextureAspect::color, "color"},
+        {TextureAspect::depth, "depth"},
+        {TextureAspect::stencil, "stencil"},
+        {TextureAspect::meta_data, "meta_data"},
+        {TextureAspect::plane0, "plane0"},
+        {TextureAspect::plane1, "plane1"},
+        {TextureAspect::plane2, "plane2"},
+        {TextureAspect::depth_stencil, "depth_stencil"},
+
+    }
+);
+SGL_ENUM_REGISTER(TextureAspect);
 
 struct SubresourceRange {
     static constexpr uint32_t ALL = std::numeric_limits<uint32_t>::max();
@@ -220,6 +238,18 @@ struct SubresourceRange {
     uint32_t layer_count{ALL}; // For cube maps, this is a multiple of 6.
 
     auto operator<=>(const SubresourceRange&) const = default;
+
+    std::string to_string() const
+    {
+        return fmt::format(
+            "SubresourceRange(texture_aspect={}, mip_level={}, mip_count={}, base_array_layer={}, layer_count={}",
+            texture_aspect,
+            mip_level,
+            mip_count,
+            base_array_layer,
+            layer_count
+        );
+    }
 };
 
 struct ResourceViewDesc {
@@ -583,10 +613,9 @@ public:
 
     uint32_t array_size() const { return m_desc.array_size; }
     uint32_t mip_count() const { return m_desc.mip_count; }
-    uint32_t subresource_count() const
-    {
-        return array_size() * mip_count() * (type() == ResourceType::texture_cube ? 6 : 1);
-    }
+    uint32_t layer_count() const { return array_size() * (type() == ResourceType::texture_cube ? 6 : 1); }
+
+    uint32_t subresource_count() const { return layer_count() * mip_count(); }
 
     uint32_t get_subresource_index(uint32_t mip_level, uint32_t array_slice) const
     {

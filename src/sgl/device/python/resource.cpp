@@ -119,7 +119,7 @@ static const char* __doc_sgl_texture_to_numpy = R"doc()doc";
 inline nb::ndarray<nb::numpy> texture_to_numpy(Texture* self, uint32_t mip_level, uint32_t array_slice)
 {
     SGL_CHECK_LT(mip_level, self->mip_count());
-    SGL_CHECK_LT(array_slice, self->array_size());
+    SGL_CHECK_LT(array_slice, self->layer_count());
 
     uint3 dimensions = self->get_mip_dimensions(mip_level);
     uint32_t subresource = self->get_subresource_index(mip_level, array_slice);
@@ -153,7 +153,7 @@ inline void texture_from_numpy(Texture* self, nb::ndarray<nb::numpy> data, uint3
 {
     SGL_CHECK(is_ndarray_contiguous(data), "numpy array is not contiguous");
     SGL_CHECK_LT(mip_level, self->mip_count());
-    SGL_CHECK_LT(array_slice, self->array_size());
+    SGL_CHECK_LT(array_slice, self->layer_count());
 
     uint3 dimensions = self->get_mip_dimensions(mip_level);
     uint32_t subresource = self->get_subresource_index(mip_level, array_slice);
@@ -217,9 +217,28 @@ SGL_PY_EXPORT(device_resource)
 
     nb::sgl_enum<ResourceViewType>(m, "ResourceViewType");
 
+    nb::sgl_enum<TextureAspect>(m, "TextureAspect");
+
+    nb::class_<BufferRange>(m, "BufferRange", D(SubresourceRange))
+        .def(nb::init<>())
+        .def_ro("offset", &BufferRange::offset, D_NA(BufferRange, offset))
+        .def_ro("size", &BufferRange::size, D_NA(BufferRange, size))
+        .def("__repr__", &BufferRange::to_string, D_NA(BufferRange, to_string));
+
+    nb::class_<SubresourceRange>(m, "SubresourceRange", D(SubresourceRange))
+        .def(nb::init<>())
+        .def_ro("texture_aspect", &SubresourceRange::texture_aspect, D_NA(SubresourceRange, texture_aspect))
+        .def_ro("mip_level", &SubresourceRange::mip_level, D_NA(SubresourceRange, mip_level))
+        .def_ro("mip_count", &SubresourceRange::mip_count, D_NA(SubresourceRange, mip_count))
+        .def_ro("base_array_layer", &SubresourceRange::base_array_layer, D_NA(SubresourceRange, base_array_layer))
+        .def_ro("layer_count", &SubresourceRange::layer_count, D_NA(SubresourceRange, layer_count))
+        .def("__repr__", &SubresourceRange::to_string, D_NA(SubresourceRange, to_string));
+
     nb::class_<ResourceView, Object>(m, "ResourceView", D(ResourceView))
         .def_prop_ro("type", &ResourceView::type, D(ResourceView, type))
-        .def_prop_ro("resource", &ResourceView::resource, D(ResourceView, resource));
+        .def_prop_ro("resource", &ResourceView::resource, D(ResourceView, resource))
+        .def_prop_ro("buffer_range", &ResourceView::buffer_range, D_NA(ResourceView, buffer_range))
+        .def_prop_ro("subresource_range", &ResourceView::subresource_range, D_NA(ResourceView, subresource_range));
 
     nb::class_<BufferDesc>(m, "BufferDesc", D(BufferDesc))
         .def(nb::init<>())
