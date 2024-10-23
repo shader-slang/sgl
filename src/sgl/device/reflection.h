@@ -810,15 +810,19 @@ public:
     /// will identify the correct overload based on the arguments.
     ref<const FunctionReflection> specialize_with_arg_types(const std::vector<ref<TypeReflection>>& types) const
     {
-        std::vector<slang::TypeReflection*> slang_types;
-        slang_types.reserve(types.size());
-        for (const auto& type : types)
-            slang_types.push_back(type->slang_target());
+        if (types.empty()) {
+            return detail::from_slang(m_owner, m_target->specializeWithArgTypes(0, nullptr));
+        } else {
+            std::vector<slang::TypeReflection*> slang_types;
+            slang_types.reserve(types.size());
+            for (const auto& type : types)
+                slang_types.push_back(type->slang_target());
 
-        return detail::from_slang(
-            m_owner,
-            m_target->specializeWithArgTypes((uint32_t)slang_types.size(), &slang_types[0])
-        );
+            return detail::from_slang(
+                m_owner,
+                m_target->specializeWithArgTypes((uint32_t)slang_types.size(), &slang_types[0])
+            );
+        }
     }
 
     /// Check whether this function object represents a group of overloaded functions,
