@@ -727,6 +727,65 @@ def test_basic_function_overloads(test_id: str, device_type: sgl.DeviceType):
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_type_method_overloads(test_id: str, device_type: sgl.DeviceType):
+    device = helpers.get_device(type=device_type)
+
+    # Create a session, and within it a module.
+    session = helpers.create_session(device, {})
+    module = session.load_module_from_source(
+        module_name=f"test_type_method_overloads_{test_id}",
+        source=r"""
+        struct MyType {
+            int foo() { return 0; }
+            int foo(int a) { return a; }
+        }
+    """,
+    )
+
+    # Get MyType.
+    mytype = module.layout.find_type_by_name("MyType")
+    assert mytype is not None
+
+    # Find and verify the function.
+    f1 = module.layout.find_function_by_name_in_type(mytype, "foo")
+    assert f1 is not None
+    assert f1.is_overloaded
+    assert len(f1.overloads) == 2
+    overloads = [x for x in f1.overloads]
+    l0 = len(overloads[0].parameters)
+    l1 = len(overloads[1].parameters)
+    assert l0 == 0 or l1 == 0
+    assert l0 == 1 or l1 == 1
+
+
+@pytest.mark.skip("Pending slang fix for __init function finding")
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_type_constructor_overloads(test_id: str, device_type: sgl.DeviceType):
+    device = helpers.get_device(type=device_type)
+
+    # Create a session, and within it a module.
+    session = helpers.create_session(device, {})
+    module = session.load_module_from_source(
+        module_name=f"test_type_constructor_overloads_{test_id}",
+        source=r"""
+        struct MyType {
+            int val;
+            __init() { this.val = 0; }
+            __init(int a) { this.val = a; }
+        }
+    """,
+    )
+
+    # Get MyType.
+    mytype = module.layout.find_type_by_name("MyType")
+    assert mytype is not None
+
+    # Find and verify the function.
+    f1 = module.layout.find_function_by_name_in_type(mytype, "$init")
+    assert f1 is not None
+
+
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_specialize_concrete_function(test_id: str, device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
 
@@ -800,6 +859,38 @@ def test_specialize_concrete_function_with_defaults(
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_specialize_concrete_function_with_inout(
+    test_id: str, device_type: sgl.DeviceType
+):
+    device = helpers.get_device(type=device_type)
+
+    # Create a session, and within it a module.
+    session = helpers.create_session(device, {})
+    module = session.load_module_from_source(
+        module_name=f"module_from_source_{test_id}",
+        source=r"""
+        void foo(inout float3 val)
+        {
+            val = 0;
+        }
+    """,
+    )
+
+    # Find and verify the generic function.
+    f1 = module.layout.find_function_by_name("foo")
+    assert f1 is not None
+    assert not f1.is_overloaded
+    assert len(f1.overloads) == 0
+    assert len(f1.parameters) == 1
+    assert f1.parameters[0].name == "val"
+    assert f1.parameters[0].type.full_name == "vector<float,3>"
+
+    # Specialize the function with float3.
+    f2 = f1.specialize_with_arg_types([module.layout.find_type_by_name("float3")])
+    assert f2 is not None
+
+
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_fail_specialize_concrete_function(test_id: str, device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
 
@@ -855,14 +946,15 @@ def test_specialize_interface_function(test_id: str, device_type: sgl.DeviceType
     assert f1.parameters[0].name == "val"
     assert f1.parameters[0].type.name == "IFloat"
 
-    # Specialize the function with float.
+    # Specialize the function with float, still expect
+    # to get back the interface type.
     f2 = f1.specialize_with_arg_types([module.layout.find_type_by_name("float")])
     assert f2 is not None
     assert not f2.is_overloaded
     assert len(f2.overloads) == 0
     assert len(f2.parameters) == 1
     assert f2.parameters[0].name == "val"
-    assert f2.parameters[0].type.full_name == "float"
+    assert f2.parameters[0].type.full_name == "IFloat"
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
