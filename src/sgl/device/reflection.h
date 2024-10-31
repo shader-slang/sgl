@@ -815,8 +815,10 @@ public:
         } else {
             std::vector<slang::TypeReflection*> slang_types;
             slang_types.reserve(types.size());
-            for (const auto& type : types)
+            for (const auto& type : types) {
+                SGL_CHECK(type, "Null type provided to specialize_with_arg_types");
                 slang_types.push_back(type->slang_target());
+            }
 
             return detail::from_slang(
                 m_owner,
