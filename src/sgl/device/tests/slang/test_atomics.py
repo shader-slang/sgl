@@ -19,6 +19,9 @@ INT64_MAX = np.iinfo(np.int64).max
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_buffer_add_f16(device_type: sgl.DeviceType):
+    if device_type == sgl.DeviceType.vulkan:
+        pytest.skip("FP16 atomic extension not yet supported by NVidia")
+
     device = helpers.get_device(device_type)
 
     np.random.seed(123)

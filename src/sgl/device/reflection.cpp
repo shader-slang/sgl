@@ -259,6 +259,11 @@ FunctionReflectionParameterList FunctionReflection::parameters() const
     return FunctionReflectionParameterList(ref(this));
 }
 
+FunctionReflectionOverloadList FunctionReflection::overloads() const
+{
+    return FunctionReflectionOverloadList(ref(this));
+}
+
 std::string VariableLayoutReflection::to_string() const
 {
     return fmt::format(
