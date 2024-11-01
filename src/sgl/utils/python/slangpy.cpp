@@ -39,8 +39,12 @@ void NativeBoundVariableRuntime::populate_call_shape(std::vector<int>& call_shap
         auto tf = m_transform.as_vector();
         size_t csl = call_shape.size();
 
-        // Get the shape of the value.
-        m_shape = m_python_type->get_shape(value);
+        // Get the shape of the value. In the case of none-concrete types,
+        // only the container shape is needed, as we never map elements.
+        if (m_python_type->concrete_shape().valid())
+            m_shape = m_python_type->concrete_shape();
+        else
+            m_shape = m_python_type->get_container_shape(value);
 
         // Apply this shape to the overall call shape.
         auto shape = m_shape.as_vector();
@@ -141,7 +145,7 @@ nb::object NativeBoundVariableRuntime::read_output(CallContext* context, nb::obj
         for (const auto& [name, child_ref] : *m_children) {
             if (res.contains(name.c_str())) {
                 if (child_ref) {
-                    nb::object child_data = data[child_ref->m_name.c_str()];
+                    nb::object child_data = data[child_ref->m_variable_name.c_str()];
                     res[name.c_str()] = child_ref->read_output(context, child_data);
                 }
             }
@@ -541,12 +545,6 @@ SGL_PY_EXPORT(utils_slangpy)
             D_NA(NativeBoundVariableRuntime, transform)
         )
         .def_prop_rw(
-            "slang_shape",
-            &NativeBoundVariableRuntime::get_slang_shape,
-            &NativeBoundVariableRuntime::set_slang_shape,
-            D_NA(NativeBoundVariableRuntime, slang_shape)
-        )
-        .def_prop_rw(
             "python_type",
             &NativeBoundVariableRuntime::get_python_type,
             &NativeBoundVariableRuntime::set_python_type,
@@ -557,12 +555,6 @@ SGL_PY_EXPORT(utils_slangpy)
             &NativeBoundVariableRuntime::get_shape,
             &NativeBoundVariableRuntime::set_shape,
             D_NA(NativeBoundVariableRuntime, shape)
-        )
-        .def_prop_rw(
-            "name",
-            &NativeBoundVariableRuntime::get_name,
-            &NativeBoundVariableRuntime::set_name,
-            D_NA(NativeBoundVariableRuntime, name)
         )
         .def_prop_rw(
             "variable_name",

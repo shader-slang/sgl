@@ -75,7 +75,7 @@ public:
     virtual Shape get_container_shape(nb::object value) const
     {
         SGL_UNUSED(value);
-        return Shape();
+        return Shape(std::vector<int>());
     }
 
     /// Get the full shape of the type. This includes the container shape and the
@@ -189,12 +189,6 @@ public:
     /// Set the call transform.
     void set_transform(const Shape& transform) { m_transform = transform; }
 
-    /// Get the slang type shape.
-    Shape get_slang_shape() const { return m_slang_shape; }
-
-    /// Set the slang type shape.
-    void set_slang_shape(const Shape& slang_shape) { m_slang_shape = slang_shape; }
-
     /// Get the python type marshal.
     ref<NativeType> get_python_type() const { return m_python_type; }
 
@@ -206,12 +200,6 @@ public:
 
     /// Set the shape being used for the current call.
     void set_shape(const Shape& shape) { m_shape = shape; }
-
-    /// Get the name.
-    std::string_view get_name() const { return m_name; }
-
-    /// Set the name.
-    void set_name(std::string_view name) { m_name = name; }
 
     /// Get the uniform variable name.
     std::string_view get_variable_name() const { return m_variable_name; }
@@ -243,10 +231,8 @@ public:
 private:
     std::pair<AccessType, AccessType> m_access{AccessType::none, AccessType::none};
     Shape m_transform;
-    Shape m_slang_shape;
     ref<NativeType> m_python_type;
     Shape m_shape;
-    std::string m_name;
     std::string m_variable_name;
     std::optional<std::map<std::string, ref<NativeBoundVariableRuntime>>> m_children;
 };
