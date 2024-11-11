@@ -341,7 +341,8 @@ target_include_directories(sgl PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include)
 target_link_libraries(sgl
     PUBLIC
         fmt::fmt
-        slang::slang slang::gfx
+        slang
+        slang-rhi
         Vulkan::Headers
         header_only
         $<$<NOT:$<BOOL:${SGL_USE_DYNAMIC_CUDA}>>:CUDA::cuda_driver>
@@ -522,7 +523,7 @@ if(SGL_BUILD_PYTHON)
             list(APPEND MKDOC_ARGS -I${value})
         endforeach()
 
-        get_target_property(list slang::slang INTERFACE_INCLUDE_DIRECTORIES)
+        get_target_property(list slang INTERFACE_INCLUDE_DIRECTORIES)
         foreach(value ${list})
             list(APPEND MKDOC_ARGS -I${value})
         endforeach()
