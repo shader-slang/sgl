@@ -81,8 +81,8 @@ if(SGL_LOCAL_SLANG)
 endif()
 
 if(SGL_WINDOWS)
-    add_library(slang::slang SHARED IMPORTED GLOBAL)
-    set_target_properties(slang::slang PROPERTIES
+    add_library(slang SHARED IMPORTED GLOBAL)
+    set_target_properties(slang PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES ${SLANG_INCLUDE_DIR}
         IMPORTED_IMPLIB ${SLANG_DIR}/lib/slang.lib
         IMPORTED_LOCATION ${SLANG_DIR}/bin/slang.dll
@@ -92,8 +92,8 @@ if(SGL_WINDOWS)
     sgl_copy_binary(${SLANG_DIR}/bin/slang-llvm.dll .)
     sgl_copy_binary(${SLANG_DIR}/bin/slang-rt.dll .)
 elseif(SGL_LINUX)
-    add_library(slang::slang SHARED IMPORTED GLOBAL)
-    set_target_properties(slang::slang PROPERTIES
+    add_library(slang SHARED IMPORTED GLOBAL)
+    set_target_properties(slang PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES ${SLANG_INCLUDE_DIR}
         IMPORTED_LOCATION ${SLANG_DIR}/lib/libslang.so
     )
@@ -101,39 +101,25 @@ elseif(SGL_LINUX)
     sgl_copy_binary(${SLANG_DIR}/lib/libslang-glslang.so .)
     # sgl_copy_binary(${SLANG_DIR}/lib/libslang-llvm.so .)
 elseif(SGL_MACOS)
-    add_library(slang::slang SHARED IMPORTED GLOBAL)
-    set_target_properties(slang::slang PROPERTIES
+    add_library(slang SHARED IMPORTED GLOBAL)
+    set_target_properties(slang PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES ${SLANG_INCLUDE_DIR}
         IMPORTED_LOCATION ${SLANG_DIR}/lib/libslang.dylib
     )
     sgl_copy_binary(${SLANG_DIR}/lib/libslang.dylib .)
 endif()
 
-# slang-gfx
+# slang-rhi
 
-if(SGL_WINDOWS)
-    add_library(slang::gfx SHARED IMPORTED GLOBAL)
-    set_target_properties(slang::gfx PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES ${SLANG_INCLUDE_DIR}
-        IMPORTED_IMPLIB ${SLANG_DIR}/lib/gfx.lib
-        IMPORTED_LOCATION ${SLANG_DIR}/bin/gfx.dll
-    )
-    sgl_copy_binary(${SLANG_DIR}/bin/gfx.dll .)
-elseif(SGL_LINUX)
-    add_library(slang::gfx SHARED IMPORTED GLOBAL)
-    set_target_properties(slang::gfx PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES ${SLANG_INCLUDE_DIR}
-        IMPORTED_LOCATION ${SLANG_DIR}/lib/libgfx.so
-    )
-    sgl_copy_binary(${SLANG_DIR}/lib/libgfx.so .)
-elseif(SGL_MACOS)
-    add_library(slang::gfx SHARED IMPORTED GLOBAL)
-    set_target_properties(slang::gfx PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES ${SLANG_INCLUDE_DIR}
-        IMPORTED_LOCATION ${SLANG_DIR}/lib/libgfx.dylib
-    )
-    sgl_copy_binary(${SLANG_DIR}/lib/libgfx.dylib .)
-endif()
+set(SLANG_RHI_BUILD_TESTS OFF)
+set(SLANG_RHI_BUILD_EXAMPLES OFF)
+set(SLANG_RHI_FETCH_SLANG OFF)
+# TODO: We should rename SLANG_RHI_BUILD_FROM_SLANG_REPO to something more generic.
+# We want slang-rhi to support using a `slang` target that is provided from the outside.
+set(SLANG_RHI_BUILD_FROM_SLANG_REPO ON)
+set(SLANG_RHI_SLANG_INCLUDE_DIR ${SLANG_INCLUDE_DIR})
+set(SLANG_RHI_SLANG_BINARY_DIR ${SLANG_DIR})
+add_subdirectory(slang-rhi)
 
 # nvapi
 
