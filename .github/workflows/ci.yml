@@ -62,7 +62,7 @@ jobs:
 
       # Setup Linux.
       - name: Setup Linux
-        if: startsWith(matrix.os, 'linux') && !contains(matrix.runs-on, 'self-hosted')
+        if: startsWith(matrix.os, 'linux') && startsWith(matrix.runs-on, 'ubuntu-')
         run: |
           sudo apt update && sudo apt install -y libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev pkg-config
 
