@@ -36,8 +36,8 @@ jobs:
           - { os: macos, compiler: gcc }
         include:
           # Builds running on self-hosted runners (build + tests + coverage)
-          - { os: windows, compiler: msvc, config: Debug, flags: "unit-test,header-validation", runs-on: [self-hosted, Windows, X64] }
-          - { os: windows, compiler: msvc, config: Release, flags: "unit-test", runs-on: [self-hosted, Windows, X64] }
+          - { os: windows, compiler: msvc, config: Debug, flags: "unit-test,header-validation", runs-on: { group: nvrgfx, labels: [Windows, X64] } }
+          - { os: windows, compiler: msvc, config: Release, flags: "unit-test", runs-on: { group: nvrgfx, labels: [Windows, X64] } }
           - { os: linux, compiler: gcc, config: Debug, flags: "unit-test,header-validation,coverage", runs-on: [self-hosted, Linux, X64] }
           - { os: linux, compiler: gcc, config: Release, flags: "unit-test", runs-on: [self-hosted, Linux, X64] }
           # Additional builds running on GitHub hosted runners (build only)
