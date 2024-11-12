@@ -36,10 +36,10 @@ jobs:
           - { os: macos, compiler: gcc }
         include:
           # Builds running on self-hosted runners (build + tests + coverage)
-          - { os: windows, compiler: msvc, config: Debug, flags: "unit-test,header-validation", runs-on: [self-hosted, Windows, X64] }
-          - { os: windows, compiler: msvc, config: Release, flags: "unit-test", runs-on: [self-hosted, Windows, X64] }
-          - { os: linux, compiler: gcc, config: Debug, flags: "unit-test,header-validation,coverage", runs-on: [self-hosted, Linux, X64] }
-          - { os: linux, compiler: gcc, config: Release, flags: "unit-test", runs-on: [self-hosted, Linux, X64] }
+          - { os: windows, compiler: msvc, config: Debug, flags: "unit-test,header-validation", runs-on: { group: nvrgfx, labels: [Windows, X64] } }
+          - { os: windows, compiler: msvc, config: Release, flags: "unit-test", runs-on: { group: nvrgfx, labels: [Windows, X64] } }
+          - { os: linux, compiler: gcc, config: Debug, flags: "unit-test,header-validation,coverage", runs-on: { group: nvrgfx, labels: [Linux, X64] } }
+          - { os: linux, compiler: gcc, config: Release, flags: "unit-test", runs-on: { group: nvrgfx, labels: [Linux, X64] } }
           # Additional builds running on GitHub hosted runners (build only)
           - { os: linux, compiler: clang, runs-on: [ubuntu-latest] }
           - { os: macos, compiler: clang, runs-on: [macos-latest] }
@@ -62,7 +62,7 @@ jobs:
 
       # Setup Linux.
       - name: Setup Linux
-        if: startsWith(matrix.os, 'linux') && !contains(matrix.runs-on, 'self-hosted')
+        if: startsWith(matrix.os, 'linux') && contains(matrix.runs-on, 'ubuntu-latest')
         run: |
           sudo apt update && sudo apt install -y libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev pkg-config
 
