@@ -32,6 +32,7 @@ class File:
 
     def save(self):
         if self.modified_content:
+            print(f"Modified {self.path}")
             self.path.write_text(self.modified_content)
 
 
@@ -52,6 +53,23 @@ def fix_sgl_h(file: str, version: Version) -> str:
         file,
     )
     return file
+
+
+def fix_api_rst(file: str, version: Version) -> str:
+    lines = file.split("\n")
+    for i, line in enumerate(lines):
+        if line.startswith(".. py:data:: sgl.SGL_VERSION"):
+            if line.endswith("VERSION"):
+                lines[i + 2] = (
+                    f'    :value: "{version.major}.{version.minor}.{version.patch}"'
+                )
+            elif line.endswith("MAJOR"):
+                lines[i + 2] = f"    :value: {version.major}"
+            elif line.endswith("MINOR"):
+                lines[i + 2] = f"    :value: {version.minor}"
+            elif line.endswith("PATCH"):
+                lines[i + 2] = f"    :value: {version.patch}"
+    return "\n".join(lines)
 
 
 def fix_docs_index(file: str, version: Version) -> str:
@@ -91,6 +109,7 @@ def run(save: bool = False):
         File(root / "docs/index.rst", fix_docs_index),
         File(root / "README.md", fix_docs_index),
         File(root / "vcpkg.json", fix_vcpkg),
+        File(root / "docs/generated/api.rst", fix_api_rst),
     ]
 
     for file in files:
