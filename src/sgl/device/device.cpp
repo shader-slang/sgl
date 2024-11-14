@@ -514,6 +514,8 @@ ShaderCacheStats Device::shader_cache_stats() const
 {
     Slang::ComPtr<gfx::IShaderCache> gfx_shader_cache;
     SLANG_CALL(m_gfx_device->queryInterface(SLANG_UUID_IShaderCache, (void**)gfx_shader_cache.writeRef()));
+    if (!gfx_shader_cache)
+        return {};
     gfx::ShaderCacheStats gfx_stats;
     SLANG_CALL(gfx_shader_cache->getShaderCacheStats(&gfx_stats));
     return {
