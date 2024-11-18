@@ -16,7 +16,7 @@ if errorlevel 1 (
 
 echo Fetching dependencies ...
 
-call python setup-tools.py
+call python %~dp0\setup-tools.py
 if errorlevel 1 (
     echo Failed to fetch dependencies!
     exit /b 1
