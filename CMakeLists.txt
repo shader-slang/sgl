@@ -27,47 +27,47 @@ set(CMAKE_INSTALL_RPATH "${SGL_ORIGIN};${SGL_ORIGIN}/../lib")
 
 # Check if this project is the master cmake project (i.e. not included via add_subdirectory).
 set(SGL_MASTER_PROJECT OFF)
-set(SGL_BUILD_STANDALONE_DEFAULT ON)
 if (${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${CMAKE_SOURCE_DIR})
   set(SGL_MASTER_PROJECT ON)
-  set(SGL_BUILD_STANDALONE_DEFAULT OFF)
+  set(SGL_BUILD_STANDALONE OFF)
 endif()
 
 # -----------------------------------------------------------------------------
 # Configuration
 # -----------------------------------------------------------------------------
 
-set(SGL_BUILD_PYTHON ${SGL_MASTER_PROJECT} CACHE BOOL "Build sgl Python extension")
-set(SGL_BUILD_EXAMPLES ${SGL_MASTER_PROJECT} CACHE BOOL "Build sgl example applications")
-set(SGL_BUILD_TESTS ${SGL_MASTER_PROJECT} CACHE BOOL "Build sgl tests")
-set(SGL_BUILD_DOC OFF CACHE BOOL "Build sgl documentation")
-set(SGL_BINARY_DIR ${CMAKE_BINARY_DIR} CACHE STRING "Binary directory (defaults to CMAKE_BINARY_DIR)")
+option(SGL_BUILD_PYTHON "Build Python extension" ON)
+option(SGL_BUILD_EXAMPLES "Build example applications" ON)
+option(SGL_BUILD_TESTS "Build tests" ON)
+option(SGL_BUILD_DOC "Build documentation" OFF)
 
 # Enable building sgl without external dependencies.
 # This is useful when using sgl through cmake add_subdirectory.
-set(SGL_BUILD_STANDALONE ${SGL_BUILD_STANDALONE_DEFAULT} CACHE BOOL "Build sgl without external dependencies")
+option(SGL_BUILD_STANDALONE "Build without external dependencies" ON)
 
 # Enable linking CUDA driver API dynamically.
 # This allows to build CUDA support without having CUDA SDK installed.
-set(SGL_USE_DYNAMIC_CUDA ON CACHE BOOL "Load CUDA driver API dynamically")
+option(SGL_USE_DYNAMIC_CUDA "Load CUDA driver API dynamically" ON)
 
 # Disable asserts.
 # By default, asserts are enabled in both debug and release builds.
 # This option can be used to override the default behavior.
-set(SGL_DISABLE_ASSERTS OFF CACHE BOOL "Disable asserts")
+option(SGL_DISABLE_ASSERTS "Disable asserts" OFF)
 
 # Enable/disable precompiled headers.
-set(SGL_ENABLE_PCH OFF CACHE BOOL "Enable precompiled headers")
+option(SGL_ENABLE_PCH "Enable precompiled headers" OFF)
 
 # Enable/disable code coverage.
-set(SGL_ENABLE_COVERAGE OFF CACHE BOOL "Enable code coverage (gcov)")
+option(SGL_ENABLE_COVERAGE "Enable code coverage (gcov)" OFF)
 
 # Enable/disable address sanitizer.
-set(SGL_ENABLE_ASAN OFF CACHE BOOL "Enable address sanitizer")
+option(SGL_ENABLE_ASAN "Enable address sanitizer" OFF)
 
 # Enable/disable header validation.
 # If enabled, additional targets are generated to validate that headers are self sufficient.
-set(SGL_ENABLE_HEADER_VALIDATION OFF CACHE BOOL "Enable header validation")
+option(SGL_ENABLE_HEADER_VALIDATION "Enable header validation" OFF)
+
+set(SGL_BINARY_DIR ${CMAKE_BINARY_DIR} CACHE STRING "Binary directory (defaults to CMAKE_BINARY_DIR)")
 
 # -----------------------------------------------------------------------------
 # Check platform
