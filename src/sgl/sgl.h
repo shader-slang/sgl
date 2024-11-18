@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
+#pragma once
+
 #include "sgl/core/macros.h"
 
 #define SGL_VERSION_MAJOR 0
