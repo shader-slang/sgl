@@ -34,6 +34,8 @@ SGL_PY_EXPORT(device_reflection)
     using namespace sgl;
 
     nb::class_<BaseReflectionObject, Object> base_reflection(m, "BaseReflectionObject", D(BaseReflectionObject));
+    base_reflection //
+        .def_prop_ro("is_valid", &DeclReflection::is_valid, D_NA(BaseReflectionObject, is_valid));
 
     nb::class_<DeclReflection, BaseReflectionObject> decl_reflection(m, "DeclReflection", D(DeclReflection));
 

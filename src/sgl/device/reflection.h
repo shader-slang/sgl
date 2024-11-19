@@ -37,6 +37,8 @@ namespace detail {
     SGL_API ref<const ProgramLayout> from_slang(ref<const Object> owner, slang::ProgramLayout* program_layout);
 
     SGL_API void on_slang_wrapper_destroyed(void* slang_reflection);
+
+    SGL_API void invalidate_all_reflection_data();
 } // namespace detail
 
 
@@ -191,6 +193,10 @@ public:
     {
     }
 
+    virtual void _hot_reload_invalidate() { m_owner = nullptr; }
+
+    bool is_valid() const { return m_owner != nullptr; }
+
 protected:
     ref<const Object> m_owner;
 };
@@ -205,9 +211,19 @@ public:
     }
     ~BaseReflectionObjectImpl() { detail::on_slang_wrapper_destroyed(m_target); }
 
-    SlangType* slang_target() const { return m_target; }
+    SlangType* slang_target() const
+    {
+        SGL_CHECK(m_target, "Reflection object has been invalidated");
+        return m_target;
+    }
 
-protected:
+    void _hot_reload_invalidate() override
+    {
+        BaseReflectionObject::_hot_reload_invalidate();
+        m_target = nullptr;
+    }
+
+private:
     SlangType* m_target;
 };
 
@@ -242,20 +258,20 @@ public:
     );
 
     /// Decl kind (struct/function/module/generic/variable).
-    Kind kind() const { return static_cast<Kind>(m_target->getKind()); }
+    Kind kind() const { return static_cast<Kind>(slang_target()->getKind()); }
 
     /// List of children of this cursor.
     DeclReflectionChildList children() const;
 
     /// Get number of children.
-    uint32_t child_count() const { return m_target->getChildrenCount(); }
+    uint32_t child_count() const { return slang_target()->getChildrenCount(); }
 
     /// Get a child by index.
     ref<const DeclReflection> child(uint32_t index) const
     {
         if (index > child_count())
             SGL_THROW("Child index out of range: {}", index);
-        return detail::from_slang(m_owner, m_target->getChild(index));
+        return detail::from_slang(m_owner, slang_target()->getChild(index));
     }
 
     /// Get the name of this decl (if it is of a kind that has a name).
@@ -268,7 +284,7 @@ public:
     /// Index operator to get nth child.
     ref<const DeclReflection> operator[](uint32_t index) const
     {
-        return detail::from_slang(m_owner, m_target->getChild(index));
+        return detail::from_slang(m_owner, slang_target()->getChild(index));
     }
 
     /// Description as string.
@@ -278,10 +294,16 @@ public:
     ref<const TypeReflection> as_type() const;
 
     /// Get variable corresponding to this decl ref.
-    ref<const VariableReflection> as_variable() const { return detail::from_slang(m_owner, m_target->asVariable()); }
+    ref<const VariableReflection> as_variable() const
+    {
+        return detail::from_slang(m_owner, slang_target()->asVariable());
+    }
 
     /// Get function corresponding to this decl ref.
-    ref<const FunctionReflection> as_function() const { return detail::from_slang(m_owner, m_target->asFunction()); }
+    ref<const FunctionReflection> as_function() const
+    {
+        return detail::from_slang(m_owner, slang_target()->asFunction());
+    }
 
     /// Finds all children of a specific kind with a given name.
     /// Note: Only supported for types, functions and variables.
@@ -539,9 +561,9 @@ public:
     {
     }
 
-    Kind kind() const { return static_cast<Kind>(m_target->getKind()); }
+    Kind kind() const { return static_cast<Kind>(slang_target()->getKind()); }
 
-    char const* name() const { return m_target->getName(); }
+    char const* name() const { return slang_target()->getName(); }
 
     std::string full_name() const;
 
@@ -550,13 +572,13 @@ public:
     uint32_t field_count() const
     {
         SGL_CHECK(is_struct(), "Type is not a struct");
-        return m_target->getFieldCount();
+        return slang_target()->getFieldCount();
     }
 
     ref<const VariableReflection> get_field_by_index(uint32_t index) const
     {
         SGL_CHECK(is_struct(), "Type is not a struct");
-        return detail::from_slang(m_owner, m_target->getFieldByIndex(index));
+        return detail::from_slang(m_owner, slang_target()->getFieldByIndex(index));
     }
 
     TypeReflectionFieldList fields() const;
@@ -566,7 +588,7 @@ public:
     size_t element_count() const
     {
         SGL_CHECK(is_array(), "Type is not an array");
-        return m_target->getElementCount();
+        return slang_target()->getElementCount();
     }
 
     size_t total_element_count() const
@@ -584,7 +606,7 @@ public:
     ref<const TypeReflection> element_type() const
     {
         SGL_CHECK(is_array(), "Type is not an array");
-        return detail::from_slang(m_owner, m_target->getElementType());
+        return detail::from_slang(m_owner, slang_target()->getElementType());
     }
 
     ref<const TypeReflection> unwrap_array() const
@@ -596,20 +618,20 @@ public:
         return type;
     }
 
-    uint32_t row_count() const { return m_target->getRowCount(); }
+    uint32_t row_count() const { return slang_target()->getRowCount(); }
 
-    uint32_t col_count() const { return m_target->getColumnCount(); }
+    uint32_t col_count() const { return slang_target()->getColumnCount(); }
 
-    ScalarType scalar_type() const { return static_cast<ScalarType>(m_target->getScalarType()); }
+    ScalarType scalar_type() const { return static_cast<ScalarType>(slang_target()->getScalarType()); }
 
     ref<const TypeReflection> resource_result_type() const
     {
-        return detail::from_slang(m_owner, m_target->getResourceResultType());
+        return detail::from_slang(m_owner, slang_target()->getResourceResultType());
     }
 
-    ResourceShape resource_shape() const { return static_cast<ResourceShape>(m_target->getResourceShape()); }
+    ResourceShape resource_shape() const { return static_cast<ResourceShape>(slang_target()->getResourceShape()); }
 
-    ResourceAccess resource_access() const { return static_cast<ResourceAccess>(m_target->getResourceAccess()); }
+    ResourceAccess resource_access() const { return static_cast<ResourceAccess>(slang_target()->getResourceAccess()); }
 
 #if 0
     unsigned int getUserAttributeCount() { return spReflectionType_GetUserAttributeCount((SlangReflectionType*)this); }
@@ -665,39 +687,42 @@ public:
     {
     }
 
-    slang::TypeLayoutReflection* get_slang_type_layout() const { return m_target; }
+    slang::TypeLayoutReflection* get_slang_type_layout() const { return slang_target(); }
 
-    ref<const TypeReflection> type() const { return detail::from_slang(m_owner, m_target->getType()); }
+    ref<const TypeReflection> type() const { return detail::from_slang(m_owner, slang_target()->getType()); }
 
-    TypeReflection::Kind kind() const { return static_cast<TypeReflection::Kind>(m_target->getKind()); }
+    TypeReflection::Kind kind() const { return static_cast<TypeReflection::Kind>(slang_target()->getKind()); }
 
-    const char* name() const { return m_target->getName(); }
+    const char* name() const { return slang_target()->getName(); }
 
-    size_t size() const { return m_target->getSize(SlangParameterCategory::SLANG_PARAMETER_CATEGORY_UNIFORM); }
-    size_t stride() const { return m_target->getStride(SlangParameterCategory::SLANG_PARAMETER_CATEGORY_UNIFORM); }
+    size_t size() const { return slang_target()->getSize(SlangParameterCategory::SLANG_PARAMETER_CATEGORY_UNIFORM); }
+    size_t stride() const
+    {
+        return slang_target()->getStride(SlangParameterCategory::SLANG_PARAMETER_CATEGORY_UNIFORM);
+    }
     int32_t alignment() const
     {
-        return m_target->getAlignment(SlangParameterCategory::SLANG_PARAMETER_CATEGORY_UNIFORM);
+        return slang_target()->getAlignment(SlangParameterCategory::SLANG_PARAMETER_CATEGORY_UNIFORM);
     }
 
-    uint32_t field_count() const { return m_target->getFieldCount(); }
+    uint32_t field_count() const { return slang_target()->getFieldCount(); }
 
     ref<const VariableLayoutReflection> get_field_by_index(uint32_t index) const
     {
         // TODO field_count() does not always return the right number of fields
         // SGL_CHECK(index < field_count(), "Field index out of range");
-        return detail::from_slang(m_owner, m_target->getFieldByIndex(index));
+        return detail::from_slang(m_owner, slang_target()->getFieldByIndex(index));
     }
 
     int32_t find_field_index_by_name(const char* name_begin, const char* name_end = nullptr) const
     {
-        return narrow_cast<int32_t>(m_target->findFieldIndexByName(name_begin, name_end));
+        return narrow_cast<int32_t>(slang_target()->findFieldIndexByName(name_begin, name_end));
     }
 
     ref<const VariableLayoutReflection> find_field_by_name(const char* name_begin, const char* name_end = nullptr) const
     {
-        if (auto index = m_target->findFieldIndexByName(name_begin, name_end); index >= 0)
-            return detail::from_slang(m_owner, m_target->getFieldByIndex(narrow_cast<unsigned int>(index)));
+        if (auto index = slang_target()->findFieldIndexByName(name_begin, name_end); index >= 0)
+            return detail::from_slang(m_owner, slang_target()->getFieldByIndex(narrow_cast<unsigned int>(index)));
         return nullptr;
     }
 
@@ -714,37 +739,37 @@ public:
         return type_layout;
     }
 
-    size_t element_count() const { return m_target->getElementCount(); }
+    size_t element_count() const { return slang_target()->getElementCount(); }
 
     size_t element_stride(TypeReflection::ParameterCategory category = TypeReflection::ParameterCategory::uniform) const
     {
-        return m_target->getElementStride(static_cast<SlangParameterCategory>(category));
+        return slang_target()->getElementStride(static_cast<SlangParameterCategory>(category));
     }
 
     ref<const TypeLayoutReflection> element_type_layout() const
     {
-        return detail::from_slang(m_owner, m_target->getElementTypeLayout());
+        return detail::from_slang(m_owner, slang_target()->getElementTypeLayout());
     }
 
     ref<const VariableLayoutReflection> element_var_layout() const
     {
-        return detail::from_slang(m_owner, m_target->getElementVarLayout());
+        return detail::from_slang(m_owner, slang_target()->getElementVarLayout());
     }
 
     ref<const VariableLayoutReflection> container_var_layout() const
     {
-        return detail::from_slang(m_owner, m_target->getContainerVarLayout());
+        return detail::from_slang(m_owner, slang_target()->getContainerVarLayout());
     }
 
     // How is this type supposed to be bound?
     TypeReflection::ParameterCategory parameter_category() const
     {
-        return static_cast<TypeReflection::ParameterCategory>(m_target->getParameterCategory());
+        return static_cast<TypeReflection::ParameterCategory>(slang_target()->getParameterCategory());
     }
 
     uint32_t get_field_binding_range_offset(uint32_t field_index) const
     {
-        return narrow_cast<uint32_t>(m_target->getFieldBindingRangeOffset(field_index));
+        return narrow_cast<uint32_t>(slang_target()->getFieldBindingRangeOffset(field_index));
     }
 
     std::string to_string() const;
@@ -779,19 +804,19 @@ public:
     }
 
     /// Function name.
-    char const* name() const { return m_target->getName(); }
+    char const* name() const { return slang_target()->getName(); }
 
     /// Function return type.
-    ref<const TypeReflection> return_type() { return detail::from_slang(m_owner, m_target->getReturnType()); }
+    ref<const TypeReflection> return_type() { return detail::from_slang(m_owner, slang_target()->getReturnType()); }
 
     /// Number of function parameters.
-    uint32_t parameter_count() const { return m_target->getParameterCount(); }
+    uint32_t parameter_count() const { return slang_target()->getParameterCount(); }
 
     /// Get a single parameter.
     ref<const VariableReflection> get_parameter_by_index(uint32_t index) const
     {
         SGL_CHECK(index < parameter_count(), "Parameter index out of range");
-        return detail::from_slang(m_owner, m_target->getParameterByIndex(index));
+        return detail::from_slang(m_owner, slang_target()->getParameterByIndex(index));
     }
 
     /// List of all function parameters.
@@ -800,7 +825,7 @@ public:
     /// Check if the function has a given modifier (e.g. 'differentiable').
     bool has_modifier(ModifierID modifier) const
     {
-        return m_target->findModifier(static_cast<slang::Modifier::ID>(modifier)) != nullptr;
+        return slang_target()->findModifier(static_cast<slang::Modifier::ID>(modifier)) != nullptr;
     }
 
     /// Specialize a generic or interface based function with a set of concrete
@@ -811,7 +836,7 @@ public:
     ref<const FunctionReflection> specialize_with_arg_types(const std::vector<ref<TypeReflection>>& types) const
     {
         if (types.empty()) {
-            return detail::from_slang(m_owner, m_target->specializeWithArgTypes(0, nullptr));
+            return detail::from_slang(m_owner, slang_target()->specializeWithArgTypes(0, nullptr));
         } else {
             std::vector<slang::TypeReflection*> slang_types;
             slang_types.reserve(types.size());
@@ -822,22 +847,22 @@ public:
 
             return detail::from_slang(
                 m_owner,
-                m_target->specializeWithArgTypes((uint32_t)slang_types.size(), &slang_types[0])
+                slang_target()->specializeWithArgTypes((uint32_t)slang_types.size(), &slang_types[0])
             );
         }
     }
 
     /// Check whether this function object represents a group of overloaded functions,
     /// accessible via the overloads list.
-    bool is_overloaded() const { return m_target->isOverloaded(); }
+    bool is_overloaded() const { return slang_target()->isOverloaded(); }
 
     /// Get number of available overloads of this function.
-    uint32_t overload_count() const { return is_overloaded() ? m_target->getOverloadCount() : 0; }
+    uint32_t overload_count() const { return is_overloaded() ? slang_target()->getOverloadCount() : 0; }
 
     /// Get a given overload of this function.
     ref<const FunctionReflection> get_overload_by_index(uint32_t index) const
     {
-        return detail::from_slang(m_owner, m_target->getOverload(index));
+        return detail::from_slang(m_owner, slang_target()->getOverload(index));
     }
 
     /// List of all overloads of this function.
@@ -898,15 +923,15 @@ public:
     }
 
     /// Variable name.
-    const char* name() const { return m_target->getName(); }
+    const char* name() const { return slang_target()->getName(); }
 
     /// Variable type reflection.
-    ref<const TypeReflection> type() const { return detail::from_slang(m_owner, m_target->getType()); }
+    ref<const TypeReflection> type() const { return detail::from_slang(m_owner, slang_target()->getType()); }
 
     /// Check if variable has a given modifier (e.g. 'inout').
     bool has_modifier(ModifierID modifier) const
     {
-        return m_target->findModifier(static_cast<slang::Modifier::ID>(modifier)) != nullptr;
+        return slang_target()->findModifier(static_cast<slang::Modifier::ID>(modifier)) != nullptr;
     }
 };
 
@@ -917,16 +942,22 @@ public:
     {
     }
 
-    ref<const VariableReflection> variable() const { return detail::from_slang(m_owner, m_target->getVariable()); }
+    ref<const VariableReflection> variable() const
+    {
+        return detail::from_slang(m_owner, slang_target()->getVariable());
+    }
 
-    const char* name() const { return m_target->getName(); }
+    const char* name() const { return slang_target()->getName(); }
 
     ref<const TypeLayoutReflection> type_layout() const
     {
-        return detail::from_slang(m_owner, m_target->getTypeLayout());
+        return detail::from_slang(m_owner, slang_target()->getTypeLayout());
     }
 
-    size_t offset() const { return m_target->getOffset(SlangParameterCategory::SLANG_PARAMETER_CATEGORY_UNIFORM); }
+    size_t offset() const
+    {
+        return slang_target()->getOffset(SlangParameterCategory::SLANG_PARAMETER_CATEGORY_UNIFORM);
+    }
 
     std::string to_string() const;
 };
@@ -944,18 +975,18 @@ public:
     {
     }
 
-    const char* name() const { return m_target->getName(); }
+    const char* name() const { return slang_target()->getName(); }
 
-    const char* name_override() const { return m_target->getNameOverride(); }
+    const char* name_override() const { return slang_target()->getNameOverride(); }
 
-    ShaderStage stage() const { return static_cast<ShaderStage>(m_target->getStage()); }
+    ShaderStage stage() const { return static_cast<ShaderStage>(slang_target()->getStage()); }
 
-    uint32_t parameter_count() const { return m_target->getParameterCount(); }
+    uint32_t parameter_count() const { return slang_target()->getParameterCount(); }
 
     ref<const VariableLayoutReflection> get_parameter_by_index(uint32_t index) const
     {
         SGL_CHECK(index < parameter_count(), "Parameter index out of range");
-        return detail::from_slang(m_owner, m_target->getParameterByIndex(index));
+        return detail::from_slang(m_owner, slang_target()->getParameterByIndex(index));
     }
 
     EntryPointLayoutParameterList parameters() const;
@@ -963,11 +994,11 @@ public:
     uint3 compute_thread_group_size() const
     {
         SlangUInt size[3];
-        m_target->getComputeThreadGroupSize(3, size);
+        slang_target()->getComputeThreadGroupSize(3, size);
         return uint3(narrow_cast<uint32_t>(size[0]), narrow_cast<uint32_t>(size[1]), narrow_cast<uint32_t>(size[2]));
     }
 
-    bool uses_any_sample_rate_input() const { return m_target->usesAnySampleRateInput(); }
+    bool uses_any_sample_rate_input() const { return slang_target()->usesAnySampleRateInput(); }
 
     std::string to_string() const;
 };
@@ -1008,37 +1039,37 @@ public:
 
     ref<const TypeLayoutReflection> globals_type_layout() const
     {
-        return detail::from_slang(m_owner, m_target->getGlobalParamsTypeLayout());
+        return detail::from_slang(m_owner, slang_target()->getGlobalParamsTypeLayout());
     }
 
     ref<const VariableLayoutReflection> globals_variable_layout() const
     {
-        return detail::from_slang(m_owner, m_target->getGlobalParamsVarLayout());
+        return detail::from_slang(m_owner, slang_target()->getGlobalParamsVarLayout());
     }
 
-    uint32_t parameter_count() const { return m_target->getParameterCount(); }
+    uint32_t parameter_count() const { return slang_target()->getParameterCount(); }
 
     ref<const VariableLayoutReflection> get_parameter_by_index(uint32_t index) const
     {
         SGL_CHECK(index < parameter_count(), "Parameter index out of range");
-        return detail::from_slang(m_owner, m_target->getParameterByIndex(index));
+        return detail::from_slang(m_owner, slang_target()->getParameterByIndex(index));
     }
 
     ProgramLayoutParameterList parameters() const;
 
-    uint32_t type_parameter_count() const { return m_target->getTypeParameterCount(); }
+    uint32_t type_parameter_count() const { return slang_target()->getTypeParameterCount(); }
 
-    uint32_t entry_point_count() const { return narrow_cast<uint32_t>(m_target->getEntryPointCount()); }
+    uint32_t entry_point_count() const { return narrow_cast<uint32_t>(slang_target()->getEntryPointCount()); }
 
     ref<const EntryPointLayout> get_entry_point_by_index(uint32_t index) const
     {
         SGL_CHECK(index < entry_point_count(), "Entry point index out of range");
-        return detail::from_slang(m_owner, m_target->getEntryPointByIndex(index));
+        return detail::from_slang(m_owner, slang_target()->getEntryPointByIndex(index));
     }
 
     ref<const EntryPointLayout> get_entry_point_by_name(const char* name) const
     {
-        return detail::from_slang(m_owner, m_target->findEntryPointByName(name));
+        return detail::from_slang(m_owner, slang_target()->findEntryPointByName(name));
     }
 
     ref<const EntryPointLayout> get_entry_point_by_name(std::string_view name) const
@@ -1049,7 +1080,7 @@ public:
 
     ref<const EntryPointLayout> find_entry_point_by_name(const char* name) const
     {
-        if (auto entry_point = m_target->findEntryPointByName(name)) {
+        if (auto entry_point = slang_target()->findEntryPointByName(name)) {
             return detail::from_slang(m_owner, entry_point);
         }
         return nullptr;
@@ -1067,38 +1098,41 @@ public:
     /// variable values are provided.
     ref<const TypeReflection> find_type_by_name(const char* name) const
     {
-        return detail::from_slang(m_owner, m_target->findTypeByName(name));
+        return detail::from_slang(m_owner, slang_target()->findTypeByName(name));
     }
 
     /// Find a given function by name. Handles generic specilization if generic
     /// variable values are provided.
     ref<const FunctionReflection> find_function_by_name(const char* name)
     {
-        return detail::from_slang(m_owner, m_target->findFunctionByName(name));
+        return detail::from_slang(m_owner, slang_target()->findFunctionByName(name));
     }
 
     /// Find a given function in a type by name. Handles generic specilization if generic
     /// variable values are provided.
     ref<const FunctionReflection> find_function_by_name_in_type(const TypeReflection* type, const char* name)
     {
-        return detail::from_slang(m_owner, m_target->findFunctionByNameInType(type->slang_target(), name));
+        return detail::from_slang(m_owner, slang_target()->findFunctionByNameInType(type->slang_target(), name));
     }
 
     /// Test whether a type is a sub type of another type. Handles both
     /// struct inheritance and interface implementation.
     bool is_sub_type(const TypeReflection* sub_type, const TypeReflection* super_type)
     {
-        return m_target->isSubType(sub_type->slang_target(), super_type->slang_target());
+        return slang_target()->isSubType(sub_type->slang_target(), super_type->slang_target());
     }
 
     /// Get corresponding type layout from a given type.
     ref<const TypeLayoutReflection> get_type_layout(const TypeReflection* type)
     {
         // TODO: Once device is available via session reference, pass metal layout rules for metal target
-        return detail::from_slang(m_owner, m_target->getTypeLayout(type->slang_target(), slang::LayoutRules::Default));
+        return detail::from_slang(
+            m_owner,
+            slang_target()->getTypeLayout(type->slang_target(), slang::LayoutRules::Default)
+        );
     }
 
-    uint32_t hashed_string_count() const { return narrow_cast<uint32_t>(m_target->getHashedStringCount()); }
+    uint32_t hashed_string_count() const { return narrow_cast<uint32_t>(slang_target()->getHashedStringCount()); }
 
     struct HashedString {
         std::string string;
@@ -1109,16 +1143,16 @@ public:
     {
         SGL_CHECK(index < hashed_string_count(), "Hashed string index out of range");
         size_t size;
-        const char* str = m_target->getHashedString(index, &size);
+        const char* str = slang_target()->getHashedString(index, &size);
         return {std::string(str, str + size), spComputeStringHash(str, size)};
     }
 
     std::vector<HashedString> hashed_strings() const
     {
         std::vector<HashedString> result;
-        for (uint32_t i = 0; i < m_target->getHashedStringCount(); ++i) {
+        for (uint32_t i = 0; i < slang_target()->getHashedStringCount(); ++i) {
             size_t size;
-            const char* str = m_target->getHashedString(i, &size);
+            const char* str = slang_target()->getHashedString(i, &size);
             result.push_back({std::string(str, str + size), spComputeStringHash(str, size)});
         }
         return result;
@@ -1127,9 +1161,9 @@ public:
     std::map<uint32_t, std::string> hashed_strings_map() const
     {
         std::map<uint32_t, std::string> result;
-        for (uint32_t i = 0; i < m_target->getHashedStringCount(); ++i) {
+        for (uint32_t i = 0; i < slang_target()->getHashedStringCount(); ++i) {
             size_t size;
-            const char* str = m_target->getHashedString(i, &size);
+            const char* str = slang_target()->getHashedString(i, &size);
             uint32_t hash = spComputeStringHash(str, size);
             result.emplace(hash, std::string(str, str + size));
         }
