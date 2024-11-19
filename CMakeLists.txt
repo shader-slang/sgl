@@ -40,6 +40,7 @@ option(SGL_BUILD_PYTHON "Build Python extension" ON)
 option(SGL_BUILD_EXAMPLES "Build example applications" ON)
 option(SGL_BUILD_TESTS "Build tests" ON)
 option(SGL_BUILD_DOC "Build documentation" OFF)
+option(SGL_GENERATE_SETPATH_SCRIPTS "Generate setpath scripts" ON)
 
 # Enable building sgl without external dependencies.
 # This is useful when using sgl through cmake add_subdirectory.
@@ -377,13 +378,15 @@ add_dependencies(sgl copy_binary_files)
 # -----------------------------------------------------------------------------
 
 # Generate setpath scripts.
-if(SGL_WINDOWS)
-    file(GENERATE OUTPUT ${SGL_OUTPUT_DIRECTORY}/setpath.bat INPUT ${CMAKE_CURRENT_SOURCE_DIR}/resources/setpath.bat.in)
-    file(GENERATE OUTPUT ${SGL_OUTPUT_DIRECTORY}/setpath.ps1 INPUT ${CMAKE_CURRENT_SOURCE_DIR}/resources/setpath.ps1.in)
-endif()
+if(SGL_GENERATE_SETPATH_SCRIPTS)
+    if(SGL_WINDOWS)
+        file(GENERATE OUTPUT ${SGL_OUTPUT_DIRECTORY}/setpath.bat INPUT ${CMAKE_CURRENT_SOURCE_DIR}/resources/setpath.bat.in)
+        file(GENERATE OUTPUT ${SGL_OUTPUT_DIRECTORY}/setpath.ps1 INPUT ${CMAKE_CURRENT_SOURCE_DIR}/resources/setpath.ps1.in)
+    endif()
 
-if(SGL_LINUX OR SGL_MACOS)
-    file(GENERATE OUTPUT ${SGL_OUTPUT_DIRECTORY}/setpath.sh INPUT ${CMAKE_CURRENT_SOURCE_DIR}/resources/setpath.sh.in)
+    if(SGL_LINUX OR SGL_MACOS)
+        file(GENERATE OUTPUT ${SGL_OUTPUT_DIRECTORY}/setpath.sh INPUT ${CMAKE_CURRENT_SOURCE_DIR}/resources/setpath.sh.in)
+    endif()
 endif()
 
 file(GENERATE OUTPUT ${SGL_OUTPUT_DIRECTORY}/python/sgl/__init__.py INPUT ${CMAKE_CURRENT_SOURCE_DIR}/resources/__init__.py)
