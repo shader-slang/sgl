@@ -920,7 +920,8 @@ private:
                 c.comment(text.c_str());
             };
 
-            auto node = c.addFunc(asmjit::FuncSignature::build<void(const void*, void*, size_t)>(asmjit::CallConvId::kHost));
+            auto node
+                = c.addFunc(asmjit::FuncSignature::build<void, const void*, void*, size_t>(asmjit::CallConvId::kHost));
             auto src = c.newIntPtr("src");
             auto dst = c.newIntPtr("dst");
             auto count = c.newInt64("count");
@@ -1113,7 +1114,7 @@ private:
                     c.invoke(
                         &node,
                         imm((void*)math::float16_to_float32),
-                        FuncSignature::build<float(uint16_t)>(CallConvId::kHost)
+                        FuncSignature::build<float, uint16_t>(CallConvId::kHost)
                     );
                     node->setArg(0, tmp);
                     node->setRet(0, reg.xmm);
@@ -1198,7 +1199,7 @@ private:
                     c.invoke(
                         &node,
                         imm((void*)math::float32_to_float16),
-                        FuncSignature::build<uint16_t(float)>(CallConvId::kHost)
+                        FuncSignature::build<uint16_t, float>(CallConvId::kHost)
                     );
                     node->setArg(0, reg.xmm);
                     node->setRet(0, tmp2);
@@ -1506,7 +1507,8 @@ private:
                 c.comment(text.c_str());
             };
 
-            auto node = c.addFunc(asmjit::FuncSignature::build<void(const void*, void*, size_t)>(asmjit::CallConvId::kHost));
+            auto node
+                = c.addFunc(asmjit::FuncSignature::build<void, const void*, void*, size_t>(asmjit::CallConvId::kHost));
             auto src = c.newIntPtr("src");
             auto dst = c.newIntPtr("dst");
             auto count = c.newInt64("count");
