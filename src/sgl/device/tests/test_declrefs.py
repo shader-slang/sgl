@@ -7,7 +7,7 @@ from pathlib import Path
 from deepdiff import DeepDiff
 
 sys.path.append(str(Path(__file__).parent))
-import helpers
+import sglhelpers as helpers
 
 DEVICES = helpers.DEFAULT_DEVICE_TYPES
 

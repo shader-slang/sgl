@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 
 sys.path.append(str(Path(__file__).parent))
-import helpers
+import sglhelpers as helpers
 
 
 # Generate random data for a texture with a given array size and mip count.

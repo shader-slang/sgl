@@ -9,7 +9,7 @@ import numpy as np
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent))
-import helpers
+import sglhelpers as helpers
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)

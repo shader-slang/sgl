@@ -12,7 +12,7 @@ from numpy.typing import DTypeLike
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent))
-import helpers
+import sglhelpers as helpers
 
 INT_MIN = -2147483648
 INT_MAX = 2147483647

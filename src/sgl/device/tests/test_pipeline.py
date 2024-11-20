@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent))
-import helpers
+import sglhelpers as helpers
 
 
 class PipelineTestContext:

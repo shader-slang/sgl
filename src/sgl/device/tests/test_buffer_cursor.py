@@ -10,8 +10,8 @@ import numpy as np
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent))
-import helpers
-from helpers import test_id  # type: ignore (pytest fixture)
+import sglhelpers as helpers
+from sglhelpers import test_id  # type: ignore (pytest fixture)
 
 TESTS = [
     ("f_bool", "bool", "true", True),

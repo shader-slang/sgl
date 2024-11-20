@@ -7,7 +7,7 @@ import numpy as np
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent))
-import helpers
+import sglhelpers as helpers
 
 ELEMENT_COUNT = 1024
 
