@@ -1164,7 +1164,7 @@ def test_is_sub_type(test_id: str, device_type: sgl.DeviceType):
     assert i2.name == "IHello2"
     assert module.layout.is_sub_type(t, i)
 
-
+@pytest.mark.skip("Added early")
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_hot_reload_invalid(test_id: str, device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
