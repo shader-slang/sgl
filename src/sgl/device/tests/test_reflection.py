@@ -1165,5 +1165,27 @@ def test_is_sub_type(test_id: str, device_type: sgl.DeviceType):
     assert module.layout.is_sub_type(t, i)
 
 
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_hot_reload_invalid(test_id: str, device_type: sgl.DeviceType):
+    device = helpers.get_device(type=device_type)
+
+    # Create a session, and within it a module.
+    session = helpers.create_session(device, {})
+    module = session.load_module_from_source(
+        module_name=f"module_from_source_{test_id}",
+        source=MODULE_SOURCE,
+    )
+    func = module.layout.find_function_by_name("main")
+    assert func is not None
+    assert func.name == "main"
+
+    device.reload_all_programs()
+
+    assert not func.is_valid
+
+    with pytest.raises(RuntimeError, match="Reflection object has been invalidated"):
+        x = func.name
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

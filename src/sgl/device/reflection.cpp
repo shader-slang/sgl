@@ -54,6 +54,14 @@ namespace detail {
     {
         g_slang_reflection_to_sgl_reflection.erase(slang_reflection);
     }
+
+    void invalidate_all_reflection_data()
+    {
+        for (auto& [_, reflection] : g_slang_reflection_to_sgl_reflection) {
+            const_cast<BaseReflectionObject*>(reflection)->_hot_reload_invalidate();
+        }
+        g_slang_reflection_to_sgl_reflection.clear();
+    }
 } // namespace detail
 
 std::string c_str_to_string(const char* str)
@@ -74,7 +82,7 @@ DeclReflectionIndexedChildList DeclReflection::children_of_kind(Kind kind) const
     uint32_t count = child_count();
     indices.reserve(count);
     for (uint32_t i = 0; i < count; i++) {
-        if (static_cast<Kind>(m_target->getChild(i)->getKind()) == kind)
+        if (static_cast<Kind>(slang_target()->getChild(i)->getKind()) == kind)
             indices.push_back(i);
     }
     return DeclReflectionIndexedChildList(ref(this), std::move(indices));
@@ -93,7 +101,7 @@ std::string DeclReflection::to_string() const
 
 ref<const TypeReflection> DeclReflection::as_type() const
 {
-    return detail::from_slang(m_owner, m_target->getType());
+    return detail::from_slang(m_owner, slang_target()->getType());
 }
 
 std::string DeclReflection::name() const
@@ -116,7 +124,7 @@ DeclReflectionIndexedChildList DeclReflection::find_children_of_kind(Kind kind, 
     uint32_t count = child_count();
     indices.reserve(count);
     for (uint32_t i = 0; i < count; i++) {
-        slang::DeclReflection* child = m_target->getChild(i);
+        slang::DeclReflection* child = slang_target()->getChild(i);
         if (static_cast<Kind>(child->getKind()) == kind) {
             switch (child->getKind()) {
             case slang::DeclReflection::Kind::Variable:
@@ -145,7 +153,7 @@ ref<const DeclReflection> DeclReflection::find_first_child_of_kind(Kind kind, st
     int32_t count = child_count();
     res.reserve(count);
     for (int32_t i = 0; i < count; i++) {
-        ref<const DeclReflection> child = detail::from_slang(m_owner, m_target->getChild(i));
+        ref<const DeclReflection> child = detail::from_slang(m_owner, slang_target()->getChild(i));
         if (child->kind() == kind && child->name() == child_name) {
             return child;
         }
@@ -156,7 +164,7 @@ ref<const DeclReflection> DeclReflection::find_first_child_of_kind(Kind kind, st
 std::string TypeReflection::full_name() const
 {
     Slang::ComPtr<ISlangBlob> blob;
-    m_target->getFullName(blob.writeRef());
+    slang_target()->getFullName(blob.writeRef());
     return std::string((const char*)blob->getBufferPointer());
 }
 
