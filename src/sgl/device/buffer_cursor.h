@@ -103,7 +103,12 @@ public:
     BufferCursor(ref<TypeLayoutReflection> element_layout, ref<Buffer> resource);
 
     /// Create as a view onto a section of a buffer resource.
-    BufferCursor(ref<TypeLayoutReflection> element_layout, ref<Buffer> resource, size_t size, DeviceOffset offset);
+    BufferCursor(
+        ref<TypeLayoutReflection> element_layout,
+        ref<Buffer> resource,
+        size_t element_count,
+        size_t first_element
+    );
 
     ~BufferCursor();
 
