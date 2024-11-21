@@ -481,8 +481,7 @@ void BufferCursor::load()
     }
 }
  
-void BufferCursor::apply()
-{
+void BufferCursor::apply(){
     if (m_resource && m_buffer) {
         if (m_resource->memory_type() != MemoryType::read_back) {
             m_resource->set_data(m_buffer, m_size, m_offset);
