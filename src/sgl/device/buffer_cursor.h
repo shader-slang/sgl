@@ -102,6 +102,14 @@ public:
     /// Create as a view onto a buffer resource.
     BufferCursor(ref<TypeLayoutReflection> element_layout, ref<Buffer> resource);
 
+    /// Create as a view onto a section of a buffer resource.
+    BufferCursor(
+        ref<TypeLayoutReflection> element_layout,
+        ref<Buffer> resource,
+        size_t element_count,
+        size_t first_element
+    );
+
     ~BufferCursor();
 
     /// Get type layout of an element of the cursor.
@@ -149,6 +157,7 @@ private:
     uint8_t* m_buffer{nullptr};
     size_t m_size{0};
     bool m_owner{false};
+    DeviceOffset m_offset{0};
 };
 
 

@@ -406,6 +406,22 @@ BufferCursor::BufferCursor(ref<TypeLayoutReflection> element_layout, ref<Buffer>
 {
     m_resource = std::move(resource);
     m_size = m_resource->size();
+    m_offset = 0;
+    m_buffer = nullptr;
+    m_owner = true;
+}
+
+BufferCursor::BufferCursor(
+    ref<TypeLayoutReflection> element_layout,
+    ref<Buffer> resource,
+    size_t element_count,
+    size_t first_element
+)
+    : m_element_type_layout(std::move(element_layout))
+{
+    m_resource = std::move(resource);
+    m_size = m_element_type_layout->stride() * element_count;
+    m_offset = m_element_type_layout->stride() * first_element;
     m_buffer = nullptr;
     m_owner = true;
 }
@@ -460,7 +476,7 @@ void BufferCursor::load()
             m_buffer = new uint8_t[m_size];
         }
         if (m_resource->memory_type() != MemoryType::upload) {
-            m_resource->get_data(m_buffer, m_size);
+            m_resource->get_data(m_buffer, m_size, m_offset);
         }
     }
 }
@@ -469,7 +485,7 @@ void BufferCursor::apply()
 {
     if (m_resource && m_buffer) {
         if (m_resource->memory_type() != MemoryType::read_back) {
-            m_resource->set_data(m_buffer, m_size);
+            m_resource->set_data(m_buffer, m_size, m_offset);
         }
     }
 }
