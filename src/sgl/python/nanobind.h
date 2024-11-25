@@ -22,6 +22,9 @@
 #include "sgl/core/enum.h"
 #include "sgl/core/type_utils.h"
 #include "sgl/core/struct.h"
+#include "sgl/core/data_type.h"
+
+#include "sgl/math/float16.h"
 
 #include "sgl/device/cuda_interop.h"
 
@@ -33,6 +36,16 @@ namespace nb = nanobind;
 using namespace nb::literals;
 
 NAMESPACE_BEGIN(NB_NAMESPACE)
+
+template<>
+struct ndarray_traits<sgl::math::float16_t> {
+    static constexpr bool is_complex = false;
+    static constexpr bool is_float = true;
+    static constexpr bool is_bool = false;
+    static constexpr bool is_int = false;
+    static constexpr bool is_signed = true;
+};
+
 NAMESPACE_BEGIN(detail)
 
 /// Type caster for sgl::ref<T>
@@ -274,6 +287,100 @@ inline cuda::TensorView ndarray_to_cuda_tensor_view(nb::ndarray<nb::device::cuda
         .size = array.nbytes(),
         .stride = 0, // TODO
     };
+}
+
+inline nb::dlpack::dtype data_type_to_dtype(DataType type)
+{
+    switch (type) {
+    case DataType::bool_:
+        return nb::dtype<bool>();
+    case DataType::int8:
+        return nb::dtype<int8_t>();
+    case DataType::int16:
+        return nb::dtype<int16_t>();
+    case DataType::int32:
+        return nb::dtype<int32_t>();
+    case DataType::int64:
+        return nb::dtype<int64_t>();
+    case DataType::uint8:
+        return nb::dtype<uint8_t>();
+    case DataType::uint16:
+        return nb::dtype<uint16_t>();
+    case DataType::uint32:
+        return nb::dtype<uint32_t>();
+    case DataType::uint64:
+        return nb::dtype<uint64_t>();
+    case DataType::float16:
+        return nb::dtype<math::float16_t>();
+    case DataType::float32:
+        return nb::dtype<float>();
+    case DataType::float64:
+        return nb::dtype<double>();
+    default:
+        break;
+    }
+    SGL_THROW("Data type is incompatible with DLPack.");
+}
+
+inline DataType dtype_to_data_type(nb::dlpack::dtype dtype)
+{
+    switch ((nb::dlpack::dtype_code)dtype.code) {
+    case nb::dlpack::dtype_code::Float:
+        switch (dtype.bits) {
+        case 16:
+            return DataType::float16;
+        case 32:
+            return DataType::float32;
+        case 64:
+            return DataType::float64;
+        default:
+            break;
+        }
+        break;
+
+    case nb::dlpack::dtype_code::Int:
+        switch (dtype.bits) {
+        case 8:
+            return DataType::int8;
+        case 16:
+            return DataType::int16;
+        case 32:
+            return DataType::int32;
+        case 64:
+            return DataType::int64;
+        default:
+            break;
+        }
+        break;
+
+    case nb::dlpack::dtype_code::UInt:
+        switch (dtype.bits) {
+        case 8:
+            return DataType::uint8;
+        case 16:
+            return DataType::uint16;
+        case 32:
+            return DataType::uint32;
+        case 64:
+            return DataType::uint64;
+        default:
+            break;
+        }
+        break;
+
+    case nb::dlpack::dtype_code::Bool:
+        switch (dtype.bits) {
+        case 8:
+            return DataType::bool_;
+        default:
+            break;
+        }
+        break;
+
+    default:
+        break;
+    }
+    SGL_THROW("Unsupported dtype.");
 }
 
 inline std::optional<Struct::Type> dtype_to_struct_type(nb::dlpack::dtype dtype)

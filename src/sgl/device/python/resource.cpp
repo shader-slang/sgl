@@ -111,6 +111,40 @@ inline void buffer_from_numpy(Buffer* self, nb::ndarray<nb::numpy> data)
     self->set_data(data.data(), data_size);
 }
 
+static const char* __doc_sgl_buffer_to_torch = R"doc()doc";
+
+inline nb::ndarray<nb::pytorch, nb::device::cuda>
+buffer_to_torch(Buffer* self, DataType type, std::vector<size_t> shape, std::vector<int64_t> strides)
+{
+    void* data = self->cuda_memory();
+    size_t data_size = self->size();
+
+    nb::dlpack::dtype dtype = data_type_to_dtype(type);
+    size_t element_size = dtype.bits / 8;
+
+    if (shape.empty())
+        shape.push_back(data_size / element_size);
+    int64_t* strides_ptr = nullptr;
+    if (!strides.empty()) {
+        SGL_CHECK(strides.size() == shape.size(), "strides must have the same length as the shape");
+        strides_ptr = strides.data();
+    }
+
+    size_t required_size = 1;
+    for (size_t dim : shape)
+        required_size *= dim;
+    SGL_CHECK(data_size >= required_size * element_size, "requested shape exceeds the buffer size");
+
+    return nb::ndarray<nb::pytorch, nb::device::cuda>(
+        data,
+        shape.size(),
+        shape.data(),
+        nb::find(self),
+        strides.empty() ? nullptr : strides.data(),
+        dtype
+    );
+}
+
 static const char* __doc_sgl_texture_to_numpy = R"doc()doc";
 
 /**
@@ -284,7 +318,15 @@ SGL_PY_EXPORT(device_resource)
             D(Buffer, get_uav)
         )
         .def("to_numpy", &buffer_to_numpy, D(buffer_to_numpy))
-        .def("from_numpy", &buffer_from_numpy, "data"_a, D(buffer_from_numpy));
+        .def("from_numpy", &buffer_from_numpy, "data"_a, D(buffer_from_numpy))
+        .def(
+            "to_torch",
+            &buffer_to_torch,
+            "type"_a = DataType::void_,
+            "shape"_a = std::vector<size_t>{},
+            "strides"_a = std::vector<int64_t>{},
+            D(buffer_to_torch)
+        );
 
     nb::class_<TextureDesc>(m, "TextureDesc", D(TextureDesc))
         .def(nb::init<>())
