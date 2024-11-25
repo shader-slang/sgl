@@ -6,6 +6,7 @@
 #include "sgl/device/command.h"
 #include "sgl/device/helpers.h"
 #include "sgl/device/native_handle_traits.h"
+#include "sgl/device/cuda_utils.h"
 
 #include "sgl/core/config.h"
 #include "sgl/core/error.h"
@@ -354,6 +355,7 @@ Buffer::Buffer(ref<Device> device, BufferDesc desc)
 
 Buffer::~Buffer()
 {
+    m_cuda_memory.reset();
     m_device->deferred_release(m_gfx_buffer);
 }
 
@@ -383,6 +385,14 @@ void Buffer::unmap() const
     SGL_ASSERT(m_mapped_ptr != nullptr);
     SLANG_CALL(m_gfx_buffer->unmap(nullptr));
     m_mapped_ptr = nullptr;
+}
+
+void* Buffer::cuda_memory() const
+{
+    SGL_CHECK(m_device->supports_cuda_interop(), "Device does not support CUDA interop");
+    if (!m_cuda_memory)
+        m_cuda_memory = make_ref<cuda::ExternalMemory>(this);
+    return m_cuda_memory->mapped_data();
 }
 
 void Buffer::set_data(const void* data, size_t size, DeviceOffset offset)
