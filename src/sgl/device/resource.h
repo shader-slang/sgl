@@ -462,6 +462,11 @@ public:
     /// Returns true if buffer is currently mapped.
     bool is_mapped() const { return m_mapped_ptr != nullptr; }
 
+    /// Returns a pointer to the CUDA memory.
+    /// This is only supported if the buffer was created with ResourceUsage::shared
+    /// and the device has CUDA interop enabled.
+    void* cuda_memory() const;
+
     /**
      * Set buffer data from host memory.
      *
@@ -532,7 +537,7 @@ public:
 private:
     BufferDesc m_desc;
     Slang::ComPtr<gfx::IBufferResource> m_gfx_buffer;
-
+    mutable ref<cuda::ExternalMemory> m_cuda_memory;
     mutable void* m_mapped_ptr{nullptr};
 };
 

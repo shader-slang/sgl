@@ -17,6 +17,7 @@ target_sources(sgl PRIVATE
     sgl/core/bitmap.h
     sgl/core/crypto.cpp
     sgl/core/crypto.h
+    sgl/core/data_type.h
     sgl/core/dds_file.cpp
     sgl/core/dds_file.h
     sgl/core/enum.h
@@ -392,6 +393,7 @@ if(SGL_BUILD_PYTHON)
         sgl/app/python/app.cpp
         sgl/core/python/bitmap.cpp
         sgl/core/python/crypto.cpp
+        sgl/core/python/data_type.cpp
         sgl/core/python/input.cpp
         sgl/core/python/logger.cpp
         sgl/core/python/object.cpp

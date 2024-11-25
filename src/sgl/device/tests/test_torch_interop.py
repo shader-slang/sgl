@@ -4,6 +4,7 @@ import sgl
 import sys
 import pytest
 from pathlib import Path
+import numpy as np
 
 sys.path.append(str(Path(__file__).parent))
 import sglhelpers as helpers
@@ -11,8 +12,6 @@ import sglhelpers as helpers
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_torch_interop(device_type):
-    if device_type == sgl.DeviceType.vulkan:
-        pytest.skip("Vulkan does not support CUDA interop")
     try:
         import torch
     except ImportError:
@@ -45,6 +44,43 @@ def test_torch_interop(device_type):
 
     # Check result
     assert torch.all(c == a + b)
+
+
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_buffer_to_torch(device_type):
+    try:
+        import torch
+    except ImportError:
+        pytest.skip("torch is not installed")
+
+    device = sgl.Device(
+        type=device_type,
+        enable_debug_layers=True,
+        enable_cuda_interop=True,
+        compiler_options={"include_paths": [Path(__file__).parent]},
+    )
+
+    if not device.supports_cuda_interop:
+        pytest.skip(f"CUDA interop is not supported on this device type {device_type}")
+
+    data = np.linspace(0, 15, 16, dtype=np.float32)
+    buffer = device.create_buffer(
+        size=4 * 16,
+        usage=sgl.ResourceUsage.shared,
+        data=data,
+    )
+    tensor1 = buffer.to_torch(type=sgl.DataType.float32)
+    assert tensor1.shape == (16,)
+    assert torch.all(
+        tensor1 == torch.tensor(data, dtype=torch.float32, device="cuda:0")
+    )
+
+    tensor2 = buffer.to_torch(type=sgl.DataType.float32, shape=[4, 4])
+    assert tensor2.shape == (4, 4)
+    assert torch.all(
+        tensor2
+        == torch.tensor(np.reshape(data, [4, 4]), dtype=torch.float32, device="cuda:0")
+    )
 
 
 if __name__ == "__main__":
