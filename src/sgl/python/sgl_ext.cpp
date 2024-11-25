@@ -13,6 +13,7 @@ SGL_PY_DECLARE(app_app);
 
 SGL_PY_DECLARE(core_bitmap);
 SGL_PY_DECLARE(core_crypto);
+SGL_PY_DECLARE(core_data_type);
 SGL_PY_DECLARE(core_input);
 SGL_PY_DECLARE(core_logger);
 SGL_PY_DECLARE(core_object);
@@ -92,6 +93,7 @@ NB_MODULE(sgl_ext, m_)
     SGL_PY_IMPORT(core_struct);
     SGL_PY_IMPORT(core_bitmap);
     SGL_PY_IMPORT(core_crypto);
+    SGL_PY_IMPORT(core_data_type);
 
     m.def_submodule("math", "Math module");
     SGL_PY_IMPORT(math_scalar);
