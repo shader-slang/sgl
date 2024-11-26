@@ -22,6 +22,7 @@
 #include <slang.h>
 
 #include <random>
+#include <regex>
 
 namespace sgl {
 
@@ -139,19 +140,33 @@ private:
 // SlangSession
 // ----------------------------------------------------------------------------
 
+/// Filter specific messages from slang diagnostics.
+/// This is mainly a workaround for the annoying warnings from NVAPI.
+/// Ideally to solve that case, slang should have diagnostic pragmas.
+inline std::string filter_diagnostics(const char* diagnostics)
+{
+    std::regex re("^.*nvHLSLExtns.h.*\\n.*\\n.*\\^~+\\n", std::regex::ECMAScript);
+    std::string result = diagnostics;
+    result = std::regex_replace(result, re, "");
+    return result;
+}
+
 /// Append slang diagnostics to a string if not null.
 inline std::string append_diagnostics(std::string msg, ISlangBlob* diagnostics)
 {
     if (diagnostics)
-        msg += fmt::format("\n{}", static_cast<const char*>(diagnostics->getBufferPointer()));
+        msg += fmt::format("\n{}", filter_diagnostics(static_cast<const char*>(diagnostics->getBufferPointer())));
     return msg;
 }
 
 /// Report slang diagnostics to log if not null.
 inline void report_diagnostics(ISlangBlob* diagnostics)
 {
-    if (diagnostics)
-        log_warn("Slang compiler warnings:\n{}", static_cast<const char*>(diagnostics->getBufferPointer()));
+    if (diagnostics) {
+        std::string filtered = filter_diagnostics(static_cast<const char*>(diagnostics->getBufferPointer()));
+        if (!filtered.empty())
+            log_warn("Slang compiler warnings:\n{}", filtered);
+    }
 }
 
 SlangSession::SlangSession(ref<Device> device, SlangSessionDesc desc)
