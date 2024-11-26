@@ -22,6 +22,7 @@
 #include <slang.h>
 
 #include <random>
+#include <regex>
 
 namespace sgl {
 
@@ -144,12 +145,9 @@ private:
 /// Ideally to solve that case, slang should have diagnostic pragmas.
 inline std::string filter_diagnostics(const char* diagnostics)
 {
-    std::string result;
-    for (const std::string& line : string::split(diagnostics, "\n")) {
-        if (line.empty() || line.find("shaders/nvapi/nvHLSLExtns.h"))
-            continue;
-        result += line + "\n";
-    }
+    std::regex re("^.*nvHLSLExtns.h.*\\n.*\\n.*\\^~+\\n", std::regex::ECMAScript);
+    std::string result = diagnostics;
+    result = std::regex_replace(result, re, "");
     return result;
 }
 
