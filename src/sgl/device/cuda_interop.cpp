@@ -31,22 +31,28 @@ ref<ResourceView> InteropBuffer::get_resource_view() const
 
 void InteropBuffer::copy_from_cuda(void* cuda_stream)
 {
+    cuCtxPushCurrent(m_device->cuda_device()->context());
     SGL_CU_CHECK(cuMemcpyAsync(
         reinterpret_cast<CUdeviceptr>(m_external_memory->mapped_data()),
         reinterpret_cast<CUdeviceptr>(m_tensor_view.data),
         m_tensor_view.size,
         static_cast<CUstream>(cuda_stream)
     ));
+    CUcontext p;
+    cuCtxPopCurrent(&p);
 }
 
 void InteropBuffer::copy_to_cuda(void* cuda_stream)
 {
+    cuCtxPushCurrent(m_device->cuda_device()->context());
     SGL_CU_CHECK(cuMemcpyAsync(
         reinterpret_cast<CUdeviceptr>(m_tensor_view.data),
         reinterpret_cast<CUdeviceptr>(m_external_memory->mapped_data()),
         m_tensor_view.size,
         static_cast<CUstream>(cuda_stream)
     ));
+    CUcontext p;
+    cuCtxPopCurrent(&p);
 }
 
 } // namespace sgl::cuda

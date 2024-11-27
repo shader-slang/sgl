@@ -873,15 +873,21 @@ void Device::wait_for_idle(CommandQueueType queue)
 void Device::sync_to_cuda(void* cuda_stream)
 {
     // Signal fence from CUDA, wait for it on graphics queue.
+    cuCtxPushCurrent(cuda_device()->context());
     uint64_t signal_value = m_global_fence->update_signaled_value();
     m_cuda_semaphore->signal(signal_value, CUstream(cuda_stream));
     gfx::IFence* fence = m_global_fence->gfx_fence();
     m_gfx_graphics_queue->waitForFenceValuesOnDevice(1, &fence, &signal_value);
+    CUcontext p;
+    cuCtxPopCurrent(&p);
 }
 
 void Device::sync_to_device(void* cuda_stream)
 {
+    cuCtxPushCurrent(cuda_device()->context());
     m_cuda_semaphore->wait(m_global_fence->signaled_value(), CUstream(cuda_stream));
+    CUcontext p;
+    cuCtxPopCurrent(&p);
 }
 
 void Device::run_garbage_collection()

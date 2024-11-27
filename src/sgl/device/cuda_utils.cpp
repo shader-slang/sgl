@@ -49,6 +49,8 @@ void memset_device(void* dst, uint8_t value, size_t count)
 
 CUexternalMemory import_external_memory(const Buffer* buffer)
 {
+    cuCtxPushCurrent(buffer->device()->cuda_device()->context());
+
     SGL_CHECK_NOT_NULL(buffer);
     SGL_CHECK(
         is_set(buffer->desc().usage, ResourceUsage::shared),
@@ -82,6 +84,9 @@ CUexternalMemory import_external_memory(const Buffer* buffer)
 
     CUexternalMemory ext_mem;
     SGL_CU_CHECK(cuImportExternalMemory(&ext_mem, &desc));
+
+    CUcontext p;
+    cuCtxPopCurrent(&p);
     return ext_mem;
 }
 
