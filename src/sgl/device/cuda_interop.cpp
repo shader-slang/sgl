@@ -31,6 +31,7 @@ ref<ResourceView> InteropBuffer::get_resource_view() const
 
 void InteropBuffer::copy_from_cuda(void* cuda_stream)
 {
+    SGL_CU_SCOPE(m_device);
     SGL_CU_CHECK(cuMemcpyAsync(
         reinterpret_cast<CUdeviceptr>(m_external_memory->mapped_data()),
         reinterpret_cast<CUdeviceptr>(m_tensor_view.data),
@@ -41,6 +42,7 @@ void InteropBuffer::copy_from_cuda(void* cuda_stream)
 
 void InteropBuffer::copy_to_cuda(void* cuda_stream)
 {
+    SGL_CU_SCOPE(m_device);
     SGL_CU_CHECK(cuMemcpyAsync(
         reinterpret_cast<CUdeviceptr>(m_tensor_view.data),
         reinterpret_cast<CUdeviceptr>(m_external_memory->mapped_data()),

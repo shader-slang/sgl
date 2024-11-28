@@ -20,6 +20,9 @@
         }                                                                                                              \
     } while (0)
 
+#define SGL_CU_SCOPE(device) sgl::cuda::ContextScope _context_scope(device)
+
+
 namespace sgl::cuda {
 
 SGL_API void* malloc_device(size_t size);
@@ -92,6 +95,13 @@ private:
     /// Non-owning pointer to the fence.
     Fence* m_fence;
     CUexternalSemaphore m_external_semaphore;
+};
+
+class SGL_API ContextScope {
+public:
+    explicit ContextScope(const Device* device);
+    explicit ContextScope(const sgl::Device* device);
+    ~ContextScope();
 };
 
 } // namespace sgl::cuda

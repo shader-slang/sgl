@@ -49,6 +49,8 @@ void memset_device(void* dst, uint8_t value, size_t count)
 
 CUexternalMemory import_external_memory(const Buffer* buffer)
 {
+    SGL_CU_SCOPE(buffer->device());
+
     SGL_CHECK_NOT_NULL(buffer);
     SGL_CHECK(
         is_set(buffer->desc().usage, ResourceUsage::shared),
@@ -82,6 +84,7 @@ CUexternalMemory import_external_memory(const Buffer* buffer)
 
     CUexternalMemory ext_mem;
     SGL_CU_CHECK(cuImportExternalMemory(&ext_mem, &desc));
+
     return ext_mem;
 }
 
@@ -286,6 +289,22 @@ void ExternalSemaphore::signal(uint64_t value, CUstream stream)
 void ExternalSemaphore::wait(uint64_t value, CUstream stream)
 {
     wait_external_semaphore(m_external_semaphore, value, stream);
+}
+
+ContextScope::ContextScope(const Device* device)
+{
+    SGL_CU_CHECK(cuCtxPushCurrent(device->context()));
+}
+
+ContextScope::ContextScope(const sgl::Device* device)
+{
+    SGL_CU_CHECK(cuCtxPushCurrent(device->cuda_device()->context()));
+}
+
+ContextScope::~ContextScope()
+{
+    CUcontext p;
+    SGL_CU_CHECK(cuCtxPopCurrent(&p));
 }
 
 } // namespace sgl::cuda
