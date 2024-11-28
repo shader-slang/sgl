@@ -565,13 +565,12 @@ public:
      */
     static bool enable_agility_sdk();
 
-    cuda::Device* cuda_device() const { return m_cuda_device.get(); }   
+    cuda::Device* cuda_device() const { return m_cuda_device.get(); }
 
     std::string to_string() const override;
 
     Blitter* _blitter();
     HotReload* _hot_reload() { return m_hot_reload; }
-
 
 
 private:
