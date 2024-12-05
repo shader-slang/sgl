@@ -3,6 +3,16 @@
 #include <slang.h>
 #include <slang-com-ptr.h>
 
+#define SGL_CATCH_INTERNAL_SLANG_ERROR(expr)                                                                           \
+    try {                                                                                                              \
+        expr;                                                                                                          \
+    } catch (...) {                                                                                                    \
+        /* TODO future slang versions should have API to query the error message */                                    \
+        /* const char* slang_error = slang::getLastInternalErrorMessage(); */                                          \
+        const char* slang_error = "unknown";                                                                           \
+        throw sgl::SlangCompileError(fmt::format("Internal slang error: {}", slang_error));                            \
+    }
+
 namespace sgl {
 
 /// Implementation of slang's ISlangBlob interface to access an unowned blob of data.
