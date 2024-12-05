@@ -54,7 +54,7 @@ SGL_PY_EXPORT(device_shader)
 
     nb::class_<TypeConformance>(m, "TypeConformance", D(TypeConformance))
         .def(nb::init<>())
-        .def(nb::init<std::string, std::string, int32_t>(), "type_name"_a, "interface_name"_a, "id"_a = -1)
+        .def(nb::init<std::string, std::string, int32_t>(), "interface_name"_a, "type_name"_a, "id"_a = -1)
         .def(
             "__init__",
             [](TypeConformance* self, nb::tuple tuple)
