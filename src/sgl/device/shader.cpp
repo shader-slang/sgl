@@ -730,7 +730,9 @@ void SlangModule::load(SlangSessionBuild& build_data) const
     // Load module either from resolved name or source depending on whether source specified
     if (!desc.source.has_value()) {
         std::string resolved_name = session_data->resolve_module_name(desc.module_name);
-        slang_module = session_data->slang_session->loadModule(resolved_name.c_str(), diagnostics.writeRef());
+        SGL_CATCH_INTERNAL_SLANG_ERROR(
+            slang_module = session_data->slang_session->loadModule(resolved_name.c_str(), diagnostics.writeRef());
+        );
         if (!slang_module) {
             std::string msg
                 = append_diagnostics(fmt::format("Failed to load slang module \"{}\"", desc.module_name), diagnostics);
@@ -741,11 +743,13 @@ void SlangModule::load(SlangSessionBuild& build_data) const
         static uint32_t id = 0;
         std::string source_str = fmt::format("// {}\n{}", id++, desc.source);
 
-        slang_module = session_data->slang_session->loadModuleFromSourceString(
-            std::string{desc.module_name}.c_str(),
-            desc.path ? desc.path->string().c_str() : nullptr,
-            source_str.c_str(),
-            diagnostics.writeRef()
+        SGL_CATCH_INTERNAL_SLANG_ERROR(
+            slang_module = session_data->slang_session->loadModuleFromSourceString(
+                std::string{desc.module_name}.c_str(),
+                desc.path ? desc.path->string().c_str() : nullptr,
+                source_str.c_str(),
+                diagnostics.writeRef()
+            )
         );
         if (!slang_module) {
             std::string msg = append_diagnostics(
@@ -938,13 +942,13 @@ void SlangEntryPoint::init(SlangSessionBuild& build_data) const
             slang::TypeReflection* type = layout->findTypeByName(c.type_name.c_str());
             SGL_CHECK(type, "Type \"{}\" not found", c.type_name);
             Slang::ComPtr<ISlangBlob> diagnostics;
-            build_data.session->slang_session->createTypeConformanceComponentType(
+            SGL_CATCH_INTERNAL_SLANG_ERROR(build_data.session->slang_session->createTypeConformanceComponentType(
                 type,
                 interface_type,
                 slang_type_conformances[i].writeRef(),
                 c.id,
                 diagnostics.writeRef()
-            );
+            ));
             report_diagnostics(diagnostics);
             SGL_CHECK(
                 slang_type_conformances[i],
@@ -959,12 +963,12 @@ void SlangEntryPoint::init(SlangSessionBuild& build_data) const
         slang_component_types[desc.type_conformances.size()] = slang_entry_point.get();
         Slang::ComPtr<slang::IComponentType> new_entry_point;
         Slang::ComPtr<ISlangBlob> diagnostics;
-        build_data.session->slang_session->createCompositeComponentType(
+        SGL_CATCH_INTERNAL_SLANG_ERROR(build_data.session->slang_session->createCompositeComponentType(
             slang_component_types.data(),
             narrow_cast<SlangInt>(slang_component_types.size()),
             new_entry_point.writeRef(),
             diagnostics.writeRef()
-        );
+        ));
         report_diagnostics(diagnostics);
         SGL_CHECK(new_entry_point, "Failed to create composite component type for new entry point");
 
@@ -1074,12 +1078,12 @@ void ShaderProgram::link(SlangSessionBuild& build_data) const
         }
 
         Slang::ComPtr<ISlangBlob> diagnostics;
-        session->createCompositeComponentType(
+        SGL_CATCH_INTERNAL_SLANG_ERROR(session->createCompositeComponentType(
             component_types.data(),
             component_types.size(),
             composed_program.writeRef(),
             diagnostics.writeRef()
-        );
+        ));
         if (!composed_program) {
             std::string msg = append_diagnostics("Failed to compose program", diagnostics);
             throw SlangCompileError(msg);
@@ -1122,12 +1126,12 @@ void ShaderProgram::link(SlangSessionBuild& build_data) const
     {
         Slang::ComPtr<ISlangBlob> diagnostics;
         auto slang_link_option_entries = link_option_entries.slang_entries();
-        composed_program->linkWithOptions(
+        SGL_CATCH_INTERNAL_SLANG_ERROR(composed_program->linkWithOptions(
             linked_program.writeRef(),
             narrow_cast<uint32_t>(slang_link_option_entries.size()),
             slang_link_option_entries.data(),
             diagnostics.writeRef()
-        );
+        ));
         if (!composed_program) {
             std::string msg = append_diagnostics("Failed to link program", diagnostics);
             throw SlangCompileError(msg);

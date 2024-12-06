@@ -469,7 +469,7 @@ def test_full_type_name(test_id: str, device_type: sgl.DeviceType):
         sgl.DeclReflection.Kind.struct, "B"
     ).as_type()
     assert struct_b.name == "B"
-    assert struct_b.full_name == "B"
+    assert struct_b.full_name == "A.B"
 
     scalar_types_decl = module.module_decl.find_first_child_of_kind(
         sgl.DeclReflection.Kind.struct, "ScalarTypes"

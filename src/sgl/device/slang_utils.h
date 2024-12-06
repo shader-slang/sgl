@@ -3,6 +3,14 @@
 #include <slang.h>
 #include <slang-com-ptr.h>
 
+#define SGL_CATCH_INTERNAL_SLANG_ERROR(expr)                                                                           \
+    try {                                                                                                              \
+        expr;                                                                                                          \
+    } catch (...) {                                                                                                    \
+        const char* slang_error = slang::getLastInternalErrorMessage();                                                \
+        throw sgl::SlangCompileError(fmt::format("Internal slang error: {}", slang_error));                            \
+    }
+
 namespace sgl {
 
 /// Implementation of slang's ISlangBlob interface to access an unowned blob of data.
