@@ -7,9 +7,7 @@
     try {                                                                                                              \
         expr;                                                                                                          \
     } catch (...) {                                                                                                    \
-        /* TODO future slang versions should have API to query the error message */                                    \
-        /* const char* slang_error = slang::getLastInternalErrorMessage(); */                                          \
-        const char* slang_error = "unknown";                                                                           \
+        const char* slang_error = slang::getLastInternalErrorMessage();                                                \
         throw sgl::SlangCompileError(fmt::format("Internal slang error: {}", slang_error));                            \
     }
 
