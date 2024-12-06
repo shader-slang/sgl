@@ -383,6 +383,14 @@ private:
             if (kind != TypeReflection::Kind::struct_)
                 type_layout = type_layout->element_type_layout();
 
+            // Handle shader object if possible.
+            if constexpr (requires { self.set_object(nullptr); }) {
+                if (nb::isinstance<MutableShaderObject>(nbval)) {
+                    self.set_object(nb::cast<ref<MutableShaderObject>>(nbval));
+                    return;
+                }
+            }
+
             // Expect a dict for a slang struct.
             if (nb::isinstance<nb::dict>(nbval)) {
                 auto dict = nb::cast<nb::dict>(nbval);
