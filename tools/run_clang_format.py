@@ -57,7 +57,7 @@ from functools import partial
 try:
     from subprocess import DEVNULL  # py3k
 except ImportError:
-    DEVNULL = open(os.devnull, "wb")
+    DEVNULL = open(os.devnull, "wb")  # type: ignore (declared final)
 
 
 DEFAULT_EXTENSIONS = "h,cpp,slang,slangh"
