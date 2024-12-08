@@ -92,6 +92,10 @@ public:
     /// Get the clipboard content.
     std::optional<std::string> get_clipboard() const;
 
+    /// The mouse cursor mode.
+    CursorMode cursor_mode() const { return m_cursor_mode; }
+    void set_cursor_mode(CursorMode mode);
+
     // events
 
     using ResizeCallback = std::function<void(uint32_t /* width */, uint32_t /* height */)>;
@@ -152,6 +156,7 @@ private:
 
     bool m_should_close{false};
 
+    CursorMode m_cursor_mode{CursorMode::normal};
     float2 m_mouse_pos{0.f, 0.f};
     KeyModifierFlags m_mods{KeyModifierFlags::none};
 

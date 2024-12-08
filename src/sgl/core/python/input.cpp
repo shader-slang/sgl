@@ -8,6 +8,7 @@ SGL_PY_EXPORT(core_input)
 {
     using namespace sgl;
 
+    nb::sgl_enum<CursorMode>(m, "CursorMode", D_NA(CursorMode));
     nb::sgl_enum<MouseButton>(m, "MouseButton", D(MouseButton));
     nb::sgl_enum<KeyModifierFlags>(m, "KeyModifierFlags", D(KeyModifierFlags));
     nb::sgl_enum<KeyModifier>(m, "KeyModifier", D(KeyModifier));

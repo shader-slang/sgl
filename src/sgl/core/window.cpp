@@ -453,6 +453,26 @@ std::optional<std::string> Window::get_clipboard() const
     return text ? std::optional<std::string>(text) : std::nullopt;
 }
 
+void Window::set_cursor_mode(CursorMode mode)
+{
+    if (mode != m_cursor_mode) {
+        m_cursor_mode = mode;
+        switch (mode) {
+        case CursorMode::normal:
+            glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            break;
+        case CursorMode::hidden:
+            glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+            break;
+        case CursorMode::disabled:
+            glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            break;
+        default:
+            SGL_UNREACHABLE();
+        }
+    }
+}
+
 std::string Window::to_string() const
 {
     return fmt::format(
