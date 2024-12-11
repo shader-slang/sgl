@@ -175,8 +175,7 @@ struct ShaderCacheStats {
 };
 
 /// Event data for hot reload hook.
-struct HotReloadHookEvent {
-};
+struct HotReloadHookEvent { };
 
 class SGL_API Device : public Object {
     SGL_OBJECT(Device)
