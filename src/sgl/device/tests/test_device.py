@@ -63,5 +63,32 @@ def test_global_buffer_alignment(device_type: sgl.DeviceType):
     assert np.allclose(val, texture_data, atol=1e-6)
 
 
+# Tests the hot reload event callback.
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_hot_reload_event(device_type: sgl.DeviceType):
+    device = helpers.get_device(type=device_type, use_cache=False)
+
+    # Load a shader
+    program = device.load_program(
+        module_name="test_shader_foo.slang",
+        entry_point_names=["main_a", "main_b", "main_vs", "main_fs"],
+    )
+
+    # Setup a hook that increments a counter on hot reload.
+    count = 0
+
+    def inc_count(x: sgl.ShaderHotReloadEvent):
+        nonlocal count
+        count += 1
+
+    device.register_shader_hot_reload_callback(inc_count)
+
+    # Force hot reload.
+    device.reload_all_programs()
+
+    # Check count.
+    assert count == 1
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
