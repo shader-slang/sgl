@@ -174,6 +174,10 @@ struct ShaderCacheStats {
     size_t miss_count;
 };
 
+/// Event data for hot reload hook.
+struct ShaderHotReloadEvent { };
+using ShaderHotReloadCallback = std::function<void(const ShaderHotReloadEvent&)>;
+
 class SGL_API Device : public Object {
     SGL_OBJECT(Device)
 public:
@@ -541,6 +545,7 @@ public:
     /// - Vulkan: VkQueue (Vulkan)
     NativeHandle get_native_command_queue_handle(CommandQueueType queue = CommandQueueType::graphics) const;
 
+
     /// Enumerates all available adapters of a given device type.
     static std::vector<AdapterInfo> enumerate_adapters(DeviceType type = DeviceType::automatic);
 
@@ -565,6 +570,12 @@ public:
      */
     static bool enable_agility_sdk();
 
+    /// Register a hot reload hook, called immediately after any module is reloaded.
+    void register_shader_hot_reload_callback(ShaderHotReloadCallback call_back)
+    {
+        m_shader_hot_reload_callbacks.push_back(call_back);
+    }
+
     cuda::Device* cuda_device() const { return m_cuda_device.get(); }
 
     std::string to_string() const override;
@@ -572,6 +583,12 @@ public:
     Blitter* _blitter();
     HotReload* _hot_reload() { return m_hot_reload; }
 
+    /// Called by hot reload system after reload occurs, to trigger the hooks.
+    void _on_hot_reload()
+    {
+        for (auto& hook : m_shader_hot_reload_callbacks)
+            hook({});
+    }
 
 private:
     DeviceDesc m_desc;
@@ -612,6 +629,9 @@ private:
 
     /// Transient resource heaps that are currently in flight.
     std::queue<std::pair<Slang::ComPtr<gfx::ITransientResourceHeap>, uint64_t>> m_in_flight_transient_resource_heaps;
+
+    /// List of callbacks for hot reload event
+    std::vector<ShaderHotReloadCallback> m_shader_hot_reload_callbacks;
 
     struct DeferredRelease {
         uint64_t fence_value;

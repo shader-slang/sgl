@@ -3,6 +3,7 @@
 #include "hot_reload.h"
 
 #include "sgl/core/file_system_watcher.h"
+#include "sgl/device/device.h"
 #include "sgl/device/shader.h"
 
 namespace sgl {
@@ -86,6 +87,9 @@ void HotReload::recreate_all_sessions()
 
     // Set has reloaded flag so testing system can detect changes
     m_has_reloaded = true;
+
+    // Notify device so it can notify hooks.
+    m_device->_on_hot_reload();
 }
 
 void HotReload::update_watched_paths_for_session(SlangSession* session)
