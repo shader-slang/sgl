@@ -145,7 +145,7 @@ SGL_PY_EXPORT(device_device)
         .def_ro("hit_count", &ShaderCacheStats::hit_count, D(ShaderCacheStats, hit_count))
         .def_ro("miss_count", &ShaderCacheStats::miss_count, D(ShaderCacheStats, miss_count));
 
-    nb::class_<HotReloadHookEvent>(m, "HotReloadHookEvent", D_NA(HotReloadHookEvent));
+    nb::class_<ShaderHotReloadEvent>(m, "ShaderHotReloadEvent", D_NA(ShaderHotReloadEvent));
 
     nb::class_<Device, Object> device(m, "Device", D(Device));
     device.def(
@@ -754,10 +754,10 @@ SGL_PY_EXPORT(device_device)
     device.def("run_garbage_collection", &Device::run_garbage_collection, D(Device, run_garbage_collection));
     device.def("wait", &Device::wait, D(Device, wait));
     device.def(
-        "register_hot_reload_hook",
-        &Device::register_hot_reload_hook,
-        "hook"_a,
-        D_NA(Device, register_hot_reload_hook)
+        "register_shader_hot_reload_callback",
+        &Device::register_shader_hot_reload_callback,
+        "callback"_a,
+        D_NA(Device, register_shader_hot_reload_callback)
     );
 
     device.def_static(

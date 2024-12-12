@@ -175,7 +175,8 @@ struct ShaderCacheStats {
 };
 
 /// Event data for hot reload hook.
-struct HotReloadHookEvent { };
+struct ShaderHotReloadEvent { };
+using ShaderHotReloadCallback = std::function<void(const ShaderHotReloadEvent&)>;
 
 class SGL_API Device : public Object {
     SGL_OBJECT(Device)
@@ -570,7 +571,10 @@ public:
     static bool enable_agility_sdk();
 
     /// Register a hot reload hook, called immediately after any module is reloaded.
-    void register_hot_reload_hook(std::function<void(HotReloadHookEvent)> hook) { m_hot_reload_hooks.push_back(hook); }
+    void register_shader_hot_reload_callback(ShaderHotReloadCallback call_back)
+    {
+        m_shader_hot_reload_callbacks.push_back(call_back);
+    }
 
     cuda::Device* cuda_device() const { return m_cuda_device.get(); }
 
@@ -582,7 +586,7 @@ public:
     /// Called by hot reload system after reload occurs, to trigger the hooks.
     void _on_hot_reload()
     {
-        for (auto& hook : m_hot_reload_hooks)
+        for (auto& hook : m_shader_hot_reload_callbacks)
             hook({});
     }
 
@@ -626,8 +630,8 @@ private:
     /// Transient resource heaps that are currently in flight.
     std::queue<std::pair<Slang::ComPtr<gfx::ITransientResourceHeap>, uint64_t>> m_in_flight_transient_resource_heaps;
 
-    /// List of hooks for hot reload event
-    std::vector<std::function<void(HotReloadHookEvent)>> m_hot_reload_hooks;
+    /// List of callbacks for hot reload event
+    std::vector<ShaderHotReloadCallback> m_shader_hot_reload_callbacks;
 
     struct DeferredRelease {
         uint64_t fence_value;
