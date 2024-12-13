@@ -224,7 +224,7 @@ std::string TypeLayoutReflection::to_string() const
             kind(),
             type()->resource_shape(),
             type()->resource_access(),
-            string::indent(element_type_layout()->to_string())
+            element_type_layout() ? string::indent(element_type_layout()->to_string()) : "null"
         );
         break;
     case TypeReflection::Kind::scalar:
