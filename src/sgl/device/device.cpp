@@ -550,10 +550,17 @@ void Device::close()
 
     wait();
 
+    // Handle device close callbacks
+    for (const DeviceCloseCallback& callback : m_device_close_callbacks)
+        callback(this);
+
     // Make sure Device's ref count is not going to zero when releasing resources.
     inc_ref();
 
     m_closed = true;
+
+    m_shader_hot_reload_callbacks.clear();
+    m_device_close_callbacks.clear();
 
     m_blitter.reset();
     m_debug_printer.reset();

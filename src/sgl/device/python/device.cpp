@@ -147,7 +147,7 @@ SGL_PY_EXPORT(device_device)
 
     nb::class_<ShaderHotReloadEvent>(m, "ShaderHotReloadEvent", D_NA(ShaderHotReloadEvent));
 
-    nb::class_<Device, Object> device(m, "Device", D(Device));
+    nb::class_<Device, Object> device(m, "Device", nb::is_weak_referenceable(), D(Device));
     device.def(
         "__init__",
         [](Device* self,
@@ -758,6 +758,12 @@ SGL_PY_EXPORT(device_device)
         &Device::register_shader_hot_reload_callback,
         "callback"_a,
         D_NA(Device, register_shader_hot_reload_callback)
+    );
+    device.def(
+        "register_device_close_callback",
+        &Device::register_device_close_callback,
+        "callback"_a,
+        D_NA(Device, register_device_close_callback)
     );
 
     device.def_static(

@@ -178,6 +178,9 @@ struct ShaderCacheStats {
 struct ShaderHotReloadEvent { };
 using ShaderHotReloadCallback = std::function<void(const ShaderHotReloadEvent&)>;
 
+
+using DeviceCloseCallback = std::function<void(Device*)>;
+
 class SGL_API Device : public Object {
     SGL_OBJECT(Device)
 public:
@@ -576,6 +579,12 @@ public:
         m_shader_hot_reload_callbacks.push_back(call_back);
     }
 
+    /// Register a device close callback, called at start of device close.
+    void register_device_close_callback(DeviceCloseCallback call_back)
+    {
+        m_device_close_callbacks.push_back(call_back);
+    }
+
     cuda::Device* cuda_device() const { return m_cuda_device.get(); }
 
     std::string to_string() const override;
@@ -632,6 +641,9 @@ private:
 
     /// List of callbacks for hot reload event
     std::vector<ShaderHotReloadCallback> m_shader_hot_reload_callbacks;
+
+    /// List of callbacks for shutdown event
+    std::vector<DeviceCloseCallback> m_device_close_callbacks;
 
     struct DeferredRelease {
         uint64_t fence_value;

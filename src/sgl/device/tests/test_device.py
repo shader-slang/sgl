@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
+from typing import Optional
 import pytest
 import sgl
 import sys
@@ -26,6 +27,43 @@ def test_create_device(device_type: sgl.DeviceType):
     assert device.info.adapter_name != ""
     API_NAMES = {sgl.DeviceType.d3d12: "Direct3D 12", sgl.DeviceType.vulkan: "Vulkan"}
     assert device.info.api_name == API_NAMES[device_type]
+
+
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_device_close_handler(device_type: sgl.DeviceType):
+
+    # Create none-cached device.
+    device = helpers.get_device(device_type, use_cache=False)
+
+    # Define a callback that increments a counter and captures the closed device.
+    count = 0
+    closed_device: Optional[sgl.Device] = None
+
+    def on_close(cd: sgl.Device):
+        nonlocal count
+        nonlocal device
+        nonlocal closed_device
+        assert cd == device
+        count += 1
+        closed_device = cd
+
+    # Register device, then close it.
+    device.register_device_close_callback(on_close)
+    device.close()
+
+    # Check that the callback was called.
+    assert count == 1
+    assert closed_device is not None
+
+    # Null the device, but the captured reference should still be
+    # valid, so it won't be GC yet.
+    device = None
+
+    # Call close on the already closed device. Should be safe as it
+    # hasn't been garbage collected, but should have no effect as
+    # device is already closed.
+    closed_device.close()
+    assert count == 1
 
 
 # Checks fix for alignment issues when creating/accessing a small buffer,
