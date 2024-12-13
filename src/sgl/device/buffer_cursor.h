@@ -125,10 +125,13 @@ public:
     BufferElementCursor operator[](uint32_t index) { return find_element(index); }
 
     /// Number of elements in the buffer.
-    size_t element_count() const { return size() / element_size(); }
+    size_t element_count() const { return size() / element_stride(); }
 
     /// Size of element.
     size_t element_size() const { return m_element_type_layout->size(); }
+
+    /// Stride of elements.
+    size_t element_stride() const { return m_element_type_layout->stride(); }
 
     /// Size of whole buffer.
     size_t size() const { return m_size; }
