@@ -6,6 +6,7 @@
 
 #include <GLFW/glfw3.h>
 
+#include <algorithm>
 #include <cstdio>
 
 namespace sgl::platform {
