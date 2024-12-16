@@ -7,6 +7,7 @@
 
 #include <imgui.h>
 
+#include <algorithm>
 #include <string_view>
 #include <string>
 #include <functional>
