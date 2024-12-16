@@ -219,6 +219,7 @@ target_compile_options(sgl
             -Wno-unused-variable
             -Wno-unused-but-set-variable
             -Wno-sign-compare
+            -Wno-missing-field-initializers
 
             # this is a workaround for warnings in the nanobind binding code
             -Wno-odr
@@ -232,7 +233,6 @@ target_compile_options(sgl
         >
         # GCC flags.
         $<$<CXX_COMPILER_ID:GNU>:
-            -Wno-missing-field-initializers
             -Wno-literal-suffix
             -Wno-class-memaccess
             -Wno-strict-aliasing
