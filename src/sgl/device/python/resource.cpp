@@ -114,10 +114,11 @@ inline void buffer_from_numpy(Buffer* self, nb::ndarray<nb::numpy> data)
 static const char* __doc_sgl_buffer_to_torch = R"doc()doc";
 
 inline nb::ndarray<nb::pytorch, nb::device::cuda>
-buffer_to_torch(Buffer* self, DataType type, std::vector<size_t> shape, std::vector<int64_t> strides)
+buffer_to_torch(Buffer* self, DataType type, std::vector<size_t> shape, std::vector<int64_t> strides, size_t offset)
 {
-    void* data = self->cuda_memory();
-    size_t data_size = self->size();
+    SGL_CHECK(offset < self->size(), "offset is out of bounds");
+    void* data = reinterpret_cast<uint8_t*>(self->cuda_memory()) + offset;
+    size_t data_size = self->size() - offset;
 
     nb::dlpack::dtype dtype = data_type_to_dtype(type);
     size_t element_size = dtype.bits / 8;
@@ -325,6 +326,7 @@ SGL_PY_EXPORT(device_resource)
             "type"_a = DataType::void_,
             "shape"_a = std::vector<size_t>{},
             "strides"_a = std::vector<int64_t>{},
+            "offset"_a = 0,
             D(buffer_to_torch)
         );
 
