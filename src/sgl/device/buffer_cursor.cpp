@@ -411,17 +411,12 @@ BufferCursor::BufferCursor(ref<TypeLayoutReflection> element_layout, ref<Buffer>
     m_owner = true;
 }
 
-BufferCursor::BufferCursor(
-    ref<TypeLayoutReflection> element_layout,
-    ref<Buffer> resource,
-    size_t element_count,
-    size_t first_element
-)
+BufferCursor::BufferCursor(ref<TypeLayoutReflection> element_layout, ref<Buffer> resource, size_t size, size_t offset)
     : m_element_type_layout(std::move(element_layout))
 {
     m_resource = std::move(resource);
-    m_size = m_element_type_layout->stride() * element_count;
-    m_offset = m_element_type_layout->stride() * first_element;
+    m_size = size;
+    m_offset = offset;
     m_buffer = nullptr;
     m_owner = true;
 }
