@@ -140,7 +140,9 @@ class Material:
 
 class Mesh:
     def __init__(
-        self, vertices: npt.NDArray[np.float32], indices: npt.NDArray[np.uint32]
+        self,
+        vertices: npt.NDArray[np.float32],  # type: ignore
+        indices: npt.NDArray[np.uint32],  # type: ignore
     ):
         super().__init__()
         assert vertices.ndim == 2 and vertices.dtype == np.float32

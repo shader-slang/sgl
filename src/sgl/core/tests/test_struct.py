@@ -44,8 +44,8 @@ def check_conversion(
     converter: StructConverter,
     src_fmt: str | bytes,
     dst_fmt: str | bytes,
-    src_values: npt.ArrayLike,
-    ref_values: Optional[npt.ArrayLike] = None,
+    src_values: npt.ArrayLike,  # type: ignore
+    ref_values: Optional[npt.ArrayLike] = None,  # type: ignore
     err_thresh: float = 1e-6,
 ):
     # print("\nsrc_values: " + str(src_values))

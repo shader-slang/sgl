@@ -93,8 +93,8 @@ SGL_PY_EXPORT(device_buffer_cursor)
             nb::init<ref<TypeLayoutReflection>, ref<Buffer>, size_t, size_t>(),
             "element_layout"_a,
             "buffer_resource"_a,
-            "element_count"_a,
-            "first_element"_a,
+            "size"_a,
+            "offset"_a,
             D_NA(BufferCursor, BufferCursor)
         )
         .def_prop_ro("element_type_layout", &BufferCursor::element_type_layout, D_NA(BufferCursor, type_layout))

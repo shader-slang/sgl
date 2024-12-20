@@ -4,7 +4,7 @@ import pytest
 import sys
 import sgl
 from pathlib import Path
-from deepdiff import DeepDiff
+from deepdiff.diff import DeepDiff
 
 sys.path.append(str(Path(__file__).parent))
 import sglhelpers as helpers
