@@ -31,7 +31,7 @@ class TypeInfo:
     # encoding of read back data
     struct: str
     # numpy dtype
-    dtype: DTypeLike
+    dtype: DTypeLike  # type: ignore
 
 
 TYPE_INFOS = {

@@ -144,7 +144,7 @@ def create_test_array(
     width: int,
     height: int,
     channels: int,
-    dtype: npt.DTypeLike,
+    dtype: npt.DTypeLike,  # type: ignore
     type_range: tuple[float, float],
 ):
     img = np.zeros((height, width, channels), dtype)
