@@ -10,6 +10,17 @@ sgl uses a `semantic versioning <http://semver.org>`__ policy for its API.
 Changelog
 =========
 
+v0.4.0
+--------------------
+* Fixes for specification of size/offset when creating buffer cursors.
+* Weak reference support.
+* Events for hot reload.
+* Slang update to 2024.17.
+* Allow set of shader object via python dictionary.
+* Better handling of slang internal errors.
+* Fixed incorrect name ordering for type conformances.
+* Fix incorrect name ordering for type conformances.
+
 v0.3.0
 --------------------
 
