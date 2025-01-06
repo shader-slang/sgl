@@ -576,7 +576,7 @@ Constants
 
 .. py:data:: sgl.SGL_VERSION
     :type: str
-    :value: "0.3.0"
+    :value: "0.4.0"
 
 
 
@@ -592,7 +592,7 @@ Constants
 
 .. py:data:: sgl.SGL_VERSION_MINOR
     :type: int
-    :value: 3
+    :value: 4
 
 
 
