@@ -10,6 +10,10 @@ sgl uses a `semantic versioning <http://semver.org>`__ policy for its API.
 Changelog
 =========
 
+v0.5.0
+--------------------
+* Slang update to 2025.1 (Happy new year!).
+
 v0.4.0
 --------------------
 * Fixes for specification of size/offset when creating buffer cursors.
