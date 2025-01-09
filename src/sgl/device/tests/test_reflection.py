@@ -1186,6 +1186,9 @@ def test_hot_reload_invalid(test_id: str, device_type: sgl.DeviceType):
         x = func.name
 
 
+# This test reproduces issues with reflection where 2 independently loaded
+# modules can not resolve specialized versions of a generic function that
+# is defined in one but not the other.
 @pytest.mark.skip("Pending slang fix")
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_independent_module_generic_resolution(
