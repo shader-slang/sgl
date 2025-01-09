@@ -920,7 +920,6 @@ def test_fail_specialize_concrete_function(test_id: str, device_type: sgl.Device
     assert f2 is None
 
 
-@pytest.mark.skip("Slang still not returning correct type for interface")
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_specialize_interface_function(test_id: str, device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
@@ -1165,7 +1164,6 @@ def test_is_sub_type(test_id: str, device_type: sgl.DeviceType):
     assert module.layout.is_sub_type(t, i)
 
 
-@pytest.mark.skip("Added early")
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_hot_reload_invalid(test_id: str, device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
@@ -1186,6 +1184,71 @@ def test_hot_reload_invalid(test_id: str, device_type: sgl.DeviceType):
 
     with pytest.raises(RuntimeError, match="Reflection object has been invalidated"):
         x = func.name
+
+
+@pytest.mark.skip("Pending slang fix")
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_independent_module_generic_resolution(
+    test_id: str, device_type: sgl.DeviceType
+):
+    device = helpers.get_device(type=device_type)
+
+    # Create a session, and within it a module.
+    session = helpers.create_session(device, {})
+
+    generic_module = session.load_module_from_source(
+        module_name=f"module_with_generic_{test_id}",
+        source="""
+T copy<T>(T val)
+{
+    return val;
+}
+
+struct GenericStruct<T>
+{
+    T val;
+}
+
+    """,
+    )
+
+    type_module = session.load_module_from_source(
+        module_name=f"module_with_type_{test_id}",
+        source="""
+struct MyStruct
+{
+    int a;
+}
+    """,
+    )
+
+    # These first 4 versions don't currently work with slang
+
+    find_func_via_generic_module = generic_module.layout.find_function_by_name(
+        "copy<MyStruct>"
+    )
+    assert find_func_via_generic_module is not None
+
+    find_func_via_type_module = type_module.layout.find_function_by_name(
+        "copy<MyStruct>"
+    )
+    assert find_func_via_type_module is not None
+
+    find_struct_via_generic_module = generic_module.layout.find_type_by_name(
+        "GenericStruct<MyStruct>"
+    )
+    assert find_struct_via_generic_module is not None
+
+    find_struct_via_type_module = type_module.layout.find_type_by_name(
+        "GenericStruct<MyStruct>"
+    )
+    assert find_struct_via_type_module is not None
+
+    # This does currently work
+    mystruct = type_module.layout.find_type_by_name("MyStruct")
+    gen_func = generic_module.layout.find_function_by_name("copy")
+    spec_func_via_generic_module = gen_func.specialize_with_arg_types([mystruct])
+    assert spec_func_via_generic_module is not None
 
 
 if __name__ == "__main__":
