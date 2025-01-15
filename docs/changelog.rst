@@ -10,9 +10,13 @@ sgl uses a `semantic versioning <http://semver.org>`__ policy for its API.
 Changelog
 =========
 
+v0.6.1
+--------------------
+* Slang update to 2025.2.1
+
 v0.6.0
 --------------------
-* Slang update to 2025.2/
+* Slang update to 2025.2
 * Added support for Python 3.13.
 
 v0.5.0
