@@ -115,7 +115,7 @@ public:
             SGL_THROW("Failed to unload NVAPI.");
     }
 
-    virtual SLANG_NO_THROW SlangResult SLANG_MCALL queryInterface(SlangUUID const& uuid, void** outObject) override
+    virtual SLANG_NO_THROW SlangResult SLANG_MCALL queryInterface(const SlangUUID& uuid, void** outObject) override
     {
         if (uuid == SlangUUID SLANG_UUID_IPipelineCreationAPIDispatcher) {
             *outObject = static_cast<gfx::IPipelineCreationAPIDispatcher*>(this);

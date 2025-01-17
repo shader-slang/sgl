@@ -72,7 +72,7 @@ void ShaderObject::set_acceleration_structure(
     ));
 }
 
-void ShaderObject::set_data(const ShaderOffset& offset, void const* data, size_t size)
+void ShaderObject::set_data(const ShaderOffset& offset, const void* data, size_t size)
 {
     SLANG_CALL(m_shader_object->setData(gfx_shader_offset(offset), data, size));
 }

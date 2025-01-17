@@ -35,7 +35,7 @@ public:
     virtual void set_sampler(const ShaderOffset& offset, const ref<Sampler>& sampler);
     virtual void
     set_acceleration_structure(const ShaderOffset& offset, const ref<AccelerationStructure>& acceleration_structure);
-    virtual void set_data(const ShaderOffset& offset, void const* data, size_t size);
+    virtual void set_data(const ShaderOffset& offset, const void* data, size_t size);
 
     virtual void set_cuda_tensor_view(const ShaderOffset& offset, const cuda::TensorView& tensor_view, bool is_uav);
     virtual void get_cuda_interop_buffers(std::vector<ref<cuda::InteropBuffer>>& cuda_interop_buffers) const;

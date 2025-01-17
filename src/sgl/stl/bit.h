@@ -76,7 +76,7 @@ namespace bit {
         ((sizeof(To) == sizeof(From)) && std::is_trivially_copyable<From>::value && std::is_trivial<To>::value
          && (std::is_copy_constructible<To>::value || std::is_move_constructible<To>::value)),
         To>::type
-    bit_cast(From const& src) noexcept
+    bit_cast(const From& src) noexcept
     {
         To dst;
         std::memcpy(&dst, &src, sizeof(To));

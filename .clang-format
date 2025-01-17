@@ -42,3 +42,4 @@ AlignTrailingComments: true
 ReflowComments: true
 CommentPragmas: '^\\.+'
 PenaltyBreakComment: 0
+QualifierAlignment: Left

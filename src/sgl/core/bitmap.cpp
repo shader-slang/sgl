@@ -1617,7 +1617,7 @@ void Bitmap::read_exr(Stream* stream)
     std::sort(
         channels_sorted.begin(),
         channels_sorted.end(),
-        [&](auto const& v0, auto const& v1) { return channel_key(v0) < channel_key(v1); }
+        [&](const auto& v0, const auto& v1) { return channel_key(v0) < channel_key(v1); }
     );
 
     // Create pixel struct.
@@ -2142,7 +2142,7 @@ void Bitmap::read_exr(Stream* stream)
     std::sort(
         channels_sorted.begin(),
         channels_sorted.end(),
-        [&](auto const& v0, auto const& v1) { return channel_key(v0) < channel_key(v1); }
+        [&](const auto& v0, const auto& v1) { return channel_key(v0) < channel_key(v1); }
     );
 
     // Create pixel struct.

@@ -22,10 +22,10 @@ public:
     {
     }
 
-    virtual SLANG_NO_THROW void const* SLANG_MCALL getBufferPointer() override { return m_data; }
+    virtual SLANG_NO_THROW const void* SLANG_MCALL getBufferPointer() override { return m_data; }
     virtual SLANG_NO_THROW size_t SLANG_MCALL getBufferSize() override { return m_size; }
 
-    virtual SLANG_NO_THROW SlangResult SLANG_MCALL queryInterface(SlangUUID const& uuid, void** outObject) override
+    virtual SLANG_NO_THROW SlangResult SLANG_MCALL queryInterface(const SlangUUID& uuid, void** outObject) override
     {
         if (uuid == SLANG_UUID_ISlangBlob) {
             *outObject = static_cast<ISlangBlob*>(this);
