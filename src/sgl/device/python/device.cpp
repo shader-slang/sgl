@@ -541,6 +541,14 @@ SGL_PY_EXPORT(device_device)
         D(Device, create_acceleration_structure)
     );
     device.def(
+        "query_coopvec_matrix_size",
+        &Device::query_coopvec_matrix_size,
+        "rows"_a,
+        "cols"_a,
+        "layout"_a,
+        D_NA(Device, query_coopvec_matrix_size)
+    );
+    device.def(
         "create_shader_table",
         [](Device* self,
            ref<ShaderProgram> program,

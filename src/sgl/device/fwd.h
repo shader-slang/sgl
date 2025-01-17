@@ -146,6 +146,9 @@ class TextureLoader;
 // hot_reload.h
 class HotReload;
 
+// coopvec.h
+class CoopVec;
+
 // cuda_interop.h
 
 namespace cuda {
