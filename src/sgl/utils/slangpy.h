@@ -136,18 +136,21 @@ private:
 
 class SGL_API CallContext : Object {
 public:
-    CallContext(ref<Device> device, const Shape& call_shape)
+    CallContext(ref<Device> device, const Shape& call_shape, CallMode call_mode)
         : m_device(std::move(device))
         , m_call_shape(call_shape)
+        , m_call_mode(call_mode)
     {
     }
 
     Device* device() const { return m_device.get(); }
     const Shape& call_shape() const { return m_call_shape; }
+    CallMode call_mode() const { return m_call_mode; }
 
 private:
     ref<Device> m_device;
     Shape m_call_shape;
+    CallMode m_call_mode;
 };
 
 } // namespace sgl::slangpy

@@ -37,22 +37,29 @@ private:
     ref<NativeBoundVariableRuntime> m_source;
 };
 
+/// Base class for a slang reflection type
+class NativeSlangType : public Object {
+public:
+    NativeSlangType() = default;
+
+    virtual ~NativeSlangType(){
+
+    };
+
+    /// Get the reflection type.
+    ref<TypeReflection> reflection() const { return m_reflection; }
+
+    /// Set the reflection type.
+    void set_reflection(const ref<TypeReflection>& reflection) { m_reflection = reflection; }
+
+private:
+    ref<TypeReflection> m_reflection;
+};
+
 /// Base class for a marshal to a slangpy supported type.
 class NativeType : public Object {
 public:
     virtual ~NativeType() = default;
-
-    /// Get the name of the type (eg 'int', 'vector<float,3>', 'Foo').
-    std::string_view name() const { return m_name; }
-
-    /// Set the name of the type
-    void set_name(std::string_view name) { m_name = name; }
-
-    /// Get the element type (eg vector<float,3> -> float).
-    ref<NativeType> element_type() const { return m_element_type; }
-
-    /// Set the element type.
-    void set_element_type(ref<NativeType> element_type) { m_element_type = std::move(element_type); }
 
     /// Get the concrete shape of the type. For none-concrete types such as buffers,
     /// this will return an invalid shape.
@@ -61,37 +68,11 @@ public:
     /// Set the concrete shape of the type.
     void set_concrete_shape(const Shape& concrete_shape) { m_concrete_shape = concrete_shape; }
 
-    /// Calculate size in bytes of a value of this type.
-    virtual int get_byte_size(nb::object value) const
+    /// Get the shape of the type (only used if not concrete).
+    virtual Shape get_shape(nb::object data) const
     {
-        SGL_UNUSED(value);
-        return 0;
-    }
-
-    /// Get the container shape when it is a container type (eg buffer, array, etc).
-    /// This does not include the shape of the element type, so a float3[10] array
-    /// would return a shape of [10]. This is typically only called from get_shape
-    /// and is only required if a concrete shape has not been set.
-    virtual Shape get_container_shape(nb::object value) const
-    {
-        SGL_UNUSED(value);
-        return Shape(std::vector<int>());
-    }
-
-    /// Get the full shape of the type. This includes the container shape and the
-    /// shape of the element type. Returns the concrete shape if set, or calculates
-    /// the shape from the element type and container shape if not.
-    virtual Shape get_shape(nb::object value) const
-    {
-        if (m_concrete_shape.valid())
-            return m_concrete_shape;
-
-        auto et = element_type();
-        if (!et) {
-            return get_container_shape(value);
-        } else {
-            return get_container_shape(value) + element_type()->get_shape(value);
-        }
+        SGL_UNUSED(data);
+        return Shape();
     }
 
     /// Create call data (uniform values) to be passed to a compute kernel.
@@ -99,6 +80,13 @@ public:
     {
         SGL_UNUSED(context);
         SGL_UNUSED(binding);
+        SGL_UNUSED(data);
+        return nb::none();
+    }
+
+    /// Create dispatch (uniform values) to be passed to a compute kernel in raw dispatch
+    virtual nb::object create_dispatchdata(nb::object data) const
+    {
         SGL_UNUSED(data);
         return nb::none();
     }
@@ -133,8 +121,6 @@ public:
     };
 
 private:
-    std::string m_name;
-    ref<NativeType> m_element_type;
     Shape m_concrete_shape;
 };
 
@@ -142,17 +128,15 @@ private:
 struct PyNativeType : public NativeType {
     NB_TRAMPOLINE(NativeType, 9);
 
-    int get_byte_size(nb::object value) const override { NB_OVERRIDE(get_byte_size, value); }
-
-    Shape get_container_shape(nb::object value) const override { NB_OVERRIDE(get_container_shape, value); }
-
-    Shape get_shape(nb::object value) const override { NB_OVERRIDE(get_shape, value); }
+    Shape get_shape(nb::object data) const override { NB_OVERRIDE(get_shape, data); }
 
     nb::object
     create_calldata(CallContext* context, NativeBoundVariableRuntime* binding, nb::object data) const override
     {
         NB_OVERRIDE(create_calldata, context, binding, data);
     }
+
+    nb::object create_dispatchdata(nb::object data) const override { NB_OVERRIDE(create_dispatchdata, data); }
 
     void read_calldata(CallContext* context, NativeBoundVariableRuntime* binding, nb::object data, nb::object result)
         const override
@@ -195,6 +179,16 @@ public:
     /// Set the python type marshal.
     void set_python_type(const ref<NativeType>& python_type) { m_python_type = python_type; }
 
+    /// Get the vector slang type.
+    ref<NativeSlangType> get_vector_type() const { return m_vector_type; }
+
+    /// Set the vector slang type.
+    void set_vector_type(const ref<NativeSlangType>& vector_type)
+    {
+        SGL_UNUSED(vector_type); /* m_vector_type = vector_type*/
+        ;
+    }
+
     /// Get the shape being used for the current call.
     Shape get_shape() const { return m_shape; }
 
@@ -216,6 +210,12 @@ public:
         m_children = children;
     }
 
+    /// Get the call dimensionality.
+    int get_call_dimensionality() const { return m_call_dimensionality; }
+
+    /// Set the call dimensionality.
+    void set_call_dimensionality(int call_dimensionality) { m_call_dimensionality = call_dimensionality; }
+
     /// Recursively populate the overall kernel call shape.
     void populate_call_shape(std::vector<int>& call_shape, nb::object value);
 
@@ -228,6 +228,9 @@ public:
     /// Read output data from a compute kernel by calling read_output on the marshal.
     nb::object read_output(CallContext* context, nb::object data);
 
+    /// Write uniforms for raw dispatch.
+    void write_raw_dispatch_data(nb::dict call_data, nb::object value);
+
 private:
     std::pair<AccessType, AccessType> m_access{AccessType::none, AccessType::none};
     Shape m_transform;
@@ -235,6 +238,8 @@ private:
     Shape m_shape;
     std::string m_variable_name;
     std::optional<std::map<std::string, ref<NativeBoundVariableRuntime>>> m_children;
+    int m_call_dimensionality{0};
+    ref<NativeSlangType> m_vector_type;
 };
 
 /// Binding information for a call to a compute kernel. Includes a set of positional
@@ -275,9 +280,24 @@ public:
     /// marshals.
     void read_call_data_post_dispatch(CallContext* context, nb::dict call_data, nb::list args, nb::dict kwargs);
 
+    /// Write uniforms for raw dispatch.
+    void write_raw_dispatch_data(nb::dict call_data, nb::dict kwargs);
+
 private:
     std::vector<ref<NativeBoundVariableRuntime>> m_args;
     std::map<std::string, ref<NativeBoundVariableRuntime>> m_kwargs;
+};
+
+class NativeCallRuntimeOptions : Object {
+public:
+    /// Get the uniforms.
+    nb::list get_uniforms() const { return m_uniforms; }
+
+    /// Set the uniforms.
+    void set_uniforms(const nb::list& uniforms) { m_uniforms = uniforms; }
+
+private:
+    nb::list m_uniforms;
 };
 
 /// Contains the compute kernel for a call, the corresponding bindings and any additional
@@ -310,49 +330,32 @@ public:
     /// Set the runtime bindings.
     void set_runtime(const ref<NativeBoundCallRuntime>& runtime) { m_runtime = runtime; }
 
-    /// Get user provided uniforms.
-    const nb::dict& get_vars() const { return m_vars; }
-
-    /// Set user provided uniforms.
-    void set_vars(const nb::dict& vars) { m_vars = vars; }
-
     /// Get the call mode (primitive/forward/backward).
     CallMode get_call_mode() const { return m_call_mode; }
 
     /// Set the call mode (primitive/forward/backward).
     void set_call_mode(CallMode call_mode) { m_call_mode = call_mode; }
 
-    /// Add a hook to be called before dispatching or appending the kernel.
-    void add_before_dispatch_hook(const std::function<void(nb::dict)>& hook)
-    {
-        m_before_dispatch_hooks.push_back(hook);
-    }
-
-    /// Add a hook to be called after dispatching the kernel. Not valid
-    /// for append_to.
-    void add_after_dispatch_hooks(const std::function<void(nb::dict)>& hook) { m_after_dispatch_hooks.push_back(hook); }
-
     /// Get the shape of the last call (useful for debugging).
     const Shape& get_last_call_shape() const { return m_last_call_shape; }
 
     /// Call the compute kernel with the provided arguments and keyword arguments.
-    nb::object call(nb::args args, nb::kwargs kwargs);
+    nb::object call(ref<NativeCallRuntimeOptions> opts, nb::args args, nb::kwargs kwargs);
 
     /// Append the compute kernel to a command buffer with the provided arguments and keyword arguments.
-    nb::object append_to(ref<CommandBuffer> command_buffer, nb::args args, nb::kwargs kwargs);
+    nb::object
+    append_to(ref<NativeCallRuntimeOptions> opts, ref<CommandBuffer> command_buffer, nb::args args, nb::kwargs kwargs);
 
 private:
     ref<Device> m_device;
     ref<ComputeKernel> m_kernel;
     int m_call_dimensionality{0};
     ref<NativeBoundCallRuntime> m_runtime;
-    nb::dict m_vars;
     CallMode m_call_mode{CallMode::prim};
-    std::vector<std::function<void(nb::dict)>> m_before_dispatch_hooks;
-    std::vector<std::function<void(nb::dict)>> m_after_dispatch_hooks;
     Shape m_last_call_shape;
 
-    nb::object exec(CommandBuffer* command_buffer, nb::args args, nb::kwargs kwargs);
+    nb::object
+    exec(ref<NativeCallRuntimeOptions> opts, CommandBuffer* command_buffer, nb::args args, nb::kwargs kwargs);
 
     nb::list unpack_args(nb::args args);
 

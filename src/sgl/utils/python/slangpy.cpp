@@ -44,7 +44,7 @@ void NativeBoundVariableRuntime::populate_call_shape(std::vector<int>& call_shap
         if (m_python_type->concrete_shape().valid())
             m_shape = m_python_type->concrete_shape();
         else
-            m_shape = m_python_type->get_container_shape(value);
+            m_shape = m_python_type->get_shape(value);
 
         // Apply this shape to the overall call shape.
         auto shape = m_shape.as_vector();
@@ -137,6 +137,30 @@ void NativeBoundVariableRuntime::read_call_data_post_dispatch(
     }
 }
 
+void NativeBoundVariableRuntime::write_raw_dispatch_data(nb::dict call_data, nb::object value)
+{
+    if (m_children) {
+        // We have children, so generate call data for each child and
+        // store in a dictionary, then store the dictionary as the call data.
+        nb::dict cd_val;
+        for (const auto& [name, child_ref] : *m_children) {
+            if (child_ref) {
+                nb::object child_value = value[name.c_str()];
+                child_ref->write_raw_dispatch_data(cd_val, child_value);
+            }
+        }
+        if (cd_val.size() > 0) {
+            call_data[m_variable_name.c_str()] = cd_val;
+        }
+    } else {
+        // We are a leaf node, so generate and store call data for this node.
+        nb::object cd_val = m_python_type->create_dispatchdata(value);
+        if (!cd_val.is_none()) {
+            call_data[m_variable_name.c_str()] = cd_val;
+        }
+    }
+}
+
 nb::object NativeBoundVariableRuntime::read_output(CallContext* context, nb::object data)
 {
     if (m_children) {
@@ -224,17 +248,38 @@ void NativeBoundCallRuntime::read_call_data_post_dispatch(
     }
 }
 
-nb::object NativeCallData::call(nb::args args, nb::kwargs kwargs)
+void NativeBoundCallRuntime::write_raw_dispatch_data(nb::dict call_data, nb::dict kwargs)
 {
-    return exec(nullptr, args, kwargs);
+    // Write call data for each keyword argument.
+    for (auto [key, value] : kwargs) {
+        auto it = m_kwargs.find(nb::str(key).c_str());
+        if (it != m_kwargs.end()) {
+            it->second->write_raw_dispatch_data(call_data, nb::cast<nb::object>(value));
+        }
+    }
 }
 
-nb::object NativeCallData::append_to(ref<CommandBuffer> command_buffer, nb::args args, nb::kwargs kwargs)
+nb::object NativeCallData::call(ref<NativeCallRuntimeOptions> opts, nb::args args, nb::kwargs kwargs)
 {
-    return exec(command_buffer.get(), args, kwargs);
+    return exec(opts, nullptr, args, kwargs);
 }
 
-nb::object NativeCallData::exec(CommandBuffer* command_buffer, nb::args args, nb::kwargs kwargs)
+nb::object NativeCallData::append_to(
+    ref<NativeCallRuntimeOptions> opts,
+    ref<CommandBuffer> command_buffer,
+    nb::args args,
+    nb::kwargs kwargs
+)
+{
+    return exec(opts, command_buffer.get(), args, kwargs);
+}
+
+nb::object NativeCallData::exec(
+    ref<NativeCallRuntimeOptions> opts,
+    CommandBuffer* command_buffer,
+    nb::args args,
+    nb::kwargs kwargs
+)
 {
     // Unpack args and kwargs.
     nb::list unpacked_args = unpack_args(args);
@@ -245,7 +290,7 @@ nb::object NativeCallData::exec(CommandBuffer* command_buffer, nb::args args, nb
     m_last_call_shape = call_shape;
 
     // Setup context.
-    auto context = make_ref<CallContext>(m_device, call_shape);
+    auto context = make_ref<CallContext>(m_device, call_shape, m_call_mode);
 
     // Allocate return value if needed.
     if (!command_buffer && m_call_mode == CallMode::prim) {
@@ -279,13 +324,8 @@ nb::object NativeCallData::exec(CommandBuffer* command_buffer, nb::args args, nb
     call_data["_thread_count"] = uint3(total_threads, 1, 1);
 
     // Copy user provided vars and insert call data.
-    nb::dict vars = nb::dict(m_vars);
+    nb::dict vars = nb::dict();
     vars["call_data"] = call_data;
-
-    // Execute before dispatch hooks.
-    for (const auto& hook : m_before_dispatch_hooks) {
-        hook(vars);
-    }
 
     // Dispatch the kernel.
     auto bind_vars = [&](ShaderCursor cursor) { write_shader_cursor(cursor, vars); };
@@ -294,11 +334,6 @@ nb::object NativeCallData::exec(CommandBuffer* command_buffer, nb::args args, nb
     // If command_buffer is not null, return early.
     if (command_buffer != nullptr) {
         return nanobind::none();
-    }
-
-    // Execute after dispatch hooks.
-    for (const auto& hook : m_after_dispatch_hooks) {
-        hook(vars);
     }
 
     // Read call data post dispatch.
@@ -502,29 +537,28 @@ SGL_PY_EXPORT(utils_slangpy)
         }
     );
 
+    nb::class_<NativeSlangType, Object>(slangpy, "NativeSlangType") //
+        .def(nb::init<>(), D_NA(NativeSlangType, NativeSlangType))
+        .def_prop_rw(
+            "_reflection",
+            &NativeSlangType::reflection,
+            &NativeSlangType::set_reflection,
+            D_NA(NativeSlangType, reflection)
+        );
+
     nb::class_<NativeType, PyNativeType, Object>(slangpy, "NativeType") //
         .def(
             "__init__",
             [](NativeType& self) { new (&self) PyNativeType(); },
             D_NA(NativeType, NativeType)
         )
-        .def_prop_rw("name", &NativeType::name, &NativeType::set_name, D_NA(NativeType, name))
-        .def_prop_rw(
-            "element_type",
-            &NativeType::element_type,
-            &NativeType::set_element_type,
-            nb::arg().none(),
-            D_NA(NativeType, element_type)
-        )
+
         .def_prop_rw(
             "concrete_shape",
             &NativeType::concrete_shape,
             &NativeType::set_concrete_shape,
             D_NA(NativeType, concrete_shape)
         )
-        .def("get_byte_size", &NativeType::get_byte_size, D_NA(NativeType, get_byte_size))
-        .def("get_container_shape", &NativeType::get_container_shape, D_NA(NativeType, get_container_shape))
-        .def("get_shape", &NativeType::get_shape, "value"_a = nb::none(), D_NA(NativeType, get_shape))
         .def("create_calldata", &NativeType::create_calldata, D_NA(NativeType, create_calldata))
         .def("read_calldata", &NativeType::read_calldata, D_NA(NativeType, read_calldata))
         .def("create_output", &NativeType::create_output, D_NA(NativeType, create_output))
@@ -549,6 +583,12 @@ SGL_PY_EXPORT(utils_slangpy)
             &NativeBoundVariableRuntime::get_python_type,
             &NativeBoundVariableRuntime::set_python_type,
             D_NA(NativeBoundVariableRuntime, python_type)
+        )
+        .def_prop_rw(
+            "vector_type",
+            &NativeBoundVariableRuntime::get_vector_type,
+            &NativeBoundVariableRuntime::set_vector_type,
+            D_NA(NativeBoundVariableRuntime, vector_type)
         )
         .def_prop_rw(
             "shape",
@@ -616,6 +656,15 @@ SGL_PY_EXPORT(utils_slangpy)
             D_NA(NativeBoundCallRuntime, read_call_data_post_dispatch)
         );
 
+    nb::class_<NativeCallRuntimeOptions, Object>(slangpy, "NativeCallRuntimeOptions") //
+        .def(nb::init<>(), D_NA(NativeCallRuntimeOptions, NativeCallRuntimeOptions))
+        .def_prop_rw(
+            "uniforms",
+            &NativeCallRuntimeOptions::get_uniforms,
+            &NativeCallRuntimeOptions::set_uniforms,
+            D_NA(NativeCallRuntimeOptions, uniforms)
+        );
+
     nb::class_<NativeCallData, Object>(slangpy, "NativeCallData") //
         .def(nb::init<>(), D_NA(NativeCallData, NativeCallData))
         .def_prop_rw("device", &NativeCallData::get_device, &NativeCallData::set_device, D_NA(NativeCallData, device))
@@ -632,7 +681,6 @@ SGL_PY_EXPORT(utils_slangpy)
             &NativeCallData::set_runtime,
             D_NA(NativeCallData, runtime)
         )
-        .def_prop_rw("vars", &NativeCallData::get_vars, &NativeCallData::set_vars, D_NA(NativeCallData, vars))
         .def_prop_rw(
             "call_mode",
             &NativeCallData::get_call_mode,
@@ -641,19 +689,17 @@ SGL_PY_EXPORT(utils_slangpy)
         )
         .def_prop_ro("last_call_shape", &NativeCallData::get_last_call_shape, D_NA(NativeCallData, last_call_shape))
         .def(
-            "add_before_dispatch_hook",
-            &NativeCallData::add_before_dispatch_hook,
-            D_NA(NativeCallData, add_before_dispatch_hook)
+            "call",
+            &NativeCallData::call,
+            nb::arg("opts"),
+            nb::arg("args"),
+            nb::arg("kwargs"),
+            D_NA(NativeCallData, call)
         )
-        .def(
-            "add_after_dispatch_hook",
-            &NativeCallData::add_after_dispatch_hooks,
-            D_NA(NativeCallData, add_after_dispatch_hooks)
-        )
-        .def("call", &NativeCallData::call, nb::arg("args"), nb::arg("kwargs"), D_NA(NativeCallData, call))
         .def(
             "append_to",
             &NativeCallData::append_to,
+            nb::arg("opts"),
             nb::arg("command_buffer"),
             nb::arg("args"),
             nb::arg("kwargs"),
@@ -753,9 +799,10 @@ SGL_PY_EXPORT(utils_slangpy)
 
     nb::class_<CallContext, Object>(slangpy, "CallContext") //
         .def(
-            nb::init<ref<Device>, const Shape&>(),
+            nb::init<ref<Device>, const Shape&, CallMode>(),
             nb::arg("device"),
             nb::arg("call_shape"),
+            nb::arg("call_mode"),
             D_NA(CallContext, CallContext)
         )
         .def_prop_ro(
