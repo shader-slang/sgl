@@ -19,6 +19,7 @@ extern void write_shader_cursor(ShaderCursor& cursor, nb::object value);
 
 namespace sgl::slangpy {
 
+
 void NativeBoundVariableRuntime::populate_call_shape(std::vector<int>& call_shape, nb::object value)
 {
     if (m_children) {
@@ -325,6 +326,17 @@ nb::object NativeCallData::exec(
 
     // Copy user provided vars and insert call data.
     nb::dict vars = nb::dict();
+    nb::list uniforms = opts->get_uniforms();
+    if (uniforms) {
+        for (auto u : uniforms) {
+            if (nb::isinstance<nb::dict>(u)) {
+                vars.update(nb::cast<nb::dict>(u));
+            } else {
+                vars.update(nb::cast<nb::dict>(u(this)));
+            }
+        }
+    }
+
     vars["call_data"] = call_data;
 
     // Dispatch the kernel.
@@ -357,7 +369,7 @@ nb::object NativeCallData::exec(
     return nb::none();
 }
 
-nb::list NativeCallData::unpack_args(nb::args args)
+nb::list unpack_args(nb::args args)
 {
     nb::list unpacked;
     for (auto arg : args) {
@@ -366,7 +378,7 @@ nb::list NativeCallData::unpack_args(nb::args args)
     return unpacked;
 }
 
-nb::dict NativeCallData::unpack_kwargs(nb::kwargs kwargs)
+nb::dict unpack_kwargs(nb::kwargs kwargs)
 {
     nb::dict unpacked;
     for (const auto& [k, v] : kwargs) {
@@ -375,7 +387,7 @@ nb::dict NativeCallData::unpack_kwargs(nb::kwargs kwargs)
     return unpacked;
 }
 
-nb::object NativeCallData::unpack_arg(nb::object arg)
+nb::object unpack_arg(nb::object arg)
 {
     auto obj = arg;
 
@@ -408,7 +420,7 @@ nb::object NativeCallData::unpack_arg(nb::object arg)
     return obj;
 }
 
-void NativeCallData::pack_arg(nanobind::object arg, nanobind::object unpacked_arg)
+void pack_arg(nanobind::object arg, nanobind::object unpacked_arg)
 {
     // If object has 'update_this', update it.
     if (nb::hasattr(arg, "update_this")) {
@@ -523,6 +535,32 @@ SGL_PY_EXPORT(utils_slangpy)
         D_NA(slangpy, hash_signature)
     );
 
+    slangpy.def(
+        "unpack_args",
+        [](nb::args args) { return unpack_args(args); },
+        "args"_a,
+        D_NA(slangpy, unpack_args)
+    );
+    slangpy.def(
+        "unpack_kwargs",
+        [](nb::kwargs kwargs) { return unpack_kwargs(kwargs); },
+        "kwargs"_a,
+        D_NA(slangpy, unpack_kwargs)
+    );
+    slangpy.def(
+        "unpack_arg",
+        [](nb::object arg) { return unpack_arg(arg); },
+        "arg"_a,
+        D_NA(slangpy, unpack_arg)
+    );
+    slangpy.def(
+        "pack_arg",
+        [](nb::object arg, nb::object unpacked_arg) { pack_arg(arg, unpacked_arg); },
+        "arg"_a,
+        "unpacked_arg"_a,
+        D_NA(slangpy, pack_arg)
+    );
+
     nb::register_exception_translator(
         [](const std::exception_ptr& p, void* /* unused */)
         {
@@ -623,6 +661,11 @@ SGL_PY_EXPORT(utils_slangpy)
             &NativeBoundVariableRuntime::read_call_data_post_dispatch,
             D_NA(NativeBoundVariableRuntime, read_call_data_post_dispatch)
         )
+        .def(
+            "write_raw_dispatch_data",
+            &NativeBoundVariableRuntime::write_raw_dispatch_data,
+            D_NA(NativeBoundVariableRuntime, write_raw_dispatch_data)
+        )
         .def("read_output", &NativeBoundVariableRuntime::read_output, D_NA(NativeBoundVariableRuntime, read_output));
 
     nb::class_<NativeBoundCallRuntime, Object>(slangpy, "NativeBoundCallRuntime") //
@@ -654,6 +697,11 @@ SGL_PY_EXPORT(utils_slangpy)
             "read_call_data_post_dispatch",
             &NativeBoundCallRuntime::read_call_data_post_dispatch,
             D_NA(NativeBoundCallRuntime, read_call_data_post_dispatch)
+        )
+        .def(
+            "write_raw_dispatch_data",
+            &NativeBoundCallRuntime::write_raw_dispatch_data,
+            D_NA(NativeBoundCallRuntime, write_raw_dispatch_data)
         );
 
     nb::class_<NativeCallRuntimeOptions, Object>(slangpy, "NativeCallRuntimeOptions") //
@@ -815,5 +863,8 @@ SGL_PY_EXPORT(utils_slangpy)
             &CallContext::call_shape,
             nb::rv_policy::reference_internal,
             D_NA(CallContext, call_shape)
-        );
+        )
+        .def_prop_ro("call_mode", &CallContext::call_mode, D_NA(CallContext, call_mode))
+
+        ;
 }

@@ -183,11 +183,7 @@ public:
     ref<NativeSlangType> get_vector_type() const { return m_vector_type; }
 
     /// Set the vector slang type.
-    void set_vector_type(const ref<NativeSlangType>& vector_type)
-    {
-        SGL_UNUSED(vector_type); /* m_vector_type = vector_type*/
-        ;
-    }
+    void set_vector_type(ref<NativeSlangType> vector_type) { m_vector_type = vector_type; }
 
     /// Get the shape being used for the current call.
     Shape get_shape() const { return m_shape; }
@@ -356,14 +352,12 @@ private:
 
     nb::object
     exec(ref<NativeCallRuntimeOptions> opts, CommandBuffer* command_buffer, nb::args args, nb::kwargs kwargs);
-
-    nb::list unpack_args(nb::args args);
-
-    nb::dict unpack_kwargs(nb::kwargs kwargs);
-
-    nb::object unpack_arg(nanobind::object arg);
-
-    void pack_arg(nb::object arg, nb::object unpacked_arg);
 };
+
+
+nb::list unpack_args(nb::args args);
+nb::dict unpack_kwargs(nb::kwargs kwargs);
+nb::object unpack_arg(nanobind::object arg);
+void pack_arg(nb::object arg, nb::object unpacked_arg);
 
 } // namespace sgl::slangpy

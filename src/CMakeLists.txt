@@ -471,6 +471,7 @@ if(SGL_BUILD_PYTHON)
         PYTHON_PATH ${SGL_OUTPUT_DIRECTORY}/python
         OUTPUT ${SGL_OUTPUT_DIRECTORY}/python/sgl/__init__.pyi
         DEPENDS sgl_ext
+        INCLUDE_PRIVATE # allow us to have functions/variables that start with _
     )
 
     # Post-process the main stub file.
@@ -485,6 +486,7 @@ if(SGL_BUILD_PYTHON)
             PYTHON_PATH ${SGL_OUTPUT_DIRECTORY}/python
             OUTPUT ${SGL_OUTPUT_DIRECTORY}/python/sgl/${submodule_path}/__init__.pyi
             DEPENDS sgl_ext
+            INCLUDE_PRIVATE # allow us to have functions/variables that start with _
         )
     endforeach()
 
