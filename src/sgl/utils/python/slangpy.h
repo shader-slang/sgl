@@ -47,13 +47,13 @@ public:
     };
 
     /// Get the reflection type.
-    ref<TypeReflection> reflection() const { return m_reflection; }
+    ref<TypeReflection> get_type_reflection() const { return m_type_reflection; }
 
     /// Set the reflection type.
-    void set_reflection(const ref<TypeReflection>& reflection) { m_reflection = reflection; }
+    void set_type_reflection(const ref<TypeReflection>& reflection) { m_type_reflection = reflection; }
 
 private:
-    ref<TypeReflection> m_reflection;
+    ref<TypeReflection> m_type_reflection;
 };
 
 /// Base class for a marshal to a slangpy supported type.
@@ -63,7 +63,7 @@ public:
 
     /// Get the concrete shape of the type. For none-concrete types such as buffers,
     /// this will return an invalid shape.
-    Shape concrete_shape() const { return m_concrete_shape; }
+    Shape get_concrete_shape() const { return m_concrete_shape; }
 
     /// Set the concrete shape of the type.
     void set_concrete_shape(const Shape& concrete_shape) { m_concrete_shape = concrete_shape; }
@@ -74,6 +74,17 @@ public:
         SGL_UNUSED(data);
         return Shape();
     }
+
+    /// Writes call data to a shader cursor before dispatch, optionally writing data for
+    /// read back after the kernel has executed. By default, this calls through to
+    /// create_calldata, which is typically overridden python side to generate a dictionary.
+    virtual void write_shader_cursor_pre_dispatch(
+        CallContext* context,
+        NativeBoundVariableRuntime* binding,
+        ShaderCursor cursor,
+        nb::object value,
+        nb::list read_back
+    ) const;
 
     /// Create call data (uniform values) to be passed to a compute kernel.
     virtual nb::object create_calldata(CallContext* context, NativeBoundVariableRuntime* binding, nb::object data) const
@@ -126,9 +137,20 @@ private:
 
 /// Nanobind trampoline class for NativeType
 struct PyNativeType : public NativeType {
-    NB_TRAMPOLINE(NativeType, 9);
+    NB_TRAMPOLINE(NativeType, 10);
 
     Shape get_shape(nb::object data) const override { NB_OVERRIDE(get_shape, data); }
+
+    void write_shader_cursor_pre_dispatch(
+        CallContext* context,
+        NativeBoundVariableRuntime* binding,
+        ShaderCursor cursor,
+        nb::object value,
+        nb::list read_back
+    ) const override
+    {
+        NB_OVERRIDE(write_shader_cursor_pre_dispatch, context, binding, cursor, value, read_back);
+    }
 
     nb::object
     create_calldata(CallContext* context, NativeBoundVariableRuntime* binding, nb::object data) const override
@@ -218,6 +240,9 @@ public:
     /// Write call data to be passed to a compute kernel by calling create_calldata on the marshal.
     void write_call_data_pre_dispatch(CallContext* context, nb::dict call_data, nb::object value);
 
+    void
+    write_shader_cursor_pre_dispatch(CallContext* context, ShaderCursor cursor, nb::object value, nb::list read_back);
+
     /// Read back changes from call data after a kernel has been executed by calling read_calldata on the marshal.
     void read_call_data_post_dispatch(CallContext* context, nb::dict call_data, nb::object value);
 
@@ -271,6 +296,14 @@ public:
 
     /// Write call data to be passed to a compute kernel by calling create_calldata on the argument marshals.
     void write_calldata_pre_dispatch(CallContext* context, nb::dict call_data, nb::list args, nb::dict kwargs);
+
+    void write_shader_cursor_pre_dispatch(
+        CallContext* context,
+        ShaderCursor cursor,
+        nb::list args,
+        nb::dict kwargs,
+        nb::list read_back
+    );
 
     /// Read back changes from call data after a kernel has been executed by calling read_calldata on the argument
     /// marshals.
