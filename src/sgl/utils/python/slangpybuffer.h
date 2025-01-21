@@ -88,10 +88,70 @@ public:
     };
     */
 
+    int dims() const { return m_dims; }
+    bool writable() const { return m_writable; }
+    ref<NativeSlangType> slang_element_type() const { return m_slang_element_type; }
+
+    Shape get_shape(nb::object data) const override
+    {
+        auto buffer = nb::cast<NativeNDBuffer*>(data);
+        return buffer->shape();
+    }
+
+    void write_shader_cursor_pre_dispatch(
+        CallContext* context,
+        NativeBoundVariableRuntime* binding,
+        ShaderCursor cursor,
+        nb::object value,
+        nb::list read_back
+    ) const override
+    {
+        SGL_UNUSED(context);
+        SGL_UNUSED(read_back);
+
+        auto buffer = nb::cast<NativeNDBuffer*>(value);
+        ShaderCursor field = cursor[binding->get_variable_name()];
+        field["buffer"] = buffer->storage();
+
+        auto shape_vec = buffer->shape().as_vector();
+        field["shape"]
+            ._set_array(&shape_vec[0], shape_vec.size() * 4, TypeReflection::ScalarType::int32, shape_vec.size());
+
+        auto strides_vec = buffer->strides().as_vector();
+        field["strides"]
+            ._set_array(&strides_vec[0], strides_vec.size() * 4, TypeReflection::ScalarType::int32, strides_vec.size());
+    }
+
+    void read_calldata(CallContext* context, NativeBoundVariableRuntime* binding, nb::object data, nb::object result)
+        const override
+    {
+        SGL_UNUSED(context);
+        SGL_UNUSED(binding);
+        SGL_UNUSED(data);
+        SGL_UNUSED(result);
+    }
+
+    nb::object read_output(CallContext* context, NativeBoundVariableRuntime* binding, nb::object data) const override
+    {
+        SGL_UNUSED(context);
+        SGL_UNUSED(binding);
+        return data;
+    }
+
 private:
     int m_dims;
     bool m_writable;
     ref<NativeSlangType> m_slang_element_type;
+};
+
+/// Nanobind trampoline class for NativeNDBufferMarshall as can't currently implement create_output in native.
+struct PyNativeNDBufferMarshall : public NativeNDBufferMarshall {
+    NB_TRAMPOLINE(NativeNDBufferMarshall, 1);
+
+    nb::object create_output(CallContext* context, NativeBoundVariableRuntime* binding) const override
+    {
+        NB_OVERRIDE(create_output, context, binding);
+    }
 };
 
 } // namespace sgl::slangpy

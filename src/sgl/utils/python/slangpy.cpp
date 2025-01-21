@@ -708,6 +708,21 @@ SGL_PY_EXPORT(utils_slangpy)
             D_NA(NativeValueMarshall, NativeValueMarshall)
         );
 
+    nb::class_<NativeNDBufferMarshall, PyNativeNDBufferMarshall, NativeMarshall>(slangpy, "NativeNDBufferMarshall") //
+        .def(
+            "__init__",
+            [](NativeNDBufferMarshall& self,
+               int dims,
+               bool writable,
+               ref<NativeSlangType> slang_type,
+               ref<NativeSlangType> slang_element_type)
+            { new (&self) PyNativeNDBufferMarshall(dims, writable, slang_type, slang_element_type); },
+            D_NA(NativeNDBufferMarshall, NativeNDBufferMarshall)
+        )
+        .def_prop_ro("dims", &sgl::slangpy::NativeNDBufferMarshall::dims)
+        .def_prop_ro("writable", &sgl::slangpy::NativeNDBufferMarshall::writable)
+        .def_prop_ro("slang_element_type", &sgl::slangpy::NativeNDBufferMarshall::slang_element_type);
+
     nb::class_<NativeBoundVariableRuntime, Object>(slangpy, "NativeBoundVariableRuntime") //
         .def(nb::init<>(), D_NA(NativeBoundVariableRuntime, NativeBoundVariableRuntime))
         .def_prop_rw(
