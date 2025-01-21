@@ -57,9 +57,9 @@ private:
 };
 
 /// Base class for a marshal to a slangpy supported type.
-class NativeType : public Object {
+class NativeMarshall : public Object {
 public:
-    virtual ~NativeType() = default;
+    virtual ~NativeMarshall() = default;
 
     /// Get the concrete shape of the type. For none-concrete types such as buffers,
     /// this will return an invalid shape.
@@ -135,9 +135,9 @@ private:
     Shape m_concrete_shape;
 };
 
-/// Nanobind trampoline class for NativeType
-struct PyNativeType : public NativeType {
-    NB_TRAMPOLINE(NativeType, 10);
+/// Nanobind trampoline class for NativeMarshall
+struct PyNativeMarshall : public NativeMarshall {
+    NB_TRAMPOLINE(NativeMarshall, 10);
 
     Shape get_shape(nb::object data) const override { NB_OVERRIDE(get_shape, data); }
 
@@ -196,10 +196,10 @@ public:
     void set_transform(const Shape& transform) { m_transform = transform; }
 
     /// Get the python type marshal.
-    ref<NativeType> get_python_type() const { return m_python_type; }
+    ref<NativeMarshall> get_python_type() const { return m_python_type; }
 
     /// Set the python type marshal.
-    void set_python_type(const ref<NativeType>& python_type) { m_python_type = python_type; }
+    void set_python_type(const ref<NativeMarshall>& python_type) { m_python_type = python_type; }
 
     /// Get the vector slang type.
     ref<NativeSlangType> get_vector_type() const { return m_vector_type; }
@@ -255,7 +255,7 @@ public:
 private:
     std::pair<AccessType, AccessType> m_access{AccessType::none, AccessType::none};
     Shape m_transform;
-    ref<NativeType> m_python_type;
+    ref<NativeMarshall> m_python_type;
     Shape m_shape;
     std::string m_variable_name;
     std::optional<std::map<std::string, ref<NativeBoundVariableRuntime>>> m_children;

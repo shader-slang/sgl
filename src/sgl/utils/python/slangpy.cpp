@@ -19,7 +19,7 @@ extern void write_shader_cursor(ShaderCursor& cursor, nb::object value);
 
 namespace sgl::slangpy {
 
-void NativeType::write_shader_cursor_pre_dispatch(
+void NativeMarshall::write_shader_cursor_pre_dispatch(
     CallContext* context,
     NativeBoundVariableRuntime* binding,
     ShaderCursor cursor,
@@ -665,28 +665,28 @@ SGL_PY_EXPORT(utils_slangpy)
             D_NA(NativeSlangType, type_reflection)
         );
 
-    nb::class_<NativeType, PyNativeType, Object>(slangpy, "NativeType") //
+    nb::class_<NativeMarshall, PyNativeMarshall, Object>(slangpy, "NativeMarshall") //
         .def(
             "__init__",
-            [](NativeType& self) { new (&self) PyNativeType(); },
-            D_NA(NativeType, NativeType)
+            [](NativeMarshall& self) { new (&self) PyNativeMarshall(); },
+            D_NA(NativeMarshall, NativeMarshall)
         )
 
         .def_prop_rw(
             "concrete_shape",
-            &NativeType::get_concrete_shape,
-            &NativeType::set_concrete_shape,
-            D_NA(NativeType, concrete_shape)
+            &NativeMarshall::get_concrete_shape,
+            &NativeMarshall::set_concrete_shape,
+            D_NA(NativeMarshall, concrete_shape)
         )
         .def(
             "write_shader_cursor_pre_dispatch",
-            &NativeType::write_shader_cursor_pre_dispatch,
-            D_NA(NativeType, write_shader_cursor_pre_dispatch)
+            &NativeMarshall::write_shader_cursor_pre_dispatch,
+            D_NA(NativeMarshall, write_shader_cursor_pre_dispatch)
         )
-        .def("create_calldata", &NativeType::create_calldata, D_NA(NativeType, create_calldata))
-        .def("read_calldata", &NativeType::read_calldata, D_NA(NativeType, read_calldata))
-        .def("create_output", &NativeType::create_output, D_NA(NativeType, create_output))
-        .def("read_output", &NativeType::read_output, D_NA(NativeType, read_output));
+        .def("create_calldata", &NativeMarshall::create_calldata, D_NA(NativeMarshall, create_calldata))
+        .def("read_calldata", &NativeMarshall::read_calldata, D_NA(NativeMarshall, read_calldata))
+        .def("create_output", &NativeMarshall::create_output, D_NA(NativeMarshall, create_output))
+        .def("read_output", &NativeMarshall::read_output, D_NA(NativeMarshall, read_output));
 
     nb::class_<NativeBoundVariableRuntime, Object>(slangpy, "NativeBoundVariableRuntime") //
         .def(nb::init<>(), D_NA(NativeBoundVariableRuntime, NativeBoundVariableRuntime))
