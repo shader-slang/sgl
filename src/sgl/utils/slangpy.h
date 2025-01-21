@@ -130,6 +130,16 @@ public:
         return fmt::format("[{}]", fmt::join(as_vector(), ", "));
     }
 
+    /// Total element count (if this represented contiguous array)
+    size_t element_count() const
+    {
+        size_t result = 1;
+        for (auto dim : as_vector()) {
+            result *= dim;
+        }
+        return result;
+    }
+
 private:
     std::optional<std::vector<int>> m_shape;
 };

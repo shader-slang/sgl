@@ -11,6 +11,7 @@
 #include "sgl/core/fwd.h"
 #include "sgl/core/object.h"
 #include "sgl/device/fwd.h"
+#include "sgl/device/shader_cursor.h"
 #include "sgl/utils/slangpy.h"
 
 namespace sgl::slangpy {
@@ -59,6 +60,13 @@ private:
 /// Base class for a marshal to a slangpy supported type.
 class NativeMarshall : public Object {
 public:
+    NativeMarshall() = default;
+
+    NativeMarshall(ref<NativeSlangType> slang_type)
+        : m_slang_type(std::move(slang_type))
+    {
+    }
+
     virtual ~NativeMarshall() = default;
 
     /// Get the concrete shape of the type. For none-concrete types such as buffers,
@@ -74,6 +82,12 @@ public:
         SGL_UNUSED(data);
         return Shape();
     }
+
+    /// Get the slang type.
+    ref<NativeSlangType> get_slang_type() const { return m_slang_type; }
+
+    /// Set the slang type.
+    void set_slang_type(const ref<NativeSlangType>& slang_type) { m_slang_type = slang_type; }
 
     /// Writes call data to a shader cursor before dispatch, optionally writing data for
     /// read back after the kernel has executed. By default, this calls through to
@@ -133,6 +147,7 @@ public:
 
 private:
     Shape m_concrete_shape;
+    ref<NativeSlangType> m_slang_type;
 };
 
 /// Nanobind trampoline class for NativeMarshall

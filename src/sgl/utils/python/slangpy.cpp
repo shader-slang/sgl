@@ -12,6 +12,8 @@
 #include "sgl/device/command.h"
 
 #include "sgl/utils/python/slangpy.h"
+#include "sgl/utils/python/slangpyvalue.h"
+#include "sgl/utils/python/slangpybuffer.h"
 
 namespace sgl {
 extern void write_shader_cursor(ShaderCursor& cursor, nb::object value);
@@ -678,15 +680,33 @@ SGL_PY_EXPORT(utils_slangpy)
             &NativeMarshall::set_concrete_shape,
             D_NA(NativeMarshall, concrete_shape)
         )
+        .def_prop_rw(
+            "slang_type",
+            &NativeMarshall::get_slang_type,
+            &NativeMarshall::set_slang_type,
+            D_NA(NativeMarshall, slang_type)
+        )
         .def(
             "write_shader_cursor_pre_dispatch",
             &NativeMarshall::write_shader_cursor_pre_dispatch,
+            "context"_a,
+            "binding"_a,
+            "cursor"_a,
+            "value"_a,
+            "read_back"_a,
             D_NA(NativeMarshall, write_shader_cursor_pre_dispatch)
         )
         .def("create_calldata", &NativeMarshall::create_calldata, D_NA(NativeMarshall, create_calldata))
         .def("read_calldata", &NativeMarshall::read_calldata, D_NA(NativeMarshall, read_calldata))
         .def("create_output", &NativeMarshall::create_output, D_NA(NativeMarshall, create_output))
         .def("read_output", &NativeMarshall::read_output, D_NA(NativeMarshall, read_output));
+
+    nb::class_<NativeValueMarshall, NativeMarshall>(slangpy, "NativeValueMarshall") //
+        .def(
+            "__init__",
+            [](NativeValueMarshall& self) { new (&self) NativeValueMarshall(); },
+            D_NA(NativeValueMarshall, NativeValueMarshall)
+        );
 
     nb::class_<NativeBoundVariableRuntime, Object>(slangpy, "NativeBoundVariableRuntime") //
         .def(nb::init<>(), D_NA(NativeBoundVariableRuntime, NativeBoundVariableRuntime))
@@ -923,14 +943,6 @@ SGL_PY_EXPORT(utils_slangpy)
             D_NA(Shape, operator==)
         );
 
-    /* def __eq__(self, value
-                   : object)
-                ->bool : if isinstance (value, Shape)
-            : return self.shape
-            == value.shape else : return self.shape
-            == value*/
-
-
     nb::class_<CallContext, Object>(slangpy, "CallContext") //
         .def(
             nb::init<ref<Device>, const Shape&, CallMode>(),
@@ -950,7 +962,26 @@ SGL_PY_EXPORT(utils_slangpy)
             nb::rv_policy::reference_internal,
             D_NA(CallContext, call_shape)
         )
-        .def_prop_ro("call_mode", &CallContext::call_mode, D_NA(CallContext, call_mode))
+        .def_prop_ro("call_mode", &CallContext::call_mode, D_NA(CallContext, call_mode));
 
-        ;
+    nb::class_<NativeNDBufferDesc>(slangpy, "NativeNDBufferDesc")
+        .def(nb::init<>())
+        .def_rw("dtype", &NativeNDBufferDesc::dtype)
+        .def_rw("element_stride", &NativeNDBufferDesc::element_stride)
+        .def_rw("shape", &NativeNDBufferDesc::shape)
+        .def_rw("strides", &NativeNDBufferDesc::strides)
+        .def_rw("usage", &NativeNDBufferDesc::usage)
+        .def_rw("memory_type", &NativeNDBufferDesc::memory_type);
+
+    nb::class_<NativeNDBuffer, Object>(slangpy, "NativeNDBuffer")
+        .def(nb::init<ref<Device>, NativeNDBufferDesc>())
+        .def_prop_ro("device", &NativeNDBuffer::device)
+        .def_prop_rw("slangpy_signature", &NativeNDBuffer::slangpy_signature, &NativeNDBuffer::set_slagpy_signature)
+        .def_prop_ro("dtype", &NativeNDBuffer::dtype)
+        .def_prop_ro("shape", &NativeNDBuffer::shape)
+        .def_prop_ro("strides", &NativeNDBuffer::strides)
+        .def_prop_ro("element_count", &NativeNDBuffer::element_count)
+        .def_prop_ro("usage", &NativeNDBuffer::usage)
+        .def_prop_ro("memory_type", &NativeNDBuffer::memory_type)
+        .def_prop_ro("storage", &NativeNDBuffer::storage);
 }
