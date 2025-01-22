@@ -53,8 +53,15 @@ public:
     /// Set the reflection type.
     void set_type_reflection(const ref<TypeReflection>& reflection) { m_type_reflection = reflection; }
 
+    /// Get the shape of the type.
+    Shape get_shape() const { return m_shape; }
+
+    /// Set the shape of the type.
+    void set_shape(const Shape& shape) { m_shape = shape; }
+
 private:
     ref<TypeReflection> m_type_reflection;
+    Shape m_shape;
 };
 
 /// Base class for a marshal to a slangpy supported type.
@@ -144,6 +151,10 @@ public:
         SGL_UNUSED(data);
         return nb::none();
     };
+
+protected:
+    void
+    store_readback(NativeBoundVariableRuntime* binding, nb::list& read_back, nb::object value, nb::object data) const;
 
 private:
     Shape m_concrete_shape;
