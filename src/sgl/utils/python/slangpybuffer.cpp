@@ -60,16 +60,16 @@ void NativeNDBufferMarshall::write_shader_cursor_pre_dispatch(
     field["buffer"] = buffer->storage();
 
     // Write shape vector as an array of ints.
-    std::vector<size_t> shape_vec = buffer->shape().as_vector();
+    std::vector<int> shape_vec = buffer->shape().as_vector();
     field["shape"]._set_array(&shape_vec[0], shape_vec.size() * 4, TypeReflection::ScalarType::int32, shape_vec.size());
 
     // Generate and write strides vector, clearing strides to 0
     // for dimensions that are broadcast.
-    std::vector<size_t> strides_vec = buffer->strides().as_vector();
-    std::vector<size_t> transform = binding->get_transform().as_vector();
-    std::vector<size_t> call_shape = context->call_shape().as_vector();
+    std::vector<int> strides_vec = buffer->strides().as_vector();
+    std::vector<int> transform = binding->get_transform().as_vector();
+    std::vector<int> call_shape = context->call_shape().as_vector();
     for (size_t i = 0; i < transform.size(); i++) {
-        size_t csidx = transform[i];
+        int csidx = transform[i];
         if (call_shape[csidx] != shape_vec[i]) {
             strides_vec[i] = 0;
         }
@@ -134,9 +134,9 @@ NativeNDBufferMarshall::read_output(CallContext* context, NativeBoundVariableRun
 Shape NativeNumpyMarshall::get_shape(nb::object data) const
 {
     auto ndarray = nb::cast<nb::ndarray<nb::numpy>>(data);
-    std::vector<size_t> shape_vec;
+    std::vector<int> shape_vec;
     for (size_t i = 0; i < ndarray.ndim(); i++) {
-        shape_vec.push_back(ndarray.shape(i));
+        shape_vec.push_back((int)ndarray.shape(i));
     }
     return Shape(shape_vec);
 }
@@ -152,15 +152,15 @@ void NativeNumpyMarshall::write_shader_cursor_pre_dispatch(
     auto ndarray = nb::cast<nb::ndarray<nb::numpy>>(value);
     SGL_CHECK(ndarray.dtype() == m_dtype, "numpy array dtype does not match the expected dtype");
 
-    std::vector<size_t> shape_vec;
+    std::vector<int> shape_vec;
     for (size_t i = 0; i < ndarray.ndim(); i++) {
-        shape_vec.push_back(ndarray.shape(i));
+        shape_vec.push_back((int)ndarray.shape(i));
     }
 
-    std::vector<size_t> vector_shape = binding->get_vector_type()->get_shape().as_vector();
+    std::vector<int> vector_shape = binding->get_vector_type()->get_shape().as_vector();
     for (size_t i = 0; i < vector_shape.size(); i++) {
-        size_t vs_size = vector_shape[vector_shape.size() - i - 1];
-        size_t arr_size = shape_vec[shape_vec.size() - i - 1];
+        int vs_size = vector_shape[vector_shape.size() - i - 1];
+        int arr_size = shape_vec[shape_vec.size() - i - 1];
 
         SGL_CHECK(
             vs_size == arr_size,
