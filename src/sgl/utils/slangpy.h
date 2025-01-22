@@ -140,6 +140,23 @@ public:
         return result;
     }
 
+    /// Calculate the strides of a buffer of this shape, assuming it is contiguous.
+    Shape calc_contiguous_strides() const
+    {
+        if (valid()) {
+            auto& shape = as_vector();
+            int total = 1;
+            std::vector<int> strides(shape.size(), 1);
+            for (int i = (int)shape.size() - 1; i >= 0; --i) {
+                strides[i] = total;
+                total *= shape[i];
+            }
+            return Shape(strides);
+        } else {
+            return Shape();
+        }
+    }
+
 private:
     std::optional<std::vector<int>> m_shape;
 };

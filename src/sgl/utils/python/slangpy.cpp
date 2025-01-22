@@ -715,8 +715,14 @@ SGL_PY_EXPORT(utils_slangpy)
                int dims,
                bool writable,
                ref<NativeSlangType> slang_type,
-               ref<NativeSlangType> slang_element_type)
-            { new (&self) PyNativeNDBufferMarshall(dims, writable, slang_type, slang_element_type); },
+               ref<NativeSlangType> slang_element_type,
+               int element_stride)
+            { new (&self) PyNativeNDBufferMarshall(dims, writable, slang_type, slang_element_type, element_stride); },
+            "dims"_a,
+            "writable"_a,
+            "slang_type"_a,
+            "slang_element_type"_a,
+            "element_stride"_a,
             D_NA(NativeNDBufferMarshall, NativeNDBufferMarshall)
         )
         .def_prop_ro("dims", &sgl::slangpy::NativeNDBufferMarshall::dims)

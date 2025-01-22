@@ -29,7 +29,7 @@ struct NativeNDBufferDesc {
 
 class NativeNDBuffer : public Object {
 public:
-    NativeNDBuffer(ref<Device> device, NativeNDBufferDesc desc);
+    NativeNDBuffer(Device* device, NativeNDBufferDesc desc);
 
     Device* device() const { return storage()->device(); }
     std::string_view slangpy_signature() const { return m_signature; }
@@ -55,12 +55,14 @@ public:
         int dims,
         bool writable,
         ref<NativeSlangType> slang_type,
-        ref<NativeSlangType> slang_element_type
+        ref<NativeSlangType> slang_element_type,
+        int element_stride
     )
         : NativeMarshall(slang_type)
         , m_dims(dims)
         , m_writable(writable)
         , m_slang_element_type(slang_element_type)
+        , m_element_stride(element_stride)
     {
     }
     /*
@@ -106,18 +108,36 @@ public:
         nb::list read_back
     ) const override
     {
-        SGL_UNUSED(context);
         SGL_UNUSED(read_back);
 
+        // TODO: This function can be a lot more efficient and cleaner
+        // optimize in next pass.
+
+        // Cast value to buffer, and get the cursor field to write to.
         auto buffer = nb::cast<NativeNDBuffer*>(value);
         ShaderCursor field = cursor[binding->get_variable_name()];
+
+        // Write the buffer storage.
         field["buffer"] = buffer->storage();
 
-        auto shape_vec = buffer->shape().as_vector();
+        // Write shape vector as an array of ints.
+        std::vector<int> shape_vec = buffer->shape().as_vector();
         field["shape"]
             ._set_array(&shape_vec[0], shape_vec.size() * 4, TypeReflection::ScalarType::int32, shape_vec.size());
 
-        auto strides_vec = buffer->strides().as_vector();
+        // Generate and write strides vector, clearing strides to 0
+        // for dimensions that are broadcast.
+        std::vector<int> strides_vec = buffer->strides().as_vector();
+        std::vector<int> transform = binding->get_transform().as_vector();
+        std::vector<int> call_shape = context->call_shape().as_vector();
+        for (size_t i = 0; i < transform.size(); i++) {
+            int csidx = transform[i];
+            if (call_shape[csidx] != shape_vec[i]) {
+                strides_vec[i] = 0;
+            }
+        }
+
+        // Write the strides vector as an array of ints.
         field["strides"]
             ._set_array(&strides_vec[0], strides_vec.size() * 4, TypeReflection::ScalarType::int32, strides_vec.size());
     }
@@ -131,6 +151,21 @@ public:
         SGL_UNUSED(result);
     }
 
+    nb::object create_output(CallContext* context, NativeBoundVariableRuntime* binding) const override
+    {
+        SGL_UNUSED(context);
+        SGL_UNUSED(binding);
+        NativeNDBufferDesc desc;
+        desc.dtype = m_slang_element_type;
+        desc.element_stride = m_element_stride;
+        desc.shape = context->call_shape();
+        desc.strides = desc.shape.calc_contiguous_strides();
+        desc.usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access;
+        desc.memory_type = MemoryType::device_local;
+        auto buffer = make_ref<NativeNDBuffer>(context->device(), desc);
+        return nb::cast(buffer);
+    }
+
     nb::object read_output(CallContext* context, NativeBoundVariableRuntime* binding, nb::object data) const override
     {
         SGL_UNUSED(context);
@@ -138,10 +173,12 @@ public:
         return data;
     }
 
+
 private:
     int m_dims;
     bool m_writable;
     ref<NativeSlangType> m_slang_element_type;
+    int m_element_stride;
 };
 
 /// Nanobind trampoline class for NativeNDBufferMarshall as can't currently implement create_output in native.

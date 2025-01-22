@@ -10,7 +10,7 @@ extern void write_shader_cursor(ShaderCursor& cursor, nb::object value);
 
 namespace sgl::slangpy {
 
-NativeNDBuffer::NativeNDBuffer(ref<Device> device, NativeNDBufferDesc desc)
+NativeNDBuffer::NativeNDBuffer(Device* device, NativeNDBufferDesc desc)
     : m_desc(desc)
 {
 
