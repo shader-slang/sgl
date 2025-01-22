@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
+#include "nanobind.h"
+
 #include "sgl/utils/python/slangpyvalue.h"
 
 namespace sgl {
@@ -26,3 +28,19 @@ void NativeValueMarshall::write_shader_cursor_pre_dispatch(
 }
 
 } // namespace sgl::slangpy
+
+
+SGL_PY_EXPORT(utils_slangpy_value)
+{
+    using namespace sgl;
+    using namespace sgl::slangpy;
+
+    nb::module_ slangpy = m.attr("slangpy");
+
+    nb::class_<NativeValueMarshall, NativeMarshall>(slangpy, "NativeValueMarshall") //
+        .def(
+            "__init__",
+            [](NativeValueMarshall& self) { new (&self) NativeValueMarshall(); },
+            D_NA(NativeValueMarshall, NativeValueMarshall)
+        );
+}

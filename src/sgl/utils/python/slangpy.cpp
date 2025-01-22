@@ -39,8 +39,17 @@ void NativeMarshall::write_shader_cursor_pre_dispatch(
     if (!cd_val.is_none()) {
         ShaderCursor child_field = cursor[binding->get_variable_name()];
         write_shader_cursor(child_field, cd_val);
-        read_back.append(nb::make_tuple(binding, value, cd_val));
+        store_readback(binding, read_back, value, cd_val);
     }
+}
+void NativeMarshall::store_readback(
+    NativeBoundVariableRuntime* binding,
+    nb::list& read_back,
+    nb::object value,
+    nb::object data
+) const
+{
+    read_back.append(nb::make_tuple(binding, value, data));
 }
 
 void NativeBoundVariableRuntime::populate_call_shape(std::vector<int>& call_shape, nb::object value)
@@ -612,7 +621,8 @@ SGL_PY_EXPORT(utils_slangpy)
             &NativeSlangType::get_type_reflection,
             &NativeSlangType::set_type_reflection,
             D_NA(NativeSlangType, type_reflection)
-        );
+        )
+        .def_prop_rw("shape", &NativeSlangType::get_shape, &NativeSlangType::set_shape, D_NA(NativeSlangType, shape));
 
     nb::class_<NativeMarshall, PyNativeMarshall, Object>(slangpy, "NativeMarshall") //
         .def(
@@ -647,34 +657,6 @@ SGL_PY_EXPORT(utils_slangpy)
         .def("read_calldata", &NativeMarshall::read_calldata, D_NA(NativeMarshall, read_calldata))
         .def("create_output", &NativeMarshall::create_output, D_NA(NativeMarshall, create_output))
         .def("read_output", &NativeMarshall::read_output, D_NA(NativeMarshall, read_output));
-
-    nb::class_<NativeValueMarshall, NativeMarshall>(slangpy, "NativeValueMarshall") //
-        .def(
-            "__init__",
-            [](NativeValueMarshall& self) { new (&self) NativeValueMarshall(); },
-            D_NA(NativeValueMarshall, NativeValueMarshall)
-        );
-
-    nb::class_<NativeNDBufferMarshall, PyNativeNDBufferMarshall, NativeMarshall>(slangpy, "NativeNDBufferMarshall") //
-        .def(
-            "__init__",
-            [](NativeNDBufferMarshall& self,
-               int dims,
-               bool writable,
-               ref<NativeSlangType> slang_type,
-               ref<NativeSlangType> slang_element_type,
-               int element_stride)
-            { new (&self) PyNativeNDBufferMarshall(dims, writable, slang_type, slang_element_type, element_stride); },
-            "dims"_a,
-            "writable"_a,
-            "slang_type"_a,
-            "slang_element_type"_a,
-            "element_stride"_a,
-            D_NA(NativeNDBufferMarshall, NativeNDBufferMarshall)
-        )
-        .def_prop_ro("dims", &sgl::slangpy::NativeNDBufferMarshall::dims)
-        .def_prop_ro("writable", &sgl::slangpy::NativeNDBufferMarshall::writable)
-        .def_prop_ro("slang_element_type", &sgl::slangpy::NativeNDBufferMarshall::slang_element_type);
 
     nb::class_<NativeBoundVariableRuntime, Object>(slangpy, "NativeBoundVariableRuntime") //
         .def(nb::init<>(), D_NA(NativeBoundVariableRuntime, NativeBoundVariableRuntime))
@@ -921,36 +903,4 @@ SGL_PY_EXPORT(utils_slangpy)
             D_NA(CallContext, call_shape)
         )
         .def_prop_ro("call_mode", &CallContext::call_mode, D_NA(CallContext, call_mode));
-
-    nb::class_<NativeNDBufferDesc>(slangpy, "NativeNDBufferDesc")
-        .def(nb::init<>())
-        .def_rw("dtype", &NativeNDBufferDesc::dtype)
-        .def_rw("element_stride", &NativeNDBufferDesc::element_stride)
-        .def_rw("shape", &NativeNDBufferDesc::shape)
-        .def_rw("strides", &NativeNDBufferDesc::strides)
-        .def_rw("usage", &NativeNDBufferDesc::usage)
-        .def_rw("memory_type", &NativeNDBufferDesc::memory_type);
-
-    nb::class_<NativeNDBuffer, Object>(slangpy, "NativeNDBuffer")
-        .def(nb::init<ref<Device>, NativeNDBufferDesc>())
-        .def_prop_ro("device", &NativeNDBuffer::device)
-        .def_prop_rw("slangpy_signature", &NativeNDBuffer::slangpy_signature, &NativeNDBuffer::set_slagpy_signature)
-        .def_prop_ro("dtype", &NativeNDBuffer::dtype)
-        .def_prop_ro("shape", &NativeNDBuffer::shape)
-        .def_prop_ro("strides", &NativeNDBuffer::strides)
-        .def_prop_ro("element_count", &NativeNDBuffer::element_count)
-        .def_prop_ro("usage", &NativeNDBuffer::usage)
-        .def_prop_ro("memory_type", &NativeNDBuffer::memory_type)
-        .def_prop_ro("storage", &NativeNDBuffer::storage)
-        .def(
-            "to_numpy",
-            [](NativeNDBuffer& self) { return buffer_to_numpy(self.storage().get()); },
-            D_NA(NativeNDBuffer, buffer_to_numpy)
-        )
-        .def(
-            "from_numpy",
-            [](NativeNDBuffer& self, nb::ndarray<nb::numpy> data) { buffer_from_numpy(self.storage().get(), data); },
-            "data"_a,
-            D_NA(NativeNDBuffer, buffer_from_numpy)
-        );
 }
