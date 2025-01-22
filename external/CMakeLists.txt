@@ -51,8 +51,8 @@ endif()
 
 # slang
 
-set(SGL_LOCAL_SLANG OFF CACHE BOOL "Use a local build of slang instead of downloading a prebuilt binary")
-set(SGL_LOCAL_SLANG_DIR "${CMAKE_SOURCE_DIR}/../slang" CACHE PATH "Path to a local slang build")
+set(SGL_LOCAL_SLANG ON CACHE BOOL "Use a local build of slang instead of downloading a prebuilt binary")
+set(SGL_LOCAL_SLANG_DIR "${CMAKE_SOURCE_DIR}/../tmp/slang" CACHE PATH "Path to a local slang build")
 set(SGL_LOCAL_SLANG_BUILD_DIR "build/Debug" CACHE STRING "Build directory of the local slang build")
 
 set(SLANG_VERSION "2025.2.2")
@@ -70,14 +70,14 @@ elseif(SGL_MACOS)
     endif()
 endif()
 
-sgl_download_package(slang ${SLANG_URL})
-
-set(SLANG_DIR ${slang_SOURCE_DIR})
-set(SLANG_INCLUDE_DIR ${slang_SOURCE_DIR}/include)
-
 if(SGL_LOCAL_SLANG)
     set(SLANG_DIR ${SGL_LOCAL_SLANG_DIR}/${SGL_LOCAL_SLANG_BUILD_DIR})
     set(SLANG_INCLUDE_DIR ${SGL_LOCAL_SLANG_DIR}/include)
+else()
+    sgl_download_package(slang ${SLANG_URL})
+
+    set(SLANG_DIR ${slang_SOURCE_DIR})
+    set(SLANG_INCLUDE_DIR ${slang_SOURCE_DIR}/include)
 endif()
 
 if(SGL_WINDOWS)

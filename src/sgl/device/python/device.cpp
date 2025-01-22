@@ -540,14 +540,14 @@ SGL_PY_EXPORT(device_device)
         "size"_a = 0,
         D(Device, create_acceleration_structure)
     );
-    device.def(
+    /*device.def(
         "query_coopvec_matrix_size",
         &Device::query_coopvec_matrix_size,
         "rows"_a,
         "cols"_a,
         "layout"_a,
         D_NA(Device, query_coopvec_matrix_size)
-    );
+    );*/
     device.def(
         "create_shader_table",
         [](Device* self,
@@ -757,6 +757,7 @@ SGL_PY_EXPORT(device_device)
 
     device.def_prop_ro("upload_heap", &Device::upload_heap, D(Device, upload_heap));
     device.def_prop_ro("read_back_heap", &Device::read_back_heap, D(Device, read_back_heap));
+    device.def_prop_ro("coop_vec", &Device::get_or_create_coop_vec, D_NA(Device, get_or_create_coop_vec));
     device.def("flush_print", &Device::flush_print, D(Device, flush_print));
     device.def("flush_print_to_string", &Device::flush_print_to_string, D(Device, flush_print_to_string));
     device.def("run_garbage_collection", &Device::run_garbage_collection, D(Device, run_garbage_collection));

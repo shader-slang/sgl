@@ -364,9 +364,9 @@ public:
     ref<AccelerationStructure> create_acceleration_structure(AccelerationStructureDesc desc);
 
     /**
-    * Get byte size of a coop-vec matrix of given shape and layout.
+    * Get coop vec instance
     */
-    size_t query_coopvec_matrix_size(uint32_t rows, uint32_t columns, CoopVecMatrixLayout layout);
+    ref<CoopVec> get_or_create_coop_vec();
 
 
     ref<ShaderTable> create_shader_table(ShaderTableDesc desc);

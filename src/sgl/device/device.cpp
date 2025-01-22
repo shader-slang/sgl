@@ -490,9 +490,6 @@ Device::Device(const DeviceDesc& desc)
         std::lock_guard lock(s_devices_mutex);
         s_devices.push_back(this);
     }
-
-    // Setup the coop-vec implementation.
-    m_coop_vec = make_ref<CoopVec>(ref<Device>(this));
 }
 
 Device::~Device()
@@ -666,9 +663,16 @@ ref<AccelerationStructure> Device::create_acceleration_structure(AccelerationStr
     return make_ref<AccelerationStructure>(ref<Device>(this), std::move(desc));
 }
 
-size_t Device::query_coopvec_matrix_size(uint32_t rows, uint32_t columns, CoopVecMatrixLayout layout)
+/*size_t Device::query_coopvec_matrix_size(uint32_t rows, uint32_t columns, CoopVecMatrixLayout layout)
 {
     return m_coop_vec->query_matrix_size(rows, columns, layout);
+}*/
+
+ref<CoopVec> Device::get_or_create_coop_vec()
+{
+    if (!m_coop_vec)
+        m_coop_vec.reset(new CoopVec(ref<Device>(this)));
+    return m_coop_vec;
 }
 
 ref<ShaderTable> Device::create_shader_table(ShaderTableDesc desc)
