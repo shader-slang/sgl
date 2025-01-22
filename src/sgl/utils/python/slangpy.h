@@ -261,7 +261,7 @@ public:
     void set_call_dimensionality(int call_dimensionality) { m_call_dimensionality = call_dimensionality; }
 
     /// Recursively populate the overall kernel call shape.
-    void populate_call_shape(std::vector<int>& call_shape, nb::object value);
+    void populate_call_shape(std::vector<size_t>& call_shape, nb::object value);
 
     /// Write call data to shader cursor before dispatch, optionally writing data for read back after the kernel has
     /// run.

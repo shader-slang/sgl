@@ -52,7 +52,7 @@ void NativeMarshall::store_readback(
     read_back.append(nb::make_tuple(binding, value, data));
 }
 
-void NativeBoundVariableRuntime::populate_call_shape(std::vector<int>& call_shape, nb::object value)
+void NativeBoundVariableRuntime::populate_call_shape(std::vector<size_t>& call_shape, nb::object value)
 {
     if (m_children) {
         // We have children, so load each child value and recurse down the tree.
@@ -82,13 +82,13 @@ void NativeBoundVariableRuntime::populate_call_shape(std::vector<int>& call_shap
         // Apply this shape to the overall call shape.
         auto shape = m_shape.as_vector();
         for (size_t i = 0; i < tf.size(); ++i) {
-            int shape_dim = shape[i];
-            int call_idx = tf[i];
+            size_t shape_dim = shape[i];
+            size_t call_idx = tf[i];
 
             // If the call index loaded from the transform is
             // out of bounds, this dimension is a sub-element index,
             // so ignore it.
-            if (call_idx >= static_cast<int>(csl)) {
+            if (call_idx >= csl) {
                 continue;
             }
 
@@ -97,7 +97,7 @@ void NativeBoundVariableRuntime::populate_call_shape(std::vector<int>& call_shap
             //- if current call shape == 1, shape_dim != 1, call is expanded
             //- if current call shape != 1, shape_dim == 1, shape is broadcast
             //- if current call shape != 1, shape_dim != 1, it's a mismatch
-            int& cs = call_shape[call_idx];
+            size_t& cs = call_shape[call_idx];
             if (cs != shape_dim) {
                 if (cs != 1 && shape_dim != 1) {
                     throw NativeBoundVariableException(
@@ -215,7 +215,7 @@ nb::object NativeBoundVariableRuntime::read_output(CallContext* context, nb::obj
 Shape NativeBoundCallRuntime::calculate_call_shape(int call_dimensionality, nb::list args, nb::dict kwargs)
 {
     // Setup initial call shape of correct dimensionality, with all dimensions set to 1.
-    std::vector<int> call_shape(call_dimensionality, 1);
+    std::vector<size_t> call_shape(call_dimensionality, 1);
 
     // Populate call shape for each positional argument.
     for (size_t idx = 0; idx < args.size(); ++idx) {
@@ -335,8 +335,8 @@ nb::object NativeCallData::exec(
     }
 
     // Calculate total threads and strides.
-    int total_threads = 1;
-    std::vector<int> strides;
+    size_t total_threads = 1;
+    std::vector<size_t> strides;
     auto cs = call_shape.as_vector();
     for (auto it = cs.rbegin(); it != cs.rend(); ++it) {
         strides.push_back(total_threads);
@@ -806,19 +806,19 @@ SGL_PY_EXPORT(utils_slangpy)
             [](Shape& self, nb::args args)
             {
                 if (args.size() == 0) {
-                    new (&self) Shape(std::vector<int>());
+                    new (&self) Shape(std::vector<size_t>());
                 } else if (args.size() == 1) {
                     if (args[0].is_none()) {
                         new (&self) Shape(std::nullopt);
                     } else if (nb::isinstance<nb::tuple>(args[0])) {
-                        new (&self) Shape(nb::cast<std::vector<int>>(args[0]));
+                        new (&self) Shape(nb::cast<std::vector<size_t>>(args[0]));
                     } else if (nb::isinstance<Shape>(args[0])) {
                         new (&self) Shape(nb::cast<Shape>(args[0]));
                     } else {
-                        new (&self) Shape(nb::cast<std::vector<int>>(args));
+                        new (&self) Shape(nb::cast<std::vector<size_t>>(args));
                     }
                 } else {
-                    new (&self) Shape(nb::cast<std::vector<int>>(args));
+                    new (&self) Shape(nb::cast<std::vector<size_t>>(args));
                 }
             },
             "args"_a,
@@ -832,7 +832,7 @@ SGL_PY_EXPORT(utils_slangpy)
         )
         .def(
             "__getitem__",
-            [](const Shape& self, size_t i) -> int
+            [](const Shape& self, size_t i) -> size_t
             {
                 if (i >= self.size())
                     throw nb::index_error(); // throwing index_error allows this to be used as a python iterator
@@ -848,9 +848,9 @@ SGL_PY_EXPORT(utils_slangpy)
             "as_tuple",
             [](Shape& self)
             {
-                std::vector<int>& v = self.as_vector();
+                std::vector<size_t>& v = self.as_vector();
                 nb::list py_list;
-                for (const int& item : v) {
+                for (const size_t& item : v) {
                     py_list.append(item);
                 }
                 return nb::tuple(py_list);
@@ -873,7 +873,7 @@ SGL_PY_EXPORT(utils_slangpy)
                     return self.as_vector() == nb::cast<Shape>(other).as_vector();
                 }
 
-                std::vector<int> v;
+                std::vector<size_t> v;
                 if (nb::try_cast(other, v)) {
                     return self.as_vector() == v;
                 }

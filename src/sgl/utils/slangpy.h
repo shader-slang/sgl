@@ -48,7 +48,7 @@ public:
     Shape() = default;
 
     /// Constructor from optional 'tuple'.
-    Shape(const std::optional<std::vector<int>>& shape)
+    Shape(const std::optional<std::vector<size_t>>& shape)
         : m_shape(shape)
     {
     }
@@ -70,7 +70,7 @@ public:
     {
         auto& this_vec = as_vector();
         auto& other_vec = other.as_vector();
-        std::vector<int> combined = this_vec;
+        std::vector<size_t> combined = this_vec;
         combined.insert(combined.end(), other_vec.begin(), other_vec.end());
         return Shape(combined);
     }
@@ -83,11 +83,11 @@ public:
     }
 
     /// Indexers.
-    int operator[](size_t i) const { return as_vector()[i]; }
-    int& operator[](size_t i) { return as_vector()[i]; }
+    size_t operator[](size_t i) const { return as_vector()[i]; }
+    size_t& operator[](size_t i) { return as_vector()[i]; }
 
     /// Access to internal vector.
-    std::vector<int>& as_vector()
+    std::vector<size_t>& as_vector()
     {
         if (!m_shape) {
             SGL_THROW("Shape is invalid");
@@ -96,7 +96,7 @@ public:
     }
 
     /// Const access to internal vector.
-    const std::vector<int>& as_vector() const
+    const std::vector<size_t>& as_vector() const
     {
         if (!m_shape) {
             SGL_THROW("Shape is invalid");
@@ -145,8 +145,8 @@ public:
     {
         if (valid()) {
             auto& shape = as_vector();
-            int total = 1;
-            std::vector<int> strides(shape.size(), 1);
+            size_t total = 1;
+            std::vector<size_t> strides(shape.size(), 1);
             for (int i = (int)shape.size() - 1; i >= 0; --i) {
                 strides[i] = total;
                 total *= shape[i];
@@ -158,7 +158,7 @@ public:
     }
 
 private:
-    std::optional<std::vector<int>> m_shape;
+    std::optional<std::vector<size_t>> m_shape;
 };
 
 class SGL_API CallContext : Object {
