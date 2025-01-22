@@ -563,7 +563,7 @@ public:
 
     Kind kind() const { return static_cast<Kind>(slang_target()->getKind()); }
 
-    char const* name() const { return slang_target()->getName(); }
+    const char* name() const { return slang_target()->getName(); }
 
     std::string full_name() const;
 
@@ -804,7 +804,7 @@ public:
     }
 
     /// Function name.
-    char const* name() const { return slang_target()->getName(); }
+    const char* name() const { return slang_target()->getName(); }
 
     /// Function return type.
     ref<const TypeReflection> return_type() { return detail::from_slang(m_owner, slang_target()->getReturnType()); }
