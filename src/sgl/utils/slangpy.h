@@ -48,7 +48,7 @@ public:
     Shape() = default;
 
     /// Constructor from optional 'tuple'.
-    Shape(const std::optional<std::vector<size_t>>& shape)
+    Shape(const std::optional<std::vector<int64_t>>& shape)
         : m_shape(shape)
     {
     }
@@ -70,7 +70,7 @@ public:
     {
         auto& this_vec = as_vector();
         auto& other_vec = other.as_vector();
-        std::vector<size_t> combined = this_vec;
+        std::vector<int64_t> combined = this_vec;
         combined.insert(combined.end(), other_vec.begin(), other_vec.end());
         return Shape(combined);
     }
@@ -83,11 +83,11 @@ public:
     }
 
     /// Indexers.
-    size_t operator[](size_t i) const { return as_vector()[i]; }
-    size_t& operator[](size_t i) { return as_vector()[i]; }
+    int64_t operator[](int64_t i) const { return as_vector()[i]; }
+    int64_t& operator[](int64_t i) { return as_vector()[i]; }
 
     /// Access to internal vector.
-    std::vector<size_t>& as_vector()
+    std::vector<int64_t>& as_vector()
     {
         if (!m_shape) {
             SGL_THROW("Shape is invalid");
@@ -96,7 +96,7 @@ public:
     }
 
     /// Const access to internal vector.
-    const std::vector<size_t>& as_vector() const
+    const std::vector<int64_t>& as_vector() const
     {
         if (!m_shape) {
             SGL_THROW("Shape is invalid");
@@ -108,7 +108,7 @@ public:
     bool valid() const { return m_shape.has_value(); }
 
     /// Get size (i.e. number of dimensions) of shape.
-    size_t size() const { return as_vector().size(); }
+    int64_t size() const { return as_vector().size(); }
 
     /// Check if concrete shape (no dimensions are -1).
     bool concrete() const
@@ -131,9 +131,9 @@ public:
     }
 
     /// Total element count (if this represented contiguous array)
-    size_t element_count() const
+    int64_t element_count() const
     {
-        size_t result = 1;
+        int64_t result = 1;
         for (auto dim : as_vector()) {
             result *= dim;
         }
@@ -145,8 +145,8 @@ public:
     {
         if (valid()) {
             auto& shape = as_vector();
-            size_t total = 1;
-            std::vector<size_t> strides(shape.size(), 1);
+            int64_t total = 1;
+            std::vector<int64_t> strides(shape.size(), 1);
             for (int i = (int)shape.size() - 1; i >= 0; --i) {
                 strides[i] = total;
                 total *= shape[i];
@@ -158,7 +158,7 @@ public:
     }
 
 private:
-    std::optional<std::vector<size_t>> m_shape;
+    std::optional<std::vector<int64_t>> m_shape;
 };
 
 class SGL_API CallContext : Object {
