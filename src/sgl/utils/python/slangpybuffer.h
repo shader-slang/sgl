@@ -166,6 +166,17 @@ public:
         return nb::cast(buffer);
     }
 
+    nb::object create_dispatchdata(nb::object data) const override
+    {
+        // Cast value to buffer, and get the cursor field to write to.
+        auto buffer = nb::cast<NativeNDBuffer*>(data);
+        nb::dict res;
+        res["buffer"] = buffer->storage();
+        res["shape"] = buffer->shape().as_vector();
+        res["strides"] = buffer->strides().as_vector();
+        return res;
+    }
+
     nb::object read_output(CallContext* context, NativeBoundVariableRuntime* binding, nb::object data) const override
     {
         SGL_UNUSED(context);
