@@ -72,7 +72,7 @@ inline std::optional<nb::dlpack::dtype> resource_format_to_dtype(Format format)
 
 static const char* __doc_sgl_buffer_to_numpy = R"doc()doc";
 
-inline nb::ndarray<nb::numpy> buffer_to_numpy(Buffer* self)
+nb::ndarray<nb::numpy> buffer_to_numpy(Buffer* self)
 {
     size_t data_size = self->size();
     void* data = new uint8_t[data_size];
@@ -100,7 +100,7 @@ inline nb::ndarray<nb::numpy> buffer_to_numpy(Buffer* self)
 
 static const char* __doc_sgl_buffer_from_numpy = R"doc()doc";
 
-inline void buffer_from_numpy(Buffer* self, nb::ndarray<nb::numpy> data)
+void buffer_from_numpy(Buffer* self, nb::ndarray<nb::numpy> data)
 {
     SGL_CHECK(is_ndarray_contiguous(data), "numpy array is not contiguous");
 
@@ -113,7 +113,7 @@ inline void buffer_from_numpy(Buffer* self, nb::ndarray<nb::numpy> data)
 
 static const char* __doc_sgl_buffer_to_torch = R"doc()doc";
 
-inline nb::ndarray<nb::pytorch, nb::device::cuda>
+nb::ndarray<nb::pytorch, nb::device::cuda>
 buffer_to_torch(Buffer* self, DataType type, std::vector<size_t> shape, std::vector<int64_t> strides, size_t offset)
 {
     SGL_CHECK(offset < self->size(), "offset is out of bounds");
@@ -151,7 +151,7 @@ static const char* __doc_sgl_texture_to_numpy = R"doc()doc";
 /**
  * Python binding wrapper for returning the content of a texture as a numpy array.
  */
-inline nb::ndarray<nb::numpy> texture_to_numpy(Texture* self, uint32_t mip_level, uint32_t array_slice)
+nb::ndarray<nb::numpy> texture_to_numpy(Texture* self, uint32_t mip_level, uint32_t array_slice)
 {
     SGL_CHECK_LT(mip_level, self->mip_count());
     SGL_CHECK_LT(array_slice, self->layer_count());

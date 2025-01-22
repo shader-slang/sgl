@@ -130,24 +130,54 @@ public:
         return fmt::format("[{}]", fmt::join(as_vector(), ", "));
     }
 
+    /// Total element count (if this represented contiguous array)
+    size_t element_count() const
+    {
+        size_t result = 1;
+        for (auto dim : as_vector()) {
+            result *= dim;
+        }
+        return result;
+    }
+
+    /// Calculate the strides of a buffer of this shape, assuming it is contiguous.
+    Shape calc_contiguous_strides() const
+    {
+        if (valid()) {
+            auto& shape = as_vector();
+            int total = 1;
+            std::vector<int> strides(shape.size(), 1);
+            for (int i = (int)shape.size() - 1; i >= 0; --i) {
+                strides[i] = total;
+                total *= shape[i];
+            }
+            return Shape(strides);
+        } else {
+            return Shape();
+        }
+    }
+
 private:
     std::optional<std::vector<int>> m_shape;
 };
 
 class SGL_API CallContext : Object {
 public:
-    CallContext(ref<Device> device, const Shape& call_shape)
+    CallContext(ref<Device> device, const Shape& call_shape, CallMode call_mode)
         : m_device(std::move(device))
         , m_call_shape(call_shape)
+        , m_call_mode(call_mode)
     {
     }
 
     Device* device() const { return m_device.get(); }
     const Shape& call_shape() const { return m_call_shape; }
+    CallMode call_mode() const { return m_call_mode; }
 
 private:
     ref<Device> m_device;
     Shape m_call_shape;
+    CallMode m_call_mode;
 };
 
 } // namespace sgl::slangpy
