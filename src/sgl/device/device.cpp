@@ -961,6 +961,8 @@ void Device::upload_buffer_data(Buffer* buffer, const void* data, size_t size, s
 
     std::memcpy(alloc->data, data, size);
 
+    // If command buffer is already open, only add the copy command, don't attempt
+    // to immediately submit.
     if (m_shared_command_buffer) {
         m_shared_command_buffer->copy_buffer_region(buffer, offset, alloc->buffer, alloc->offset, size);
     } else {

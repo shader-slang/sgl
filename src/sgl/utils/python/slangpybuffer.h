@@ -65,30 +65,6 @@ public:
         , m_element_stride(element_stride)
     {
     }
-    /*
-    /// Writes call data to a shader cursor before dispatch, optionally writing data for
-    /// read back after the kernel has executed. By default, this calls through to
-    /// create_calldata, which is typically overridden python side to generate a dictionary.
-    void write_shader_cursor_pre_dispatch(
-        CallContext* context,
-        NativeBoundVariableRuntime* binding,
-        ShaderCursor cursor,
-        nb::object value,
-        nb::list read_back
-    ) const override;
-
-
-    /// Dispatch data is just the value.
-    nb::object create_dispatchdata(nb::object data) const override { return data; }
-
-    /// If requested, output is just the input value (as it can't have changed).
-    nb::object read_output(CallContext* context, NativeBoundVariableRuntime* binding, nb::object data) const override
-    {
-        SGL_UNUSED(context);
-        SGL_UNUSED(binding);
-        return data;
-    };
-    */
 
     int dims() const { return m_dims; }
     bool writable() const { return m_writable; }

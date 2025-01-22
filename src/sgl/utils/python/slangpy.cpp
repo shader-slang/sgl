@@ -104,34 +104,6 @@ void NativeBoundVariableRuntime::populate_call_shape(std::vector<int>& call_shap
     }
 }
 
-void NativeBoundVariableRuntime::write_call_data_pre_dispatch(
-    CallContext* context,
-    nb::dict call_data,
-    nb::object value
-)
-{
-    if (m_children) {
-        // We have children, so generate call data for each child and
-        // store in a dictionary, then store the dictionary as the call data.
-        nb::dict cd_val;
-        for (const auto& [name, child_ref] : *m_children) {
-            if (child_ref) {
-                nb::object child_value = value[name.c_str()];
-                child_ref->write_call_data_pre_dispatch(context, cd_val, child_value);
-            }
-        }
-        if (cd_val.size() > 0) {
-            call_data[m_variable_name.c_str()] = cd_val;
-        }
-    } else {
-        // We are a leaf node, so generate and store call data for this node.
-        nb::object cd_val = m_python_type->create_calldata(context, this, value);
-        if (!cd_val.is_none()) {
-            call_data[m_variable_name.c_str()] = cd_val;
-        }
-    }
-}
-
 void NativeBoundVariableRuntime::write_shader_cursor_pre_dispatch(
     CallContext* context,
     ShaderCursor cursor,
@@ -253,27 +225,6 @@ Shape NativeBoundCallRuntime::calculate_call_shape(int call_dimensionality, nb::
     return Shape(call_shape);
 }
 
-void NativeBoundCallRuntime::write_calldata_pre_dispatch(
-    CallContext* context,
-    nb::dict call_data,
-    nb::list args,
-    nb::dict kwargs
-)
-{
-    // Write call data for each positional argument.
-    for (size_t idx = 0; idx < args.size(); ++idx) {
-        m_args[idx]->write_call_data_pre_dispatch(context, call_data, args[idx]);
-    }
-
-    // Write call data for each keyword argument.
-    for (auto [key, value] : kwargs) {
-        auto it = m_kwargs.find(nb::str(key).c_str());
-        if (it != m_kwargs.end()) {
-            it->second->write_call_data_pre_dispatch(context, call_data, nb::cast<nb::object>(value));
-        }
-    }
-}
-
 void NativeBoundCallRuntime::write_shader_cursor_pre_dispatch(
     CallContext* context,
     ShaderCursor cursor,
@@ -374,10 +325,6 @@ nb::object NativeCallData::exec(
         }
     }
 
-    // Write uniforms to call data.
-    // nb::dict call_data;
-    // m_runtime->write_calldata_pre_dispatch(context, call_data, unpacked_args, unpacked_kwargs);
-
     // Calculate total threads and strides.
     int total_threads = 1;
     std::vector<int> strides;
@@ -387,11 +334,6 @@ nb::object NativeCallData::exec(
         total_threads *= *it;
     }
     std::reverse(strides.begin(), strides.end());
-
-
-    // Copy user provided vars and insert call data.
-
-    // vars["call_data"] = call_data;
 
     nb::list read_back;
 
@@ -784,11 +726,6 @@ SGL_PY_EXPORT(utils_slangpy)
             D_NA(NativeBoundVariableRuntime, populate_call_shape)
         )
         .def(
-            "write_call_data_pre_dispatch",
-            &NativeBoundVariableRuntime::write_call_data_pre_dispatch,
-            D_NA(NativeBoundVariableRuntime, write_call_data_pre_dispatch)
-        )
-        .def(
             "read_call_data_post_dispatch",
             &NativeBoundVariableRuntime::read_call_data_post_dispatch,
             D_NA(NativeBoundVariableRuntime, read_call_data_post_dispatch)
@@ -819,11 +756,6 @@ SGL_PY_EXPORT(utils_slangpy)
             "calculate_call_shape",
             &NativeBoundCallRuntime::calculate_call_shape,
             D_NA(NativeBoundCallRuntime, calculate_call_shape)
-        )
-        .def(
-            "write_calldata_pre_dispatch",
-            &NativeBoundCallRuntime::write_calldata_pre_dispatch,
-            D_NA(NativeBoundCallRuntime, write_calldata_pre_dispatch)
         )
         .def(
             "read_call_data_post_dispatch",

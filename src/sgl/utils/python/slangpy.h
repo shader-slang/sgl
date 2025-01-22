@@ -252,9 +252,8 @@ public:
     /// Recursively populate the overall kernel call shape.
     void populate_call_shape(std::vector<int>& call_shape, nb::object value);
 
-    /// Write call data to be passed to a compute kernel by calling create_calldata on the marshal.
-    void write_call_data_pre_dispatch(CallContext* context, nb::dict call_data, nb::object value);
-
+    /// Write call data to shader cursor before dispatch, optionally writing data for read back after the kernel has
+    /// run.
     void
     write_shader_cursor_pre_dispatch(CallContext* context, ShaderCursor cursor, nb::object value, nb::list read_back);
 
@@ -308,9 +307,6 @@ public:
 
     /// Calculate the overall call shape by combining the shapes of all arguments.
     Shape calculate_call_shape(int call_dimensionality, nb::list args, nb::dict kwargs);
-
-    /// Write call data to be passed to a compute kernel by calling create_calldata on the argument marshals.
-    void write_calldata_pre_dispatch(CallContext* context, nb::dict call_data, nb::list args, nb::dict kwargs);
 
     void write_shader_cursor_pre_dispatch(
         CallContext* context,
