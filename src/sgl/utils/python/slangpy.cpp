@@ -624,6 +624,9 @@ SGL_PY_EXPORT(utils_slangpy)
         )
         .def_prop_rw("shape", &NativeSlangType::get_shape, &NativeSlangType::set_shape, D_NA(NativeSlangType, shape));
 
+    // This exposing of NativeMarshall as NativeMarshallBase, and the corresponding
+    // trampoline below is not how it is recommended in nanobind. It is a workaround
+    // for issue https://github.com/shader-slang/sgl/issues/159
     nb::class_<NativeMarshall, Object>(slangpy, "NativeMarshallBase") //
         .def(
             "__init__",
