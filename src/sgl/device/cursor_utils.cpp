@@ -68,114 +68,123 @@ namespace cursor_utils {
             return 0;
         }
     }
+
+    slang::TypeLayoutReflection* unwrap_array(slang::TypeLayoutReflection* layout)
+    {
+        while (layout->isArray()) {
+            layout = layout->getElementTypeLayout();
+        }
+        return layout;
+    }
+
     void check_array(
-        const TypeLayoutReflection* type_layout,
+        slang::TypeLayoutReflection* type_layout,
         size_t size,
         TypeReflection::ScalarType scalar_type,
         size_t element_count
     )
     {
-        ref<const TypeReflection> type = type_layout->type();
-        ref<const TypeReflection> element_type = type_layout->unwrap_array()->type();
-        size_t element_size = get_scalar_type_size(element_type->scalar_type());
+        slang::TypeReflection* type = type_layout->getType();
+        slang::TypeReflection* element_type = unwrap_array(type_layout)->getType();
+        size_t element_size = get_scalar_type_size((TypeReflection::ScalarType)element_type->getScalarType());
 
-        SGL_CHECK(type->is_array(), "\"{}\" cannot bind an array", type_layout->name());
+        SGL_CHECK(type->isArray(), "\"{}\" cannot bind an array", type_layout->getName());
         SGL_CHECK(
-            allow_scalar_conversion(scalar_type, element_type->scalar_type()),
+            allow_scalar_conversion(scalar_type, (TypeReflection::ScalarType)element_type->getScalarType()),
             "\"{}\" expects scalar type {} (no implicit conversion from type {})",
-            type_layout->name(),
-            element_type->scalar_type(),
+            type_layout->getName(),
+            (TypeReflection::ScalarType)element_type->getScalarType(),
             scalar_type
         );
         SGL_CHECK(
-            element_count <= type->element_count(),
+            element_count <= type->getElementCount(),
             "\"{}\" expects an array with at most {} elements (got {})",
-            type_layout->name(),
-            type->element_count(),
+            type_layout->getName(),
+            type->getElementCount(),
             element_count
         );
         SGL_ASSERT(element_count * element_size == size);
     }
 
-    void check_scalar(const TypeLayoutReflection* type_layout, size_t size, TypeReflection::ScalarType scalar_type)
+    void check_scalar(slang::TypeLayoutReflection* type_layout, size_t size, TypeReflection::ScalarType scalar_type)
     {
-        ref<const TypeReflection> type = type_layout->unwrap_array()->type();
+        slang::TypeReflection* type = unwrap_array(type_layout)->getType();
 
         SGL_CHECK(
-            type->kind() == TypeReflection::Kind::scalar,
+            (TypeReflection::Kind)type->getKind() == TypeReflection::Kind::scalar,
             "\"{}\" cannot bind a scalar value",
-            type_layout->name()
+            type_layout->getName()
         );
         SGL_CHECK(
-            allow_scalar_conversion(scalar_type, type->scalar_type()),
+            allow_scalar_conversion(scalar_type, (TypeReflection::ScalarType)type->getScalarType()),
             "\"{}\" expects scalar type {} (no implicit conversion from type {})",
-            type_layout->name(),
-            type->scalar_type(),
+            type_layout->getName(),
+            (TypeReflection::ScalarType)type->getScalarType(),
             scalar_type
         );
         SGL_UNUSED(size);
     }
 
     void check_vector(
-        const TypeLayoutReflection* type_layout,
+        slang::TypeLayoutReflection* type_layout,
         size_t size,
         TypeReflection::ScalarType scalar_type,
         int dimension
     )
     {
-        ref<const TypeReflection> type = type_layout->unwrap_array()->type();
+        slang::TypeReflection* type = unwrap_array(type_layout)->getType();
 
         SGL_CHECK(
-            type->kind() == TypeReflection::Kind::vector,
+            (TypeReflection::Kind)type->getKind() == TypeReflection::Kind::vector,
             "\"{}\" cannot bind a vector value",
-            type_layout->name()
+            type_layout->getName()
         );
         SGL_CHECK(
-            type->col_count() == uint32_t(dimension),
+            type->getColumnCount() == uint32_t(dimension),
             "\"{}\" expects a vector with dimension {} (got dimension {})",
-            type_layout->name(),
-            type->col_count(),
+            type_layout->getName(),
+            type->getColumnCount(),
             dimension
         );
         SGL_CHECK(
-            allow_scalar_conversion(scalar_type, type->scalar_type()),
+            allow_scalar_conversion(scalar_type, (TypeReflection::ScalarType)type->getScalarType()),
             "\"{}\" expects a vector with scalar type {} (no implicit conversion from type {})",
-            type_layout->name(),
-            type->scalar_type(),
+            type_layout->getName(),
+            (TypeReflection::ScalarType)type->getScalarType(),
             scalar_type
         );
         SGL_UNUSED(size);
     }
 
     void check_matrix(
-        const TypeLayoutReflection* type_layout,
+        slang::TypeLayoutReflection* type_layout,
         size_t size,
         TypeReflection::ScalarType scalar_type,
         int rows,
         int cols
     )
     {
-        ref<const TypeReflection> type = type_layout->unwrap_array()->type();
+        slang::TypeReflection* type = unwrap_array(type_layout)->getType();
 
         SGL_CHECK(
-            type->kind() == TypeReflection::Kind::matrix,
+            (TypeReflection::Kind)type->getKind() == TypeReflection::Kind::matrix,
             "\"{}\" cannot bind a matrix value",
-            type_layout->name()
+            type_layout->getName()
         );
         SGL_CHECK(
-            type->row_count() == uint32_t(rows) && type->col_count() == uint32_t(cols),
+            type->getRowCount() == uint32_t(rows) && type->getColumnCount() == uint32_t(cols),
             "\"{}\" expects a matrix with dimension {}x{} (got dimension {}x{})",
-            type_layout->name(),
-            type->row_count(),
-            type->col_count(),
+            type_layout->getName(),
+            type->getRowCount(),
+            type->getColumnCount(),
             rows,
             cols
         );
         SGL_CHECK(
-            allow_scalar_conversion(scalar_type, type->scalar_type()),
+            allow_scalar_conversion(scalar_type, (TypeReflection::ScalarType)type->getScalarType()),
             "\"{}\" expects a matrix with scalar type {} (no implicit conversion from type {})",
-            type_layout->name(),
-            type->scalar_type(),
+            type_layout->getName(),
+            (TypeReflection::ScalarType)type->getScalarType(),
             scalar_type
         );
         SGL_UNUSED(size);

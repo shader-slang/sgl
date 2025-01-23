@@ -12,6 +12,11 @@
 #include "sgl/math/vector_types.h"
 #include "sgl/math/matrix_types.h"
 
+// TODO: Decide if we want to disable / optimize type checks
+// currently can represent 50% of the cost of writes in
+// certain situations.
+#define SGL_ENABLE_CURSOR_TYPE_CHECKS
+
 namespace sgl {
 
 ShaderCursor::ShaderCursor(ShaderObject* shader_object)
@@ -336,17 +341,9 @@ inline bool is_acceleration_structure_resource_type(slang::TypeReflection* type)
         == TypeReflection::ResourceShape::acceleration_structure;
 }
 
-slang::TypeLayoutReflection* unwrap_array(slang::TypeLayoutReflection* layout)
-{
-    while (layout->isArray()) {
-        layout = layout->getElementTypeLayout();
-    }
-    return layout;
-}
-
 void ShaderCursor::set_resource(const ref<ResourceView>& resource_view) const
 {
-    slang::TypeReflection* type = unwrap_array(m_type_layout)->getType();
+    slang::TypeReflection* type = cursor_utils::unwrap_array(m_type_layout)->getType();
 
     SGL_CHECK(is_resource_type(type), "\"{}\" cannot bind a resource", m_type_layout->getName());
 
@@ -373,7 +370,7 @@ void ShaderCursor::set_resource(const ref<ResourceView>& resource_view) const
 
 void ShaderCursor::set_buffer(const ref<Buffer>& buffer) const
 {
-    slang::TypeReflection* type = unwrap_array(m_type_layout)->getType();
+    slang::TypeReflection* type = cursor_utils::unwrap_array(m_type_layout)->getType();
 
     SGL_CHECK(is_buffer_resource_type(type), "\"{}\" cannot bind a buffer", m_type_layout->getName());
 
@@ -392,7 +389,7 @@ void ShaderCursor::set_buffer(const ref<Buffer>& buffer) const
 
 void ShaderCursor::set_texture(const ref<Texture>& texture) const
 {
-    slang::TypeReflection* type = unwrap_array(m_type_layout)->getType();
+    slang::TypeReflection* type = cursor_utils::unwrap_array(m_type_layout)->getType();
 
     SGL_CHECK(is_texture_resource_type(type), "\"{}\" cannot bind a texture", m_type_layout->getName());
 
@@ -411,7 +408,7 @@ void ShaderCursor::set_texture(const ref<Texture>& texture) const
 
 void ShaderCursor::set_sampler(const ref<Sampler>& sampler) const
 {
-    slang::TypeReflection* type = unwrap_array(m_type_layout)->getType();
+    slang::TypeReflection* type = cursor_utils::unwrap_array(m_type_layout)->getType();
 
     SGL_CHECK(is_sampler_type(type), "\"{}\" cannot bind a sampler", m_type_layout->getName());
 
@@ -450,7 +447,7 @@ void ShaderCursor::set_object(const ref<MutableShaderObject>& object) const
 
 void ShaderCursor::set_cuda_tensor_view(const cuda::TensorView& tensor_view) const
 {
-    slang::TypeReflection* type = unwrap_array(m_type_layout)->getType();
+    slang::TypeReflection* type = cursor_utils::unwrap_array(m_type_layout)->getType();
 
     SGL_CHECK(is_buffer_resource_type(type), "\"{}\" cannot bind a CUDA tensor view", m_type_layout->getName());
 
@@ -470,11 +467,15 @@ void ShaderCursor::_set_array(
     size_t element_count
 ) const
 {
-    slang::TypeReflection* element_type = unwrap_array(m_type_layout)->getType();
+    slang::TypeReflection* element_type = cursor_utils::unwrap_array(m_type_layout)->getType();
     size_t element_size = cursor_utils::get_scalar_type_size((TypeReflection::ScalarType)element_type->getScalarType());
 
-    // cursor_utils::check_array(m_type_layout, size, scalar_type, element_count);
+#ifdef SGL_ENABLE_CURSOR_TYPE_CHECKS
+    cursor_utils::check_array(m_type_layout, size, scalar_type, element_count);
+#else
     SGL_UNUSED(scalar_type);
+    SGL_UNUSED(element_count);
+#endif
 
     size_t stride = m_type_layout->getElementStride(SLANG_PARAMETER_CATEGORY_UNIFORM);
     if (element_size == stride) {
@@ -490,17 +491,23 @@ void ShaderCursor::_set_array(
 
 void ShaderCursor::_set_scalar(const void* data, size_t size, TypeReflection::ScalarType scalar_type) const
 {
-    // cursor_utils::check_scalar(m_type_layout, size, scalar_type);
+#ifdef SGL_ENABLE_CURSOR_TYPE_CHECKS
+    cursor_utils::check_scalar(m_type_layout, size, scalar_type);
+#else
     SGL_UNUSED(scalar_type);
+#endif
     m_shader_object->set_data(m_offset, data, size);
 }
 
 void ShaderCursor::_set_vector(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int dimension)
     const
 {
-    // cursor_utils::check_vector(m_type_layout, size, scalar_type, dimension);
+#ifdef SGL_ENABLE_CURSOR_TYPE_CHECKS
+    cursor_utils::check_vector(m_type_layout, size, scalar_type, dimension);
+#else
     SGL_UNUSED(scalar_type);
     SGL_UNUSED(dimension);
+#endif
     m_shader_object->set_data(m_offset, data, size);
 }
 
@@ -512,9 +519,13 @@ void ShaderCursor::_set_matrix(
     int cols
 ) const
 {
-    // cursor_utils::check_matrix(m_type_layout, size, scalar_type, rows, cols);
+#ifdef SGL_ENABLE_CURSOR_TYPE_CHECKS
+    cursor_utils::check_matrix(m_type_layout, size, scalar_type, rows, cols);
+#else
     SGL_UNUSED(scalar_type);
     SGL_UNUSED(cols);
+#endif
+
     if (rows > 1) {
         // each row is aligned to 16 bytes
         size_t row_size = size / rows;
