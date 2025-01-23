@@ -28,8 +28,8 @@ public:
 
     ShaderCursor dereference() const;
 
-    ref<const TypeLayoutReflection> type_layout() const { return m_type_layout; }
-    ref<const TypeReflection> type() const { return m_type_layout->type(); }
+    // ref<const TypeLayoutReflection> type_layout() const { return m_type_layout; }
+    // ref<const TypeReflection> type() const { return m_type_layout->type(); }
 
     //
     // Navigation
@@ -76,8 +76,10 @@ public:
     void _set_vector(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int dimension) const;
     void _set_matrix(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int rows, int cols) const;
 
+    slang::TypeLayoutReflection* slang_type_layout() const { return m_type_layout; }
+
 private:
-    ref<const TypeLayoutReflection> m_type_layout;
+    slang::TypeLayoutReflection* m_type_layout;
     ShaderObject* m_shader_object{nullptr};
     ShaderOffset m_offset;
 };

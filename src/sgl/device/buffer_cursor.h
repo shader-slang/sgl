@@ -73,6 +73,8 @@ public:
     void _get_vector(void* data, size_t size, TypeReflection::ScalarType scalar_type, int dimension) const;
     void _get_matrix(void* data, size_t size, TypeReflection::ScalarType scalar_type, int rows, int cols) const;
 
+    slang::TypeLayoutReflection* slang_type_layout() const { return m_type_layout->slang_target(); }
+
 private:
     void write_data(size_t offset, const void* data, size_t size);
     void read_data(size_t offset, void* data, size_t size) const;

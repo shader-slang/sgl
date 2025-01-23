@@ -34,7 +34,12 @@ ShaderObject::ShaderObject(ref<Device> device, gfx::IShaderObject* shader_object
 
 ref<const TypeLayoutReflection> ShaderObject::element_type_layout() const
 {
-    return TypeLayoutReflection::from_slang(ref(this), m_shader_object->getElementTypeLayout());
+    return TypeLayoutReflection::from_slang(ref(this), slang_element_type_layout());
+}
+
+slang::TypeLayoutReflection* ShaderObject::slang_element_type_layout() const
+{
+    return m_shader_object->getElementTypeLayout();
 }
 
 uint32_t ShaderObject::get_entry_point_count() const
