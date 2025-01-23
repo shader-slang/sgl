@@ -102,8 +102,8 @@ ShaderCursor ShaderCursor::find_field(std::string_view name) const
         //
         field_cursor.m_offset.uniform_offset
             = m_offset.uniform_offset + narrow_cast<uint32_t>(field_layout->getOffset());
-        field_cursor.m_offset.binding_range_index
-            = m_offset.binding_range_index + (int32_t)m_type_layout->getFieldBindingRangeOffset(field_index);
+        field_cursor.m_offset.binding_range_index = m_offset.binding_range_index
+            + narrow_cast<int32_t>(m_type_layout->getFieldBindingRangeOffset(field_index));
 
         // The index of the field within any binding ranges will be the same
         // as the index computed for the parent structure.

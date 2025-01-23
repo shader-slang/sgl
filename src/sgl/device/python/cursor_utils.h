@@ -581,8 +581,6 @@ template<typename CursorType>
 inline void bind_traversable_cursor(nanobind::class_<CursorType>& cursor)
 {
     cursor //
-           //.def_prop_ro("_type_layout", &CursorType::type_layout, D_NA(CursorType, type_layout))
-           //.def_prop_ro("_type", &CursorType::type, D_NA(CursorType, type))
         .def("is_valid", &CursorType::is_valid, D_NA(CursorType, is_valid))
         .def("find_field", &CursorType::find_field, "name"_a, D_NA(CursorType, find_field))
         .def("find_element", &CursorType::find_element, "index"_a, D_NA(CursorType, find_element))

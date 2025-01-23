@@ -64,9 +64,6 @@ concept TraversableCursor = requires(T obj, std::string_view name_idx, uint32_t 
     {
         obj.slang_type_layout()
     } -> std::convertible_to<slang::TypeLayoutReflection*>;
-    //{
-    //    obj.type()
-    //} -> std::convertible_to<ref<const TypeReflection>>;
     {
         obj.is_valid()
     } -> std::convertible_to<bool>;

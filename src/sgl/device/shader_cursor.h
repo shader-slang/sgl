@@ -28,8 +28,7 @@ public:
 
     ShaderCursor dereference() const;
 
-    // ref<const TypeLayoutReflection> type_layout() const { return m_type_layout; }
-    // ref<const TypeReflection> type() const { return m_type_layout->type(); }
+    slang::TypeLayoutReflection* slang_type_layout() const { return m_type_layout; }
 
     //
     // Navigation
@@ -75,8 +74,6 @@ public:
     void _set_scalar(const void* data, size_t size, TypeReflection::ScalarType scalar_type) const;
     void _set_vector(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int dimension) const;
     void _set_matrix(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int rows, int cols) const;
-
-    slang::TypeLayoutReflection* slang_type_layout() const { return m_type_layout; }
 
 private:
     slang::TypeLayoutReflection* m_type_layout;
