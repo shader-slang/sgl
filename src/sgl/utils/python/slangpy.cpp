@@ -624,13 +624,10 @@ SGL_PY_EXPORT(utils_slangpy)
         )
         .def_prop_rw("shape", &NativeSlangType::get_shape, &NativeSlangType::set_shape, D_NA(NativeSlangType, shape));
 
-    // This exposing of NativeMarshall as NativeMarshallBase, and the corresponding
-    // trampoline below is not how it is recommended in nanobind. It is a workaround
-    // for issue https://github.com/shader-slang/sgl/issues/159
-    nb::class_<NativeMarshall, Object>(slangpy, "NativeMarshallBase") //
+    nb::class_<NativeMarshall, PyNativeMarshall, Object>(slangpy, "NativeMarshall") //
         .def(
             "__init__",
-            [](NativeMarshall& self) { new (&self) NativeMarshall(); },
+            [](NativeMarshall& self) { new (&self) PyNativeMarshall(); },
             D_NA(NativeMarshall, NativeMarshall)
         )
 
@@ -660,13 +657,6 @@ SGL_PY_EXPORT(utils_slangpy)
         .def("read_calldata", &NativeMarshall::read_calldata, D_NA(NativeMarshall, read_calldata))
         .def("create_output", &NativeMarshall::create_output, D_NA(NativeMarshall, create_output))
         .def("read_output", &NativeMarshall::read_output, D_NA(NativeMarshall, read_output));
-
-    nb::class_<PyNativeMarshall, NativeMarshall>(slangpy, "NativeMarshall") //
-        .def(
-            "__init__",
-            [](PyNativeMarshall& self) { new (&self) PyNativeMarshall(); },
-            D_NA(PyNativeMarshall, PyNativeMarshall)
-        );
 
     nb::class_<NativeBoundVariableRuntime, Object>(slangpy, "NativeBoundVariableRuntime") //
         .def(nb::init<>(), D_NA(NativeBoundVariableRuntime, NativeBoundVariableRuntime))
