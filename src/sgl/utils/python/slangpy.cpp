@@ -624,10 +624,10 @@ SGL_PY_EXPORT(utils_slangpy)
         )
         .def_prop_rw("shape", &NativeSlangType::get_shape, &NativeSlangType::set_shape, D_NA(NativeSlangType, shape));
 
-    nb::class_<NativeMarshall, PyNativeMarshall, Object>(slangpy, "NativeMarshall") //
+    nb::class_<NativeMarshall, Object>(slangpy, "NativeMarshallBase") //
         .def(
             "__init__",
-            [](NativeMarshall& self) { new (&self) PyNativeMarshall(); },
+            [](NativeMarshall& self) { new (&self) NativeMarshall(); },
             D_NA(NativeMarshall, NativeMarshall)
         )
 
@@ -657,6 +657,13 @@ SGL_PY_EXPORT(utils_slangpy)
         .def("read_calldata", &NativeMarshall::read_calldata, D_NA(NativeMarshall, read_calldata))
         .def("create_output", &NativeMarshall::create_output, D_NA(NativeMarshall, create_output))
         .def("read_output", &NativeMarshall::read_output, D_NA(NativeMarshall, read_output));
+
+    nb::class_<PyNativeMarshall, NativeMarshall>(slangpy, "NativeMarshall") //
+        .def(
+            "__init__",
+            [](PyNativeMarshall& self) { new (&self) PyNativeMarshall(); },
+            D_NA(PyNativeMarshall, PyNativeMarshall)
+        );
 
     nb::class_<NativeBoundVariableRuntime, Object>(slangpy, "NativeBoundVariableRuntime") //
         .def(nb::init<>(), D_NA(NativeBoundVariableRuntime, NativeBoundVariableRuntime))
