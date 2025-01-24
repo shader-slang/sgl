@@ -38,6 +38,27 @@ private:
     ref<NativeBoundVariableRuntime> m_source;
 };
 
+/// Base class for types that can be passed to a slang function. Use of
+/// this is optional, but it is the fastest way to supply signatures
+/// to slangpy without entering python code.
+class NativeObject : public Object {
+public:
+    NativeObject() = default;
+
+    virtual std::string get_slangpy_signature() const
+    {
+        SGL_THROW("SlangPy objects must supply a get_slangpy_signature function");
+    }
+};
+
+/// Nanobind trampoline class for NativeObject
+class PyNativeObject : public NativeObject {
+public:
+    NB_TRAMPOLINE(NativeObject, 1);
+
+    std::string get_slangpy_signature() const override { NB_OVERRIDE(get_slangpy_signature); }
+};
+
 /// Base class for a slang reflection type
 class NativeSlangType : public Object {
 public:

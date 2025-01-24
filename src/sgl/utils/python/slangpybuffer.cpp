@@ -252,7 +252,7 @@ SGL_PY_EXPORT(utils_slangpy_buffer)
         .def_rw("usage", &NativeNDBufferDesc::usage)
         .def_rw("memory_type", &NativeNDBufferDesc::memory_type);
 
-    nb::class_<NativeNDBuffer, Object>(slangpy, "NativeNDBuffer")
+    nb::class_<NativeNDBuffer, NativeObject>(slangpy, "NativeNDBuffer")
         .def(nb::init<ref<Device>, NativeNDBufferDesc>())
         .def_prop_ro("device", &NativeNDBuffer::device)
         .def_prop_rw("slangpy_signature", &NativeNDBuffer::slangpy_signature, &NativeNDBuffer::set_slagpy_signature)

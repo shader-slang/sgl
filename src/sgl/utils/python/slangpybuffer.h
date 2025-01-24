@@ -27,7 +27,7 @@ struct NativeNDBufferDesc {
     MemoryType memory_type{MemoryType::device_local};
 };
 
-class NativeNDBuffer : public Object {
+class NativeNDBuffer : public NativeObject {
 public:
     NativeNDBuffer(Device* device, NativeNDBufferDesc desc);
 
@@ -41,6 +41,8 @@ public:
     ResourceUsage usage() const { return m_desc.usage; }
     MemoryType memory_type() const { return m_desc.memory_type; }
     ref<Buffer> storage() const { return m_storage; }
+
+    std::string get_slangpy_signature() const override { return m_signature; }
 
 private:
     NativeNDBufferDesc m_desc;

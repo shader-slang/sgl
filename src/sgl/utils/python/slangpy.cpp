@@ -489,6 +489,31 @@ void _get_value_signature(
     std::stringstream& stream
 )
 {
+    auto type = o.type();
+    bool is_bound_type = nb::type_check(type);
+    if (is_bound_type) {
+        const auto& type_info = nb::type_info(type);
+        auto native_object = nb::cast<const NativeObject*>(o);
+
+        if (native_object) {
+            stream << type_info.name() << "\n";
+            stream << native_object->get_slangpy_signature() << "\n";
+            // log_info(
+            //     "Appending signature from native object {}: {}",
+            //     type_info.name(),
+            //     native_object->get_slangpy_signature()
+            //);
+            return;
+        }
+
+        // const auto& ndbuffer_info = typeid(NativeNDBuffer);
+        // log_info("Getting value signature for native bound type {}, is_buffer={}", type_info.name(),
+        // type_info==ndbuffer_info);
+    }
+
+    // bool is_int = nb::isinstance<int>(o);
+    // bool is_float = nb::isinstance<float>(o);
+
     // Add type name.
     auto type_name = nb::str(nb::getattr(o.type(), "__name__"));
     stream << type_name.c_str() << "\n";
@@ -613,6 +638,14 @@ SGL_PY_EXPORT(utils_slangpy)
             }
         }
     );
+
+    nb::class_<NativeObject, PyNativeObject, Object>(slangpy, "NativeObject") //
+        .def(
+            "__init__",
+            [](NativeObject& self) { new (&self) PyNativeObject(); },
+            D_NA(NativeObject, NativeObject)
+        )
+        .def("get_slangpy_signature", &NativeObject::get_slangpy_signature, D_NA(NativeObject, get_slangpy_signature));
 
     nb::class_<NativeSlangType, Object>(slangpy, "NativeSlangType") //
         .def(nb::init<>(), D_NA(NativeSlangType, NativeSlangType))
