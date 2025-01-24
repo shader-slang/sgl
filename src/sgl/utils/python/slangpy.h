@@ -43,11 +43,15 @@ class SignatureBuilder : public Object {
 public:
     SignatureBuilder()
     {
-        m_buffer = new uint8_t[256];
+        m_buffer = m_initial_buffer;
         m_size = 0;
-        m_capacity = 256;
+        m_capacity = sizeof(m_initial_buffer);
     }
-    ~SignatureBuilder() { delete[] m_buffer; }
+    ~SignatureBuilder()
+    {
+        if (m_buffer != m_initial_buffer)
+            delete[] m_buffer;
+    }
 
     void add(const std::string& value);
     void add(const char* value);
@@ -63,28 +67,22 @@ public:
 
     nb::str str() const;
 
-    std::string dbg_as_string() const
-    {
-        auto c_str = new char[m_size + 1];
-        memcpy(c_str, m_buffer, m_size);
-        c_str[m_size] = '\0';
-        auto res = std::string(c_str);
-        delete[] c_str;
-        return res;
-    }
+    std::string dbg_as_string() const { return std::string((const char*)m_buffer, m_size); }
 
 private:
+    uint8_t m_initial_buffer[1024];
     uint8_t* m_buffer;
-    int m_size;
-    int m_capacity;
+    size_t m_size;
+    size_t m_capacity;
 
-    void add_bytes(const uint8_t* data, int size)
+    void add_bytes(const uint8_t* data, size_t size)
     {
         if (m_size + size > m_capacity) {
             m_capacity = std::max(m_capacity * 2, m_size + size);
             uint8_t* new_buffer = new uint8_t[m_capacity];
             memcpy(new_buffer, m_buffer, m_size);
-            delete[] m_buffer;
+            if (m_buffer != m_initial_buffer)
+                delete[] m_buffer;
             m_buffer = new_buffer;
         }
         memcpy(m_buffer + m_size, data, size);
