@@ -26,6 +26,25 @@ buffer_to_torch(Buffer* self, DataType type, std::vector<size_t> shape, std::vec
 
 namespace sgl::slangpy {
 
+void SignatureBuilder::add(const std::string& value)
+{
+    add_bytes((const uint8_t*)value.data(), (int)value.length());
+}
+void SignatureBuilder::add(const char* value)
+{
+    add_bytes((const uint8_t*)value, (int)strlen(value));
+}
+
+nb::bytes SignatureBuilder::bytes() const
+{
+    return nb::bytes(m_buffer, m_size);
+}
+
+nb::str SignatureBuilder::str() const
+{
+    return nb::str((const char*)m_buffer, m_size);
+}
+
 void NativeMarshall::write_shader_cursor_pre_dispatch(
     CallContext* context,
     NativeBoundVariableRuntime* binding,
@@ -486,18 +505,41 @@ void pack_arg(nanobind::object arg, nanobind::object unpacked_arg)
 void _get_value_signature(
     const std::function<std::string(nb::handle)>& value_to_id,
     nb::handle o,
-    std::stringstream& stream
+    const ref<SignatureBuilder> builder
 )
 {
+    // Get python type.
+    auto type = o.type();
+
+    // Check if this is a bound native type, in which case we can hopefully do fast things!
+    bool is_bound_type = nb::type_check(type);
+    if (is_bound_type) {
+
+        // Get C++ type info, and attempt to cast to a slangpy native object
+        const auto& type_info = nb::type_info(type);
+
+        // If we have a native object, can directly request the signature.
+        const NativeObject* native_object;
+        if (nb::try_cast<const NativeObject*>(o, native_object)) {
+            *builder << type_info.name() << "\n";
+            native_object->read_signature(builder);
+            return;
+        }
+
+        // TODO: Handle known types (such as Texture) here.
+    }
+
+    // TODO: Add fast path for basic Python types (int/float) here.
+
     // Add type name.
     auto type_name = nb::str(nb::getattr(o.type(), "__name__"));
-    stream << type_name.c_str() << "\n";
+    *builder << type_name.c_str() << "\n";
 
     // Handle objects with get_this method.
     auto get_this = nb::getattr(o, "get_this", nb::none());
     if (!get_this.is_none()) {
         auto this_ = get_this();
-        _get_value_signature(value_to_id, this_, stream);
+        _get_value_signature(value_to_id, this_, builder);
         return;
     }
 
@@ -505,17 +547,17 @@ void _get_value_signature(
     if (nb::hasattr(o, "slangpy_signature")) {
 
         auto slangpy_sig = nb::getattr(o, "slangpy_signature");
-        stream << nb::str(slangpy_sig).c_str() << "\n";
+        *builder << nb::str(slangpy_sig).c_str() << "\n";
         return;
     }
 
     // If x is a dictionary get signature of its children.
     nb::dict dict;
     if (nb::try_cast(o, dict)) {
-        stream << "\n";
+        *builder << "\n";
         for (const auto& [k, v] : dict) {
-            stream << nb::str(k).c_str() << ":";
-            _get_value_signature(value_to_id, v, stream);
+            *builder << nb::str(k).c_str() << ":";
+            _get_value_signature(value_to_id, v, builder);
         }
         return;
     }
@@ -523,28 +565,29 @@ void _get_value_signature(
     // Use value_to_id function.
     std::string s = value_to_id(o);
     if (!s.empty()) {
-        stream << s;
+        *builder << s;
     }
-    stream << "\n";
+    *builder << "\n";
 }
 
 void hash_signature(
     const std::function<std::string(nb::handle)>& value_to_id,
     nb::args args,
     nb::kwargs kwargs,
-    std::stringstream& stream
+    const ref<SignatureBuilder>& builder
 )
 {
-    stream << "args\n";
+    builder->add("args\n");
     for (const auto& arg : args) {
-        stream << "N:";
-        _get_value_signature(value_to_id, arg, stream);
+        builder->add("N:");
+        _get_value_signature(value_to_id, arg, builder);
     }
 
-    stream << "kwargs\n";
+    builder->add("kwargs\n");
     for (const auto& [k, v] : kwargs) {
-        stream << nb::str(k).c_str() << ":";
-        _get_value_signature(value_to_id, v, stream);
+        builder->add(nb::str(k).c_str());
+        builder->add(":");
+        _get_value_signature(value_to_id, v, builder);
     }
 }
 
@@ -564,9 +607,9 @@ SGL_PY_EXPORT(utils_slangpy)
         "hash_signature",
         [](const std::function<std::string(nb::handle)>& value_to_id, nb::args args, nb::kwargs kwargs)
         {
-            std::stringstream stream;
-            hash_signature(value_to_id, args, kwargs, stream);
-            return stream.str();
+            auto builder = make_ref<SignatureBuilder>();
+            hash_signature(value_to_id, args, kwargs, builder);
+            return builder->str();
         },
         "value_to_id"_a,
         "args"_a,
@@ -613,6 +656,26 @@ SGL_PY_EXPORT(utils_slangpy)
             }
         }
     );
+
+    nb::class_<SignatureBuilder, Object>(slangpy, "SignatureBuilder") //
+        .def(nb::init<>(), D_NA(SignatureBuilder, SignatureBuilder))
+        .def("add", nb::overload_cast<const std::string&>(&SignatureBuilder::add), "value"_a, D_NA(NativeObject, add))
+        .def_prop_ro("str", &SignatureBuilder::str, D_NA(SignatureBuilder, str))
+        .def_prop_ro(
+            "bytes",
+            &SignatureBuilder::bytes,
+            nb::rv_policy::reference_internal,
+            D_NA(SignatureBuilder, bytes)
+        );
+
+    nb::class_<NativeObject, PyNativeObject, Object>(slangpy, "NativeObject") //
+        .def(
+            "__init__",
+            [](NativeObject& self) { new (&self) PyNativeObject(); },
+            D_NA(NativeObject, NativeObject)
+        )
+        .def_prop_rw("slangpy_signature", &NativeNDBuffer::slangpy_signature, &NativeNDBuffer::set_slangpy_signature)
+        .def("read_signature", &NativeObject::read_signature, "builder"_a, D_NA(NativeObject, read_signature));
 
     nb::class_<NativeSlangType, Object>(slangpy, "NativeSlangType") //
         .def(nb::init<>(), D_NA(NativeSlangType, NativeSlangType))
