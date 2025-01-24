@@ -38,17 +38,76 @@ private:
     ref<NativeBoundVariableRuntime> m_source;
 };
 
+/// Used during calculation of slangpy signature
+class SignatureBuilder : public Object {
+public:
+    SignatureBuilder()
+    {
+        m_buffer = new uint8_t[256];
+        m_size = 0;
+        m_capacity = 256;
+    }
+    ~SignatureBuilder() { delete[] m_buffer; }
+
+    void add(const std::string& value);
+    void add(const char* value);
+
+    template<typename T>
+    SignatureBuilder& operator<<(const T& value)
+    {
+        add(value);
+        return *this;
+    }
+
+    nb::bytes bytes() const;
+
+    nb::str str() const;
+
+    std::string dbg_as_string() const
+    {
+        auto c_str = new char[m_size + 1];
+        memcpy(c_str, m_buffer, m_size);
+        c_str[m_size] = '\0';
+        auto res = std::string(c_str);
+        delete[] c_str;
+        return res;
+    }
+
+private:
+    uint8_t* m_buffer;
+    int m_size;
+    int m_capacity;
+
+    void add_bytes(const uint8_t* data, int size)
+    {
+        if (m_size + size > m_capacity) {
+            m_capacity = std::max(m_capacity * 2, m_size + size);
+            uint8_t* new_buffer = new uint8_t[m_capacity];
+            memcpy(new_buffer, m_buffer, m_size);
+            delete[] m_buffer;
+            m_buffer = new_buffer;
+        }
+        memcpy(m_buffer + m_size, data, size);
+        m_size += size;
+    };
+};
+
 /// Base class for types that can be passed to a slang function. Use of
 /// this is optional, but it is the fastest way to supply signatures
-/// to slangpy without entering python code.
+/// to slangpy without entering python code. A user can set a fixed
+/// signature on a NativeObject on construction, or override the
+/// read_signature function to generate a signature dynamically.
 class NativeObject : public Object {
 public:
     NativeObject() = default;
 
-    virtual std::string get_slangpy_signature() const
-    {
-        SGL_THROW("SlangPy objects must supply a get_slangpy_signature function");
-    }
+    std::string_view slangpy_signature() const { return m_signature; }
+    void set_slangpy_signature(std::string_view signature) { m_signature = signature; }
+
+    virtual void read_signature(SignatureBuilder* builder) const { builder->add(m_signature); }
+
+private:
+    std::string m_signature;
 };
 
 /// Nanobind trampoline class for NativeObject
@@ -56,7 +115,7 @@ class PyNativeObject : public NativeObject {
 public:
     NB_TRAMPOLINE(NativeObject, 1);
 
-    std::string get_slangpy_signature() const override { NB_OVERRIDE(get_slangpy_signature); }
+    virtual void read_signature(SignatureBuilder* builder) const { NB_OVERRIDE(read_signature, builder); }
 };
 
 /// Base class for a slang reflection type

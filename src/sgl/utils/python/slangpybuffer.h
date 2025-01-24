@@ -32,8 +32,6 @@ public:
     NativeNDBuffer(Device* device, NativeNDBufferDesc desc);
 
     Device* device() const { return storage()->device(); }
-    std::string_view slangpy_signature() const { return m_signature; }
-    void set_slagpy_signature(std::string_view signature) { m_signature = signature; }
     ref<NativeSlangType> dtype() const { return m_desc.dtype; }
     Shape shape() const { return m_desc.shape; }
     Shape strides() const { return m_desc.strides; }
@@ -42,12 +40,9 @@ public:
     MemoryType memory_type() const { return m_desc.memory_type; }
     ref<Buffer> storage() const { return m_storage; }
 
-    std::string get_slangpy_signature() const override { return m_signature; }
-
 private:
     NativeNDBufferDesc m_desc;
     ref<Buffer> m_storage;
-    std::string m_signature;
 };
 
 

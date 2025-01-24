@@ -30,7 +30,9 @@ NativeNDBuffer::NativeNDBuffer(Device* device, NativeNDBufferDesc desc)
     buffer_desc.memory_type = desc.memory_type;
     m_storage = device->create_buffer(buffer_desc);
 
-    m_signature = fmt::format("[{},{},{}]", desc.dtype->get_type_reflection()->name(), desc.shape.size(), desc.usage);
+    set_slangpy_signature(
+        fmt::format("[{},{},{}]", desc.dtype->get_type_reflection()->name(), desc.shape.size(), desc.usage)
+    );
 }
 
 Shape NativeNDBufferMarshall::get_shape(nb::object data) const
@@ -255,7 +257,6 @@ SGL_PY_EXPORT(utils_slangpy_buffer)
     nb::class_<NativeNDBuffer, NativeObject>(slangpy, "NativeNDBuffer")
         .def(nb::init<ref<Device>, NativeNDBufferDesc>())
         .def_prop_ro("device", &NativeNDBuffer::device)
-        .def_prop_rw("slangpy_signature", &NativeNDBuffer::slangpy_signature, &NativeNDBuffer::set_slagpy_signature)
         .def_prop_ro("dtype", &NativeNDBuffer::dtype)
         .def_prop_ro("shape", &NativeNDBuffer::shape)
         .def_prop_ro("strides", &NativeNDBuffer::strides)
