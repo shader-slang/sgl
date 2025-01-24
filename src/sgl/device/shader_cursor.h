@@ -14,6 +14,11 @@
 
 namespace sgl {
 
+/// Cursor used for parsing and setting shader object fields. This class does *NOT* use
+/// the SGL reflection wrappers for accessing due to the performance implications of
+/// allocating/freeing them repeatedly. This is far faster, however does introduce
+/// a risk of mem access problems if the shader cursor is kept alive longer than
+/// the shader object it was created from.
 class SGL_API ShaderCursor {
 public:
     ShaderCursor() = default;
