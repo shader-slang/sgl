@@ -609,10 +609,6 @@ SGL_PY_EXPORT(utils_slangpy)
         {
             auto builder = make_ref<SignatureBuilder>();
             hash_signature(value_to_id, args, kwargs, builder);
-#if SGL_DEBUG
-            log_info("Signature:");
-            log_info("{}\n", builder->dbg_as_string());
-#endif
             return builder->str();
         },
         "value_to_id"_a,
