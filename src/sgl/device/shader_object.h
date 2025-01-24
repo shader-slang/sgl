@@ -25,6 +25,8 @@ public:
 
     virtual ref<const TypeLayoutReflection> element_type_layout() const;
 
+    virtual slang::TypeLayoutReflection* slang_element_type_layout() const;
+
     virtual uint32_t get_entry_point_count() const;
     virtual ref<ShaderObject> get_entry_point(uint32_t index) = 0;
 

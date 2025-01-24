@@ -12,10 +12,15 @@
 #include "sgl/math/vector_types.h"
 #include "sgl/math/matrix_types.h"
 
+// TODO: Decide if we want to disable / optimize type checks
+// currently can represent 50% of the cost of writes in
+// certain situations.
+#define SGL_ENABLE_CURSOR_TYPE_CHECKS
+
 namespace sgl {
 
 ShaderCursor::ShaderCursor(ShaderObject* shader_object)
-    : m_type_layout(shader_object->element_type_layout())
+    : m_type_layout(shader_object->slang_element_type_layout())
     , m_shader_object(shader_object)
     , m_offset(ShaderOffset::zero())
 {
@@ -32,7 +37,7 @@ std::string ShaderCursor::to_string() const
 ShaderCursor ShaderCursor::dereference() const
 {
     SGL_CHECK(is_valid(), "Invalid cursor");
-    switch (m_type_layout->kind()) {
+    switch ((TypeReflection::Kind)m_type_layout->getKind()) {
     case TypeReflection::Kind::constant_buffer:
     case TypeReflection::Kind::parameter_block:
         return ShaderCursor(m_shader_object->get_object(m_offset));
@@ -69,7 +74,7 @@ ShaderCursor ShaderCursor::find_field(std::string_view name) const
     // If the cursor is valid, we want to consider the type of data
     // it is referencing.
     //
-    switch (m_type_layout->kind()) {
+    switch ((TypeReflection::Kind)m_type_layout->getKind()) {
         // The easy/expected case is when the value has a structure type.
         //
     case TypeReflection::Kind::struct_: {
@@ -77,7 +82,7 @@ ShaderCursor ShaderCursor::find_field(std::string_view name) const
         //
         // If there is no such field, we have an error.
         //
-        int32_t field_index = m_type_layout->find_field_index_by_name(name.data(), name.data() + name.size());
+        int32_t field_index = (int32_t)m_type_layout->findFieldIndexByName(name.data(), name.data() + name.size());
         if (field_index < 0)
             break;
 
@@ -86,23 +91,24 @@ ShaderCursor ShaderCursor::find_field(std::string_view name) const
         // the offset information already in this cursor, plus
         // offsets derived from the field's layout.
         //
-        ref<const VariableLayoutReflection> field_layout = m_type_layout->get_field_by_index(field_index);
+        slang::VariableLayoutReflection* field_layout = m_type_layout->getFieldByIndex(field_index);
         ShaderCursor field_cursor;
 
-        // The field cursorwill point into the same parent object.
+        // The field cursor will point into the same parent object.
         //
         field_cursor.m_shader_object = m_shader_object;
 
-        // The type being pointed to is the tyep of the field.
+        // The type being pointed to is the type of the field.
         //
-        field_cursor.m_type_layout = field_layout->type_layout();
+        field_cursor.m_type_layout = field_layout->getTypeLayout();
 
         // The byte offset is the current offset plus the relative offset of the field.
         // The offset in binding ranges is computed similarly.
         //
-        field_cursor.m_offset.uniform_offset = m_offset.uniform_offset + narrow_cast<uint32_t>(field_layout->offset());
-        field_cursor.m_offset.binding_range_index
-            = m_offset.binding_range_index + m_type_layout->get_field_binding_range_offset(field_index);
+        field_cursor.m_offset.uniform_offset
+            = m_offset.uniform_offset + narrow_cast<uint32_t>(field_layout->getOffset());
+        field_cursor.m_offset.binding_range_index = m_offset.binding_range_index
+            + narrow_cast<int32_t>(m_type_layout->getFieldBindingRangeOffset(field_index));
 
         // The index of the field within any binding ranges will be the same
         // as the index computed for the parent structure.
@@ -195,16 +201,19 @@ ShaderCursor ShaderCursor::find_element(uint32_t index) const
     }
 #endif
 
-    switch (m_type_layout->kind()) {
+    switch ((TypeReflection::Kind)m_type_layout->getKind()) {
     case TypeReflection::Kind::array: {
         ShaderCursor element_cursor;
         element_cursor.m_shader_object = m_shader_object;
-        element_cursor.m_type_layout = m_type_layout->element_type_layout();
-        element_cursor.m_offset.uniform_offset
-            = m_offset.uniform_offset + index * narrow_cast<uint32_t>(m_type_layout->element_stride());
+        element_cursor.m_type_layout = m_type_layout->getElementTypeLayout();
+        element_cursor.m_offset.uniform_offset = m_offset.uniform_offset
+            + index
+                * narrow_cast<uint32_t>(
+                    m_type_layout->getElementStride(SlangParameterCategory::SLANG_PARAMETER_CATEGORY_UNIFORM)
+                );
         element_cursor.m_offset.binding_range_index = m_offset.binding_range_index;
         element_cursor.m_offset.binding_array_index
-            = m_offset.binding_array_index * narrow_cast<uint32_t>(m_type_layout->element_count()) + index;
+            = m_offset.binding_array_index * narrow_cast<uint32_t>(m_type_layout->getElementCount()) + index;
         return element_cursor;
     } break;
 
@@ -212,9 +221,9 @@ ShaderCursor ShaderCursor::find_element(uint32_t index) const
     case TypeReflection::Kind::matrix: {
         ShaderCursor field_cursor;
         field_cursor.m_shader_object = m_shader_object;
-        field_cursor.m_type_layout = m_type_layout->element_type_layout();
-        field_cursor.m_offset.uniform_offset
-            = m_offset.uniform_offset + narrow_cast<uint32_t>(m_type_layout->element_stride()) * index;
+        field_cursor.m_type_layout = m_type_layout->getElementTypeLayout();
+        field_cursor.m_offset.uniform_offset = m_offset.uniform_offset
+            + narrow_cast<uint32_t>(m_type_layout->getElementStride(SLANG_PARAMETER_CATEGORY_UNIFORM)) * index;
         field_cursor.m_offset.binding_range_index = m_offset.binding_range_index;
         field_cursor.m_offset.binding_array_index = m_offset.binding_array_index;
         return field_cursor;
@@ -241,14 +250,14 @@ ShaderCursor ShaderCursor::find_entry_point(uint32_t index) const
 // Resource binding
 //
 
-inline bool is_parameter_block(const TypeReflection* type)
+inline bool is_parameter_block(slang::TypeReflection* type)
 {
-    return type->kind() == TypeReflection::Kind::parameter_block;
+    return (TypeReflection::Kind)type->getKind() == TypeReflection::Kind::parameter_block;
 }
 
-inline bool is_resource_type(const TypeReflection* type)
+inline bool is_resource_type(slang::TypeReflection* type)
 {
-    switch (type->kind()) {
+    switch ((TypeReflection::Kind)type->getKind()) {
     case TypeReflection::Kind::constant_buffer:
     case TypeReflection::Kind::resource:
     case TypeReflection::Kind::sampler_state:
@@ -261,12 +270,15 @@ inline bool is_resource_type(const TypeReflection* type)
     }
 }
 
-inline bool is_buffer_resource_type(const TypeReflection* type)
+inline bool is_buffer_resource_type(slang::TypeReflection* type)
 {
-    switch (type->kind()) {
+    switch ((TypeReflection::Kind)type->getKind()) {
     case TypeReflection::Kind::constant_buffer:
-    case TypeReflection::Kind::resource:
-        switch (type->resource_shape() & TypeReflection::ResourceShape::base_shape_mask) {
+    case TypeReflection::Kind::resource: {
+        auto shape = (TypeReflection::ResourceShape)(
+            type->getResourceShape() & SlangResourceShape::SLANG_RESOURCE_BASE_SHAPE_MASK
+        );
+        switch (shape) {
         case TypeReflection::ResourceShape::texture_buffer:
         case TypeReflection::ResourceShape::structured_buffer:
         case TypeReflection::ResourceShape::byte_address_buffer:
@@ -274,7 +286,7 @@ inline bool is_buffer_resource_type(const TypeReflection* type)
         default:
             return false;
         }
-        break;
+    }
     case TypeReflection::Kind::texture_buffer:
     case TypeReflection::Kind::shader_storage_buffer:
     case TypeReflection::Kind::parameter_block:
@@ -284,11 +296,14 @@ inline bool is_buffer_resource_type(const TypeReflection* type)
     }
 }
 
-inline bool is_texture_resource_type(const TypeReflection* type)
+inline bool is_texture_resource_type(slang::TypeReflection* type)
 {
-    switch (type->kind()) {
-    case TypeReflection::Kind::resource:
-        switch (type->resource_shape() & TypeReflection::ResourceShape::base_shape_mask) {
+    switch ((TypeReflection::Kind)type->getKind()) {
+    case TypeReflection::Kind::resource: {
+        auto shape = (TypeReflection::ResourceShape)(
+            type->getResourceShape() & SlangResourceShape::SLANG_RESOURCE_BASE_SHAPE_MASK
+        );
+        switch (shape) {
         case TypeReflection::ResourceShape::texture_1d:
         case TypeReflection::ResourceShape::texture_2d:
         case TypeReflection::ResourceShape::texture_3d:
@@ -298,53 +313,55 @@ inline bool is_texture_resource_type(const TypeReflection* type)
             return false;
         }
         break;
+    }
     default:
         return false;
     }
 }
 
-inline bool is_sampler_type(const TypeReflection* type)
+inline bool is_sampler_type(slang::TypeReflection* type)
 {
-    return type->kind() == TypeReflection::Kind::sampler_state;
+    return (TypeReflection::Kind)type->getKind() == TypeReflection::Kind::sampler_state;
 }
 
-inline bool is_shader_resource_type(const TypeReflection* type)
+inline bool is_shader_resource_type(slang::TypeReflection* type)
 {
-    return type->resource_access() == TypeReflection::ResourceAccess::read;
+    return (TypeReflection::ResourceAccess)type->getResourceAccess() == TypeReflection::ResourceAccess::read;
 }
 
-inline bool is_unordered_access_type(const TypeReflection* type)
+inline bool is_unordered_access_type(slang::TypeReflection* type)
 {
-    return type->resource_access() == TypeReflection::ResourceAccess::read_write;
+    return (TypeReflection::ResourceAccess)type->getResourceAccess() == TypeReflection::ResourceAccess::read_write;
 }
 
-inline bool is_acceleration_structure_resource_type(const TypeReflection* type)
+inline bool is_acceleration_structure_resource_type(slang::TypeReflection* type)
 {
-    return type->kind() == TypeReflection::Kind::resource
-        && type->resource_shape() == TypeReflection::ResourceShape::acceleration_structure;
+    return (TypeReflection::Kind)type->getKind() == TypeReflection::Kind::resource
+        && (TypeReflection::ResourceShape)type->getResourceShape()
+        == TypeReflection::ResourceShape::acceleration_structure;
 }
 
 void ShaderCursor::set_resource(const ref<ResourceView>& resource_view) const
 {
-    ref<const TypeReflection> type = m_type_layout->unwrap_array()->type();
+    slang::TypeReflection* type = cursor_utils::unwrap_array(m_type_layout)->getType();
 
-    SGL_CHECK(is_resource_type(type), "\"{}\" cannot bind a resource", m_type_layout->name());
+    SGL_CHECK(is_resource_type(type), "\"{}\" cannot bind a resource", m_type_layout->getName());
 
     if (resource_view) {
         if (is_shader_resource_type(type)) {
             SGL_CHECK(
                 resource_view->type() == ResourceViewType::shader_resource,
                 "\"{}\" expects a shader resource view",
-                m_type_layout->name()
+                m_type_layout->getName()
             );
         } else if (is_unordered_access_type(type)) {
             SGL_CHECK(
                 resource_view->type() == ResourceViewType::unordered_access,
                 "\"{}\" expects an unordered access view",
-                m_type_layout->name()
+                m_type_layout->getName()
             );
         } else {
-            SGL_THROW("\"{}\" expects a valid resource view", m_type_layout->name());
+            SGL_THROW("\"{}\" expects a valid resource view", m_type_layout->getName());
         }
     }
 
@@ -353,9 +370,9 @@ void ShaderCursor::set_resource(const ref<ResourceView>& resource_view) const
 
 void ShaderCursor::set_buffer(const ref<Buffer>& buffer) const
 {
-    ref<const TypeReflection> type = m_type_layout->unwrap_array()->type();
+    slang::TypeReflection* type = cursor_utils::unwrap_array(m_type_layout)->getType();
 
-    SGL_CHECK(is_buffer_resource_type(type), "\"{}\" cannot bind a buffer", m_type_layout->name());
+    SGL_CHECK(is_buffer_resource_type(type), "\"{}\" cannot bind a buffer", m_type_layout->getName());
 
     if (buffer) {
         if (is_shader_resource_type(type)) {
@@ -363,7 +380,7 @@ void ShaderCursor::set_buffer(const ref<Buffer>& buffer) const
         } else if (is_unordered_access_type(type)) {
             set_resource(buffer->get_uav());
         } else {
-            SGL_THROW("\"{}\" expects a valid buffer", m_type_layout->name());
+            SGL_THROW("\"{}\" expects a valid buffer", m_type_layout->getName());
         }
     } else {
         set_resource(nullptr);
@@ -372,9 +389,9 @@ void ShaderCursor::set_buffer(const ref<Buffer>& buffer) const
 
 void ShaderCursor::set_texture(const ref<Texture>& texture) const
 {
-    ref<const TypeReflection> type = m_type_layout->unwrap_array()->type();
+    slang::TypeReflection* type = cursor_utils::unwrap_array(m_type_layout)->getType();
 
-    SGL_CHECK(is_texture_resource_type(type), "\"{}\" cannot bind a texture", m_type_layout->name());
+    SGL_CHECK(is_texture_resource_type(type), "\"{}\" cannot bind a texture", m_type_layout->getName());
 
     if (texture) {
         if (is_shader_resource_type(type)) {
@@ -382,7 +399,7 @@ void ShaderCursor::set_texture(const ref<Texture>& texture) const
         } else if (is_unordered_access_type(type)) {
             set_resource(texture->get_uav());
         } else {
-            SGL_THROW("\"{}\" expects a valid texture", m_type_layout->name());
+            SGL_THROW("\"{}\" expects a valid texture", m_type_layout->getName());
         }
     } else {
         set_resource(nullptr);
@@ -391,21 +408,21 @@ void ShaderCursor::set_texture(const ref<Texture>& texture) const
 
 void ShaderCursor::set_sampler(const ref<Sampler>& sampler) const
 {
-    ref<const TypeReflection> type = m_type_layout->unwrap_array()->type();
+    slang::TypeReflection* type = cursor_utils::unwrap_array(m_type_layout)->getType();
 
-    SGL_CHECK(is_sampler_type(type), "\"{}\" cannot bind a sampler", m_type_layout->name());
+    SGL_CHECK(is_sampler_type(type), "\"{}\" cannot bind a sampler", m_type_layout->getName());
 
     m_shader_object->set_sampler(m_offset, sampler);
 }
 
 void ShaderCursor::set_acceleration_structure(const ref<AccelerationStructure>& acceleration_structure) const
 {
-    ref<const TypeReflection> type = m_type_layout->type();
+    slang::TypeReflection* type = m_type_layout->getType();
 
     SGL_CHECK(
         is_acceleration_structure_resource_type(type),
         "\"{}\" cannot bind an acceleration structure",
-        m_type_layout->name()
+        m_type_layout->getName()
     );
 
     m_shader_object->set_acceleration_structure(m_offset, acceleration_structure);
@@ -413,32 +430,33 @@ void ShaderCursor::set_acceleration_structure(const ref<AccelerationStructure>& 
 
 void ShaderCursor::set_data(const void* data, size_t size) const
 {
-    if (m_type_layout->parameter_category() != TypeReflection::ParameterCategory::uniform)
-        SGL_THROW("\"{}\" cannot bind data", m_type_layout->name());
+    if ((TypeReflection::ParameterCategory)m_type_layout->getParameterCategory()
+        != TypeReflection::ParameterCategory::uniform)
+        SGL_THROW("\"{}\" cannot bind data", m_type_layout->getName());
     m_shader_object->set_data(m_offset, data, size);
 }
 
 void ShaderCursor::set_object(const ref<MutableShaderObject>& object) const
 {
-    ref<const TypeReflection> type = m_type_layout->type();
+    slang::TypeReflection* type = m_type_layout->getType();
 
-    SGL_CHECK(is_parameter_block(type), "\"{}\" cannot bind an object", m_type_layout->name());
+    SGL_CHECK(is_parameter_block(type), "\"{}\" cannot bind an object", m_type_layout->getName());
 
     m_shader_object->set_object(m_offset, object);
 }
 
 void ShaderCursor::set_cuda_tensor_view(const cuda::TensorView& tensor_view) const
 {
-    ref<const TypeReflection> type = m_type_layout->unwrap_array()->type();
+    slang::TypeReflection* type = cursor_utils::unwrap_array(m_type_layout)->getType();
 
-    SGL_CHECK(is_buffer_resource_type(type), "\"{}\" cannot bind a CUDA tensor view", m_type_layout->name());
+    SGL_CHECK(is_buffer_resource_type(type), "\"{}\" cannot bind a CUDA tensor view", m_type_layout->getName());
 
     if (is_shader_resource_type(type)) {
         m_shader_object->set_cuda_tensor_view(m_offset, tensor_view, false);
     } else if (is_unordered_access_type(type)) {
         m_shader_object->set_cuda_tensor_view(m_offset, tensor_view, true);
     } else {
-        SGL_THROW("\"{}\" expects a valid buffer", m_type_layout->name());
+        SGL_THROW("\"{}\" expects a valid buffer", m_type_layout->getName());
     }
 }
 
@@ -449,12 +467,17 @@ void ShaderCursor::_set_array(
     size_t element_count
 ) const
 {
-    ref<const TypeReflection> element_type = m_type_layout->unwrap_array()->type();
-    size_t element_size = cursor_utils::get_scalar_type_size(element_type->scalar_type());
+    slang::TypeReflection* element_type = cursor_utils::unwrap_array(m_type_layout)->getType();
+    size_t element_size = cursor_utils::get_scalar_type_size((TypeReflection::ScalarType)element_type->getScalarType());
 
+#ifdef SGL_ENABLE_CURSOR_TYPE_CHECKS
     cursor_utils::check_array(m_type_layout, size, scalar_type, element_count);
+#else
+    SGL_UNUSED(scalar_type);
+    SGL_UNUSED(element_count);
+#endif
 
-    size_t stride = m_type_layout->element_stride();
+    size_t stride = m_type_layout->getElementStride(SLANG_PARAMETER_CATEGORY_UNIFORM);
     if (element_size == stride) {
         m_shader_object->set_data(m_offset, data, size);
     } else {
@@ -468,14 +491,23 @@ void ShaderCursor::_set_array(
 
 void ShaderCursor::_set_scalar(const void* data, size_t size, TypeReflection::ScalarType scalar_type) const
 {
+#ifdef SGL_ENABLE_CURSOR_TYPE_CHECKS
     cursor_utils::check_scalar(m_type_layout, size, scalar_type);
+#else
+    SGL_UNUSED(scalar_type);
+#endif
     m_shader_object->set_data(m_offset, data, size);
 }
 
 void ShaderCursor::_set_vector(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int dimension)
     const
 {
+#ifdef SGL_ENABLE_CURSOR_TYPE_CHECKS
     cursor_utils::check_vector(m_type_layout, size, scalar_type, dimension);
+#else
+    SGL_UNUSED(scalar_type);
+    SGL_UNUSED(dimension);
+#endif
     m_shader_object->set_data(m_offset, data, size);
 }
 
@@ -487,7 +519,13 @@ void ShaderCursor::_set_matrix(
     int cols
 ) const
 {
+#ifdef SGL_ENABLE_CURSOR_TYPE_CHECKS
     cursor_utils::check_matrix(m_type_layout, size, scalar_type, rows, cols);
+#else
+    SGL_UNUSED(scalar_type);
+    SGL_UNUSED(cols);
+#endif
+
     if (rows > 1) {
         // each row is aligned to 16 bytes
         size_t row_size = size / rows;

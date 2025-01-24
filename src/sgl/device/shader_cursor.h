@@ -14,6 +14,11 @@
 
 namespace sgl {
 
+/// Cursor used for parsing and setting shader object fields. This class does *NOT* use
+/// the SGL reflection wrappers for accessing due to the performance implications of
+/// allocating/freeing them repeatedly. This is far faster, however does introduce
+/// a risk of mem access problems if the shader cursor is kept alive longer than
+/// the shader object it was created from.
 class SGL_API ShaderCursor {
 public:
     ShaderCursor() = default;
@@ -28,8 +33,7 @@ public:
 
     ShaderCursor dereference() const;
 
-    ref<const TypeLayoutReflection> type_layout() const { return m_type_layout; }
-    ref<const TypeReflection> type() const { return m_type_layout->type(); }
+    slang::TypeLayoutReflection* slang_type_layout() const { return m_type_layout; }
 
     //
     // Navigation
@@ -77,7 +81,7 @@ public:
     void _set_matrix(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int rows, int cols) const;
 
 private:
-    ref<const TypeLayoutReflection> m_type_layout;
+    slang::TypeLayoutReflection* m_type_layout;
     ShaderObject* m_shader_object{nullptr};
     ShaderOffset m_offset;
 };

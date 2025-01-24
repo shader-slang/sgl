@@ -118,7 +118,7 @@ void BufferElementCursor::_set_array(
     ref<const TypeReflection> element_type = m_type_layout->unwrap_array()->type();
     size_t element_size = cursor_utils::get_scalar_type_size(element_type->scalar_type());
 
-    cursor_utils::check_array(m_type_layout, size, scalar_type, element_count);
+    cursor_utils::check_array(m_type_layout->slang_target(), size, scalar_type, element_count);
 
     size_t stride = m_type_layout->element_stride();
     if (element_size == stride) {
@@ -142,7 +142,7 @@ void BufferElementCursor::_get_array(
     ref<const TypeReflection> element_type = m_type_layout->unwrap_array()->type();
     size_t element_size = cursor_utils::get_scalar_type_size(element_type->scalar_type());
 
-    cursor_utils::check_array(m_type_layout, size, scalar_type, element_count);
+    cursor_utils::check_array(m_type_layout->slang_target(), size, scalar_type, element_count);
 
     size_t stride = m_type_layout->element_stride();
     if (element_size == stride) {
@@ -157,13 +157,13 @@ void BufferElementCursor::_get_array(
 }
 void BufferElementCursor::_set_scalar(const void* data, size_t size, TypeReflection::ScalarType scalar_type)
 {
-    cursor_utils::check_scalar(m_type_layout, size, scalar_type);
+    cursor_utils::check_scalar(m_type_layout->slang_target(), size, scalar_type);
     write_data(m_offset, data, size);
 }
 
 void BufferElementCursor::_get_scalar(void* data, size_t size, TypeReflection::ScalarType scalar_type) const
 {
-    cursor_utils::check_scalar(m_type_layout, size, scalar_type);
+    cursor_utils::check_scalar(m_type_layout->slang_target(), size, scalar_type);
     read_data(m_offset, data, size);
 }
 
@@ -174,14 +174,14 @@ void BufferElementCursor::_set_vector(
     int dimension
 )
 {
-    cursor_utils::check_vector(m_type_layout, size, scalar_type, dimension);
+    cursor_utils::check_vector(m_type_layout->slang_target(), size, scalar_type, dimension);
     write_data(m_offset, data, size);
 }
 
 void BufferElementCursor::_get_vector(void* data, size_t size, TypeReflection::ScalarType scalar_type, int dimension)
     const
 {
-    cursor_utils::check_vector(m_type_layout, size, scalar_type, dimension);
+    cursor_utils::check_vector(m_type_layout->slang_target(), size, scalar_type, dimension);
     read_data(m_offset, data, size);
 }
 
@@ -193,7 +193,7 @@ void BufferElementCursor::_set_matrix(
     int cols
 )
 {
-    cursor_utils::check_matrix(m_type_layout, size, scalar_type, rows, cols);
+    cursor_utils::check_matrix(m_type_layout->slang_target(), size, scalar_type, rows, cols);
     write_data(m_offset, data, size);
 }
 
@@ -205,7 +205,7 @@ void BufferElementCursor::_get_matrix(
     int cols
 ) const
 {
-    cursor_utils::check_matrix(m_type_layout, size, scalar_type, rows, cols);
+    cursor_utils::check_matrix(m_type_layout->slang_target(), size, scalar_type, rows, cols);
     read_data(m_offset, data, size);
 }
 

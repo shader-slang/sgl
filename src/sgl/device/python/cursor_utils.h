@@ -357,31 +357,31 @@ private:
         if (!self.is_valid())
             return;
 
-        ref<const TypeLayoutReflection> type_layout = self.type_layout();
-        auto kind = type_layout->kind();
+        slang::TypeLayoutReflection* type_layout = self.slang_type_layout();
+        auto kind = (TypeReflection::Kind)type_layout->getKind();
 
         switch (kind) {
         case TypeReflection::Kind::scalar: {
-            auto type = type_layout->type();
+            auto type = type_layout->getType();
             SGL_ASSERT(type);
-            return m_write_scalar[(int)type->scalar_type()](self, nbval);
+            return m_write_scalar[(int)type->getScalarType()](self, nbval);
         }
         case TypeReflection::Kind::vector: {
-            auto type = type_layout->type();
+            auto type = type_layout->getType();
             SGL_ASSERT(type);
-            return m_write_vector[(int)type->scalar_type()][type->col_count()](self, nbval);
+            return m_write_vector[(int)type->getScalarType()][type->getColumnCount()](self, nbval);
         }
         case TypeReflection::Kind::matrix: {
-            auto type = type_layout->type();
+            auto type = type_layout->getType();
             SGL_ASSERT(type);
-            return m_write_matrix[(int)type->scalar_type()][type->row_count()][type->col_count()](self, nbval);
+            return m_write_matrix[(int)type->getScalarType()][type->getRowCount()][type->getColumnCount()](self, nbval);
         }
         case TypeReflection::Kind::constant_buffer:
         case TypeReflection::Kind::parameter_block:
         case TypeReflection::Kind::struct_: {
             // Unwrap constant buffers or parameter blocks
             if (kind != TypeReflection::Kind::struct_)
-                type_layout = type_layout->element_type_layout();
+                type_layout = type_layout->getElementTypeLayout();
 
             // Handle shader object if possible.
             if constexpr (requires { self.set_object(nullptr); }) {
@@ -394,9 +394,9 @@ private:
             // Expect a dict for a slang struct.
             if (nb::isinstance<nb::dict>(nbval)) {
                 auto dict = nb::cast<nb::dict>(nbval);
-                for (uint32_t i = 0; i < type_layout->field_count(); i++) {
-                    auto field = type_layout->get_field_by_index(i);
-                    const char* name = field->name();
+                for (uint32_t i = 0; i < type_layout->getFieldCount(); i++) {
+                    auto field = type_layout->getFieldByIndex(i);
+                    const char* name = field->getName();
                     auto child = self[name];
                     if (dict.contains(name)) {
                         m_stack.push_back(name);
@@ -416,26 +416,26 @@ private:
                 // data type and extracting individual elements.
                 auto nbarray = nb::cast<nb::ndarray<nb::numpy>>(nbval);
                 SGL_CHECK(nbarray.ndim() == 1, "numpy array must have 1 dimension.");
-                SGL_CHECK(nbarray.shape(0) == type_layout->element_count(), "numpy array is the wrong length.");
+                SGL_CHECK(nbarray.shape(0) == type_layout->getElementCount(), "numpy array is the wrong length.");
                 SGL_CHECK(is_ndarray_contiguous(nbarray), "data is not contiguous");
                 self._set_array(
                     nbarray.data(),
                     nbarray.nbytes(),
-                    type_layout->element_type_layout()->type()->scalar_type(),
+                    (TypeReflection::ScalarType)type_layout->getElementTypeLayout()->getType()->getScalarType(),
                     narrow_cast<int>(nbarray.shape(0))
                 );
                 return;
             } else if (nb::isinstance<nb::sequence>(nbval)) {
                 auto seq = nb::cast<nb::sequence>(nbval);
                 SGL_CHECK(
-                    nb::len(seq) == type_layout->element_count(),
+                    nb::len(seq) == type_layout->getElementCount(),
                     "sequence is the wrong length accessing type {}: {} != {}.",
-                    type_layout->type()->full_name(),
+                    type_layout->getType()->getName(),
                     nb::len(seq),
-                    type_layout->element_count()
+                    type_layout->getElementCount()
                 );
                 m_stack.push_back("[]");
-                for (uint32_t i = 0; i < type_layout->element_count(); i++) {
+                for (uint32_t i = 0; i < type_layout->getElementCount(); i++) {
                     auto child = self[i];
                     write_internal(child, seq[i]);
                 }
@@ -581,8 +581,6 @@ template<typename CursorType>
 inline void bind_traversable_cursor(nanobind::class_<CursorType>& cursor)
 {
     cursor //
-        .def_prop_ro("_type_layout", &CursorType::type_layout, D_NA(CursorType, type_layout))
-        .def_prop_ro("_type", &CursorType::type, D_NA(CursorType, type))
         .def("is_valid", &CursorType::is_valid, D_NA(CursorType, is_valid))
         .def("find_field", &CursorType::find_field, "name"_a, D_NA(CursorType, find_field))
         .def("find_element", &CursorType::find_element, "index"_a, D_NA(CursorType, find_element))

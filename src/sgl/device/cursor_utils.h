@@ -6,28 +6,28 @@
 namespace sgl {
 
 namespace cursor_utils {
-    bool allow_scalar_conversion(TypeReflection::ScalarType from, TypeReflection::ScalarType to);
-
     size_t get_scalar_type_size(TypeReflection::ScalarType type);
 
+    slang::TypeLayoutReflection* unwrap_array(slang::TypeLayoutReflection* layout);
+
     void check_array(
-        const TypeLayoutReflection* type_layout,
+        slang::TypeLayoutReflection* type_layout,
         size_t size,
         TypeReflection::ScalarType scalar_type,
         size_t element_count
     );
 
-    void check_scalar(const TypeLayoutReflection* type_layout, size_t size, TypeReflection::ScalarType scalar_type);
+    void check_scalar(slang::TypeLayoutReflection* type_layout, size_t size, TypeReflection::ScalarType scalar_type);
 
     void check_vector(
-        const TypeLayoutReflection* type_layout,
+        slang::TypeLayoutReflection* type_layout,
         size_t size,
         TypeReflection::ScalarType scalar_type,
         int dimension
     );
 
     void check_matrix(
-        const TypeLayoutReflection* type_layout,
+        slang::TypeLayoutReflection* type_layout,
         size_t size,
         TypeReflection::ScalarType scalar_type,
         int rows,
@@ -62,11 +62,8 @@ concept TraversableCursor = requires(T obj, std::string_view name_idx, uint32_t 
         obj.has_element(el_index)
     } -> std::convertible_to<bool>;
     {
-        obj.type_layout()
-    } -> std::convertible_to<ref<const TypeLayoutReflection>>;
-    {
-        obj.type()
-    } -> std::convertible_to<ref<const TypeReflection>>;
+        obj.slang_type_layout()
+    } -> std::convertible_to<slang::TypeLayoutReflection*>;
     {
         obj.is_valid()
     } -> std::convertible_to<bool>;

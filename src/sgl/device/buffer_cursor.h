@@ -26,6 +26,8 @@ public:
     ref<const TypeLayoutReflection> type_layout() const { return m_type_layout; }
     ref<const TypeReflection> type() const { return m_type_layout->type(); }
 
+    slang::TypeLayoutReflection* slang_type_layout() const { return m_type_layout->slang_target(); }
+
     size_t offset() const { return m_offset; }
 
     bool is_valid() const { return m_buffer != nullptr; }
