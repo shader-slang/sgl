@@ -36,9 +36,10 @@ struct CoopVecMatrixDesc
 {
     uint32_t rows{0};
     uint32_t cols{0};
-    size_t size{0}; // Size (in bytes) of the matrix
     DataType element_type{DataType::void_};
     CoopVecMatrixLayout layout{CoopVecMatrixLayout::row_major};
+    size_t size{0}; // Size (in bytes) of the matrix
+    size_t offset{0}; // Offset (in bytes) from start of buffer
 };
 
 class SGL_API CoopVec : public Object {
@@ -53,20 +54,21 @@ public:
     size_t query_matrix_size(uint32_t rows, uint32_t cols, CoopVecMatrixLayout layout, DataType element_type);
 
     // Convenience function for building a matrix desc; calls query_matrix_size internally
-    CoopVecMatrixDesc create_matrix_desc(uint32_t rows, uint32_t cols, CoopVecMatrixLayout layout, DataType element_type);
+    CoopVecMatrixDesc create_matrix_desc(uint32_t rows, uint32_t cols, CoopVecMatrixLayout layout, DataType element_type, size_t offset = 0);
 
     // Host-to-host conversion
     size_t convert_matrix_host(const void* src, CoopVecMatrixDesc src_desc, void* dst, CoopVecMatrixDesc dst_desc);
-    // Device-to-device conversion
-    void convert_matrix_device(const ref<Buffer>& src, size_t src_offset, CoopVecMatrixDesc src_desc, const ref<Buffer>& dst, size_t dst_offset, CoopVecMatrixDesc dst_desc, CommandBuffer* cmd = nullptr);
-    // Convert multiple matrices from device to device
-    void convert_matrix_multiple(const ref<Buffer>& src, const std::vector<size_t>& src_offset, const std::vector<CoopVecMatrixDesc>& src_desc, const ref<Buffer>& dst, const std::vector<size_t>& dst_offset, const std::vector<CoopVecMatrixDesc>& dst_desc, CommandBuffer* cmd = nullptr);
+    // Device-to-device conversion of single matrix
+    void convert_matrix_device(const ref<Buffer>& src, CoopVecMatrixDesc src_desc, const ref<Buffer>& dst, CoopVecMatrixDesc dst_desc, CommandBuffer* cmd = nullptr);
+    // Device-to-device conversion of multiple matrices
+    void convert_matrix_device(const ref<Buffer>& src, const std::vector<CoopVecMatrixDesc>& src_desc, const ref<Buffer>& dst, const std::vector<CoopVecMatrixDesc>& dst_desc, CommandBuffer* cmd = nullptr);
+    void convert_matrix_device(const ref<Buffer>& src, const CoopVecMatrixDesc *src_desc, const ref<Buffer>& dst, const CoopVecMatrixDesc *dst_desc, uint32_t matrix_count, CommandBuffer* cmd = nullptr);
+
+    size_t align_matrix_offset(size_t offset) { return k_matrix_alignment * ((offset + k_matrix_alignment - 1) / k_matrix_alignment); }
+    size_t align_vector_offset(size_t offset) { return k_vector_alignment * ((offset + k_vector_alignment - 1) / k_vector_alignment); }
 
 private:
     PFN_vkVoidFunction get_function(const char* name) const;
-
-    // Convert multiple matrices from device to device
-    void convert_matrix_internal(const ref<Buffer>& src, const size_t *src_offset, const CoopVecMatrixDesc *src_desc, const ref<Buffer>& dst, const size_t *dst_offset, const CoopVecMatrixDesc *dst_desc, uint32_t matrix_count, CommandBuffer* cmd = nullptr);
 
     Device* m_device;
 

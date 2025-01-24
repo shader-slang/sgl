@@ -201,14 +201,16 @@ size_t CoopVec::query_matrix_size(uint32_t rows, uint32_t cols, CoopVecMatrixLay
     return required_size;
 }
 
-CoopVecMatrixDesc CoopVec::create_matrix_desc(uint32_t rows, uint32_t cols, CoopVecMatrixLayout layout, DataType element_type)
+CoopVecMatrixDesc CoopVec::create_matrix_desc(uint32_t rows, uint32_t cols, CoopVecMatrixLayout layout, DataType element_type, size_t offset)
 {
+    SGL_CHECK((offset % k_matrix_alignment) == 0, "Matrix offset %d does not conform to required matrix alignment of %d", offset, k_matrix_alignment);
     CoopVecMatrixDesc result;
     result.rows = rows;
     result.cols = cols;
     result.layout = layout;
     result.element_type = element_type;
     result.size = query_matrix_size(rows, cols, layout, element_type);
+    result.offset = offset;
     return result;
 }
 
@@ -251,9 +253,9 @@ size_t CoopVec::convert_matrix_host(const void* src, CoopVecMatrixDesc src_desc,
     SGL_ASSERT(m_VkConvertCooperativeVectorMatrixNV);
 
     VkDeviceOrHostAddressConstKHR vk_src;
-    vk_src.hostAddress = src;
+    vk_src.hostAddress = reinterpret_cast<const uint8_t *>(src) + src_desc.offset;
     VkDeviceOrHostAddressKHR vk_dst;
-    vk_dst.hostAddress = dst;
+    vk_dst.hostAddress = reinterpret_cast<uint8_t *>(dst) + dst_desc.offset;
 
     size_t actual_size;
     VkConvertCooperativeVectorMatrixInfoNV info = build_vk_matrix_info(vk_src, src_desc, vk_dst, dst_desc, &actual_size);
@@ -266,43 +268,42 @@ size_t CoopVec::convert_matrix_host(const void* src, CoopVecMatrixDesc src_desc,
     return actual_size;
 }
 
-void CoopVec::convert_matrix_device(const ref<Buffer>& src, size_t src_offset, CoopVecMatrixDesc src_desc, const ref<Buffer>& dst, size_t dst_offset, CoopVecMatrixDesc dst_desc, CommandBuffer* cmd)
+void CoopVec::convert_matrix_device(const ref<Buffer>& src, CoopVecMatrixDesc src_desc, const ref<Buffer>& dst, CoopVecMatrixDesc dst_desc, CommandBuffer* cmd)
 {
-    convert_matrix_internal(src, &src_offset, &src_desc, dst, &dst_offset, &dst_desc, 1, cmd);
+    convert_matrix_device(src, &src_desc, dst, &dst_desc, 1, cmd);
 }
 
-void CoopVec::convert_matrix_multiple(const ref<Buffer>& src, const std::vector<size_t>& src_offset, const std::vector<CoopVecMatrixDesc>& src_desc, const ref<Buffer>& dst, const std::vector<size_t>& dst_offset, const std::vector<CoopVecMatrixDesc>& dst_desc, CommandBuffer* cmd)
+void CoopVec::convert_matrix_device(const ref<Buffer>& src, const std::vector<CoopVecMatrixDesc>& src_desc, const ref<Buffer>& dst, const std::vector<CoopVecMatrixDesc>& dst_desc, CommandBuffer* cmd)
 {
-    SGL_CHECK(src_offset.size() == src_desc.size(), "Number of source offsets and descriptors must match (%d != %d)", src_offset.size(), src_desc.size());
-    SGL_CHECK(dst_offset.size() == dst_desc.size(), "Number of destination offsets and descriptors must match (%d != %d)", dst_offset.size(), dst_desc.size());
     SGL_CHECK(src_desc.size() == dst_desc.size(), "Number of source and destination matrices must match (%d != %d)", src_desc.size(), dst_desc.size());
 
-    convert_matrix_internal(src, &src_offset[0], &src_desc[0], dst, &dst_offset[0], &dst_desc[0], uint32_t(src_offset.size()), cmd);
+    convert_matrix_device(src, &src_desc[0], dst, &dst_desc[0], uint32_t(src_desc.size()), cmd);
 }
 
-void CoopVec::convert_matrix_internal(const ref<Buffer>& src, const size_t *src_offset, const CoopVecMatrixDesc *src_desc, const ref<Buffer>& dst, const size_t *dst_offset, const CoopVecMatrixDesc *dst_desc, uint32_t matrix_count, CommandBuffer* cmd)
+void CoopVec::convert_matrix_device(const ref<Buffer>& src, const CoopVecMatrixDesc *src_desc, const ref<Buffer>& dst, const CoopVecMatrixDesc *dst_desc, uint32_t matrix_count, CommandBuffer* cmd)
 {
     SGL_ASSERT(m_vk_device);
     SGL_ASSERT(m_VkCmdConvertCooperativeVectorMatrixNV);
     SGL_CHECK(matrix_count > 0, "Matrix count must be 1 or more.");
-    /*SGL_CHECK(
-        dst->size() >= dst_offset + dst_desc.size,
-        "Destination buffer is too small (offset %d + matrix size %d > buffer size %d)",
-        dst_offset, dst_desc.size, dst->size()
-    );
-    SGL_CHECK(
-        src->size() >= src_offset + src_desc.size,
-        "Matrix size exceeds size of source buffer (offset %d + matrix size %d > buffer size %d)",
-        src_offset, src_desc.size, src->size()
-    );*/
 
     size_t actual_size;
     std::vector<VkConvertCooperativeVectorMatrixInfoNV> infos(matrix_count);
     for (size_t i = 0; i < matrix_count; i++) {
+        SGL_CHECK(
+            dst->size() >= dst_desc[i].offset + dst_desc[i].size,
+            "Destination buffer is too small (offset %d + matrix size %d > buffer size %d)",
+            dst_desc[i].offset, dst_desc[i].size, dst->size()
+        );
+        SGL_CHECK(
+            src->size() >= src_desc[i].offset + src_desc[i].size,
+            "Matrix size exceeds size of source buffer (offset %d + matrix size %d > buffer size %d)",
+            src_desc[i].offset, src_desc[i].size, src->size()
+        );
+
         VkDeviceOrHostAddressConstKHR vk_src;
-        vk_src.deviceAddress = src->device_address() + src_offset[i];
+        vk_src.deviceAddress = src->device_address() + src_desc[i].offset;
         VkDeviceOrHostAddressKHR vk_dst;
-        vk_dst.deviceAddress = dst->device_address() + dst_offset[i];
+        vk_dst.deviceAddress = dst->device_address() + dst_desc[i].offset;
 
         infos[i] = build_vk_matrix_info(vk_src, src_desc[i], vk_dst, dst_desc[i], &actual_size);
     }

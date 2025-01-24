@@ -64,9 +64,10 @@ static const char* __doc_sgl_CoopVec_query_matrix_size = R"doc()doc";
 static const char* __doc_sgl_CoopVec_create_matrix_desc = R"doc()doc";
 static const char* __doc_sgl_CoopVec_convert_matrix = R"doc()doc";
 static const char* __doc_sgl_CoopVec_convert_matrix_device = R"doc()doc";
-static const char* __doc_sgl_CoopVec_convert_matrix_multiple = R"doc()doc";
 static const char* __doc_sgl_CoopVec_matrix_alignment = R"doc()doc";
 static const char* __doc_sgl_CoopVec_vector_alignment = R"doc()doc";
+static const char* __doc_sgl_CoopVec_align_matrix_offset = R"doc()doc";
+static const char* __doc_sgl_CoopVec_align_vector_offset = R"doc()doc";
 
 inline size_t convert_matrix_host_to_host(CoopVec* self,
         nb::ndarray<nb::device::cpu> src, nb::ndarray<nb::device::cpu> dst,
@@ -108,31 +109,36 @@ SGL_PY_EXPORT(device_coopvec)
         .def(nb::init<>())
         .def(
             "__init__",
-            [](CoopVecMatrixDesc* self, uint32_t rows, uint32_t cols, size_t size, DataType element_type, CoopVecMatrixLayout layout) {
+            [](CoopVecMatrixDesc* self, uint32_t rows, uint32_t cols, DataType element_type, CoopVecMatrixLayout layout, size_t size, size_t offset) {
                 self->rows = rows;
                 self->cols = cols;
-                self->size = size;
                 self->element_type = element_type;
                 self->layout = layout;
+                self->size = size;
+                self->offset = offset;
             },
             "rows"_a,
             "cols"_a,
-            "size"_a,
             "element_type"_a,
-            "layout"_a
+            "layout"_a,
+            "size"_a,
+            "offset"_a
         )
         .def_rw("rows", &CoopVecMatrixDesc::rows, D_NA(CoopVec, MatrixDesc, rows))
         .def_rw("cols", &CoopVecMatrixDesc::cols, D_NA(CoopVec, MatrixDesc, cols))
-        .def_rw("size", &CoopVecMatrixDesc::size, D_NA(CoopVec, MatrixDesc, size))
         .def_rw("element_type", &CoopVecMatrixDesc::element_type, D_NA(CoopVec, MatrixDesc, element_type))
-        .def_rw("layout", &CoopVecMatrixDesc::layout, D_NA(CoopVec, MatrixDesc, layout));
+        .def_rw("layout", &CoopVecMatrixDesc::layout, D_NA(CoopVec, MatrixDesc, layout))
+        .def_rw("size", &CoopVecMatrixDesc::size, D_NA(CoopVec, MatrixDesc, size))
+        .def_rw("offset", &CoopVecMatrixDesc::offset, D_NA(CoopVec, MatrixDesc, offset));
 
     coop_vec
         .def("query_matrix_size", &CoopVec::query_matrix_size, D(CoopVec, query_matrix_size))
-        .def("create_matrix_desc", &CoopVec::create_matrix_desc, "rows"_a, "cols"_a, "layout"_a, "element_type"_a, D(CoopVec, create_matrix_desc))
+        .def("create_matrix_desc", &CoopVec::create_matrix_desc, "rows"_a, "cols"_a, "layout"_a, "element_type"_a, "offset"_a = 0, D(CoopVec, create_matrix_desc))
         .def("convert_matrix_host", &convert_matrix_host_to_host, "src"_a, "dst"_a, "src_layout"_a = nb::none(), "dst_layout"_a = nb::none(), D(CoopVec, convert_matrix))
-        .def("convert_matrix_device", &CoopVec::convert_matrix_device, "src"_a, "src_offset"_a, "src_desc"_a, "dst"_a, "dst_offset"_a, "dst_desc"_a, "cmd"_a = nullptr, D(CoopVec, convert_matrix_device))
-        .def("convert_matrix_multiple", &CoopVec::convert_matrix_multiple, "src"_a, "src_offset"_a, "src_desc"_a, "dst"_a, "dst_offset"_a, "dst_desc"_a, "cmd"_a = nullptr, D(CoopVec, convert_matrix_multiple))
+        .def("convert_matrix_device", static_cast<void (CoopVec::*)(const ref<Buffer>&, CoopVecMatrixDesc, const ref<Buffer>&, CoopVecMatrixDesc, CommandBuffer*)>(&CoopVec::convert_matrix_device), "src"_a, "src_desc"_a, "dst"_a, "dst_desc"_a, "cmd"_a = nullptr, D(CoopVec, convert_matrix_device))
+        .def("convert_matrix_device", static_cast<void (CoopVec::*)(const ref<Buffer>&, const std::vector<CoopVecMatrixDesc>&, const ref<Buffer>&, const std::vector<CoopVecMatrixDesc>&, CommandBuffer*)>(&CoopVec::convert_matrix_device), "src"_a, "src_desc"_a, "dst"_a, "dst_desc"_a, "cmd"_a = nullptr, D(CoopVec, convert_matrix_device))
+        .def("align_matrix_offset", &CoopVec::align_matrix_offset, "offset"_a, D(CoopVec, align_matrix_offset))
+        .def("align_vector_offset", &CoopVec::align_vector_offset, "offset"_a, D(CoopVec, align_vector_offset))
         .def_ro_static("matrix_alignment", &CoopVec::k_matrix_alignment, D(CoopVec, matrix_alignment))
         .def_ro_static("vector_alignment", &CoopVec::k_vector_alignment, D(CoopVec, vector_alignment));
 }
