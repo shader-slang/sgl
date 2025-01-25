@@ -316,12 +316,12 @@ nb::object NativeCallData::call(ref<NativeCallRuntimeOptions> opts, nb::args arg
 
 nb::object NativeCallData::append_to(
     ref<NativeCallRuntimeOptions> opts,
-    ref<CommandBuffer> command_buffer,
+    CommandBuffer* command_buffer,
     nb::args args,
     nb::kwargs kwargs
 )
 {
-    return exec(opts, command_buffer.get(), args, kwargs);
+    return exec(opts, command_buffer, args, kwargs);
 }
 
 nb::object NativeCallData::exec(

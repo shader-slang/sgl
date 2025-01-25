@@ -63,8 +63,15 @@ public:
         if (m_parent) {
             m_parent->gather_runtime_options(options);
         }
-        if (m_type == sgl::slangpy::FunctionNodeType::uniforms) {
+        switch (m_type) {
+        case sgl::slangpy::FunctionNodeType::this_:
+            options->set_this(m_data);
+            break;
+        case sgl::slangpy::FunctionNodeType::uniforms:
             options->get_uniforms().append(m_data);
+            break;
+        default:
+            break;
         }
     }
 

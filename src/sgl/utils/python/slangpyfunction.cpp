@@ -15,18 +15,74 @@ namespace sgl::slangpy {
 
 nb::object NativeFunctionNode::call(nb::dict cache, nb::args args, nb::kwargs kwargs)
 {
-    SGL_UNUSED(cache);
-    SGL_UNUSED(args);
-    SGL_UNUSED(kwargs);
-    return nb::none();
+    auto options = make_ref<NativeCallRuntimeOptions>();
+    gather_runtime_options(options);
+
+    nb::tuple full_args;
+    if (!options->get_this().is_none()) {
+        args = nb::cast<nb::args>(nb::make_tuple(options->get_this()) + args);
+    }
+
+    auto builder = make_ref<SignatureBuilder>();
+    read_signature(builder);
+    hash_signature(
+        [&](nb::handle value)
+        {
+            if (true) {
+                SGL_THROW("Bad type");
+            }
+            return nb::str(value).c_str();
+        },
+        args,
+        kwargs,
+        make_ref<SignatureBuilder>()
+    );
+
+    nb::str sig = builder->str();
+    if (cache.contains(sig)) {
+        NativeCallData* call_data = nb::cast<NativeCallData*>(cache[sig]);
+        return call_data->call(options, args, kwargs);
+    } else {
+        ref<NativeCallData> call_data = generate_call_data(args, kwargs);
+        cache[sig] = call_data;
+        return call_data->call(options, args, kwargs);
+    }
 }
 
 void NativeFunctionNode::append_to(nb::dict cache, CommandBuffer* command_buffer, nb::args args, nb::kwargs kwargs)
 {
-    SGL_UNUSED(cache);
-    SGL_UNUSED(command_buffer);
-    SGL_UNUSED(args);
-    SGL_UNUSED(kwargs);
+    auto options = make_ref<NativeCallRuntimeOptions>();
+    gather_runtime_options(options);
+
+    nb::tuple full_args;
+    if (!options->get_this().is_none()) {
+        args = nb::cast<nb::args>(nb::make_tuple(options->get_this()) + args);
+    }
+
+    auto builder = make_ref<SignatureBuilder>();
+    read_signature(builder);
+    hash_signature(
+        [&](nb::handle value)
+        {
+            if (true) {
+                SGL_THROW("Bad type");
+            }
+            return nb::str(value).c_str();
+        },
+        args,
+        kwargs,
+        make_ref<SignatureBuilder>()
+    );
+
+    nb::str sig = builder->str();
+    if (cache.contains(sig)) {
+        NativeCallData* call_data = nb::cast<NativeCallData*>(cache[sig]);
+        call_data->append_to(options, command_buffer, args, kwargs);
+    } else {
+        ref<NativeCallData> call_data = generate_call_data(args, kwargs);
+        cache[sig] = call_data;
+        call_data->append_to(options, command_buffer, args, kwargs);
+    }
 }
 
 } // namespace sgl::slangpy
