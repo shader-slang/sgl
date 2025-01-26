@@ -139,6 +139,12 @@ void NativeBoundVariableRuntime::write_shader_cursor_pre_dispatch(
     nb::list read_back
 )
 {
+    // Dereference the cursor if it is a reference.
+    // We do this here to avoid doing it automatically for every
+    // child.
+    if (cursor.is_reference())
+        cursor = cursor.dereference();
+
     if (m_children) {
         // We have children, so generate call data for each child and
         // store in a dictionary, then store the dictionary as the call data.
@@ -262,6 +268,12 @@ void NativeBoundCallRuntime::write_shader_cursor_pre_dispatch(
 
 )
 {
+    // Dereference the cursor if it is a reference.
+    // We do this here to avoid doing it automatically for every
+    // child.
+    if (cursor.is_reference())
+        cursor = cursor.dereference();
+
     // Write call data for each positional argument.
     for (size_t idx = 0; idx < args.size(); ++idx) {
         m_args[idx]->write_shader_cursor_pre_dispatch(context, cursor, args[idx], read_back);

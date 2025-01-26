@@ -34,6 +34,17 @@ std::string ShaderCursor::to_string() const
     return "ShaderCursor()";
 }
 
+bool ShaderCursor::is_reference() const
+{
+    switch ((TypeReflection::Kind)m_type_layout->getKind()) {
+    case TypeReflection::Kind::constant_buffer:
+    case TypeReflection::Kind::parameter_block:
+        return true;
+    default:
+        return false;
+    }
+}
+
 ShaderCursor ShaderCursor::dereference() const
 {
     SGL_CHECK(is_valid(), "Invalid cursor");

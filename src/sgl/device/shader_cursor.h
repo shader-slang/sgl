@@ -31,6 +31,8 @@ public:
 
     std::string to_string() const;
 
+    bool is_reference() const;
+
     ShaderCursor dereference() const;
 
     slang::TypeLayoutReflection* slang_type_layout() const { return m_type_layout; }
