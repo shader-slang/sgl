@@ -88,7 +88,7 @@ void NativeBoundVariableRuntime::populate_call_shape(std::vector<int>& call_shap
         }
 
         // Read the transform and call shape size.
-        auto tf = m_transform.as_vector();
+        const std::vector<int>& tf = m_transform.as_vector();
         size_t csl = call_shape.size();
 
         // Get the shape of the value. In the case of none-concrete types,
@@ -99,7 +99,7 @@ void NativeBoundVariableRuntime::populate_call_shape(std::vector<int>& call_shap
             m_shape = m_python_type->get_shape(value);
 
         // Apply this shape to the overall call shape.
-        auto shape = m_shape.as_vector();
+        const std::vector<int>& shape = m_shape.as_vector();
         for (size_t i = 0; i < tf.size(); ++i) {
             int shape_dim = shape[i];
             int call_idx = tf[i];
@@ -356,7 +356,7 @@ nb::object NativeCallData::exec(
     // Calculate total threads and strides.
     int total_threads = 1;
     std::vector<int> strides;
-    auto cs = call_shape.as_vector();
+    const std::vector<int>& cs = call_shape.as_vector();
     for (auto it = cs.rbegin(); it != cs.rend(); ++it) {
         strides.push_back(total_threads);
         total_threads *= *it;
