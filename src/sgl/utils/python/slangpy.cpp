@@ -139,12 +139,6 @@ void NativeBoundVariableRuntime::write_shader_cursor_pre_dispatch(
     nb::list read_back
 )
 {
-    // Dereference the cursor if it is a reference.
-    // We do this here to avoid doing it automatically for every
-    // child.
-    if (cursor.is_reference())
-        cursor = cursor.dereference();
-
     if (m_children) {
         // We have children, so generate call data for each child and
         // store in a dictionary, then store the dictionary as the call data.
@@ -268,12 +262,6 @@ void NativeBoundCallRuntime::write_shader_cursor_pre_dispatch(
 
 )
 {
-    // Dereference the cursor if it is a reference.
-    // We do this here to avoid doing it automatically for every
-    // child.
-    if (cursor.is_reference())
-        cursor = cursor.dereference();
-
     // Write call data for each positional argument.
     for (size_t idx = 0; idx < args.size(); ++idx) {
         m_args[idx]->write_shader_cursor_pre_dispatch(context, cursor, args[idx], read_back);
@@ -382,11 +370,16 @@ nb::object NativeCallData::exec(
     {
         auto call_data_cursor = cursor.find_field("call_data");
 
+        // Dereference the cursor if it is a reference.
+        // We do this here to avoid doing it automatically for every
+        // child. Shouldn't need to do recursively as its only
+        // relevant for parameter blocks and constant buffers.
+        if (cursor.is_reference())
+            cursor = cursor.dereference();
+
         if (!strides.empty()) {
-            call_data_cursor["_call_stride"]
-                ._set_array(&strides[0], strides.size() * 4, TypeReflection::ScalarType::int32, strides.size());
-            call_data_cursor["_call_dim"]
-                ._set_array(&cs[0], cs.size() * 4, TypeReflection::ScalarType::int32, cs.size());
+            call_data_cursor["_call_stride"]._set_array_unsafe(&strides[0], strides.size() * 4, strides.size());
+            call_data_cursor["_call_dim"]._set_array_unsafe(&cs[0], cs.size() * 4, cs.size());
         }
         call_data_cursor["_thread_count"] = uint3(total_threads, 1, 1);
 
