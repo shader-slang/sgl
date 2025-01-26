@@ -374,8 +374,8 @@ nb::object NativeCallData::exec(
         // We do this here to avoid doing it automatically for every
         // child. Shouldn't need to do recursively as its only
         // relevant for parameter blocks and constant buffers.
-        if (cursor.is_reference())
-            cursor = cursor.dereference();
+        if (call_data_cursor.is_reference())
+            call_data_cursor = call_data_cursor.dereference();
 
         if (!strides.empty()) {
             call_data_cursor["_call_stride"]._set_array_unsafe(&strides[0], strides.size() * 4, strides.size());
