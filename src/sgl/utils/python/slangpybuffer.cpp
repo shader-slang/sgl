@@ -62,14 +62,14 @@ void NativeNDBufferMarshall::write_shader_cursor_pre_dispatch(
     field["buffer"] = buffer->storage();
 
     // Write shape vector as an array of ints.
-    std::vector<int> shape_vec = buffer->shape().as_vector();
+    const std::vector<int>& shape_vec = buffer->shape().as_vector();
     field["shape"]._set_array_unsafe(&shape_vec[0], shape_vec.size() * 4, shape_vec.size());
 
     // Generate and write strides vector, clearing strides to 0
     // for dimensions that are broadcast.
     std::vector<int> strides_vec = buffer->strides().as_vector();
-    std::vector<int> transform = binding->get_transform().as_vector();
-    std::vector<int> call_shape = context->call_shape().as_vector();
+    const std::vector<int>& transform = binding->get_transform().as_vector();
+    const std::vector<int>& call_shape = context->call_shape().as_vector();
     for (size_t i = 0; i < transform.size(); i++) {
         int csidx = transform[i];
         if (call_shape[csidx] != shape_vec[i]) {

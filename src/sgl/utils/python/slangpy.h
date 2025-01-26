@@ -294,7 +294,7 @@ public:
     void set_access(const std::pair<AccessType, AccessType>& access) { m_access = access; }
 
     /// Get the call transform.
-    Shape get_transform() const { return m_transform; }
+    const Shape& get_transform() const { return m_transform; }
 
     /// Set the call transform.
     void set_transform(const Shape& transform) { m_transform = transform; }
