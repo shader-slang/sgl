@@ -65,7 +65,7 @@ public:
 
     nb::bytes bytes() const;
 
-    nb::str str() const;
+    std::string str() const;
 
     std::string dbg_as_string() const { return std::string((const char*)m_buffer, m_size); }
 
@@ -494,6 +494,44 @@ private:
     exec(ref<NativeCallRuntimeOptions> opts, CommandBuffer* command_buffer, nb::args args, nb::kwargs kwargs);
 };
 
+/// Native side of system for caching call data info for given function signatures.
+class NativeCallDataCache : Object {
+public:
+    NativeCallDataCache() = default;
+
+    void get_value_signature(const ref<SignatureBuilder> builder, nb::handle o);
+
+    void get_args_signature(const ref<SignatureBuilder> builder, nb::args args, nb::kwargs kwargs);
+
+    ref<NativeCallData> find_call_data(const std::string& signature)
+    {
+        auto it = m_cache.find(signature);
+        if (it != m_cache.end()) {
+            return it->second;
+        }
+        return nullptr;
+    }
+
+    void add_call_data(const std::string& signature, const ref<NativeCallData>& call_data)
+    {
+        m_cache[signature] = call_data;
+    }
+
+    virtual std::optional<std::string> lookup_value_signature(nb::handle o)
+    {
+        SGL_UNUSED(o);
+        return std::nullopt;
+    }
+
+private:
+    std::unordered_map<std::string, ref<NativeCallData>> m_cache;
+};
+
+class PyNativeCallDataCache : public NativeCallDataCache {
+public:
+    NB_TRAMPOLINE(NativeCallDataCache, 1);
+    std::optional<std::string> lookup_value_signature(nb::handle o) override { NB_OVERRIDE(lookup_value_signature, o); }
+};
 
 nb::list unpack_args(nb::args args);
 nb::dict unpack_kwargs(nb::kwargs kwargs);

@@ -90,9 +90,11 @@ public:
         return root;
     }
 
-    nb::object call(nb::dict cache, nb::args args, nb::kwargs kwargs);
+    ref<NativeCallData> build_call_data(NativeCallDataCache* cache, nb::args args, nb::kwargs kwargs);
 
-    void append_to(nb::dict cache, CommandBuffer* command_buffer, nb::args args, nb::kwargs kwargs);
+    nb::object call(NativeCallDataCache* cache, nb::args args, nb::kwargs kwargs);
+
+    void append_to(NativeCallDataCache* cache, CommandBuffer* command_buffer, nb::args args, nb::kwargs kwargs);
 
     virtual ref<NativeCallData> generate_call_data(nb::args args, nb::kwargs kwargs)
     {

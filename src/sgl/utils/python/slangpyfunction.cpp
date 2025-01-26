@@ -13,7 +13,7 @@ namespace sgl {
 
 namespace sgl::slangpy {
 
-nb::object NativeFunctionNode::call(nb::dict cache, nb::args args, nb::kwargs kwargs)
+ref<NativeCallData> NativeFunctionNode::build_call_data(NativeCallDataCache* cache, nb::args args, nb::kwargs kwargs)
 {
     auto options = make_ref<NativeCallRuntimeOptions>();
     gather_runtime_options(options);
@@ -25,31 +25,49 @@ nb::object NativeFunctionNode::call(nb::dict cache, nb::args args, nb::kwargs kw
 
     auto builder = make_ref<SignatureBuilder>();
     read_signature(builder);
-    hash_signature(
-        [&](nb::handle value)
-        {
-            if (true) {
-                SGL_THROW("Bad type");
-            }
-            return nb::str(value).c_str();
-        },
-        args,
-        kwargs,
-        make_ref<SignatureBuilder>()
-    );
+    cache->get_args_signature(builder, args, kwargs);
 
-    nb::str sig = builder->str();
-    if (cache.contains(sig)) {
-        NativeCallData* call_data = nb::cast<NativeCallData*>(cache[sig]);
+    std::string sig = builder->str();
+    ref<NativeCallData> result = cache->find_call_data(sig);
+    if (!result) {
+        result = generate_call_data(args, kwargs);
+        cache->add_call_data(sig, result);
+    }
+    return result;
+}
+
+nb::object NativeFunctionNode::call(NativeCallDataCache* cache, nb::args args, nb::kwargs kwargs)
+{
+    auto options = make_ref<NativeCallRuntimeOptions>();
+    gather_runtime_options(options);
+
+    nb::tuple full_args;
+    if (!options->get_this().is_none()) {
+        args = nb::cast<nb::args>(nb::make_tuple(options->get_this()) + args);
+    }
+
+    auto builder = make_ref<SignatureBuilder>();
+    read_signature(builder);
+    cache->get_args_signature(builder, args, kwargs);
+
+    std::string sig = builder->str();
+    NativeCallData* call_data = cache->find_call_data(sig);
+
+    if (call_data) {
         return call_data->call(options, args, kwargs);
     } else {
-        ref<NativeCallData> call_data = generate_call_data(args, kwargs);
-        cache[sig] = call_data;
-        return call_data->call(options, args, kwargs);
+        ref<NativeCallData> new_call_data = generate_call_data(args, kwargs);
+        cache->add_call_data(sig, new_call_data);
+        return new_call_data->call(options, args, kwargs);
     }
 }
 
-void NativeFunctionNode::append_to(nb::dict cache, CommandBuffer* command_buffer, nb::args args, nb::kwargs kwargs)
+void NativeFunctionNode::append_to(
+    NativeCallDataCache* cache,
+    CommandBuffer* command_buffer,
+    nb::args args,
+    nb::kwargs kwargs
+)
 {
     auto options = make_ref<NativeCallRuntimeOptions>();
     gather_runtime_options(options);
@@ -74,14 +92,15 @@ void NativeFunctionNode::append_to(nb::dict cache, CommandBuffer* command_buffer
         make_ref<SignatureBuilder>()
     );
 
-    nb::str sig = builder->str();
-    if (cache.contains(sig)) {
-        NativeCallData* call_data = nb::cast<NativeCallData*>(cache[sig]);
+    std::string sig = builder->str();
+    NativeCallData* call_data = cache->find_call_data(sig);
+
+    if (call_data) {
         call_data->append_to(options, command_buffer, args, kwargs);
     } else {
-        ref<NativeCallData> call_data = generate_call_data(args, kwargs);
-        cache[sig] = call_data;
-        call_data->append_to(options, command_buffer, args, kwargs);
+        ref<NativeCallData> new_call_data = generate_call_data(args, kwargs);
+        cache->add_call_data(sig, new_call_data);
+        new_call_data->append_to(options, command_buffer, args, kwargs);
     }
 }
 
@@ -112,6 +131,14 @@ SGL_PY_EXPORT(utils_slangpy_function)
         .def_prop_ro("_native_type", &NativeFunctionNode::type)
         .def_prop_ro("_native_data", &NativeFunctionNode::data)
         .def("_find_native_root", &NativeFunctionNode::find_root, D_NA(NativeFunctionNode, find_root))
+        .def(
+            "_native_build_call_data",
+            &NativeFunctionNode::build_call_data,
+            "cache"_a,
+            "args"_a,
+            "kwargs"_a,
+            D_NA(NativeFunctionNode, build_call_data)
+        )
         .def("_native_call", &NativeFunctionNode::call, "cache"_a, "args"_a, "kwargs"_a, D_NA(NativeFunctionNode, call))
         .def(
             "_native_append_to",
