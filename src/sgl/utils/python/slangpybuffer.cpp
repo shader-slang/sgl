@@ -281,6 +281,8 @@ SGL_PY_EXPORT(utils_slangpy_buffer)
         .def_prop_ro("usage", &NativeNDBuffer::usage)
         .def_prop_ro("memory_type", &NativeNDBuffer::memory_type)
         .def_prop_ro("storage", &NativeNDBuffer::storage)
+        .def("cursor", &NativeNDBuffer::cursor, "start"_a.none() = std::nullopt, "count"_a.none() = std::nullopt)
+        .def("uniforms", &NativeNDBuffer::uniforms)
         .def(
             "to_numpy",
             [](NativeNDBuffer& self) { return buffer_to_numpy(self.storage().get()); },
