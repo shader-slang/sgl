@@ -31,6 +31,8 @@ public:
 
     std::string to_string() const;
 
+    bool is_reference() const;
+
     ShaderCursor dereference() const;
 
     slang::TypeLayoutReflection* slang_type_layout() const { return m_type_layout; }
@@ -76,6 +78,8 @@ public:
     void set(const T& value) const;
 
     void _set_array(const void* data, size_t size, TypeReflection::ScalarType scalar_type, size_t element_count) const;
+    void _set_array_unsafe(const void* data, size_t size, size_t element_count) const;
+
     void _set_scalar(const void* data, size_t size, TypeReflection::ScalarType scalar_type) const;
     void _set_vector(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int dimension) const;
     void _set_matrix(const void* data, size_t size, TypeReflection::ScalarType scalar_type, int rows, int cols) const;

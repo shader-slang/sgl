@@ -34,6 +34,17 @@ std::string ShaderCursor::to_string() const
     return "ShaderCursor()";
 }
 
+bool ShaderCursor::is_reference() const
+{
+    switch ((TypeReflection::Kind)m_type_layout->getKind()) {
+    case TypeReflection::Kind::constant_buffer:
+    case TypeReflection::Kind::parameter_block:
+        return true;
+    default:
+        return false;
+    }
+}
+
 ShaderCursor ShaderCursor::dereference() const
 {
     SGL_CHECK(is_valid(), "Invalid cursor");
@@ -476,6 +487,23 @@ void ShaderCursor::_set_array(
     SGL_UNUSED(scalar_type);
     SGL_UNUSED(element_count);
 #endif
+
+    size_t stride = m_type_layout->getElementStride(SLANG_PARAMETER_CATEGORY_UNIFORM);
+    if (element_size == stride) {
+        m_shader_object->set_data(m_offset, data, size);
+    } else {
+        ShaderOffset offset = m_offset;
+        for (size_t i = 0; i < element_count; ++i) {
+            m_shader_object->set_data(offset, reinterpret_cast<const uint8_t*>(data) + i * element_size, element_size);
+            offset.uniform_offset += narrow_cast<uint32_t>(stride);
+        }
+    }
+}
+
+void ShaderCursor::_set_array_unsafe(const void* data, size_t size, size_t element_count) const
+{
+    slang::TypeReflection* element_type = cursor_utils::unwrap_array(m_type_layout)->getType();
+    size_t element_size = cursor_utils::get_scalar_type_size((TypeReflection::ScalarType)element_type->getScalarType());
 
     size_t stride = m_type_layout->getElementStride(SLANG_PARAMETER_CATEGORY_UNIFORM);
     if (element_size == stride) {

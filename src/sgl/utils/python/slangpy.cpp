@@ -40,9 +40,9 @@ nb::bytes SignatureBuilder::bytes() const
     return nb::bytes(m_buffer, m_size);
 }
 
-nb::str SignatureBuilder::str() const
+std::string SignatureBuilder::str() const
 {
-    return nb::str((const char*)m_buffer, m_size);
+    return std::string(reinterpret_cast<const char*>(m_buffer), m_size);
 }
 
 void NativeMarshall::write_shader_cursor_pre_dispatch(
@@ -88,7 +88,7 @@ void NativeBoundVariableRuntime::populate_call_shape(std::vector<int>& call_shap
         }
 
         // Read the transform and call shape size.
-        auto tf = m_transform.as_vector();
+        const std::vector<int>& tf = m_transform.as_vector();
         size_t csl = call_shape.size();
 
         // Get the shape of the value. In the case of none-concrete types,
@@ -99,7 +99,7 @@ void NativeBoundVariableRuntime::populate_call_shape(std::vector<int>& call_shap
             m_shape = m_python_type->get_shape(value);
 
         // Apply this shape to the overall call shape.
-        auto shape = m_shape.as_vector();
+        const std::vector<int>& shape = m_shape.as_vector();
         for (size_t i = 0; i < tf.size(); ++i) {
             int shape_dim = shape[i];
             int call_idx = tf[i];
@@ -316,12 +316,12 @@ nb::object NativeCallData::call(ref<NativeCallRuntimeOptions> opts, nb::args arg
 
 nb::object NativeCallData::append_to(
     ref<NativeCallRuntimeOptions> opts,
-    ref<CommandBuffer> command_buffer,
+    CommandBuffer* command_buffer,
     nb::args args,
     nb::kwargs kwargs
 )
 {
-    return exec(opts, command_buffer.get(), args, kwargs);
+    return exec(opts, command_buffer, args, kwargs);
 }
 
 nb::object NativeCallData::exec(
@@ -356,7 +356,7 @@ nb::object NativeCallData::exec(
     // Calculate total threads and strides.
     int total_threads = 1;
     std::vector<int> strides;
-    auto cs = call_shape.as_vector();
+    const std::vector<int>& cs = call_shape.as_vector();
     for (auto it = cs.rbegin(); it != cs.rend(); ++it) {
         strides.push_back(total_threads);
         total_threads *= *it;
@@ -370,11 +370,16 @@ nb::object NativeCallData::exec(
     {
         auto call_data_cursor = cursor.find_field("call_data");
 
+        // Dereference the cursor if it is a reference.
+        // We do this here to avoid doing it automatically for every
+        // child. Shouldn't need to do recursively as its only
+        // relevant for parameter blocks and constant buffers.
+        if (call_data_cursor.is_reference())
+            call_data_cursor = call_data_cursor.dereference();
+
         if (!strides.empty()) {
-            call_data_cursor["_call_stride"]
-                ._set_array(&strides[0], strides.size() * 4, TypeReflection::ScalarType::int32, strides.size());
-            call_data_cursor["_call_dim"]
-                ._set_array(&cs[0], cs.size() * 4, TypeReflection::ScalarType::int32, cs.size());
+            call_data_cursor["_call_stride"]._set_array_unsafe(&strides[0], strides.size() * 4, strides.size());
+            call_data_cursor["_call_dim"]._set_array_unsafe(&cs[0], cs.size() * 4, cs.size());
         }
         call_data_cursor["_thread_count"] = uint3(total_threads, 1, 1);
 
@@ -425,6 +430,98 @@ nb::object NativeCallData::exec(
         }
     }
     return nb::none();
+}
+
+void NativeCallDataCache::get_value_signature(const ref<SignatureBuilder> builder, nb::handle o)
+{
+    // Get python type.
+    auto type = o.type();
+
+    // Check if this is a bound native type, in which case we can hopefully do fast things!
+    bool is_bound_type = nb::type_check(type);
+    if (is_bound_type) {
+
+        // Get C++ type info, and attempt to cast to a slangpy native object
+        const auto& type_info = nb::type_info(type);
+
+        // If we have a native object, can directly request the signature.
+        const NativeObject* native_object;
+        if (nb::try_cast<const NativeObject*>(o, native_object)) {
+            *builder << type_info.name() << "\n";
+            native_object->read_signature(builder);
+            return;
+        }
+
+        // TODO: Handle known types (such as Texture) here.
+    }
+
+    // Fast path for basic Python types (int/float) here.
+    if (nb::isinstance<int>(o)) {
+        *builder << "int\n";
+        return;
+    }
+    if (nb::isinstance<float>(o)) {
+        *builder << "float\n";
+        return;
+    }
+    if (nb::isinstance<bool>(o)) {
+        *builder << "bool\n";
+        return;
+    }
+
+    // Add type name.
+    auto type_name = nb::str(nb::getattr(o.type(), "__name__"));
+    *builder << type_name.c_str() << "\n";
+
+    // Handle objects with get_this method.
+    auto get_this = nb::getattr(o, "get_this", nb::none());
+    if (!get_this.is_none()) {
+        auto this_ = get_this();
+        get_value_signature(builder, this_);
+        return;
+    }
+
+    // If x has signature attribute, use it.
+    if (nb::hasattr(o, "slangpy_signature")) {
+
+        auto slangpy_sig = nb::getattr(o, "slangpy_signature");
+        *builder << nb::str(slangpy_sig).c_str() << "\n";
+        return;
+    }
+
+    // If x is a dictionary get signature of its children.
+    nb::dict dict;
+    if (nb::try_cast(o, dict)) {
+        *builder << "\n";
+        for (const auto& [k, v] : dict) {
+            *builder << nb::str(k).c_str() << ":";
+            get_value_signature(builder, v);
+        }
+        return;
+    }
+
+    // Use value_to_id function.
+    std::optional<std::string> s = lookup_value_signature(o);
+    if (s.has_value()) {
+        *builder << *s;
+    }
+    *builder << "\n";
+}
+
+void NativeCallDataCache::get_args_signature(const ref<SignatureBuilder> builder, nb::args args, nb::kwargs kwargs)
+{
+    builder->add("args\n");
+    for (const auto& arg : args) {
+        builder->add("N:");
+        get_value_signature(builder, arg);
+    }
+
+    builder->add("kwargs\n");
+    for (const auto& [k, v] : kwargs) {
+        builder->add(nb::str(k).c_str());
+        builder->add(":");
+        get_value_signature(builder, v);
+    }
 }
 
 nb::list unpack_args(nb::args args)
@@ -529,7 +626,19 @@ void _get_value_signature(
         // TODO: Handle known types (such as Texture) here.
     }
 
-    // TODO: Add fast path for basic Python types (int/float) here.
+    // Fast path for basic Python types (int/float) here.
+    if (nb::isinstance<int>(o)) {
+        *builder << "int\n";
+        return;
+    }
+    if (nb::isinstance<float>(o)) {
+        *builder << "float\n";
+        return;
+    }
+    if (nb::isinstance<bool>(o)) {
+        *builder << "bool\n";
+        return;
+    }
 
     // Add type name.
     auto type_name = nb::str(nb::getattr(o.type(), "__name__"));
@@ -862,6 +971,48 @@ SGL_PY_EXPORT(utils_slangpy)
             nb::arg("kwargs"),
             D_NA(NativeCallData, append_to)
         );
+
+    nb::class_<NativeCallDataCache, PyNativeCallDataCache, Object>(slangpy, "NativeCallDataCache")
+        .def(
+            "__init__",
+            [](NativeCallDataCache& self) { new (&self) PyNativeCallDataCache(); },
+            D_NA(NativeCallDataCache, NativeCallDataCache)
+        )
+        .def(
+            "get_value_signature",
+            &NativeCallDataCache::get_value_signature,
+            "builder"_a,
+            "o"_a,
+            D_NA(NativeCallDataCache, get_value_signature)
+        )
+        .def(
+            "get_args_signature",
+            &NativeCallDataCache::get_args_signature,
+            "builder"_a,
+            "args"_a,
+            "kwargs"_a,
+            D_NA(NativeCallDataCache, get_args_signature)
+        )
+        .def(
+            "find_call_data",
+            &NativeCallDataCache::find_call_data,
+            "signature"_a,
+            D_NA(NativeCallDataCache, find_call_data)
+        )
+        .def(
+            "add_call_data",
+            &NativeCallDataCache::add_call_data,
+            "signature"_a,
+            "call_data"_a,
+            D_NA(NativeCallDataCache, add_call_data)
+        )
+        .def(
+            "lookup_value_signature",
+            &NativeCallDataCache::lookup_value_signature,
+            "o"_a,
+            D_NA(NativeCallDataCache, lookup_value_signature)
+        );
+
 
     nb::class_<Shape>(slangpy, "Shape") //
         .def(

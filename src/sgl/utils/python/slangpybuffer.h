@@ -33,8 +33,8 @@ public:
 
     Device* device() const { return storage()->device(); }
     ref<NativeSlangType> dtype() const { return m_desc.dtype; }
-    Shape shape() const { return m_desc.shape; }
-    Shape strides() const { return m_desc.strides; }
+    const Shape& shape() const { return m_desc.shape; }
+    const Shape& strides() const { return m_desc.strides; }
     size_t element_count() const { return m_desc.shape.element_count(); }
     ResourceUsage usage() const { return m_desc.usage; }
     MemoryType memory_type() const { return m_desc.memory_type; }

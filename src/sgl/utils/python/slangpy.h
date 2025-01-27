@@ -65,7 +65,7 @@ public:
 
     nb::bytes bytes() const;
 
-    nb::str str() const;
+    std::string str() const;
 
     std::string dbg_as_string() const { return std::string((const char*)m_buffer, m_size); }
 
@@ -294,7 +294,7 @@ public:
     void set_access(const std::pair<AccessType, AccessType>& access) { m_access = access; }
 
     /// Get the call transform.
-    Shape get_transform() const { return m_transform; }
+    const Shape& get_transform() const { return m_transform; }
 
     /// Set the call transform.
     void set_transform(const Shape& transform) { m_transform = transform; }
@@ -425,8 +425,15 @@ public:
     /// Set the uniforms.
     void set_uniforms(const nb::list& uniforms) { m_uniforms = uniforms; }
 
+    /// Get this
+    nb::object get_this() const { return m_this; }
+
+    /// Set this
+    void set_this(const nb::object& this_) { m_this = this_; }
+
 private:
     nb::list m_uniforms;
+    nb::object m_this{nb::none()};
 };
 
 /// Contains the compute kernel for a call, the corresponding bindings and any additional
@@ -473,7 +480,7 @@ public:
 
     /// Append the compute kernel to a command buffer with the provided arguments and keyword arguments.
     nb::object
-    append_to(ref<NativeCallRuntimeOptions> opts, ref<CommandBuffer> command_buffer, nb::args args, nb::kwargs kwargs);
+    append_to(ref<NativeCallRuntimeOptions> opts, CommandBuffer* command_buffer, nb::args args, nb::kwargs kwargs);
 
 private:
     ref<Device> m_device;
@@ -487,10 +494,55 @@ private:
     exec(ref<NativeCallRuntimeOptions> opts, CommandBuffer* command_buffer, nb::args args, nb::kwargs kwargs);
 };
 
+/// Native side of system for caching call data info for given function signatures.
+class NativeCallDataCache : Object {
+public:
+    NativeCallDataCache() = default;
+
+    void get_value_signature(const ref<SignatureBuilder> builder, nb::handle o);
+
+    void get_args_signature(const ref<SignatureBuilder> builder, nb::args args, nb::kwargs kwargs);
+
+    ref<NativeCallData> find_call_data(const std::string& signature)
+    {
+        auto it = m_cache.find(signature);
+        if (it != m_cache.end()) {
+            return it->second;
+        }
+        return nullptr;
+    }
+
+    void add_call_data(const std::string& signature, const ref<NativeCallData>& call_data)
+    {
+        m_cache[signature] = call_data;
+    }
+
+    virtual std::optional<std::string> lookup_value_signature(nb::handle o)
+    {
+        SGL_UNUSED(o);
+        return std::nullopt;
+    }
+
+private:
+    std::unordered_map<std::string, ref<NativeCallData>> m_cache;
+};
+
+class PyNativeCallDataCache : public NativeCallDataCache {
+public:
+    NB_TRAMPOLINE(NativeCallDataCache, 1);
+    std::optional<std::string> lookup_value_signature(nb::handle o) override { NB_OVERRIDE(lookup_value_signature, o); }
+};
 
 nb::list unpack_args(nb::args args);
 nb::dict unpack_kwargs(nb::kwargs kwargs);
 nb::object unpack_arg(nanobind::object arg);
 void pack_arg(nb::object arg, nb::object unpacked_arg);
+
+void hash_signature(
+    const std::function<std::string(nb::handle)>& value_to_id,
+    nb::args args,
+    nb::kwargs kwargs,
+    const ref<SignatureBuilder>& builder
+);
 
 } // namespace sgl::slangpy

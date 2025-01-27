@@ -437,6 +437,8 @@ if(SGL_BUILD_PYTHON)
         sgl/utils/python/slangpyvalue.cpp
         sgl/utils/python/slangpybuffer.h
         sgl/utils/python/slangpybuffer.cpp
+        sgl/utils/python/slangpyfunction.h
+        sgl/utils/python/slangpyfunction.cpp
         sgl/utils/python/tev.cpp
         sgl/utils/python/texture_loader.cpp
     )
