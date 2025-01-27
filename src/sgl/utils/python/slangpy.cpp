@@ -42,7 +42,7 @@ nb::bytes SignatureBuilder::bytes() const
 
 std::string SignatureBuilder::str() const
 {
-    return std::string((const char*)m_buffer, m_size);
+    return std::string(reinterpret_cast<const char*>(m_buffer), m_size);
 }
 
 void NativeMarshall::write_shader_cursor_pre_dispatch(
@@ -465,7 +465,7 @@ void NativeCallDataCache::get_value_signature(const ref<SignatureBuilder> builde
         return;
     }
     if (nb::isinstance<bool>(o)) {
-        *builder << "float\n";
+        *builder << "bool\n";
         return;
     }
 
@@ -636,7 +636,7 @@ void _get_value_signature(
         return;
     }
     if (nb::isinstance<bool>(o)) {
-        *builder << "float\n";
+        *builder << "bool\n";
         return;
     }
 
