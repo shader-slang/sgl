@@ -10,6 +10,12 @@ sgl uses a `semantic versioning <http://semver.org>`__ policy for its API.
 Changelog
 =========
 
+v0.8.0
+--------------------
+* SlangPy extensive native updates.
+* Significant optimizations to shader cursor and uniform setting
+
+
 v0.7.0
 --------------------
 * SlangPy native utilities updated
