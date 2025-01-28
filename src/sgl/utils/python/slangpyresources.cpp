@@ -23,8 +23,14 @@ void NativeTextureMarshall::write_shader_cursor_pre_dispatch(
     SGL_UNUSED(context);
     AccessType primal_access = binding->get_access().first;
     if (primal_access != AccessType::none) {
+
         ShaderCursor field = cursor[binding->get_variable_name()]["value"];
-        field.set_texture(nb::cast<ref<Texture>>(value));
+        ref<ResourceView> view;
+        if (nb::try_cast(value, view)) {
+            field.set_resource(view);
+        } else {
+            field.set_texture(nb::cast<ref<Texture>>(value));
+        }
     }
 }
 
@@ -38,7 +44,7 @@ Shape NativeTextureMarshall::get_shape(nb::object value) const
     if (value.is_none()) {
         texture = nullptr;
         mip = 0;
-    } else if (nb::try_cast<ResourceView*>(value, view)) {
+    } else if (nb::try_cast(value, view)) {
         texture = view->resource()->as_texture();
         SGL_CHECK(texture, "NativeTextureMarshall ResourceView must point at a texture");
         mip = view->subresource_range().mip_level;
