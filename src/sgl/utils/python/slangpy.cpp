@@ -432,6 +432,28 @@ nb::object NativeCallData::exec(
     return nb::none();
 }
 
+NativeCallDataCache::NativeCallDataCache()
+{
+    m_cache.reserve(1024);
+
+    m_type_signature_table[typeid(Texture)] = [](const ref<SignatureBuilder>& builder, nb::handle o)
+    {
+        auto tex = nb::cast<Texture*>(o);
+        // This is much faster than the fmt library
+        char temp[256];
+        sprintf_s(
+            temp,
+            "[%d,%d,%d,%d]",
+            (int)tex->desc().type,
+            (int)tex->desc().usage,
+            (int)tex->desc().format,
+            (int)tex->array_size()
+        );
+        builder->add(temp);
+        return true;
+    };
+}
+
 void NativeCallDataCache::get_value_signature(const ref<SignatureBuilder> builder, nb::handle o)
 {
     // Get python type.
@@ -452,7 +474,13 @@ void NativeCallDataCache::get_value_signature(const ref<SignatureBuilder> builde
             return;
         }
 
-        // TODO: Handle known types (such as Texture) here.
+        // Attempt to use type signature table to lookup type
+        auto it = m_type_signature_table.find(type_info);
+        if (it != m_type_signature_table.end()) {
+            if (it->second(builder, o)) {
+                return;
+            }
+        }
     }
 
     // Fast path for basic Python types (int/float) here.

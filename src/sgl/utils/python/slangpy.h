@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <map>
+#include <typeindex>
 
 #include "nanobind.h"
 
@@ -494,10 +495,12 @@ private:
     exec(ref<NativeCallRuntimeOptions> opts, CommandBuffer* command_buffer, nb::args args, nb::kwargs kwargs);
 };
 
+typedef std::function<bool(const ref<SignatureBuilder>& builder, nb::handle)> BuildSignatureFunc;
+
 /// Native side of system for caching call data info for given function signatures.
 class NativeCallDataCache : Object {
 public:
-    NativeCallDataCache() = default;
+    NativeCallDataCache();
 
     void get_value_signature(const ref<SignatureBuilder> builder, nb::handle o);
 
@@ -525,6 +528,7 @@ public:
 
 private:
     std::unordered_map<std::string, ref<NativeCallData>> m_cache;
+    std::unordered_map<std::type_index, BuildSignatureFunc> m_type_signature_table;
 };
 
 class PyNativeCallDataCache : public NativeCallDataCache {
