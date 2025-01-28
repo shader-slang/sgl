@@ -53,6 +53,12 @@ public:
     {
     }
 
+    /// Constructor from initializer list
+    Shape(std::initializer_list<int> shape)
+        : m_shape(shape)
+    {
+    }
+
     /// Copy constructor.
     Shape(const Shape& other)
         : m_shape(other.m_shape)
