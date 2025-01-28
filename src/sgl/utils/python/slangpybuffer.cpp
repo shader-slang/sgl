@@ -4,6 +4,7 @@
 #include "nanobind.h"
 
 #include "sgl/device/device.h"
+#include "sgl/device/buffer_cursor.h"
 
 #include "sgl/utils/python/slangpybuffer.h"
 
@@ -25,7 +26,7 @@ NativeNDBuffer::NativeNDBuffer(Device* device, NativeNDBufferDesc desc)
 
     BufferDesc buffer_desc;
     buffer_desc.element_count = desc.shape.element_count();
-    buffer_desc.struct_size = desc.element_stride;
+    buffer_desc.struct_size = desc.element_layout->stride();
     buffer_desc.usage = desc.usage;
     buffer_desc.memory_type = desc.memory_type;
     m_storage = device->create_buffer(buffer_desc);
@@ -33,6 +34,23 @@ NativeNDBuffer::NativeNDBuffer(Device* device, NativeNDBufferDesc desc)
     set_slangpy_signature(
         fmt::format("[{},{},{}]", desc.dtype->get_type_reflection()->name(), desc.shape.size(), desc.usage)
     );
+}
+
+ref<BufferCursor> NativeNDBuffer::cursor(std::optional<int> start, std::optional<int> count) const
+{
+    size_t el_stride = m_desc.element_layout->stride();
+    size_t size = (count.value_or(element_count())) * el_stride;
+    size_t offset = (start.value_or(0)) * el_stride;
+    return make_ref<BufferCursor>(m_desc.element_layout, m_storage, size, offset);
+}
+
+nb::dict NativeNDBuffer::uniforms() const
+{
+    nb::dict res;
+    res["buffer"] = m_storage;
+    res["strides"] = m_desc.strides.as_vector();
+    res["shape"] = m_desc.shape.as_vector();
+    return res;
 }
 
 Shape NativeNDBufferMarshall::get_shape(nb::object data) const
@@ -105,7 +123,7 @@ ref<NativeNDBuffer> NativeNDBufferMarshall::create_buffer(Device* device, const 
 {
     NativeNDBufferDesc desc;
     desc.dtype = m_slang_element_type;
-    desc.element_stride = m_element_stride;
+    desc.element_layout = m_element_layout;
     desc.shape = shape;
     desc.strides = desc.shape.calc_contiguous_strides();
     desc.usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access;
@@ -247,7 +265,7 @@ SGL_PY_EXPORT(utils_slangpy_buffer)
     nb::class_<NativeNDBufferDesc>(slangpy, "NativeNDBufferDesc")
         .def(nb::init<>())
         .def_rw("dtype", &NativeNDBufferDesc::dtype)
-        .def_rw("element_stride", &NativeNDBufferDesc::element_stride)
+        .def_rw("element_layout", &NativeNDBufferDesc::element_layout)
         .def_rw("shape", &NativeNDBufferDesc::shape)
         .def_rw("strides", &NativeNDBufferDesc::strides)
         .def_rw("usage", &NativeNDBufferDesc::usage)
@@ -263,6 +281,8 @@ SGL_PY_EXPORT(utils_slangpy_buffer)
         .def_prop_ro("usage", &NativeNDBuffer::usage)
         .def_prop_ro("memory_type", &NativeNDBuffer::memory_type)
         .def_prop_ro("storage", &NativeNDBuffer::storage)
+        .def("cursor", &NativeNDBuffer::cursor, "start"_a.none() = std::nullopt, "count"_a.none() = std::nullopt)
+        .def("uniforms", &NativeNDBuffer::uniforms)
         .def(
             "to_numpy",
             [](NativeNDBuffer& self) { return buffer_to_numpy(self.storage().get()); },
@@ -284,13 +304,13 @@ SGL_PY_EXPORT(utils_slangpy_buffer)
                bool writable,
                ref<NativeSlangType> slang_type,
                ref<NativeSlangType> slang_element_type,
-               int element_stride)
-            { new (&self) NativeNDBufferMarshall(dims, writable, slang_type, slang_element_type, element_stride); },
+               ref<TypeLayoutReflection> element_layout)
+            { new (&self) NativeNDBufferMarshall(dims, writable, slang_type, slang_element_type, element_layout); },
             "dims"_a,
             "writable"_a,
             "slang_type"_a,
             "slang_element_type"_a,
-            "element_stride"_a,
+            "element_layout"_a,
             D_NA(NativeNDBufferMarshall, NativeNDBufferMarshall)
         )
         .def_prop_ro("dims", &sgl::slangpy::NativeNDBufferMarshall::dims)
@@ -304,7 +324,7 @@ SGL_PY_EXPORT(utils_slangpy_buffer)
                int dims,
                ref<NativeSlangType> slang_type,
                ref<NativeSlangType> slang_element_type,
-               int element_stride,
+               ref<TypeLayoutReflection> element_layout,
                nb::object numpydtype)
             {
                 nb::dlpack::dtype dtype;
@@ -330,12 +350,12 @@ SGL_PY_EXPORT(utils_slangpy_buffer)
                     SGL_THROW("Unsupported numpy dtype kind '{}'", kind);
                     break;
                 }
-                new (&self) NativeNumpyMarshall(dims, slang_type, slang_element_type, element_stride, dtype);
+                new (&self) NativeNumpyMarshall(dims, slang_type, slang_element_type, element_layout, dtype);
             },
             "dims"_a,
             "slang_type"_a,
             "slang_element_type"_a,
-            "element_stride"_a,
+            "element_layout"_a,
             "numpydtype"_a,
             D_NA(NativeNumpyMarshall, NativeNumpyMarshall)
         )

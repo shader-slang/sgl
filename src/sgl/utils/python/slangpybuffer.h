@@ -20,7 +20,7 @@ namespace sgl::slangpy {
 
 struct NativeNDBufferDesc {
     ref<NativeSlangType> dtype;
-    int element_stride;
+    ref<TypeLayoutReflection> element_layout;
     Shape shape;
     Shape strides;
     ResourceUsage usage{ResourceUsage::shader_resource | ResourceUsage::unordered_access};
@@ -39,6 +39,10 @@ public:
     ResourceUsage usage() const { return m_desc.usage; }
     MemoryType memory_type() const { return m_desc.memory_type; }
     ref<Buffer> storage() const { return m_storage; }
+    size_t element_stride() const { return m_desc.element_layout->stride(); }
+
+    ref<BufferCursor> cursor(std::optional<int> start = std::nullopt, std::optional<int> count = std::nullopt) const;
+    nb::dict uniforms() const;
 
 private:
     NativeNDBufferDesc m_desc;
@@ -53,20 +57,21 @@ public:
         bool writable,
         ref<NativeSlangType> slang_type,
         ref<NativeSlangType> slang_element_type,
-        int element_stride
+        ref<TypeLayoutReflection> element_layout
     )
         : NativeMarshall(slang_type)
         , m_dims(dims)
         , m_writable(writable)
         , m_slang_element_type(slang_element_type)
-        , m_element_stride(element_stride)
+        , m_element_layout(element_layout)
     {
     }
 
     int dims() const { return m_dims; }
     bool writable() const { return m_writable; }
     ref<NativeSlangType> slang_element_type() const { return m_slang_element_type; }
-    int element_stride() const { return m_element_stride; }
+    ref<TypeLayoutReflection> element_layout() const { return m_element_layout; }
+    size_t element_stride() const { return m_element_layout->stride(); }
 
     Shape get_shape(nb::object data) const override;
 
@@ -94,7 +99,7 @@ private:
     int m_dims;
     bool m_writable;
     ref<NativeSlangType> m_slang_element_type;
-    int m_element_stride;
+    ref<TypeLayoutReflection> m_element_layout;
 };
 
 class NativeNumpyMarshall : public NativeNDBufferMarshall {
@@ -103,10 +108,10 @@ public:
         int dims,
         ref<NativeSlangType> slang_type,
         ref<NativeSlangType> slang_element_type,
-        int element_stride,
+        ref<TypeLayoutReflection> element_layout,
         nb::dlpack::dtype dtype
     )
-        : NativeNDBufferMarshall(dims, true, slang_type, slang_element_type, element_stride)
+        : NativeNDBufferMarshall(dims, true, slang_type, slang_element_type, element_layout)
         , m_dtype(dtype)
     {
     }
