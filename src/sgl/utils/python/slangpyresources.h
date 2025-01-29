@@ -38,6 +38,8 @@ public:
 
     Shape get_shape(nb::object data) const override;
 
+    nb::object create_dispatchdata(nb::object data) const override { return data; }
+
 private:
     ResourceUsage m_usage;
 };
@@ -75,6 +77,8 @@ public:
     Shape get_shape(nb::object value) const override;
 
     Shape get_texture_shape(const Texture* texture, int mip) const;
+
+    nb::object create_dispatchdata(nb::object data) const override { return data; }
 
 private:
     TypeReflection::ResourceShape m_resource_shape;
