@@ -439,10 +439,13 @@ NativeCallDataCache::NativeCallDataCache()
     m_type_signature_table[typeid(Texture)] = [](const ref<SignatureBuilder>& builder, nb::handle o)
     {
         auto tex = nb::cast<Texture*>(o);
-        // This is much faster than the fmt library
+
+        // Note: Using snprintf here as fmt library is quite
+        // a bit slower for this use case. (over 4x).
         char temp[256];
-        sprintf_s(
+        std::snprintf(
             temp,
+            sizeof(temp),
             "[%d,%d,%d,%d]",
             (int)tex->desc().type,
             (int)tex->desc().usage,
@@ -450,6 +453,7 @@ NativeCallDataCache::NativeCallDataCache()
             (int)tex->array_size()
         );
         builder->add(temp);
+
         return true;
     };
 }
