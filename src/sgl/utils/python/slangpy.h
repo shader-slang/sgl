@@ -231,6 +231,59 @@ public:
         return nb::none();
     };
 
+    /// Check if the value has a derivative.
+    bool has_derivative() const { return false; }
+
+    /// Check if the value is writable.
+    bool is_writable() const { return false; }
+
+    /// Code gen only, takes Python types:
+    ///   cgb: CodeGenBlock
+    ///   context: BindContext
+    ///   binding: BoundVariable
+    /// Override to generate the code for the uniforms that will represent this value in the kernel.
+    virtual void gen_calldata(nb::object cgb, nb::object context, nb::object binding) const
+    {
+        SGL_UNUSED(cgb);
+        SGL_UNUSED(context);
+        SGL_UNUSED(binding);
+        SGL_THROW("Not implemented");
+    }
+
+    /// Code gen only, takes Python types:
+    ///   context: BindContext
+    /// Override to get the slang type for this variable when a given number of dimensions are removed.
+    virtual ref<NativeSlangType> reduce_type(nb::object context, int dimensions) const
+    {
+        SGL_UNUSED(context);
+        SGL_UNUSED(dimensions);
+        SGL_THROW("Not implemented");
+    }
+
+    /// Code gen only, takes Python types:
+    ///   context: BindContext
+    /// Return the slang type for this variable when passed to a parameter of the given type.
+    /// Default behaviour is to always cast directly to the bound type.
+    virtual ref<NativeSlangType> resolve_type(nb::object context, const ref<NativeSlangType> bound_type) const
+    {
+        return m_slang_type;
+    }
+
+    /// Code gen only, takes Python types CodeGenBlock, BindContext, BoundVariable.
+    /// Calculate the call dimensionality when this value is passed as a given type.
+    virtual int
+    resolve_dimensionality(nb::object context, nb::object binding, ref<NativeSlangType> vector_target_type) const
+    {
+        SGL_UNUSED(context);
+        SGL_UNUSED(binding);
+        if (!m_slang_type) {
+            SGL_THROW("Cannot resolve dimensionality without slang type");
+        }
+        return static_cast<int>(m_slang_type->get_shape().size())
+            - static_cast<int>(vector_target_type->get_shape().size());
+    }
+
+
 protected:
     void
     store_readback(NativeBoundVariableRuntime* binding, nb::list& read_back, nb::object value, nb::object data) const;
@@ -242,7 +295,7 @@ private:
 
 /// Nanobind trampoline class for NativeMarshall
 struct PyNativeMarshall : public NativeMarshall {
-    NB_TRAMPOLINE(NativeMarshall, 10);
+    NB_TRAMPOLINE(NativeMarshall, 13);
 
     Shape get_shape(nb::object data) const override { NB_OVERRIDE(get_shape, data); }
 
@@ -278,6 +331,27 @@ struct PyNativeMarshall : public NativeMarshall {
     nb::object read_output(CallContext* context, NativeBoundVariableRuntime* binding, nb::object data) const override
     {
         NB_OVERRIDE(read_output, context, binding, data);
+    }
+
+    void gen_calldata(nb::object cgb, nb::object context, nb::object binding) const override
+    {
+        NB_OVERRIDE(gen_calldata, cgb, context, binding);
+    }
+
+    ref<NativeSlangType> reduce_type(nb::object context, int dimensions) const override
+    {
+        NB_OVERRIDE(reduce_type, context, dimensions);
+    }
+
+    ref<NativeSlangType> resolve_type(nb::object context, const ref<NativeSlangType> bound_type) const override
+    {
+        NB_OVERRIDE(resolve_type, context, bound_type);
+    }
+
+    int resolve_dimensionality(nb::object context, nb::object binding, ref<NativeSlangType> vector_target_type)
+        const override
+    {
+        NB_OVERRIDE(resolve_dimensionality, context, binding, vector_target_type);
     }
 };
 

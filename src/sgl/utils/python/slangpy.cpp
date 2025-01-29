@@ -456,6 +456,19 @@ NativeCallDataCache::NativeCallDataCache()
 
         return true;
     };
+
+    m_type_signature_table[typeid(Buffer)] = [](const ref<SignatureBuilder>& builder, nb::handle o)
+    {
+        auto buffer = nb::cast<Buffer*>(o);
+
+        // Note: Using snprintf here as fmt library is quite
+        // a bit slower for this use case. (over 4x).
+        char temp[256];
+        std::snprintf(temp, sizeof(temp), "[%d]", (int)buffer->desc().usage);
+        builder->add(temp);
+
+        return true;
+    };
 }
 
 void NativeCallDataCache::get_value_signature(const ref<SignatureBuilder> builder, nb::handle o)
@@ -498,6 +511,24 @@ void NativeCallDataCache::get_value_signature(const ref<SignatureBuilder> builde
     }
     if (nb::isinstance<bool>(o)) {
         *builder << "bool\n";
+        return;
+    }
+
+    // Python tuple/list
+    nb::tuple tuple;
+    if (nb::try_cast<nb::tuple>(o, tuple)) {
+        *builder << "tuple\n";
+        for (const auto& i : tuple) {
+            get_value_signature(builder, i);
+        }
+        return;
+    }
+    nb::list list;
+    if (nb::try_cast<nb::list>(o, list)) {
+        *builder << "list\n";
+        for (const auto& i : list) {
+            get_value_signature(builder, i);
+        }
         return;
     }
 
@@ -631,107 +662,6 @@ void pack_arg(nanobind::object arg, nanobind::object unpacked_arg)
     }
 }
 
-void _get_value_signature(
-    const std::function<std::string(nb::handle)>& value_to_id,
-    nb::handle o,
-    const ref<SignatureBuilder> builder
-)
-{
-    // Get python type.
-    auto type = o.type();
-
-    // Check if this is a bound native type, in which case we can hopefully do fast things!
-    bool is_bound_type = nb::type_check(type);
-    if (is_bound_type) {
-
-        // Get C++ type info, and attempt to cast to a slangpy native object
-        const auto& type_info = nb::type_info(type);
-
-        // If we have a native object, can directly request the signature.
-        const NativeObject* native_object;
-        if (nb::try_cast<const NativeObject*>(o, native_object)) {
-            *builder << type_info.name() << "\n";
-            native_object->read_signature(builder);
-            return;
-        }
-
-        // TODO: Handle known types (such as Texture) here.
-    }
-
-    // Fast path for basic Python types (int/float) here.
-    if (nb::isinstance<int>(o)) {
-        *builder << "int\n";
-        return;
-    }
-    if (nb::isinstance<float>(o)) {
-        *builder << "float\n";
-        return;
-    }
-    if (nb::isinstance<bool>(o)) {
-        *builder << "bool\n";
-        return;
-    }
-
-    // Add type name.
-    auto type_name = nb::str(nb::getattr(o.type(), "__name__"));
-    *builder << type_name.c_str() << "\n";
-
-    // Handle objects with get_this method.
-    auto get_this = nb::getattr(o, "get_this", nb::none());
-    if (!get_this.is_none()) {
-        auto this_ = get_this();
-        _get_value_signature(value_to_id, this_, builder);
-        return;
-    }
-
-    // If x has signature attribute, use it.
-    if (nb::hasattr(o, "slangpy_signature")) {
-
-        auto slangpy_sig = nb::getattr(o, "slangpy_signature");
-        *builder << nb::str(slangpy_sig).c_str() << "\n";
-        return;
-    }
-
-    // If x is a dictionary get signature of its children.
-    nb::dict dict;
-    if (nb::try_cast(o, dict)) {
-        *builder << "\n";
-        for (const auto& [k, v] : dict) {
-            *builder << nb::str(k).c_str() << ":";
-            _get_value_signature(value_to_id, v, builder);
-        }
-        return;
-    }
-
-    // Use value_to_id function.
-    std::string s = value_to_id(o);
-    if (!s.empty()) {
-        *builder << s;
-    }
-    *builder << "\n";
-}
-
-void hash_signature(
-    const std::function<std::string(nb::handle)>& value_to_id,
-    nb::args args,
-    nb::kwargs kwargs,
-    const ref<SignatureBuilder>& builder
-)
-{
-    builder->add("args\n");
-    for (const auto& arg : args) {
-        builder->add("N:");
-        _get_value_signature(value_to_id, arg, builder);
-    }
-
-    builder->add("kwargs\n");
-    for (const auto& [k, v] : kwargs) {
-        builder->add(nb::str(k).c_str());
-        builder->add(":");
-        _get_value_signature(value_to_id, v, builder);
-    }
-}
-
 } // namespace sgl::slangpy
 
 SGL_PY_EXPORT(utils_slangpy)
@@ -743,20 +673,6 @@ SGL_PY_EXPORT(utils_slangpy)
 
     nb::sgl_enum<AccessType>(slangpy, "AccessType");
     nb::sgl_enum<CallMode>(slangpy, "CallMode");
-
-    slangpy.def(
-        "hash_signature",
-        [](const std::function<std::string(nb::handle)>& value_to_id, nb::args args, nb::kwargs kwargs)
-        {
-            auto builder = make_ref<SignatureBuilder>();
-            hash_signature(value_to_id, args, kwargs, builder);
-            return builder->str();
-        },
-        "value_to_id"_a,
-        "args"_a,
-        "kwargs"_a,
-        D_NA(slangpy, hash_signature)
-    );
 
     slangpy.def(
         "unpack_args",
@@ -815,7 +731,7 @@ SGL_PY_EXPORT(utils_slangpy)
             [](NativeObject& self) { new (&self) PyNativeObject(); },
             D_NA(NativeObject, NativeObject)
         )
-        .def_prop_rw("slangpy_signature", &NativeNDBuffer::slangpy_signature, &NativeNDBuffer::set_slangpy_signature)
+        .def_prop_rw("slangpy_signature", &NativeObject::slangpy_signature, &NativeObject::set_slangpy_signature)
         .def("read_signature", &NativeObject::read_signature, "builder"_a, D_NA(NativeObject, read_signature));
 
     nb::class_<NativeSlangType, Object>(slangpy, "NativeSlangType") //
@@ -860,7 +776,39 @@ SGL_PY_EXPORT(utils_slangpy)
         .def("create_calldata", &NativeMarshall::create_calldata, D_NA(NativeMarshall, create_calldata))
         .def("read_calldata", &NativeMarshall::read_calldata, D_NA(NativeMarshall, read_calldata))
         .def("create_output", &NativeMarshall::create_output, D_NA(NativeMarshall, create_output))
-        .def("read_output", &NativeMarshall::read_output, D_NA(NativeMarshall, read_output));
+        .def("read_output", &NativeMarshall::read_output, D_NA(NativeMarshall, read_output))
+        .def_prop_ro("has_derivative", &NativeMarshall::has_derivative, D_NA(NativeMarshall, has_derivative))
+        .def_prop_ro("is_writable", &NativeMarshall::is_writable, D_NA(NativeMarshall, is_writable))
+        .def(
+            "gen_calldata",
+            &NativeMarshall::gen_calldata,
+            "cgb"_a,
+            "context"_a,
+            "binding"_a,
+            D_NA(NativeMarshall, gen_calldata)
+        )
+        .def(
+            "reduce_type",
+            &NativeMarshall::reduce_type,
+            "context"_a,
+            "dimensions"_a,
+            D_NA(NativeMarshall, reduce_type)
+        )
+        .def(
+            "resolve_type",
+            &NativeMarshall::resolve_type,
+            "context"_a,
+            "bound_type"_a,
+            D_NA(NativeMarshall, resolve_type)
+        )
+        .def(
+            "resolve_dimensionality",
+            &NativeMarshall::resolve_dimensionality,
+            "context"_a,
+            "binding"_a,
+            "vector_target_type"_a,
+            D_NA(NativeMarshall, resolve_dimensionality)
+        );
 
     nb::class_<NativeBoundVariableRuntime, Object>(slangpy, "NativeBoundVariableRuntime") //
         .def(nb::init<>(), D_NA(NativeBoundVariableRuntime, NativeBoundVariableRuntime))
