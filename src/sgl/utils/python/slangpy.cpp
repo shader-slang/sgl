@@ -776,7 +776,39 @@ SGL_PY_EXPORT(utils_slangpy)
         .def("create_calldata", &NativeMarshall::create_calldata, D_NA(NativeMarshall, create_calldata))
         .def("read_calldata", &NativeMarshall::read_calldata, D_NA(NativeMarshall, read_calldata))
         .def("create_output", &NativeMarshall::create_output, D_NA(NativeMarshall, create_output))
-        .def("read_output", &NativeMarshall::read_output, D_NA(NativeMarshall, read_output));
+        .def("read_output", &NativeMarshall::read_output, D_NA(NativeMarshall, read_output))
+        .def_prop_ro("has_derivative", &NativeMarshall::has_derivative, D_NA(NativeMarshall, has_derivative))
+        .def_prop_ro("is_writable", &NativeMarshall::is_writable, D_NA(NativeMarshall, is_writable))
+        .def(
+            "gen_calldata",
+            &NativeMarshall::gen_calldata,
+            "cgb"_a,
+            "context"_a,
+            "binding"_a,
+            D_NA(NativeMarshall, gen_calldata)
+        )
+        .def(
+            "reduce_type",
+            &NativeMarshall::reduce_type,
+            "context"_a,
+            "dimensions"_a,
+            D_NA(NativeMarshall, reduce_type)
+        )
+        .def(
+            "resolve_type",
+            &NativeMarshall::resolve_type,
+            "context"_a,
+            "bound_type"_a,
+            D_NA(NativeMarshall, resolve_type)
+        )
+        .def(
+            "resolve_dimensionality",
+            &NativeMarshall::resolve_dimensionality,
+            "context"_a,
+            "binding"_a,
+            "vector_target_type"_a,
+            D_NA(NativeMarshall, resolve_dimensionality)
+        );
 
     nb::class_<NativeBoundVariableRuntime, Object>(slangpy, "NativeBoundVariableRuntime") //
         .def(nb::init<>(), D_NA(NativeBoundVariableRuntime, NativeBoundVariableRuntime))
