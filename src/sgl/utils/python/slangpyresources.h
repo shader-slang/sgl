@@ -18,6 +18,30 @@
 
 namespace sgl::slangpy {
 
+class NativeBufferMarshall : public NativeMarshall {
+public:
+    NativeBufferMarshall(ref<NativeSlangType> slang_type, ResourceUsage usage)
+        : NativeMarshall(slang_type)
+        , m_usage(usage)
+    {
+    }
+
+    ResourceUsage usage() { return m_usage; }
+
+    void write_shader_cursor_pre_dispatch(
+        CallContext* context,
+        NativeBoundVariableRuntime* binding,
+        ShaderCursor cursor,
+        nb::object value,
+        nb::list read_back
+    ) const override;
+
+    Shape get_shape(nb::object data) const override;
+
+private:
+    ResourceUsage m_usage;
+};
+
 class NativeTextureMarshall : public NativeMarshall {
 public:
     NativeTextureMarshall(

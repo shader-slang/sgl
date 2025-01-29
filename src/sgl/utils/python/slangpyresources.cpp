@@ -12,6 +12,42 @@ namespace sgl {
 
 namespace sgl::slangpy {
 
+Shape NativeBufferMarshall::get_shape(nb::object data) const
+{
+    const Buffer* buffer;
+    if (nb::try_cast<const Buffer*>(data, buffer)) {
+        std::vector<int> shape = {int(buffer->desc().size / buffer->desc().struct_size)};
+        return Shape(shape);
+    } else {
+        return Shape({{-1}});
+    }
+}
+
+void NativeBufferMarshall::write_shader_cursor_pre_dispatch(
+    CallContext* context,
+    NativeBoundVariableRuntime* binding,
+    ShaderCursor cursor,
+    nb::object value,
+    nb::list read_back
+) const
+{
+    SGL_UNUSED(read_back);
+    SGL_UNUSED(context);
+
+    AccessType primal_access = binding->get_access().first;
+    if (primal_access != AccessType::none) {
+        SGL_UNUSED(binding);
+        SGL_UNUSED(context);
+        ShaderCursor field = cursor[binding->get_variable_name()]["value"];
+        ref<ResourceView> view;
+        if (nb::try_cast(value, view)) {
+            field.set_resource(view);
+        } else {
+            field.set_buffer(nb::cast<ref<Buffer>>(value));
+        }
+    }
+}
+
 void NativeTextureMarshall::write_shader_cursor_pre_dispatch(
     CallContext* context,
     NativeBoundVariableRuntime* binding,
@@ -105,6 +141,29 @@ SGL_PY_EXPORT(utils_slangpy_resources)
     using namespace sgl::slangpy;
 
     nb::module_ slangpy = m.attr("slangpy");
+
+    nb::class_<NativeBufferMarshall, NativeMarshall>(slangpy, "NativeBufferMarshall") //
+        .def(
+            "__init__",
+            [](NativeBufferMarshall& self, ref<NativeSlangType> slang_type, ResourceUsage usage)
+            { new (&self) NativeBufferMarshall(slang_type, usage); },
+            "slang_type"_a,
+            "usage"_a,
+            D_NA(NativeBufferMarshall, NativeBufferMarshall)
+        )
+        .def(
+            "write_shader_cursor_pre_dispatch",
+            &NativeBufferMarshall::write_shader_cursor_pre_dispatch,
+            "context"_a,
+            "binding"_a,
+            "cursor"_a,
+            "value"_a,
+            "read_back"_a,
+            D_NA(NativeBufferMarshall, write_shader_cursor_pre_dispatch)
+        )
+        .def("get_shape", &NativeBufferMarshall::get_shape, "value"_a, D_NA(NativeBufferMarshall, get_shape))
+        .def_prop_ro("usage", &sgl::slangpy::NativeBufferMarshall::usage)
+        .def_prop_ro("slang_type", &sgl::slangpy::NativeBufferMarshall::get_slang_type);
 
     nb::class_<NativeTextureMarshall, NativeMarshall>(slangpy, "NativeTextureMarshall") //
         .def(
