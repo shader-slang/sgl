@@ -79,18 +79,8 @@ void NativeFunctionNode::append_to(
 
     auto builder = make_ref<SignatureBuilder>();
     read_signature(builder);
-    hash_signature(
-        [&](nb::handle value)
-        {
-            if (true) {
-                SGL_THROW("Bad type");
-            }
-            return nb::str(value).c_str();
-        },
-        args,
-        kwargs,
-        make_ref<SignatureBuilder>()
-    );
+    cache->get_args_signature(builder, args, kwargs);
+
 
     std::string sig = builder->str();
     NativeCallData* call_data = cache->find_call_data(sig);
