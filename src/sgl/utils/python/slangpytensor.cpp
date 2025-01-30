@@ -20,9 +20,16 @@ buffer_to_torch(Buffer* self, DataType type, std::vector<size_t> shape, std::vec
 
 namespace sgl::slangpy {
 
-NativeTensor::NativeTensor(NativeTensorDesc desc, const ref<Buffer>& storage)
+NativeTensor::NativeTensor(
+    NativeTensorDesc desc,
+    const ref<Buffer>& storage,
+    const ref<NativeTensor>& grad_in,
+    const ref<NativeTensor>& grad_out
+)
     : m_desc(desc)
     , m_storage(storage)
+    , m_grad_in(grad_in)
+    , m_grad_out(grad_out)
 {
     set_slangpy_signature(fmt::format("[{},{},{}]", desc.dtype->get_type_reflection()->name(), dims(), usage()));
 }
@@ -144,12 +151,16 @@ SGL_PY_EXPORT(utils_slangpy_tensor)
         .def_rw("element_layout", &NativeTensorDesc::element_layout)
         .def_rw("shape", &NativeTensorDesc::shape)
         .def_rw("strides", &NativeTensorDesc::strides)
-        .def_rw("offset", &NativeTensorDesc::offset)
-        .def_rw("grad_in", &NativeTensorDesc::grad_in, nb::arg().none())
-        .def_rw("grad_out", &NativeTensorDesc::grad_out, nb::arg().none());
+        .def_rw("offset", &NativeTensorDesc::offset);
 
     nb::class_<NativeTensor, NativeObject>(slangpy, "NativeTensor")
-        .def(nb::init<NativeTensorDesc, const ref<Buffer>&>())
+        .def(
+            nb::init<NativeTensorDesc, const ref<Buffer>&, const ref<NativeTensor>&, const ref<NativeTensor>&>(),
+            "desc"_a,
+            "storage"_a,
+            "grad_in"_a.none(),
+            "grad_out"_a.none()
+        )
         .def_prop_ro("device", &NativeTensor::device)
         .def_prop_ro("dtype", &NativeTensor::dtype)
         .def_prop_ro("shape", &NativeTensor::shape)
@@ -159,8 +170,9 @@ SGL_PY_EXPORT(utils_slangpy_tensor)
         .def_prop_ro("usage", &NativeTensor::usage)
         .def_prop_ro("memory_type", &NativeTensor::memory_type)
         .def_prop_ro("storage", &NativeTensor::storage)
-        .def_prop_ro("grad_in", &NativeTensor::grad_in, nb::none())
-        .def_prop_ro("grad_out", &NativeTensor::grad_out, nb::none())
+        .def_prop_rw("grad_in", &NativeTensor::grad_in, &NativeTensor::set_grad_in, nb::none())
+        .def_prop_rw("grad_out", &NativeTensor::grad_out, &NativeTensor::set_grad_out, nb::none())
+        .def_prop_ro("grad", &NativeTensor::grad)
         .def("cursor", &NativeTensor::cursor, "start"_a.none() = std::nullopt, "count"_a.none() = std::nullopt)
         .def("uniforms", &NativeTensor::uniforms)
         .def(

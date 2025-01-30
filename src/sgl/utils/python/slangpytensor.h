@@ -26,13 +26,16 @@ struct NativeTensorDesc {
     Shape shape;
     Shape strides;
     int offset{0};
-    ref<NativeTensor> grad_in;
-    ref<NativeTensor> grad_out;
 };
 
 class NativeTensor : public NativeObject {
 public:
-    NativeTensor(NativeTensorDesc desc, const ref<Buffer>& storage);
+    NativeTensor(
+        NativeTensorDesc desc,
+        const ref<Buffer>& storage,
+        const ref<NativeTensor>& grad_in,
+        const ref<NativeTensor>& grad_out
+    );
 
     Device* device() const { return storage()->device(); }
     ref<NativeSlangType> dtype() const { return m_desc.dtype; }
@@ -45,8 +48,19 @@ public:
     MemoryType memory_type() const { return m_storage->desc().memory_type; }
     ref<Buffer> storage() const { return m_storage; }
     size_t element_stride() const { return m_desc.element_layout->stride(); }
-    ref<NativeTensor> grad_in() const { return m_desc.grad_in; }
-    ref<NativeTensor> grad_out() const { return m_desc.grad_out; }
+
+    ref<NativeTensor> grad_in() const { return m_grad_in; }
+    void set_grad_in(const ref<NativeTensor>& grad_in) { m_grad_in = grad_in; }
+
+    ref<NativeTensor> grad_out() const { return m_grad_out; }
+    void set_grad_out(const ref<NativeTensor>& grad_out) { m_grad_out = grad_out; }
+
+    /// Helper that gets/validates the output grad.
+    ref<NativeTensor> grad() const
+    {
+        SGL_CHECK(m_grad_out, "Tensor has no grad.");
+        return m_grad_out;
+    }
 
     ref<BufferCursor> cursor(std::optional<int> start = std::nullopt, std::optional<int> count = std::nullopt) const;
     nb::dict uniforms() const;
@@ -54,6 +68,8 @@ public:
 private:
     NativeTensorDesc m_desc;
     ref<Buffer> m_storage;
+    ref<NativeTensor> m_grad_in;
+    ref<NativeTensor> m_grad_out;
 };
 
 
