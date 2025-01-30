@@ -154,4 +154,27 @@ private:
     ) const;
 };
 
+/// Bare minimum overridable functions to allow python marshall
+/// extensions to utilize the majority of native functionality.
+struct PyNativeTensorMarshall : public NativeTensorMarshall {
+    NB_TRAMPOLINE(NativeTensorMarshall, 4);
+
+    Shape get_shape(nb::object data) const override { NB_OVERRIDE(get_shape, data); }
+
+    nb::object
+    create_calldata(CallContext* context, NativeBoundVariableRuntime* binding, nb::object data) const override
+    {
+        NB_OVERRIDE(create_calldata, context, binding, data);
+    }
+
+    nb::object create_output(CallContext* context, NativeBoundVariableRuntime* binding) const override
+    {
+        NB_OVERRIDE(create_output, context, binding);
+    }
+    nb::object read_output(CallContext* context, NativeBoundVariableRuntime* binding, nb::object data) const override
+    {
+        NB_OVERRIDE(read_output, context, binding, data);
+    }
+};
+
 } // namespace sgl::slangpy
