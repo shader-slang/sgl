@@ -257,20 +257,29 @@ void NativeTensorMarshall::write_shader_cursor_pre_dispatch(
 {
     ShaderCursor field = cursor[binding->get_variable_name()];
 
+    NativeTensor* primal = nb::cast<NativeTensor*>(value);
+    SGL_CHECK(primal, "Missing primal tensor value");
+
+    const ref<NativeTensor>& grad_in = primal->grad_in();
+    const ref<NativeTensor>& grad_out = primal->grad_out();
+
     if (!has_derivative()) {
-        write_shader_cursor_fields(context, binding, field, value, read_back);
+        write_shader_cursor_fields(context, binding, field, primal, read_back);
     } else {
-        write_shader_cursor_fields(context, binding, field["primal"], value, read_back);
+        write_shader_cursor_fields(context, binding, field["primal"], primal, read_back);
         if (m_d_in) {
-            write_shader_cursor_fields(context, binding, field["d_in"], value, read_back);
+            SGL_CHECK(grad_in, "Missing required input gradients");
+            write_shader_cursor_fields(context, binding, field["d_in"], grad_in.get(), read_back);
         }
         if (m_d_out) {
-            write_shader_cursor_fields(context, binding, field["d_out"], value, read_back);
+            SGL_CHECK(grad_out, "Missing required input gradients");
+            write_shader_cursor_fields(context, binding, field["d_out"], grad_out.get(), read_back);
         }
     }
 
-    if (context->call_mode() != CallMode::prim && m_d_in != nullptr && m_d_in == m_d_out) {
-        SGL_THROW("inout parameter gradients need separate buffers for inputs and outputs (see Tensor.with_grads)");
+    if (context->call_mode() != CallMode::prim && grad_in && grad_in == grad_out) {
+        if (binding->get_access().second == AccessType::readwrite)
+            SGL_THROW("inout parameter gradients need separate buffers for inputs and outputs (see Tensor.with_grads)");
     }
 }
 
@@ -278,15 +287,11 @@ void NativeTensorMarshall::write_shader_cursor_fields(
     CallContext* context,
     NativeBoundVariableRuntime* binding,
     ShaderCursor field,
-    nb::object value,
+    NativeTensor* buffer,
     nb::list read_back
 ) const
 {
     SGL_UNUSED(read_back);
-
-    // Cast value to buffer, and get the cursor field to write to.
-    auto buffer = nb::cast<NativeTensor*>(value);
-    SGL_CHECK(buffer, "Tensor data is null");
 
     // Write the buffer storage.
     field["buffer"] = buffer->storage();
