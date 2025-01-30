@@ -159,7 +159,7 @@ ref<NativeTensor> NativeTensor::with_grads(ref<NativeTensor> grad_in, ref<Native
                 .dtype = dtype,
                 .element_layout = layout,
                 .shape = m_desc.shape,
-                .strides = m_desc.strides,
+                .strides = m_desc.shape.calc_contiguous_strides(),
                 .offset = m_desc.offset},
             buffer,
             nullptr,
@@ -255,31 +255,38 @@ void NativeTensorMarshall::write_shader_cursor_pre_dispatch(
     nb::list read_back
 ) const
 {
-    ShaderCursor field = cursor[binding->get_variable_name()];
+    // The native tensor marshall can be inherited for other types, so
+    // we check if we have a native tensor, and if not revert to the
+    // base class implementation.
+    NativeTensor* primal;
+    if (nb::try_cast(value, primal)) {
+        ShaderCursor field = cursor[binding->get_variable_name()];
 
-    NativeTensor* primal = nb::cast<NativeTensor*>(value);
-    SGL_CHECK(primal, "Missing primal tensor value");
+        const ref<NativeTensor>& grad_in = primal->grad_in();
+        const ref<NativeTensor>& grad_out = primal->grad_out();
 
-    const ref<NativeTensor>& grad_in = primal->grad_in();
-    const ref<NativeTensor>& grad_out = primal->grad_out();
+        if (!has_derivative()) {
+            write_shader_cursor_fields(context, binding, field, primal, read_back);
+        } else {
+            write_shader_cursor_fields(context, binding, field["primal"], primal, read_back);
+            if (m_d_in) {
+                SGL_CHECK(grad_in, "Missing required input gradients");
+                write_shader_cursor_fields(context, binding, field["d_in"], grad_in.get(), read_back);
+            }
+            if (m_d_out) {
+                SGL_CHECK(grad_out, "Missing required input gradients");
+                write_shader_cursor_fields(context, binding, field["d_out"], grad_out.get(), read_back);
+            }
+        }
 
-    if (!has_derivative()) {
-        write_shader_cursor_fields(context, binding, field, primal, read_back);
+        if (context->call_mode() != CallMode::prim && grad_in && grad_in == grad_out) {
+            if (binding->get_access().second == AccessType::readwrite)
+                SGL_THROW(
+                    "inout parameter gradients need separate buffers for inputs and outputs (see Tensor.with_grads)"
+                );
+        }
     } else {
-        write_shader_cursor_fields(context, binding, field["primal"], primal, read_back);
-        if (m_d_in) {
-            SGL_CHECK(grad_in, "Missing required input gradients");
-            write_shader_cursor_fields(context, binding, field["d_in"], grad_in.get(), read_back);
-        }
-        if (m_d_out) {
-            SGL_CHECK(grad_out, "Missing required input gradients");
-            write_shader_cursor_fields(context, binding, field["d_out"], grad_out.get(), read_back);
-        }
-    }
-
-    if (context->call_mode() != CallMode::prim && grad_in && grad_in == grad_out) {
-        if (binding->get_access().second == AccessType::readwrite)
-            SGL_THROW("inout parameter gradients need separate buffers for inputs and outputs (see Tensor.with_grads)");
+        NativeMarshall::write_shader_cursor_pre_dispatch(context, binding, cursor, value, read_back);
     }
 }
 
@@ -431,7 +438,7 @@ SGL_PY_EXPORT(utils_slangpy_tensor)
         .def("to_numpy", &NativeTensor::to_numpy, D_NA(NativeTensor, to_numpy));
 
 
-    nb::class_<NativeTensorMarshall, NativeMarshall>(slangpy, "NativeTensorMarshall") //
+    nb::class_<NativeTensorMarshall, PyNativeTensorMarshall, NativeMarshall>(slangpy, "NativeTensorMarshall") //
         .def(
             "__init__",
             [](NativeTensorMarshall& self,
@@ -443,7 +450,7 @@ SGL_PY_EXPORT(utils_slangpy_tensor)
                ref<NativeTensorMarshall> d_in,
                ref<NativeTensorMarshall> d_out) {
                 new (&self)
-                    NativeTensorMarshall(dims, writable, slang_type, slang_element_type, element_layout, d_in, d_out);
+                    PyNativeTensorMarshall(dims, writable, slang_type, slang_element_type, element_layout, d_in, d_out);
             },
             "dims"_a,
             "writable"_a,
