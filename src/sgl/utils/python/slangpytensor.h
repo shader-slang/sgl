@@ -114,6 +114,9 @@ public:
     ref<NativeSlangType> slang_element_type() const { return m_slang_element_type; }
     ref<TypeLayoutReflection> element_layout() const { return m_element_layout; }
     size_t element_stride() const { return m_element_layout->stride(); }
+    bool has_derivative() const { return m_d_in != nullptr || m_d_out != nullptr; }
+    ref<NativeTensorMarshall> d_in() const { return m_d_in; }
+    ref<NativeTensorMarshall> d_out() const { return m_d_out; }
 
     Shape get_shape(nb::object data) const override;
 
@@ -141,6 +144,14 @@ private:
     ref<TypeLayoutReflection> m_element_layout;
     ref<NativeTensorMarshall> m_d_in;
     ref<NativeTensorMarshall> m_d_out;
+
+    void write_shader_cursor_fields(
+        CallContext* context,
+        NativeBoundVariableRuntime* binding,
+        ShaderCursor field,
+        nb::object value,
+        nb::list read_back
+    ) const;
 };
 
 } // namespace sgl::slangpy

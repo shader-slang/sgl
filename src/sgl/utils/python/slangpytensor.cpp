@@ -119,6 +119,19 @@ void NativeTensor::clear(CommandBuffer* cmd)
     }
 }
 
+ref<NativeSlangType> innermost_type(ref<NativeSlangType> type)
+{
+    ref<NativeSlangType> result = type;
+    while (true) {
+        ref<NativeSlangType> child = result->element_type();
+        if (!child || child == result) {
+            break;
+        }
+        result = child;
+    }
+    return result;
+}
+
 ref<NativeTensor> NativeTensor::with_grads(ref<NativeTensor> grad_in, ref<NativeTensor> grad_out, bool zero) const
 {
     ref<NativeTensor> new_grad_in = std::move(grad_in);
@@ -174,14 +187,18 @@ ref<NativeTensor> NativeTensor::with_grads(ref<NativeTensor> grad_in, ref<Native
 
 nb::ndarray<nb::numpy> NativeTensor::to_numpy() const
 {
-    if (m_desc.element_layout->kind() != TypeReflection::Kind::scalar)
-        SGL_THROW("Cannot convert non-scalar tensor to numpy array.");
-
     // Get dlpack type from scalar type.
-    auto dlpack_type = scalartype_to_dtype(m_desc.element_layout->type()->scalar_type());
+    size_t dtype_size = dtype()->buffer_type_layout()->stride();
+    ref<NativeSlangType> innermost = innermost_type(dtype());
+    ref<TypeLayoutReflection> innermost_layout = innermost->buffer_type_layout();
+    size_t innermost_size = innermost_layout->stride();
+    TypeReflection::ScalarType scalar_type = innermost_layout->type()->scalar_type();
+    auto dlpack_type = scalartype_to_dtype(scalar_type);
+    auto dtype_shape = dtype()->get_shape();
+    auto dtype_strides = dtype_shape.calc_contiguous_strides();
 
     // Verify buffer stride matches dlpack stride
-    SGL_CHECK(m_storage->desc().struct_size == dlpack_type->bits / 8, "Buffer stride does not match dlpack stride.");
+    // SGL_CHECK(m_storage->desc().struct_size == dlpack_type->bits / 8, "Buffer stride does not match dlpack stride.");
 
     // Create data and nanobind capsule to contain the data.
     size_t data_size = m_storage->size();
@@ -192,9 +209,14 @@ nb::ndarray<nb::numpy> NativeTensor::to_numpy() const
     // Build sizes/strides arrays in form numpy wants them.
     std::vector<size_t> sizes;
     std::vector<int64_t> strides;
+
     for (size_t i = 0; i < m_desc.shape.size(); ++i) {
         sizes.push_back(m_desc.shape[i]);
-        strides.push_back(m_desc.strides[i]);
+        strides.push_back(m_desc.strides[i] * dtype_size / innermost_size);
+    }
+    for (size_t i = 0; i < dtype_shape.size(); ++i) {
+        sizes.push_back(dtype_shape[i]);
+        strides.push_back(dtype_strides[i]);
     }
 
     // Return numpy array.
@@ -233,21 +255,45 @@ void NativeTensorMarshall::write_shader_cursor_pre_dispatch(
     nb::list read_back
 ) const
 {
-    SGL_UNUSED(read_back);
+    ShaderCursor field = cursor[binding->get_variable_name()];
 
-    // TODO: This function can be a lot more efficient and cleaner
-    // optimize in next pass.
+    if (!has_derivative()) {
+        write_shader_cursor_fields(context, binding, field, value, read_back);
+    } else {
+        write_shader_cursor_fields(context, binding, field["primal"], value, read_back);
+        if (m_d_in) {
+            write_shader_cursor_fields(context, binding, field["d_in"], value, read_back);
+        }
+        if (m_d_out) {
+            write_shader_cursor_fields(context, binding, field["d_out"], value, read_back);
+        }
+    }
+
+    if (context->call_mode() != CallMode::prim && m_d_in != nullptr && m_d_in == m_d_out) {
+        SGL_THROW("inout parameter gradients need separate buffers for inputs and outputs (see Tensor.with_grads)");
+    }
+}
+
+void NativeTensorMarshall::write_shader_cursor_fields(
+    CallContext* context,
+    NativeBoundVariableRuntime* binding,
+    ShaderCursor field,
+    nb::object value,
+    nb::list read_back
+) const
+{
+    SGL_UNUSED(read_back);
 
     // Cast value to buffer, and get the cursor field to write to.
     auto buffer = nb::cast<NativeTensor*>(value);
-    ShaderCursor field = cursor[binding->get_variable_name()];
+    SGL_CHECK(buffer, "Tensor data is null");
 
     // Write the buffer storage.
     field["buffer"] = buffer->storage();
 
     // Write shape vector as an array of ints.
     const std::vector<int>& shape_vec = buffer->shape().as_vector();
-    field["shape"]._set_array_unsafe(&shape_vec[0], shape_vec.size() * 4, shape_vec.size());
+    field["_shape"]._set_array_unsafe(&shape_vec[0], shape_vec.size() * 4, shape_vec.size());
 
     // Generate and write strides vector, clearing strides to 0
     // for dimensions that are broadcast.
@@ -262,7 +308,9 @@ void NativeTensorMarshall::write_shader_cursor_pre_dispatch(
     }
 
     // Write the strides vector as an array of ints.
-    field["strides"]._set_array_unsafe(&strides_vec[0], strides_vec.size() * 4, strides_vec.size());
+    auto layout_field = field["layout"];
+    layout_field["strides"]._set_array_unsafe(&strides_vec[0], strides_vec.size() * 4, strides_vec.size());
+    layout_field["offset"] = buffer->offset();
 }
 
 void NativeTensorMarshall::read_calldata(
@@ -280,9 +328,32 @@ void NativeTensorMarshall::read_calldata(
 
 nb::object NativeTensorMarshall::create_output(CallContext* context, NativeBoundVariableRuntime* binding) const
 {
-    SGL_UNUSED(context);
     SGL_UNUSED(binding);
-    return nb::none();
+
+    // Get the derivative type, buffer layout and shape.
+    ref<NativeSlangType> dtype = m_slang_element_type;
+    ref<TypeLayoutReflection> layout = m_element_layout;
+    auto& shape = context->call_shape();
+
+    // Create a new structured buffer for storage.
+    BufferDesc buffer_desc;
+    buffer_desc.usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access | ResourceUsage::shared;
+    buffer_desc.struct_size = layout->stride();
+    buffer_desc.element_count = shape.element_count();
+    ref<Buffer> buffer = context->device()->create_buffer(buffer_desc);
+
+    // Create new native tensor to hold the grads.
+    return nb::cast(make_ref<NativeTensor>(
+        NativeTensorDesc{
+            .dtype = dtype,
+            .element_layout = layout,
+            .shape = shape,
+            .strides = shape.calc_contiguous_strides(),
+            .offset = 0},
+        buffer,
+        nullptr,
+        nullptr
+    ));
 }
 
 nb::object
@@ -299,7 +370,7 @@ nb::object NativeTensorMarshall::create_dispatchdata(nb::object data) const
     auto buffer = nb::cast<NativeTensor*>(data);
     nb::dict res;
     res["buffer"] = buffer->storage();
-    res["shape"] = buffer->shape().as_vector();
+    res["_shape"] = buffer->shape().as_vector();
     res["strides"] = buffer->strides().as_vector();
     return res;
 }
@@ -374,11 +445,13 @@ SGL_PY_EXPORT(utils_slangpy_tensor)
             "slang_type"_a,
             "slang_element_type"_a,
             "element_layout"_a,
-            "d_in"_a,
-            "d_out"_a,
+            "d_in"_a.none(),
+            "d_out"_a.none(),
             D_NA(NativeTensorMarshall, NativeTensorMarshall)
         )
         .def_prop_ro("dims", &sgl::slangpy::NativeTensorMarshall::dims)
         .def_prop_ro("writable", &sgl::slangpy::NativeTensorMarshall::writable)
-        .def_prop_ro("slang_element_type", &sgl::slangpy::NativeTensorMarshall::slang_element_type);
+        .def_prop_ro("slang_element_type", &sgl::slangpy::NativeTensorMarshall::slang_element_type)
+        .def_prop_ro("d_in", &NativeTensorMarshall::d_in)
+        .def_prop_ro("d_out", &NativeTensorMarshall::d_out);
 }
