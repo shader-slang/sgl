@@ -74,6 +74,9 @@ public:
     ref<NativeTensor>
     with_grads(ref<NativeTensor> grad_in = nullptr, ref<NativeTensor> grad_out = nullptr, bool zero = false) const;
 
+    /// Copy to CPU memory as a numpy array of correct stride/shape
+    nb::ndarray<nb::numpy> to_numpy() const;
+
     ref<BufferCursor> cursor(std::optional<int> start = std::nullopt, std::optional<int> count = std::nullopt) const;
     nb::dict uniforms() const;
 

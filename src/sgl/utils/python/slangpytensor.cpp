@@ -12,14 +12,50 @@
 namespace sgl {
 
 extern void write_shader_cursor(ShaderCursor& cursor, nb::object value);
-extern nb::ndarray<nb::numpy> buffer_to_numpy(Buffer* self);
-extern void buffer_from_numpy(Buffer* self, nb::ndarray<nb::numpy> data);
-extern nb::ndarray<nb::pytorch, nb::device::cuda>
-buffer_to_torch(Buffer* self, DataType type, std::vector<size_t> shape, std::vector<int64_t> strides, size_t offset);
 
 } // namespace sgl
 
 namespace sgl::slangpy {
+
+inline std::optional<nb::dlpack::dtype> scalartype_to_dtype(TypeReflection::ScalarType scalar_type)
+{
+    switch (scalar_type) {
+    case TypeReflection::ScalarType::none_:
+        return {};
+    case TypeReflection::ScalarType::void_:
+        return {};
+    case TypeReflection::ScalarType::bool_:
+        return nb::dlpack::dtype{(uint8_t)nb::dlpack::dtype_code::Bool, 8, 1};
+    case TypeReflection::ScalarType::int32:
+        return nb::dlpack::dtype{(uint8_t)nb::dlpack::dtype_code::Int, 32, 1};
+    case TypeReflection::ScalarType::uint32:
+        return nb::dlpack::dtype{(uint8_t)nb::dlpack::dtype_code::UInt, 32, 1};
+    case TypeReflection::ScalarType::int64:
+        return nb::dlpack::dtype{(uint8_t)nb::dlpack::dtype_code::Int, 64, 1};
+    case TypeReflection::ScalarType::uint64:
+        return nb::dlpack::dtype{(uint8_t)nb::dlpack::dtype_code::UInt, 64, 1};
+    case TypeReflection::ScalarType::float16:
+        return nb::dlpack::dtype{(uint8_t)nb::dlpack::dtype_code::Float, 16, 1};
+    case TypeReflection::ScalarType::float32:
+        return nb::dlpack::dtype{(uint8_t)nb::dlpack::dtype_code::Float, 32, 1};
+    case TypeReflection::ScalarType::float64:
+        return nb::dlpack::dtype{(uint8_t)nb::dlpack::dtype_code::Float, 64, 1};
+    case TypeReflection::ScalarType::int8:
+        return nb::dlpack::dtype{(uint8_t)nb::dlpack::dtype_code::Int, 8, 1};
+    case TypeReflection::ScalarType::uint8:
+        return nb::dlpack::dtype{(uint8_t)nb::dlpack::dtype_code::UInt, 8, 1};
+    case TypeReflection::ScalarType::int16:
+        return nb::dlpack::dtype{(uint8_t)nb::dlpack::dtype_code::Int, 16, 1};
+    case TypeReflection::ScalarType::uint16:
+        return nb::dlpack::dtype{(uint8_t)nb::dlpack::dtype_code::UInt, 16, 1};
+    case TypeReflection::ScalarType::intptr:
+        return nb::dlpack::dtype{(uint8_t)nb::dlpack::dtype_code::Int, sizeof(intptr_t) * 8, 1};
+    case TypeReflection::ScalarType::uintptr:
+        return nb::dlpack::dtype{(uint8_t)nb::dlpack::dtype_code::UInt, sizeof(uintptr_t) * 8, 1};
+    default:
+        return {};
+    }
+}
 
 NativeTensor::NativeTensor(
     NativeTensorDesc desc,
@@ -134,6 +170,36 @@ ref<NativeTensor> NativeTensor::with_grads(ref<NativeTensor> grad_in, ref<Native
     }
 
     return result;
+}
+
+nb::ndarray<nb::numpy> NativeTensor::to_numpy() const
+{
+    if (m_desc.element_layout->kind() != TypeReflection::Kind::scalar)
+        SGL_THROW("Cannot convert non-scalar tensor to numpy array.");
+
+    // Get dlpack type from scalar type.
+    auto dlpack_type = scalartype_to_dtype(m_desc.element_layout->type()->scalar_type());
+
+    // Verify buffer stride matches dlpack stride
+    SGL_CHECK(m_storage->desc().struct_size == dlpack_type->bits / 8, "Buffer stride does not match dlpack stride.");
+
+    // Create data and nanobind capsule to contain the data.
+    size_t data_size = m_storage->size();
+    void* data = new uint8_t[data_size];
+    m_storage->get_data(data, data_size);
+    nb::capsule owner(data, [](void* p) noexcept { delete[] reinterpret_cast<uint8_t*>(p); });
+
+    // Build sizes/strides arrays in form numpy wants them.
+    std::vector<size_t> sizes;
+    std::vector<int64_t> strides;
+    for (size_t i = 0; i < m_desc.shape.size(); ++i) {
+        sizes.push_back(m_desc.shape[i]);
+        strides.push_back(m_desc.strides[i]);
+    }
+
+    // Return numpy array.
+    return nb::ndarray<
+        nb::numpy>(data, sizes.size(), sizes.data(), owner, strides.data(), *dlpack_type, nb::device::cpu::value);
 }
 
 ref<BufferCursor> NativeTensor::cursor(std::optional<int> start, std::optional<int> count) const
@@ -286,17 +352,7 @@ SGL_PY_EXPORT(utils_slangpy_tensor)
         )
         .def("cursor", &NativeTensor::cursor, "start"_a.none() = std::nullopt, "count"_a.none() = std::nullopt)
         .def("uniforms", &NativeTensor::uniforms)
-        .def(
-            "to_numpy",
-            [](NativeTensor& self) { return buffer_to_numpy(self.storage().get()); },
-            D_NA(NativeTensor, buffer_to_numpy)
-        )
-        .def(
-            "from_numpy",
-            [](NativeTensor& self, nb::ndarray<nb::numpy> data) { buffer_from_numpy(self.storage().get(), data); },
-            "data"_a,
-            D_NA(NativeTensor, buffer_from_numpy)
-        );
+        .def("to_numpy", &NativeTensor::to_numpy, D_NA(NativeTensor, to_numpy));
 
 
     nb::class_<NativeTensorMarshall, NativeMarshall>(slangpy, "NativeTensorMarshall") //
