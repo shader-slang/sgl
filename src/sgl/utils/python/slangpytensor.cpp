@@ -5,6 +5,7 @@
 
 #include "sgl/device/device.h"
 #include "sgl/device/buffer_cursor.h"
+#include "sgl/device/command.h"
 
 #include "sgl/utils/python/slangpytensor.h"
 
@@ -32,6 +33,107 @@ NativeTensor::NativeTensor(
     , m_grad_out(grad_out)
 {
     set_slangpy_signature(fmt::format("[{},{},{}]", desc.dtype->get_type_reflection()->name(), dims(), usage()));
+}
+
+ref<NativeTensor> NativeTensor::broadcast_to(const Shape& new_shape) const
+{
+    auto& curr_shape_vec = this->shape().as_vector();
+    auto& new_shape_vec = new_shape.as_vector();
+
+    int D = (int)new_shape_vec.size() - (int)curr_shape_vec.size();
+    if (D < 0) {
+        SGL_THROW("Broadcast shape must be larger than tensor shape");
+    }
+
+    for (size_t i = 0; i < curr_shape_vec.size(); ++i) {
+        // TODO: Should this be curr_shape_vec[i] != 1? Waiting for Benedikt response.
+        if (new_shape_vec[D + i] != curr_shape_vec[i] && new_shape_vec[D + i] != 1) {
+            SGL_THROW(
+                "New dimension {}({}) must be equal to current dimension {}({}) or 1",
+                D + i,
+                new_shape_vec[D + i],
+                i,
+                curr_shape_vec[i]
+            );
+        }
+    }
+
+    auto& curr_strides_vec = this->strides().as_vector();
+    std::vector<int> new_strides(new_shape.size(), 0);
+    for (size_t i = 0; i < curr_strides_vec.size(); ++i) {
+        if (curr_shape_vec[i] > 1) {
+            new_strides[D + i] = curr_strides_vec[i];
+        }
+    }
+
+    NativeTensorDesc new_desc = m_desc;
+    new_desc.shape = new_shape;
+    new_desc.strides = Shape(new_strides);
+    return make_ref<NativeTensor>(new_desc, m_storage, m_grad_in, m_grad_out);
+}
+
+void NativeTensor::clear(CommandBuffer* cmd)
+{
+    if (cmd) {
+        cmd->clear_resource_view(m_storage->get_uav(), uint4(0, 0, 0, 0));
+    } else {
+        ref<CommandBuffer> temp_cmd = device()->create_command_buffer();
+        temp_cmd->clear_resource_view(m_storage->get_uav(), uint4(0, 0, 0, 0));
+        temp_cmd->submit();
+    }
+}
+
+ref<NativeTensor> NativeTensor::with_grads(ref<NativeTensor> grad_in, ref<NativeTensor> grad_out, bool zero) const
+{
+    ref<NativeTensor> new_grad_in = std::move(grad_in);
+    ref<NativeTensor> new_grad_out = std::move(grad_out);
+
+    // Create new, empty tensor for grads if none specified.
+    if (!new_grad_in && !new_grad_out) {
+
+        // Get the derivative type + buffer layout.
+        ref<NativeSlangType> dtype = m_desc.dtype->derivative();
+        if (!dtype)
+            SGL_THROW("No derivative type found for {}", m_desc.dtype->get_type_reflection()->name());
+        ref<TypeLayoutReflection> layout = dtype->buffer_type_layout();
+
+        // Create a new structured buffer for storage.
+        BufferDesc buffer_desc;
+        buffer_desc.usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access | ResourceUsage::shared;
+        buffer_desc.struct_size = layout->stride();
+        buffer_desc.element_count = element_count();
+        ref<Buffer> buffer = device()->create_buffer(buffer_desc);
+
+        // Create new native tensor to hold the grads.
+        new_grad_in = make_ref<NativeTensor>(
+            NativeTensorDesc{
+                .dtype = dtype,
+                .element_layout = layout,
+                .shape = m_desc.shape,
+                .strides = m_desc.strides,
+                .offset = m_desc.offset},
+            buffer,
+            nullptr,
+            nullptr
+        );
+        new_grad_out = new_grad_in;
+    }
+
+    // Create a new tensor object that refers to the same data as this one, but with
+    // associated grads.
+    ref<NativeTensor> result = make_ref<NativeTensor>(m_desc, m_storage, new_grad_in, new_grad_out);
+
+    // Optionally clear both.
+    if (zero) {
+        if (new_grad_in) {
+            new_grad_in->clear();
+        }
+        if (new_grad_out && new_grad_out != new_grad_in) {
+            new_grad_out->clear();
+        }
+    }
+
+    return result;
 }
 
 ref<BufferCursor> NativeTensor::cursor(std::optional<int> start, std::optional<int> count) const
@@ -173,6 +275,15 @@ SGL_PY_EXPORT(utils_slangpy_tensor)
         .def_prop_rw("grad_in", &NativeTensor::grad_in, &NativeTensor::set_grad_in, nb::none())
         .def_prop_rw("grad_out", &NativeTensor::grad_out, &NativeTensor::set_grad_out, nb::none())
         .def_prop_ro("grad", &NativeTensor::grad)
+        .def("broadcast_to", &NativeTensor::broadcast_to, "shape"_a)
+        .def("clear", &NativeTensor::clear, "cmd"_a.none() = nullptr)
+        .def(
+            "with_grads",
+            &NativeTensor::with_grads,
+            "grad_in"_a.none() = nullptr,
+            "grad_out"_a.none() = nullptr,
+            "zero"_a = false
+        )
         .def("cursor", &NativeTensor::cursor, "start"_a.none() = std::nullopt, "count"_a.none() = std::nullopt)
         .def("uniforms", &NativeTensor::uniforms)
         .def(
