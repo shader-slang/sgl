@@ -62,6 +62,18 @@ public:
         return m_grad_out;
     }
 
+    /// Broadcast tensor to new shape using standard numpy broadcasting rules.
+    ref<NativeTensor> broadcast_to(const Shape& shape) const;
+
+    /// Clear tensor to 0s
+    void clear(CommandBuffer* cmd = nullptr);
+
+    /// Create a new version of this tensor with associated grads. It is valid for
+    /// both input and output grads to refer to the same tensor. If neither grad_in
+    /// or grad_out are provided, a single new tensor is created and used for both grads.
+    ref<NativeTensor>
+    with_grads(ref<NativeTensor> grad_in = nullptr, ref<NativeTensor> grad_out = nullptr, bool zero = false) const;
+
     ref<BufferCursor> cursor(std::optional<int> start = std::nullopt, std::optional<int> count = std::nullopt) const;
     nb::dict uniforms() const;
 
