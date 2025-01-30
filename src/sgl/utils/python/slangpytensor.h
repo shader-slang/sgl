@@ -49,10 +49,10 @@ public:
     ref<Buffer> storage() const { return m_storage; }
     size_t element_stride() const { return m_desc.element_layout->stride(); }
 
-    ref<NativeTensor> grad_in() const { return m_grad_in; }
+    const ref<NativeTensor>& grad_in() const { return m_grad_in; }
     void set_grad_in(const ref<NativeTensor>& grad_in) { m_grad_in = grad_in; }
 
-    ref<NativeTensor> grad_out() const { return m_grad_out; }
+    const ref<NativeTensor>& grad_out() const { return m_grad_out; }
     void set_grad_out(const ref<NativeTensor>& grad_out) { m_grad_out = grad_out; }
 
     /// Helper that gets/validates the output grad.
@@ -149,7 +149,7 @@ private:
         CallContext* context,
         NativeBoundVariableRuntime* binding,
         ShaderCursor field,
-        nb::object value,
+        NativeTensor* value,
         nb::list read_back
     ) const;
 };
