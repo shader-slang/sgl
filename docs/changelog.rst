@@ -10,9 +10,13 @@ sgl uses a `semantic versioning <http://semver.org>`__ policy for its API.
 Changelog
 =========
 
+v0.10.1
+--------------------
+* Fix cuda path issue on linux.
+
 v0.10.0
 --------------------
-* SlangPy native .
+* SlangPy native.
 
 v0.9.0
 --------------------
