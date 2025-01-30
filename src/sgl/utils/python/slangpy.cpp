@@ -734,15 +734,24 @@ SGL_PY_EXPORT(utils_slangpy)
         .def_prop_rw("slangpy_signature", &NativeObject::slangpy_signature, &NativeObject::set_slangpy_signature)
         .def("read_signature", &NativeObject::read_signature, "builder"_a, D_NA(NativeObject, read_signature));
 
-    nb::class_<NativeSlangType, Object>(slangpy, "NativeSlangType") //
-        .def(nb::init<>(), D_NA(NativeSlangType, NativeSlangType))
+    nb::class_<NativeSlangType, PyNativeSlangType, Object>(slangpy, "NativeSlangType") //
+        .def(
+            "__init__",
+            [](NativeSlangType& self) { new (&self) PyNativeSlangType(); },
+            D_NA(NativeSlangType, NativeSlangType)
+        )
         .def_prop_rw(
             "type_reflection",
             &NativeSlangType::get_type_reflection,
             &NativeSlangType::set_type_reflection,
             D_NA(NativeSlangType, type_reflection)
         )
-        .def_prop_rw("shape", &NativeSlangType::get_shape, &NativeSlangType::set_shape, D_NA(NativeSlangType, shape));
+        .def_prop_rw("shape", &NativeSlangType::get_shape, &NativeSlangType::set_shape, D_NA(NativeSlangType, shape))
+        .def("_py_element_type", &NativeSlangType::_py_element_type)
+        .def("_py_has_derivative", &NativeSlangType::_py_has_derivative)
+        .def("_py_derivative", &NativeSlangType::_py_derivative)
+        .def("_py_uniform_type_layout", &NativeSlangType::_py_uniform_type_layout)
+        .def("_py_buffer_type_layout", &NativeSlangType::_py_buffer_type_layout);
 
     nb::class_<NativeMarshall, PyNativeMarshall, Object>(slangpy, "NativeMarshall") //
         .def(
