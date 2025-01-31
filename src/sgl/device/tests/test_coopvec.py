@@ -1,4 +1,3 @@
-from typing import Optional
 import pytest
 import sgl
 import sys
