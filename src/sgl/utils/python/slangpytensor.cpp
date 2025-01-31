@@ -197,9 +197,6 @@ nb::ndarray<nb::numpy> NativeTensor::to_numpy() const
     auto dtype_shape = dtype()->get_shape();
     auto dtype_strides = dtype_shape.calc_contiguous_strides();
 
-    // Verify buffer stride matches dlpack stride
-    // SGL_CHECK(m_storage->desc().struct_size == dlpack_type->bits / 8, "Buffer stride does not match dlpack stride.");
-
     // Create data and nanobind capsule to contain the data.
     size_t data_size = m_storage->size();
     void* data = new uint8_t[data_size];
@@ -342,7 +339,7 @@ nb::object NativeTensorMarshall::create_output(CallContext* context, NativeBound
 {
     SGL_UNUSED(binding);
 
-    // Get the derivative type, buffer layout and shape.
+    // Get type, buffer layout and shape.
     ref<NativeSlangType> dtype = m_slang_element_type;
     ref<TypeLayoutReflection> layout = m_element_layout;
     auto& shape = context->call_shape();
