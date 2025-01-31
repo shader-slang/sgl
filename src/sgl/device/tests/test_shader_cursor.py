@@ -14,6 +14,8 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent))
 import sglhelpers as helpers
 
+@pytest.skip("Crashes on Slang 2025.3.3", allow_module_level=True)
+
 INT_MIN = -2147483648
 INT_MAX = 2147483647
 UINT_MIN = 0
