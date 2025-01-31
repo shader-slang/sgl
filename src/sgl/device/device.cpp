@@ -577,6 +577,7 @@ void Device::close()
 
     m_slang_session.reset();
     m_hot_reload.reset();
+    m_coop_vec.reset();
 
     dec_ref();
 }
@@ -660,6 +661,18 @@ Device::get_acceleration_structure_prebuild_info(const AccelerationStructureBuil
 ref<AccelerationStructure> Device::create_acceleration_structure(AccelerationStructureDesc desc)
 {
     return make_ref<AccelerationStructure>(ref<Device>(this), std::move(desc));
+}
+
+/*size_t Device::query_coopvec_matrix_size(uint32_t rows, uint32_t columns, CoopVecMatrixLayout layout)
+{
+    return m_coop_vec->query_matrix_size(rows, columns, layout);
+}*/
+
+ref<CoopVec> Device::get_or_create_coop_vec()
+{
+    if (!m_coop_vec)
+        m_coop_vec.reset(new CoopVec(ref<Device>(this)));
+    return m_coop_vec;
 }
 
 ref<ShaderTable> Device::create_shader_table(ShaderTableDesc desc)
@@ -1056,15 +1069,15 @@ NativeHandle Device::get_native_handle(uint32_t index) const
     SLANG_CALL(m_gfx_device->getNativeDeviceHandles(&handles));
 
 #if SGL_HAS_D3D12
-    SGL_ASSERT(index == 0);
     if (type() == DeviceType::d3d12) {
+        SGL_ASSERT(index == 0);
         if (index == 0)
             return NativeHandle(reinterpret_cast<ID3D12Device*>(handles.handles[0].handleValue));
     }
 #endif
 #if SGL_HAS_VULKAN
-    SGL_ASSERT(index < 3);
     if (type() == DeviceType::vulkan) {
+        SGL_ASSERT(index < 3);
         if (index == 0)
             return NativeHandle(reinterpret_cast<VkInstance>(handles.handles[0].handleValue));
         else if (index == 1)
