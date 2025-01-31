@@ -8,9 +8,8 @@
 #include "sgl/core/enum.h"
 #include "sgl/core/data_type.h"
 
-#include "vk_coop_vector.h"
-
 #include <vector>
+#include <vulkan/vulkan.h>
 
 namespace sgl {
 
