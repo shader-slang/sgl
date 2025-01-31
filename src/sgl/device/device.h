@@ -7,6 +7,7 @@
 #include "sgl/device/native_handle.h"
 #include "sgl/device/resource.h"
 #include "sgl/device/shader.h"
+#include "sgl/device/coopvec.h"
 
 #include "sgl/core/fwd.h"
 #include "sgl/core/config.h"
@@ -362,6 +363,12 @@ public:
 
     ref<AccelerationStructure> create_acceleration_structure(AccelerationStructureDesc desc);
 
+    /**
+     * Get coop vec instance
+     */
+    ref<CoopVec> get_or_create_coop_vec();
+
+
     ref<ShaderTable> create_shader_table(ShaderTableDesc desc);
 
     /**
@@ -659,6 +666,7 @@ private:
 
     ref<Blitter> m_blitter;
     ref<HotReload> m_hot_reload;
+    ref<CoopVec> m_coop_vec;
 
     bool m_supports_cuda_interop{false};
     ref<cuda::Device> m_cuda_device;

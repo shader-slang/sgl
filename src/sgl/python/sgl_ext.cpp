@@ -25,6 +25,7 @@ SGL_PY_DECLARE(core_window);
 
 SGL_PY_DECLARE(device_buffer_cursor);
 SGL_PY_DECLARE(device_command);
+SGL_PY_DECLARE(device_coopvec);
 SGL_PY_DECLARE(device_device_resource);
 SGL_PY_DECLARE(device_device);
 SGL_PY_DECLARE(device_fence);
@@ -124,6 +125,7 @@ NB_MODULE(sgl_ext, m_)
     SGL_PY_IMPORT(device_framebuffer);
     SGL_PY_IMPORT(device_swapchain);
     SGL_PY_IMPORT(device_command);
+    SGL_PY_IMPORT(device_coopvec);
     SGL_PY_IMPORT(device_kernel);
     SGL_PY_IMPORT(device_memory_heap);
     SGL_PY_IMPORT(device_device);

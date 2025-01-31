@@ -76,6 +76,8 @@ target_sources(sgl PRIVATE
     sgl/device/buffer_cursor.h
     sgl/device/command.cpp
     sgl/device/command.h
+    sgl/device/coopvec.h
+    sgl/device/coopvec.cpp
     sgl/device/cuda_api.cpp
     sgl/device/cuda_api.h
     sgl/device/cuda_interop.cpp
@@ -404,6 +406,7 @@ if(SGL_BUILD_PYTHON)
         sgl/core/python/window.cpp
         sgl/device/python/command.cpp
         sgl/device/python/buffer_cursor.cpp
+        sgl/device/python/coopvec.cpp
         sgl/device/python/cursor_utils.h
         sgl/device/python/device_resource.cpp
         sgl/device/python/device.cpp
