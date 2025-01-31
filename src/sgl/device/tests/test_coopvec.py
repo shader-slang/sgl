@@ -15,7 +15,9 @@ COOPVEC_DEVICE_TYPES = [sgl.DeviceType.vulkan]
 def test_matrix_size(device_type: sgl.DeviceType):
     device = helpers.get_device(device_type)
 
-    sz = device.query_coopvec_matrix_size(4, 4, sgl.CoopVecMatrixLayout.row_major)
+    sz = device.coop_vec.query_matrix_size(
+        4, 4, sgl.CoopVec.MatrixLayout.row_major, sgl.DataType.float32
+    )
 
 
 if __name__ == "__main__":
