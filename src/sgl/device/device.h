@@ -364,8 +364,8 @@ public:
     ref<AccelerationStructure> create_acceleration_structure(AccelerationStructureDesc desc);
 
     /**
-    * Get coop vec instance
-    */
+     * Get coop vec instance
+     */
     ref<CoopVec> get_or_create_coop_vec();
 
 

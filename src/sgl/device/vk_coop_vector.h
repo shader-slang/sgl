@@ -66,7 +66,7 @@ typedef enum VkCooperativeVectorMatrixLayoutNV {
 
 typedef struct VkConvertCooperativeVectorMatrixLayoutInfoNV {
     VkStructureType sType;
-    void const* pNext;
+    const void* pNext;
     VkComponentTypeKHR srcComponentType;
     VkComponentTypeKHR dstComponentType;
     uint32_t numRows;
@@ -79,7 +79,7 @@ typedef struct VkConvertCooperativeVectorMatrixLayoutInfoNV {
 
 typedef struct VkConvertCooperativeVectorMatrixInfoNV {
     VkStructureType sType;
-    void const* pNext;
+    const void* pNext;
     size_t srcSize;
     VkDeviceOrHostAddressConstKHR srcData;
     size_t* pDstSize;
@@ -126,19 +126,19 @@ VKAPI_ATTR VkResult VKAPI_CALL vkGetPhysicalDeviceCooperativeVectorPropertiesNV(
 
 VKAPI_ATTR VkResult VKAPI_CALL vkConvertCooperativeVectorMatrixLayoutNV(
     VkDevice device,
-    VkConvertCooperativeVectorMatrixLayoutInfoNV const* pInfo,
+    const VkConvertCooperativeVectorMatrixLayoutInfoNV* pInfo,
     size_t srcSize,
-    void const* pSrcData,
+    const void* pSrcData,
     size_t* pDstSize,
     void* pDstData
 );
 
 VKAPI_ATTR VkResult VKAPI_CALL
-vkConvertCooperativeVectorMatrixNV(VkDevice device, VkConvertCooperativeVectorMatrixInfoNV const* pInfo);
+vkConvertCooperativeVectorMatrixNV(VkDevice device, const VkConvertCooperativeVectorMatrixInfoNV* pInfo);
 
 VKAPI_ATTR void VKAPI_CALL vkCmdConvertCooperativeVectorMatrixNV(
     VkCommandBuffer commandBuffer,
     uint32_t infoCount,
-    VkConvertCooperativeVectorMatrixInfoNV const* pInfos
+    const VkConvertCooperativeVectorMatrixInfoNV* pInfos
 );
 #endif
