@@ -10,6 +10,11 @@ sgl uses a `semantic versioning <http://semver.org>`__ policy for its API.
 Changelog
 =========
 
+v0.11.0
+* Slang 2025.3.3
+* CoopVec support
+* SlangPy native tensor types
+
 v0.10.1
 --------------------
 * Fix cuda path issue on linux.
