@@ -145,9 +145,6 @@ struct Writer {
             for (int c = 0; c < C; ++c)
                 value[r][c].write(this);
     }
-
-    [mutating]
-    void write<T : IWritable>(Buffer<T> value) { value[0].write(this); }
 }
 
 interface IWritable {
