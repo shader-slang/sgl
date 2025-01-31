@@ -85,7 +85,7 @@ PFN_vkVoidFunction CoopVec::get_function(const char* name) const
 #if SGL_WINDOWS
     return (PFN_vkVoidFunction)::GetProcAddress((HMODULE)m_vk_module, name);
 #elif SGL_LINUX
-    return (PFN_vkVoidFunction)dlsym(mVkModule, name);
+    return (PFN_vkVoidFunction)dlsym(m_vk_module, name);
 #else
     return nullptr;
 #endif
