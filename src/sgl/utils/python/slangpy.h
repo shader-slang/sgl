@@ -138,9 +138,41 @@ public:
     /// Set the shape of the type.
     void set_shape(const Shape& shape) { m_shape = shape; }
 
+    /// Get the element type of the type (call into Python).
+    ref<NativeSlangType> element_type() const { return _py_element_type(); }
+
+    /// Check if the type has a derivative (call into Python).
+    bool has_derivative() const { return _py_has_derivative(); }
+
+    /// Get the derivative type of the type (call into Python).
+    ref<NativeSlangType> derivative() const { return _py_derivative(); }
+
+    /// Get the uniform type layout of the type (call into Python).
+    ref<TypeLayoutReflection> uniform_type_layout() const { return _py_uniform_type_layout(); }
+
+    /// Get the buffer type layout of the type (call into Python).
+    ref<TypeLayoutReflection> buffer_type_layout() const { return _py_buffer_type_layout(); }
+
+    /// Virtual accessors to give native system access to python defined reflection properties
+    virtual ref<NativeSlangType> _py_element_type() const { return nullptr; }
+    virtual bool _py_has_derivative() const { return false; }
+    virtual ref<NativeSlangType> _py_derivative() const { return nullptr; }
+    virtual ref<TypeLayoutReflection> _py_uniform_type_layout() const { return nullptr; }
+    virtual ref<TypeLayoutReflection> _py_buffer_type_layout() const { return nullptr; }
+
 private:
     ref<TypeReflection> m_type_reflection;
     Shape m_shape;
+};
+
+/// Nanobind trampoline class for NativeSlangType
+struct PyNativeSlangType : public NativeSlangType {
+    NB_TRAMPOLINE(NativeSlangType, 5);
+    ref<NativeSlangType> _py_element_type() const override { NB_OVERRIDE(_py_element_type); }
+    bool _py_has_derivative() const override { NB_OVERRIDE(_py_has_derivative); }
+    ref<NativeSlangType> _py_derivative() const override { NB_OVERRIDE(_py_derivative); }
+    ref<TypeLayoutReflection> _py_uniform_type_layout() const override { NB_OVERRIDE(_py_uniform_type_layout); }
+    ref<TypeLayoutReflection> _py_buffer_type_layout() const override { NB_OVERRIDE(_py_buffer_type_layout); }
 };
 
 /// Base class for a marshal to a slangpy supported type.

@@ -49,10 +49,10 @@ public:
     ref<Buffer> storage() const { return m_storage; }
     size_t element_stride() const { return m_desc.element_layout->stride(); }
 
-    ref<NativeTensor> grad_in() const { return m_grad_in; }
+    const ref<NativeTensor>& grad_in() const { return m_grad_in; }
     void set_grad_in(const ref<NativeTensor>& grad_in) { m_grad_in = grad_in; }
 
-    ref<NativeTensor> grad_out() const { return m_grad_out; }
+    const ref<NativeTensor>& grad_out() const { return m_grad_out; }
     void set_grad_out(const ref<NativeTensor>& grad_out) { m_grad_out = grad_out; }
 
     /// Helper that gets/validates the output grad.
@@ -61,6 +61,21 @@ public:
         SGL_CHECK(m_grad_out, "Tensor has no grad.");
         return m_grad_out;
     }
+
+    /// Broadcast tensor to new shape using standard numpy broadcasting rules.
+    ref<NativeTensor> broadcast_to(const Shape& shape) const;
+
+    /// Clear tensor to 0s
+    void clear(CommandBuffer* cmd = nullptr);
+
+    /// Create a new version of this tensor with associated grads. It is valid for
+    /// both input and output grads to refer to the same tensor. If neither grad_in
+    /// or grad_out are provided, a single new tensor is created and used for both grads.
+    ref<NativeTensor>
+    with_grads(ref<NativeTensor> grad_in = nullptr, ref<NativeTensor> grad_out = nullptr, bool zero = false) const;
+
+    /// Copy to CPU memory as a numpy array of correct stride/shape
+    nb::ndarray<nb::numpy> to_numpy() const;
 
     ref<BufferCursor> cursor(std::optional<int> start = std::nullopt, std::optional<int> count = std::nullopt) const;
     nb::dict uniforms() const;
@@ -99,6 +114,9 @@ public:
     ref<NativeSlangType> slang_element_type() const { return m_slang_element_type; }
     ref<TypeLayoutReflection> element_layout() const { return m_element_layout; }
     size_t element_stride() const { return m_element_layout->stride(); }
+    bool has_derivative() const { return m_d_in != nullptr || m_d_out != nullptr; }
+    ref<NativeTensorMarshall> d_in() const { return m_d_in; }
+    ref<NativeTensorMarshall> d_out() const { return m_d_out; }
 
     Shape get_shape(nb::object data) const override;
 
@@ -126,6 +144,37 @@ private:
     ref<TypeLayoutReflection> m_element_layout;
     ref<NativeTensorMarshall> m_d_in;
     ref<NativeTensorMarshall> m_d_out;
+
+    void write_shader_cursor_fields(
+        CallContext* context,
+        NativeBoundVariableRuntime* binding,
+        ShaderCursor field,
+        NativeTensor* value,
+        nb::list read_back
+    ) const;
+};
+
+/// Bare minimum overridable functions to allow python marshall
+/// extensions to utilize the majority of native functionality.
+struct PyNativeTensorMarshall : public NativeTensorMarshall {
+    NB_TRAMPOLINE(NativeTensorMarshall, 4);
+
+    Shape get_shape(nb::object data) const override { NB_OVERRIDE(get_shape, data); }
+
+    nb::object
+    create_calldata(CallContext* context, NativeBoundVariableRuntime* binding, nb::object data) const override
+    {
+        NB_OVERRIDE(create_calldata, context, binding, data);
+    }
+
+    nb::object create_output(CallContext* context, NativeBoundVariableRuntime* binding) const override
+    {
+        NB_OVERRIDE(create_output, context, binding);
+    }
+    nb::object read_output(CallContext* context, NativeBoundVariableRuntime* binding, nb::object data) const override
+    {
+        NB_OVERRIDE(read_output, context, binding, data);
+    }
 };
 
 } // namespace sgl::slangpy
