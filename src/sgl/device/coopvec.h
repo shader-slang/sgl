@@ -7,6 +7,7 @@
 #include "sgl/core/object.h"
 #include "sgl/core/enum.h"
 #include "sgl/core/data_type.h"
+#include "sgl/core/platform.h"
 
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -97,11 +98,9 @@ public:
     }
 
 private:
-    PFN_vkVoidFunction get_function(const char* name) const;
-
     Device* m_device;
 
-    void* m_vk_module{nullptr};
+    SharedLibraryHandle m_vk_module{nullptr};
     VkDevice m_vk_device{nullptr};
     PFN_vkConvertCooperativeVectorMatrixNV m_VkConvertCooperativeVectorMatrixNV{nullptr};
     PFN_vkCmdConvertCooperativeVectorMatrixNV m_VkCmdConvertCooperativeVectorMatrixNV{nullptr};

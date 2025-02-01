@@ -7,12 +7,6 @@
 
 #include <vector>
 
-#if SGL_WINDOWS
-#include <windows.h>
-#elif SGL_LINUX
-#include <dlfcn.h>
-#endif
-
 namespace sgl {
 
 CoopVec::CoopVec(ref<Device> device)
@@ -26,15 +20,15 @@ CoopVec::CoopVec(ref<Device> device)
 
 #if SGL_WINDOWS
     const char* dll_name = "vulkan-1.dll";
-    m_vk_module = (void*)::LoadLibraryA(dll_name);
-    SGL_CHECK(m_vk_module != nullptr, "Failed to load Vulkan module '{}'.", dll_name);
 #elif SGL_LINUX
     const char* dll_name = "libvulkan.so.1";
-    m_vk_module = dlopen(dll_name, RTLD_NOW);
 #else
-    SGL_THROW("Platform does not support coop_vector");
+    SGL_THROW("Platform does not support CoopVec");
     return;
 #endif
+
+    m_vk_module = platform::load_shared_library(dll_name);
+    SGL_CHECK(m_vk_module != nullptr, "Failed to load Vulkan module '{}'.", dll_name);
 
     auto vk_instance = device->get_native_handle(0).as<VkInstance>();
     SGL_CHECK(vk_instance != VK_NULL_HANDLE, "Failed to get Vulkan instance handle from GFX.");
@@ -42,7 +36,8 @@ CoopVec::CoopVec(ref<Device> device)
     m_vk_device = device->get_native_handle(2).as<VkDevice>();
     SGL_CHECK(m_vk_device != VK_NULL_HANDLE, "Failed to get Vulkan device handle from GFX.");
 
-    auto vkGetInstanceProcAddr = (PFN_vkGetInstanceProcAddr)get_function("vkGetInstanceProcAddr");
+    auto vkGetInstanceProcAddr
+        = (PFN_vkGetInstanceProcAddr)platform::get_proc_address(m_vk_module, "vkGetInstanceProcAddr");
     SGL_CHECK(vkGetInstanceProcAddr != nullptr, "Failed to get Vulkan function 'vkGetInstanceProcAddr'.");
 
     auto vkGetDeviceProcAddr = (PFN_vkGetDeviceProcAddr)vkGetInstanceProcAddr(vk_instance, "vkGetDeviceProcAddr");
@@ -66,26 +61,9 @@ CoopVec::CoopVec(ref<Device> device)
 CoopVec::~CoopVec()
 {
     if (m_vk_module != nullptr) {
-#if SGL_WINDOWS
-        ::FreeLibrary((HMODULE)m_vk_module);
-#elif SGL_LINUX
-        dlclose(m_vk_module);
-#endif
+        platform::release_shared_library(m_vk_module);
         m_vk_module = nullptr;
     }
-}
-
-PFN_vkVoidFunction CoopVec::get_function(const char* name) const
-{
-    if (!m_vk_module)
-        return nullptr;
-#if SGL_WINDOWS
-    return (PFN_vkVoidFunction)::GetProcAddress((HMODULE)m_vk_module, name);
-#elif SGL_LINUX
-    return (PFN_vkVoidFunction)dlsym(m_vk_module, name);
-#else
-    return nullptr;
-#endif
 }
 
 static uint32_t calc_element_stride(uint32_t rows, uint32_t cols, CoopVecMatrixLayout layout)
