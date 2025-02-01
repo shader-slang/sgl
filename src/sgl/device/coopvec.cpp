@@ -12,11 +12,11 @@ namespace sgl {
 CoopVec::CoopVec(Device* device)
     : m_device(device)
 {
-    SGL_CHECK(device->type() == DeviceType::vulkan, "Requires a Vulkan device");
+    SGL_CHECK(device->type() == DeviceType::vulkan, "CoopVec requires a Vulkan device");
     bool have_coop_vec = false;
     for (const auto& f : device->features())
         have_coop_vec = have_coop_vec || f == "cooperative-vector";
-    SGL_CHECK(have_coop_vec, "Requires a Vulkan device with coop_vector support.");
+    SGL_CHECK(have_coop_vec, "Requires a Vulkan device with CoopVec support.");
 
 #if SGL_WINDOWS
     const char* dll_name = "vulkan-1.dll";
