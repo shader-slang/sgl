@@ -21,7 +21,7 @@ jobs:
         platform: [x86_64, aarch64]
         compiler: [msvc, gcc, clang]
         config: [Debug, Release]
-        python: ["3.10"]
+        python: ["3.9","3.10","3.11","3.12"]
         exclude:
           # Exclude aarch64 for windows/linux
           - { os: windows, platform: aarch64 }
@@ -36,13 +36,14 @@ jobs:
           - { os: macos, compiler: gcc }
         include:
           # Builds running on self-hosted runners (build + tests + coverage)
-          - { os: windows, compiler: msvc, config: Debug, flags: "unit-test,header-validation", runs-on: { group: nvrgfx, labels: [Windows, X64] } }
-          - { os: windows, compiler: msvc, config: Release, flags: "unit-test", runs-on: { group: nvrgfx, labels: [Windows, X64] } }
-          - { os: linux, compiler: gcc, config: Debug, flags: "unit-test,header-validation,coverage", runs-on: { group: nvrgfx, labels: [Linux, X64] } }
-          - { os: linux, compiler: gcc, config: Release, flags: "unit-test", runs-on: { group: nvrgfx, labels: [Linux, X64] } }
+          - { os: windows, compiler: msvc, config: Debug, python: "3.10", flags: "unit-test,header-validation", runs-on: { group: nvrgfx, labels: [Windows, X64] } }
+          - { os: windows, compiler: msvc, config: Release, python: "3.10", flags: "unit-test", runs-on: { group: nvrgfx, labels: [Windows, X64] } }
+          - { os: linux, compiler: gcc, config: Debug, python: "3.10", flags: "unit-test,header-validation,coverage", runs-on: { group: nvrgfx, labels: [Linux, X64] } }
+          - { os: linux, compiler: gcc, config: Release, python: "3.10", flags: "unit-test", runs-on: { group: nvrgfx, labels: [Linux, X64] } }
           # Additional builds running on GitHub hosted runners (build only)
-          - { os: linux, compiler: clang, runs-on: [ubuntu-latest] }
-          - { os: macos, compiler: clang, runs-on: [macos-latest] }
+          - { os: linux, runs-on: [ubuntu-latest] }
+          - { os: macos, runs-on: [macos-latest] }
+          - { os: windows, runs-on: [windows-latest] }
 
     env:
       VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
