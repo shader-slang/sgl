@@ -46,8 +46,8 @@ public:
     CoopVec(ref<Device> device);
     ~CoopVec();
 
-    static const size_t k_matrix_alignment = 64; ///< Minimum byte alignment according to spec.
-    static const size_t k_vector_alignment = 16; ///< Minimum byte alignment according to spec.
+    static constexpr size_t MATRIX_ALIGNMENT = 64; ///< Minimum byte alignment according to spec.
+    static constexpr size_t VECTOR_ALIGHMENT = 16; ///< Minimum byte alignment according to spec.
 
     size_t query_matrix_size(uint32_t rows, uint32_t cols, CoopVecMatrixLayout layout, DataType element_type);
 
@@ -89,11 +89,11 @@ public:
 
     size_t align_matrix_offset(size_t offset)
     {
-        return k_matrix_alignment * ((offset + k_matrix_alignment - 1) / k_matrix_alignment);
+        return MATRIX_ALIGNMENT * ((offset + MATRIX_ALIGNMENT - 1) / MATRIX_ALIGNMENT);
     }
     size_t align_vector_offset(size_t offset)
     {
-        return k_vector_alignment * ((offset + k_vector_alignment - 1) / k_vector_alignment);
+        return VECTOR_ALIGHMENT * ((offset + VECTOR_ALIGHMENT - 1) / VECTOR_ALIGHMENT);
     }
 
 private:

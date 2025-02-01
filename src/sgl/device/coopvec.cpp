@@ -15,9 +15,6 @@
 
 namespace sgl {
 
-const size_t CoopVec::k_matrix_alignment;
-const size_t CoopVec::k_vector_alignment;
-
 CoopVec::CoopVec(ref<Device> device)
     : m_device(device.get())
 {
@@ -210,10 +207,10 @@ CoopVecMatrixDesc CoopVec::create_matrix_desc(
 )
 {
     SGL_CHECK(
-        (offset % k_matrix_alignment) == 0,
+        (offset % MATRIX_ALIGNMENT) == 0,
         "Matrix offset %d does not conform to required matrix alignment of %d",
         offset,
-        k_matrix_alignment
+        MATRIX_ALIGNMENT
     );
     CoopVecMatrixDesc result;
     result.rows = rows;
