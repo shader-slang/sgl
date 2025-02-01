@@ -44,7 +44,7 @@ struct CoopVecMatrixDesc {
 class SGL_API CoopVec : public Object {
     SGL_OBJECT(CoopVec)
 public:
-    CoopVec(ref<Device> device);
+    CoopVec(Device* device);
     ~CoopVec();
 
     static constexpr size_t MATRIX_ALIGNMENT = 64; ///< Minimum byte alignment according to spec.
@@ -65,24 +65,24 @@ public:
     size_t convert_matrix_host(const void* src, CoopVecMatrixDesc src_desc, void* dst, CoopVecMatrixDesc dst_desc);
     // Device-to-device conversion of single matrix
     void convert_matrix_device(
-        const ref<Buffer>& src,
+        const Buffer* src,
         CoopVecMatrixDesc src_desc,
-        const ref<Buffer>& dst,
+        const Buffer* dst,
         CoopVecMatrixDesc dst_desc,
         CommandBuffer* cmd = nullptr
     );
     // Device-to-device conversion of multiple matrices
     void convert_matrix_device(
-        const ref<Buffer>& src,
+        const Buffer* src,
         const std::vector<CoopVecMatrixDesc>& src_desc,
-        const ref<Buffer>& dst,
+        const Buffer* dst,
         const std::vector<CoopVecMatrixDesc>& dst_desc,
         CommandBuffer* cmd = nullptr
     );
     void convert_matrix_device(
-        const ref<Buffer>& src,
+        const Buffer* src,
         const CoopVecMatrixDesc* src_desc,
-        const ref<Buffer>& dst,
+        const Buffer* dst,
         const CoopVecMatrixDesc* dst_desc,
         uint32_t matrix_count,
         CommandBuffer* cmd = nullptr

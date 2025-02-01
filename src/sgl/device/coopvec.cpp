@@ -9,8 +9,8 @@
 
 namespace sgl {
 
-CoopVec::CoopVec(ref<Device> device)
-    : m_device(device.get())
+CoopVec::CoopVec(Device* device)
+    : m_device(device)
 {
     SGL_CHECK(device->type() == DeviceType::vulkan, "Requires a Vulkan device");
     bool have_coop_vec = false;
@@ -271,9 +271,9 @@ size_t CoopVec::convert_matrix_host(const void* src, CoopVecMatrixDesc src_desc,
 }
 
 void CoopVec::convert_matrix_device(
-    const ref<Buffer>& src,
+    const Buffer* src,
     CoopVecMatrixDesc src_desc,
-    const ref<Buffer>& dst,
+    const Buffer* dst,
     CoopVecMatrixDesc dst_desc,
     CommandBuffer* cmd
 )
@@ -282,9 +282,9 @@ void CoopVec::convert_matrix_device(
 }
 
 void CoopVec::convert_matrix_device(
-    const ref<Buffer>& src,
+    const Buffer* src,
     const std::vector<CoopVecMatrixDesc>& src_desc,
-    const ref<Buffer>& dst,
+    const Buffer* dst,
     const std::vector<CoopVecMatrixDesc>& dst_desc,
     CommandBuffer* cmd
 )
@@ -300,9 +300,9 @@ void CoopVec::convert_matrix_device(
 }
 
 void CoopVec::convert_matrix_device(
-    const ref<Buffer>& src,
+    const Buffer* src,
     const CoopVecMatrixDesc* src_desc,
-    const ref<Buffer>& dst,
+    const Buffer* dst,
     const CoopVecMatrixDesc* dst_desc,
     uint32_t matrix_count,
     CommandBuffer* cmd
@@ -347,8 +347,8 @@ void CoopVec::convert_matrix_device(
     // Slang GFX doesn't expose this yet, so we use regular ShaderResource / UnorderedAccess states for now.
 
     // Insert barriers to transition source to ShaderResource, and explicit UAV barrier for destination.
-    actual_cmd->set_resource_state(src.get(), ResourceState::shader_resource);
-    actual_cmd->uav_barrier(dst.get());
+    actual_cmd->set_resource_state(src, ResourceState::shader_resource);
+    actual_cmd->uav_barrier(dst);
 
     gfx::InteropHandle handle = {};
     SLANG_CALL(actual_cmd->gfx_command_buffer()->getNativeHandle(&handle));
@@ -359,7 +359,7 @@ void CoopVec::convert_matrix_device(
 
     // Insert barriers to transition destination to ShaderResource.
     // After this point it should be safe to access.
-    actual_cmd->set_resource_state(dst.get(), ResourceState::shader_resource);
+    actual_cmd->set_resource_state(dst, ResourceState::shader_resource);
 
     if (cmd == nullptr)
         m_device->_end_shared_command_buffer(false);
