@@ -12,6 +12,7 @@ namespace sgl {
 CoopVec::CoopVec(Device* device)
     : m_device(device)
 {
+#if SGL_WINDOWS || SGL_LINUX
     SGL_CHECK(device->type() == DeviceType::vulkan, "CoopVec requires a Vulkan device");
     bool have_coop_vec = false;
     for (const auto& f : device->features())
@@ -22,9 +23,6 @@ CoopVec::CoopVec(Device* device)
     const char* dll_name = "vulkan-1.dll";
 #elif SGL_LINUX
     const char* dll_name = "libvulkan.so.1";
-#else
-    SGL_THROW("Platform does not support CoopVec");
-    return;
 #endif
 
     m_vk_module = platform::load_shared_library(dll_name);
@@ -56,6 +54,10 @@ CoopVec::CoopVec(Device* device)
         m_VkCmdConvertCooperativeVectorMatrixNV != nullptr,
         "Failed to get Vulkan function 'vkCmdConvertCooperativeVectorMatrixNV'."
     );
+#else
+    SGL_THROW("Platform does not support CoopVec");
+    return;
+#endif
 }
 
 CoopVec::~CoopVec()
