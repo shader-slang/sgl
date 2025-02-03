@@ -31,6 +31,89 @@ SGL_DICT_TO_DESC_FIELD(adapter_luid, AdapterLUID)
 SGL_DICT_TO_DESC_FIELD_DICT(compiler_options, SlangCompilerOptions)
 SGL_DICT_TO_DESC_FIELD(shader_cache_path, std::filesystem::path)
 SGL_DICT_TO_DESC_END()
+
+// Utility functions for doing CoopVec conversions between ndarrays
+template<typename... Args>
+static bool ndarray_is_row_maj(const nb::ndarray<Args...>& array)
+{
+    return array.ndim() == 2 && (array.stride(0) == int64_t(array.shape(1)) && array.stride(1) == 1);
+}
+template<typename... Args>
+static bool ndarray_is_col_maj(const nb::ndarray<Args...>& array)
+{
+    return array.ndim() == 2 && (array.stride(0) == 1 && array.stride(1) == int64_t(array.shape(0)));
+}
+
+template<typename... Args>
+static void coopvec_check_ndarray(const nb::ndarray<Args...>& array)
+{
+    DataType dtype = dtype_to_data_type(array.dtype());
+    SGL_CHECK(dtype != DataType::void_ && dtype != DataType::bool_, "Invalid CoopVec element type \"%d\"", dtype);
+    if (array.ndim() == 1)
+        return; // 1D arrays are always ok
+    SGL_CHECK(array.ndim() == 2, "Expected 2-dimensional array (received ndim = %d)", array.ndim());
+    SGL_CHECK(ndarray_is_row_maj(array) || ndarray_is_col_maj(array), "2D arrays must be row or column major");
+}
+template<typename... Args>
+static CoopVecMatrixLayout
+coopvec_get_ndarray_matrix_layout(const nb::ndarray<Args...>& array, std::optional<CoopVecMatrixLayout> hint)
+{
+    if (hint)
+        return hint.value();
+    if (ndarray_is_row_maj(array))
+        return CoopVecMatrixLayout::row_major;
+    if (ndarray_is_col_maj(array))
+        return CoopVecMatrixLayout::column_major;
+    SGL_THROW("Require a 2D row major/column major array when no explicit matrix layout is given");
+}
+template<typename... Args>
+static CoopVecMatrixDesc
+coopvec_get_ndarray_matrix_desc(const nb::ndarray<Args...>& array, std::optional<CoopVecMatrixLayout> layout_hint)
+{
+    coopvec_check_ndarray(array);
+
+    CoopVecMatrixDesc desc;
+    desc.size = array.nbytes();
+    desc.layout = coopvec_get_ndarray_matrix_layout(array, layout_hint);
+    desc.element_type = dtype_to_data_type(array.dtype());
+    desc.rows = array.ndim() > 0 ? uint32_t(array.shape(0)) : 0;
+    desc.cols = array.ndim() > 1 ? uint32_t(array.shape(1)) : 0;
+    return desc;
+}
+
+inline size_t coopvec_convert_matrix_host_to_host(
+    Device* self,
+    nb::ndarray<nb::device::cpu> src,
+    nb::ndarray<nb::device::cpu> dst,
+    std::optional<CoopVecMatrixLayout> src_layout,
+    std::optional<CoopVecMatrixLayout> dst_layout
+)
+{
+    CoopVecMatrixDesc src_desc = coopvec_get_ndarray_matrix_desc(src, src_layout);
+    CoopVecMatrixDesc dst_desc = coopvec_get_ndarray_matrix_desc(dst, dst_layout);
+
+    if (src.ndim() == 2 && dst.ndim() == 2) {
+        SGL_CHECK(
+            src_desc.rows == dst_desc.rows && src_desc.cols == dst_desc.cols,
+            "Array shapes of src and dst do not match ((%d, %d) != (%d, %d))",
+            src_desc.rows,
+            src_desc.cols,
+            dst_desc.rows,
+            dst_desc.cols
+        );
+    } else if (src.ndim() == 2) {
+        dst_desc.rows = src_desc.rows;
+        dst_desc.cols = src_desc.cols;
+    } else if (dst.ndim() == 2) {
+        src_desc.rows = dst_desc.rows;
+        src_desc.cols = dst_desc.cols;
+    } else {
+        SGL_THROW("At least one of src or dst must be a 2D array");
+    }
+
+    return self->get_or_create_coop_vec()->convert_matrix_host(src.data(), src_desc, dst.data(), dst_desc);
+}
+
 } // namespace sgl
 
 SGL_PY_EXPORT(device_device)
@@ -749,7 +832,6 @@ SGL_PY_EXPORT(device_device)
 
     device.def_prop_ro("upload_heap", &Device::upload_heap, D(Device, upload_heap));
     device.def_prop_ro("read_back_heap", &Device::read_back_heap, D(Device, read_back_heap));
-    device.def_prop_ro("coop_vec", &Device::get_or_create_coop_vec, D_NA(Device, get_or_create_coop_vec));
     device.def("flush_print", &Device::flush_print, D(Device, flush_print));
     device.def("flush_print_to_string", &Device::flush_print_to_string, D(Device, flush_print_to_string));
     device.def("run_garbage_collection", &Device::run_garbage_collection, D(Device, run_garbage_collection));
@@ -765,6 +847,80 @@ SGL_PY_EXPORT(device_device)
         &Device::register_device_close_callback,
         "callback"_a,
         D_NA(Device, register_device_close_callback)
+    );
+    device.def(
+        "coopvec_query_matrix_size",
+        [](Device* self, uint32_t rows, uint32_t cols, CoopVecMatrixLayout layout, DataType element_type)
+        { return self->get_or_create_coop_vec()->query_matrix_size(rows, cols, layout, element_type); },
+        "rows"_a,
+        "cols"_a,
+        "layout"_a,
+        "element_type"_a,
+        D_NA(Device, coopvec_query_matrix_size)
+    );
+    device.def(
+        "coopvec_create_matrix_desc",
+        [](Device* self, uint32_t rows, uint32_t cols, CoopVecMatrixLayout layout, DataType element_type, size_t offset)
+        { return self->get_or_create_coop_vec()->create_matrix_desc(rows, cols, layout, element_type, offset); },
+        "rows"_a,
+        "cols"_a,
+        "layout"_a,
+        "element_type"_a,
+        "offset"_a = 0,
+        D_NA(Device, coopvec_create_matrix_desc)
+    );
+    device.def(
+        "coopvec_convert_matrix_host",
+        &coopvec_convert_matrix_host_to_host,
+        "src"_a,
+        "dst"_a,
+        "src_layout"_a = nb::none(),
+        "dst_layout"_a = nb::none(),
+        D_NA(Device, coopvec_convert_matrix)
+    );
+    device.def(
+        "coopvec_convert_matrix_device",
+        [](Device* self,
+           const ref<Buffer>& src,
+           CoopVecMatrixDesc srcDesc,
+           const ref<Buffer>& dst,
+           CoopVecMatrixDesc dstDesc,
+           CommandBuffer* cmd)
+        { return self->get_or_create_coop_vec()->convert_matrix_device(src, srcDesc, dst, dstDesc, cmd); },
+        "src"_a,
+        "src_desc"_a,
+        "dst"_a,
+        "dst_desc"_a,
+        "cmd"_a = nullptr,
+        D_NA(Device, coopvec_convert_matrix_device)
+    );
+    device.def(
+        "coopvec_convert_matrix_device",
+        [](Device* self,
+           const ref<Buffer>& src,
+           const std::vector<CoopVecMatrixDesc>& srcDesc,
+           const ref<Buffer>& dst,
+           const std::vector<CoopVecMatrixDesc>& dstDesc,
+           CommandBuffer* cmd)
+        { return self->get_or_create_coop_vec()->convert_matrix_device(src, srcDesc, dst, dstDesc, cmd); },
+        "src"_a,
+        "src_desc"_a,
+        "dst"_a,
+        "dst_desc"_a,
+        "cmd"_a = nullptr,
+        D_NA(Device, coopvec_convert_matrix_device)
+    );
+    device.def(
+        "coopvec_align_matrix_offset",
+        [](Device* self, size_t offset) { return self->get_or_create_coop_vec()->align_matrix_offset(offset); },
+        "offset"_a,
+        D_NA(Device, coopvec_align_matrix_offset)
+    );
+    device.def(
+        "coopvec_align_vector_offset",
+        [](Device* self, size_t offset) { return self->get_or_create_coop_vec()->align_vector_offset(offset); },
+        "offset"_a,
+        D_NA(Device, coopvec_align_vector_offset)
     );
 
     device.def_static(

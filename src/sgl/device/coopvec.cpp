@@ -7,37 +7,26 @@
 
 #include <vector>
 
-#if SGL_WINDOWS
-#include <windows.h>
-#elif SGL_LINUX
-#include <dlfcn.h>
-#endif
-
 namespace sgl {
 
-const size_t CoopVec::k_matrix_alignment;
-const size_t CoopVec::k_vector_alignment;
-
-CoopVec::CoopVec(ref<Device> device)
-    : m_device(device.get())
+CoopVec::CoopVec(Device* device)
+    : m_device(device)
 {
-    SGL_CHECK(device->type() == DeviceType::vulkan, "Requires a Vulkan device");
+#if SGL_WINDOWS || SGL_LINUX
+    SGL_CHECK(device->type() == DeviceType::vulkan, "CoopVec requires a Vulkan device");
     bool have_coop_vec = false;
     for (const auto& f : device->features())
         have_coop_vec = have_coop_vec || f == "cooperative-vector";
-    SGL_CHECK(have_coop_vec, "Requires a Vulkan device with coop_vector support.");
+    SGL_CHECK(have_coop_vec, "Requires a Vulkan device with CoopVec support.");
 
 #if SGL_WINDOWS
     const char* dll_name = "vulkan-1.dll";
-    m_vk_module = (void*)::LoadLibraryA(dll_name);
-    SGL_CHECK(m_vk_module != nullptr, "Failed to load Vulkan module '{}'.", dll_name);
 #elif SGL_LINUX
     const char* dll_name = "libvulkan.so.1";
-    m_vk_module = dlopen(dll_name, RTLD_NOW);
-#else
-    SGL_THROW("Platform does not support coop_vector");
-    return;
 #endif
+
+    m_vk_module = platform::load_shared_library(dll_name);
+    SGL_CHECK(m_vk_module != nullptr, "Failed to load Vulkan module '{}'.", dll_name);
 
     auto vk_instance = device->get_native_handle(0).as<VkInstance>();
     SGL_CHECK(vk_instance != VK_NULL_HANDLE, "Failed to get Vulkan instance handle from GFX.");
@@ -45,7 +34,8 @@ CoopVec::CoopVec(ref<Device> device)
     m_vk_device = device->get_native_handle(2).as<VkDevice>();
     SGL_CHECK(m_vk_device != VK_NULL_HANDLE, "Failed to get Vulkan device handle from GFX.");
 
-    auto vkGetInstanceProcAddr = (PFN_vkGetInstanceProcAddr)get_function("vkGetInstanceProcAddr");
+    auto vkGetInstanceProcAddr
+        = (PFN_vkGetInstanceProcAddr)platform::get_proc_address(m_vk_module, "vkGetInstanceProcAddr");
     SGL_CHECK(vkGetInstanceProcAddr != nullptr, "Failed to get Vulkan function 'vkGetInstanceProcAddr'.");
 
     auto vkGetDeviceProcAddr = (PFN_vkGetDeviceProcAddr)vkGetInstanceProcAddr(vk_instance, "vkGetDeviceProcAddr");
@@ -64,31 +54,18 @@ CoopVec::CoopVec(ref<Device> device)
         m_VkCmdConvertCooperativeVectorMatrixNV != nullptr,
         "Failed to get Vulkan function 'vkCmdConvertCooperativeVectorMatrixNV'."
     );
+#else
+    SGL_THROW("Platform does not support CoopVec");
+    return;
+#endif
 }
 
 CoopVec::~CoopVec()
 {
     if (m_vk_module != nullptr) {
-#if SGL_WINDOWS
-        ::FreeLibrary((HMODULE)m_vk_module);
-#elif SGL_LINUX
-        dlclose(m_vk_module);
-#endif
+        platform::release_shared_library(m_vk_module);
         m_vk_module = nullptr;
     }
-}
-
-PFN_vkVoidFunction CoopVec::get_function(const char* name) const
-{
-    if (!m_vk_module)
-        return nullptr;
-#if SGL_WINDOWS
-    return (PFN_vkVoidFunction)::GetProcAddress((HMODULE)m_vk_module, name);
-#elif SGL_LINUX
-    return (PFN_vkVoidFunction)dlsym(m_vk_module, name);
-#else
-    return nullptr;
-#endif
 }
 
 static uint32_t calc_element_stride(uint32_t rows, uint32_t cols, CoopVecMatrixLayout layout)
@@ -210,10 +187,10 @@ CoopVecMatrixDesc CoopVec::create_matrix_desc(
 )
 {
     SGL_CHECK(
-        (offset % k_matrix_alignment) == 0,
+        (offset % MATRIX_ALIGNMENT) == 0,
         "Matrix offset %d does not conform to required matrix alignment of %d",
         offset,
-        k_matrix_alignment
+        MATRIX_ALIGNMENT
     );
     CoopVecMatrixDesc result;
     result.rows = rows;
@@ -296,9 +273,9 @@ size_t CoopVec::convert_matrix_host(const void* src, CoopVecMatrixDesc src_desc,
 }
 
 void CoopVec::convert_matrix_device(
-    const ref<Buffer>& src,
+    const Buffer* src,
     CoopVecMatrixDesc src_desc,
-    const ref<Buffer>& dst,
+    const Buffer* dst,
     CoopVecMatrixDesc dst_desc,
     CommandBuffer* cmd
 )
@@ -307,9 +284,9 @@ void CoopVec::convert_matrix_device(
 }
 
 void CoopVec::convert_matrix_device(
-    const ref<Buffer>& src,
+    const Buffer* src,
     const std::vector<CoopVecMatrixDesc>& src_desc,
-    const ref<Buffer>& dst,
+    const Buffer* dst,
     const std::vector<CoopVecMatrixDesc>& dst_desc,
     CommandBuffer* cmd
 )
@@ -325,9 +302,9 @@ void CoopVec::convert_matrix_device(
 }
 
 void CoopVec::convert_matrix_device(
-    const ref<Buffer>& src,
+    const Buffer* src,
     const CoopVecMatrixDesc* src_desc,
-    const ref<Buffer>& dst,
+    const Buffer* dst,
     const CoopVecMatrixDesc* dst_desc,
     uint32_t matrix_count,
     CommandBuffer* cmd
@@ -372,8 +349,8 @@ void CoopVec::convert_matrix_device(
     // Slang GFX doesn't expose this yet, so we use regular ShaderResource / UnorderedAccess states for now.
 
     // Insert barriers to transition source to ShaderResource, and explicit UAV barrier for destination.
-    actual_cmd->set_resource_state(src.get(), ResourceState::shader_resource);
-    actual_cmd->uav_barrier(dst.get());
+    actual_cmd->set_resource_state(src, ResourceState::shader_resource);
+    actual_cmd->uav_barrier(dst);
 
     gfx::InteropHandle handle = {};
     SLANG_CALL(actual_cmd->gfx_command_buffer()->getNativeHandle(&handle));
@@ -384,7 +361,7 @@ void CoopVec::convert_matrix_device(
 
     // Insert barriers to transition destination to ShaderResource.
     // After this point it should be safe to access.
-    actual_cmd->set_resource_state(dst.get(), ResourceState::shader_resource);
+    actual_cmd->set_resource_state(dst, ResourceState::shader_resource);
 
     if (cmd == nullptr)
         m_device->_end_shared_command_buffer(false);
