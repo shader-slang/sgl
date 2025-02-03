@@ -10,7 +10,12 @@ sgl uses a `semantic versioning <http://semver.org>`__ policy for its API.
 Changelog
 =========
 
+v0.12.0
+--------------------
+* CoopVec api moved to device.
+
 v0.11.0
+--------------------
 * Slang 2025.3.3
 * CoopVec support
 * SlangPy native tensor types
