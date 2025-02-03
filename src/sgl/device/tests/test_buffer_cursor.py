@@ -250,7 +250,7 @@ def test_cursor_read_write(device_type: sgl.DeviceType, seed: int):
 
     # Create new cursor by copying the first, and read element
     cursor2 = sgl.BufferCursor(buffer_layout.element_type_layout, 1)
-    cursor2.from_numpy(cursor.to_numpy())
+    cursor2.copy_from_numpy(cursor.to_numpy())
     element2 = cursor2[0]
 
     # Verify data matches
@@ -284,7 +284,7 @@ def test_fill_from_kernel(device_type: sgl.DeviceType, seed: int):
 
     # Create a cursor and read the buffer by copying its data
     cursor = sgl.BufferCursor(buffer_layout.element_type_layout, count)
-    cursor.from_numpy(buffer.to_numpy())
+    cursor.copy_from_numpy(buffer.to_numpy())
 
     # Verify data matches
     for i in range(count):

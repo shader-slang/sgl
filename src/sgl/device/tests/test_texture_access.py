@@ -86,7 +86,7 @@ def test_read_write_texture(
     # Write random data to texture
     for slice_idx, slice_data in enumerate(rand_data):
         for mip_idx, mip_data in enumerate(slice_data):
-            tex.from_numpy(mip_data, array_slice=slice_idx, mip_level=mip_idx)
+            tex.copy_from_numpy(mip_data, array_slice=slice_idx, mip_level=mip_idx)
 
     # Read back data and compare
     for slice_idx, slice_data in enumerate(rand_data):
@@ -132,7 +132,7 @@ def test_shader_read_write_texture(
     # Write random data to texture
     for slice_idx, slice_data in enumerate(rand_data):
         for mip_idx, mip_data in enumerate(slice_data):
-            src_tex.from_numpy(mip_data, array_slice=slice_idx, mip_level=mip_idx)
+            src_tex.copy_from_numpy(mip_data, array_slice=slice_idx, mip_level=mip_idx)
 
     for mip in range(src_tex.mip_count):
         dims = len(rand_data[0][0].shape) - 1

@@ -12,7 +12,7 @@ namespace sgl {
 
 extern void write_shader_cursor(ShaderCursor& cursor, nb::object value);
 extern nb::ndarray<nb::numpy> buffer_to_numpy(Buffer* self);
-extern void buffer_from_numpy(Buffer* self, nb::ndarray<nb::numpy> data);
+extern void buffer_copy_from_numpy(Buffer* self, nb::ndarray<nb::numpy> data);
 extern nb::ndarray<nb::pytorch, nb::device::cuda>
 buffer_to_torch(Buffer* self, DataType type, std::vector<size_t> shape, std::vector<int64_t> strides, size_t offset);
 
@@ -194,7 +194,7 @@ void NativeNumpyMarshall::write_shader_cursor_pre_dispatch(
 
     SGL_UNUSED(binding);
     auto buffer = create_buffer(context->device(), shape);
-    buffer_from_numpy(buffer->storage().get(), ndarray);
+    buffer_copy_from_numpy(buffer->storage().get(), ndarray);
 
     auto buffer_obj = nb::cast(buffer);
     store_readback(binding, read_back, value, buffer_obj);
@@ -289,10 +289,11 @@ SGL_PY_EXPORT(utils_slangpy_buffer)
             D_NA(NativeNDBuffer, buffer_to_numpy)
         )
         .def(
-            "from_numpy",
-            [](NativeNDBuffer& self, nb::ndarray<nb::numpy> data) { buffer_from_numpy(self.storage().get(), data); },
+            "copy_from_numpy",
+            [](NativeNDBuffer& self, nb::ndarray<nb::numpy> data)
+            { buffer_copy_from_numpy(self.storage().get(), data); },
             "data"_a,
-            D_NA(NativeNDBuffer, buffer_from_numpy)
+            D_NA(NativeNDBuffer, buffer_copy_from_numpy)
         );
 
 
