@@ -10,6 +10,10 @@ sgl uses a `semantic versioning <http://semver.org>`__ policy for its API.
 Changelog
 =========
 
+v0.12.1
+--------------------
+* Rename buffer/texture from_numpy to copy_from_numpy
+
 v0.12.0
 --------------------
 * CoopVec api moved to device.
