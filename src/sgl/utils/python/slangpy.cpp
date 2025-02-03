@@ -18,7 +18,7 @@
 namespace sgl {
 extern void write_shader_cursor(ShaderCursor& cursor, nb::object value);
 extern nb::ndarray<nb::numpy> buffer_to_numpy(Buffer* self);
-extern void buffer_from_numpy(Buffer* self, nb::ndarray<nb::numpy> data);
+extern void buffer_copy_from_numpy(Buffer* self, nb::ndarray<nb::numpy> data);
 extern nb::ndarray<nb::pytorch, nb::device::cuda>
 buffer_to_torch(Buffer* self, DataType type, std::vector<size_t> shape, std::vector<int64_t> strides, size_t offset);
 
