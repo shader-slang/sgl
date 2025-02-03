@@ -289,7 +289,7 @@ SGL_PY_EXPORT(utils_slangpy_buffer)
             D_NA(NativeNDBuffer, buffer_to_numpy)
         )
         .def(
-            "from_numpy",
+            "copy_from_numpy",
             [](NativeNDBuffer& self, nb::ndarray<nb::numpy> data) { buffer_from_numpy(self.storage().get(), data); },
             "data"_a,
             D_NA(NativeNDBuffer, buffer_from_numpy)

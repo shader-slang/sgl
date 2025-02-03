@@ -319,7 +319,7 @@ SGL_PY_EXPORT(device_resource)
             D(Buffer, get_uav)
         )
         .def("to_numpy", &buffer_to_numpy, D(buffer_to_numpy))
-        .def("from_numpy", &buffer_from_numpy, "data"_a, D(buffer_from_numpy))
+        .def("copy_from_numpy", &buffer_from_numpy, "data"_a, D(buffer_from_numpy))
         .def(
             "to_torch",
             &buffer_to_torch,
@@ -462,7 +462,7 @@ SGL_PY_EXPORT(device_resource)
         .def("to_bitmap", &Texture::to_bitmap, "mip_level"_a = 0, "array_slice"_a = 0, D(Texture, to_bitmap))
         .def("to_numpy", &texture_to_numpy, "mip_level"_a = 0, "array_slice"_a = 0, D(texture_to_numpy))
         .def(
-            "from_numpy",
+            "copy_from_numpy",
             &texture_from_numpy,
             "data"_a,
             "mip_level"_a = 0,

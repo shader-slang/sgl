@@ -124,7 +124,7 @@ SGL_PY_EXPORT(device_buffer_cursor)
             }
         )
         .def(
-            "from_numpy",
+            "copy_from_numpy",
             [](BufferCursor& self, nb::ndarray<nb::numpy> data)
             {
                 SGL_CHECK(is_ndarray_contiguous(data), "numpy array is not contiguous");

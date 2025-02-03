@@ -121,7 +121,7 @@ def test_buffer(device_type: sgl.DeviceType, type: str, size_MB: int):
 
     for offset in check_offsets:
         data = np.random.randint(0, 0xFFFFFFFF, size=check_count, dtype=np.uint32)
-        write_buffer.from_numpy(data)
+        write_buffer.copy_from_numpy(data)
         copy_kernel.dispatch(
             thread_count=[element_count, 1, 1],
             src=write_buffer,

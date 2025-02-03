@@ -48,7 +48,7 @@ class PipelineTestContext:
         )
 
     def count(self):
-        self.count_buffer.from_numpy(np.array([0, 0, 0, 0], dtype=np.uint32))
+        self.count_buffer.copy_from_numpy(np.array([0, 0, 0, 0], dtype=np.uint32))
         self.count_kernel.dispatch(
             thread_count=[self.output_texture.width, self.output_texture.height, 1],
             render_texture=self.output_texture,
