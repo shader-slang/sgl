@@ -110,23 +110,23 @@ Shape NativeTextureMarshall::get_texture_shape(const Texture* texture, int mip) 
 
     case TypeReflection::ResourceShape::texture_2d:
     case TypeReflection::ResourceShape::texture_2d_multisample:
-        return Shape({(int)texture->width() >> mip, (int)texture->height() >> mip});
+        return Shape({(int)texture->height() >> mip, (int)texture->width() >> mip});
 
     case TypeReflection::ResourceShape::texture_3d:
-        return Shape({(int)texture->width() >> mip, (int)texture->height() >> mip, (int)texture->depth() >> mip});
+        return Shape({(int)texture->depth() >> mip, (int)texture->height() >> mip, (int)texture->width() >> mip});
 
     case TypeReflection::ResourceShape::texture_cube:
-        return Shape({6, (int)texture->width() >> mip, (int)texture->height() >> mip});
+        return Shape({6, (int)texture->height() >> mip, (int)texture->width() >> mip});
 
     case TypeReflection::ResourceShape::texture_1d_array:
         return Shape({(int)texture->array_size(), (int)texture->width() >> mip});
 
     case TypeReflection::ResourceShape::texture_2d_array:
     case TypeReflection::ResourceShape::texture_2d_multisample_array:
-        return Shape({(int)texture->array_size(), (int)texture->width() >> mip, (int)texture->height() >> mip});
+        return Shape({(int)texture->array_size(), (int)texture->height() >> mip, (int)texture->width() >> mip});
 
     case TypeReflection::ResourceShape::texture_cube_array:
-        return Shape({(int)texture->array_size(), 6, (int)texture->width() >> mip, (int)texture->height() >> mip});
+        return Shape({(int)texture->array_size(), 6, (int)texture->height() >> mip, (int)texture->width() >> mip});
 
     default:
         SGL_THROW("Unsupported resource shape: {}", m_resource_shape);
