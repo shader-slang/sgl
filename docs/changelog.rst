@@ -10,6 +10,10 @@ sgl uses a `semantic versioning <http://semver.org>`__ policy for its API.
 Changelog
 =========
 
+v0.12.2
+--------------------
+* Fix SlangPy textures being transposed during load/store
+
 v0.12.1
 --------------------
 * Rename buffer/texture from_numpy to copy_from_numpy
