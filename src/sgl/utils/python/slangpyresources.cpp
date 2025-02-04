@@ -133,6 +133,39 @@ Shape NativeTextureMarshall::get_texture_shape(const Texture* texture, int mip) 
     }
 }
 
+nb::object NativeTextureMarshall::create_output(CallContext* context, NativeBoundVariableRuntime* binding) const
+{
+    size_t dims = context->call_shape().size();
+    SGL_CHECK(dims > 0 && dims <= 3, "Invalid call shape (must be 1D, 2D or 3D) for texture output");
+
+    ResourceType type =
+        dims == 1 ? ResourceType::texture_1d :
+        dims == 2 ? ResourceType::texture_2d :
+        ResourceType::texture_3d;
+
+    SGL_UNUSED(binding);
+    TextureDesc desc;
+    desc.format = m_format;
+    desc.usage = m_usage;
+    desc.type = type;
+    desc.width = context->call_shape()[0];
+    if (dims > 1)
+        desc.height = context->call_shape()[1];
+    if (dims > 2)
+        desc.depth = context->call_shape()[2];
+    auto texture = context->device()->create_texture(desc);
+
+    return nb::cast(texture);
+}
+
+nb::object
+NativeTextureMarshall::read_output(CallContext* context, NativeBoundVariableRuntime* binding, nb::object data) const
+{
+    SGL_UNUSED(context);
+    SGL_UNUSED(binding);
+    return data;
+}
+
 } // namespace sgl::slangpy
 
 SGL_PY_EXPORT(utils_slangpy_resources)
@@ -172,11 +205,13 @@ SGL_PY_EXPORT(utils_slangpy_resources)
                ref<NativeSlangType> slang_type,
                ref<NativeSlangType> element_type,
                TypeReflection::ResourceShape resource_shape,
+               Format format,
                ResourceUsage usage,
-               int dims) { new (&self) NativeTextureMarshall(slang_type, element_type, resource_shape, usage, dims); },
+               int dims) { new (&self) NativeTextureMarshall(slang_type, element_type, resource_shape, format, usage, dims); },
             "slang_type"_a,
             "element_type"_a,
             "resource_shape"_a,
+            "format"_a,
             "usage"_a,
             "dims"_a,
             D_NA(NativeTextureMarshall, NativeTextureMarshall)
