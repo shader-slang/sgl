@@ -138,10 +138,9 @@ nb::object NativeTextureMarshall::create_output(CallContext* context, NativeBoun
     size_t dims = context->call_shape().size();
     SGL_CHECK(dims > 0 && dims <= 3, "Invalid call shape (must be 1D, 2D or 3D) for texture output");
 
-    ResourceType type =
-        dims == 1 ? ResourceType::texture_1d :
-        dims == 2 ? ResourceType::texture_2d :
-        ResourceType::texture_3d;
+    ResourceType type = dims == 1 ? ResourceType::texture_1d
+        : dims == 2               ? ResourceType::texture_2d
+                                  : ResourceType::texture_3d;
 
     SGL_UNUSED(binding);
     TextureDesc desc;
@@ -207,7 +206,8 @@ SGL_PY_EXPORT(utils_slangpy_resources)
                TypeReflection::ResourceShape resource_shape,
                Format format,
                ResourceUsage usage,
-               int dims) { new (&self) NativeTextureMarshall(slang_type, element_type, resource_shape, format, usage, dims); },
+               int dims)
+            { new (&self) NativeTextureMarshall(slang_type, element_type, resource_shape, format, usage, dims); },
             "slang_type"_a,
             "element_type"_a,
             "resource_shape"_a,
