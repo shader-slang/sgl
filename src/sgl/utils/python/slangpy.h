@@ -18,14 +18,20 @@
 namespace sgl::slangpy {
 
 class NativeBoundVariableRuntime;
+class NativeCallData;
 
 /// General exception that includes a message and the bound variable from which the error
 /// originated.
 class NativeBoundVariableException : public std::exception {
 public:
-    NativeBoundVariableException(std::string_view message, ref<NativeBoundVariableRuntime> source = nullptr)
+    NativeBoundVariableException(
+        std::string_view message,
+        ref<NativeBoundVariableRuntime> source = nullptr,
+        ref<NativeCallData> context = nullptr
+    )
         : m_message(message)
         , m_source(std::move(source))
+        , m_context(std::move(context))
     {
     }
 
@@ -33,10 +39,12 @@ public:
 
     std::string_view message() const { return m_message; }
     ref<NativeBoundVariableRuntime> source() const { return m_source; }
+    ref<NativeCallData> context() const { return m_context; }
 
 private:
     std::string m_message;
     ref<NativeBoundVariableRuntime> m_source;
+    ref<NativeCallData> m_context;
 };
 
 /// Used during calculation of slangpy signature
@@ -446,7 +454,7 @@ public:
     void set_call_dimensionality(int call_dimensionality) { m_call_dimensionality = call_dimensionality; }
 
     /// Recursively populate the overall kernel call shape.
-    void populate_call_shape(std::vector<int>& call_shape, nb::object value);
+    void populate_call_shape(std::vector<int>& call_shape, nb::object value, NativeCallData* error_context);
 
     /// Write call data to shader cursor before dispatch, optionally writing data for read back after the kernel has
     /// run.
@@ -502,7 +510,7 @@ public:
     }
 
     /// Calculate the overall call shape by combining the shapes of all arguments.
-    Shape calculate_call_shape(int call_dimensionality, nb::list args, nb::dict kwargs);
+    Shape calculate_call_shape(int call_dimensionality, nb::list args, nb::dict kwargs, NativeCallData* error_context);
 
     void write_shader_cursor_pre_dispatch(
         CallContext* context,
