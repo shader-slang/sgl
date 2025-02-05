@@ -71,20 +71,28 @@ void NativeMarshall::store_readback(
     read_back.append(nb::make_tuple(binding, value, data));
 }
 
-void NativeBoundVariableRuntime::populate_call_shape(std::vector<int>& call_shape, nb::object value)
+void NativeBoundVariableRuntime::populate_call_shape(
+    std::vector<int>& call_shape,
+    nb::object value,
+    NativeCallData* error_context
+)
 {
     if (m_children) {
         // We have children, so load each child value and recurse down the tree.
         for (const auto& [name, child_ref] : *m_children) {
             if (child_ref) {
                 nb::object child_value = value[name.c_str()];
-                child_ref->populate_call_shape(call_shape, child_value);
+                child_ref->populate_call_shape(call_shape, child_value, error_context);
             }
         }
     } else if (!value.is_none()) {
         // We are a leaf node, so we can populate the call shape.
         if (!m_transform.valid()) {
-            throw NativeBoundVariableException("Transform shape is not set.", ref(this));
+            throw NativeBoundVariableException(
+                fmt::format("Transform shape is not set for {}. This is an internal error.", m_variable_name),
+                ref(this),
+                ref(error_context)
+            );
         }
 
         // Read the transform and call shape size.
@@ -120,8 +128,15 @@ void NativeBoundVariableRuntime::populate_call_shape(std::vector<int>& call_shap
             if (cs != shape_dim) {
                 if (cs != 1 && shape_dim != 1) {
                     throw NativeBoundVariableException(
-                        "Shape mismatch for " + m_variable_name + " between input and output",
-                        ref(this)
+                        fmt::format(
+                            "Shape mismatch for {} between value ({}) and call ({})\nThis is typically caused when "
+                            "attempting to combine containers with the same dimensionality but different sizes.",
+                            m_variable_name,
+                            shape_dim,
+                            cs
+                        ),
+                        ref(this),
+                        ref(error_context)
                     );
                 }
                 if (shape_dim != 1) {
@@ -231,21 +246,26 @@ nb::object NativeBoundVariableRuntime::read_output(CallContext* context, nb::obj
     }
 }
 
-Shape NativeBoundCallRuntime::calculate_call_shape(int call_dimensionality, nb::list args, nb::dict kwargs)
+Shape NativeBoundCallRuntime::calculate_call_shape(
+    int call_dimensionality,
+    nb::list args,
+    nb::dict kwargs,
+    NativeCallData* error_context
+)
 {
     // Setup initial call shape of correct dimensionality, with all dimensions set to 1.
     std::vector<int> call_shape(call_dimensionality, 1);
 
     // Populate call shape for each positional argument.
     for (size_t idx = 0; idx < args.size(); ++idx) {
-        m_args[idx]->populate_call_shape(call_shape, args[idx]);
+        m_args[idx]->populate_call_shape(call_shape, args[idx], error_context);
     }
 
     // Populate call shape for each keyword argument.
     for (auto [key, value] : kwargs) {
         auto it = m_kwargs.find(nb::str(key).c_str());
         if (it != m_kwargs.end()) {
-            it->second->populate_call_shape(call_shape, nb::cast<nb::object>(value));
+            it->second->populate_call_shape(call_shape, nb::cast<nb::object>(value), error_context);
         }
     }
 
@@ -336,7 +356,7 @@ nb::object NativeCallData::exec(
     nb::dict unpacked_kwargs = unpack_kwargs(kwargs);
 
     // Calculate call shape.
-    Shape call_shape = m_runtime->calculate_call_shape(m_call_dimensionality, unpacked_args, unpacked_kwargs);
+    Shape call_shape = m_runtime->calculate_call_shape(m_call_dimensionality, unpacked_args, unpacked_kwargs, this);
     m_last_call_shape = call_shape;
 
     // Setup context.
@@ -349,7 +369,7 @@ nb::object NativeCallData::exec(
             nb::object output = rv_node->get_python_type()->create_output(context, rv_node.get());
             kwargs["_result"] = output;
             unpacked_kwargs["_result"] = output;
-            rv_node->populate_call_shape(call_shape.as_vector(), output);
+            rv_node->populate_call_shape(call_shape.as_vector(), output, this);
         }
     }
 
@@ -709,6 +729,7 @@ SGL_PY_EXPORT(utils_slangpy)
                 nb::dict data;
                 data["message"] = e.message();
                 data["source"] = e.source();
+                data["context"] = e.context();
                 PyErr_SetObject(PyExc_ValueError, data.ptr());
             }
         }
