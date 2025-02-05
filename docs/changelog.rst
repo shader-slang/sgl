@@ -10,6 +10,10 @@ sgl uses a `semantic versioning <http://semver.org>`__ policy for its API.
 Changelog
 =========
 
+v0.12.3
+--------------------
+* Improved dispatch error handling
+
 v0.12.2
 --------------------
 * Fix SlangPy textures being transposed during load/store
