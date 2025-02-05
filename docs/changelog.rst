@@ -10,6 +10,11 @@ sgl uses a `semantic versioning <http://semver.org>`__ policy for its API.
 Changelog
 =========
 
+v0.12.4
+--------------------
+* SlangPy support for auto-shaped types
+* SlangPy support for creating texture outputs
+
 v0.12.3
 --------------------
 * Improved dispatch error handling

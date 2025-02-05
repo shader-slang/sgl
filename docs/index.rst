@@ -28,7 +28,7 @@ If you use ``sgl`` in a research project leading to a publication, please cite t
         title = {Slang Graphics Library},
         author = {Simon Kallweit and Chris Cummings},
         note = {https://github.com/shader-slang/sgl},
-        version = {0.12.3},
+        version = {0.12.4},
         year = 2024
     }
 
