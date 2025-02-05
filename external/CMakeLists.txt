@@ -70,12 +70,11 @@ elseif(SGL_MACOS)
     endif()
 endif()
 
-sgl_download_package(slang ${SLANG_URL})
-
-set(SLANG_DIR ${slang_SOURCE_DIR})
-set(SLANG_INCLUDE_DIR ${slang_SOURCE_DIR}/include)
-
-if(SGL_LOCAL_SLANG)
+if(NOT SGL_LOCAL_SLANG)
+    sgl_download_package(slang ${SLANG_URL})
+    set(SLANG_DIR ${slang_SOURCE_DIR})
+    set(SLANG_INCLUDE_DIR ${slang_SOURCE_DIR}/include)
+else()
     set(SLANG_DIR ${SGL_LOCAL_SLANG_DIR}/${SGL_LOCAL_SLANG_BUILD_DIR})
     set(SLANG_INCLUDE_DIR ${SGL_LOCAL_SLANG_DIR}/include)
 endif()
@@ -182,9 +181,16 @@ endif()
 
 # imgui
 
-set(IMGUI_VERSION "1.90.1")
-sgl_download_package(imgui "https://github.com/ocornut/imgui/archive/refs/tags/v${IMGUI_VERSION}.zip")
-set(SGL_IMGUI_DIR ${imgui_SOURCE_DIR} PARENT_SCOPE)
+set(SGL_LOCAL_IMGUI OFF CACHE BOOL "Use a local source of imgui instead of downloading at configure time")
+set(SGL_LOCAL_IMGUI_DIR "" CACHE PATH "Path to a local imgui source tree")
+if(NOT SGL_LOCAL_IMGUI)
+    set(IMGUI_VERSION "1.90.1")
+message(FATAL_ERROR "ELLO")
+    sgl_download_package(imgui "https://github.com/ocornut/imgui/archive/refs/tags/v${IMGUI_VERSION}.zip")
+    set(SGL_IMGUI_DIR ${imgui_SOURCE_DIR} PARENT_SCOPE)
+else()
+    set(SGL_IMGUI_DIR ${SGL_LOCAL_IMGUI_DIR} PARENT_SCOPE)
+endif()
 
 # header only
 
