@@ -50,11 +50,13 @@ public:
         ref<NativeSlangType> slang_type,
         ref<NativeSlangType> element_type,
         TypeReflection::ResourceShape resource_shape,
+        Format format,
         ResourceUsage usage,
         int dims
     )
         : NativeMarshall(std::move(slang_type))
         , m_resource_shape(resource_shape)
+        , m_format(format)
         , m_usage(usage)
         , m_texture_dims(dims)
         , m_slang_element_type(std::move(element_type))
@@ -80,8 +82,13 @@ public:
 
     nb::object create_dispatchdata(nb::object data) const override { return data; }
 
+    nb::object create_output(CallContext* context, NativeBoundVariableRuntime* binding) const override;
+
+    nb::object read_output(CallContext* context, NativeBoundVariableRuntime* binding, nb::object data) const override;
+
 private:
     TypeReflection::ResourceShape m_resource_shape;
+    Format m_format;
     ResourceUsage m_usage;
     int m_texture_dims;
     ref<NativeSlangType> m_slang_element_type;
