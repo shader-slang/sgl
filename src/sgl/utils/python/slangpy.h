@@ -202,6 +202,14 @@ public:
     /// Set the concrete shape of the type.
     void set_concrete_shape(const Shape& concrete_shape) { m_concrete_shape = concrete_shape; }
 
+    /// Get whether this type always defines its shape by matching that of the
+    /// activate call, rather than by inspecting the value. This is preferred
+    /// for some generator types.
+    bool get_match_call_shape() const { return m_match_call_shape; }
+
+    /// Set whether this type matches call shape.
+    void set_match_call_shape(bool match_call_shape) { m_match_call_shape = match_call_shape; }
+
     /// Get the shape of the type (only used if not concrete).
     virtual Shape get_shape(nb::object data) const
     {
@@ -331,6 +339,7 @@ protected:
 private:
     Shape m_concrete_shape;
     ref<NativeSlangType> m_slang_type;
+    bool m_match_call_shape;
 };
 
 /// Nanobind trampoline class for NativeMarshall
