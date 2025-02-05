@@ -101,8 +101,12 @@ void NativeBoundVariableRuntime::populate_call_shape(
 
         // Get the shape of the value. In the case of none-concrete types,
         // only the container shape is needed, as we never map elements.
+        // Types that match the call shape simply take their transform
+        // and set every corresponding dimension to 1 so it is broadcast.
         if (m_python_type->get_concrete_shape().valid())
             m_shape = m_python_type->get_concrete_shape();
+        else if (m_python_type->get_match_call_shape())
+            m_shape = Shape(std::vector<int>(tf.size(), 1));
         else
             m_shape = m_python_type->get_shape(value);
 
@@ -787,6 +791,13 @@ SGL_PY_EXPORT(utils_slangpy)
             &NativeMarshall::set_concrete_shape,
             D_NA(NativeMarshall, concrete_shape)
         )
+        .def_prop_rw(
+            "match_call_shape",
+            &NativeMarshall::get_match_call_shape,
+            &NativeMarshall::set_match_call_shape,
+            D_NA(NativeMarshall, match_call_shape)
+        )
+        .def("get_shape", &NativeMarshall::get_shape, "value"_a, D_NA(NativeMarshall, get_shape))
         .def_prop_rw(
             "slang_type",
             &NativeMarshall::get_slang_type,
