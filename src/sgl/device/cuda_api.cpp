@@ -23,10 +23,7 @@ bool sgl_cuda_api_init()
 #if SGL_WINDOWS
     std::vector<std::string> cuda_paths{"nvcuda.dll"};
 #elif SGL_LINUX
-    std::vector<std::string> cuda_paths{
-        "/usr/lib/x86_64-linux-gnu/libcuda.so",
-        "/usr/lib/aarch64-linux-gnu/libcuda.so",
-    };
+    std::vector<std::string> cuda_paths{"libcuda.so"};
 #else
     std::vector<std::string> cuda_paths;
     return false;
