@@ -147,11 +147,13 @@ nb::object NativeTextureMarshall::create_output(CallContext* context, NativeBoun
     desc.format = m_format;
     desc.usage = m_usage;
     desc.type = type;
-    desc.width = context->call_shape()[0];
+
+    size_t shape_end = context->call_shape().size() - 1;
+    desc.width = context->call_shape()[shape_end];
     if (dims > 1)
-        desc.height = context->call_shape()[1];
+        desc.height = context->call_shape()[shape_end - 1];
     if (dims > 2)
-        desc.depth = context->call_shape()[2];
+        desc.depth = context->call_shape()[shape_end - 2];
     auto texture = context->device()->create_texture(desc);
 
     return nb::cast(texture);
