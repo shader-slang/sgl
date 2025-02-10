@@ -19,7 +19,7 @@ Shape NativeBufferMarshall::get_shape(nb::object data) const
         std::vector<int> shape = {int(buffer->desc().size / buffer->desc().struct_size)};
         return Shape(shape);
     } else {
-        return Shape({{-1}});
+        return Shape({-1});
     }
 }
 
