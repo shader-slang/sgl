@@ -67,6 +67,7 @@ enum class DeviceType {
     automatic,
     d3d12,
     vulkan,
+    metal,
     cpu,
     cuda,
 };
@@ -77,6 +78,7 @@ SGL_ENUM_INFO(
         {DeviceType::automatic, "automatic"},
         {DeviceType::d3d12, "d3d12"},
         {DeviceType::vulkan, "vulkan"},
+        {DeviceType::metal, "metal"},
         {DeviceType::cpu, "cpu"},
         {DeviceType::cuda, "cuda"},
     }

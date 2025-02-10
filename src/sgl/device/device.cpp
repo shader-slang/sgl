@@ -287,6 +287,8 @@ inline gfx::DeviceType gfx_device_type(DeviceType device_type)
         return gfx::DeviceType::DirectX12;
     case DeviceType::vulkan:
         return gfx::DeviceType::Vulkan;
+    case DeviceType::metal:
+        return gfx::DeviceType::Metal;
     case DeviceType::cpu:
         return gfx::DeviceType::CPU;
     case DeviceType::cuda:
