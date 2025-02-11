@@ -167,6 +167,42 @@ NativeTextureMarshall::read_output(CallContext* context, NativeBoundVariableRunt
     return data;
 }
 
+Shape get_texture_shape(const Texture* texture, int mip)
+{
+    if (texture->array_size() == 1) {
+        switch (texture->type()) {
+        case ResourceType::texture_1d:
+            return Shape({(int)texture->width() >> mip});
+        case ResourceType::texture_2d:
+            return Shape({(int)texture->height() >> mip, (int)texture->width() >> mip});
+        case ResourceType::texture_3d:
+            return Shape({(int)texture->depth() >> mip, (int)texture->height() >> mip, (int)texture->width() >> mip});
+        case ResourceType::texture_cube:
+            return Shape({6, (int)texture->height() >> mip, (int)texture->width() >> mip});
+        default:
+            SGL_THROW("Invalid texture shape: {}", texture->type());
+        }
+    } else {
+        switch (texture->type()) {
+        case ResourceType::texture_1d:
+            return Shape({(int)texture->array_size(), (int)texture->width() >> mip});
+        case ResourceType::texture_2d:
+            return Shape({(int)texture->array_size(), (int)texture->height() >> mip, (int)texture->width() >> mip});
+        case ResourceType::texture_3d:
+            return Shape(
+                {(int)texture->array_size(),
+                 (int)texture->depth() >> mip,
+                 (int)texture->height() >> mip,
+                 (int)texture->width() >> mip}
+            );
+        case ResourceType::texture_cube:
+            return Shape({(int)texture->array_size(), 6, (int)texture->height() >> mip, (int)texture->width() >> mip});
+        default:
+            SGL_THROW("Invalid texture shape: {}", texture->type());
+        }
+    }
+}
+
 } // namespace sgl::slangpy
 
 SGL_PY_EXPORT(utils_slangpy_resources)
@@ -175,6 +211,8 @@ SGL_PY_EXPORT(utils_slangpy_resources)
     using namespace sgl::slangpy;
 
     nb::module_ slangpy = m.attr("slangpy");
+
+    slangpy.def("get_texture_shape", &get_texture_shape, "texture"_a, "mip"_a = 0, D_NA(get_texture_shape()));
 
     nb::class_<NativeBufferMarshall, NativeMarshall>(slangpy, "NativeBufferMarshall") //
         .def(
