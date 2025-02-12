@@ -401,7 +401,7 @@ BufferCursor::BufferCursor(ref<TypeLayoutReflection> element_layout, size_t elem
     m_owner = true;
 }
 
-BufferCursor::BufferCursor(ref<TypeLayoutReflection> element_layout, ref<Buffer> resource)
+BufferCursor::BufferCursor(ref<TypeLayoutReflection> element_layout, ref<Buffer> resource, bool load_before_write)
     : m_element_type_layout(std::move(element_layout))
 {
     m_resource = std::move(resource);
@@ -409,9 +409,16 @@ BufferCursor::BufferCursor(ref<TypeLayoutReflection> element_layout, ref<Buffer>
     m_offset = 0;
     m_buffer = nullptr;
     m_owner = true;
+    m_load_before_write = load_before_write;
 }
 
-BufferCursor::BufferCursor(ref<TypeLayoutReflection> element_layout, ref<Buffer> resource, size_t size, size_t offset)
+BufferCursor::BufferCursor(
+    ref<TypeLayoutReflection> element_layout,
+    ref<Buffer> resource,
+    size_t size,
+    size_t offset,
+    bool load_before_write
+)
     : m_element_type_layout(std::move(element_layout))
 {
     m_resource = std::move(resource);
@@ -419,6 +426,7 @@ BufferCursor::BufferCursor(ref<TypeLayoutReflection> element_layout, ref<Buffer>
     m_offset = offset;
     m_buffer = nullptr;
     m_owner = true;
+    m_load_before_write = load_before_write;
 }
 
 BufferCursor::~BufferCursor()
@@ -443,7 +451,10 @@ void BufferCursor::write_data(size_t offset, const void* data, size_t size)
     if (!m_buffer) {
         // Load data on demand if haven't done so yet.
         SGL_CHECK(m_resource, "Buffer resource not set");
-        load();
+        if (m_load_before_write)
+            load();
+        else
+            m_buffer = new uint8_t[m_size];
     }
 
     SGL_CHECK(offset + size <= m_size, "Buffer overflow");

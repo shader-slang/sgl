@@ -84,17 +84,19 @@ SGL_PY_EXPORT(device_buffer_cursor)
             D_NA(BufferCursor, BufferCursor)
         )
         .def(
-            nb::init<ref<TypeLayoutReflection>, ref<Buffer>>(),
+            nb::init<ref<TypeLayoutReflection>, ref<Buffer>, bool>(),
             "element_layout"_a,
             "buffer_resource"_a,
+            "load_buffer_write"_a = true,
             D_NA(BufferCursor, BufferCursor)
         )
         .def(
-            nb::init<ref<TypeLayoutReflection>, ref<Buffer>, size_t, size_t>(),
+            nb::init<ref<TypeLayoutReflection>, ref<Buffer>, size_t, size_t, bool>(),
             "element_layout"_a,
             "buffer_resource"_a,
             "size"_a,
             "offset"_a,
+            "load_buffer_write"_a = true,
             D_NA(BufferCursor, BufferCursor)
         )
         .def_prop_ro("element_type_layout", &BufferCursor::element_type_layout, D_NA(BufferCursor, type_layout))
