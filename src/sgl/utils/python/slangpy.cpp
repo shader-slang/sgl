@@ -686,6 +686,15 @@ void pack_arg(nanobind::object arg, nanobind::object unpacked_arg)
     }
 }
 
+// Helper to get signature of a single value.
+std::string get_value_signature(nb::handle o)
+{
+    static NativeCallDataCache cache;
+    auto builder = make_ref<SignatureBuilder>();
+    cache.get_value_signature(builder, o);
+    return builder->str();
+}
+
 } // namespace sgl::slangpy
 
 SGL_PY_EXPORT(utils_slangpy)
@@ -723,6 +732,7 @@ SGL_PY_EXPORT(utils_slangpy)
         "unpacked_arg"_a,
         D_NA(slangpy, pack_arg)
     );
+    slangpy.def("get_value_signature", &get_value_signature, "o"_a, D_NA(slangpy, get_value_signature));
 
     nb::register_exception_translator(
         [](const std::exception_ptr& p, void* /* unused */)
