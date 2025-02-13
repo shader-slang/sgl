@@ -686,7 +686,7 @@ void pack_arg(nanobind::object arg, nanobind::object unpacked_arg)
     }
 }
 
-// Helper to quickly get signature of a value
+// Helper to get signature of a single value.
 std::string get_value_signature(nb::handle o)
 {
     static NativeCallDataCache cache;
