@@ -14,6 +14,11 @@ enable_testing()
 include(GNUInstallDirs)
 include(CMakeRC)
 
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux" AND ${CMAKE_SYSTEM_PROCESSOR} MATCHES "aarch64")
+    # Building vcpkg for aarch64 requires the following
+    set($ENV{VCPKG_FORCE_SYSTEM_BINARIES})
+endif()
+
 set(CMAKE_OSX_DEPLOYMENT_TARGET "13.0")
 
 if (APPLE)
@@ -84,6 +89,9 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     set(SGL_LINUX TRUE)
     set(SGL_HAS_D3D12 OFF)
     set(SGL_HAS_VULKAN ON)
+    if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "aarch64")
+        set(SGL_ARCH_ARM64 TRUE)
+    endif()
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(SGL_PLATFORM "macOS")
     set(SGL_MACOS TRUE)
