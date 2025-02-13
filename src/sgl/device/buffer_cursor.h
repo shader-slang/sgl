@@ -101,11 +101,19 @@ public:
     /// Create buffer + allocate space internally for a given number of elements.
     BufferCursor(ref<TypeLayoutReflection> element_layout, size_t element_count);
 
-    /// Create as a view onto a buffer resource.
-    BufferCursor(ref<TypeLayoutReflection> element_layout, ref<Buffer> resource);
+    /// Create as a view onto a buffer resource. Disable load_before_write to
+    /// prevent automatic loading of current buffer state before writing data to it.
+    BufferCursor(ref<TypeLayoutReflection> element_layout, ref<Buffer> resource, bool load_before_write = true);
 
-    /// Create as a view onto a section of a buffer resource.
-    BufferCursor(ref<TypeLayoutReflection> element_layout, ref<Buffer> resource, size_t size, size_t offset);
+    /// Create as a view onto a section of a buffer resource. Disable load_before_write to
+    /// prevent automatic loading of current buffer state before writing data to it.
+    BufferCursor(
+        ref<TypeLayoutReflection> element_layout,
+        ref<Buffer> resource,
+        size_t size,
+        size_t offset,
+        bool load_before_write = true
+    );
 
     ~BufferCursor();
 
@@ -158,6 +166,7 @@ private:
     size_t m_size{0};
     bool m_owner{false};
     DeviceOffset m_offset{0};
+    bool m_load_before_write{true};
 };
 
 
