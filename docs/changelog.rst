@@ -10,6 +10,11 @@ sgl uses a `semantic versioning <http://semver.org>`__ policy for its API.
 Changelog
 =========
 
+v0.13.0
+--------------------
+* Expose additional SlangPy functions for inspecting textures and signatures.
+* BufferCursor supports option to not load data from GPU if user knows it is garbage.
+
 v0.12.4
 --------------------
 * SlangPy support for auto-shaped types
