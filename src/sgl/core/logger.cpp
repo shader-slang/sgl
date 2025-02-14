@@ -151,9 +151,9 @@ void DebugConsoleLoggerOutput::write(LogLevel level, const std::string_view modu
         OutputDebugStringA(fmt::format("[{}] ({}) {}\n", s_level_str[int(level)], module, msg).c_str());
 #else
     if (module.empty())
-        fprintf(stdout, "[%s] %s\n",s_level_str[int(level)].data(), msg.data());
+        fprintf(stdout, "[%s] %s\n", s_level_str[int(level)].data(), msg.data());
     else
-        fprintf(stdout, "[%s] (%s) %s\n",s_level_str[int(level)].data(), module.data(), msg.data());
+        fprintf(stdout, "[%s] (%s) %s\n", s_level_str[int(level)].data(), module.data(), msg.data());
 
 #endif
 }
