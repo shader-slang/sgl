@@ -124,7 +124,8 @@ struct Foo {
     struct = ast[0]
     assert struct.kind == sgl.DeclReflection.Kind.struct
     assert struct.name == "Foo"
-    assert len(struct) == 2
+    # there will be an synthetic constructor
+    assert len(struct) == 3
 
     # Repeat for list of structs
     structs = ast.children_of_kind(sgl.DeclReflection.Kind.struct)
@@ -132,14 +133,14 @@ struct Foo {
     struct = structs[0]
     assert struct.kind == sgl.DeclReflection.Kind.struct
     assert struct.name == "Foo"
-    assert len(struct) == 2
+    assert len(struct) == 3
 
     # Again by searching for the struct
     assert len(ast) == 1
     struct = ast.find_first_child_of_kind(sgl.DeclReflection.Kind.struct, "Foo")
     assert struct.kind == sgl.DeclReflection.Kind.struct
     assert struct.name == "Foo"
-    assert len(struct) == 2
+    assert len(struct) == 3
 
     # Verify both fields by index
     assert struct[0].kind == sgl.DeclReflection.Kind.variable
@@ -759,6 +760,30 @@ HASHGRID_NO_GENERICS_DUMP = {
                     "kind": sgl.DeclReflection.Kind.func,
                     "name": "updateOptimizerState",
                 },
+                {
+                    "children": [
+                        {
+                            "children": [],
+                            "kind": sgl.DeclReflection.Kind.variable,
+                            "name": "parameters",
+                            "type": "Array",
+                        },
+                        {
+                            "children": [],
+                            "kind": sgl.DeclReflection.Kind.variable,
+                            "name": "derivatives",
+                            "type": "Array",
+                        },
+                        {
+                            "children": [],
+                            "kind": sgl.DeclReflection.Kind.variable,
+                            "name": "moments",
+                            "type": "Array",
+                        },
+                    ],
+                    "kind": sgl.DeclReflection.Kind.func,
+                    "name": "$init",
+                },
             ],
             "kind": sgl.DeclReflection.Kind.struct,
             "name": "OptimizerHashGrid",
@@ -778,7 +803,7 @@ def test_ast_cursor_hashgrid_nogenerics(device_type: sgl.DeviceType):
 
     module = device.load_module("test_declrefs_falcorhashgrid_nogenerics.slang")
 
-    # print_ast(module.module_decl, device)
+    #  print_ast(module.module_decl, device)
     dump = ast_to_dict(module.module_decl, device)
     diff = DeepDiff(
         dump,
