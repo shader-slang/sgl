@@ -68,7 +68,7 @@ interface IPrintable {
 // clang-format off
 extension bool : IPrintable {
     [ForceInline]
-    static Layout printable_layout() { return Layout(Kind::scalar, Type::boolean); }
+    static Layout printable_layout() { return Layout(Kind::scalar, Type::boolean, 0, 0); }
     [ForceInline]
     static uint printable_data_count() { return 1; }
     [ForceInline]
@@ -77,7 +77,7 @@ extension bool : IPrintable {
 
 extension int8_t : IPrintable {
     [ForceInline]
-    static Layout printable_layout() { return Layout(Kind::scalar, Type::int8); }
+    static Layout printable_layout() { return Layout(Kind::scalar, Type::int8, 0, 0); }
     [ForceInline]
     static uint printable_data_count() { return 1; }
     [ForceInline]
@@ -86,7 +86,7 @@ extension int8_t : IPrintable {
 
 extension int16_t : IPrintable {
     [ForceInline]
-    static Layout printable_layout() { return Layout(Kind::scalar, Type::int16); }
+    static Layout printable_layout() { return Layout(Kind::scalar, Type::int16, 0, 0); }
     [ForceInline]
     static uint printable_data_count() { return 1; }
     [ForceInline]
@@ -95,7 +95,7 @@ extension int16_t : IPrintable {
 
 extension int32_t : IPrintable {
     [ForceInline]
-    static Layout printable_layout() { return Layout(Kind::scalar, Type::int32); }
+    static Layout printable_layout() { return Layout(Kind::scalar, Type::int32, 0, 0); }
     [ForceInline]
     static uint printable_data_count() { return 1; }
     [ForceInline]
@@ -104,7 +104,7 @@ extension int32_t : IPrintable {
 
 extension int64_t : IPrintable {
     [ForceInline]
-    static Layout printable_layout() { return Layout(Kind::scalar, Type::int64); }
+    static Layout printable_layout() { return Layout(Kind::scalar, Type::int64, 0, 0); }
     [ForceInline]
     static uint printable_data_count() { return 2; }
     [ForceInline]
@@ -113,7 +113,7 @@ extension int64_t : IPrintable {
 
 extension uint8_t : IPrintable {
     [ForceInline]
-    static Layout printable_layout() { return Layout(Kind::scalar, Type::uint8); }
+    static Layout printable_layout() { return Layout(Kind::scalar, Type::uint8, 0, 0); }
     [ForceInline]
     static uint printable_data_count() { return 1; }
     [ForceInline]
@@ -122,7 +122,7 @@ extension uint8_t : IPrintable {
 
 extension uint16_t : IPrintable {
     [ForceInline]
-    static Layout printable_layout() { return Layout(Kind::scalar, Type::uint16); }
+    static Layout printable_layout() { return Layout(Kind::scalar, Type::uint16, 0, 0); }
     [ForceInline]
     static uint printable_data_count() { return 1; }
     [ForceInline]
@@ -131,7 +131,7 @@ extension uint16_t : IPrintable {
 
 extension uint32_t : IPrintable {
     [ForceInline]
-    static Layout printable_layout() { return Layout(Kind::scalar, Type::uint32); }
+    static Layout printable_layout() { return Layout(Kind::scalar, Type::uint32, 0, 0); }
     [ForceInline]
     static uint printable_data_count() { return 1; }
     [ForceInline]
@@ -140,7 +140,7 @@ extension uint32_t : IPrintable {
 
 extension uint64_t : IPrintable {
     [ForceInline]
-    static Layout printable_layout() { return Layout(Kind::scalar, Type::uint64); }
+    static Layout printable_layout() { return Layout(Kind::scalar, Type::uint64, 0, 0); }
     [ForceInline]
     static uint printable_data_count() { return 2; }
     [ForceInline]
@@ -149,7 +149,7 @@ extension uint64_t : IPrintable {
 
 extension float16_t : IPrintable {
     [ForceInline]
-    static Layout printable_layout() { return Layout(Kind::scalar, Type::float16); }
+    static Layout printable_layout() { return Layout(Kind::scalar, Type::float16, 0, 0); }
     [ForceInline]
     static uint printable_data_count() { return 1; }
     [ForceInline]
@@ -158,7 +158,7 @@ extension float16_t : IPrintable {
 
 extension float : IPrintable {
     [ForceInline]
-    static Layout printable_layout() { return Layout(Kind::scalar, Type::float32); }
+    static Layout printable_layout() { return Layout(Kind::scalar, Type::float32, 0, 0); }
     [ForceInline]
     static uint printable_data_count() { return 1; }
     [ForceInline]
@@ -167,7 +167,7 @@ extension float : IPrintable {
 
 extension double : IPrintable {
     [ForceInline]
-    static Layout printable_layout() { return Layout(Kind::scalar, Type::float64); }
+    static Layout printable_layout() { return Layout(Kind::scalar, Type::float64, 0, 0); }
     [ForceInline]
     static uint printable_data_count() { return 2; }
     [ForceInline]
@@ -177,7 +177,7 @@ extension double : IPrintable {
 __generic<T : IPrintable, let N : int>
 extension vector<T, N> : IPrintable {
     [ForceInline]
-    static Layout printable_layout() { return Layout(Kind::vector, T::printable_layout().type, N); }
+    static Layout printable_layout() { return Layout(Kind::vector, T::printable_layout().type, N, 0); }
     [ForceInline]
     static uint printable_data_count() { return N * T::printable_data_count(); }
     [ForceInline]

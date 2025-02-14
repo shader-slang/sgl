@@ -1115,6 +1115,8 @@ std::vector<AdapterInfo> Device::enumerate_adapters(DeviceType type)
         type = DeviceType::d3d12;
 #elif SGL_LINUX
         type = DeviceType::vulkan;
+#elif SGL_MACOS
+        type = DeviceType::metal;
 #endif
     }
 
