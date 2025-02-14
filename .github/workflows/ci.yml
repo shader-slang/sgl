@@ -42,7 +42,7 @@ jobs:
           - { os: linux, compiler: gcc, config: Release, flags: "unit-test", runs-on: { group: nvrgfx, labels: [Linux, X64] } }
           # Additional builds running on GitHub hosted runners (build only)
           - { os: linux, compiler: clang, runs-on: [ubuntu-latest] }
-          - { os: macos, compiler: clang, runs-on: [macos-latest] }
+          - { os: macos, compiler: clang, flags: "unit-test", runs-on: [macos-latest] }
 
     env:
       VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"

@@ -15,7 +15,7 @@ if sys.platform == "win32":
 elif sys.platform == "linux" or sys.platform == "linux2":
     DEFAULT_DEVICE_TYPES = [sgl.DeviceType.vulkan]
 elif sys.platform == "darwin":
-    DEFAULT_DEVICE_TYPES = [sgl.DeviceType.vulkan]
+    DEFAULT_DEVICE_TYPES = [sgl.DeviceType.metal]
 else:
     raise RuntimeError("Unsupported platform")
 

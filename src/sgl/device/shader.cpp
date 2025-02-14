@@ -351,6 +351,10 @@ void SlangSession::create_session(SlangSessionBuild& build)
         target_desc.flags |= SLANG_TARGET_FLAG_GENERATE_SPIRV_DIRECTLY;
         target_define = "__TARGET_VULKAN__";
         break;
+    case DeviceType::metal:
+        target_desc.format = SLANG_METAL_LIB;
+        target_define = "__TARGET_METAL__";
+        break;
     case DeviceType::cpu:
         target_desc.format = SLANG_SHADER_HOST_CALLABLE;
         target_define = "__TARGET_CPU__";

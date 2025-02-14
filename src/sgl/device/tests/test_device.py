@@ -25,7 +25,11 @@ def test_create_device(device_type: sgl.DeviceType):
 
     assert device.info.type == device_type
     assert device.info.adapter_name != ""
-    API_NAMES = {sgl.DeviceType.d3d12: "Direct3D 12", sgl.DeviceType.vulkan: "Vulkan"}
+    API_NAMES = {
+        sgl.DeviceType.d3d12: "Direct3D 12",
+        sgl.DeviceType.vulkan: "Vulkan",
+        sgl.DeviceType.metal: "Metal",
+    }
     assert device.info.api_name == API_NAMES[device_type]
 
 

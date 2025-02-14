@@ -10,7 +10,9 @@
 #include "sgl/device/cuda_interop.h"
 
 #include "sgl/device/python/cursor_utils.h"
+
 #include <typeindex>
+#include <unordered_map>
 
 namespace sgl {
 namespace detail {
