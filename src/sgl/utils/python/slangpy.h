@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include <typeindex>
+#include <unordered_map>
 
 #include "nanobind.h"
 
