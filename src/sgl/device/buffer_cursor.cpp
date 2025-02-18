@@ -322,13 +322,21 @@ SGL_API void BufferElementCursor::get(bool& value) const
 template<>
 SGL_API void BufferElementCursor::set(const bool1& value)
 {
+#if SGL_MACOS
+    bool1 v = value;
+#else
     uint1 v(value.x ? 1 : 0);
+#endif
     _set_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 1);
 }
 template<>
 SGL_API void BufferElementCursor::get(bool1& value) const
 {
+#if SGL_MACOS
+    bool1 v;
+#else
     uint1 v;
+#endif
     _get_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 1);
     value = bool1(v.x != 0);
 }
@@ -336,13 +344,22 @@ SGL_API void BufferElementCursor::get(bool1& value) const
 template<>
 SGL_API void BufferElementCursor::set(const bool2& value)
 {
+#if SGL_MACOS
+    bool2 v = value;
+#else
     uint2 v = {value.x ? 1 : 0, value.y ? 1 : 0};
+#endif
     _set_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 2);
 }
+
 template<>
 SGL_API void BufferElementCursor::get(bool2& value) const
 {
+#if SGL_MACOS
+    bool2 v;
+#else
     uint2 v;
+#endif
     _get_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 2);
     value = {v.x != 0, v.y != 0};
 }
@@ -350,13 +367,22 @@ SGL_API void BufferElementCursor::get(bool2& value) const
 template<>
 SGL_API void BufferElementCursor::set(const bool3& value)
 {
+#if SGL_MACOS
+    bool3 v = value;
+#else
     uint3 v = {value.x ? 1 : 0, value.y ? 1 : 0, value.z ? 1 : 0};
+#endif
     _set_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 3);
 }
+
 template<>
 SGL_API void BufferElementCursor::get(bool3& value) const
 {
+#if SGL_MACOS
+    bool3 v;
+#else
     uint3 v;
+#endif
     _get_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 3);
     value = {v.x != 0, v.y != 0, v.z != 0};
 }
@@ -364,13 +390,22 @@ SGL_API void BufferElementCursor::get(bool3& value) const
 template<>
 SGL_API void BufferElementCursor::set(const bool4& value)
 {
+#if SGL_MACOS
+    bool4 v = value;
+#else
     uint4 v = {value.x ? 1 : 0, value.y ? 1 : 0, value.z ? 1 : 0, value.w ? 1 : 0};
+#endif
     _set_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 4);
 }
+
 template<>
 SGL_API void BufferElementCursor::get(bool4& value) const
 {
+#if SGL_MACOS
+    bool4 v;
+#else
     uint4 v;
+#endif
     _get_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 4);
     value = {v.x != 0, v.y != 0, v.z != 0, v.w != 0};
 }

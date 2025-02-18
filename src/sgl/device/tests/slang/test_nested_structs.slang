@@ -31,7 +31,7 @@ cbuffer data
 
 [shader("compute")]
 [numthreads(1, 1, 1)]
-void main()
+void computeMain()
 {
     result[0] = asuint(a);
     result[1] = s3.a;

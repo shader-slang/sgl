@@ -233,9 +233,26 @@ private:
         requires IsSpecializationOfMatrix<ValType>
     inline static nb::object _read_matrix(const CursorType& self)
     {
-        ValType res;
-        self.get(res);
-        return nb::cast(res);
+#if SGL_MACOS
+        // metal always require alignedement of 4 elements for each column, so we need to read by matrix<R, 4>
+        // and convert to target matrix type. The only expcetion is when column is 2, because it's just satisfies
+        // the alignment requirement.
+        if (ValType::cols < 4 && ValType::cols != 2)
+        {
+            using elementType = ValType::value_type;
+            int rows = ValType::rows;
+            sgl::math::matrix<elementType, ValType::rows, 4> internal_res;
+            self.get(internal_res);
+            ValType res(internal_res);
+            return nb::cast(res);
+        }
+        else
+#endif
+        {
+            ValType res;
+            self.get(res);
+            return nb::cast(res);
+        }
     }
 };
 
@@ -550,6 +567,28 @@ private:
         }
     }
 
+    template<typename ValType>
+        requires IsSpecializationOfMatrix<ValType>
+    inline static void _write_matrix_maybe_aglined(CursorType& self, ValType& val)
+    {
+        #if SGL_MACOS
+        // metal always require alignedement of 4 elements for each column, so we need to read by matrix<R, 4>
+        // and convert to target matrix type. The only expcetion is when column is 2, because it's just satisfies
+        // the alignment requirement.
+        if (ValType::cols < 4 && ValType::cols != 2)
+        {
+            using elementType = ValType::value_type;
+            int rows = ValType::rows;
+            sgl::math::matrix<elementType, ValType::rows, 4> internal_val(val);
+            self.set(internal_val);
+        }
+        else
+#endif
+        {
+            self.set(val);
+        }
+    }
+
     /// Write matrix value to buffer element cursor from Python object.
     template<typename ValType>
         requires IsSpecializationOfMatrix<ValType>
@@ -558,12 +597,13 @@ private:
         if (nb::isinstance<ValType>(nbval)) {
             // Matrix of correct type
             auto val = nb::cast<ValType>(nbval);
-            self.set(val);
+            _write_matrix_maybe_aglined(self, val);
+
         } else if (nb::isinstance<nb::ndarray<nb::numpy>>(nbval)) {
             // A numpy array. We have a python cast from numpy->matrix,
             // so can just call it here to convert properly.
             auto val = nb::cast<ValType>(nbval);
-            self.set(val);
+            _write_matrix_maybe_aglined(self, val);
         } else {
             SGL_THROW("Expected numpy array or matrix");
         }
