@@ -12,6 +12,14 @@ sys.path.append(str(Path(__file__).parent))
 import sglhelpers as helpers
 
 
+@pytest.fixture(autouse=True)
+def skip_metal(device_type: sgl.DeviceType):
+    if device_type == sgl.DeviceType.metal:
+        pytest.skip(
+            "Skipping test for Metal device, trace by https://github.com/shader-slang/slang/issues/6387"
+        )
+
+
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_type_conformance(device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)

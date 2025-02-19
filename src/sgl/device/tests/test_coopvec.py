@@ -11,7 +11,7 @@ COOPVEC_DEVICE_TYPES = [sgl.DeviceType.vulkan]
 
 
 def get_coop_vec_device(device_type: sgl.DeviceType) -> sgl.Device:
-    if sys.platform == 'darwin':
+    if sys.platform == "darwin":
         pytest.skip("Cooperative vector tests not supported on MacOS")
 
     device = helpers.get_device(device_type)
