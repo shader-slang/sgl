@@ -114,7 +114,7 @@ jobs:
 
       # Unit Tests (Python)
       - name: Unit Tests (Python)
-        if: contains(matrix.flags, 'unit-test') && matrix.os != 'macos'
+        if: contains(matrix.flags, 'unit-test')
         run: python tools/ci.py unit-test-python
 
       # Unit Test Report
