@@ -10,6 +10,10 @@ sgl uses a `semantic versioning <http://semver.org>`__ policy for its API.
 Changelog
 =========
 
+v0.13.1
+--------------------
+* Update Slang to 2025.5.1.
+
 v0.13.0
 --------------------
 * Expose additional SlangPy functions for inspecting textures and signatures.
