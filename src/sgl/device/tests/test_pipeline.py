@@ -249,6 +249,7 @@ class GfxContext:
             viewport=viewport,
         )
 
+
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_gfx_simple_primitive(device_type: sgl.DeviceType):
     if device_type == sgl.DeviceType.metal:

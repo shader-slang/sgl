@@ -173,8 +173,8 @@ namespace cursor_utils {
         );
 
 #if SGL_MACOS
-        bool dimensionCondition = type->getRowCount() == uint32_t(rows) &&
-            (type->getColumnCount() == 2 ? cols == 2 : cols == 4);
+        bool dimensionCondition
+            = type->getRowCount() == uint32_t(rows) && (type->getColumnCount() == 2 ? cols == 2 : cols == 4);
 #else
         bool dimensionCondition = type->getRowCount() == uint32_t(rows) && type->getColumnCount() == uint32_t(cols);
 #endif

@@ -237,16 +237,14 @@ private:
         // metal always require alignedement of 4 elements for each column, so we need to read by matrix<R, 4>
         // and convert to target matrix type. The only expcetion is when column is 2, because it's just satisfies
         // the alignment requirement.
-        if (ValType::cols < 4 && ValType::cols != 2)
-        {
+        if (ValType::cols < 4 && ValType::cols != 2) {
             using elementType = ValType::value_type;
             int rows = ValType::rows;
             sgl::math::matrix<elementType, ValType::rows, 4> internal_res;
             self.get(internal_res);
             ValType res(internal_res);
             return nb::cast(res);
-        }
-        else
+        } else
 #endif
         {
             ValType res;
@@ -571,18 +569,16 @@ private:
         requires IsSpecializationOfMatrix<ValType>
     inline static void _write_matrix_maybe_aglined(CursorType& self, ValType& val)
     {
-        #if SGL_MACOS
+#if SGL_MACOS
         // metal always require alignedement of 4 elements for each column, so we need to read by matrix<R, 4>
         // and convert to target matrix type. The only expcetion is when column is 2, because it's just satisfies
         // the alignment requirement.
-        if (ValType::cols < 4 && ValType::cols != 2)
-        {
+        if (ValType::cols < 4 && ValType::cols != 2) {
             using elementType = ValType::value_type;
             int rows = ValType::rows;
             sgl::math::matrix<elementType, ValType::rows, 4> internal_val(val);
             self.set(internal_val);
-        }
-        else
+        } else
 #endif
         {
             self.set(val);
