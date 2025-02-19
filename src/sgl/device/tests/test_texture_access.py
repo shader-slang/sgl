@@ -10,6 +10,11 @@ import numpy as np
 sys.path.append(str(Path(__file__).parent))
 import sglhelpers as helpers
 
+# TODO: Texture functionality in slang-gfx is not yet implemented for Metal
+@pytest.fixture(autouse=True)
+def skip_metal(device_type: sgl.DeviceType):
+    if device_type == sgl.DeviceType.metal:
+        pytest.skip("Skipping test for Metal device, trace by https://github.com/shader-slang/slang/issues/6386")
 
 # Generate random data for a texture with a given array size and mip count.
 def make_rand_data(type: sgl.ResourceType, array_size: int, mip_count: int):
