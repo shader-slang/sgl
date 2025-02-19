@@ -161,7 +161,7 @@ def create_test_array(
 
 # TODO: Texture functionality in slang-gfx is not yet implemented for Metal
 @pytest.fixture(autouse=True)
-def skip_metal(device_type):
+def skip_metal(device_type: sgl.DeviceType):
     if device_type == sgl.DeviceType.metal:
         pytest.skip("Skipping test for Metal device")
 
