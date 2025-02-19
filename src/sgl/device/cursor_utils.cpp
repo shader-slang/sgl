@@ -171,8 +171,16 @@ namespace cursor_utils {
             "\"{}\" cannot bind a matrix value",
             type_layout->getName()
         );
+
+#if SGL_MACOS
+        bool dimensionCondition
+            = type->getRowCount() == uint32_t(rows) && (type->getColumnCount() == 2 ? cols == 2 : cols == 4);
+#else
+        bool dimensionCondition = type->getRowCount() == uint32_t(rows) && type->getColumnCount() == uint32_t(cols);
+#endif
+
         SGL_CHECK(
-            type->getRowCount() == uint32_t(rows) && type->getColumnCount() == uint32_t(cols),
+            dimensionCondition,
             "\"{}\" expects a matrix with dimension {}x{} (got dimension {}x{})",
             type_layout->getName(),
             type->getRowCount(),

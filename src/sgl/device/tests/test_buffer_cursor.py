@@ -156,7 +156,7 @@ def gen_fill_in_module(tests: list[Any]):
 
     [shader("compute")]
     [numthreads(1, 1, 1)]
-    void main(uint tid: SV_DispatchThreadID, RWStructuredBuffer<TestType> buffer) {{
+    void computeMain(uint tid: SV_DispatchThreadID, RWStructuredBuffer<TestType> buffer) {{
         buffer[tid].value = tid+1;
         buffer[tid].child.floatval = tid+2.0;
         buffer[tid].child.uintval = tid+3;
@@ -179,7 +179,7 @@ def gen_copy_module(tests: list[Any]):
 
     [shader("compute")]
     [numthreads(1, 1, 1)]
-    void main(uint tid: SV_DispatchThreadID, StructuredBuffer<TestType> src, RWStructuredBuffer<TestType> dest) {{
+    void computeMain(uint tid: SV_DispatchThreadID, StructuredBuffer<TestType> src, RWStructuredBuffer<TestType> dest) {{
         dest[tid] = src[tid];
     }}
     """
@@ -206,7 +206,7 @@ def make_fill_in_module(device_type: sgl.DeviceType, tests: list[Any]):
     )
     device = helpers.get_device(type=device_type)
     module = device.load_module_from_source(mod_name, code)
-    prog = device.link_program([module], [module.entry_point("main")])
+    prog = device.link_program([module], [module.entry_point("computeMain")])
     buffer_layout = module.layout.get_type_layout(
         module.layout.find_type_by_name("StructuredBuffer<TestType>")
     )
@@ -220,7 +220,7 @@ def make_copy_module(device_type: sgl.DeviceType, tests: list[Any]):
     )
     device = helpers.get_device(type=device_type)
     module = device.load_module_from_source(mod_name, code)
-    prog = device.link_program([module], [module.entry_point("main")])
+    prog = device.link_program([module], [module.entry_point("computeMain")])
     buffer_layout = module.layout.get_type_layout(
         module.layout.find_type_by_name("StructuredBuffer<TestType>")
     )

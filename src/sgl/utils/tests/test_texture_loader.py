@@ -159,6 +159,15 @@ def create_test_array(
     return img
 
 
+# TODO: Texture functionality in slang-gfx is not yet implemented for Metal
+@pytest.fixture(autouse=True)
+def skip_metal(device_type: sgl.DeviceType):
+    if device_type == sgl.DeviceType.metal:
+        pytest.skip(
+            "Texture functionality in slang-gfx is not yet implemented for Metal, trace by https://github.com/shader-slang/slang/issues/6386"
+        )
+
+
 @pytest.mark.parametrize("format", FORMATS)
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_load_texture_from_bitmap(device_type: sgl.DeviceType, format: FormatEntry):

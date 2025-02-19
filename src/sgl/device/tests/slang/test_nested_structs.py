@@ -14,7 +14,7 @@ import sglhelpers as helpers
 def test_cast_float16(device_type: sgl.DeviceType):
     device = helpers.get_device(device_type)
 
-    program = device.load_program("slang/test_nested_structs.slang", ["main"])
+    program = device.load_program("slang/test_nested_structs.slang", ["computeMain"])
     kernel = device.create_compute_kernel(program)
 
     result_buffer = device.create_buffer(

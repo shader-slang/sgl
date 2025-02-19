@@ -14,6 +14,14 @@ from sglhelpers import test_id  # type: ignore (pytest fixture)
 SlangCompileError = RuntimeError if sys.platform == "darwin" else sgl.SlangCompileError
 
 
+@pytest.fixture(autouse=True)
+def skip_metal(device_type: sgl.DeviceType):
+    if device_type == sgl.DeviceType.metal:
+        pytest.skip(
+            "Skipping test for Metal device, trace by https://github.com/shader-slang/slang/issues/6387"
+        )
+
+
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_type_layout(test_id: str, device_type: sgl.DeviceType):
 
