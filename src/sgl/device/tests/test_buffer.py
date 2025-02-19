@@ -68,8 +68,8 @@ def test_buffer(device_type: sgl.DeviceType, type: str, size_MB: int):
         pytest.skip("Vulkan does not support large type buffers (storage buffers)")
     if device_type == sgl.DeviceType.metal and type == "buffer_uint":
         pytest.skip("Test currently failing with Metal")
-    if device_type == sgl.DeviceType.metal and size_MB > 2048:
-        pytest.skip("Metal does not support buffers > 2048MB")
+    if device_type == sgl.DeviceType.metal and size_MB >= 1024:
+        pytest.skip("Metal does not support buffers >= 1024MB")
     if (
         device_type == sgl.DeviceType.vulkan
         and type == "byte_address_buffer"
