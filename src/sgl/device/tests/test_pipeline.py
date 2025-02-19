@@ -58,6 +58,7 @@ class PipelineTestContext:
     def expect_counts(self, expected: Sequence[int]):
         self.count()
         count = self.count_buffer.to_numpy().view(np.uint32)
+
         assert np.all(count == expected)
 
     def create_quad_mesh(self):
@@ -90,6 +91,22 @@ class PipelineTestContext:
 
         return vertex_buffer, index_buffer, input_layout
 
+# def print_red_channel(texture, rows=32, cols=32):
+#     """Print a visualization of the red channel of the texture."""
+#     pixels = texture.to_numpy()
+#     red_channel = pixels[:, :, 0]  # Get red channel
+    
+#     # Downsample to requested size
+#     h, w = red_channel.shape
+#     h_stride = max(1, h // rows)
+#     w_stride = max(1, w // cols)
+#     downsampled = red_channel[::h_stride, ::w_stride]
+#     downsampled = downsampled[:rows, :cols]  # Ensure exact size
+    
+#     # Print using ASCII characters for different intensity levels
+#     chars = ' .:-=+*#%@'
+#     for row in downsampled:
+#         print(''.join(chars[min(int(val * (len(chars)-1)), len(chars)-1)] for val in row))
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_clear_and_count(device_type: sgl.DeviceType):
@@ -99,11 +116,11 @@ def test_clear_and_count(device_type: sgl.DeviceType):
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_compute_set_square(device_type: sgl.DeviceType):
-    ctx = PipelineTestContext(device_type)
+    ctx = PipelineTestContext(device_type, 16)
     prog = ctx.device.load_program("test_pipeline_utils.slang", ["setcolor"])
     set_kernel = ctx.device.create_compute_kernel(prog)
 
-    pos = sgl.int2(32, 32)
+    pos = sgl.int2(0, 0)
     size = sgl.int2(16, 16)
     set_kernel.dispatch(
         thread_count=[ctx.output_texture.width, ctx.output_texture.height, 1],
@@ -112,6 +129,8 @@ def test_compute_set_square(device_type: sgl.DeviceType):
         size=size,
         color=sgl.float4(1, 0, 0, 1),
     )
+
+    ctx.device.wait_for_idle()
 
     area = size.x * size.y
     ctx.expect_counts([area, 0, 0, area])

@@ -20,6 +20,7 @@ void count(uint2 tid: SV_DispatchThreadID, Texture2D<float4> render_texture, RWB
     if (any(tid.xy >= dim))
         return;
     float4 val = render_texture[tid.xy];
+    
     count_buffer.InterlockedAdd(0, val.x > 0 ? 1 : 0);
     count_buffer.InterlockedAdd(4, val.y > 0 ? 1 : 0);
     count_buffer.InterlockedAdd(8, val.z > 0 ? 1 : 0);
