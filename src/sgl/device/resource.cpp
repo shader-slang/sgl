@@ -643,7 +643,8 @@ Texture::Texture(ref<Device> device, TextureDesc desc)
     gfx_desc.size.height = static_cast<gfx::Size>(m_desc.height);
     gfx_desc.size.depth = static_cast<gfx::Size>(m_desc.depth);
     gfx_desc.numMipLevels = static_cast<gfx::Size>(m_desc.mip_count);
-    gfx_desc.arraySize = static_cast<gfx::Size>(m_desc.array_size);
+    // slang-gfx uses 0 for non-array texture
+    gfx_desc.arraySize = static_cast<gfx::Size>((m_desc.array_size == 1) ? 0 : m_desc.array_size);
     gfx_desc.format = static_cast<gfx::Format>(m_desc.format);
     gfx_desc.sampleDesc.numSamples = static_cast<gfx::GfxCount>(m_desc.sample_count);
     gfx_desc.sampleDesc.quality = m_desc.quality;
