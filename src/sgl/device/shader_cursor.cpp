@@ -686,35 +686,55 @@ SET_SCALAR(double, float64);
 template<>
 SGL_API void ShaderCursor::set(const bool& value) const
 {
+#if SGL_MACOS
+    bool v = value;
+#else
     uint v = value ? 1 : 0;
+#endif
     _set_scalar(&v, sizeof(v), TypeReflection::ScalarType::bool_);
 }
 
 template<>
 SGL_API void ShaderCursor::set(const bool1& value) const
 {
+#if SGL_MACOS
+    bool1 v = value;
+#else
     uint1 v(value.x ? 1 : 0);
+#endif
     _set_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 1);
 }
 
 template<>
 SGL_API void ShaderCursor::set(const bool2& value) const
 {
+#if SGL_MACOS
+    bool2 v = value;
+#else
     uint2 v = {value.x ? 1 : 0, value.y ? 1 : 0};
+#endif
     _set_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 2);
 }
 
 template<>
 SGL_API void ShaderCursor::set(const bool3& value) const
 {
+#if SGL_MACOS
+    bool3 v = value;
+#else
     uint3 v = {value.x ? 1 : 0, value.y ? 1 : 0, value.z ? 1 : 0};
+#endif
     _set_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 3);
 }
 
 template<>
 SGL_API void ShaderCursor::set(const bool4& value) const
 {
+#if SGL_MACOS
+    bool4 v = value;
+#else
     uint4 v = {value.x ? 1 : 0, value.y ? 1 : 0, value.z ? 1 : 0, value.w ? 1 : 0};
+#endif
     _set_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 4);
 }
 

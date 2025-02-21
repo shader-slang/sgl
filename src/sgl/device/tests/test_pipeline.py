@@ -150,6 +150,8 @@ def test_compute_set_and_overwrite(device_type: sgl.DeviceType):
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_gfx_clear(device_type: sgl.DeviceType):
+    if device_type == sgl.DeviceType.metal:
+        pytest.skip("Graphics pipeline tests not supported on Metal")
     ctx = PipelineTestContext(device_type)
 
     command_buffer = ctx.device.create_command_buffer()
@@ -250,6 +252,8 @@ class GfxContext:
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_gfx_simple_primitive(device_type: sgl.DeviceType):
+    if device_type == sgl.DeviceType.metal:
+        pytest.skip("Graphics pipeline tests not supported on Metal")
     ctx = PipelineTestContext(device_type)
     gfx = GfxContext(ctx)
 
@@ -283,6 +287,8 @@ def test_gfx_simple_primitive(device_type: sgl.DeviceType):
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_gfx_viewport(device_type: sgl.DeviceType):
+    if device_type == sgl.DeviceType.metal:
+        pytest.skip("Graphics pipeline tests not supported on Metal")
     ctx = PipelineTestContext(device_type)
     gfx = GfxContext(ctx)
 
@@ -324,6 +330,8 @@ def test_gfx_viewport(device_type: sgl.DeviceType):
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_gfx_depth(device_type: sgl.DeviceType):
+    if device_type == sgl.DeviceType.metal:
+        pytest.skip("Graphics pipeline tests not supported on Metal")
     ctx = PipelineTestContext(device_type)
     gfx = GfxContext(ctx)
 
@@ -443,6 +451,8 @@ def test_gfx_depth(device_type: sgl.DeviceType):
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_gfx_blend(device_type: sgl.DeviceType):
+    if device_type == sgl.DeviceType.metal:
+        pytest.skip("Graphics pipeline tests not supported on Metal")
     ctx = PipelineTestContext(device_type)
     gfx = GfxContext(ctx)
     area = ctx.output_texture.width * ctx.output_texture.height

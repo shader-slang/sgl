@@ -7,7 +7,7 @@ RWStructuredBuffer<float> result;
 
 [shader("compute")]
 [numthreads(NUM_THREADS, 1, 1)]
-void main(uint3 tid: SV_DispatchThreadID)
+void computeMain(uint3 tid: SV_DispatchThreadID)
 {
     result[tid.x] = tid.x * VALUE;
 }

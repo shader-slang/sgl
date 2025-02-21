@@ -10,6 +10,11 @@ sys.path.append(str(Path(__file__).parent))
 import sglhelpers as helpers
 from sglhelpers import test_id  # type: ignore (pytest fixture)
 
+# @pytest.fixture(autouse=True)
+# def skip_metal(device_type: sgl.DeviceType):
+#     if device_type == sgl.DeviceType.metal:
+#         pytest.skip("Skipping test for Metal device, trace by https://github.com/shader-slang/slang/issues/6385")
+
 
 # Before running more in depth link time tests below, this test simply
 # verifies that the basic linking of 2 modules together with exported
@@ -36,7 +41,7 @@ def test_link_time_modules_compile(test_id: str, device_type: sgl.DeviceType):
 
         [shader("compute")]
         [numthreads(NUM_THREADS, 1, 1)]
-        void main(uint3 tid: SV_DispatchThreadID)
+        void computeMain(uint3 tid: SV_DispatchThreadID)
         {
         }
     """,
@@ -44,7 +49,7 @@ def test_link_time_modules_compile(test_id: str, device_type: sgl.DeviceType):
     assert main_module is not None
 
     program = device.link_program(
-        [main_module, extra_module], [main_module.entry_point("main")]
+        [main_module, extra_module], [main_module.entry_point("computeMain")]
     )
     assert program is not None
 
@@ -73,14 +78,14 @@ def test_link_time_constant_value(
 
         [shader("compute")]
         [numthreads(16, 1, 1)]
-        void main(uint3 tid: SV_DispatchThreadID)
+        void computeMain(uint3 tid: SV_DispatchThreadID)
         {
             result[tid.x] = tid.x * VALUE;
         }
     """,
     )
     program = device.link_program(
-        [main_module, extra_module], [main_module.entry_point("main")]
+        [main_module, extra_module], [main_module.entry_point("computeMain")]
     )
     assert program is not None
     assert program.layout.entry_points[0].compute_thread_group_size == [16, 1, 1]
@@ -119,7 +124,7 @@ def test_link_time_constants(device_type: sgl.DeviceType, value: int):
 
     program = device.load_program(
         module_name="test_link_time_constants.slang",
-        entry_point_names=["main"],
+        entry_point_names=["computeMain"],
         additional_source=constants,
     )
 
@@ -155,7 +160,7 @@ def test_link_time_type(device_type: sgl.DeviceType, op: str):
 
     program = device.load_program(
         module_name="test_link_time_type.slang",
-        entry_point_names=["main"],
+        entry_point_names=["computeMain"],
         additional_source=constants,
     )
 
