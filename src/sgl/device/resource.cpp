@@ -597,7 +597,15 @@ inline void process_texture_desc(TextureDesc& desc)
     desc.depth = std::max(desc.depth, 1u);
 
     if (desc.mip_count == 0) {
-        desc.mip_count = stdx::bit_width(std::max({desc.width, desc.height, desc.depth}));
+#if SGL_MACOS
+        // On macOS, mipmap is not supported for 1D textures.
+        if (desc.type == ResourceType::texture_1d) {
+            desc.mip_count = 1;
+        } else
+#endif
+        {
+            desc.mip_count = stdx::bit_width(std::max({desc.width, desc.height, desc.depth}));
+        }
     }
     SGL_CHECK(desc.array_size >= 1, "Invalid array size.");
     SGL_CHECK(desc.sample_count >= 1, "Invalid sample count.");
@@ -707,7 +715,17 @@ SubresourceLayout Texture::get_subresource_layout(uint32_t subresource) const
     gfx::FormatInfo gfx_format_info;
     SLANG_CALL(gfx::gfxGetFormatInfo(gfx_texture_resource()->getDesc()->format, &gfx_format_info));
     size_t alignment;
+
+#if SGL_MACOS
+    // On macOS, getTextureRowAlignment is not a right interface to get the alignment, because MacOS does not
+    // have a unify alignment for all formats, we have to provide the format to get the alignment. However,
+    // getTextureRowAlignment does not take format as an argument, so we have to use getTextureAllocationInfo
+    // to get the alignment.
+    size_t size;
+    SLANG_CALL(m_device->gfx_device()->getTextureAllocationInfo(*m_gfx_texture->getDesc(), &size, &alignment));
+#else
     SLANG_CALL(m_device->gfx_device()->getTextureRowAlignment(&alignment));
+#endif
 
     uint32_t mip_level = get_subresource_mip_level(subresource);
     uint3 mip_dimensions = get_mip_dimensions(mip_level);
