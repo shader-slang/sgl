@@ -130,7 +130,6 @@ target_sources(sgl PRIVATE
     sgl/device/shader_offset.h
     sgl/device/shader.cpp
     sgl/device/shader.h
-    sgl/device/shared_handle.h
     sgl/device/slang_utils.h
     sgl/device/surface.cpp
     sgl/device/surface.h

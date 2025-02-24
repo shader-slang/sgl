@@ -229,6 +229,8 @@ struct Viewport {
     float height{0.f};
     float min_depth{0.f};
     float max_depth{1.f};
+
+    static Viewport from_size(float width, float height) { return {0.f, 0.f, width, height, 0.f, 1.f}; }
 };
 
 static_assert(
@@ -246,6 +248,8 @@ struct ScissorRect {
     int32_t min_y{0};
     int32_t max_x{0};
     int32_t max_y{0};
+
+    static ScissorRect from_size(int32_t width, int32_t height) { return {0, 0, width, height}; }
 };
 
 static_assert(
@@ -519,6 +523,36 @@ struct RasterizerDesc {
     bool enable_conservative_rasterization{false};
     uint32_t forced_sample_count{0};
 };
+
+enum class LoadOp : uint8_t {
+    load = static_cast<uint8_t>(rhi::LoadOp::Load),
+    clear = static_cast<uint8_t>(rhi::LoadOp::Clear),
+    dont_care = static_cast<uint8_t>(rhi::LoadOp::DontCare),
+};
+
+SGL_ENUM_INFO(
+    LoadOp,
+    {
+        {LoadOp::load, "load"},
+        {LoadOp::clear, "clear"},
+        {LoadOp::dont_care, "dont_care"},
+    }
+);
+SGL_ENUM_REGISTER(LoadOp);
+
+enum class StoreOp : uint8_t {
+    store = static_cast<uint8_t>(rhi::StoreOp::Store),
+    dont_care = static_cast<uint8_t>(rhi::StoreOp::DontCare),
+};
+
+SGL_ENUM_INFO(
+    StoreOp,
+    {
+        {StoreOp::store, "store"},
+        {StoreOp::dont_care, "dont_care"},
+    }
+);
+SGL_ENUM_REGISTER(StoreOp);
 
 // ----------------------------------------------------------------------------
 // Queries

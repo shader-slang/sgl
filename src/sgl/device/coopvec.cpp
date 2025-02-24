@@ -310,6 +310,10 @@ void CoopVec::convert_matrix_device(
     CommandBuffer* cmd
 )
 {
+    // TODO(slang-rhi)
+    SGL_UNUSED(src, src_desc, dst, dst_desc, matrix_count, cmd);
+    SGL_UNIMPLEMENTED();
+#if 0
     SGL_ASSERT(m_vk_device);
     SGL_ASSERT(m_VkCmdConvertCooperativeVectorMatrixNV);
     SGL_CHECK(matrix_count > 0, "Matrix count must be 1 or more.");
@@ -365,6 +369,7 @@ void CoopVec::convert_matrix_device(
 
     if (cmd == nullptr)
         m_device->_end_shared_command_buffer(false);
+#endif
 }
 
 } // namespace sgl

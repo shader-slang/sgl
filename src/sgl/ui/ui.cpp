@@ -355,12 +355,12 @@ void Context::new_frame(uint32_t width, uint32_t height)
     ImGui::NewFrame();
 }
 
-void Context::render(Texture* texture, CommandEncoder* command_encoder)
+void Context::render(TextureView* texture_view, CommandEncoder* command_encoder)
 {
     ImGui::SetCurrentContext(m_imgui_context);
     ImGuiIO& io = ImGui::GetIO();
 
-    bool is_srgb_format = get_format_info(texture->format()).is_srgb_format();
+    bool is_srgb_format = get_format_info(texture_view->format()).is_srgb_format();
 
     m_screen->render();
 
@@ -407,8 +407,8 @@ void Context::render(Texture* texture, CommandEncoder* command_encoder)
         index_buffer->unmap();
 
         // Render command lists.
-        RenderCommandEncoder encoder = command_buffer->encode_render_commands(framebuffer);
-        ref<ShaderObject> shader_object = encoder.bind_pipeline(get_pipeline(framebuffer));
+        auto pass_encoder = command_encoder->begin_render_pass({.color_attachments = {{.view = texture_view}}});
+        ShaderObject* shader_object = pass_encoder->bind_pipeline(get_pipeline(texture_view->desc().format));
         ShaderCursor shader_cursor = ShaderCursor(shader_object);
         shader_cursor["sampler"] = m_sampler;
         shader_cursor["scale"] = 2.f / float2(io.DisplaySize.x, -io.DisplaySize.y);
@@ -416,17 +416,13 @@ void Context::render(Texture* texture, CommandEncoder* command_encoder)
         shader_cursor["is_srgb_format"] = is_srgb_format;
         ShaderOffset texture_offset = shader_cursor["texture"].offset();
 
-        encoder.set_vertex_buffer(0, vertex_buffer);
-        encoder.set_index_buffer(index_buffer, sizeof(ImDrawIdx) == 2 ? Format::r16_uint : Format::r32_uint);
-        encoder.set_primitive_topology(PrimitiveTopology::triangle_list);
-        encoder.set_viewport_and_scissor_rect({
-            .x = 0.f,
-            .y = 0.f,
-            .width = io.DisplaySize.x,
-            .height = io.DisplaySize.y,
-            .min_depth = 0.f,
-            .max_depth = 1.f,
-        });
+        RenderState render_state = {
+            .viewports = {Viewport::from_size(io.DisplaySize.x, io.DisplaySize.y)},
+            .scissor_rects = {ScissorRect{}},
+            .vertex_buffers = {BufferWithOffset{vertex_buffer}},
+            .index_buffer = BufferWithOffset{index_buffer},
+            .index_format = sizeof(ImDrawIdx) == 2 ? IndexFormat::uint16 : IndexFormat::uint32,
+        };
 
         int vertex_offset = 0;
         int index_offset = 0;
@@ -447,15 +443,27 @@ void Context::render(Texture* texture, CommandEncoder* command_encoder)
                     continue;
 
                 // Apply scissor/clipping rectangle, bind texture, draw.
-                encoder.set_scissor_rects(std::span<ScissorRect>{&clip_rect, 1});
-                Texture* texture = static_cast<Texture*>(pcmd->GetTexID());
-                shader_object->set_resource(texture_offset, texture ? texture->get_srv() : nullptr);
-                encoder.draw_indexed(pcmd->ElemCount, pcmd->IdxOffset + index_offset, pcmd->VtxOffset + vertex_offset);
+                render_state.scissor_rects[0] = clip_rect;
+                ref<Texture> texture = ref<Texture>(static_cast<Texture*>(pcmd->GetTexID()));
+                shader_object->set_texture(texture_offset, texture);
+                pass_encoder->set_render_state(render_state);
+                pass_encoder->draw_indexed({
+                    .vertex_count = pcmd->ElemCount,
+                    .start_vertex_location = pcmd->VtxOffset + vertex_offset,
+                    .start_index_location = pcmd->IdxOffset + index_offset,
+                });
             }
             index_offset += cmd_list->IdxBuffer.Size;
             vertex_offset += cmd_list->VtxBuffer.Size;
         }
+        pass_encoder->end();
     }
+}
+
+void Context::render(Texture* texture, CommandEncoder* command_encoder)
+{
+    // TODO(slang-rhi) use default_view once it is available
+    render(texture->create_view({}), command_encoder);
 }
 
 bool Context::handle_keyboard_event(const KeyboardEvent& event)
