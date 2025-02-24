@@ -63,7 +63,10 @@ void ShaderObject::set_buffer_view(const ShaderOffset& offset, const ref<BufferV
 {
     SLANG_CALL(m_shader_object->setBinding(
         rhi_shader_offset(offset),
-        rhi::Binding(buffer_view ? buffer_view->rhi_buffer_view() : nullptr)
+        rhi::Binding(
+            buffer_view->buffer()->rhi_buffer(),
+            rhi::BufferRange(buffer_view->range().offset, buffer_view->range().size)
+        )
     ));
 }
 

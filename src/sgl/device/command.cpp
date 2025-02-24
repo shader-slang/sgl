@@ -243,6 +243,12 @@ void RayTracingPassEncoder::end()
 // CommandEncoder
 // ----------------------------------------------------------------------------
 
+CommandEncoder::CommandEncoder(ref<Device> device, Slang::ComPtr<rhi::ICommandEncoder> rhi_command_encoder)
+    : DeviceResource(std::move(device))
+    , m_rhi_command_encoder(std::move(rhi_command_encoder))
+{
+}
+
 ref<RenderPassEncoder> CommandEncoder::begin_render_pass(const RenderPassDesc& desc)
 {
     rhi::RenderPassDesc rhi_desc = {};

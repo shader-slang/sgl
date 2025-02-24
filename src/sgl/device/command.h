@@ -149,6 +149,8 @@ private:
 class SGL_API CommandEncoder : public DeviceResource {
     SGL_OBJECT(CommandEncoder)
 public:
+    CommandEncoder(ref<Device> device, Slang::ComPtr<rhi::ICommandEncoder> rhi_command_encoder);
+
     ref<RenderPassEncoder> begin_render_pass(const RenderPassDesc& desc);
     ref<ComputePassEncoder> begin_compute_pass();
     ref<RayTracingPassEncoder> begin_ray_tracing_pass();
@@ -539,6 +541,8 @@ private:
     Slang::ComPtr<rhi::ICommandBuffer> m_rhi_command_buffer;
 
     std::vector<ref<cuda::InteropBuffer>> m_cuda_interop_buffers;
+
+    friend class Device;
 };
 
 } // namespace sgl

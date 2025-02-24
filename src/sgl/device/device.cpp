@@ -365,7 +365,7 @@ ref<Buffer> Device::create_buffer(BufferDesc desc)
 
 ref<BufferView> Device::create_buffer_view(Buffer* buffer, BufferViewDesc desc)
 {
-    return make_ref<BufferView>(ref<Device>(this), buffer, std::move(desc));
+    return make_ref<BufferView>(ref<Device>(this), ref<Buffer>(buffer), std::move(desc));
 }
 
 ref<Texture> Device::create_texture(TextureDesc desc)
@@ -380,7 +380,7 @@ ref<Texture> Device::create_texture_from_resource(TextureDesc desc, rhi::ITextur
 
 ref<TextureView> Device::create_texture_view(Texture* texture, TextureViewDesc desc)
 {
-    return make_ref<TextureView>(ref<Device>(this), texture, std::move(desc));
+    return make_ref<TextureView>(ref<Device>(this), ref<Texture>(texture), std::move(desc));
 }
 
 ref<Sampler> Device::create_sampler(SamplerDesc desc)
@@ -531,7 +531,9 @@ ref<CommandEncoder> Device::create_command_encoder(CommandQueueType queue)
 {
     SGL_CHECK(queue == CommandQueueType::graphics, "Only graphics queue is supported.");
 
-    return make_ref<CommandEncoder>(m_rhi_graphics_queue.get());
+    Slang::ComPtr<rhi::ICommandEncoder> rhi_command_encoder;
+    SLANG_CALL(m_rhi_graphics_queue->createCommandEncoder(rhi_command_encoder.writeRef()));
+    return make_ref<CommandEncoder>(ref(this), rhi_command_encoder);
 }
 
 uint64_t Device::submit_command_buffer(CommandBuffer* command_buffer, CommandQueueType queue)
@@ -550,8 +552,7 @@ uint64_t Device::submit_command_buffer(CommandBuffer* command_buffer, CommandQue
     }
 
     uint64_t fence_value = m_global_fence->update_signaled_value();
-    m_rhi_graphics_queue
-        ->executeCommandBuffer(command_buffer->rhi_command_buffer(), m_global_fence->rhi_fence(), fence_value);
+    m_rhi_graphics_queue->submit(command_buffer->rhi_command_buffer(), m_global_fence->rhi_fence(), fence_value);
 
     if (m_supports_cuda_interop && command_buffer->m_cuda_interop_buffers.size() > 0) {
         sync_to_device(cuda_stream);
@@ -643,15 +644,9 @@ void Device::upload_buffer_data(Buffer* buffer, const void* data, size_t size, s
 
     std::memcpy(alloc->data, data, size);
 
-    // If command buffer is already open, only add the copy command, don't attempt
-    // to immediately submit.
-    if (m_shared_command_buffer) {
-        m_shared_command_buffer->copy_buffer_region(buffer, offset, alloc->buffer, alloc->offset, size);
-    } else {
-        CommandBuffer* command_buffer = _begin_shared_command_buffer();
-        command_buffer->copy_buffer_region(buffer, offset, alloc->buffer, alloc->offset, size);
-        _end_shared_command_buffer(false);
-    }
+    auto command_encoder = create_command_encoder();
+    command_encoder->copy_buffer(buffer, offset, alloc->buffer, alloc->offset, size);
+    submit_command_buffer(command_encoder->finish());
 }
 
 void Device::read_buffer_data(const Buffer* buffer, void* data, size_t size, size_t offset)

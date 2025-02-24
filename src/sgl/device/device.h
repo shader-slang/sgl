@@ -613,11 +613,6 @@ private:
 
     std::unique_ptr<DebugPrinter> m_debug_printer;
 
-    /// Currently open command buffer.
-    /// Due to limitations in gfx, only one command buffer can be open at a time.
-    CommandBuffer* m_open_command_buffer{nullptr};
-    ref<CommandBuffer> m_shared_command_buffer;
-
     /// List of callbacks for hot reload event
     std::vector<ShaderHotReloadCallback> m_shader_hot_reload_callbacks;
 

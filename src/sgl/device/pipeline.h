@@ -28,11 +28,6 @@ public:
     Pipeline(ref<Device> device, ref<ShaderProgram> program);
     virtual ~Pipeline();
 
-    /// Returns the native API handle:
-    /// - D3D12: ID3D12PipelineState*
-    /// - Vulkan: VkPipeline
-    NativeHandle get_native_handle() const;
-
     void notify_program_reloaded();
 
 protected:
@@ -60,6 +55,11 @@ public:
     /// Thread group size.
     /// Used to determine the number of thread groups to dispatch.
     uint3 thread_group_size() const { return m_thread_group_size; }
+
+    /// Returns the native API handle:
+    /// - D3D12: ID3D12PipelineState*
+    /// - Vulkan: VkPipeline
+    NativeHandle get_native_handle() const;
 
     rhi::IComputePipeline* rhi_pipeline() const { return m_rhi_pipeline; }
 
@@ -90,6 +90,11 @@ public:
     RenderPipeline(ref<Device> device, RenderPipelineDesc desc);
 
     const RenderPipelineDesc& desc() const { return m_desc; }
+
+    /// Returns the native API handle:
+    /// - D3D12: ID3D12PipelineState*
+    /// - Vulkan: VkPipeline
+    NativeHandle get_native_handle() const;
 
     rhi::IRenderPipeline* rhi_pipeline() const { return m_rhi_pipeline; }
 
@@ -130,6 +135,11 @@ public:
     RayTracingPipeline(ref<Device> device, RayTracingPipelineDesc desc);
 
     const RayTracingPipelineDesc& desc() const { return m_desc; }
+
+    /// Returns the native API handle:
+    /// - D3D12: ID3D12PipelineState*
+    /// - Vulkan: VkPipeline
+    NativeHandle get_native_handle() const;
 
     rhi::IRayTracingPipeline* rhi_pipeline() const { return m_rhi_pipeline; }
 
