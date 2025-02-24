@@ -47,6 +47,16 @@ uint32_t ShaderObject::get_entry_point_count() const
     return m_shader_object->getEntryPointCount();
 }
 
+ref<ShaderObject> ShaderObject::get_entry_point(uint32_t index)
+{
+    return make_ref<ShaderObject>(m_device, m_shader_object->getEntryPoint(index));
+}
+
+ref<ShaderObject> ShaderObject::get_object(const ShaderOffset& offset)
+{
+    return make_ref<ShaderObject>(m_device, m_shader_object->getObject(rhi_shader_offset(offset)));
+}
+
 void ShaderObject::set_object(const ShaderOffset& offset, const ref<ShaderObject>& object)
 {
     SLANG_CALL(m_shader_object->setObject(rhi_shader_offset(offset), object ? object->rhi_shader_object() : nullptr));

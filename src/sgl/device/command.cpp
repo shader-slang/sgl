@@ -180,6 +180,7 @@ ShaderObject* ComputePassEncoder::bind_pipeline(ComputePipeline* pipeline)
     SGL_CHECK_NOT_NULL(pipeline);
 
     rhi::IShaderObject* rhi_shader_object = m_rhi_compute_pass_encoder->bindPipeline(pipeline->rhi_pipeline());
+    m_thread_group_size = pipeline->thread_group_size();
 
     // TODO(slang-rhi) return ShaderObject
     return nullptr;
@@ -191,6 +192,26 @@ void ComputePassEncoder::bind_pipeline(ComputePipeline* pipeline, ShaderObject* 
     SGL_CHECK_NOT_NULL(root_object);
 
     m_rhi_compute_pass_encoder->bindPipeline(pipeline->rhi_pipeline(), root_object->rhi_shader_object());
+    m_thread_group_size = pipeline->thread_group_size();
+}
+
+void ComputePassEncoder::dispatch(uint3 thread_count)
+{
+    uint3 thread_group_count{
+        div_round_up(thread_count.x, m_thread_group_size.x),
+        div_round_up(thread_count.y, m_thread_group_size.y),
+        div_round_up(thread_count.z, m_thread_group_size.z)};
+    dispatch_thread_groups(thread_group_count);
+}
+
+void ComputePassEncoder::dispatch_thread_groups(uint3 thread_group_count)
+{
+    m_rhi_compute_pass_encoder->dispatchCompute(thread_group_count.x, thread_group_count.y, thread_group_count.z);
+}
+
+void ComputePassEncoder::dispatch_thread_groups_indirect(BufferWithOffset arg_buffer)
+{
+    m_rhi_compute_pass_encoder->dispatchComputeIndirect(arg_buffer.buffer->rhi_buffer(), arg_buffer.offset);
 }
 
 void ComputePassEncoder::end()
@@ -699,6 +720,28 @@ std::string CommandEncoder::to_string() const
         m_device
     );
 }
+
+// ----------------------------------------------------------------------------
+// CommandBuffer
+// ----------------------------------------------------------------------------
+
+CommandBuffer::CommandBuffer(ref<Device> device)
+    : DeviceResource(std::move(device))
+{
+}
+
+CommandBuffer::~CommandBuffer() { }
+
+std::string CommandBuffer::to_string() const
+{
+    return fmt::format(
+        "CommandBuffer(\n"
+        "  device = {}\n"
+        ")",
+        m_device
+    );
+}
+
 
 #if 0
 
@@ -1472,17 +1515,6 @@ RayTracingCommandEncoder CommandBuffer::encode_ray_tracing_commands()
 
     m_encoder_open = true;
     return RayTracingCommandEncoder(this, (static_cast<rhi::IRayTracingCommandEncoder*>(m_rhi_command_encoder.get())));
-}
-
-
-std::string CommandBuffer::to_string() const
-{
-    return fmt::format(
-        "CommandBuffer(\n"
-        "  device = {}\n"
-        ")",
-        m_device
-    );
 }
 
 void CommandBuffer::end_encoder()
