@@ -35,15 +35,7 @@ Pipeline::~Pipeline()
 
 void Pipeline::notify_program_reloaded()
 {
-    m_rhi_pipeline = nullptr;
     recreate();
-}
-
-NativeHandle Pipeline::get_native_handle() const
-{
-    rhi::NativeHandle rhi_handle = {};
-    SLANG_CALL(m_rhi_pipeline->getNativeHandle(&rhi_handle));
-    return NativeHandle(rhi_handle);
 }
 
 // ----------------------------------------------------------------------------
@@ -64,6 +56,13 @@ void ComputePipeline::recreate()
         m_device->rhi_device()->createComputePipeline(rhi_desc, (rhi::IComputePipeline**)m_rhi_pipeline.writeRef())
     );
     m_thread_group_size = m_desc.program->layout()->get_entry_point_by_index(0)->compute_thread_group_size();
+}
+
+NativeHandle ComputePipeline::get_native_handle() const
+{
+    rhi::NativeHandle rhi_handle = {};
+    SLANG_CALL(m_rhi_pipeline->getNativeHandle(&rhi_handle));
+    return NativeHandle(rhi_handle);
 }
 
 std::string ComputePipeline::to_string() const
@@ -170,6 +169,13 @@ void RenderPipeline::recreate()
     );
 }
 
+NativeHandle RenderPipeline::get_native_handle() const
+{
+    rhi::NativeHandle rhi_handle = {};
+    SLANG_CALL(m_rhi_pipeline->getNativeHandle(&rhi_handle));
+    return NativeHandle(rhi_handle);
+}
+
 std::string RenderPipeline::to_string() const
 {
     return fmt::format(
@@ -219,6 +225,13 @@ void RayTracingPipeline::recreate()
     };
     SLANG_CALL(m_device->rhi_device()
                    ->createRayTracingPipeline(rhi_desc, (rhi::IRayTracingPipeline**)m_rhi_pipeline.writeRef()));
+}
+
+NativeHandle RayTracingPipeline::get_native_handle() const
+{
+    rhi::NativeHandle rhi_handle = {};
+    SLANG_CALL(m_rhi_pipeline->getNativeHandle(&rhi_handle));
+    return NativeHandle(rhi_handle);
 }
 
 std::string RayTracingPipeline::to_string() const
