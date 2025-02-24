@@ -48,15 +48,12 @@ void ComputeKernel::dispatch(uint3 thread_count, BindVarsCallback bind_vars, Com
     }
 
     {
-        ref<ShaderObject> shader_object = encoder.bind_pipeline(pipeline());
+        auto pass_encoder = command_encoder->begin_compute_pass();
+        ShaderObject* shader_object = pass_encoder->bind_pipeline(pipeline());
         if (bind_vars)
             bind_vars(ShaderCursor(shader_object));
-
-        uint3 thread_group_count{
-            div_round_up(thread_count.x, m_thread_group_size.x),
-            div_round_up(thread_count.y, m_thread_group_size.y),
-            div_round_up(thread_count.z, m_thread_group_size.z)};
-        encoder.dispatch_thread_groups(thread_group_count);
+        pass_encoder->dispatch(thread_count);
+        pass_encoder->end();
     }
 
     if (temp_command_encoder) {

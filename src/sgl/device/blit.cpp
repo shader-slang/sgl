@@ -81,16 +81,16 @@ void Blitter::blit(CommandEncoder* command_encoder, TextureView* dst, TextureVie
     );
 
     {
-        auto encoder = command_buffer->encode_render_commands(framebuffer);
-        ShaderCursor cursor = ShaderCursor(encoder.bind_pipeline(pipeline));
-        encoder.set_primitive_topology(PrimitiveTopology::triangle_list);
-        encoder.set_viewport_and_scissor_rect({
-            .width = float(dst_size.x),
-            .height = float(dst_size.y),
+        auto pass_encoder = command_encoder->begin_render_pass({.color_attachments = {{.view = dst}}});
+        ShaderCursor cursor = ShaderCursor(pass_encoder->bind_pipeline(pipeline));
+        pass_encoder->set_render_state({
+            .viewports = {Viewport(float(dst_size.x), float(dst_size.y))},
+            .scissor_rects = {ScissorRect(dst_size.x, dst_size.y)},
         });
         cursor["src"] = ref(src);
         cursor["sampler"] = filter == TextureFilteringMode::linear ? m_linear_sampler : m_point_sampler;
-        encoder.draw(3);
+        pass_encoder->draw({.vertex_count = 3});
+        pass_encoder->end();
     }
 }
 

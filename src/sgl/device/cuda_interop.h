@@ -19,7 +19,7 @@ public:
     InteropBuffer(sgl::Device* device, const TensorView tensor_view, bool is_uav);
     ~InteropBuffer();
 
-    Buffer* buffer() const { return m_buffer; }
+    const ref<sgl::Buffer>& buffer() const { return m_buffer; }
     bool is_uav() const { return m_is_uav; }
 
     void copy_from_cuda(void* cuda_stream = 0);

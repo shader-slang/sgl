@@ -4,7 +4,6 @@
 
 #include "sgl/device/fwd.h"
 #include "sgl/device/device_resource.h"
-#include "sgl/device/shared_handle.h"
 #include "sgl/device/native_handle.h"
 
 #include "sgl/core/macros.h"

@@ -105,7 +105,7 @@ CUexternalSemaphore import_external_semaphore(const Fence* fence)
 {
     SGL_CHECK_NOT_NULL(fence);
     SGL_CHECK(fence->desc().shared, "Fence was not created with shared flag.");
-    SharedFenceHandle shared_handle = fence->get_shared_handle();
+    NativeHandle shared_handle = fence->get_shared_handle();
     SGL_CHECK(shared_handle, "Fence shared handle creation failed.");
 
     CUDA_EXTERNAL_SEMAPHORE_HANDLE_DESC desc = {};

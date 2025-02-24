@@ -109,7 +109,7 @@ void ShaderObject::set_cuda_tensor_view(const ShaderOffset& offset, const cuda::
 {
     SGL_CHECK(m_device->supports_cuda_interop(), "Device does not support CUDA interop");
     ref<cuda::InteropBuffer> cuda_interop_buffer = make_ref<cuda::InteropBuffer>(m_device, tensor_view, is_uav);
-    set_resource(offset, cuda_interop_buffer->get_resource_view());
+    set_buffer(offset, cuda_interop_buffer->buffer());
     m_cuda_interop_buffers.push_back(cuda_interop_buffer);
 }
 

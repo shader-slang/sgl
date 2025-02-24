@@ -26,6 +26,26 @@ struct RenderState {
     IndexFormat index_format{IndexFormat::uint32};
 };
 
+struct RenderPassColorAttachment {
+    TextureView* view{nullptr};
+    TextureView* resolve_target{nullptr};
+    LoadOp load_op{LoadOp::dont_care};
+    StoreOp store_op{StoreOp::store};
+    float4 clear_value{0.f};
+};
+
+struct RenderPassDepthStencilAttachment {
+    TextureView* view{nullptr};
+    LoadOp depth_load_op{LoadOp::dont_care};
+    StoreOp depth_store_op{StoreOp::store};
+    float depth_clear_value{1.f};
+    bool depth_read_only{false};
+    LoadOp stencil_load_op{LoadOp::dont_care};
+    StoreOp stencil_store_op{StoreOp::dont_care};
+    uint8_t stencil_clear_value{0};
+    bool stencil_read_only{false};
+};
+
 struct RenderPassDesc {
     std::vector<RenderPassColorAttachment> color_attachments;
     std::optional<RenderPassDepthStencilAttachment> depth_stencil_attachment;
@@ -39,7 +59,8 @@ struct DrawArguments {
     uint32_t start_index_location{0};
 };
 
-class SGL_API PassEncoder {
+class SGL_API PassEncoder : public Object {
+    SGL_OBJECT(PassEncoder)
 public:
     /// Push a debug group.
     void push_debug_group(const char* name, float3 color);
@@ -54,7 +75,7 @@ public:
      */
     void insert_debug_marker(const char* name, float3 color);
 
-    virtual void end() = 0;
+    virtual void end();
 
 protected:
     rhi::IPassEncoder* m_rhi_pass_encoder;
@@ -63,6 +84,7 @@ protected:
 };
 
 class SGL_API RenderPassEncoder : public PassEncoder {
+    SGL_OBJECT(RenderPassEncoder)
 public:
     ShaderObject* bind_pipeline(RenderPipeline* pipeline);
     void bind_pipeline(RenderPipeline* pipeline, ShaderObject* root_object);
@@ -88,6 +110,7 @@ private:
 };
 
 class SGL_API ComputePassEncoder : public PassEncoder {
+    SGL_OBJECT(ComputePassEncoder)
 public:
     ShaderObject* bind_pipeline(ComputePipeline* pipeline);
     void bind_pipeline(ComputePipeline* pipeline, ShaderObject* root_object);
@@ -108,6 +131,7 @@ private:
 };
 
 class SGL_API RayTracingPassEncoder : public PassEncoder {
+    SGL_OBJECT(RayTracingPassEncoder)
 public:
     ShaderObject* bind_pipeline(RayTracingPipeline* pipeline, ShaderTable* shader_table);
     void bind_pipeline(RayTracingPipeline* pipeline, ShaderTable* shader_table, ShaderObject* root_object);
@@ -125,9 +149,9 @@ private:
 class SGL_API CommandEncoder : public DeviceResource {
     SGL_OBJECT(CommandEncoder)
 public:
-    RenderPassEncoder* begin_render_pass(const RenderPassDesc& desc);
-    ComputePassEncoder* begin_compute_pass();
-    RayTracingPassEncoder* begin_ray_tracing_pass();
+    ref<RenderPassEncoder> begin_render_pass(const RenderPassDesc& desc);
+    ref<ComputePassEncoder> begin_compute_pass();
+    ref<RayTracingPassEncoder> begin_ray_tracing_pass();
 
     /**
      * \brief Copy a buffer region.
@@ -310,9 +334,6 @@ public:
      */
     void write_timestamp(QueryPool* query_pool, uint32_t index);
 
-    void dispatch_compute(uint3 thread_count);
-    void dispatch_compute_indirect(BufferWithOffset arg_buffer);
-
     ref<CommandBuffer> finish();
 
     NativeHandle get_native_handle() const;
@@ -328,9 +349,9 @@ private:
 
     bool m_open{false};
 
-    RenderPassEncoder m_render_pass_encoder;
-    ComputePassEncoder m_compute_pass_encoder;
-    RayTracingPassEncoder m_ray_tracing_pass_encoder;
+    ref<RenderPassEncoder> m_render_pass_encoder;
+    ref<ComputePassEncoder> m_compute_pass_encoder;
+    ref<RayTracingPassEncoder> m_ray_tracing_pass_encoder;
 };
 
 #if 0

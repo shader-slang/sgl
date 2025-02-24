@@ -75,6 +75,14 @@ void PassEncoder::insert_debug_marker(const char* name, float3 color)
     m_rhi_pass_encoder->insertDebugMarker(name, &color[0]);
 }
 
+void PassEncoder::end()
+{
+    SGL_CHECK(m_rhi_pass_encoder, "Pass encoder already ended");
+
+    m_rhi_pass_encoder->end();
+    m_rhi_pass_encoder = nullptr;
+}
+
 // ----------------------------------------------------------------------------
 // RenderPassEncoder
 // ----------------------------------------------------------------------------
@@ -159,7 +167,8 @@ void RenderPassEncoder::draw_mesh_tasks(uint3 dimensions)
 
 void RenderPassEncoder::end()
 {
-    m_rhi_render_pass_encoder->end();
+    PassEncoder::end();
+    m_rhi_render_pass_encoder = nullptr;
 }
 
 // ----------------------------------------------------------------------------
@@ -182,6 +191,12 @@ void ComputePassEncoder::bind_pipeline(ComputePipeline* pipeline, ShaderObject* 
     SGL_CHECK_NOT_NULL(root_object);
 
     m_rhi_compute_pass_encoder->bindPipeline(pipeline->rhi_pipeline(), root_object->rhi_shader_object());
+}
+
+void ComputePassEncoder::end()
+{
+    PassEncoder::end();
+    m_rhi_compute_pass_encoder = nullptr;
 }
 
 // ----------------------------------------------------------------------------
@@ -218,33 +233,79 @@ void RayTracingPassEncoder::dispatch_rays(uint32_t ray_gen_shader_index, uint3 d
     m_rhi_ray_tracing_pass_encoder->dispatchRays(ray_gen_shader_index, dimensions.x, dimensions.y, dimensions.z);
 }
 
+void RayTracingPassEncoder::end()
+{
+    PassEncoder::end();
+    m_rhi_ray_tracing_pass_encoder = nullptr;
+}
+
 // ----------------------------------------------------------------------------
 // CommandEncoder
 // ----------------------------------------------------------------------------
 
-RenderPassEncoder* CommandEncoder::begin_render_pass(const RenderPassDesc& desc)
+ref<RenderPassEncoder> CommandEncoder::begin_render_pass(const RenderPassDesc& desc)
 {
-    // TODO(slang-rhi)
-    SGL_UNUSED(desc);
-    SGL_UNIMPLEMENTED();
     rhi::RenderPassDesc rhi_desc = {};
-    m_render_pass_encoder.m_rhi_render_pass_encoder = m_rhi_command_encoder->beginRenderPass(rhi_desc);
-    m_render_pass_encoder.m_rhi_pass_encoder = m_render_pass_encoder.m_rhi_render_pass_encoder;
-    return &m_render_pass_encoder;
+
+    short_vector<rhi::RenderPassColorAttachment, 16> rhi_color_attachments;
+    for (const auto& ca : desc.color_attachments) {
+        rhi_color_attachments.push_back({
+            .view = ca.view ? ca.view->rhi_texture_view() : nullptr,
+            .resolveTarget = ca.resolve_target ? ca.resolve_target->rhi_texture_view() : nullptr,
+            .loadOp = static_cast<rhi::LoadOp>(ca.load_op),
+            .storeOp = static_cast<rhi::StoreOp>(ca.store_op),
+            .clearValue = {ca.clear_value[0], ca.clear_value[1], ca.clear_value[2], ca.clear_value[3]},
+        });
+    }
+    rhi_desc.colorAttachments = rhi_color_attachments.data();
+    rhi_desc.colorAttachmentCount = narrow_cast<uint32_t>(rhi_color_attachments.size());
+
+    rhi::RenderPassDepthStencilAttachment rhi_depth_stencil_attachment = {};
+    if (desc.depth_stencil_attachment) {
+        const auto& dsa = *desc.depth_stencil_attachment;
+        rhi_depth_stencil_attachment = {
+            .view = dsa.view ? dsa.view->rhi_texture_view() : nullptr,
+            .depthLoadOp = static_cast<rhi::LoadOp>(dsa.depth_load_op),
+            .depthStoreOp = static_cast<rhi::StoreOp>(dsa.depth_store_op),
+            .depthClearValue = dsa.depth_clear_value,
+            .depthReadOnly = dsa.depth_read_only,
+            .stencilLoadOp = static_cast<rhi::LoadOp>(dsa.stencil_load_op),
+            .stencilStoreOp = static_cast<rhi::StoreOp>(dsa.stencil_store_op),
+            .stencilClearValue = dsa.stencil_clear_value,
+            .stencilReadOnly = dsa.stencil_read_only,
+        };
+        rhi_desc.depthStencilAttachment = &rhi_depth_stencil_attachment;
+    }
+
+    if (!m_render_pass_encoder) {
+        m_render_pass_encoder = make_ref<RenderPassEncoder>();
+    }
+
+    m_render_pass_encoder->m_rhi_render_pass_encoder = m_rhi_command_encoder->beginRenderPass(rhi_desc);
+    m_render_pass_encoder->m_rhi_pass_encoder = m_render_pass_encoder->m_rhi_render_pass_encoder;
+    return m_render_pass_encoder;
 }
-ComputePassEncoder* CommandEncoder::begin_compute_pass()
+
+ref<ComputePassEncoder> CommandEncoder::begin_compute_pass()
 {
-    // TODO(slang-rhi)
-    SGL_UNIMPLEMENTED();
-    m_compute_pass_encoder.m_rhi_compute_pass_encoder = m_rhi_command_encoder->beginComputePass();
-    return &m_compute_pass_encoder;
+    if (!m_compute_pass_encoder) {
+        m_compute_pass_encoder = make_ref<ComputePassEncoder>();
+    }
+
+    m_compute_pass_encoder->m_rhi_compute_pass_encoder = m_rhi_command_encoder->beginComputePass();
+    m_compute_pass_encoder->m_rhi_pass_encoder = m_compute_pass_encoder->m_rhi_compute_pass_encoder;
+    return m_compute_pass_encoder;
 }
-RayTracingPassEncoder* CommandEncoder::begin_ray_tracing_pass()
+
+ref<RayTracingPassEncoder> CommandEncoder::begin_ray_tracing_pass()
 {
-    // TODO(slang-rhi)
-    SGL_UNIMPLEMENTED();
-    m_ray_tracing_pass_encoder.m_rhi_ray_tracing_pass_encoder = m_rhi_command_encoder->beginRayTracingPass();
-    return &m_ray_tracing_pass_encoder;
+    if (!m_ray_tracing_pass_encoder) {
+        m_ray_tracing_pass_encoder = make_ref<RayTracingPassEncoder>();
+    }
+
+    m_ray_tracing_pass_encoder->m_rhi_ray_tracing_pass_encoder = m_rhi_command_encoder->beginRayTracingPass();
+    m_ray_tracing_pass_encoder->m_rhi_pass_encoder = m_ray_tracing_pass_encoder->m_rhi_ray_tracing_pass_encoder;
+    return m_ray_tracing_pass_encoder;
 }
 
 void CommandEncoder::copy_buffer(
@@ -611,6 +672,27 @@ void CommandEncoder::write_timestamp(QueryPool* query_pool, uint32_t index)
     m_rhi_command_encoder->writeTimestamp(query_pool->rhi_query_pool(), index);
 }
 
+ref<CommandBuffer> CommandEncoder::finish()
+{
+    return nullptr;
+}
+
+NativeHandle CommandEncoder::get_native_handle() const
+{
+    rhi::NativeHandle rhi_handle;
+    SLANG_CALL(m_rhi_command_encoder->getNativeHandle(&rhi_handle));
+    return NativeHandle(rhi_handle);
+}
+
+std::string CommandEncoder::to_string() const
+{
+    return fmt::format(
+        "CommandEncoder(\n"
+        "  device = {}\n"
+        ")",
+        m_device
+    );
+}
 
 #if 0
 
