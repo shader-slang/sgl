@@ -7,15 +7,15 @@
 #include "sgl/device/device_resource.h"
 #include "sgl/device/formats.h"
 
-#include <slang-gfx.h>
+#include <slang-rhi.h>
 
 #include <string>
 
 namespace sgl {
 
 enum class InputSlotClass : uint8_t {
-    per_vertex = static_cast<uint8_t>(gfx::InputSlotClass::PerVertex),
-    per_instance = static_cast<uint8_t>(gfx::InputSlotClass::PerInstance),
+    per_vertex = static_cast<uint8_t>(rhi::InputSlotClass::PerVertex),
+    per_instance = static_cast<uint8_t>(rhi::InputSlotClass::PerInstance),
 };
 
 SGL_ENUM_INFO(
@@ -62,13 +62,13 @@ public:
 
     const InputLayoutDesc& desc() const { return m_desc; }
 
-    gfx::IInputLayout* gfx_input_layout() const { return m_gfx_input_layout.get(); }
+    rhi::IInputLayout* rhi_input_layout() const { return m_rhi_input_layout.get(); }
 
     std::string to_string() const override;
 
 private:
     InputLayoutDesc m_desc;
-    Slang::ComPtr<gfx::IInputLayout> m_gfx_input_layout;
+    Slang::ComPtr<rhi::IInputLayout> m_rhi_input_layout;
 };
 
 } // namespace sgl

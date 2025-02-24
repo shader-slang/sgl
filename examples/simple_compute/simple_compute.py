@@ -19,21 +19,21 @@ N = 1024
 buffer_a = device.create_buffer(
     element_count=N,
     struct_type=kernel.reflection.processor.a,
-    usage=sgl.ResourceUsage.shader_resource,
+    usage=sgl.BufferUsage.shader_resource,
     data=np.linspace(0, N - 1, N, dtype=np.uint32),
 )
 
 buffer_b = device.create_buffer(
     element_count=N,
     struct_type=kernel.reflection.processor.b,
-    usage=sgl.ResourceUsage.shader_resource,
+    usage=sgl.BufferUsage.shader_resource,
     data=np.linspace(N, 1, N, dtype=np.uint32),
 )
 
 buffer_c = device.create_buffer(
     element_count=N,
     struct_type=kernel.reflection.processor.c,
-    usage=sgl.ResourceUsage.unordered_access,
+    usage=sgl.BufferUsage.unordered_access,
 )
 
 if True:

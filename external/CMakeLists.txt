@@ -121,46 +121,17 @@ set(SLANG_RHI_SLANG_INCLUDE_DIR ${SLANG_INCLUDE_DIR})
 set(SLANG_RHI_SLANG_BINARY_DIR ${SLANG_DIR})
 add_subdirectory(slang-rhi)
 
-# nvapi
-
-set(NVAPI_COMMIT "4ba3384657149d63aa193f5a34e20efe1e42bf31")
-
-if(SGL_WINDOWS)
-    sgl_download_package(nvapi "https://github.com/NVIDIA/nvapi/archive/${NVAPI_COMMIT}.zip")
-    add_library(nvapi STATIC IMPORTED GLOBAL)
-    set_target_properties(nvapi PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES ${nvapi_SOURCE_DIR}
-        IMPORTED_LOCATION ${nvapi_SOURCE_DIR}/amd64/nvapi64.lib
-    )
-    sgl_copy_shader_file(${nvapi_SOURCE_DIR}/nvHLSLExtns.h nvapi)
-    sgl_copy_shader_file(${nvapi_SOURCE_DIR}/nvHLSLExtnsInternal.h nvapi)
-    sgl_copy_shader_file(${nvapi_SOURCE_DIR}/nvShaderExtnEnums.h nvapi)
+if(TARGET slang-rhi-nvapi)
+    get_target_property(NVAPI_DIR slang-rhi-nvapi INTERFACE_INCLUDE_DIRECTORIES)
+    sgl_copy_shader_file(${NVAPI_DIR}/nvHLSLExtns.h nvapi)
+    sgl_copy_shader_file(${NVAPI_DIR}/nvHLSLExtnsInternal.h nvapi)
+    sgl_copy_shader_file(${NVAPI_DIR}/nvShaderExtnEnums.h nvapi)
     set(SGL_HAS_NVAPI ON PARENT_SCOPE)
 else()
     set(SGL_HAS_NVAPI OFF PARENT_SCOPE)
 endif()
 
-# dxc
-
-set(DXC_VERSION "1.7.2308")
-set(DXC_TAG "2023_08_14")
-
-if(SGL_WINDOWS)
-    sgl_download_package(dxc "https://github.com/microsoft/DirectXShaderCompiler/releases/download/v${DXC_VERSION}/dxc_${DXC_TAG}.zip")
-    sgl_copy_binary(${dxc_SOURCE_DIR}/bin/x64/dxcompiler.dll .)
-    sgl_copy_binary(${dxc_SOURCE_DIR}/bin/x64/dxil.dll .)
-endif()
-
-# agility-sdk
-
-set(AGILITY_SDK_VERSION "1.611.2")
-
-if(SGL_WINDOWS)
-    sgl_download_package(agility_sdk "https://www.nuget.org/api/v2/package/Microsoft.Direct3D.D3D12/${AGILITY_SDK_VERSION}")
-    add_library(agility_sdk INTERFACE)
-    target_include_directories(agility_sdk INTERFACE ${agility_sdk_SOURCE_DIR}/build/native/include)
-    sgl_copy_binary(${agility_sdk_SOURCE_DIR}/build/native/bin/x64/D3D12Core.dll d3d12)
-    sgl_copy_binary(${agility_sdk_SOURCE_DIR}/build/native/bin/x64/d3d12SDKLayers.dll d3d12)
+if(TARGET slang-rhi-agility-sdk)
     set(SGL_HAS_AGILITY_SDK ON PARENT_SCOPE)
 else()
     set(SGL_HAS_AGILITY_SDK OFF PARENT_SCOPE)

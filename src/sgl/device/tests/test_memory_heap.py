@@ -16,7 +16,7 @@ def test_memory_heap(device_type: sgl.DeviceType):
     with pytest.raises(Exception):
         device.create_memory_heap(
             memory_type=sgl.MemoryType.upload,
-            usage=sgl.ResourceUsage.none,
+            usage=sgl.BufferUsage.none,
             page_size=0,
         )
 
@@ -24,7 +24,7 @@ def test_memory_heap(device_type: sgl.DeviceType):
     with pytest.raises(Exception):
         device.create_memory_heap(
             memory_type=sgl.MemoryType.device_local,
-            usage=sgl.ResourceUsage.none,
+            usage=sgl.BufferUsage.none,
             page_size=1024,
         )
 
@@ -36,7 +36,7 @@ def test_memory_heap(device_type: sgl.DeviceType):
 def test_allocation(device_type: sgl.DeviceType, memory_type: sgl.MemoryType):
     device = helpers.get_device(type=device_type)
     heap = device.create_memory_heap(
-        memory_type=memory_type, usage=sgl.ResourceUsage.none, debug_name="test_heap"
+        memory_type=memory_type, usage=sgl.BufferUsage.none, label="test_heap"
     )
     for _ in range(10):
         a = heap.allocate(1024 * 1024)

@@ -44,7 +44,7 @@ public:
     int dims() const { return (int)m_desc.shape.size(); }
     int offset() const { return m_desc.offset; }
     size_t element_count() const { return m_desc.shape.element_count(); }
-    ResourceUsage usage() const { return m_storage->desc().usage; }
+    BufferUsage usage() const { return m_storage->desc().usage; }
     MemoryType memory_type() const { return m_storage->desc().memory_type; }
     ref<Buffer> storage() const { return m_storage; }
     size_t element_stride() const { return m_desc.element_layout->stride(); }

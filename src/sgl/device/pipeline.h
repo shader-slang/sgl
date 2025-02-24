@@ -13,7 +13,7 @@
 
 #include "sgl/math/vector_types.h"
 
-#include <slang-gfx.h>
+#include <slang-rhi.h>
 
 #include <map>
 #include <set>
@@ -28,8 +28,6 @@ public:
     Pipeline(ref<Device> device, ref<ShaderProgram> program);
     virtual ~Pipeline();
 
-    gfx::IPipelineState* gfx_pipeline_state() const { return m_gfx_pipeline_state; }
-
     /// Returns the native API handle:
     /// - D3D12: ID3D12PipelineState*
     /// - Vulkan: VkPipeline
@@ -39,8 +37,6 @@ public:
 
 protected:
     virtual void recreate() = 0;
-
-    Slang::ComPtr<gfx::IPipelineState> m_gfx_pipeline_state;
 
 private:
     /// Pipelines store program (and thus maintain the ref count)
@@ -65,6 +61,8 @@ public:
     /// Used to determine the number of thread groups to dispatch.
     uint3 thread_group_size() const { return m_thread_group_size; }
 
+    rhi::IComputePipeline* rhi_pipeline() const { return m_rhi_pipeline; }
+
     std::string to_string() const override;
 
 protected:
@@ -73,36 +71,41 @@ protected:
 private:
     ComputePipelineDesc m_desc;
     uint3 m_thread_group_size;
+    Slang::ComPtr<rhi::IComputePipeline> m_rhi_pipeline;
 };
 
-struct GraphicsPipelineDesc {
+struct RenderPipelineDesc {
     ref<ShaderProgram> program;
     ref<InputLayout> input_layout;
-    ref<FramebufferLayout> framebuffer_layout;
-    PrimitiveType primitive_type{PrimitiveType::triangle};
-    DepthStencilDesc depth_stencil;
+    PrimitiveTopology primitive_topology{PrimitiveTopology::triangle_list};
+    std::vector<ColorTargetState> targets;
+    DepthStencilState depth_stencil;
     RasterizerDesc rasterizer;
-    BlendDesc blend;
+    MultisampleState multisample;
 };
 
-/// Graphics pipeline.
-class SGL_API GraphicsPipeline : public Pipeline {
+/// Render pipeline.
+class SGL_API RenderPipeline : public Pipeline {
 public:
-    GraphicsPipeline(ref<Device> device, GraphicsPipelineDesc desc);
+    RenderPipeline(ref<Device> device, RenderPipelineDesc desc);
+
+    const RenderPipelineDesc& desc() const { return m_desc; }
+
+    rhi::IRenderPipeline* rhi_pipeline() const { return m_rhi_pipeline; }
 
     std::string to_string() const override;
-    const GraphicsPipelineDesc& desc() const { return m_desc; }
 
 protected:
     virtual void recreate() override;
 
 private:
-    GraphicsPipelineDesc m_desc;
+    RenderPipelineDesc m_desc;
 
     // These are stored to ensure the layouts aren't freed when pipeline
     // relies on them if it needs to be recreated for hot reload.
     ref<const InputLayout> m_stored_input_layout;
-    ref<const FramebufferLayout> m_stored_framebuffer_layout;
+
+    Slang::ComPtr<rhi::IRenderPipeline> m_rhi_pipeline;
 };
 
 struct HitGroupDesc {
@@ -126,6 +129,10 @@ class SGL_API RayTracingPipeline : public Pipeline {
 public:
     RayTracingPipeline(ref<Device> device, RayTracingPipelineDesc desc);
 
+    const RayTracingPipelineDesc& desc() const { return m_desc; }
+
+    rhi::IRayTracingPipeline* rhi_pipeline() const { return m_rhi_pipeline; }
+
     std::string to_string() const override;
 
 protected:
@@ -133,6 +140,7 @@ protected:
 
 private:
     RayTracingPipelineDesc m_desc;
+    Slang::ComPtr<rhi::IRayTracingPipeline> m_rhi_pipeline;
 };
 
 } // namespace sgl

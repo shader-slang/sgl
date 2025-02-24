@@ -1434,13 +1434,13 @@ static const char *__doc_sgl_AccelerationStructure_desc = R"doc()doc";
 
 static const char *__doc_sgl_AccelerationStructure_device_address = R"doc()doc";
 
-static const char *__doc_sgl_AccelerationStructure_gfx_acceleration_structure = R"doc()doc";
+static const char *__doc_sgl_AccelerationStructure_rhi_acceleration_structure = R"doc()doc";
 
 static const char *__doc_sgl_AccelerationStructure_kind = R"doc()doc";
 
 static const char *__doc_sgl_AccelerationStructure_m_desc = R"doc()doc";
 
-static const char *__doc_sgl_AccelerationStructure_m_gfx_acceleration_structure = R"doc()doc";
+static const char *__doc_sgl_AccelerationStructure_m_rhi_acceleration_structure = R"doc()doc";
 
 static const char *__doc_sgl_AccelerationStructure_to_string = R"doc()doc";
 
@@ -2061,15 +2061,15 @@ static const char *__doc_sgl_Buffer_get_uav = R"doc(Get a unordered access view 
 
 static const char *__doc_sgl_Buffer_get_view = R"doc(Get a resource view. Views are cached and reused.)doc";
 
-static const char *__doc_sgl_Buffer_gfx_buffer_resource = R"doc()doc";
+static const char *__doc_sgl_Buffer_rhi_buffer_resource = R"doc()doc";
 
-static const char *__doc_sgl_Buffer_gfx_resource = R"doc()doc";
+static const char *__doc_sgl_Buffer_rhi_resource = R"doc()doc";
 
 static const char *__doc_sgl_Buffer_is_mapped = R"doc(Returns true if buffer is currently mapped.)doc";
 
 static const char *__doc_sgl_Buffer_m_desc = R"doc()doc";
 
-static const char *__doc_sgl_Buffer_m_gfx_buffer = R"doc()doc";
+static const char *__doc_sgl_Buffer_m_rhi_buffer = R"doc()doc";
 
 static const char *__doc_sgl_Buffer_m_mapped_ptr = R"doc()doc";
 
@@ -2276,29 +2276,29 @@ The returned ``RenderCommandEncoder`` is used to bind graphics
 pipelines and issue dispatches. The encoding is ended when the
 ``RenderCommandEncoder`` is destroyed.)doc";
 
-static const char *__doc_sgl_CommandBuffer_end_current_gfx_encoder = R"doc()doc";
+static const char *__doc_sgl_CommandBuffer_end_current_rhi_encoder = R"doc()doc";
 
 static const char *__doc_sgl_CommandBuffer_end_debug_event = R"doc(End a debug event.)doc";
 
 static const char *__doc_sgl_CommandBuffer_end_encoder = R"doc(Called by command encoders when they are destroyed.)doc";
 
-static const char *__doc_sgl_CommandBuffer_get_gfx_resource_command_encoder = R"doc()doc";
+static const char *__doc_sgl_CommandBuffer_get_rhi_resource_command_encoder = R"doc()doc";
 
-static const char *__doc_sgl_CommandBuffer_gfx_command_buffer = R"doc()doc";
+static const char *__doc_sgl_CommandBuffer_rhi_command_buffer = R"doc()doc";
 
 static const char *__doc_sgl_CommandBuffer_is_open = R"doc(True if the command buffer is open.)doc";
 
-static const char *__doc_sgl_CommandBuffer_m_active_gfx_encoder = R"doc()doc";
+static const char *__doc_sgl_CommandBuffer_m_active_rhi_encoder = R"doc()doc";
 
 static const char *__doc_sgl_CommandBuffer_m_cuda_interop_buffers = R"doc()doc";
 
 static const char *__doc_sgl_CommandBuffer_m_encoder_open = R"doc()doc";
 
-static const char *__doc_sgl_CommandBuffer_m_gfx_command_buffer = R"doc()doc";
+static const char *__doc_sgl_CommandBuffer_m_rhi_command_buffer = R"doc()doc";
 
-static const char *__doc_sgl_CommandBuffer_m_gfx_command_encoder = R"doc()doc";
+static const char *__doc_sgl_CommandBuffer_m_rhi_command_encoder = R"doc()doc";
 
-static const char *__doc_sgl_CommandBuffer_m_gfx_transient_resource_heap = R"doc()doc";
+static const char *__doc_sgl_CommandBuffer_m_rhi_transient_resource_heap = R"doc()doc";
 
 static const char *__doc_sgl_CommandBuffer_m_open = R"doc()doc";
 
@@ -2541,7 +2541,7 @@ static const char *__doc_sgl_ComputeCommandEncoder_m_bound_shader_object = R"doc
 
 static const char *__doc_sgl_ComputeCommandEncoder_m_command_buffer = R"doc()doc";
 
-static const char *__doc_sgl_ComputeCommandEncoder_m_gfx_compute_command_encoder = R"doc()doc";
+static const char *__doc_sgl_ComputeCommandEncoder_m_rhi_compute_command_encoder = R"doc()doc";
 
 static const char *__doc_sgl_ComputeCommandEncoder_operator_assign = R"doc()doc";
 
@@ -3353,9 +3353,9 @@ VkInstance (0), VkPhysicalDevice (1), VkDevice (2))doc";
 
 static const char *__doc_sgl_Device_get_or_create_transient_resource_heap = R"doc()doc";
 
-static const char *__doc_sgl_Device_gfx_device = R"doc()doc";
+static const char *__doc_sgl_Device_rhi_device = R"doc()doc";
 
-static const char *__doc_sgl_Device_gfx_graphics_queue = R"doc()doc";
+static const char *__doc_sgl_Device_rhi_graphics_queue = R"doc()doc";
 
 static const char *__doc_sgl_Device_global_session = R"doc()doc";
 
@@ -3400,9 +3400,9 @@ static const char *__doc_sgl_Device_m_desc = R"doc()doc";
 
 static const char *__doc_sgl_Device_m_features = R"doc()doc";
 
-static const char *__doc_sgl_Device_m_gfx_device = R"doc()doc";
+static const char *__doc_sgl_Device_m_rhi_device = R"doc()doc";
 
-static const char *__doc_sgl_Device_m_gfx_graphics_queue = R"doc()doc";
+static const char *__doc_sgl_Device_m_rhi_graphics_queue = R"doc()doc";
 
 static const char *__doc_sgl_Device_m_global_fence = R"doc()doc";
 
@@ -3645,11 +3645,11 @@ static const char *__doc_sgl_Fence_get_shared_handle =
 R"doc(Get the shared fence handle. Throws if the fence was not created with
 the ``FenceDesc::shared`` flag.)doc";
 
-static const char *__doc_sgl_Fence_gfx_fence = R"doc()doc";
+static const char *__doc_sgl_Fence_rhi_fence = R"doc()doc";
 
 static const char *__doc_sgl_Fence_m_desc = R"doc()doc";
 
-static const char *__doc_sgl_Fence_m_gfx_fence = R"doc()doc";
+static const char *__doc_sgl_Fence_m_rhi_fence = R"doc()doc";
 
 static const char *__doc_sgl_Fence_m_signaled_value = R"doc()doc";
 
@@ -4154,11 +4154,11 @@ static const char *__doc_sgl_FramebufferLayout_class_name = R"doc()doc";
 
 static const char *__doc_sgl_FramebufferLayout_desc = R"doc()doc";
 
-static const char *__doc_sgl_FramebufferLayout_gfx_framebuffer_layout = R"doc()doc";
+static const char *__doc_sgl_FramebufferLayout_rhi_framebuffer_layout = R"doc()doc";
 
 static const char *__doc_sgl_FramebufferLayout_m_desc = R"doc()doc";
 
-static const char *__doc_sgl_FramebufferLayout_m_gfx_framebuffer_layout = R"doc()doc";
+static const char *__doc_sgl_FramebufferLayout_m_rhi_framebuffer_layout = R"doc()doc";
 
 static const char *__doc_sgl_FramebufferLayout_to_string = R"doc()doc";
 
@@ -4168,17 +4168,17 @@ static const char *__doc_sgl_Framebuffer_class_name = R"doc()doc";
 
 static const char *__doc_sgl_Framebuffer_desc = R"doc()doc";
 
-static const char *__doc_sgl_Framebuffer_gfx_framebuffer = R"doc()doc";
+static const char *__doc_sgl_Framebuffer_rhi_framebuffer = R"doc()doc";
 
-static const char *__doc_sgl_Framebuffer_gfx_render_pass_layout = R"doc()doc";
+static const char *__doc_sgl_Framebuffer_rhi_render_pass_layout = R"doc()doc";
 
 static const char *__doc_sgl_Framebuffer_layout = R"doc()doc";
 
 static const char *__doc_sgl_Framebuffer_m_desc = R"doc()doc";
 
-static const char *__doc_sgl_Framebuffer_m_gfx_framebuffer = R"doc()doc";
+static const char *__doc_sgl_Framebuffer_m_rhi_framebuffer = R"doc()doc";
 
-static const char *__doc_sgl_Framebuffer_m_gfx_render_pass_layout = R"doc()doc";
+static const char *__doc_sgl_Framebuffer_m_rhi_render_pass_layout = R"doc()doc";
 
 static const char *__doc_sgl_Framebuffer_to_string = R"doc()doc";
 
@@ -4468,11 +4468,11 @@ static const char *__doc_sgl_InputLayout_class_name = R"doc()doc";
 
 static const char *__doc_sgl_InputLayout_desc = R"doc()doc";
 
-static const char *__doc_sgl_InputLayout_gfx_input_layout = R"doc()doc";
+static const char *__doc_sgl_InputLayout_rhi_input_layout = R"doc()doc";
 
 static const char *__doc_sgl_InputLayout_m_desc = R"doc()doc";
 
-static const char *__doc_sgl_InputLayout_m_gfx_input_layout = R"doc()doc";
+static const char *__doc_sgl_InputLayout_m_rhi_input_layout = R"doc()doc";
 
 static const char *__doc_sgl_InputLayout_to_string = R"doc()doc";
 
@@ -5626,9 +5626,9 @@ static const char *__doc_sgl_Pipeline_get_native_handle =
 R"doc(Returns the native API handle: - D3D12: ID3D12PipelineState* - Vulkan:
 VkPipeline)doc";
 
-static const char *__doc_sgl_Pipeline_gfx_pipeline_state = R"doc()doc";
+static const char *__doc_sgl_Pipeline_rhi_pipeline_state = R"doc()doc";
 
-static const char *__doc_sgl_Pipeline_m_gfx_pipeline_state = R"doc()doc";
+static const char *__doc_sgl_Pipeline_m_rhi_pipeline_state = R"doc()doc";
 
 static const char *__doc_sgl_Pipeline_m_program =
 R"doc(Pipelines store program (and thus maintain the ref count) in their
@@ -5986,11 +5986,11 @@ static const char *__doc_sgl_QueryPool_get_timestamp_results = R"doc()doc";
 
 static const char *__doc_sgl_QueryPool_get_timestamp_results_2 = R"doc()doc";
 
-static const char *__doc_sgl_QueryPool_gfx_query_pool = R"doc()doc";
+static const char *__doc_sgl_QueryPool_rhi_query_pool = R"doc()doc";
 
 static const char *__doc_sgl_QueryPool_m_desc = R"doc()doc";
 
-static const char *__doc_sgl_QueryPool_m_gfx_query_pool = R"doc()doc";
+static const char *__doc_sgl_QueryPool_m_rhi_query_pool = R"doc()doc";
 
 static const char *__doc_sgl_QueryPool_reset = R"doc()doc";
 
@@ -6082,7 +6082,7 @@ static const char *__doc_sgl_RayTracingCommandEncoder_m_bound_shader_object = R"
 
 static const char *__doc_sgl_RayTracingCommandEncoder_m_command_buffer = R"doc()doc";
 
-static const char *__doc_sgl_RayTracingCommandEncoder_m_gfx_ray_tracing_command_encoder = R"doc()doc";
+static const char *__doc_sgl_RayTracingCommandEncoder_m_rhi_ray_tracing_command_encoder = R"doc()doc";
 
 static const char *__doc_sgl_RayTracingCommandEncoder_operator_assign = R"doc()doc";
 
@@ -6326,7 +6326,7 @@ static const char *__doc_sgl_RenderCommandEncoder_m_bound_shader_object = R"doc(
 
 static const char *__doc_sgl_RenderCommandEncoder_m_command_buffer = R"doc()doc";
 
-static const char *__doc_sgl_RenderCommandEncoder_m_gfx_render_command_encoder = R"doc()doc";
+static const char *__doc_sgl_RenderCommandEncoder_m_rhi_render_command_encoder = R"doc()doc";
 
 static const char *__doc_sgl_RenderCommandEncoder_operator_assign = R"doc()doc";
 
@@ -6555,7 +6555,7 @@ R"doc(Returns the native API handle: - D3D12: D3D12_CPU_DESCRIPTOR_HANDLE -
 Vulkan: VkImageView for texture views, VkBufferView for typed buffer
 views, VkBuffer for untyped buffer views)doc";
 
-static const char *__doc_sgl_ResourceView_gfx_resource_view = R"doc()doc";
+static const char *__doc_sgl_ResourceView_rhi_resource_view = R"doc()doc";
 
 static const char *__doc_sgl_ResourceView_invalidate = R"doc()doc";
 
@@ -6563,7 +6563,7 @@ static const char *__doc_sgl_ResourceView_m_all_subresources = R"doc()doc";
 
 static const char *__doc_sgl_ResourceView_m_desc = R"doc()doc";
 
-static const char *__doc_sgl_ResourceView_m_gfx_resource_view = R"doc()doc";
+static const char *__doc_sgl_ResourceView_m_rhi_resource_view = R"doc()doc";
 
 static const char *__doc_sgl_ResourceView_m_resource = R"doc()doc";
 
@@ -6597,7 +6597,7 @@ VkBuffer or VkImage)doc";
 
 static const char *__doc_sgl_Resource_get_shared_handle = R"doc(Get the shared resource handle.)doc";
 
-static const char *__doc_sgl_Resource_gfx_resource = R"doc()doc";
+static const char *__doc_sgl_Resource_rhi_resource = R"doc()doc";
 
 static const char *__doc_sgl_Resource_invalidate_views = R"doc()doc";
 
@@ -6714,11 +6714,11 @@ static const char *__doc_sgl_Sampler_get_native_handle =
 R"doc(Returns the native API handle: - D3D12: D3D12_CPU_DESCRIPTOR_HANDLE -
 Vulkan: VkSampler)doc";
 
-static const char *__doc_sgl_Sampler_gfx_sampler_state = R"doc()doc";
+static const char *__doc_sgl_Sampler_rhi_sampler_state = R"doc()doc";
 
 static const char *__doc_sgl_Sampler_m_desc = R"doc()doc";
 
-static const char *__doc_sgl_Sampler_m_gfx_sampler_state = R"doc()doc";
+static const char *__doc_sgl_Sampler_m_rhi_sampler_state = R"doc()doc";
 
 static const char *__doc_sgl_Sampler_to_string = R"doc()doc";
 
@@ -6856,7 +6856,7 @@ static const char *__doc_sgl_ShaderObject_get_entry_point_count = R"doc()doc";
 
 static const char *__doc_sgl_ShaderObject_get_object = R"doc()doc";
 
-static const char *__doc_sgl_ShaderObject_gfx_shader_object = R"doc()doc";
+static const char *__doc_sgl_ShaderObject_rhi_shader_object = R"doc()doc";
 
 static const char *__doc_sgl_ShaderObject_m_cuda_interop_buffers = R"doc()doc";
 
@@ -6915,7 +6915,7 @@ static const char *__doc_sgl_ShaderProgramData = R"doc()doc";
 
 static const char *__doc_sgl_ShaderProgramData_2 = R"doc()doc";
 
-static const char *__doc_sgl_ShaderProgramData_gfx_shader_program = R"doc()doc";
+static const char *__doc_sgl_ShaderProgramData_rhi_shader_program = R"doc()doc";
 
 static const char *__doc_sgl_ShaderProgramData_linked_program = R"doc()doc";
 
@@ -6933,7 +6933,7 @@ static const char *__doc_sgl_ShaderProgram_class_name = R"doc()doc";
 
 static const char *__doc_sgl_ShaderProgram_desc = R"doc()doc";
 
-static const char *__doc_sgl_ShaderProgram_gfx_shader_program = R"doc()doc";
+static const char *__doc_sgl_ShaderProgram_rhi_shader_program = R"doc()doc";
 
 static const char *__doc_sgl_ShaderProgram_layout = R"doc()doc";
 
@@ -7017,9 +7017,9 @@ static const char *__doc_sgl_ShaderTable_ShaderTable = R"doc()doc";
 
 static const char *__doc_sgl_ShaderTable_class_name = R"doc()doc";
 
-static const char *__doc_sgl_ShaderTable_gfx_shader_table = R"doc()doc";
+static const char *__doc_sgl_ShaderTable_rhi_shader_table = R"doc()doc";
 
-static const char *__doc_sgl_ShaderTable_m_gfx_shader_table = R"doc()doc";
+static const char *__doc_sgl_ShaderTable_m_rhi_shader_table = R"doc()doc";
 
 static const char *__doc_sgl_ShaderTable_to_string = R"doc()doc";
 
@@ -7766,7 +7766,7 @@ static const char *__doc_sgl_Swapchain_m_device = R"doc()doc";
 
 static const char *__doc_sgl_Swapchain_m_fullscreen = R"doc()doc";
 
-static const char *__doc_sgl_Swapchain_m_gfx_swapchain = R"doc()doc";
+static const char *__doc_sgl_Swapchain_m_rhi_swapchain = R"doc()doc";
 
 static const char *__doc_sgl_Swapchain_m_images = R"doc()doc";
 
@@ -8055,15 +8055,15 @@ R"doc(Get a unordered access view for a subresource range of the texture.
 
 static const char *__doc_sgl_Texture_get_view = R"doc(Get a resource view. Views are cached and reused.)doc";
 
-static const char *__doc_sgl_Texture_gfx_resource = R"doc()doc";
+static const char *__doc_sgl_Texture_rhi_resource = R"doc()doc";
 
-static const char *__doc_sgl_Texture_gfx_texture_resource = R"doc()doc";
+static const char *__doc_sgl_Texture_rhi_texture_resource = R"doc()doc";
 
 static const char *__doc_sgl_Texture_height = R"doc()doc";
 
 static const char *__doc_sgl_Texture_m_desc = R"doc()doc";
 
-static const char *__doc_sgl_Texture_m_gfx_texture = R"doc()doc";
+static const char *__doc_sgl_Texture_m_rhi_texture = R"doc()doc";
 
 static const char *__doc_sgl_Texture_memory_usage = R"doc()doc";
 

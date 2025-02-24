@@ -19,16 +19,16 @@ class PipelineTestContext:
             format=sgl.Format.rgba32_float,
             width=size,
             height=size,
-            usage=sgl.ResourceUsage.unordered_access
-            | sgl.ResourceUsage.shader_resource
-            | sgl.ResourceUsage.render_target,
-            debug_name="render_texture",
+            usage=sgl.TextureUsage.unordered_access
+            | sgl.TextureUsage.shader_resource
+            | sgl.TextureUsage.render_target,
+            label="render_texture",
         )
         self.count_buffer = self.device.create_buffer(
-            usage=sgl.ResourceUsage.unordered_access
-            | sgl.ResourceUsage.shader_resource,
+            usage=sgl.BufferUsage.unordered_access
+            | sgl.BufferUsage.shader_resource,
             size=16,
-            debug_name="count_buffer",
+            label="count_buffer",
             data=np.array([0, 0, 0, 0], dtype=np.uint32),
         )
 
@@ -67,8 +67,8 @@ class PipelineTestContext:
         indices = np.array([0, 1, 2, 1, 3, 2], dtype=np.uint32)
 
         vertex_buffer = self.device.create_buffer(
-            usage=sgl.ResourceUsage.shader_resource | sgl.ResourceUsage.vertex,
-            debug_name="vertex_buffer",
+            usage=sgl.BufferUsage.shader_resource | sgl.BufferUsage.vertex,
+            label="vertex_buffer",
             data=vertices,
         )
         input_layout = self.device.create_input_layout(
@@ -83,8 +83,8 @@ class PipelineTestContext:
             vertex_streams=[{"stride": 12}],
         )
         index_buffer = self.device.create_buffer(
-            usage=sgl.ResourceUsage.shader_resource | sgl.ResourceUsage.index,
-            debug_name="index_buffer",
+            usage=sgl.BufferUsage.shader_resource | sgl.BufferUsage.index,
+            label="index_buffer",
             data=indices,
         )
 
@@ -340,8 +340,8 @@ def test_gfx_depth(device_type: sgl.DeviceType):
         format=sgl.Format.d32_float,
         width=ctx.output_texture.width,
         height=ctx.output_texture.height,
-        usage=sgl.ResourceUsage.shader_resource | sgl.ResourceUsage.depth_stencil,
-        debug_name="depth_texture",
+        usage=sgl.TextureUsage.shader_resource | sgl.TextureUsage.depth_stencil,
+        label="depth_texture",
     )
     gfx.framebuffer = ctx.device.create_framebuffer(
         render_targets=[ctx.output_texture.get_rtv()],
@@ -491,7 +491,7 @@ def test_gfx_blend(device_type: sgl.DeviceType):
 
 # On Vulkan using 50% alpha coverage we get a checkerboard effect.
 @pytest.mark.parametrize("device_type", [sgl.DeviceType.vulkan])
-def test_gfx_alpha_coverage(device_type: sgl.DeviceType):
+def test_rhi_alpha_coverage(device_type: sgl.DeviceType):
     if device_type == sgl.DeviceType.vulkan and sys.platform == "darwin":
         pytest.skip("MoltenVK alpha coverage not working as expected")
 
@@ -536,20 +536,20 @@ class RayContext:
         indices = np.array([0, 1, 2, 1, 3, 2], dtype=np.uint32)
 
         vertex_buffer = ctx.device.create_buffer(
-            usage=sgl.ResourceUsage.shader_resource,
-            debug_name="vertex_buffer",
+            usage=sgl.BufferUsage.shader_resource,
+            label="vertex_buffer",
             data=vertices,
         )
 
         index_buffer = ctx.device.create_buffer(
-            usage=sgl.ResourceUsage.shader_resource,
-            debug_name="index_buffer",
+            usage=sgl.BufferUsage.shader_resource,
+            label="index_buffer",
             data=indices,
         )
 
         transform_buffer = ctx.device.create_buffer(
-            usage=sgl.ResourceUsage.shader_resource,
-            debug_name="transform_buffer",
+            usage=sgl.BufferUsage.shader_resource,
+            label="transform_buffer",
             data=sgl.float3x4.identity().to_numpy(),
         )
 
@@ -576,14 +576,14 @@ class RayContext:
 
         blas_scratch_buffer = ctx.device.create_buffer(
             size=blas_prebuild_info.scratch_data_size,
-            usage=sgl.ResourceUsage.unordered_access,
-            debug_name="blas_scratch_buffer",
+            usage=sgl.BufferUsage.unordered_access,
+            label="blas_scratch_buffer",
         )
 
         blas_buffer = ctx.device.create_buffer(
             size=blas_prebuild_info.result_data_max_size,
-            usage=sgl.ResourceUsage.acceleration_structure,
-            debug_name="blas_buffer",
+            usage=sgl.BufferUsage.acceleration_structure,
+            label="blas_buffer",
         )
 
         blas = ctx.device.create_acceleration_structure(
@@ -617,8 +617,8 @@ class RayContext:
             instances.append(instance_desc)
 
         instance_buffer = self.ctx.device.create_buffer(
-            usage=sgl.ResourceUsage.shader_resource,
-            debug_name="instance_buffer",
+            usage=sgl.BufferUsage.shader_resource,
+            label="instance_buffer",
             data=np.stack([i.to_numpy() for i in instances]),
         )
 
@@ -634,14 +634,14 @@ class RayContext:
 
         tlas_scratch_buffer = self.ctx.device.create_buffer(
             size=tlas_prebuild_info.scratch_data_size,
-            usage=sgl.ResourceUsage.unordered_access,
-            debug_name="tlas_scratch_buffer",
+            usage=sgl.BufferUsage.unordered_access,
+            label="tlas_scratch_buffer",
         )
 
         tlas_buffer = self.ctx.device.create_buffer(
             size=tlas_prebuild_info.result_data_max_size,
-            usage=sgl.ResourceUsage.acceleration_structure,
-            debug_name="tlas_buffer",
+            usage=sgl.BufferUsage.acceleration_structure,
+            label="tlas_buffer",
         )
 
         tlas = self.ctx.device.create_acceleration_structure(

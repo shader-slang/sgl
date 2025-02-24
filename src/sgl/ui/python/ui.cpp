@@ -8,7 +8,6 @@
 #include "sgl/core/input.h"
 
 #include "sgl/device/device.h"
-#include "sgl/device/framebuffer.h"
 #include "sgl/device/command.h"
 
 #undef D

@@ -29,7 +29,7 @@ MemoryHeap::~MemoryHeap()
     if (!m_deferred_releases.empty()) {
         log_warn(
             "MemoryHeap \"{}\" has {} unreleased allocations ({} in total)",
-            m_desc.debug_name,
+            m_desc.label,
             m_deferred_releases.size(),
             string::format_byte_size(m_stats.used_size)
         );
@@ -115,7 +115,7 @@ std::string MemoryHeap::to_string() const
         "  usage = {},\n"
         "  page_size = {},\n"
         "  retain_large_pages = {},\n"
-        "  debug_name = {}\n"
+        "  label = {}\n"
         ")",
         m_device,
         m_fence,
@@ -123,7 +123,7 @@ std::string MemoryHeap::to_string() const
         m_desc.usage,
         string::format_byte_size(m_desc.page_size),
         m_desc.retain_large_pages,
-        m_desc.debug_name
+        m_desc.label
     );
 }
 
@@ -152,9 +152,9 @@ MemoryHeap::PageID MemoryHeap::allocate_page(DeviceSize size)
 
     ref<Buffer> buffer = m_device->create_buffer({
         .size = size,
-        .usage = m_desc.usage,
         .memory_type = m_desc.memory_type,
-        .debug_name = fmt::format("{}[page_id={}]", m_desc.debug_name, page_id),
+        .usage = m_desc.usage,
+        .label = fmt::format("{}[page_id={}]", m_desc.label, page_id),
     });
     m_pages[page_id] = {
         .buffer = buffer,

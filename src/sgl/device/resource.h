@@ -14,7 +14,7 @@
 #include "sgl/core/enum.h"
 #include "sgl/core/object.h"
 
-#include <slang-gfx.h>
+#include <slang-rhi.h>
 
 #include <map>
 #include <set>
@@ -22,51 +22,26 @@
 
 namespace sgl {
 
-enum class ResourceType : uint32_t {
-    unknown = static_cast<uint32_t>(gfx::IResource::Type::Unknown),
-    buffer = static_cast<uint32_t>(gfx::IResource::Type::Buffer),
-    texture_1d = static_cast<uint32_t>(gfx::IResource::Type::Texture1D),
-    texture_2d = static_cast<uint32_t>(gfx::IResource::Type::Texture2D),
-    texture_3d = static_cast<uint32_t>(gfx::IResource::Type::Texture3D),
-    texture_cube = static_cast<uint32_t>(gfx::IResource::Type::TextureCube),
-};
-
-SGL_ENUM_INFO(
-    ResourceType,
-    {
-        {ResourceType::unknown, "unknown"},
-        {ResourceType::buffer, "buffer"},
-        {ResourceType::texture_1d, "texture_1d"},
-        {ResourceType::texture_2d, "texture_2d"},
-        {ResourceType::texture_3d, "texture_3d"},
-        {ResourceType::texture_cube, "texture_cube"},
-    }
-);
-SGL_ENUM_REGISTER(ResourceType);
-
 enum class ResourceState : uint32_t {
-    undefined = static_cast<uint32_t>(gfx::ResourceState::Undefined),
-    general = static_cast<uint32_t>(gfx::ResourceState::General),
-    pre_initialized = static_cast<uint32_t>(gfx::ResourceState::PreInitialized),
-    vertex_buffer = static_cast<uint32_t>(gfx::ResourceState::VertexBuffer),
-    index_buffer = static_cast<uint32_t>(gfx::ResourceState::IndexBuffer),
-    constant_buffer = static_cast<uint32_t>(gfx::ResourceState::ConstantBuffer),
-    stream_output = static_cast<uint32_t>(gfx::ResourceState::StreamOutput),
-    shader_resource = static_cast<uint32_t>(gfx::ResourceState::ShaderResource),
-    unordered_access = static_cast<uint32_t>(gfx::ResourceState::UnorderedAccess),
-    render_target = static_cast<uint32_t>(gfx::ResourceState::RenderTarget),
-    depth_read = static_cast<uint32_t>(gfx::ResourceState::DepthRead),
-    depth_write = static_cast<uint32_t>(gfx::ResourceState::DepthWrite),
-    present = static_cast<uint32_t>(gfx::ResourceState::Present),
-    indirect_argument = static_cast<uint32_t>(gfx::ResourceState::IndirectArgument),
-    copy_source = static_cast<uint32_t>(gfx::ResourceState::CopySource),
-    copy_destination = static_cast<uint32_t>(gfx::ResourceState::CopyDestination),
-    resolve_source = static_cast<uint32_t>(gfx::ResourceState::ResolveSource),
-    resolve_destination = static_cast<uint32_t>(gfx::ResourceState::ResolveDestination),
-    acceleration_structure = static_cast<uint32_t>(gfx::ResourceState::AccelerationStructure),
-    acceleration_structure_build_output = static_cast<uint32_t>(gfx::ResourceState::AccelerationStructureBuildInput),
-    pixel_shader_resource = static_cast<uint32_t>(gfx::ResourceState::PixelShaderResource),
-    non_pixel_shader_resource = static_cast<uint32_t>(gfx::ResourceState::NonPixelShaderResource),
+    undefined = static_cast<uint32_t>(rhi::ResourceState::Undefined),
+    general = static_cast<uint32_t>(rhi::ResourceState::General),
+    vertex_buffer = static_cast<uint32_t>(rhi::ResourceState::VertexBuffer),
+    index_buffer = static_cast<uint32_t>(rhi::ResourceState::IndexBuffer),
+    constant_buffer = static_cast<uint32_t>(rhi::ResourceState::ConstantBuffer),
+    stream_output = static_cast<uint32_t>(rhi::ResourceState::StreamOutput),
+    shader_resource = static_cast<uint32_t>(rhi::ResourceState::ShaderResource),
+    unordered_access = static_cast<uint32_t>(rhi::ResourceState::UnorderedAccess),
+    render_target = static_cast<uint32_t>(rhi::ResourceState::RenderTarget),
+    depth_read = static_cast<uint32_t>(rhi::ResourceState::DepthRead),
+    depth_write = static_cast<uint32_t>(rhi::ResourceState::DepthWrite),
+    present = static_cast<uint32_t>(rhi::ResourceState::Present),
+    indirect_argument = static_cast<uint32_t>(rhi::ResourceState::IndirectArgument),
+    copy_source = static_cast<uint32_t>(rhi::ResourceState::CopySource),
+    copy_destination = static_cast<uint32_t>(rhi::ResourceState::CopyDestination),
+    resolve_source = static_cast<uint32_t>(rhi::ResourceState::ResolveSource),
+    resolve_destination = static_cast<uint32_t>(rhi::ResourceState::ResolveDestination),
+    acceleration_structure = static_cast<uint32_t>(rhi::ResourceState::AccelerationStructure),
+    acceleration_structure_build_output = static_cast<uint32_t>(rhi::ResourceState::AccelerationStructureBuildInput),
 };
 
 SGL_ENUM_INFO(
@@ -74,7 +49,6 @@ SGL_ENUM_INFO(
     {
         {ResourceState::undefined, "undefined"},
         {ResourceState::general, "general"},
-        {ResourceState::pre_initialized, "pre_initialized"},
         {ResourceState::vertex_buffer, "vertex_buffer"},
         {ResourceState::index_buffer, "index_buffer"},
         {ResourceState::constant_buffer, "constant_buffer"},
@@ -92,66 +66,100 @@ SGL_ENUM_INFO(
         {ResourceState::resolve_destination, "resolve_destination"},
         {ResourceState::acceleration_structure, "acceleration_structure"},
         {ResourceState::acceleration_structure_build_output, "acceleration_structure_build_output"},
-        {ResourceState::pixel_shader_resource, "pixel_shader_resource"},
-        {ResourceState::non_pixel_shader_resource, "non_pixel_shader_resource"},
     }
 );
 SGL_ENUM_REGISTER(ResourceState);
 
-using ResourceStateSet = std::set<ResourceState>;
+enum class BufferUsage : uint32_t {
+    none = static_cast<uint32_t>(rhi::BufferUsage::None),
+    vertex_buffer = static_cast<uint32_t>(rhi::BufferUsage::VertexBuffer),
+    index_buffer = static_cast<uint32_t>(rhi::BufferUsage::IndexBuffer),
+    constant_buffer = static_cast<uint32_t>(rhi::BufferUsage::ConstantBuffer),
+    shader_resource = static_cast<uint32_t>(rhi::BufferUsage::ShaderResource),
+    unordered_access = static_cast<uint32_t>(rhi::BufferUsage::UnorderedAccess),
+    indirect_argument = static_cast<uint32_t>(rhi::BufferUsage::IndirectArgument),
+    copy_source = static_cast<uint32_t>(rhi::BufferUsage::CopySource),
+    copy_destination = static_cast<uint32_t>(rhi::BufferUsage::CopyDestination),
+    acceleration_structure = static_cast<uint32_t>(rhi::BufferUsage::AccelerationStructure),
+    acceleration_structure_build_input = static_cast<uint32_t>(rhi::BufferUsage::AccelerationStructureBuildInput),
+    shader_table = static_cast<uint32_t>(rhi::BufferUsage::ShaderTable),
+};
+SGL_ENUM_CLASS_OPERATORS(BufferUsage);
 
-enum class ResourceUsage : uint32_t {
-    /// The resource will not be bound the pipeline. Use this to create a staging resource.
-    none = 0x0,
-    /// The resource will be bound as a vertex-buffer.
-    vertex = 0x1,
-    /// The resource will be bound as a index-buffer.
-    index = 0x2,
-    /// The resource will be bound as a constant-buffer.
-    constant = 0x4,
-    /// The resource will be bound to the stream-output stage as an output buffer.
-    stream_output = 0x8,
-    /// The resource will be bound as a shader-resource.
-    shader_resource = 0x10,
-    /// The resource will be bound as an UAV.
-    unordered_access = 0x20,
-    /// The resource will be bound as a render-target.
-    render_target = 0x40,
-    /// The resource will be bound as a depth-stencil buffer.
-    depth_stencil = 0x80,
-    /// The resource will be bound as an indirect argument buffer.
-    indirect_arg = 0x100,
-    /// The resource will be shared with a different adapter. Mostly useful for sharing resoures with CUDA.
-    shared = 0x200,
-    /// The resource will be bound as an acceleration structure
-    acceleration_structure = 0x80000000,
+SGL_ENUM_INFO(
+    BufferUsage,
+    {
+        {BufferUsage::none, "none"},
+        {BufferUsage::vertex_buffer, "vertex_buffer"},
+        {BufferUsage::index_buffer, "index_buffer"},
+        {BufferUsage::constant_buffer, "constant_buffer"},
+        {BufferUsage::shader_resource, "shader_resource"},
+        {BufferUsage::unordered_access, "unordered_access"},
+        {BufferUsage::indirect_argument, "indirect_argument"},
+        {BufferUsage::copy_source, "copy_source"},
+        {BufferUsage::copy_destination, "copy_destination"},
+        {BufferUsage::acceleration_structure, "acceleration_structure"},
+        {BufferUsage::acceleration_structure_build_input, "acceleration_structure_build_input"},
+        {BufferUsage::shader_table, "shader_table"},
+    }
+);
+SGL_ENUM_REGISTER(BufferUsage);
+
+enum class TextureUsage : uint32_t {
+    none = static_cast<uint32_t>(rhi::TextureUsage::None),
+    shader_resource = static_cast<uint32_t>(rhi::TextureUsage::ShaderResource),
+    unordered_access = static_cast<uint32_t>(rhi::TextureUsage::UnorderedAccess),
+    render_target = static_cast<uint32_t>(rhi::TextureUsage::RenderTarget),
+    depth_read = static_cast<uint32_t>(rhi::TextureUsage::DepthRead),
+    depth_write = static_cast<uint32_t>(rhi::TextureUsage::DepthWrite),
+    present = static_cast<uint32_t>(rhi::TextureUsage::Present),
+    copy_source = static_cast<uint32_t>(rhi::TextureUsage::CopySource),
+    copy_destination = static_cast<uint32_t>(rhi::TextureUsage::CopyDestination),
+    resolve_source = static_cast<uint32_t>(rhi::TextureUsage::ResolveSource),
+    resolve_destination = static_cast<uint32_t>(rhi::TextureUsage::ResolveDestination),
+};
+SGL_ENUM_CLASS_OPERATORS(TextureUsage);
+
+SGL_ENUM_INFO(
+    TextureUsage,
+    {
+        {TextureUsage::none, "none"},
+        {TextureUsage::shader_resource, "shader_resource"},
+        {TextureUsage::unordered_access, "unordered_access"},
+        {TextureUsage::render_target, "render_target"},
+        {TextureUsage::depth_read, "depth_read"},
+        {TextureUsage::depth_write, "depth_write"},
+        {TextureUsage::present, "present"},
+        {TextureUsage::copy_source, "copy_source"},
+        {TextureUsage::copy_destination, "copy_destination"},
+        {TextureUsage::resolve_source, "resolve_source"},
+        {TextureUsage::resolve_destination, "resolve_destination"},
+    }
+);
+SGL_ENUM_REGISTER(TextureUsage);
+
+enum class TextureType : uint32_t {
+    texture_1d = static_cast<uint32_t>(rhi::TextureType::Texture1D),
+    texture_2d = static_cast<uint32_t>(rhi::TextureType::Texture2D),
+    texture_3d = static_cast<uint32_t>(rhi::TextureType::Texture3D),
+    texture_cube = static_cast<uint32_t>(rhi::TextureType::TextureCube),
 };
 
 SGL_ENUM_INFO(
-    ResourceUsage,
+    TextureType,
     {
-        {ResourceUsage::none, "none"},
-        {ResourceUsage::vertex, "vertex"},
-        {ResourceUsage::index, "index"},
-        {ResourceUsage::constant, "constant"},
-        {ResourceUsage::stream_output, "stream_output"},
-        {ResourceUsage::shader_resource, "shader_resource"},
-        {ResourceUsage::unordered_access, "unordered_access"},
-        {ResourceUsage::render_target, "render_target"},
-        {ResourceUsage::depth_stencil, "depth_stencil"},
-        {ResourceUsage::indirect_arg, "indirect_arg"},
-        {ResourceUsage::shared, "shared"},
-        {ResourceUsage::acceleration_structure, "acceleration_structure"},
+        {TextureType::texture_1d, "texture_1d"},
+        {TextureType::texture_2d, "texture_2d"},
+        {TextureType::texture_3d, "texture_3d"},
+        {TextureType::texture_cube, "texture_cube"},
     }
 );
-SGL_ENUM_REGISTER(ResourceUsage);
-
-SGL_ENUM_CLASS_OPERATORS(ResourceUsage)
+SGL_ENUM_REGISTER(TextureType);
 
 enum class MemoryType : uint32_t {
-    device_local = static_cast<uint32_t>(gfx::MemoryType::DeviceLocal),
-    upload = static_cast<uint32_t>(gfx::MemoryType::Upload),
-    read_back = static_cast<uint32_t>(gfx::MemoryType::ReadBack),
+    device_local = static_cast<uint32_t>(rhi::MemoryType::DeviceLocal),
+    upload = static_cast<uint32_t>(rhi::MemoryType::Upload),
+    read_back = static_cast<uint32_t>(rhi::MemoryType::ReadBack),
 };
 
 SGL_ENUM_INFO(
@@ -164,28 +172,6 @@ SGL_ENUM_INFO(
 );
 SGL_ENUM_REGISTER(MemoryType);
 
-enum class ResourceViewType : uint32_t {
-    unknown = static_cast<uint32_t>(gfx::IResourceView::Type::Unknown),
-    render_target = static_cast<uint32_t>(gfx::IResourceView::Type::RenderTarget),
-    depth_stencil = static_cast<uint32_t>(gfx::IResourceView::Type::DepthStencil),
-    shader_resource = static_cast<uint32_t>(gfx::IResourceView::Type::ShaderResource),
-    unordered_access = static_cast<uint32_t>(gfx::IResourceView::Type::UnorderedAccess),
-    // acceleration_structure = static_cast<uint32_t>(gfx::IResourceView::Type::AccelerationStructure),
-};
-
-SGL_ENUM_INFO(
-    ResourceViewType,
-    {
-        {ResourceViewType::unknown, "unknown"},
-        {ResourceViewType::render_target, "render_target"},
-        {ResourceViewType::depth_stencil, "depth_stencil"},
-        {ResourceViewType::shader_resource, "shader_resource"},
-        {ResourceViewType::unordered_access, "unordered_access"},
-        // {ResourceViewType::acceleration_structure, "acceleration_structure"},
-    }
-);
-SGL_ENUM_REGISTER(ResourceViewType);
-
 struct BufferRange {
     static constexpr uint64_t ALL = std::numeric_limits<uint64_t>::max();
     uint64_t offset{0};
@@ -197,29 +183,16 @@ struct BufferRange {
 };
 
 enum class TextureAspect : uint32_t {
-    default_ = static_cast<uint32_t>(gfx::TextureAspect::Default),
-    color = static_cast<uint32_t>(gfx::TextureAspect::Color),
-    depth = static_cast<uint32_t>(gfx::TextureAspect::Depth),
-    stencil = static_cast<uint32_t>(gfx::TextureAspect::Stencil),
-    meta_data = static_cast<uint32_t>(gfx::TextureAspect::MetaData),
-    plane0 = static_cast<uint32_t>(gfx::TextureAspect::Plane0),
-    plane1 = static_cast<uint32_t>(gfx::TextureAspect::Plane1),
-    plane2 = static_cast<uint32_t>(gfx::TextureAspect::Plane2),
-    depth_stencil = depth | stencil,
+    all = static_cast<uint32_t>(rhi::TextureAspect::All),
+    depth_only = static_cast<uint32_t>(rhi::TextureAspect::DepthOnly),
+    stencil_only = static_cast<uint32_t>(rhi::TextureAspect::StencilOnly),
 };
 SGL_ENUM_INFO(
     TextureAspect,
     {
-        {TextureAspect::default_, "default_"},
-        {TextureAspect::color, "color"},
-        {TextureAspect::depth, "depth"},
-        {TextureAspect::stencil, "stencil"},
-        {TextureAspect::meta_data, "meta_data"},
-        {TextureAspect::plane0, "plane0"},
-        {TextureAspect::plane1, "plane1"},
-        {TextureAspect::plane2, "plane2"},
-        {TextureAspect::depth_stencil, "depth_stencil"},
-
+        {TextureAspect::all, "all"},
+        {TextureAspect::depth_only, "depth_only"},
+        {TextureAspect::stencil_only, "stencil_only"},
     }
 );
 SGL_ENUM_REGISTER(TextureAspect);
@@ -227,7 +200,7 @@ SGL_ENUM_REGISTER(TextureAspect);
 struct SubresourceRange {
     static constexpr uint32_t ALL = std::numeric_limits<uint32_t>::max();
     /// Texture aspect.
-    TextureAspect texture_aspect{TextureAspect::default_};
+    TextureAspect texture_aspect{TextureAspect::all};
     /// Most detailed mip level.
     uint32_t mip_level{0};
     /// Number of mip levels.
@@ -252,125 +225,12 @@ struct SubresourceRange {
     }
 };
 
-struct ResourceViewDesc {
-    static constexpr uint32_t MAX_POSSIBLE = std::numeric_limits<uint32_t>::max();
-
-    ResourceViewType type{ResourceViewType::unknown};
-    Format format{Format::unknown};
-
-    // For buffer views.
-    BufferRange buffer_range;
-    uint64_t buffer_element_size;
-
-    // For texture views.
-    SubresourceRange subresource_range;
-
-    auto operator<=>(const ResourceViewDesc&) const = default;
-};
-
-class SGL_API ResourceView : public Object {
-    SGL_OBJECT(ResourceView)
-public:
-    ResourceView(const ResourceViewDesc& desc, Buffer* buffer);
-    ResourceView(const ResourceViewDesc& desc, Texture* texture);
-
-    ~ResourceView();
-
-    void invalidate(bool deferred_release);
-
-    const ResourceViewDesc& desc() const { return m_desc; }
-
-    ResourceViewType type() const { return m_desc.type; }
-
-    Resource* resource() const { return m_resource; }
-
-    const BufferRange& buffer_range() const { return m_desc.buffer_range; }
-    const SubresourceRange& subresource_range() const { return m_desc.subresource_range; }
-
-    /// True if the view covers all subresources.
-    bool all_subresources() const { return m_all_subresources; }
-
-    gfx::IResourceView* gfx_resource_view() const { return m_gfx_resource_view; }
-
-    /// Returns the native API handle:
-    /// - D3D12: D3D12_CPU_DESCRIPTOR_HANDLE
-    /// - Vulkan: VkImageView for texture views, VkBufferView for typed buffer views, VkBuffer for untyped buffer views
-    NativeHandle get_native_handle() const;
-
-    std::string to_string() const override;
-
-private:
-    ResourceViewDesc m_desc;
-    Resource* m_resource{nullptr};
-    bool m_all_subresources{false};
-    Slang::ComPtr<gfx::IResourceView> m_gfx_resource_view;
-};
-
-class ResourceStateTracker {
-public:
-    ResourceStateTracker() = default;
-
-    bool has_global_state() const { return m_has_global_state; }
-
-    ResourceState global_state() const { return m_global_state; }
-
-    void set_global_state(ResourceState state)
-    {
-        m_has_global_state = true;
-        m_global_state = state;
-    }
-
-    ResourceState subresource_state(uint32_t subresource) const
-    {
-        if (m_has_global_state)
-            return m_global_state;
-        SGL_ASSERT(m_subresource_states);
-        if (subresource >= m_subresource_states->size())
-            return m_global_state;
-        return m_subresource_states->operator[](subresource);
-    }
-
-    void set_subresource_state(uint32_t subresource, ResourceState state)
-    {
-        if (m_has_global_state && (state == m_global_state))
-            return;
-        m_has_global_state = false;
-        if (!m_subresource_states)
-            m_subresource_states = std::make_unique<std::vector<ResourceState>>(subresource + 1, m_global_state);
-        if (subresource >= m_subresource_states->size())
-            m_subresource_states->resize(subresource + 1, m_global_state);
-        m_subresource_states->operator[](subresource) = state;
-    }
-
-private:
-    bool m_has_global_state{true};
-    ResourceState m_global_state{ResourceState::undefined};
-    std::unique_ptr<std::vector<ResourceState>> m_subresource_states;
-};
-
 class SGL_API Resource : public DeviceResource {
     SGL_OBJECT(Resource)
 public:
     virtual ~Resource();
 
-    ResourceType type() const { return m_type; };
-
-    virtual Format format() const = 0;
-
-    ResourceStateTracker& state_tracker() const { return m_state_tracker; }
-
-    void invalidate_views();
-
-    const Buffer* as_buffer() const;
-    Buffer* as_buffer();
-
-    const Texture* as_texture() const;
-    Texture* as_texture();
-
-    virtual gfx::IResource* gfx_resource() const = 0;
-
-    /// Get the shared resource handle.
-    SharedResourceHandle get_shared_handle() const;
+    virtual rhi::IResource* rhi_resource() const = 0;
 
     /// Returns the native API handle:
     /// - D3D12: ID3D12Resource*
@@ -379,16 +239,7 @@ public:
 
 protected:
     Resource() = delete;
-    Resource(ref<Device> device, ResourceType type);
-
-    ResourceType m_type;
-    mutable ResourceStateTracker m_state_tracker;
-
-    std::map<ResourceViewDesc, ref<ResourceView>> m_views;
-
-    bool m_deferred_release{true};
-
-    friend class ResourceView;
+    Resource(ref<Device> device);
 };
 
 
@@ -406,15 +257,18 @@ struct BufferDesc {
     /// Buffer format. Used when creating typed buffer views.
     Format format{Format::unknown};
 
-    /// Initial resource state.
-    ResourceState initial_state{ResourceState::undefined};
-    /// Resource usage flags.
-    ResourceUsage usage{ResourceUsage::none};
     /// Memory type.
     MemoryType memory_type{MemoryType::device_local};
 
-    /// Resource debug name.
-    std::string debug_name;
+    /// Resource usage flags.
+    BufferUsage usage{BufferUsage::none};
+    /// Initial resource state.
+    ResourceState default_state{ResourceState::undefined};
+
+    bool shared{false};
+
+    /// Debug label.
+    std::string label;
 
     /// Initial data to upload to the buffer.
     const void* data{nullptr};
@@ -433,7 +287,7 @@ public:
 
     size_t size() const { return m_desc.size; }
     size_t struct_size() const { return m_desc.struct_size; }
-    Format format() const override { return m_desc.format; }
+    Format format() const { return m_desc.format; }
     MemoryType memory_type() const { return m_desc.memory_type; }
 
     /// Map the whole buffer.
@@ -444,16 +298,6 @@ public:
     T* map() const
     {
         return reinterpret_cast<T*>(map());
-    }
-
-    /// Map a range of the buffer.
-    /// Only available for buffers created with \c MemoryType::upload or \c MemoryType::read_back.
-    void* map(DeviceOffset offset, DeviceSize size) const;
-
-    template<typename T>
-    T* map(size_t offset, size_t count) const
-    {
-        return reinterpret_cast<T*>(map(offset * sizeof(T), count * sizeof(T)));
     }
 
     /// Unmap the buffer.
@@ -516,19 +360,15 @@ public:
         return values;
     }
 
-    DeviceAddress device_address() const { return m_gfx_buffer->getDeviceAddress(); }
+    DeviceAddress device_address() const { return m_rhi_buffer->getDeviceAddress(); }
 
-    /// Get a resource view. Views are cached and reused.
-    ref<ResourceView> get_view(ResourceViewDesc desc);
+    ref<BufferView> create_view(BufferViewDesc desc);
 
-    /// Get a shader resource view for a range of the buffer.
-    ref<ResourceView> get_srv(BufferRange range = BufferRange());
+    /// Get the shared resource handle.
+    NativeHandle get_shared_handle() const;
 
-    /// Get a unordered access view for a range of the buffer.
-    ref<ResourceView> get_uav(BufferRange range = BufferRange());
-
-    virtual gfx::IResource* gfx_resource() const override { return m_gfx_buffer; }
-    gfx::IBufferResource* gfx_buffer_resource() const { return m_gfx_buffer; }
+    virtual rhi::IResource* rhi_resource() const override { return m_rhi_buffer; }
+    rhi::IBuffer* rhi_buffer() const { return m_rhi_buffer; }
 
     MemoryUsage memory_usage() const override;
 
@@ -536,9 +376,42 @@ public:
 
 private:
     BufferDesc m_desc;
-    Slang::ComPtr<gfx::IBufferResource> m_gfx_buffer;
+    Slang::ComPtr<rhi::IBuffer> m_rhi_buffer;
     mutable ref<cuda::ExternalMemory> m_cuda_memory;
     mutable void* m_mapped_ptr{nullptr};
+};
+
+struct BufferViewDesc {
+    Format format{Format::unknown};
+    BufferRange range;
+    std::string label;
+};
+
+class BufferView : public DeviceResource {
+    SGL_OBJECT(BufferView)
+public:
+    BufferView(ref<Device> device, ref<Buffer> buffer, BufferViewDesc desc);
+
+    Buffer* buffer() const { return m_buffer; }
+
+    const BufferViewDesc& desc() const { return m_desc; }
+
+    Format format() const { return m_desc.format; }
+    const BufferRange& range() const { return m_desc.range; }
+    std::string_view label() const { return m_desc.label; }
+
+    NativeHandle get_native_handle() const;
+
+    std::string to_string() const;
+private:
+    ref<Buffer> m_buffer;
+    BufferViewDesc m_desc;
+    // Slang::ComPtr<rhi::IBufferView> m_rhi_buffer_view;
+};
+
+struct BufferWithOffset {
+    Buffer* buffer{nullptr};
+    DeviceOffset offset{0};
 };
 
 struct SubresourceData {
@@ -553,8 +426,8 @@ struct OwnedSubresourceData : SubresourceData {
 };
 
 struct TextureDesc {
-    /// Resource type (optional). Type is inferred from width, height, depth if not specified.
-    ResourceType type{ResourceType::unknown};
+    /// Texture type.
+    TextureType type{TextureType::texture_2d};
     /// Texture format.
     Format format{Format::unknown};
     /// Width in pixels.
@@ -570,15 +443,19 @@ struct TextureDesc {
     /// Number of samples per pixel (1 for non-multisampled textures).
     uint32_t sample_count{1};
     /// Quality level for multisampled textures.
-    uint32_t quality{0};
+    uint32_t sample_quality{0};
 
     // TODO(@skallweit): support clear value
 
-    ResourceState initial_state{ResourceState::undefined};
-    ResourceUsage usage{ResourceUsage::none};
     MemoryType memory_type{MemoryType::device_local};
 
-    std::string debug_name;
+    TextureUsage usage{TextureUsage::none};
+    ResourceState default_state{ResourceState::undefined};
+
+    bool shared{false};
+
+    /// Debug label.
+    std::string label;
 
     const void* data{nullptr};
     size_t data_size{0};
@@ -605,20 +482,21 @@ class SGL_API Texture : public Resource {
     SGL_OBJECT(Texture)
 public:
     Texture(ref<Device> device, TextureDesc desc);
-    Texture(ref<Device> device, TextureDesc desc, gfx::ITextureResource* resource, bool deferred_release);
+    Texture(ref<Device> device, TextureDesc desc, rhi::ITexture* resource);
 
     ~Texture();
 
     const TextureDesc& desc() const { return m_desc; }
 
-    Format format() const override { return m_desc.format; }
+    TextureType type() const { return m_desc.type; }
+    Format format() const { return m_desc.format; }
     uint32_t width() const { return m_desc.width; }
     uint32_t height() const { return m_desc.height; }
     uint32_t depth() const { return m_desc.depth; }
 
     uint32_t array_size() const { return m_desc.array_size; }
     uint32_t mip_count() const { return m_desc.mip_count; }
-    uint32_t layer_count() const { return array_size() * (type() == ResourceType::texture_cube ? 6 : 1); }
+    uint32_t layer_count() const { return array_size() * (type() == TextureType::texture_cube ? 6 : 1); }
 
     uint32_t subresource_count() const { return layer_count() * mip_count(); }
 
@@ -670,26 +548,13 @@ public:
      */
     OwnedSubresourceData get_subresource_data(uint32_t subresource) const;
 
-    /// Get a resource view. Views are cached and reused.
-    ref<ResourceView> get_view(ResourceViewDesc desc);
+    ref<TextureView> create_view(TextureViewDesc desc);
 
-    /// Get a shader resource view for a subresource range of the texture.
-    ref<ResourceView> get_srv(SubresourceRange range = SubresourceRange());
+    /// Get the shared resource handle.
+    NativeHandle get_shared_handle() const;
 
-    /// Get a unordered access view for a subresource range of the texture.
-    /// \note Only a single mip level can be bound.
-    ref<ResourceView> get_uav(SubresourceRange range = SubresourceRange());
-
-    /// Get a depth stencil view for a subresource range of the texture.
-    /// \note Only a single mip level can be bound.
-    ref<ResourceView> get_dsv(SubresourceRange range = SubresourceRange());
-
-    /// Get a render target view for a subresource range of the texture.
-    /// \note Only a single mip level can be bound.
-    ref<ResourceView> get_rtv(SubresourceRange range = SubresourceRange());
-
-    virtual gfx::IResource* gfx_resource() const override { return m_gfx_texture; }
-    gfx::ITextureResource* gfx_texture_resource() const { return m_gfx_texture; }
+    virtual rhi::IResource* rhi_resource() const override { return m_rhi_texture; }
+    rhi::ITexture* rhi_texture() const { return m_rhi_texture; }
 
     MemoryUsage memory_usage() const override;
 
@@ -699,7 +564,40 @@ public:
 
 private:
     TextureDesc m_desc;
-    Slang::ComPtr<gfx::ITextureResource> m_gfx_texture;
+    Slang::ComPtr<rhi::ITexture> m_rhi_texture;
+};
+
+struct TextureViewDesc {
+    Format format{Format::unknown};
+    TextureAspect aspect{TextureAspect::all};
+    SubresourceRange subresource_range;
+    std::string label;
+};
+
+class SGL_API TextureView : public DeviceResource {
+    SGL_OBJECT(TextureView)
+public:
+    TextureView(ref<Device> device, ref<Texture> texture, TextureViewDesc desc);
+
+    Texture* texture() const { return m_texture.get(); }
+
+    const TextureViewDesc& desc() const { return m_desc; }
+
+    Format format() const { return m_desc.format; }
+    TextureAspect aspect() const { return m_desc.aspect; }
+    const SubresourceRange& subresource_range() const { return m_desc.subresource_range; }
+    std::string_view label() const { return m_desc.label; }
+
+    NativeHandle get_native_handle() const;
+
+    rhi::ITextureView* rhi_texture_view() const { return m_rhi_texture_view.get(); }
+
+    std::string to_string() const;
+
+private:
+    ref<Texture> m_texture;
+    TextureViewDesc m_desc;
+    Slang::ComPtr<rhi::ITextureView> m_rhi_texture_view;
 };
 
 } // namespace sgl

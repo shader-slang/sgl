@@ -94,8 +94,6 @@ target_sources(sgl PRIVATE
     sgl/device/fence.h
     sgl/device/formats.cpp
     sgl/device/formats.h
-    sgl/device/framebuffer.cpp
-    sgl/device/framebuffer.h
     sgl/device/fwd.h
     sgl/device/helpers.h
     sgl/device/helpers.cpp
@@ -134,8 +132,8 @@ target_sources(sgl PRIVATE
     sgl/device/shader.h
     sgl/device/shared_handle.h
     sgl/device/slang_utils.h
-    sgl/device/swapchain.cpp
-    sgl/device/swapchain.h
+    sgl/device/surface.cpp
+    sgl/device/surface.h
     sgl/device/types.h
 
     sgl/math/constants.h
@@ -413,7 +411,6 @@ if(SGL_BUILD_PYTHON)
         sgl/device/python/device.cpp
         sgl/device/python/fence.cpp
         sgl/device/python/formats.cpp
-        sgl/device/python/framebuffer.cpp
         sgl/device/python/input_layout.cpp
         sgl/device/python/kernel.cpp
         sgl/device/python/memory_heap.cpp

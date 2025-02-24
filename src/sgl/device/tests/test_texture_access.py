@@ -40,7 +40,7 @@ def make_rand_data(type: sgl.ResourceType, array_size: int, mip_count: int):
 def make_args(type: sgl.ResourceType, array_size: int, mips: int):
     args = {
         "format": sgl.Format.rgba32_float,
-        "usage": sgl.ResourceUsage.shader_resource | sgl.ResourceUsage.unordered_access,
+        "usage": sgl.TextureUsage.shader_resource | sgl.TextureUsage.unordered_access,
         "mip_count": mips,
         "array_size": array_size,
     }

@@ -149,9 +149,9 @@ class App:
                     width=image.width,
                     height=image.height,
                     mip_count=1,
-                    usage=sgl.ResourceUsage.shader_resource
-                    | sgl.ResourceUsage.unordered_access,
-                    debug_name="output_texture",
+                    usage=sgl.TextureUsage.shader_resource
+                    | sgl.TextureUsage.unordered_access,
+                    label="output_texture",
                 )
 
             command_buffer = self.device.create_command_buffer()

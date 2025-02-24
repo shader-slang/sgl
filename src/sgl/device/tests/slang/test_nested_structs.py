@@ -20,7 +20,7 @@ def test_cast_float16(device_type: sgl.DeviceType):
     result_buffer = device.create_buffer(
         struct_type=kernel.reflection.result,
         element_count=32,
-        usage=sgl.ResourceUsage.unordered_access,
+        usage=sgl.BufferUsage.unordered_access,
     )
 
     kernel.dispatch(

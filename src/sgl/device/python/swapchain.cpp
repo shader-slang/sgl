@@ -3,7 +3,7 @@
 #include "nanobind.h"
 
 #include "sgl/device/device.h"
-#include "sgl/device/swapchain.h"
+#include "sgl/device/surface.h"
 
 namespace sgl {
 SGL_DICT_TO_DESC_BEGIN(SwapchainDesc)

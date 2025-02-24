@@ -52,11 +52,8 @@ CUexternalMemory import_external_memory(const Buffer* buffer)
     SGL_CU_SCOPE(buffer->device());
 
     SGL_CHECK_NOT_NULL(buffer);
-    SGL_CHECK(
-        is_set(buffer->desc().usage, ResourceUsage::shared),
-        "Buffer was not created with ResourceUsage::shared."
-    );
-    SharedResourceHandle shared_handle = buffer->get_shared_handle();
+    SGL_CHECK(buffer->desc().shared, "Buffer was not created with shared flag.");
+    NativeHandle shared_handle = buffer->get_shared_handle();
     SGL_CHECK(shared_handle, "Buffer shared handle creation failed.");
 
     CUDA_EXTERNAL_MEMORY_HANDLE_DESC desc = {};
@@ -64,16 +61,16 @@ CUexternalMemory import_external_memory(const Buffer* buffer)
 #if SGL_WINDOWS
     case DeviceType::d3d12:
         desc.type = CU_EXTERNAL_MEMORY_HANDLE_TYPE_D3D12_RESOURCE;
-        desc.handle.win32.handle = (void*)shared_handle;
+        desc.handle.win32.handle = (void*)shared_handle.value();
         break;
     case DeviceType::vulkan:
         desc.type = CU_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32;
-        desc.handle.win32.handle = (void*)shared_handle;
+        desc.handle.win32.handle = (void*)shared_handle.value();
         break;
 #elif SGL_LINUX
     case DeviceType::vulkan:
         desc.type = CU_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD;
-        desc.handle.fd = (int)(shared_handle);
+        desc.handle.fd = (int)(shared_handle.value());
         break;
 #endif
     default:
@@ -116,16 +113,16 @@ CUexternalSemaphore import_external_semaphore(const Fence* fence)
 #if SGL_WINDOWS
     case DeviceType::d3d12:
         desc.type = CU_EXTERNAL_SEMAPHORE_HANDLE_TYPE_D3D12_FENCE;
-        desc.handle.win32.handle = (void*)shared_handle;
+        desc.handle.win32.handle = (void*)shared_handle.value();
         break;
     case DeviceType::vulkan:
         desc.type = CU_EXTERNAL_SEMAPHORE_HANDLE_TYPE_TIMELINE_SEMAPHORE_WIN32;
-        desc.handle.win32.handle = (void*)shared_handle;
+        desc.handle.win32.handle = (void*)shared_handle.value();
         break;
 #elif SGL_LINUX
     case DeviceType::vulkan:
         desc.type = CU_EXTERNAL_SEMAPHORE_HANDLE_TYPE_TIMELINE_SEMAPHORE_FD;
-        desc.handle.fd = (int)shared_handle;
+        desc.handle.fd = (int)shared_handle.value();
         break;
 #endif
     default:

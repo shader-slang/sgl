@@ -66,9 +66,9 @@ class DemoWindow(sgl.AppWindow):
                 width=image.width,
                 height=image.height,
                 mip_count=1,
-                usage=sgl.ResourceUsage.shader_resource
-                | sgl.ResourceUsage.unordered_access,
-                debug_name="render_texture",
+                usage=sgl.TextureUsage.shader_resource
+                | sgl.TextureUsage.unordered_access,
+                label="render_texture",
             )
 
         self.kernel.dispatch(

@@ -32,23 +32,23 @@ int main()
         std::vector<uint32_t> indices{0, 1, 2};
 
         ref<Buffer> vertex_buffer = device->create_buffer({
-            .usage = ResourceUsage::shader_resource,
-            .debug_name = "vertex_buffer",
+            .usage = BufferUsage::shader_resource,
+            .label = "vertex_buffer",
             .data = vertices.data(),
             .data_size = vertices.size() * sizeof(float3),
         });
 
         ref<Buffer> index_buffer = device->create_buffer({
-            .usage = ResourceUsage::shader_resource,
-            .debug_name = "index_buffer",
+            .usage = BufferUsage::shader_resource,
+            .label = "index_buffer",
             .data = indices.data(),
             .data_size = indices.size() * sizeof(uint32_t),
         });
 
         float3x4 identity_transform = float3x4::identity();
         ref<Buffer> transform_buffer = device->create_buffer({
-            .usage = ResourceUsage::shader_resource,
-            .debug_name = "transform_buffer",
+            .usage = BufferUsage::shader_resource,
+            .label = "transform_buffer",
             .data = &identity_transform,
             .data_size = sizeof(identity_transform),
         });
@@ -79,15 +79,15 @@ int main()
 
         ref<Buffer> blas_scratch_buffer = device->create_buffer({
             .size = blas_prebuild_info.scratch_data_size,
-            .usage = ResourceUsage::unordered_access,
-            .debug_name = "blas_scratch_buffer",
+            .usage = BufferUsage::unordered_access,
+            .label = "blas_scratch_buffer",
         });
 
         ref<Buffer> blas_buffer = device->create_buffer({
             .size = blas_prebuild_info.result_data_max_size,
             .initial_state = ResourceState::acceleration_structure,
-            .usage = ResourceUsage::acceleration_structure,
-            .debug_name = "blas_buffer",
+            .usage = BufferUsage::acceleration_structure,
+            .label = "blas_buffer",
         });
 
         ref<AccelerationStructure> blas = device->create_acceleration_structure({
@@ -119,8 +119,8 @@ int main()
         };
 
         ref<Buffer> instance_buffer = device->create_buffer({
-            .usage = ResourceUsage::shader_resource,
-            .debug_name = "instance_buffer",
+            .usage = BufferUsage::shader_resource,
+            .label = "instance_buffer",
             .data = &instance_desc,
             .data_size = sizeof(instance_desc),
         });
@@ -137,15 +137,15 @@ int main()
 
         ref<Buffer> tlas_scratch_buffer = device->create_buffer({
             .size = tlas_prebuild_info.scratch_data_size,
-            .usage = ResourceUsage::unordered_access,
-            .debug_name = "tlas_scratch_buffer",
+            .usage = BufferUsage::unordered_access,
+            .label = "tlas_scratch_buffer",
         });
 
         ref<Buffer> tlas_buffer = device->create_buffer({
             .size = tlas_prebuild_info.result_data_max_size,
             .initial_state = ResourceState::acceleration_structure,
-            .usage = ResourceUsage::acceleration_structure,
-            .debug_name = "tlas_buffer",
+            .usage = BufferUsage::acceleration_structure,
+            .label = "tlas_buffer",
         });
 
         ref<AccelerationStructure> tlas = device->create_acceleration_structure({
@@ -171,8 +171,8 @@ int main()
             .format = Format::rgba32_float,
             .width = 1024,
             .height = 1024,
-            .usage = ResourceUsage::unordered_access,
-            .debug_name = "render_texture",
+            .usage = TextureUsage::unordered_access,
+            .label = "render_texture",
         });
 
         ref<ShaderProgram> program

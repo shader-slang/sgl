@@ -16,33 +16,33 @@ InputLayout::InputLayout(ref<Device> device, InputLayoutDesc desc)
     : DeviceResource(std::move(device))
     , m_desc(std::move(desc))
 {
-    short_vector<gfx::InputElementDesc, 16> gfx_input_elements;
+    short_vector<rhi::InputElementDesc, 16> rhi_input_elements;
     for (const auto& input_element : m_desc.input_elements) {
-        gfx_input_elements.push_back({
+        rhi_input_elements.push_back({
             .semanticName = input_element.semantic_name.c_str(),
-            .semanticIndex = narrow_cast<gfx::GfxIndex>(input_element.semantic_index),
-            .format = static_cast<gfx::Format>(input_element.format),
-            .offset = input_element.offset,
-            .bufferSlotIndex = narrow_cast<gfx::GfxIndex>(input_element.buffer_slot_index),
+            .semanticIndex = input_element.semantic_index,
+            .format = static_cast<rhi::Format>(input_element.format),
+            .offset = narrow_cast<uint32_t>(input_element.offset),
+            .bufferSlotIndex = input_element.buffer_slot_index,
         });
     }
 
-    short_vector<gfx::VertexStreamDesc, 16> gfx_vertex_streams;
+    short_vector<rhi::VertexStreamDesc, 16> rhi_vertex_streams;
     for (const auto& vertex_stream : m_desc.vertex_streams) {
-        gfx_vertex_streams.push_back({
-            .stride = vertex_stream.stride,
-            .slotClass = static_cast<gfx::InputSlotClass>(vertex_stream.slot_class),
-            .instanceDataStepRate = narrow_cast<gfx::GfxCount>(vertex_stream.instance_data_step_rate),
+        rhi_vertex_streams.push_back({
+            .stride = narrow_cast<uint32_t>(vertex_stream.stride),
+            .slotClass = static_cast<rhi::InputSlotClass>(vertex_stream.slot_class),
+            .instanceDataStepRate = narrow_cast<uint32_t>(vertex_stream.instance_data_step_rate),
         });
     }
 
-    gfx::IInputLayout::Desc gfx_desc{
-        .inputElements = gfx_input_elements.data(),
-        .inputElementCount = narrow_cast<gfx::GfxCount>(gfx_input_elements.size()),
-        .vertexStreams = gfx_vertex_streams.data(),
-        .vertexStreamCount = narrow_cast<gfx::GfxCount>(gfx_vertex_streams.size()),
+    rhi::InputLayoutDesc rhi_desc{
+        .inputElements = rhi_input_elements.data(),
+        .inputElementCount = narrow_cast<uint32_t>(rhi_input_elements.size()),
+        .vertexStreams = rhi_vertex_streams.data(),
+        .vertexStreamCount = narrow_cast<uint32_t>(rhi_vertex_streams.size()),
     };
-    SLANG_CALL(m_device->gfx_device()->createInputLayout(gfx_desc, m_gfx_input_layout.writeRef()));
+    SLANG_CALL(m_device->rhi_device()->createInputLayout(rhi_desc, m_rhi_input_layout.writeRef()));
 }
 
 inline std::string to_string(const InputElementDesc& desc)

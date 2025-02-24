@@ -5,7 +5,6 @@
 #include "sgl/device/pipeline.h"
 #include "sgl/device/shader.h"
 #include "sgl/device/input_layout.h"
-#include "sgl/device/framebuffer.h"
 
 namespace sgl {
 SGL_DICT_TO_DESC_BEGIN(ComputePipelineDesc)

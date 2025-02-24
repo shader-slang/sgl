@@ -15,23 +15,20 @@ AccelerationStructure::AccelerationStructure(ref<Device> device, AccelerationStr
     : DeviceResource(std::move(device))
     , m_desc(std::move(desc))
 {
-    gfx::IAccelerationStructure::CreateDesc gfx_desc{
-        .kind = static_cast<gfx::IAccelerationStructure::Kind>(m_desc.kind),
-        .buffer = m_desc.buffer->gfx_buffer_resource(),
-        .offset = m_desc.offset,
+    rhi::AccelerationStructureDesc rhi_desc{
         .size = m_desc.size,
+        .label = m_desc.label.c_str(),
     };
-    SLANG_CALL(m_device->gfx_device()->createAccelerationStructure(gfx_desc, m_gfx_acceleration_structure.writeRef()));
+    SLANG_CALL(m_device->rhi_device()->createAccelerationStructure(rhi_desc, m_rhi_acceleration_structure.writeRef()));
 }
 
 AccelerationStructure::~AccelerationStructure()
 {
-    m_device->deferred_release(m_gfx_acceleration_structure);
 }
 
 DeviceAddress AccelerationStructure::device_address() const
 {
-    return m_gfx_acceleration_structure->getDeviceAddress();
+    return m_rhi_acceleration_structure->getDeviceAddress();
 }
 
 std::string AccelerationStructure::to_string() const
@@ -39,65 +36,58 @@ std::string AccelerationStructure::to_string() const
     return fmt::format(
         "AccelerationStructure(\n"
         "  device = {},\n"
-        "  kind = {},\n"
-        "  buffer = {},\n"
-        "  offset = {},\n"
-        "  size = {}\n"
+        "  size = {},\n"
+        "  label = {}\n",
         ")",
         m_device,
-        m_desc.kind,
-        m_desc.buffer,
-        m_desc.offset,
-        m_desc.size
+        m_desc.size,
+        m_desc.label
     );
 }
 
 ShaderTable::ShaderTable(ref<Device> device, ShaderTableDesc desc)
     : DeviceResource(std::move(device))
 {
-    short_vector<const char*, 16> gfx_ray_gen_entry_points;
-    gfx_ray_gen_entry_points.reserve(desc.ray_gen_entry_points.size());
+    short_vector<const char*, 16> rhi_ray_gen_entry_points;
+    rhi_ray_gen_entry_points.reserve(desc.ray_gen_entry_points.size());
     for (const auto& name : desc.ray_gen_entry_points)
-        gfx_ray_gen_entry_points.push_back(name.c_str());
+        rhi_ray_gen_entry_points.push_back(name.c_str());
 
-    short_vector<const char*, 16> gfx_miss_entry_points;
-    gfx_miss_entry_points.reserve(desc.miss_entry_points.size());
+    short_vector<const char*, 16> rhi_miss_entry_points;
+    rhi_miss_entry_points.reserve(desc.miss_entry_points.size());
     for (const auto& name : desc.miss_entry_points)
-        gfx_miss_entry_points.push_back(name.c_str());
+        rhi_miss_entry_points.push_back(name.c_str());
 
-    short_vector<const char*, 16> gfx_hit_group_names;
-    gfx_hit_group_names.reserve(desc.hit_group_names.size());
+    short_vector<const char*, 16> rhi_hit_group_names;
+    rhi_hit_group_names.reserve(desc.hit_group_names.size());
     for (const auto& name : desc.hit_group_names)
-        gfx_hit_group_names.push_back(name.c_str());
+        rhi_hit_group_names.push_back(name.c_str());
 
-    short_vector<const char*, 16> gfx_callable_names;
-    gfx_callable_names.reserve(desc.callable_entry_points.size());
+    short_vector<const char*, 16> rhi_callable_names;
+    rhi_callable_names.reserve(desc.callable_entry_points.size());
     for (const auto& name : desc.callable_entry_points)
-        gfx_callable_names.push_back(name.c_str());
+        rhi_callable_names.push_back(name.c_str());
 
-    gfx::IShaderTable::Desc gfx_desc{
-        .rayGenShaderCount = narrow_cast<gfx::GfxCount>(gfx_ray_gen_entry_points.size()),
-        .rayGenShaderEntryPointNames = gfx_ray_gen_entry_points.data(),
+    rhi::ShaderTableDesc rhi_desc{
+        .rayGenShaderCount = narrow_cast<uint32_t>(rhi_ray_gen_entry_points.size()),
+        .rayGenShaderEntryPointNames = rhi_ray_gen_entry_points.data(),
         .rayGenShaderRecordOverwrites = nullptr,
-        .missShaderCount = narrow_cast<gfx::GfxCount>(gfx_miss_entry_points.size()),
-        .missShaderEntryPointNames = gfx_miss_entry_points.data(),
+        .missShaderCount = narrow_cast<uint32_t>(rhi_miss_entry_points.size()),
+        .missShaderEntryPointNames = rhi_miss_entry_points.data(),
         .missShaderRecordOverwrites = nullptr,
-        .hitGroupCount = narrow_cast<gfx::GfxCount>(gfx_hit_group_names.size()),
-        .hitGroupNames = gfx_hit_group_names.data(),
+        .hitGroupCount = narrow_cast<uint32_t>(rhi_hit_group_names.size()),
+        .hitGroupNames = rhi_hit_group_names.data(),
         .hitGroupRecordOverwrites = nullptr,
-        // .callableShaderCount = narrow_cast<gfx::GfxCount>(gfx_callable_names.size()),
-        // .callableShaderEntryPointNames = gfx_callable_names.data(),
-        // .callableShaderRecordOverwrites = nullptr,
-        .program = desc.program->gfx_shader_program(),
+        .callableShaderCount = narrow_cast<uint32_t>(rhi_callable_names.size()),
+        .callableShaderEntryPointNames = rhi_callable_names.data(),
+        .callableShaderRecordOverwrites = nullptr,
+        .program = desc.program->rhi_shader_program(),
     };
 
-    SLANG_CALL(m_device->gfx_device()->createShaderTable(gfx_desc, m_gfx_shader_table.writeRef()));
+    SLANG_CALL(m_device->rhi_device()->createShaderTable(rhi_desc, m_rhi_shader_table.writeRef()));
 }
 
-ShaderTable::~ShaderTable()
-{
-    m_device->deferred_release(m_gfx_shader_table);
-}
+ShaderTable::~ShaderTable() { }
 
 std::string ShaderTable::to_string() const
 {

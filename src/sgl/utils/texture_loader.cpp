@@ -149,17 +149,17 @@ inline std::pair<Format, bool> determine_texture_format(const Bitmap* bitmap, co
     return {it->second, convert_to_rgba};
 }
 
-inline ResourceType get_resource_type(DDSFile::TextureType type)
+inline TextureType get_texture_type(DDSFile::TextureType type)
 {
     switch (type) {
     case DDSFile::TextureType::texture_1d:
-        return ResourceType::texture_1d;
+        return TextureType::texture_1d;
     case DDSFile::TextureType::texture_2d:
-        return ResourceType::texture_2d;
+        return TextureType::texture_2d;
     case DDSFile::TextureType::texture_3d:
-        return ResourceType::texture_3d;
+        return TextureType::texture_3d;
     case DDSFile::TextureType::texture_cube:
-        return ResourceType::texture_cube;
+        return TextureType::texture_cube;
     default:
         SGL_THROW("Invalid DDS texture type {}", type);
     }
@@ -202,7 +202,7 @@ load_and_convert_source_image(const std::filesystem::path& path, const TextureLo
 inline ref<Texture> create_texture(
     Device* device,
     Blitter* blitter,
-    CommandBuffer* command_buffer,
+    CommandEncoder* command_encoder,
     SourceImage source_image,
     const TextureLoader::Options& options
 )
@@ -211,9 +211,9 @@ inline ref<Texture> create_texture(
         const Bitmap* bitmap = source_image.bitmap;
         bool allocate_mips = options.allocate_mips || options.generate_mips;
 
-        ResourceUsage usage = options.usage;
+        TextureUsage usage = options.usage;
         if (options.generate_mips)
-            usage |= ResourceUsage::render_target;
+            usage |= TextureUsage::render_target;
 
         ref<Texture> texture = device->create_texture({
             .format = source_image.format,
@@ -228,17 +228,16 @@ inline ref<Texture> create_texture(
             .row_pitch = bitmap->width() * bitmap->bytes_per_pixel(),
         };
 
-        command_buffer->upload_texture_data(texture, 0, subresource_data);
+        command_encoder->upload_texture_data(texture, 0, subresource_data);
         if (options.generate_mips) {
-            blitter->generate_mips(command_buffer, texture);
-            texture->invalidate_views();
+            blitter->generate_mips(command_encoder, texture);
         }
 
         return texture;
     } else if (source_image.dds_file) {
         const DDSFile* dds_file = source_image.dds_file;
         return device->create_texture({
-            .type = get_resource_type(dds_file->type()),
+            .type = get_texture_type(dds_file->type()),
             .format = source_image.format,
             .width = dds_file->width(),
             .height = dds_file->height(),
@@ -263,16 +262,16 @@ inline std::vector<ref<Texture>> create_textures(
 )
 {
     std::vector<ref<Texture>> textures(source_images.size());
-    ref<CommandBuffer> command_buffer = device->create_command_buffer();
+    ref<CommandEncoder> command_encoder = device->create_command_encoder();
     for (size_t i = 0; i < source_images.size(); ++i) {
-        textures[i] = create_texture(device, blitter, command_buffer, source_images[i].get(), options);
+        textures[i] = create_texture(device, blitter, command_encoder, source_images[i].get(), options);
         if (i && (i % BATCH_SIZE == 0)) {
-            command_buffer->submit();
+            device->submit_command_buffer(command_encoder->finish());
             device->run_garbage_collection();
-            command_buffer->open();
+            command_encoder = device->create_command_encoder();
         }
     }
-    command_buffer->submit();
+    device->submit_command_buffer(command_encoder->finish());
 
     return textures;
 }
@@ -288,16 +287,16 @@ inline ref<Texture> create_texture_array(
 
     bool allocate_mips = options.allocate_mips || options.generate_mips;
 
-    ResourceUsage usage = options.usage;
+    TextureUsage usage = options.usage;
     if (options.generate_mips)
-        usage |= ResourceUsage::render_target;
+        usage |= TextureUsage::render_target;
 
     ref<Texture> texture;
     uint32_t first_width = 0;
     uint32_t first_height = 0;
     Format first_format = Format::unknown;
 
-    ref<CommandBuffer> command_buffer = device->create_command_buffer();
+    ref<CommandEncoder> command_encoder = device->create_command_encoder();
 
     for (size_t i = 0; i < source_images.size(); ++i) {
         SourceImage source_image = source_images[i].get();
@@ -324,9 +323,9 @@ inline ref<Texture> create_texture_array(
         }
 
         if (i && (i % BATCH_SIZE == 0)) {
-            command_buffer->submit();
+            device->submit_command_buffer(command_encoder->finish());
             device->run_garbage_collection();
-            command_buffer->open();
+            command_encoder = device->create_command_encoder();
         }
 
         uint32_t subresource = texture->get_subresource_index(0, narrow_cast<uint32_t>(i));
@@ -335,15 +334,12 @@ inline ref<Texture> create_texture_array(
             .size = bitmap->buffer_size(),
             .row_pitch = bitmap->width() * bitmap->bytes_per_pixel(),
         };
-        command_buffer->upload_texture_data(texture, subresource, subresource_data);
+        command_encoder->upload_texture_data(texture, subresource, subresource_data);
 
         if (options.generate_mips)
-            blitter->generate_mips(command_buffer, texture, narrow_cast<uint32_t>(i));
+            blitter->generate_mips(command_encoder, texture, narrow_cast<uint32_t>(i));
     }
-    command_buffer->submit();
-
-    if (options.generate_mips)
-        texture->invalidate_views();
+    device->submit_command_buffer(command_encoder->finish());
 
     return texture;
 }
@@ -362,9 +358,9 @@ ref<Texture> TextureLoader::load_texture(const Bitmap* bitmap, std::optional<Opt
 {
     Options options = options_.value_or(Options{});
     SourceImage source_image = convert_bitmap(ref(const_cast<Bitmap*>(bitmap)), options);
-    ref<CommandBuffer> command_buffer = m_device->create_command_buffer();
-    ref<Texture> texture = create_texture(m_device, m_blitter, command_buffer, source_image, options);
-    command_buffer->submit();
+    ref<CommandEncoder> command_encoder = m_device->create_command_encoder();
+    ref<Texture> texture = create_texture(m_device, m_blitter, command_encoder, source_image, options);
+    m_device->submit_command_buffer(command_encoder->finish());
     return texture;
 }
 
@@ -372,9 +368,9 @@ ref<Texture> TextureLoader::load_texture(const std::filesystem::path& path, std:
 {
     Options options = options_.value_or(Options{});
     SourceImage source_image = load_and_convert_source_image(path, options);
-    ref<CommandBuffer> command_buffer = m_device->create_command_buffer();
-    ref<Texture> texture = create_texture(m_device, m_blitter, command_buffer, source_image, options);
-    command_buffer->submit();
+    ref<CommandEncoder> command_encoder = m_device->create_command_encoder();
+    ref<Texture> texture = create_texture(m_device, m_blitter, command_encoder, source_image, options);
+    m_device->submit_command_buffer(command_encoder->finish());
     return texture;
 }
 

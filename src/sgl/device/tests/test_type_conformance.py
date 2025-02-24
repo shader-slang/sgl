@@ -22,7 +22,7 @@ def test_type_conformance(device_type: sgl.DeviceType):
         program = device.link_program(modules=[module], entry_points=[entry_point])
         kernel = device.create_compute_kernel(program)
         result = device.create_buffer(
-            element_count=4, struct_size=4, usage=sgl.ResourceUsage.unordered_access
+            element_count=4, struct_size=4, usage=sgl.BufferUsage.unordered_access
         )
         kernel.dispatch(thread_count=[4, 1, 1], result=result)
         return result.to_numpy().view(np.uint32)

@@ -5,7 +5,6 @@
 #include "sgl/device/device.h"
 #include "sgl/device/shader.h"
 #include "sgl/device/input_layout.h"
-#include "sgl/device/framebuffer.h"
 #include "sgl/device/helpers.h"
 #include "sgl/device/native_handle_traits.h"
 
@@ -31,31 +30,20 @@ Pipeline::Pipeline(ref<Device> device, ref<ShaderProgram> program)
 
 Pipeline::~Pipeline()
 {
-    m_device->deferred_release(m_gfx_pipeline_state);
     m_program->_unregister_pipeline(this);
 }
 
-
 void Pipeline::notify_program_reloaded()
 {
-    m_device->deferred_release(m_gfx_pipeline_state);
-    m_gfx_pipeline_state = nullptr;
+    m_rhi_pipeline = nullptr;
     recreate();
 }
 
 NativeHandle Pipeline::get_native_handle() const
 {
-    gfx::InteropHandle handle = {};
-    SLANG_CALL(m_gfx_pipeline_state->getNativeHandle(&handle));
-#if SGL_HAS_D3D12
-    if (m_device->type() == DeviceType::d3d12)
-        return NativeHandle(reinterpret_cast<ID3D12PipelineState*>(handle.handleValue));
-#endif
-#if SGL_HAS_VULKAN
-    if (m_device->type() == DeviceType::vulkan)
-        return NativeHandle(reinterpret_cast<VkPipeline>(handle.handleValue));
-#endif
-    return {};
+    rhi::NativeHandle rhi_handle = {};
+    SLANG_CALL(m_rhi_pipeline->getNativeHandle(&rhi_handle));
+    return NativeHandle(rhi_handle);
 }
 
 // ----------------------------------------------------------------------------
@@ -71,8 +59,10 @@ ComputePipeline::ComputePipeline(ref<Device> device, ComputePipelineDesc desc)
 
 void ComputePipeline::recreate()
 {
-    gfx::ComputePipelineStateDesc gfx_desc{.program = m_desc.program->gfx_shader_program()};
-    SLANG_CALL(m_device->gfx_device()->createComputePipelineState(gfx_desc, m_gfx_pipeline_state.writeRef()));
+    rhi::ComputePipelineDesc rhi_desc{.program = m_desc.program->rhi_shader_program()};
+    SLANG_CALL(
+        m_device->rhi_device()->createComputePipeline(rhi_desc, (rhi::IComputePipeline**)m_rhi_pipeline.writeRef())
+    );
     m_thread_group_size = m_desc.program->layout()->get_entry_point_by_index(0)->compute_thread_group_size();
 }
 
@@ -91,54 +81,73 @@ std::string ComputePipeline::to_string() const
 }
 
 // ----------------------------------------------------------------------------
-// GraphicsPipeline
+// RenderPipeline
 // ----------------------------------------------------------------------------
 
-GraphicsPipeline::GraphicsPipeline(ref<Device> device, GraphicsPipelineDesc desc)
+RenderPipeline::RenderPipeline(ref<Device> device, RenderPipelineDesc desc)
     : Pipeline(std::move(device), desc.program)
     , m_desc(std::move(desc))
 {
     m_stored_input_layout = ref<const InputLayout>(m_desc.input_layout);
-    m_stored_framebuffer_layout = ref<const FramebufferLayout>(m_desc.framebuffer_layout);
     recreate();
 }
 
-void GraphicsPipeline::recreate()
+void RenderPipeline::recreate()
 {
-    const GraphicsPipelineDesc& desc = m_desc;
+    const RenderPipelineDesc& desc = m_desc;
 
-    SGL_CHECK_NOT_NULL(desc.framebuffer_layout);
+    short_vector<rhi::ColorTargetState, 8> rhi_targets;
+    for (size_t i = 0; i < desc.targets.size(); ++i) {
+        const auto& target = desc.targets[i];
+        rhi_targets.push_back({
+            .format = static_cast<rhi::Format>(target.format),
+            .color = {
+                .srcFactor = static_cast<rhi::BlendFactor>(target.color.src_factor),
+                .dstFactor = static_cast<rhi::BlendFactor>(target.color.dst_factor),
+                .op = static_cast<rhi::BlendOp>(target.color.op),
+            },
+            .alpha = {
+                .srcFactor = static_cast<rhi::BlendFactor>(target.alpha.src_factor),
+                .dstFactor = static_cast<rhi::BlendFactor>(target.alpha.dst_factor),
+                .op = static_cast<rhi::BlendOp>(target.alpha.op),
+            },
+            .enableBlend = target.enable_blend,
+            .logicOp = static_cast<rhi::LogicOp>(target.logic_op),
+            .writeMask = static_cast<rhi::RenderTargetWriteMaskT>(target.write_mask),
+        });
+    }
 
-    gfx::GraphicsPipelineStateDesc gfx_desc{
-        .program =  m_desc.program->gfx_shader_program(),
-        .inputLayout = desc.input_layout ? desc.input_layout->gfx_input_layout() : nullptr,
-        .framebufferLayout = desc.framebuffer_layout->gfx_framebuffer_layout(),
-        .primitiveType = static_cast<gfx::PrimitiveType>(desc.primitive_type),
+    rhi::RenderPipelineDesc rhi_desc{
+        .program =  m_desc.program->rhi_shader_program(),
+        .inputLayout = desc.input_layout ? desc.input_layout->rhi_input_layout() : nullptr,
+        .primitiveTopology = static_cast<rhi::PrimitiveTopology>(desc.primitive_topology),
+        .targets = rhi_targets.data(),
+        .targetCount = narrow_cast<uint32_t>(rhi_targets.size()),
         .depthStencil = {
+            .format = static_cast<rhi::Format>(desc.depth_stencil.format),
             .depthTestEnable = desc.depth_stencil.depth_test_enable,
             .depthWriteEnable = desc.depth_stencil.depth_write_enable,
-            .depthFunc = static_cast<gfx::ComparisonFunc>(desc.depth_stencil.depth_func),
+            .depthFunc = static_cast<rhi::ComparisonFunc>(desc.depth_stencil.depth_func),
             .stencilEnable = desc.depth_stencil.stencil_enable,
             .stencilReadMask = desc.depth_stencil.stencil_read_mask,
             .stencilWriteMask = desc.depth_stencil.stencil_write_mask,
             .frontFace = {
-                .stencilFailOp = static_cast<gfx::StencilOp>(desc.depth_stencil.front_face.stencil_fail_op),
-                .stencilDepthFailOp = static_cast<gfx::StencilOp>(desc.depth_stencil.front_face.stencil_depth_fail_op),
-                .stencilPassOp = static_cast<gfx::StencilOp>(desc.depth_stencil.front_face.stencil_pass_op),
-                .stencilFunc = static_cast<gfx::ComparisonFunc>(desc.depth_stencil.front_face.stencil_func),
+                .stencilFailOp = static_cast<rhi::StencilOp>(desc.depth_stencil.front_face.stencil_fail_op),
+                .stencilDepthFailOp = static_cast<rhi::StencilOp>(desc.depth_stencil.front_face.stencil_depth_fail_op),
+                .stencilPassOp = static_cast<rhi::StencilOp>(desc.depth_stencil.front_face.stencil_pass_op),
+                .stencilFunc = static_cast<rhi::ComparisonFunc>(desc.depth_stencil.front_face.stencil_func),
             },
             .backFace = {
-                .stencilFailOp = static_cast<gfx::StencilOp>(desc.depth_stencil.back_face.stencil_fail_op),
-                .stencilDepthFailOp = static_cast<gfx::StencilOp>(desc.depth_stencil.back_face.stencil_depth_fail_op),
-                .stencilPassOp = static_cast<gfx::StencilOp>(desc.depth_stencil.back_face.stencil_pass_op),
-                .stencilFunc = static_cast<gfx::ComparisonFunc>(desc.depth_stencil.back_face.stencil_func),
+                .stencilFailOp = static_cast<rhi::StencilOp>(desc.depth_stencil.back_face.stencil_fail_op),
+                .stencilDepthFailOp = static_cast<rhi::StencilOp>(desc.depth_stencil.back_face.stencil_depth_fail_op),
+                .stencilPassOp = static_cast<rhi::StencilOp>(desc.depth_stencil.back_face.stencil_pass_op),
+                .stencilFunc = static_cast<rhi::ComparisonFunc>(desc.depth_stencil.back_face.stencil_func),
             },
-            .stencilRef = desc.depth_stencil.stencil_ref,
         },
         .rasterizer = {
-            .fillMode = static_cast<gfx::FillMode>(desc.rasterizer.fill_mode),
-            .cullMode = static_cast<gfx::CullMode>(desc.rasterizer.cull_mode),
-            .frontFace = static_cast<gfx::FrontFaceMode>(desc.rasterizer.front_face),
+            .fillMode = static_cast<rhi::FillMode>(desc.rasterizer.fill_mode),
+            .cullMode = static_cast<rhi::CullMode>(desc.rasterizer.cull_mode),
+            .frontFace = static_cast<rhi::FrontFaceMode>(desc.rasterizer.front_face),
             .depthBias = desc.rasterizer.depth_bias,
             .depthBiasClamp = desc.rasterizer.depth_bias_clamp,
             .slopeScaledDepthBias = desc.rasterizer.slope_scaled_depth_bias,
@@ -149,40 +158,22 @@ void GraphicsPipeline::recreate()
             .enableConservativeRasterization = desc.rasterizer.enable_conservative_rasterization,
             .forcedSampleCount = desc.rasterizer.forced_sample_count,
         },
-        .blend = {
-            .targetCount = narrow_cast<gfx::GfxCount>(desc.blend.targets.size()),
-            .alphaToCoverageEnable = desc.blend.alpha_to_coverage_enable,
-        }
+        .multisample = {
+            .sampleCount = desc.multisample.sample_count,
+            .sampleMask = desc.multisample.sample_mask,
+            .alphaToCoverageEnable = desc.multisample.alpha_to_coverage_enable,
+            .alphaToOneEnable = desc.multisample.alpha_to_one_enable,
+        },
     };
 
-    SGL_CHECK(desc.blend.targets.size() <= 8, "Too many blend targets");
-
-    gfx::TargetBlendDesc* gfx_target = gfx_desc.blend.targets;
-    for (const auto& target : desc.blend.targets) {
-        *gfx_target++ = {
-            .color{
-                .srcFactor = static_cast<gfx::BlendFactor>(target.color.src_factor),
-                .dstFactor = static_cast<gfx::BlendFactor>(target.color.dst_factor),
-                .op = static_cast<gfx::BlendOp>(target.color.op),
-            },
-            .alpha{
-                .srcFactor = static_cast<gfx::BlendFactor>(target.alpha.src_factor),
-                .dstFactor = static_cast<gfx::BlendFactor>(target.alpha.dst_factor),
-                .op = static_cast<gfx::BlendOp>(target.alpha.op),
-            },
-            .enableBlend = target.enable_blend,
-            .logicOp = static_cast<gfx::LogicOp>(target.logic_op),
-            .writeMask = static_cast<gfx::RenderTargetWriteMaskT>(target.write_mask),
-        };
-    }
-
-    SLANG_CALL(m_device->gfx_device()->createGraphicsPipelineState(gfx_desc, m_gfx_pipeline_state.writeRef()));
+    SLANG_CALL(m_device->rhi_device()->createRenderPipeline(rhi_desc, (rhi::IRenderPipeline**)m_rhi_pipeline.writeRef())
+    );
 }
 
-std::string GraphicsPipeline::to_string() const
+std::string RenderPipeline::to_string() const
 {
     return fmt::format(
-        "GraphicsPipeline(\n"
+        "RenderPipeline(\n"
         "  device = {}\n"
         "  program = {}\n"
         ")",
@@ -206,10 +197,10 @@ void RayTracingPipeline::recreate()
 {
     const RayTracingPipelineDesc& desc = m_desc;
 
-    short_vector<gfx::HitGroupDesc, 16> gfx_hit_groups;
-    gfx_hit_groups.reserve(desc.hit_groups.size());
+    short_vector<rhi::HitGroupDesc, 16> rhi_hit_groups;
+    rhi_hit_groups.reserve(desc.hit_groups.size());
     for (const auto& hit_group : desc.hit_groups) {
-        gfx_hit_groups.push_back({
+        rhi_hit_groups.push_back({
             .hitGroupName = hit_group.hit_group_name.c_str(),
             .closestHitEntryPoint = hit_group.closest_hit_entry_point.c_str(),
             .anyHitEntryPoint = hit_group.any_hit_entry_point.c_str(),
@@ -217,16 +208,17 @@ void RayTracingPipeline::recreate()
         });
     }
 
-    gfx::RayTracingPipelineStateDesc gfx_desc{
-        .program = m_desc.program->gfx_shader_program(),
-        .hitGroupCount = narrow_cast<gfx::GfxCount>(gfx_hit_groups.size()),
-        .hitGroups = gfx_hit_groups.data(),
-        .maxRecursion = narrow_cast<int>(desc.max_recursion),
+    rhi::RayTracingPipelineDesc rhi_desc{
+        .program = m_desc.program->rhi_shader_program(),
+        .hitGroupCount = narrow_cast<uint32_t>(rhi_hit_groups.size()),
+        .hitGroups = rhi_hit_groups.data(),
+        .maxRecursion = desc.max_recursion,
         .maxRayPayloadSize = desc.max_ray_payload_size,
         .maxAttributeSizeInBytes = desc.max_attribute_size,
-        .flags = static_cast<gfx::RayTracingPipelineFlags::Enum>(desc.flags),
+        .flags = static_cast<rhi::RayTracingPipelineFlags>(desc.flags),
     };
-    SLANG_CALL(m_device->gfx_device()->createRayTracingPipelineState(gfx_desc, m_gfx_pipeline_state.writeRef()));
+    SLANG_CALL(m_device->rhi_device()
+                   ->createRayTracingPipeline(rhi_desc, (rhi::IRayTracingPipeline**)m_rhi_pipeline.writeRef()));
 }
 
 std::string RayTracingPipeline::to_string() const

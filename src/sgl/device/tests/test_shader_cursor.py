@@ -245,7 +245,7 @@ def test_shader_cursor(device_type: sgl.DeviceType, use_numpy: bool):
     result_buffer = device.create_buffer(
         size=4096,
         struct_size=4,
-        usage=sgl.ResourceUsage.unordered_access,
+        usage=sgl.BufferUsage.unordered_access,
     )
 
     names = []

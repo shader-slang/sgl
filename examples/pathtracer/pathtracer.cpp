@@ -407,8 +407,8 @@ struct Scene {
             material_descs[i].base_color = stage.materials[i].base_color;
 
         material_descs_buffer = device->create_buffer({
-            .usage = ResourceUsage::shader_resource,
-            .debug_name = "material_descs_buffer",
+            .usage = BufferUsage::shader_resource,
+            .label = "material_descs_buffer",
             .data = material_descs.data(),
             .data_size = material_descs.size() * sizeof(MaterialDesc),
         });
@@ -448,28 +448,28 @@ struct Scene {
             indices.insert(indices.end(), mesh.indices.begin(), mesh.indices.end());
         }
         vertex_buffer = device->create_buffer({
-            .usage = ResourceUsage::shader_resource,
-            .debug_name = "vertex_buffer",
+            .usage = BufferUsage::shader_resource,
+            .label = "vertex_buffer",
             .data = vertices.data(),
             .data_size = vertices.size() * sizeof(Mesh::Vertex),
         });
         index_buffer = device->create_buffer({
-            .usage = ResourceUsage::shader_resource,
-            .debug_name = "index_buffer",
+            .usage = BufferUsage::shader_resource,
+            .label = "index_buffer",
             .data = indices.data(),
             .data_size = indices.size() * sizeof(uint32_t),
         });
 
         mesh_descs_buffer = device->create_buffer({
-            .usage = ResourceUsage::shader_resource,
-            .debug_name = "mesh_descs_buffer",
+            .usage = BufferUsage::shader_resource,
+            .label = "mesh_descs_buffer",
             .data = mesh_descs.data(),
             .data_size = mesh_descs.size() * sizeof(MeshDesc),
         });
 
         instance_descs_buffer = device->create_buffer({
-            .usage = ResourceUsage::shader_resource,
-            .debug_name = "instance_descs_buffer",
+            .usage = BufferUsage::shader_resource,
+            .label = "instance_descs_buffer",
             .data = instance_descs.data(),
             .data_size = instance_descs.size() * sizeof(InstanceDesc),
         });
@@ -483,23 +483,23 @@ struct Scene {
             inverse_transpose_transforms[i] = transpose(inverse(transforms[i]));
 
         transforms_buffer = device->create_buffer({
-            .usage = ResourceUsage::shader_resource,
-            .debug_name = "transforms_buffer",
+            .usage = BufferUsage::shader_resource,
+            .label = "transforms_buffer",
             .data = transforms.data(),
             .data_size = transforms.size() * sizeof(float4x4),
         });
 
         inverse_transpose_transforms_buffer = device->create_buffer({
-            .usage = ResourceUsage::shader_resource,
-            .debug_name = "inverse_transpose_transforms_buffer",
+            .usage = BufferUsage::shader_resource,
+            .label = "inverse_transpose_transforms_buffer",
             .data = inverse_transpose_transforms.data(),
             .data_size = inverse_transpose_transforms.size() * sizeof(float4x4),
         });
 
         float3x4 identity = float3x4::identity();
         identity_buffer = device->create_buffer({
-            .usage = ResourceUsage::shader_resource,
-            .debug_name = "identity_buffer",
+            .usage = BufferUsage::shader_resource,
+            .label = "identity_buffer",
             .data = &identity,
             .data_size = sizeof(identity),
         });
@@ -537,14 +537,14 @@ struct Scene {
 
         ref<Buffer> blas_scratch_buffer = device->create_buffer({
             .size = blas_prebuild_info.scratch_data_size,
-            .usage = ResourceUsage::unordered_access,
-            .debug_name = "blas_scratch_buffer",
+            .usage = BufferUsage::unordered_access,
+            .label = "blas_scratch_buffer",
         });
 
         ref<Buffer> blas_buffer = device->create_buffer({
             .size = blas_prebuild_info.result_data_max_size,
-            .usage = ResourceUsage::acceleration_structure,
-            .debug_name = "blas_buffer",
+            .usage = BufferUsage::acceleration_structure,
+            .label = "blas_buffer",
         });
 
         ref<AccelerationStructure> blas = device->create_acceleration_structure({
@@ -584,8 +584,8 @@ struct Scene {
         }
 
         ref<Buffer> rt_instance_buffer = device->create_buffer({
-            .usage = ResourceUsage::shader_resource,
-            .debug_name = "rt_instance_buffer",
+            .usage = BufferUsage::shader_resource,
+            .label = "rt_instance_buffer",
             .data = rt_instance_descs.data(),
             .data_size = rt_instance_descs.size() * sizeof(RayTracingInstanceDesc),
         });
@@ -601,14 +601,14 @@ struct Scene {
 
         ref<Buffer> tlas_scratch_buffer = device->create_buffer({
             .size = tlas_prebuild_info.scratch_data_size,
-            .usage = ResourceUsage::unordered_access,
-            .debug_name = "tlas_scratch_buffer",
+            .usage = BufferUsage::unordered_access,
+            .label = "tlas_scratch_buffer",
         });
 
         ref<Buffer> tlas_buffer = device->create_buffer({
             .size = tlas_prebuild_info.result_data_max_size,
-            .usage = ResourceUsage::acceleration_structure,
-            .debug_name = "tlas_buffer",
+            .usage = BufferUsage::acceleration_structure,
+            .label = "tlas_buffer",
         });
 
         ref<AccelerationStructure> tlas_ = device->create_acceleration_structure({
@@ -690,8 +690,8 @@ struct Accumulator {
                 .width = input->width(),
                 .height = input->height(),
                 .mip_count = 1,
-                .usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access,
-                .debug_name = "accumulator",
+                .usage = TextureUsage::shader_resource | TextureUsage::unordered_access,
+                .label = "accumulator",
             });
         }
         kernel->dispatch(
@@ -836,24 +836,24 @@ struct App {
                     .width = image->width(),
                     .height = image->height(),
                     .mip_count = 1,
-                    .usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access,
-                    .debug_name = "output_texture",
+                    .usage = TextureUsage::shader_resource | TextureUsage::unordered_access,
+                    .label = "output_texture",
                 });
                 render_texture = device->create_texture({
                     .format = Format::rgba32_float,
                     .width = image->width(),
                     .height = image->height(),
                     .mip_count = 1,
-                    .usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access,
-                    .debug_name = "render_texture",
+                    .usage = TextureUsage::shader_resource | TextureUsage::unordered_access,
+                    .label = "render_texture",
                 });
                 accum_texture = device->create_texture({
                     .format = Format::rgba32_float,
                     .width = image->width(),
                     .height = image->height(),
                     .mip_count = 1,
-                    .usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access,
-                    .debug_name = "accum_texture",
+                    .usage = TextureUsage::shader_resource | TextureUsage::unordered_access,
+                    .label = "accum_texture",
                 });
             }
 

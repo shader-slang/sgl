@@ -15,14 +15,14 @@ namespace sgl {
 struct MemoryHeapDesc {
     /// The memory type of the heap.
     MemoryType memory_type{MemoryType::upload};
-    /// The resource usage of the heap.
-    ResourceUsage usage{ResourceUsage::none};
+    /// The buffer usage of the heap.
+    BufferUsage usage{BufferUsage::none};
     /// The size of a page in bytes.
     DeviceSize page_size{4 * 1024 * 1024};
     /// True to retain large pages, false to release them after use.
     bool retain_large_pages{false};
-    /// The debug name of the heap.
-    std::string debug_name;
+    /// Debug label.
+    std::string label;
 };
 
 /**

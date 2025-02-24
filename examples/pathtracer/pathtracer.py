@@ -373,8 +373,8 @@ class Scene:
             b"".join(d.pack() for d in self.material_descs), dtype=np.uint8
         ).flatten()
         self.material_descs_buffer = device.create_buffer(
-            usage=sgl.ResourceUsage.shader_resource,
-            debug_name="material_descs_buffer",
+            usage=sgl.BufferUsage.shader_resource,
+            label="material_descs_buffer",
             data=material_descs_data,
         )
 
@@ -408,14 +408,14 @@ class Scene:
         assert indices.shape[0] == index_count // 3
 
         self.vertex_buffer = device.create_buffer(
-            usage=sgl.ResourceUsage.shader_resource,
-            debug_name="vertex_buffer",
+            usage=sgl.BufferUsage.shader_resource,
+            label="vertex_buffer",
             data=vertices,
         )
 
         self.index_buffer = device.create_buffer(
-            usage=sgl.ResourceUsage.shader_resource,
-            debug_name="index_buffer",
+            usage=sgl.BufferUsage.shader_resource,
+            label="index_buffer",
             data=indices,
         )
 
@@ -423,8 +423,8 @@ class Scene:
             b"".join(d.pack() for d in self.mesh_descs), dtype=np.uint8
         ).flatten()
         self.mesh_descs_buffer = device.create_buffer(
-            usage=sgl.ResourceUsage.shader_resource,
-            debug_name="mesh_descs_buffer",
+            usage=sgl.BufferUsage.shader_resource,
+            label="mesh_descs_buffer",
             data=mesh_descs_data,
         )
 
@@ -432,8 +432,8 @@ class Scene:
             b"".join(d.pack() for d in self.instance_descs), dtype=np.uint8
         ).flatten()
         self.instance_descs_buffer = device.create_buffer(
-            usage=sgl.ResourceUsage.shader_resource,
-            debug_name="instance_descs_buffer",
+            usage=sgl.BufferUsage.shader_resource,
+            label="instance_descs_buffer",
             data=instance_descs_data,
         )
 
@@ -443,19 +443,19 @@ class Scene:
             sgl.math.transpose(sgl.math.inverse(t)) for t in self.transforms
         ]
         self.transform_buffer = device.create_buffer(
-            usage=sgl.ResourceUsage.shader_resource,
-            debug_name="transform_buffer",
+            usage=sgl.BufferUsage.shader_resource,
+            label="transform_buffer",
             data=np.stack([t.to_numpy() for t in self.transforms]),
         )
         self.inverse_transpose_transforms_buffer = device.create_buffer(
-            usage=sgl.ResourceUsage.shader_resource,
-            debug_name="inverse_transpose_transforms_buffer",
+            usage=sgl.BufferUsage.shader_resource,
+            label="inverse_transpose_transforms_buffer",
             data=np.stack([t.to_numpy() for t in self.inverse_transpose_transforms]),
         )
 
         self.identity_buffer = device.create_buffer(
-            usage=sgl.ResourceUsage.shader_resource,
-            debug_name="identity_buffer",
+            usage=sgl.BufferUsage.shader_resource,
+            label="identity_buffer",
             data=sgl.float3x4.identity().to_numpy(),
         )
 
@@ -493,14 +493,14 @@ class Scene:
 
         blas_scratch_buffer = self.device.create_buffer(
             size=blas_prebuild_info.scratch_data_size,
-            usage=sgl.ResourceUsage.unordered_access,
-            debug_name="blas_scratch_buffer",
+            usage=sgl.BufferUsage.unordered_access,
+            label="blas_scratch_buffer",
         )
 
         blas_buffer = self.device.create_buffer(
             size=blas_prebuild_info.result_data_max_size,
-            usage=sgl.ResourceUsage.acceleration_structure,
-            debug_name="blas_buffer",
+            usage=sgl.BufferUsage.acceleration_structure,
+            label="blas_buffer",
         )
 
         blas = self.device.create_acceleration_structure(
@@ -537,8 +537,8 @@ class Scene:
             rt_instance_descs.append(rt_instance_desc)
 
         rt_instance_buffer = self.device.create_buffer(
-            usage=sgl.ResourceUsage.shader_resource,
-            debug_name="rt_instance_buffer",
+            usage=sgl.BufferUsage.shader_resource,
+            label="rt_instance_buffer",
             data=np.stack([i.to_numpy() for i in rt_instance_descs]),
         )
 
@@ -554,14 +554,14 @@ class Scene:
 
         tlas_scratch_buffer = self.device.create_buffer(
             size=tlas_prebuild_info.scratch_data_size,
-            usage=sgl.ResourceUsage.unordered_access,
-            debug_name="tlas_scratch_buffer",
+            usage=sgl.BufferUsage.unordered_access,
+            label="tlas_scratch_buffer",
         )
 
         tlas_buffer = self.device.create_buffer(
             size=tlas_prebuild_info.result_data_max_size,
-            usage=sgl.ResourceUsage.acceleration_structure,
-            debug_name="tlas_buffer",
+            usage=sgl.BufferUsage.acceleration_structure,
+            label="tlas_buffer",
         )
 
         tlas = self.device.create_acceleration_structure(
@@ -648,9 +648,9 @@ class Accumulator:
                 width=input.width,
                 height=input.height,
                 mip_count=1,
-                usage=sgl.ResourceUsage.shader_resource
-                | sgl.ResourceUsage.unordered_access,
-                debug_name="accumulator",
+                usage=sgl.TextureUsage.shader_resource
+                | sgl.TextureUsage.unordered_access,
+                label="accumulator",
             )
         self.kernel.dispatch(
             thread_count=[input.width, input.height, 1],
@@ -774,27 +774,27 @@ class App:
                     width=image.width,
                     height=image.height,
                     mip_count=1,
-                    usage=sgl.ResourceUsage.shader_resource
-                    | sgl.ResourceUsage.unordered_access,
-                    debug_name="output_texture",
+                    usage=sgl.TextureUsage.shader_resource
+                    | sgl.TextureUsage.unordered_access,
+                    label="output_texture",
                 )
                 self.render_texture = self.device.create_texture(
                     format=sgl.Format.rgba32_float,
                     width=image.width,
                     height=image.height,
                     mip_count=1,
-                    usage=sgl.ResourceUsage.shader_resource
-                    | sgl.ResourceUsage.unordered_access,
-                    debug_name="render_texture",
+                    usage=sgl.TextureUsage.shader_resource
+                    | sgl.TextureUsage.unordered_access,
+                    label="render_texture",
                 )
                 self.accum_texture = self.device.create_texture(
                     format=sgl.Format.rgba32_float,
                     width=image.width,
                     height=image.height,
                     mip_count=1,
-                    usage=sgl.ResourceUsage.shader_resource
-                    | sgl.ResourceUsage.unordered_access,
-                    debug_name="accum_texture",
+                    usage=sgl.TextureUsage.shader_resource
+                    | sgl.TextureUsage.unordered_access,
+                    label="accum_texture",
                 )
 
             command_buffer = self.device.create_command_buffer()

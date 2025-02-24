@@ -1144,14 +1144,14 @@ void ShaderProgram::link(SlangSessionBuild& build_data) const
     }
 
     // Create shader program.
-    Slang::ComPtr<gfx::IShaderProgram> gfx_shader_program;
+    Slang::ComPtr<rhi::IShaderProgram> rhi_shader_program;
     {
-        gfx::IShaderProgram::Desc gfx_desc{
+        rhi::ShaderProgramDesc rhi_desc{
             .slangGlobalScope = linked_program,
         };
 
         Slang::ComPtr<ISlangBlob> diagnostics;
-        if (device->gfx_device()->createProgram(gfx_desc, gfx_shader_program.writeRef(), diagnostics.writeRef())
+        if (device->rhi_device()->createShaderProgram(rhi_desc, rhi_shader_program.writeRef(), diagnostics.writeRef())
             != SLANG_OK) {
             std::string msg = append_diagnostics("Failed to create shader program", diagnostics);
             SGL_THROW(msg);
@@ -1172,7 +1172,7 @@ void ShaderProgram::link(SlangSessionBuild& build_data) const
 
     // Store program info.
     data->linked_program = linked_program;
-    data->gfx_shader_program = gfx_shader_program;
+    data->rhi_shader_program = rhi_shader_program;
 
     // Store resulting program.
     build_data.programs[this] = std::move(data);

@@ -126,7 +126,7 @@ ref<NativeNDBuffer> NativeNDBufferMarshall::create_buffer(Device* device, const 
     desc.element_layout = m_element_layout;
     desc.shape = shape;
     desc.strides = desc.shape.calc_contiguous_strides();
-    desc.usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access;
+    desc.usage = BufferUsage::shader_resource | BufferUsage::unordered_access;
     desc.memory_type = MemoryType::device_local;
     return make_ref<NativeNDBuffer>(device, desc);
 }

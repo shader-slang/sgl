@@ -18,12 +18,12 @@ Fence::Fence(ref<Device> device, FenceDesc desc)
 {
     SGL_ASSERT(m_device);
 
-    gfx::IFence::Desc gfx_desc{
+    rhi::FenceDesc rhi_desc{
         .initialValue = m_desc.initial_value,
         .isShared = m_desc.shared,
     };
 
-    SLANG_CALL(m_device->gfx_device()->createFence(gfx_desc, m_gfx_fence.writeRef()));
+    SLANG_CALL(m_device->rhi_device()->createFence(rhi_desc, m_rhi_fence.writeRef()));
 
     m_signaled_value = m_desc.initial_value;
 }
@@ -31,7 +31,7 @@ Fence::Fence(ref<Device> device, FenceDesc desc)
 uint64_t Fence::signal(uint64_t value)
 {
     uint64_t signal_value = update_signaled_value(value);
-    SLANG_CALL(m_gfx_fence->setCurrentValue(signal_value));
+    SLANG_CALL(m_rhi_fence->setCurrentValue(signal_value));
     return signal_value;
 }
 
@@ -40,16 +40,16 @@ void Fence::wait(uint64_t value, uint64_t timeout_ns)
     uint64_t wait_value = value == AUTO ? m_signaled_value : value;
     uint64_t cur_value = current_value();
     if (cur_value < wait_value) {
-        gfx::IFence* fences[] = {m_gfx_fence};
+        rhi::IFence* fences[] = {m_rhi_fence};
         uint64_t wait_values[] = {wait_value};
-        SLANG_CALL(m_device->gfx_device()->waitForFences(1, fences, wait_values, true, timeout_ns));
+        SLANG_CALL(m_device->rhi_device()->waitForFences(1, fences, wait_values, true, timeout_ns));
     }
 }
 
 uint64_t Fence::current_value() const
 {
     uint64_t value;
-    SLANG_CALL(m_gfx_fence->getCurrentValue(&value));
+    SLANG_CALL(m_rhi_fence->getCurrentValue(&value));
     return value;
 }
 
@@ -59,26 +59,19 @@ uint64_t Fence::update_signaled_value(uint64_t value)
     return m_signaled_value;
 }
 
-SharedFenceHandle Fence::get_shared_handle() const
+NativeHandle Fence::get_shared_handle() const
 {
     SGL_CHECK(m_desc.shared, "Fence must be created with shared flag.");
-    gfx::InteropHandle handle;
-    SLANG_CALL(m_gfx_fence->getSharedHandle(&handle));
-    return static_cast<SharedFenceHandle>(handle.handleValue);
+    rhi::NativeHandle rhi_handle = {};
+    SLANG_CALL(m_rhi_fence->getSharedHandle(&rhi_handle));
+    return NativeHandle(rhi_handle);
 }
 
 NativeHandle Fence::get_native_handle() const
 {
-    gfx::InteropHandle handle = {};
-    SLANG_CALL(m_gfx_fence->getNativeHandle(&handle));
-#if SGL_HAS_D3D12
-    if (m_device->type() == DeviceType::d3d12)
-        return NativeHandle(reinterpret_cast<ID3D12Fence*>(handle.handleValue));
-#endif
-#if SGL_HAS_VULKAN
-        // currently not supported
-#endif
-    return {};
+    rhi::NativeHandle rhi_handle = {};
+    SLANG_CALL(m_rhi_fence->getNativeHandle(&rhi_handle));
+    return NativeHandle(rhi_handle);
 }
 
 std::string Fence::to_string() const

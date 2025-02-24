@@ -9,7 +9,7 @@
 #include "sgl/core/timer.h"
 
 #include "sgl/device/fwd.h"
-#include "sgl/device/framebuffer.h"
+#include "sgl/device/formats.h"
 
 #include <map>
 
@@ -29,7 +29,7 @@ public:
     ImFont* get_font(const char* name);
 
     void new_frame(uint32_t width, uint32_t height);
-    void render(Framebuffer* framebuffer, CommandBuffer* command_buffer);
+    void render(Texture* texture, CommandEncoder* command_encoder);
 
     bool handle_keyboard_event(const KeyboardEvent& event);
     bool handle_mouse_event(const MouseEvent& event);
@@ -37,7 +37,7 @@ public:
     void process_events();
 
 private:
-    GraphicsPipeline* get_pipeline(Framebuffer* framebuffer);
+    RenderPipeline* get_pipeline(Format format);
 
     static constexpr uint32_t FRAME_COUNT = 3;
 
@@ -58,7 +58,7 @@ private:
 
     std::map<std::string, ImFont*> m_fonts;
 
-    std::map<FramebufferLayoutDesc, ref<GraphicsPipeline>> m_pipelines;
+    std::map<Format, ref<RenderPipeline>> m_pipelines;
 };
 
 } // namespace sgl::ui

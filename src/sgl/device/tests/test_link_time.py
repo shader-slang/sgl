@@ -95,7 +95,7 @@ def test_link_time_constant_value(
     result = device.create_buffer(
         element_count=16,
         struct_type=program.reflection.result,
-        usage=sgl.ResourceUsage.unordered_access,
+        usage=sgl.BufferUsage.unordered_access,
     )
 
     kernel.dispatch(thread_count=[16, 1, 1], vars={"result": result})
@@ -135,7 +135,7 @@ def test_link_time_constants(device_type: sgl.DeviceType, value: int):
     result = device.create_buffer(
         element_count=16,
         struct_type=program.reflection.result,
-        usage=sgl.ResourceUsage.unordered_access,
+        usage=sgl.BufferUsage.unordered_access,
     )
 
     kernel.dispatch(thread_count=[16, 1, 1], vars={"result": result})
@@ -169,7 +169,7 @@ def test_link_time_type(device_type: sgl.DeviceType, op: str):
     result = device.create_buffer(
         element_count=1,
         struct_type=program.reflection.result,
-        usage=sgl.ResourceUsage.unordered_access,
+        usage=sgl.BufferUsage.unordered_access,
     )
 
     kernel.dispatch(thread_count=[1, 1, 1], vars={"result": result})

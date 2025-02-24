@@ -66,7 +66,7 @@ def test_buffer_to_torch(device_type):
     data = np.linspace(0, 15, 16, dtype=np.float32)
     buffer = device.create_buffer(
         size=4 * 16,
-        usage=sgl.ResourceUsage.shared,
+        usage=sgl.BufferUsage.shared,
         data=data,
     )
     tensor1 = buffer.to_torch(type=sgl.DataType.float32)
