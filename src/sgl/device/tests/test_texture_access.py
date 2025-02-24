@@ -79,7 +79,11 @@ def test_read_write_texture(
     if type == sgl.ResourceType.texture_3d and slices > 1:
         return
 
-    if device_type == sgl.DeviceType.metal and type == sgl.ResourceType.texture_1d and mips > 1:
+    if (
+        device_type == sgl.DeviceType.metal
+        and type == sgl.ResourceType.texture_1d
+        and mips > 1
+    ):
         pytest.skip("Metal does not support 1d texture with mips")
 
     # Create texture and build random data
@@ -127,8 +131,12 @@ def test_shader_read_write_texture(
     if type == sgl.ResourceType.texture_3d and mips != 1:
         pytest.skip("Pending slang fix for 3d textures with mips")
 
-    if device_type == sgl.DeviceType.metal and type == sgl.ResourceType.texture_1d and mips > 1:
-         pytest.skip("Metal does not support 1d texture with mips")
+    if (
+        device_type == sgl.DeviceType.metal
+        and type == sgl.ResourceType.texture_1d
+        and mips > 1
+    ):
+        pytest.skip("Metal does not support 1d texture with mips")
 
     # Create texture and build random data
     src_tex = device.create_texture(**make_args(type, slices, mips))

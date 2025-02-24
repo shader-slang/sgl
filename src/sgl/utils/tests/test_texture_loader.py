@@ -158,6 +158,7 @@ def create_test_array(
         img = img.reshape((height, width))
     return img
 
+
 @pytest.mark.parametrize("format", FORMATS)
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_load_texture_from_bitmap(device_type: sgl.DeviceType, format: FormatEntry):
@@ -169,7 +170,9 @@ def test_load_texture_from_bitmap(device_type: sgl.DeviceType, format: FormatEnt
         pytest.skip("Format not supported as shader resource")
 
     if device_type == sgl.DeviceType.metal and format.pixel_format == PixelFormat.rgb:
-        pytest.skip("Metal does not support rgb format: https://developer.apple.com/metal/Metal-Feature-Set-Tables.pdf")
+        pytest.skip(
+            "Metal does not support rgb format: https://developer.apple.com/metal/Metal-Feature-Set-Tables.pdf"
+        )
 
     # Create empty bitmap
     bitmap = Bitmap(
