@@ -117,7 +117,7 @@ public:
 
     void dispatch(uint3 thread_count);
     void dispatch_thread_groups(uint3 thread_group_count);
-    void dispatch_thread_groups_indirect(const Buffer* cmd_buffer, DeviceOffset offset);
+    void dispatch_thread_groups_indirect(BufferWithOffset arg_buffer);
 
     // virtual SLANG_NO_THROW void SLANG_MCALL dispatchCompute(uint32_t x, uint32_t y, uint32_t z) = 0;
     // virtual SLANG_NO_THROW void SLANG_MCALL dispatchComputeIndirect(IBuffer* argBuffer, uint64_t offset) = 0;
@@ -126,6 +126,7 @@ public:
 
 private:
     rhi::IComputePassEncoder* m_rhi_compute_pass_encoder;
+    uint3 m_thread_group_size;
 
     friend class CommandEncoder;
 };

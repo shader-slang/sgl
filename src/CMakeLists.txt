@@ -349,9 +349,6 @@ target_link_libraries(sgl
         glfw
         tevclient
         $<$<BOOL:${SGL_HAS_D3D12}>:d3d12>
-        $<$<BOOL:${SGL_HAS_AGILITY_SDK}>:agility_sdk>
-        # $<$<BOOL:${SGL_HAS_AFTERMATH}>:aftermath>
-        $<$<BOOL:${SGL_HAS_NVAPI}>:nvapi>
         $<$<BOOL:${SGL_HAS_LIBPNG}>:PNG::PNG>
         $<$<BOOL:${SGL_HAS_LIBJPEG}>:JPEG::JPEG>
         $<$<BOOL:${SGL_HAS_OPENEXR}>:OpenEXR::OpenEXR>
