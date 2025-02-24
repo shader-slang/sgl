@@ -400,8 +400,8 @@ private:
 
             // Handle shader object if possible.
             if constexpr (requires { self.set_object(nullptr); }) {
-                if (nb::isinstance<MutableShaderObject>(nbval)) {
-                    self.set_object(nb::cast<ref<MutableShaderObject>>(nbval));
+                if (nb::isinstance<ShaderObject>(nbval)) {
+                    self.set_object(nb::cast<ref<ShaderObject>>(nbval));
                     return;
                 }
             }

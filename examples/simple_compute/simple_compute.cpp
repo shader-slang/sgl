@@ -96,8 +96,7 @@ int main()
 
         if (true) {
             // Method 3: Use mutable shader object
-            ref<MutableShaderObject> processor_object
-                = device->create_mutable_shader_object(kernel->reflection()["processor"]);
+            ref<ShaderObject> processor_object = device->create_shader_object(kernel->reflection()["processor"]);
             {
                 auto processor = ShaderCursor(processor_object);
                 processor["a"] = buffer_a;

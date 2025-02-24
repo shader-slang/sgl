@@ -63,9 +63,7 @@ if True:
 
 if True:
     # Method 3: Use mutable shader object
-    processor_object = device.create_mutable_shader_object(
-        kernel.reflection["processor"]
-    )
+    processor_object = device.create_shader_object(kernel.reflection["processor"])
     processor = sgl.ShaderCursor(processor_object)
     processor.a = buffer_a
     processor.b = buffer_b

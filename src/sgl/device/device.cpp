@@ -282,10 +282,6 @@ Device::~Device()
 
     m_rhi_graphics_queue.setNull();
     m_rhi_device.setNull();
-
-#if SGL_HAS_NVAPI
-    m_api_dispatcher.reset();
-#endif
 }
 
 ShaderCacheStats Device::shader_cache_stats() const
@@ -489,9 +485,9 @@ ref<ShaderProgram> Device::load_program(
     return m_slang_session->load_program(module_name, entry_point_names, additional_source, link_options);
 }
 
-ref<MutableShaderObject> Device::create_mutable_shader_object(const ShaderProgram* shader_program)
+ref<ShaderObject> Device::create_root_shader_object(const ShaderProgram* shader_program)
 {
-    ref<MutableShaderObject> shader_object = make_ref<MutableShaderObject>(ref<Device>(this), shader_program);
+    ref<ShaderObject> shader_object = make_ref<ShaderObject>(ref<Device>(this), shader_program);
 
     // Bind the debug printer to the new shader object, if enabled.
     if (m_debug_printer)
@@ -500,15 +496,15 @@ ref<MutableShaderObject> Device::create_mutable_shader_object(const ShaderProgra
     return shader_object;
 }
 
-ref<MutableShaderObject> Device::create_mutable_shader_object(const TypeLayoutReflection* type_layout)
+ref<ShaderObject> Device::create_shader_object(const TypeLayoutReflection* type_layout)
 {
-    return make_ref<MutableShaderObject>(ref<Device>(this), type_layout);
+    return make_ref<ShaderObject>(ref<Device>(this), type_layout);
 }
 
-ref<MutableShaderObject> Device::create_mutable_shader_object(ReflectionCursor cursor)
+ref<ShaderObject> Device::create_shader_object(ReflectionCursor cursor)
 {
     SGL_CHECK(cursor.is_valid(), "Invalid reflection cursor");
-    return create_mutable_shader_object(cursor.type_layout().get());
+    return create_shader_object(cursor.type_layout().get());
 }
 
 ref<ComputePipeline> Device::create_compute_pipeline(ComputePipelineDesc desc)
@@ -542,9 +538,6 @@ uint64_t Device::submit_command_buffer(CommandBuffer* command_buffer, CommandQue
 {
     SGL_CHECK_NOT_NULL(command_buffer);
     SGL_CHECK(queue == CommandQueueType::graphics, "Only graphics queue is supported.");
-
-    if (command_buffer->is_open())
-        SGL_THROW("Cannot submit open command buffer.");
 
     // TODO make parameter
     void* cuda_stream = 0;
@@ -607,28 +600,11 @@ void Device::run_garbage_collection()
 {
     uint64_t signaled_value = m_global_fence->signaled_value();
 
-    // Finish current transient resource heap and push it to the in-flight queue.
-    if (m_current_transient_resource_heap) {
-        m_current_transient_resource_heap->finish();
-        m_in_flight_transient_resource_heaps.push({m_current_transient_resource_heap, signaled_value});
-        m_current_transient_resource_heap.setNull();
-    }
-
     // Execute deferred releases on the upload and read-back heaps.
     m_upload_heap->execute_deferred_releases();
     m_read_back_heap->execute_deferred_releases();
 
     uint64_t current_value = m_global_fence->current_value();
-
-    // Reset transient resource heaps that are no longer in use.
-    while (m_in_flight_transient_resource_heaps.size()
-           && m_in_flight_transient_resource_heaps.front().second <= current_value) {
-        Slang::ComPtr<rhi::ITransientResourceHeap> transient_resource_heap
-            = m_in_flight_transient_resource_heaps.front().first;
-        m_in_flight_transient_resource_heaps.pop();
-        transient_resource_heap->synchronizeAndReset();
-        m_transient_resource_heap_pool.push(transient_resource_heap);
-    }
 
     // Update hot reload system if created.
     if (m_hot_reload)

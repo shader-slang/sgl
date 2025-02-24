@@ -22,9 +22,7 @@ AccelerationStructure::AccelerationStructure(ref<Device> device, AccelerationStr
     SLANG_CALL(m_device->rhi_device()->createAccelerationStructure(rhi_desc, m_rhi_acceleration_structure.writeRef()));
 }
 
-AccelerationStructure::~AccelerationStructure()
-{
-}
+AccelerationStructure::~AccelerationStructure() { }
 
 DeviceAddress AccelerationStructure::device_address() const
 {

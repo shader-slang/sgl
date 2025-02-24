@@ -447,7 +447,7 @@ void ShaderCursor::set_data(const void* data, size_t size) const
     m_shader_object->set_data(m_offset, data, size);
 }
 
-void ShaderCursor::set_object(const ref<MutableShaderObject>& object) const
+void ShaderCursor::set_object(const ref<ShaderObject>& object) const
 {
     slang::TypeReflection* type = m_type_layout->getType();
 
@@ -572,7 +572,7 @@ void ShaderCursor::_set_matrix(
 //
 
 template<>
-SGL_API void ShaderCursor::set(const ref<MutableShaderObject>& value) const
+SGL_API void ShaderCursor::set(const ref<ShaderObject>& value) const
 {
     set_object(value);
 }

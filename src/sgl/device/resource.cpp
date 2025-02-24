@@ -404,9 +404,7 @@ Texture::Texture(ref<Device> device, TextureDesc desc, rhi::ITexture* resource)
     m_rhi_texture = resource;
 }
 
-Texture::~Texture()
-{
-}
+Texture::~Texture() { }
 
 SubresourceLayout Texture::get_subresource_layout(uint32_t subresource) const
 {

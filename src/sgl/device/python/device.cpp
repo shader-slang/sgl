@@ -694,23 +694,22 @@ SGL_PY_EXPORT(device_device)
     );
 
     device.def(
-        "create_mutable_shader_object",
-        nb::overload_cast<const ShaderProgram*>(&Device::create_mutable_shader_object),
+        "create_root_shader_object",
+        nb::overload_cast<const ShaderProgram*>(&Device::create_root_shader_object),
         "shader_program"_a,
-        D(Device, create_mutable_shader_object)
+        D_NA(Device, create_root_shader_object)
     );
     device.def(
-        "create_mutable_shader_object",
-        [](Device* self, ref<TypeLayoutReflection> type_layout)
-        { return self->create_mutable_shader_object(type_layout); },
+        "create_shader_object",
+        [](Device* self, ref<TypeLayoutReflection> type_layout) { return self->create_shader_object(type_layout); },
         "type_layout"_a,
-        D(Device, create_mutable_shader_object, 2)
+        D_NA(Device, create_shader_object)
     );
     device.def(
-        "create_mutable_shader_object",
-        nb::overload_cast<ReflectionCursor>(&Device::create_mutable_shader_object),
+        "create_shader_object",
+        nb::overload_cast<ReflectionCursor>(&Device::create_shader_object),
         "cursor"_a,
-        D(Device, create_mutable_shader_object, 3)
+        D_NA(Device, create_shader_object, 2)
     );
 
     device.def(

@@ -121,8 +121,6 @@ class CommandBuffer;
 
 class ShaderCursor;
 class ShaderObject;
-class TransientShaderObject;
-class MutableShaderObject;
 
 // input_layout.h
 

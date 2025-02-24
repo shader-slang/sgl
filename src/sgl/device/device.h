@@ -392,11 +392,11 @@ public:
 
     void reload_all_programs();
 
-    ref<MutableShaderObject> create_mutable_shader_object(const ShaderProgram* shader_program);
+    ref<ShaderObject> create_root_shader_object(const ShaderProgram* shader_program);
 
-    ref<MutableShaderObject> create_mutable_shader_object(const TypeLayoutReflection* type_layout);
+    ref<ShaderObject> create_shader_object(const TypeLayoutReflection* type_layout);
 
-    ref<MutableShaderObject> create_mutable_shader_object(ReflectionCursor cursor);
+    ref<ShaderObject> create_shader_object(ReflectionCursor cursor);
 
     ref<ComputePipeline> create_compute_pipeline(ComputePipelineDesc desc);
 

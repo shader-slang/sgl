@@ -57,6 +57,168 @@ namespace detail {
 } // namespace detail
 
 // ----------------------------------------------------------------------------
+// PassEncoder
+// ----------------------------------------------------------------------------
+
+void PassEncoder::push_debug_group(const char* name, float3 color)
+{
+    m_rhi_pass_encoder->pushDebugGroup(name, &color[0]);
+}
+
+void PassEncoder::pop_debug_group()
+{
+    m_rhi_pass_encoder->popDebugGroup();
+}
+
+void PassEncoder::insert_debug_marker(const char* name, float3 color)
+{
+    m_rhi_pass_encoder->insertDebugMarker(name, &color[0]);
+}
+
+// ----------------------------------------------------------------------------
+// RenderPassEncoder
+// ----------------------------------------------------------------------------
+
+ShaderObject* RenderPassEncoder::bind_pipeline(RenderPipeline* pipeline)
+{
+    SGL_CHECK_NOT_NULL(pipeline);
+
+    rhi::IShaderObject* rhi_shader_object = m_rhi_render_pass_encoder->bindPipeline(pipeline->rhi_pipeline());
+
+    // TODO(slang-rhi) return ShaderObject
+    return nullptr;
+}
+
+void RenderPassEncoder::bind_pipeline(RenderPipeline* pipeline, ShaderObject* root_object)
+{
+    SGL_CHECK_NOT_NULL(pipeline);
+    SGL_CHECK_NOT_NULL(root_object);
+
+    m_rhi_render_pass_encoder->bindPipeline(pipeline->rhi_pipeline(), root_object->rhi_shader_object());
+}
+
+void RenderPassEncoder::set_render_state(const RenderState& state)
+{
+    rhi::RenderState rhi_state = {};
+    rhi_state.stencilRef = state.stencil_ref;
+    for (size_t i = 0; i < state.viewports.size(); ++i)
+        rhi_state.viewports[i] = stdx::bit_cast<rhi::Viewport>(state.viewports[i]);
+    rhi_state.viewportCount = narrow_cast<uint32_t>(state.viewports.size());
+    for (size_t i = 0; i < state.scissor_rects.size(); ++i)
+        rhi_state.scissorRects[i] = stdx::bit_cast<rhi::ScissorRect>(state.scissor_rects[i]);
+    rhi_state.scissorRectCount = narrow_cast<uint32_t>(state.scissor_rects.size());
+    for (size_t i = 0; i < state.vertex_buffers.size(); i++)
+        rhi_state.vertexBuffers[i] = detail::to_rhi(state.vertex_buffers[i]);
+    rhi_state.vertexBufferCount = narrow_cast<uint32_t>(state.vertex_buffers.size());
+    rhi_state.indexBuffer = detail::to_rhi(state.index_buffer);
+    rhi_state.indexFormat = static_cast<rhi::IndexFormat>(state.index_format);
+
+    m_rhi_render_pass_encoder->setRenderState(rhi_state);
+}
+
+void RenderPassEncoder::draw(const DrawArguments& args)
+{
+    m_rhi_render_pass_encoder->draw(detail::to_rhi(args));
+}
+
+void RenderPassEncoder::draw_indexed(const DrawArguments& args)
+{
+    m_rhi_render_pass_encoder->drawIndexed(detail::to_rhi(args));
+}
+
+void RenderPassEncoder::draw_indirect(
+    uint32_t max_draw_count,
+    BufferWithOffset arg_buffer,
+    BufferWithOffset count_buffer
+)
+{
+    // TODO(slang-rhi)
+    SGL_UNUSED(max_draw_count, arg_buffer, count_buffer);
+    SGL_UNIMPLEMENTED();
+    // m_rhi_render_pass_encoder->drawIndirect(max_draw_count, detail::to_rhi(arg_buffer),
+    // detail::to_rhi(count_buffer));
+}
+
+void RenderPassEncoder::draw_indexed_indirect(
+    uint32_t max_draw_count,
+    BufferWithOffset arg_buffer,
+    BufferWithOffset count_buffer
+)
+{
+    // TODO(slang-rhi)
+    SGL_UNUSED(max_draw_count, arg_buffer, count_buffer);
+    SGL_UNIMPLEMENTED();
+    // m_rhi_render_pass_encoder->drawIndexedIndirect(max_draw_count, detail::to_rhi(arg_buffer),
+    // detail::to_rhi(count_buffer));
+}
+
+void RenderPassEncoder::draw_mesh_tasks(uint3 dimensions)
+{
+    m_rhi_render_pass_encoder->drawMeshTasks(dimensions.x, dimensions.y, dimensions.z);
+}
+
+void RenderPassEncoder::end()
+{
+    m_rhi_render_pass_encoder->end();
+}
+
+// ----------------------------------------------------------------------------
+// ComputePassEncoder
+// ----------------------------------------------------------------------------
+
+ShaderObject* ComputePassEncoder::bind_pipeline(ComputePipeline* pipeline)
+{
+    SGL_CHECK_NOT_NULL(pipeline);
+
+    rhi::IShaderObject* rhi_shader_object = m_rhi_compute_pass_encoder->bindPipeline(pipeline->rhi_pipeline());
+
+    // TODO(slang-rhi) return ShaderObject
+    return nullptr;
+}
+
+void ComputePassEncoder::bind_pipeline(ComputePipeline* pipeline, ShaderObject* root_object)
+{
+    SGL_CHECK_NOT_NULL(pipeline);
+    SGL_CHECK_NOT_NULL(root_object);
+
+    m_rhi_compute_pass_encoder->bindPipeline(pipeline->rhi_pipeline(), root_object->rhi_shader_object());
+}
+
+// ----------------------------------------------------------------------------
+// RayTracingPassEncoder
+// ----------------------------------------------------------------------------
+
+ShaderObject* RayTracingPassEncoder::bind_pipeline(RayTracingPipeline* pipeline, ShaderTable* shader_table)
+{
+    SGL_CHECK_NOT_NULL(pipeline);
+
+    rhi::IShaderObject* rhi_shader_object
+        = m_rhi_ray_tracing_pass_encoder->bindPipeline(pipeline->rhi_pipeline(), shader_table->rhi_shader_table());
+
+    // TODO(slang-rhi) return ShaderObject
+    return nullptr;
+}
+
+void RayTracingPassEncoder::bind_pipeline(
+    RayTracingPipeline* pipeline,
+    ShaderTable* shader_table,
+    ShaderObject* root_object
+)
+{
+    SGL_CHECK_NOT_NULL(pipeline);
+    SGL_CHECK_NOT_NULL(shader_table);
+    SGL_CHECK_NOT_NULL(root_object);
+
+    m_rhi_ray_tracing_pass_encoder
+        ->bindPipeline(pipeline->rhi_pipeline(), shader_table->rhi_shader_table(), root_object->rhi_shader_object());
+}
+
+void RayTracingPassEncoder::dispatch_rays(uint32_t ray_gen_shader_index, uint3 dimensions)
+{
+    m_rhi_ray_tracing_pass_encoder->dispatchRays(ray_gen_shader_index, dimensions.x, dimensions.y, dimensions.z);
+}
+
+// ----------------------------------------------------------------------------
 // CommandEncoder
 // ----------------------------------------------------------------------------
 
@@ -65,16 +227,24 @@ RenderPassEncoder* CommandEncoder::begin_render_pass(const RenderPassDesc& desc)
     // TODO(slang-rhi)
     SGL_UNUSED(desc);
     SGL_UNIMPLEMENTED();
+    rhi::RenderPassDesc rhi_desc = {};
+    m_render_pass_encoder.m_rhi_render_pass_encoder = m_rhi_command_encoder->beginRenderPass(rhi_desc);
+    m_render_pass_encoder.m_rhi_pass_encoder = m_render_pass_encoder.m_rhi_render_pass_encoder;
+    return &m_render_pass_encoder;
 }
 ComputePassEncoder* CommandEncoder::begin_compute_pass()
 {
     // TODO(slang-rhi)
     SGL_UNIMPLEMENTED();
+    m_compute_pass_encoder.m_rhi_compute_pass_encoder = m_rhi_command_encoder->beginComputePass();
+    return &m_compute_pass_encoder;
 }
 RayTracingPassEncoder* CommandEncoder::begin_ray_tracing_pass()
 {
     // TODO(slang-rhi)
     SGL_UNIMPLEMENTED();
+    m_ray_tracing_pass_encoder.m_rhi_ray_tracing_pass_encoder = m_rhi_command_encoder->beginRayTracingPass();
+    return &m_ray_tracing_pass_encoder;
 }
 
 void CommandEncoder::copy_buffer(
@@ -439,163 +609,6 @@ void CommandEncoder::write_timestamp(QueryPool* query_pool, uint32_t index)
     SGL_CHECK_LE(index, query_pool->desc().count);
 
     m_rhi_command_encoder->writeTimestamp(query_pool->rhi_query_pool(), index);
-}
-
-// ----------------------------------------------------------------------------
-// PassEncoder
-// ----------------------------------------------------------------------------
-
-void PassEncoder::push_debug_group(const char* name, float3 color)
-{
-    m_rhi_pass_encoder->pushDebugGroup(name, &color[0]);
-}
-
-void PassEncoder::pop_debug_group()
-{
-    m_rhi_pass_encoder->popDebugGroup();
-}
-
-void PassEncoder::insert_debug_marker(const char* name, float3 color)
-{
-    m_rhi_pass_encoder->insertDebugMarker(name, &color[0]);
-}
-
-// ----------------------------------------------------------------------------
-// RenderPassEncoder
-// ----------------------------------------------------------------------------
-
-ShaderObject* RenderPassEncoder::bind_pipeline(RenderPipeline* pipeline)
-{
-    SGL_CHECK_NOT_NULL(pipeline);
-
-    rhi::IShaderObject* rhi_shader_object = m_rhi_render_pass_encoder->bindPipeline(pipeline->rhi_pipeline());
-
-    // TODO(slang-rhi) return ShaderObject
-    return nullptr;
-}
-
-void RenderPassEncoder::bind_pipeline(RenderPipeline* pipeline, ShaderObject* root_object)
-{
-    SGL_CHECK_NOT_NULL(pipeline);
-    SGL_CHECK_NOT_NULL(root_object);
-
-    m_rhi_render_pass_encoder->bindPipeline(pipeline->rhi_pipeline(), root_object->rhi_shader_object());
-}
-
-void RenderPassEncoder::set_render_state(const RenderState& state)
-{
-    rhi::RenderState rhi_state = {};
-    rhi_state.stencilRef = state.stencil_ref;
-    for (size_t i = 0; i < state.viewports.size(); ++i)
-        rhi_state.viewports[i] = stdx::bit_cast<rhi::Viewport>(state.viewports[i]);
-    rhi_state.viewportCount = narrow_cast<uint32_t>(state.viewports.size());
-    for (size_t i = 0; i < state.scissor_rects.size(); ++i)
-        rhi_state.scissorRects[i] = stdx::bit_cast<rhi::ScissorRect>(state.scissor_rects[i]);
-    rhi_state.scissorRectCount = narrow_cast<uint32_t>(state.scissor_rects.size());
-    for (size_t i = 0; i < state.vertex_buffers.size(); i++)
-        rhi_state.vertexBuffers[i] = detail::to_rhi(state.vertex_buffers[i]);
-    rhi_state.vertexBufferCount = narrow_cast<uint32_t>(state.vertex_buffers.size());
-    rhi_state.indexBuffer = detail::to_rhi(state.index_buffer);
-    rhi_state.indexFormat = static_cast<rhi::IndexFormat>(state.index_format);
-
-    m_rhi_render_pass_encoder->setRenderState(rhi_state);
-}
-
-void RenderPassEncoder::draw(const DrawArguments& args)
-{
-    m_rhi_render_pass_encoder->draw(detail::to_rhi(args));
-}
-
-void RenderPassEncoder::draw_indexed(const DrawArguments& args)
-{
-    m_rhi_render_pass_encoder->drawIndexed(detail::to_rhi(args));
-}
-
-void RenderPassEncoder::draw_indirect(
-    uint32_t max_draw_count,
-    BufferWithOffset arg_buffer,
-    BufferWithOffset count_buffer
-)
-{
-    // TODO(slang-rhi)
-    SGL_UNUSED(max_draw_count, arg_buffer, count_buffer);
-    SGL_UNIMPLEMENTED();
-    // m_rhi_render_pass_encoder->drawIndirect(max_draw_count, detail::to_rhi(arg_buffer),
-    // detail::to_rhi(count_buffer));
-}
-
-void RenderPassEncoder::draw_indexed_indirect(
-    uint32_t max_draw_count,
-    BufferWithOffset arg_buffer,
-    BufferWithOffset count_buffer
-)
-{
-    // TODO(slang-rhi)
-    SGL_UNUSED(max_draw_count, arg_buffer, count_buffer);
-    SGL_UNIMPLEMENTED();
-    // m_rhi_render_pass_encoder->drawIndexedIndirect(max_draw_count, detail::to_rhi(arg_buffer),
-    // detail::to_rhi(count_buffer));
-}
-
-void RenderPassEncoder::draw_mesh_tasks(uint3 dimensions)
-{
-    m_rhi_render_pass_encoder->drawMeshTasks(dimensions.x, dimensions.y, dimensions.z);
-}
-
-void RenderPassEncoder::end()
-{
-    m_rhi_render_pass_encoder->end();
-}
-
-// ----------------------------------------------------------------------------
-// ComputePassEncoder
-// ----------------------------------------------------------------------------
-
-ShaderObject* ComputePassEncoder::bind_pipeline(ComputePipeline* pipeline)
-{
-    SGL_CHECK_NOT_NULL(pipeline);
-
-    rhi::IShaderObject* rhi_shader_object = m_rhi_compute_pass_encoder->bindPipeline(pipeline->rhi_pipeline());
-
-    // TODO(slang-rhi) return ShaderObject
-    return nullptr;
-}
-
-void ComputePassEncoder::bind_pipeline(ComputePipeline* pipeline, ShaderObject* root_object)
-{
-    SGL_CHECK_NOT_NULL(pipeline);
-    SGL_CHECK_NOT_NULL(root_object);
-
-    m_rhi_compute_pass_encoder->bindPipeline(pipeline->rhi_pipeline(), root_object->rhi_shader_object());
-}
-
-// ----------------------------------------------------------------------------
-// RayTracingPassEncoder
-// ----------------------------------------------------------------------------
-
-ShaderObject* RayTracingPassEncoder::bind_pipeline(RayTracingPipeline* pipeline, ShaderTable* shader_table)
-{
-    SGL_CHECK_NOT_NULL(pipeline);
-
-    rhi::IShaderObject* rhi_shader_object
-        = m_rhi_ray_tracing_pass_encoder->bindPipeline(pipeline->rhi_pipeline(), shader_table->rhi_shader_table());
-
-    // TODO(slang-rhi) return ShaderObject
-    return nullptr;
-}
-
-void RayTracingPassEncoder::bind_pipeline(
-    RayTracingPipeline* pipeline,
-    ShaderTable* shader_table,
-    ShaderObject* root_object
-)
-{
-    SGL_CHECK_NOT_NULL(pipeline);
-    SGL_CHECK_NOT_NULL(shader_table);
-    SGL_CHECK_NOT_NULL(root_object);
-
-    m_rhi_ray_tracing_pass_encoder
-        ->bindPipeline(pipeline->rhi_pipeline(), shader_table->rhi_shader_table(), root_object->rhi_shader_object());
 }
 
 
