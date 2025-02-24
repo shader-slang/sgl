@@ -806,7 +806,7 @@ bool Device::enable_agility_sdk()
 {
 #if SGL_HAS_D3D12 && SGL_HAS_AGILITY_SDK
     std::filesystem::path exe_dir = platform::executable_directory();
-    std::filesystem::path sdk_dir = platform::runtime_directory() / SGL_AGILITY_SDK_PATH;
+    std::filesystem::path sdk_dir = platform::runtime_directory() / SLANG_RHI_AGILITY_SDK_PATH;
 
     // Agility SDK can only be loaded from a relative path to the executable.
     // Make sure both paths use the same drive letter.
@@ -850,7 +850,7 @@ bool Device::enable_agility_sdk()
     }
 
     // Set the SDK version and path.
-    if (!SUCCEEDED(pD3D12SDKConfiguration->SetSDKVersion(SGL_AGILITY_SDK_VERSION, rel_path.string().c_str()))) {
+    if (!SUCCEEDED(pD3D12SDKConfiguration->SetSDKVersion(SLANG_RHI_AGILITY_SDK_VERSION, rel_path.string().c_str()))) {
         log_warn("Cannot enable D3D12 Agility SDK: "
                  "Calling SetSDKVersion failed.");
         return false;

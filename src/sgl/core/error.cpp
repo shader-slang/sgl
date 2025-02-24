@@ -19,7 +19,7 @@ void set_exception_diagnostics(ExceptionDiagnosticFlags flags)
 void throw_exception(const SourceLocation& loc, std::string_view msg)
 {
     std::string error_msg = fmt::format("{}\n", msg);
-    error_msg += fmt::format("{}({}) in function {}", loc.file_name, loc.line, loc.function_name);
+    error_msg += fmt::format("{}:{} in function {}", loc.file_name, loc.line, loc.function_name);
 
     bool debugger_present = platform::is_debugger_present();
     bool python_active = platform::is_python_active();
@@ -38,7 +38,7 @@ void throw_exception(const SourceLocation& loc, std::string_view msg)
 void report_assertion(const SourceLocation& loc, std::string_view cond)
 {
     std::string error_msg = fmt::format("Assertion failed: {}\n", cond);
-    error_msg += fmt::format("{}({}) in function {}", loc.file_name, loc.line, loc.function_name);
+    error_msg += fmt::format("{}:{} in function {}", loc.file_name, loc.line, loc.function_name);
 
     bool debugger_present = platform::is_debugger_present();
     bool python_active = platform::is_python_active();
