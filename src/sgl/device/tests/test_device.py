@@ -76,11 +76,6 @@ def test_device_close_handler(device_type: sgl.DeviceType):
 def test_global_buffer_alignment(device_type: sgl.DeviceType):
     device = helpers.get_device(device_type)
 
-    if device_type == sgl.DeviceType.metal:
-        pytest.skip(
-            "Texture is not implemented for Metal yet, trace by https://github.com/shader-slang/slang/issues/6386"
-        )
-
     # Create a small 16B buffer.
     small_buffer = device.create_buffer(
         usage=sgl.ResourceUsage.unordered_access | sgl.ResourceUsage.shader_resource,
