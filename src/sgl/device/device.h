@@ -17,14 +17,13 @@
 #include "sgl/core/platform.h"
 #include "sgl/math/vector_types.h"
 
-#include <slang-gfx.h>
+#include <slang-rhi.h>
 
 #include <array>
 #include <filesystem>
 #include <optional>
 #include <string>
 #include <vector>
-#include <queue>
 
 namespace sgl {
 
@@ -64,12 +63,12 @@ struct AdapterInfo {
 };
 
 enum class DeviceType {
-    automatic,
-    d3d12,
-    vulkan,
-    metal,
-    cpu,
-    cuda,
+    automatic = rhi::DeviceType::Default,
+    d3d12 = rhi::DeviceType::D3D12,
+    vulkan = rhi::DeviceType::Vulkan,
+    metal = rhi::DeviceType::Metal,
+    cpu = rhi::DeviceType::CPU,
+    cuda = rhi::DeviceType::CUDA,
 };
 
 SGL_ENUM_INFO(
@@ -213,7 +212,7 @@ public:
     bool supports_cuda_interop() const { return m_supports_cuda_interop; }
 
     /// Returns the supported resource states for a given format.
-    ResourceStateSet get_format_supported_resource_states(Format format) const;
+    FormatSupport get_format_support(Format format) const;
 
     /// Default slang session.
     SlangSession* slang_session() const { return m_slang_session; }
@@ -239,30 +238,20 @@ public:
     // Resource creation
 
     /**
-     * \brief Create a new swapchain.
+     * \brief Create a new surface.
      *
-     * \param format Format of the swapchain images.
-     * \param width Width of the swapchain images in pixels.
-     * \param height Height of the swapchain images in pixels.
-     * \param image_count Number of swapchain images.
-     * \param enable_vsync Enable/disable vertical synchronization.
-     * \param window Window to create the swapchain for.
-     * \return New swapchain object.
+     * \param window Window to create the surface for.
+     * \return New surface object.
      */
-    ref<Swapchain> create_swapchain(SwapchainDesc desc, Window* window);
+    ref<Surface> create_surface(Window* window);
 
     /**
-     * \brief Create a new swapchain.
+     * \brief Create a new surface.
      *
-     * \param format Format of the swapchain images.
-     * \param width Width of the swapchain images in pixels.
-     * \param height Height of the swapchain images in pixels.
-     * \param image_count Number of swapchain images.
-     * \param enable_vsync Enable/disable vertical synchronization.
-     * \param window_handle Native window handle to create the swapchain for.
-     * \return New swapchain object.
+     * \param window_handle Native window handle to create the surface for.
+     * \return New surface object.
      */
-    ref<Swapchain> create_swapchain(SwapchainDesc desc, WindowHandle window_handle);
+    ref<Surface> create_surface(WindowHandle window_handle);
 
     /**
      * \brief Create a new buffer.
@@ -275,12 +264,14 @@ public:
      * \param initial_state Initial resource state.
      * \param usage Resource usage flags.
      * \param memory_type Memory type.
-     * \param debug_name Resource debug name.
+     * \param label Debug label.
      * \param data Initial data to upload to the buffer.
      * \param data_size Size of the initial data in bytes.
      * \return New buffer object.
      */
     ref<Buffer> create_buffer(BufferDesc desc);
+
+    ref<BufferView> create_buffer_view(Buffer* buffer, BufferViewDesc desc);
 
     /**
      * \brief Create a new texture.
@@ -296,13 +287,15 @@ public:
      * \param quality Quality level for multisampled textures.
      * \param usage Resource usage.
      * \param memory_type Memory type.
-     * \param debug_name Debug name.
+     * \param label Debug label.
      * \param data Initial data.
      * \return New texture object.
      */
     ref<Texture> create_texture(TextureDesc desc);
 
-    ref<Texture> create_texture_from_resource(TextureDesc desc, gfx::ITextureResource* resource, bool deferred_release);
+    ref<Texture> create_texture_from_resource(TextureDesc desc, rhi::ITexture* resource);
+
+    ref<TextureView> create_texture_view(Texture* texture, TextureViewDesc desc);
 
     /**
      * \brief Create a new sampler.
@@ -320,6 +313,7 @@ public:
      * \param border_color Border color.
      * \param min_lod Minimum LOD level.
      * \param max_lod Maximum LOD level.
+     * \param label Debug label.
      * \return New sampler object.
      */
     ref<Sampler> create_sampler(SamplerDesc desc);
@@ -351,17 +345,11 @@ public:
      */
     ref<InputLayout> create_input_layout(InputLayoutDesc desc);
 
-    /**
-     * \brief Create a new framebuffer.
-     *
-     * \param render_target List of render targets (see \ref FramebufferAttachmentDesc for details).
-     * \param depth_stencil Optional depth-stencil attachment (see \ref FramebufferAttachmentDesc for details).
-     * \return New framebuffer object.
-     */
-    ref<Framebuffer> create_framebuffer(FramebufferDesc desc);
-
+#if 0
+    AccelerationStructureSizes get_acceleration_structure_sizes(const AccelerationStructureBuildInputs& build_inputs);
     AccelerationStructurePrebuildInfo
     get_acceleration_structure_prebuild_info(const AccelerationStructureBuildInputs& build_inputs);
+#endif
 
     ref<AccelerationStructure> create_acceleration_structure(AccelerationStructureDesc desc);
 
@@ -412,19 +400,13 @@ public:
 
     ref<ComputePipeline> create_compute_pipeline(ComputePipelineDesc desc);
 
-    ref<GraphicsPipeline> create_graphics_pipeline(GraphicsPipelineDesc desc);
+    ref<RenderPipeline> create_render_pipeline(RenderPipelineDesc desc);
 
     ref<RayTracingPipeline> create_ray_tracing_pipeline(RayTracingPipelineDesc desc);
 
     ref<ComputeKernel> create_compute_kernel(ComputeKernelDesc desc);
 
-    ref<CommandBuffer> create_command_buffer();
-
-    void _set_open_command_buffer(CommandBuffer* command_buffer);
-    Slang::ComPtr<gfx::ITransientResourceHeap> _get_or_create_transient_resource_heap();
-
-    CommandBuffer* _begin_shared_command_buffer();
-    void _end_shared_command_buffer(bool wait);
+    ref<CommandEncoder> create_command_encoder(CommandQueueType queue = CommandQueueType::graphics);
 
     /**
      * \brief Submit a command buffer to the device.
@@ -540,10 +522,8 @@ public:
      */
     OwnedSubresourceData read_texture_data(const Texture* texture, uint32_t subresource);
 
-    void deferred_release(ISlangUnknown* object);
-
-    gfx::IDevice* gfx_device() const { return m_gfx_device; }
-    gfx::ICommandQueue* gfx_graphics_queue() const { return m_gfx_graphics_queue; }
+    rhi::IDevice* rhi_device() const { return m_rhi_device; }
+    rhi::ICommandQueue* rhi_graphics_queue() const { return m_rhi_graphics_queue; }
 
     slang::IGlobalSession* global_session() const { return m_global_session; }
 
@@ -618,8 +598,8 @@ private:
     bool m_shader_cache_enabled{false};
     std::filesystem::path m_shader_cache_path;
 
-    Slang::ComPtr<gfx::IDevice> m_gfx_device;
-    Slang::ComPtr<gfx::ICommandQueue> m_gfx_graphics_queue;
+    Slang::ComPtr<rhi::IDevice> m_rhi_device;
+    Slang::ComPtr<rhi::ICommandQueue> m_rhi_graphics_queue;
     Slang::ComPtr<slang::IGlobalSession> m_global_session;
 
     ref<SlangSession> m_slang_session;
@@ -638,33 +618,11 @@ private:
     CommandBuffer* m_open_command_buffer{nullptr};
     ref<CommandBuffer> m_shared_command_buffer;
 
-    /// Currently active transient resource heap.
-    /// All command buffers are created on this heap.
-    Slang::ComPtr<gfx::ITransientResourceHeap> m_current_transient_resource_heap;
-
-    /// Transient resource heaps available for reuse.
-    std::queue<Slang::ComPtr<gfx::ITransientResourceHeap>> m_transient_resource_heap_pool;
-
-    /// Transient resource heaps that are currently in flight.
-    std::queue<std::pair<Slang::ComPtr<gfx::ITransientResourceHeap>, uint64_t>> m_in_flight_transient_resource_heaps;
-
     /// List of callbacks for hot reload event
     std::vector<ShaderHotReloadCallback> m_shader_hot_reload_callbacks;
 
     /// List of callbacks for shutdown event
     std::vector<DeviceCloseCallback> m_device_close_callbacks;
-
-    struct DeferredRelease {
-        uint64_t fence_value;
-        Slang::ComPtr<ISlangUnknown> object;
-    };
-
-    std::queue<DeferredRelease> m_deferred_release_queue;
-
-#if SGL_HAS_NVAPI
-    class PipelineCreationAPIDispatcher;
-    std::unique_ptr<PipelineCreationAPIDispatcher> m_api_dispatcher;
-#endif
 
     ref<Blitter> m_blitter;
     ref<HotReload> m_hot_reload;

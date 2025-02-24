@@ -2,7 +2,6 @@
 
 #include "nanobind.h"
 
-#include "sgl/device/framebuffer.h"
 #include "sgl/device/resource.h"
 
 namespace sgl {

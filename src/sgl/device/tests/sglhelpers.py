@@ -115,8 +115,8 @@ def dispatch_compute(
             buffer = desc
         else:
             args: Any = {
-                "usage": sgl.ResourceUsage.shader_resource
-                | sgl.ResourceUsage.unordered_access,
+                "usage": sgl.BufferUsage.shader_resource
+                | sgl.BufferUsage.unordered_access,
             }
             if "size" in desc:
                 args["size"] = desc["size"]

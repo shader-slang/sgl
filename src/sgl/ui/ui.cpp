@@ -16,7 +16,6 @@
 #include "sgl/device/command.h"
 #include "sgl/device/shader_cursor.h"
 #include "sgl/device/pipeline.h"
-#include "sgl/device/framebuffer.h"
 
 #include <imgui.h>
 #include <cmrc/cmrc.hpp>
@@ -312,7 +311,7 @@ Context::Context(ref<Device> device)
             .width = narrow_cast<uint32_t>(width),
             .height = narrow_cast<uint32_t>(height),
             .mip_count = 1,
-            .usage = ResourceUsage::shader_resource,
+            .usage = TextureUsage::shader_resource,
             .data = pixels,
             .data_size = size_t(width * height * 4),
         });
@@ -356,12 +355,12 @@ void Context::new_frame(uint32_t width, uint32_t height)
     ImGui::NewFrame();
 }
 
-void Context::render(Framebuffer* framebuffer, CommandBuffer* command_buffer)
+void Context::render(Texture* texture, CommandEncoder* command_encoder)
 {
     ImGui::SetCurrentContext(m_imgui_context);
     ImGuiIO& io = ImGui::GetIO();
 
-    bool is_srgb_format = get_format_info(framebuffer->desc().render_targets[0]->resource()->format()).is_srgb_format();
+    bool is_srgb_format = get_format_info(texture->format()).is_srgb_format();
 
     m_screen->render();
 
@@ -378,9 +377,9 @@ void Context::render(Framebuffer* framebuffer, CommandBuffer* command_buffer)
         if (!vertex_buffer || vertex_buffer->size() < draw_data->TotalVtxCount * sizeof(ImDrawVert)) {
             vertex_buffer = m_device->create_buffer({
                 .size = draw_data->TotalVtxCount * sizeof(ImDrawVert) + 128 * 1024,
-                .usage = ResourceUsage::vertex,
                 .memory_type = MemoryType::upload,
-                .debug_name = "imgui vertex buffer",
+                .usage = BufferUsage::vertex_buffer,
+                .label = "imgui vertex buffer",
             });
         }
 
@@ -388,9 +387,9 @@ void Context::render(Framebuffer* framebuffer, CommandBuffer* command_buffer)
         if (!index_buffer || index_buffer->size() < draw_data->TotalIdxCount * sizeof(ImDrawIdx)) {
             index_buffer = m_device->create_buffer({
                 .size = draw_data->TotalIdxCount * sizeof(ImDrawIdx) + 1024,
-                .usage = ResourceUsage::index,
                 .memory_type = MemoryType::upload,
-                .debug_name = "imgui index buffer",
+                .usage = BufferUsage::index_buffer,
+                .label = "imgui index buffer",
             });
         }
 
@@ -513,21 +512,20 @@ void Context::process_events()
     m_screen->dispatch_events();
 }
 
-GraphicsPipeline* Context::get_pipeline(Framebuffer* framebuffer)
+RenderPipeline* Context::get_pipeline(Format format)
 {
-    auto it = m_pipelines.find(framebuffer->layout()->desc());
+    auto it = m_pipelines.find(format);
     if (it != m_pipelines.end())
         return it->second;
 
     // Create pipeline.
-    ref<GraphicsPipeline> pipeline = m_device->create_graphics_pipeline({
+    ref<RenderPipeline> pipeline = m_device->create_render_pipeline({
         .program = m_program,
         .input_layout = m_input_layout,
-        .framebuffer_layout = framebuffer->layout(),
-        .primitive_type = PrimitiveType::triangle,
-        .blend = {.targets = {
+        .primitive_topology = PrimitiveTopology::triangle_list,
+        .targets = {
             {
-                .enable_blend = true,
+                .format = format,
                 .color = {
                     .src_factor = BlendFactor::src_alpha,
                     .dst_factor = BlendFactor::inv_src_alpha,
@@ -538,11 +536,12 @@ GraphicsPipeline* Context::get_pipeline(Framebuffer* framebuffer)
                     .dst_factor = BlendFactor::inv_src_alpha,
                     .op = BlendOp::add,
                 },
+                .enable_blend = true,
             },
-        }},
+        },
     });
 
-    m_pipelines.emplace(framebuffer->layout()->desc(), pipeline);
+    m_pipelines.emplace(format, pipeline);
     return pipeline;
 }
 

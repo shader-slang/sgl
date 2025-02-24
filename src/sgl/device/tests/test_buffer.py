@@ -20,7 +20,7 @@ def test_buffer_init_data(device_type: sgl.DeviceType):
     with pytest.raises(Exception):
         buffer = device.create_buffer(
             size=4 * 1024 - 1,
-            usage=sgl.ResourceUsage.shader_resource,
+            usage=sgl.BufferUsage.shader_resource,
             data=data,
         )
 
@@ -28,13 +28,13 @@ def test_buffer_init_data(device_type: sgl.DeviceType):
     with pytest.raises(Exception):
         buffer = device.create_buffer(
             size=4 * 1024 + 1,
-            usage=sgl.ResourceUsage.shader_resource,
+            usage=sgl.BufferUsage.shader_resource,
             data=data,
         )
 
     buffer = device.create_buffer(
         size=4 * 1024,
-        usage=sgl.ResourceUsage.shader_resource,
+        usage=sgl.BufferUsage.shader_resource,
         data=data,
     )
     readback = buffer.to_numpy().view(np.uint32)
@@ -88,13 +88,13 @@ def test_buffer(device_type: sgl.DeviceType, type: str, size_MB: int):
     # create device local buffer
     device_buffer = device.create_buffer(
         size=size,
-        usage=sgl.ResourceUsage.shader_resource | sgl.ResourceUsage.unordered_access,
+        usage=sgl.BufferUsage.shader_resource | sgl.BufferUsage.unordered_access,
     )
 
     # check we can get usage
     assert (
         device_buffer.desc.usage
-        == sgl.ResourceUsage.shader_resource | sgl.ResourceUsage.unordered_access
+        == sgl.BufferUsage.shader_resource | sgl.BufferUsage.unordered_access
     )
 
     element_count = device_buffer.size // element_size
@@ -110,13 +110,13 @@ def test_buffer(device_type: sgl.DeviceType, type: str, size_MB: int):
     # create upload buffer
     write_buffer = device.create_buffer(
         size=check_count * element_size,
-        usage=sgl.ResourceUsage.shader_resource,
+        usage=sgl.BufferUsage.shader_resource,
     )
 
     # create read-back buffer
     read_buffer = device.create_buffer(
         size=check_count * element_size,
-        usage=sgl.ResourceUsage.unordered_access,
+        usage=sgl.BufferUsage.unordered_access,
     )
 
     copy_kernel = device.create_compute_kernel(

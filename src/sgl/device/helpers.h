@@ -4,7 +4,7 @@
 
 #include "sgl/core/error.h"
 
-#include <slang-gfx.h>
+#include <slang-rhi.h>
 
 
 namespace sgl {

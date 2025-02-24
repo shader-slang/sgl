@@ -10,7 +10,6 @@
 #include "sgl/device/pipeline.h"
 #include "sgl/device/raytracing.h"
 #include "sgl/device/shader_object.h"
-#include "sgl/device/framebuffer.h"
 #include "sgl/device/native_handle_traits.h"
 #include "sgl/device/cuda_utils.h"
 #include "sgl/device/cuda_interop.h"
@@ -27,17 +26,580 @@
 namespace sgl {
 
 namespace detail {
-    gfx::SubresourceRange gfx_subresource_range(const Texture* texture, uint32_t subresource_index)
+    rhi::SubresourceRange rhi_subresource_range(const Texture* texture, uint32_t subresource_index)
     {
-        return gfx::SubresourceRange{
-            .mipLevel = narrow_cast<gfx::GfxIndex>(texture->get_subresource_mip_level(subresource_index)),
+        return rhi::SubresourceRange{
+            .mipLevel = texture->get_subresource_mip_level(subresource_index),
             .mipLevelCount = 1,
-            .baseArrayLayer = narrow_cast<gfx::GfxIndex>(texture->get_subresource_array_slice(subresource_index)),
+            .baseArrayLayer = texture->get_subresource_array_slice(subresource_index),
             .layerCount = 1,
+        };
+    }
+
+    rhi::BufferWithOffset to_rhi(const BufferWithOffset& buffer_with_offset)
+    {
+        return rhi::BufferWithOffset(
+            buffer_with_offset.buffer ? buffer_with_offset.buffer->rhi_buffer() : nullptr,
+            buffer_with_offset.offset
+        );
+    }
+
+    rhi::DrawArguments to_rhi(const DrawArguments& draw_args)
+    {
+        return rhi::DrawArguments{
+            .vertexCount = draw_args.vertex_count,
+            .instanceCount = draw_args.instance_count,
+            .startVertexLocation = draw_args.start_vertex_location,
+            .startInstanceLocation = draw_args.start_instance_location,
+            .startIndexLocation = draw_args.start_index_location,
         };
     }
 } // namespace detail
 
+// ----------------------------------------------------------------------------
+// CommandEncoder
+// ----------------------------------------------------------------------------
+
+RenderPassEncoder* CommandEncoder::begin_render_pass(const RenderPassDesc& desc)
+{
+    // TODO(slang-rhi)
+    SGL_UNUSED(desc);
+    SGL_UNIMPLEMENTED();
+}
+ComputePassEncoder* CommandEncoder::begin_compute_pass()
+{
+    // TODO(slang-rhi)
+    SGL_UNIMPLEMENTED();
+}
+RayTracingPassEncoder* CommandEncoder::begin_ray_tracing_pass()
+{
+    // TODO(slang-rhi)
+    SGL_UNIMPLEMENTED();
+}
+
+void CommandEncoder::copy_buffer(
+    Buffer* dst,
+    DeviceOffset dst_offset,
+    const Buffer* src,
+    DeviceOffset src_offset,
+    DeviceSize size
+)
+{
+    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK_NOT_NULL(dst);
+    SGL_CHECK_NOT_NULL(src);
+    SGL_CHECK_LE(dst_offset + size, dst->size());
+    SGL_CHECK_LE(src_offset + size, src->size());
+
+    m_rhi_command_encoder->copyBuffer(dst->rhi_buffer(), dst_offset, src->rhi_buffer(), src_offset, size);
+}
+
+void CommandEncoder::copy_texture(
+    Texture* dst,
+    uint32_t dst_subresource,
+    uint3 dst_offset,
+    const Texture* src,
+    uint32_t src_subresource,
+    uint3 src_offset,
+    uint3 extent
+)
+{
+    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK_NOT_NULL(dst);
+    SGL_CHECK_NOT_NULL(src);
+    SGL_CHECK_LT(dst_subresource, dst->subresource_count());
+    SGL_CHECK_LT(src_subresource, src->subresource_count());
+
+    rhi::SubresourceRange dst_sr = detail::rhi_subresource_range(dst, dst_subresource);
+    rhi::SubresourceRange src_sr = detail::rhi_subresource_range(src, src_subresource);
+
+    if (all(extent == uint3(-1)))
+        extent = src->get_mip_dimensions(src_sr.mipLevel) - src_offset;
+
+    rhi::Extents rhi_extent
+        = {narrow_cast<int32_t>(extent.x), narrow_cast<int32_t>(extent.y), narrow_cast<int32_t>(extent.z)};
+
+    m_rhi_command_encoder->copyTexture(
+        dst->rhi_texture(),
+        dst_sr,
+        rhi::Offset3D(dst_offset.x, dst_offset.y, dst_offset.z),
+        src->rhi_texture(),
+        src_sr,
+        rhi::Offset3D(src_offset.x, src_offset.y, src_offset.z),
+        rhi_extent
+    );
+}
+
+void CommandEncoder::copy_texture_to_buffer(
+    Buffer* dst,
+    DeviceOffset dst_offset,
+    DeviceSize dst_size,
+    DeviceSize dst_row_stride,
+    const Texture* src,
+    uint32_t src_subresource,
+    uint3 src_offset,
+    uint3 extent
+)
+{
+    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK_NOT_NULL(dst);
+    SGL_CHECK(dst_offset + dst_size <= dst->size(), "Destination buffer is too small");
+    SGL_CHECK_NOT_NULL(src);
+    SGL_CHECK_LT(src_subresource, src->subresource_count());
+
+    const FormatInfo& info = get_format_info(src->format());
+    SGL_CHECK(
+        (src_offset.x % info.block_width == 0) && (src_offset.y % info.block_height == 0),
+        "Source offset ({},{}) must be a multiple of the block size ({}x{})",
+        src_offset.x,
+        src_offset.y,
+        info.block_width,
+        info.block_height
+    );
+
+    if (all(extent == uint3(-1))) {
+        extent = src->get_mip_dimensions(src->get_subresource_mip_level(src_subresource)) - src_offset;
+    }
+
+    // TODO: in D3D12, the extent must be a multiple of the block size (this should be fixed in gfx instead)
+    if (m_device->type() == DeviceType::d3d12) {
+        extent.x = align_to(info.block_width, extent.x);
+        extent.y = align_to(info.block_height, extent.y);
+    }
+
+    rhi::SubresourceRange src_sr = detail::rhi_subresource_range(src, src_subresource);
+    m_rhi_command_encoder->copyTextureToBuffer(
+        dst->rhi_buffer(),
+        dst_offset,
+        dst_size,
+        dst_row_stride,
+        src->rhi_texture(),
+        src_sr,
+        rhi::Offset3D(src_offset.x, src_offset.y, src_offset.z),
+        rhi::Extents{narrow_cast<int32_t>(extent.x), narrow_cast<int32_t>(extent.y), narrow_cast<int32_t>(extent.z)}
+    );
+}
+
+void CommandEncoder::upload_buffer_data(Buffer* buffer, size_t offset, size_t size, const void* data)
+{
+    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK_NOT_NULL(buffer);
+    SGL_CHECK(offset + size <= buffer->size(), "Buffer upload is out of bounds");
+    SGL_CHECK_NOT_NULL(data);
+
+    set_buffer_state(buffer, ResourceState::copy_destination);
+
+    m_rhi_command_encoder->uploadBufferData(buffer->rhi_buffer(), offset, size, const_cast<void*>(data));
+}
+
+void CommandEncoder::upload_texture_data(Texture* texture, uint32_t subresource, SubresourceData subresource_data)
+{
+    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK_NOT_NULL(texture);
+    SGL_CHECK_LT(subresource, texture->subresource_count());
+
+    rhi::SubresourceData rhi_subresource_data = {
+        .data = const_cast<void*>(subresource_data.data),
+        .strideY = subresource_data.row_pitch,
+        .strideZ = subresource_data.slice_pitch,
+    };
+
+    rhi::SubresourceRange sr = detail::rhi_subresource_range(texture, subresource);
+    m_rhi_command_encoder->uploadTextureData(
+        texture->rhi_texture(),
+        sr,
+        rhi::Offset3D(0, 0, 0),
+        rhi::Extents{-1, -1, -1},
+        &rhi_subresource_data,
+        1
+    );
+}
+
+void CommandEncoder::clear_buffer(Buffer* buffer, BufferRange range)
+{
+    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK_NOT_NULL(buffer);
+
+    m_rhi_command_encoder->clearBuffer(buffer->rhi_buffer(), range.offset, range.size);
+}
+
+void CommandEncoder::clear_texture(
+    Texture* texture,
+    float4 clear_value,
+    SubresourceRange range,
+    bool clear_depth,
+    bool clear_stencil
+)
+{
+    // TODO(slang-rhi)
+    SGL_UNUSED(texture, clear_value, range, clear_depth, clear_stencil);
+    SGL_UNIMPLEMENTED();
+}
+
+void CommandEncoder::clear_texture(
+    Texture* texture,
+    uint4 clear_value,
+    SubresourceRange range,
+    bool clear_depth,
+    bool clear_stencil
+)
+{
+    // TODO(slang-rhi)
+    SGL_UNUSED(texture, clear_value, range, clear_depth, clear_stencil);
+    SGL_UNIMPLEMENTED();
+}
+
+void CommandEncoder::blit(TextureView* dst, TextureView* src, TextureFilteringMode filter)
+{
+    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK_NOT_NULL(dst);
+    SGL_CHECK_NOT_NULL(src);
+    m_device->_blitter()->blit(this, dst, src, filter);
+}
+
+void CommandEncoder::blit(Texture* dst, Texture* src, TextureFilteringMode filter)
+{
+    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK_NOT_NULL(dst);
+    SGL_CHECK_NOT_NULL(src);
+    // TODO(slang-rhi)
+    SGL_UNUSED(dst, src, filter);
+    SGL_UNIMPLEMENTED();
+}
+
+void CommandEncoder::resolve_query(
+    QueryPool* query_pool,
+    uint32_t index,
+    uint32_t count,
+    Buffer* buffer,
+    DeviceOffset offset
+)
+{
+    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK_NOT_NULL(query_pool);
+    SGL_CHECK_NOT_NULL(buffer);
+    SGL_CHECK_LE(index + count, query_pool->desc().count);
+    SGL_CHECK_LE(offset + count * sizeof(uint64_t), buffer->size());
+
+    m_rhi_command_encoder->resolveQuery(query_pool->rhi_query_pool(), index, count, buffer->rhi_buffer(), offset);
+}
+
+#if 0
+void CommandEncoder::build_acceleration_structure(
+    const AccelerationStructureBuildDesc& desc,
+    std::span<AccelerationStructureQueryDesc> queries
+)
+{
+    rhi::IAccelerationStructure::BuildDesc rhi_build_desc{
+        .inputs = reinterpret_cast<const rhi::IAccelerationStructure::BuildInputs&>(desc.inputs),
+        .source = desc.src ? desc.src->rhi_acceleration_structure() : nullptr,
+        .dest = desc.dst ? desc.dst->rhi_acceleration_structure() : nullptr,
+        .scratchData = desc.scratch_data,
+    };
+
+    short_vector<rhi::AccelerationStructureQueryDesc, 16> rhi_query_descs(queries.size(), {});
+    for (size_t i = 0; i < queries.size(); i++) {
+        rhi_query_descs[i] = {
+            .queryType = static_cast<rhi::QueryType>(queries[i].query_type),
+            .queryPool = queries[i].query_pool->rhi_query_pool(),
+            .firstQueryIndex = narrow_cast<rhi::GfxIndex>(queries[i].first_query_index),
+        };
+    }
+
+    m_rhi_ray_tracing_command_encoder->buildAccelerationStructure(
+        rhi_build_desc,
+        narrow_cast<rhi::GfxCount>(rhi_query_descs.size()),
+        rhi_query_descs.data()
+    );
+
+    m_rhi_command_encoder->buildAccelerationStructure()
+}
+#endif
+
+void CommandEncoder::copy_acceleration_structure(
+    AccelerationStructure* dst,
+    AccelerationStructure* src,
+    AccelerationStructureCopyMode mode
+)
+{
+    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK_NOT_NULL(dst);
+
+    m_rhi_command_encoder->copyAccelerationStructure(
+        dst->rhi_acceleration_structure(),
+        src->rhi_acceleration_structure(),
+        static_cast<rhi::AccelerationStructureCopyMode>(mode)
+    );
+}
+
+void CommandEncoder::query_acceleration_structure_properties(
+    std::span<AccelerationStructure*> acceleration_structures,
+    std::span<AccelerationStructureQueryDesc> queries
+)
+{
+    SGL_CHECK(m_open, "Command encoder is closed");
+
+    short_vector<rhi::IAccelerationStructure*, 16> rhi_acceleration_structures(acceleration_structures.size(), nullptr);
+    for (size_t i = 0; i < acceleration_structures.size(); i++)
+        rhi_acceleration_structures[i] = acceleration_structures[i]->rhi_acceleration_structure();
+
+    short_vector<rhi::AccelerationStructureQueryDesc, 16> rhi_queries(queries.size(), {});
+    for (size_t i = 0; i < queries.size(); i++) {
+        rhi_queries[i] = {
+            .queryType = static_cast<rhi::QueryType>(queries[i].query_type),
+            .queryPool = queries[i].query_pool->rhi_query_pool(),
+            .firstQueryIndex = queries[i].first_query_index,
+        };
+    }
+
+    m_rhi_command_encoder->queryAccelerationStructureProperties(
+        narrow_cast<uint32_t>(rhi_acceleration_structures.size()),
+        rhi_acceleration_structures.data(),
+        narrow_cast<uint32_t>(rhi_queries.size()),
+        rhi_queries.data()
+    );
+}
+
+void CommandEncoder::serialize_acceleration_structure(BufferWithOffset dst, AccelerationStructure* src)
+{
+    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK_NOT_NULL(dst.buffer);
+    SGL_CHECK_NOT_NULL(src);
+
+    m_rhi_command_encoder->serializeAccelerationStructure(detail::to_rhi(dst), src->rhi_acceleration_structure());
+}
+
+void CommandEncoder::deserialize_acceleration_structure(AccelerationStructure* dst, BufferWithOffset src)
+{
+    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK_NOT_NULL(dst);
+    SGL_CHECK_NOT_NULL(src.buffer);
+
+    m_rhi_command_encoder->deserializeAccelerationStructure(dst->rhi_acceleration_structure(), detail::to_rhi(src));
+}
+
+void CommandEncoder::set_buffer_state(Buffer* buffer, ResourceState state)
+{
+    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK_NOT_NULL(buffer);
+
+    m_rhi_command_encoder->setBufferState(buffer->rhi_buffer(), static_cast<rhi::ResourceState>(state));
+}
+
+void CommandEncoder::set_texture_state(Texture* texture, ResourceState state)
+{
+    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK_NOT_NULL(texture);
+
+    m_rhi_command_encoder->setTextureState(texture->rhi_texture(), static_cast<rhi::ResourceState>(state));
+}
+
+void CommandEncoder::set_texture_state(Texture* texture, SubresourceRange range, ResourceState state)
+{
+    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK_NOT_NULL(texture);
+
+    m_rhi_command_encoder->setTextureState(
+        texture->rhi_texture(),
+        {
+            .mipLevel = range.mip_level,
+            .mipLevelCount = range.mip_count,
+            .baseArrayLayer = range.base_array_layer,
+            .layerCount = range.layer_count,
+        },
+        static_cast<rhi::ResourceState>(state)
+    );
+}
+
+void CommandEncoder::push_debug_group(const char* name, float3 color)
+{
+    SGL_CHECK(m_open, "Command encoder is closed");
+
+    m_rhi_command_encoder->pushDebugGroup(name, &color[0]);
+}
+
+void CommandEncoder::pop_debug_group()
+{
+    SGL_CHECK(m_open, "Command encoder is closed");
+
+    m_rhi_command_encoder->popDebugGroup();
+}
+
+void CommandEncoder::insert_debug_marker(const char* name, float3 color)
+{
+    SGL_CHECK(m_open, "Command encoder is closed");
+
+    m_rhi_command_encoder->insertDebugMarker(name, &color[0]);
+}
+
+void CommandEncoder::write_timestamp(QueryPool* query_pool, uint32_t index)
+{
+    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK_NOT_NULL(query_pool);
+    SGL_CHECK_LE(index, query_pool->desc().count);
+
+    m_rhi_command_encoder->writeTimestamp(query_pool->rhi_query_pool(), index);
+}
+
+// ----------------------------------------------------------------------------
+// PassEncoder
+// ----------------------------------------------------------------------------
+
+void PassEncoder::push_debug_group(const char* name, float3 color)
+{
+    m_rhi_pass_encoder->pushDebugGroup(name, &color[0]);
+}
+
+void PassEncoder::pop_debug_group()
+{
+    m_rhi_pass_encoder->popDebugGroup();
+}
+
+void PassEncoder::insert_debug_marker(const char* name, float3 color)
+{
+    m_rhi_pass_encoder->insertDebugMarker(name, &color[0]);
+}
+
+// ----------------------------------------------------------------------------
+// RenderPassEncoder
+// ----------------------------------------------------------------------------
+
+ShaderObject* RenderPassEncoder::bind_pipeline(RenderPipeline* pipeline)
+{
+    SGL_CHECK_NOT_NULL(pipeline);
+
+    rhi::IShaderObject* rhi_shader_object = m_rhi_render_pass_encoder->bindPipeline(pipeline->rhi_pipeline());
+
+    // TODO(slang-rhi) return ShaderObject
+    return nullptr;
+}
+
+void RenderPassEncoder::bind_pipeline(RenderPipeline* pipeline, ShaderObject* root_object)
+{
+    SGL_CHECK_NOT_NULL(pipeline);
+    SGL_CHECK_NOT_NULL(root_object);
+
+    m_rhi_render_pass_encoder->bindPipeline(pipeline->rhi_pipeline(), root_object->rhi_shader_object());
+}
+
+void RenderPassEncoder::set_render_state(const RenderState& state)
+{
+    rhi::RenderState rhi_state = {};
+    rhi_state.stencilRef = state.stencil_ref;
+    for (size_t i = 0; i < state.viewports.size(); ++i)
+        rhi_state.viewports[i] = stdx::bit_cast<rhi::Viewport>(state.viewports[i]);
+    rhi_state.viewportCount = narrow_cast<uint32_t>(state.viewports.size());
+    for (size_t i = 0; i < state.scissor_rects.size(); ++i)
+        rhi_state.scissorRects[i] = stdx::bit_cast<rhi::ScissorRect>(state.scissor_rects[i]);
+    rhi_state.scissorRectCount = narrow_cast<uint32_t>(state.scissor_rects.size());
+    for (size_t i = 0; i < state.vertex_buffers.size(); i++)
+        rhi_state.vertexBuffers[i] = detail::to_rhi(state.vertex_buffers[i]);
+    rhi_state.vertexBufferCount = narrow_cast<uint32_t>(state.vertex_buffers.size());
+    rhi_state.indexBuffer = detail::to_rhi(state.index_buffer);
+    rhi_state.indexFormat = static_cast<rhi::IndexFormat>(state.index_format);
+
+    m_rhi_render_pass_encoder->setRenderState(rhi_state);
+}
+
+void RenderPassEncoder::draw(const DrawArguments& args)
+{
+    m_rhi_render_pass_encoder->draw(detail::to_rhi(args));
+}
+
+void RenderPassEncoder::draw_indexed(const DrawArguments& args)
+{
+    m_rhi_render_pass_encoder->drawIndexed(detail::to_rhi(args));
+}
+
+void RenderPassEncoder::draw_indirect(
+    uint32_t max_draw_count,
+    BufferWithOffset arg_buffer,
+    BufferWithOffset count_buffer
+)
+{
+    // TODO(slang-rhi)
+    SGL_UNUSED(max_draw_count, arg_buffer, count_buffer);
+    SGL_UNIMPLEMENTED();
+    // m_rhi_render_pass_encoder->drawIndirect(max_draw_count, detail::to_rhi(arg_buffer),
+    // detail::to_rhi(count_buffer));
+}
+
+void RenderPassEncoder::draw_indexed_indirect(
+    uint32_t max_draw_count,
+    BufferWithOffset arg_buffer,
+    BufferWithOffset count_buffer
+)
+{
+    // TODO(slang-rhi)
+    SGL_UNUSED(max_draw_count, arg_buffer, count_buffer);
+    SGL_UNIMPLEMENTED();
+    // m_rhi_render_pass_encoder->drawIndexedIndirect(max_draw_count, detail::to_rhi(arg_buffer),
+    // detail::to_rhi(count_buffer));
+}
+
+void RenderPassEncoder::draw_mesh_tasks(uint3 dimensions)
+{
+    m_rhi_render_pass_encoder->drawMeshTasks(dimensions.x, dimensions.y, dimensions.z);
+}
+
+void RenderPassEncoder::end()
+{
+    m_rhi_render_pass_encoder->end();
+}
+
+// ----------------------------------------------------------------------------
+// ComputePassEncoder
+// ----------------------------------------------------------------------------
+
+ShaderObject* ComputePassEncoder::bind_pipeline(ComputePipeline* pipeline)
+{
+    SGL_CHECK_NOT_NULL(pipeline);
+
+    rhi::IShaderObject* rhi_shader_object = m_rhi_compute_pass_encoder->bindPipeline(pipeline->rhi_pipeline());
+
+    // TODO(slang-rhi) return ShaderObject
+    return nullptr;
+}
+
+void ComputePassEncoder::bind_pipeline(ComputePipeline* pipeline, ShaderObject* root_object)
+{
+    SGL_CHECK_NOT_NULL(pipeline);
+    SGL_CHECK_NOT_NULL(root_object);
+
+    m_rhi_compute_pass_encoder->bindPipeline(pipeline->rhi_pipeline(), root_object->rhi_shader_object());
+}
+
+// ----------------------------------------------------------------------------
+// RayTracingPassEncoder
+// ----------------------------------------------------------------------------
+
+ShaderObject* RayTracingPassEncoder::bind_pipeline(RayTracingPipeline* pipeline, ShaderTable* shader_table)
+{
+    SGL_CHECK_NOT_NULL(pipeline);
+
+    rhi::IShaderObject* rhi_shader_object
+        = m_rhi_ray_tracing_pass_encoder->bindPipeline(pipeline->rhi_pipeline(), shader_table->rhi_shader_table());
+
+    // TODO(slang-rhi) return ShaderObject
+    return nullptr;
+}
+
+void RayTracingPassEncoder::bind_pipeline(
+    RayTracingPipeline* pipeline,
+    ShaderTable* shader_table,
+    ShaderObject* root_object
+)
+{
+    SGL_CHECK_NOT_NULL(pipeline);
+    SGL_CHECK_NOT_NULL(shader_table);
+    SGL_CHECK_NOT_NULL(root_object);
+
+    m_rhi_ray_tracing_pass_encoder
+        ->bindPipeline(pipeline->rhi_pipeline(), shader_table->rhi_shader_table(), root_object->rhi_shader_object());
+}
+
+
+#if 0
 
 // ----------------------------------------------------------------------------
 // ComputeCommandEncoder
@@ -61,10 +623,10 @@ ref<TransientShaderObject> ComputeCommandEncoder::bind_pipeline(const ComputePip
     SGL_CHECK_NOT_NULL(pipeline);
 
     m_bound_pipeline = pipeline;
-    gfx::IShaderObject* gfx_shader_object;
-    SLANG_CALL(m_gfx_compute_command_encoder->bindPipeline(pipeline->gfx_pipeline_state(), &gfx_shader_object));
+    rhi::IShaderObject* rhi_shader_object;
+    SLANG_CALL(m_rhi_compute_command_encoder->bindPipeline(pipeline->rhi_pipeline(), &rhi_shader_object));
     ref<TransientShaderObject> transient_shader_object
-        = make_ref<TransientShaderObject>(ref<Device>(m_command_buffer->device()), gfx_shader_object, m_command_buffer);
+        = make_ref<TransientShaderObject>(ref<Device>(m_command_buffer->device()), rhi_shader_object, m_command_buffer);
     if (m_command_buffer->device()->debug_printer())
         m_command_buffer->device()->debug_printer()->bind(ShaderCursor(transient_shader_object));
     m_bound_shader_object = transient_shader_object;
@@ -81,8 +643,8 @@ void ComputeCommandEncoder::bind_pipeline(const ComputePipeline* pipeline, const
     // alternatively we could process CUDA buffers at bind time
     m_bound_shader_object = ref<const ShaderObject>(shader_object);
     static_cast<const MutableShaderObject*>(shader_object)->set_resource_states(m_command_buffer);
-    SLANG_CALL(m_gfx_compute_command_encoder
-                   ->bindPipelineWithRootObject(pipeline->gfx_pipeline_state(), shader_object->gfx_shader_object()));
+    SLANG_CALL(m_rhi_compute_command_encoder
+                   ->bindPipelineWithRootObject(pipeline->rhi_pipeline(), shader_object->rhi_shader_object()));
 }
 
 void ComputeCommandEncoder::dispatch(uint3 thread_count)
@@ -104,7 +666,7 @@ void ComputeCommandEncoder::dispatch_thread_groups(uint3 thread_group_count)
     m_bound_shader_object->get_cuda_interop_buffers(m_command_buffer->m_cuda_interop_buffers);
 
     SLANG_CALL(
-        m_gfx_compute_command_encoder->dispatchCompute(thread_group_count.x, thread_group_count.y, thread_group_count.z)
+        m_rhi_compute_command_encoder->dispatchCompute(thread_group_count.x, thread_group_count.y, thread_group_count.z)
     );
 }
 
@@ -113,7 +675,7 @@ void ComputeCommandEncoder::dispatch_thread_groups_indirect(const Buffer* cmd_bu
     SGL_CHECK_NOT_NULL(cmd_buffer);
     SGL_CHECK(m_bound_pipeline, "No pipeline bound");
 
-    SLANG_CALL(m_gfx_compute_command_encoder->dispatchComputeIndirect(cmd_buffer->gfx_buffer_resource(), offset));
+    SLANG_CALL(m_rhi_compute_command_encoder->dispatchComputeIndirect(cmd_buffer->rhi_buffer(), offset));
 }
 
 // ----------------------------------------------------------------------------
@@ -138,10 +700,10 @@ ref<TransientShaderObject> RenderCommandEncoder::bind_pipeline(const GraphicsPip
     SGL_CHECK_NOT_NULL(pipeline);
 
     m_bound_pipeline = pipeline;
-    gfx::IShaderObject* gfx_shader_object;
-    SLANG_CALL(m_gfx_render_command_encoder->bindPipeline(pipeline->gfx_pipeline_state(), &gfx_shader_object));
+    rhi::IShaderObject* rhi_shader_object;
+    SLANG_CALL(m_rhi_render_command_encoder->bindPipeline(pipeline->rhi_pipeline(), &rhi_shader_object));
     ref<TransientShaderObject> transient_shader_object
-        = make_ref<TransientShaderObject>(ref<Device>(m_command_buffer->device()), gfx_shader_object, m_command_buffer);
+        = make_ref<TransientShaderObject>(ref<Device>(m_command_buffer->device()), rhi_shader_object, m_command_buffer);
     if (m_command_buffer->device()->debug_printer())
         m_command_buffer->device()->debug_printer()->bind(ShaderCursor(transient_shader_object));
     m_bound_shader_object = transient_shader_object;
@@ -156,67 +718,67 @@ void RenderCommandEncoder::bind_pipeline(const GraphicsPipeline* pipeline, const
     m_bound_pipeline = pipeline;
     m_bound_shader_object = ref<const ShaderObject>(shader_object);
     static_cast<const MutableShaderObject*>(shader_object)->set_resource_states(m_command_buffer);
-    SLANG_CALL(m_gfx_render_command_encoder
-                   ->bindPipelineWithRootObject(pipeline->gfx_pipeline_state(), shader_object->gfx_shader_object()));
+    SLANG_CALL(m_rhi_render_command_encoder
+                   ->bindPipelineWithRootObject(pipeline->rhi_pipeline(), shader_object->rhi_shader_object()));
 }
 
 void RenderCommandEncoder::set_viewports(std::span<Viewport> viewports)
 {
-    m_gfx_render_command_encoder->setViewports(
-        narrow_cast<gfx::GfxCount>(viewports.size()),
-        reinterpret_cast<const gfx::Viewport*>(viewports.data())
+    m_rhi_render_command_encoder->setViewports(
+        narrow_cast<rhi::GfxCount>(viewports.size()),
+        reinterpret_cast<const rhi::Viewport*>(viewports.data())
     );
 }
 
 void RenderCommandEncoder::set_scissor_rects(std::span<ScissorRect> scissor_rects)
 {
-    m_gfx_render_command_encoder->setScissorRects(
-        narrow_cast<gfx::GfxCount>(scissor_rects.size()),
-        reinterpret_cast<const gfx::ScissorRect*>(scissor_rects.data())
+    m_rhi_render_command_encoder->setScissorRects(
+        narrow_cast<rhi::GfxCount>(scissor_rects.size()),
+        reinterpret_cast<const rhi::ScissorRect*>(scissor_rects.data())
     );
 }
 
 void RenderCommandEncoder::set_viewport_and_scissor_rect(const Viewport& viewport)
 {
-    m_gfx_render_command_encoder->setViewportAndScissor(reinterpret_cast<const gfx::Viewport&>(viewport));
+    m_rhi_render_command_encoder->setViewportAndScissor(reinterpret_cast<const rhi::Viewport&>(viewport));
 }
 
 void RenderCommandEncoder::set_primitive_topology(PrimitiveTopology topology)
 {
-    m_gfx_render_command_encoder->setPrimitiveTopology(static_cast<gfx::PrimitiveTopology>(topology));
+    m_rhi_render_command_encoder->setPrimitiveTopology(static_cast<rhi::PrimitiveTopology>(topology));
 }
 
 void RenderCommandEncoder::set_stencil_reference(uint32_t reference_value)
 {
-    m_gfx_render_command_encoder->setStencilReference(reference_value);
+    m_rhi_render_command_encoder->setStencilReference(reference_value);
 }
 
 void RenderCommandEncoder::set_vertex_buffers(uint32_t start_slot, std::span<Slot> slots)
 {
-    short_vector<gfx::IBufferResource*, 16> gfx_buffers(slots.size(), nullptr);
-    short_vector<gfx::Offset, 16> gfx_offsets(slots.size(), 0);
+    short_vector<rhi::IBufferResource*, 16> rhi_buffers(slots.size(), nullptr);
+    short_vector<rhi::Offset, 16> rhi_offsets(slots.size(), 0);
     for (size_t i = 0; i < slots.size(); i++) {
-        gfx_buffers[i] = slots[i].buffer->gfx_buffer_resource();
-        gfx_offsets[i] = slots[i].offset;
+        rhi_buffers[i] = slots[i].buffer->rhi_buffer();
+        rhi_offsets[i] = slots[i].offset;
     }
-    m_gfx_render_command_encoder->setVertexBuffers(
+    m_rhi_render_command_encoder->setVertexBuffers(
         start_slot,
-        narrow_cast<gfx::GfxCount>(slots.size()),
-        gfx_buffers.data(),
-        gfx_offsets.data()
+        narrow_cast<rhi::GfxCount>(slots.size()),
+        rhi_buffers.data(),
+        rhi_offsets.data()
     );
 }
 
 void RenderCommandEncoder::set_vertex_buffer(uint32_t slot, const Buffer* buffer, DeviceOffset offset)
 {
-    gfx::IBufferResource* gfx_buffer = buffer->gfx_buffer_resource();
-    m_gfx_render_command_encoder->setVertexBuffer(slot, gfx_buffer, offset);
+    rhi::IBufferResource* rhi_buffer = buffer->rhi_buffer();
+    m_rhi_render_command_encoder->setVertexBuffer(slot, rhi_buffer, offset);
 }
 
 void RenderCommandEncoder::set_index_buffer(const Buffer* buffer, Format index_format, DeviceOffset offset)
 {
-    m_gfx_render_command_encoder
-        ->setIndexBuffer(buffer->gfx_buffer_resource(), static_cast<gfx::Format>(index_format), offset);
+    m_rhi_render_command_encoder
+        ->setIndexBuffer(buffer->rhi_buffer(), static_cast<rhi::Format>(index_format), offset);
 }
 
 void RenderCommandEncoder::draw(uint32_t vertex_count, uint32_t start_vertex)
@@ -225,7 +787,7 @@ void RenderCommandEncoder::draw(uint32_t vertex_count, uint32_t start_vertex)
 
     m_bound_shader_object->get_cuda_interop_buffers(m_command_buffer->m_cuda_interop_buffers);
 
-    SLANG_CALL(m_gfx_render_command_encoder->draw(vertex_count, start_vertex));
+    SLANG_CALL(m_rhi_render_command_encoder->draw(vertex_count, start_vertex));
 }
 
 void RenderCommandEncoder::draw_indexed(uint32_t index_count, uint32_t start_index, uint32_t base_vertex)
@@ -234,7 +796,7 @@ void RenderCommandEncoder::draw_indexed(uint32_t index_count, uint32_t start_ind
 
     m_bound_shader_object->get_cuda_interop_buffers(m_command_buffer->m_cuda_interop_buffers);
 
-    SLANG_CALL(m_gfx_render_command_encoder->drawIndexed(index_count, start_index, base_vertex));
+    SLANG_CALL(m_rhi_render_command_encoder->drawIndexed(index_count, start_index, base_vertex));
 }
 
 void RenderCommandEncoder::draw_instanced(
@@ -248,7 +810,7 @@ void RenderCommandEncoder::draw_instanced(
 
     m_bound_shader_object->get_cuda_interop_buffers(m_command_buffer->m_cuda_interop_buffers);
 
-    SLANG_CALL(m_gfx_render_command_encoder->drawInstanced(vertex_count, instance_count, start_vertex, start_instance));
+    SLANG_CALL(m_rhi_render_command_encoder->drawInstanced(vertex_count, instance_count, start_vertex, start_instance));
 }
 
 void RenderCommandEncoder::draw_indexed_instanced(
@@ -263,7 +825,7 @@ void RenderCommandEncoder::draw_indexed_instanced(
 
     m_bound_shader_object->get_cuda_interop_buffers(m_command_buffer->m_cuda_interop_buffers);
 
-    SLANG_CALL(m_gfx_render_command_encoder
+    SLANG_CALL(m_rhi_render_command_encoder
                    ->drawIndexedInstanced(index_count, instance_count, start_index, base_vertex, start_instance));
 }
 
@@ -279,11 +841,11 @@ void RenderCommandEncoder::draw_indirect(
 
     m_bound_shader_object->get_cuda_interop_buffers(m_command_buffer->m_cuda_interop_buffers);
 
-    SLANG_CALL(m_gfx_render_command_encoder->drawIndirect(
+    SLANG_CALL(m_rhi_render_command_encoder->drawIndirect(
         max_draw_count,
-        arg_buffer->gfx_buffer_resource(),
+        arg_buffer->rhi_buffer(),
         arg_offset,
-        count_buffer ? count_buffer->gfx_buffer_resource() : nullptr,
+        count_buffer ? count_buffer->rhi_buffer() : nullptr,
         count_offset
     ));
 }
@@ -300,11 +862,11 @@ void RenderCommandEncoder::draw_indexed_indirect(
 
     m_bound_shader_object->get_cuda_interop_buffers(m_command_buffer->m_cuda_interop_buffers);
 
-    SLANG_CALL(m_gfx_render_command_encoder->drawIndexedIndirect(
+    SLANG_CALL(m_rhi_render_command_encoder->drawIndexedIndirect(
         max_draw_count,
-        arg_buffer->gfx_buffer_resource(),
+        arg_buffer->rhi_buffer(),
         arg_offset,
-        count_buffer ? count_buffer->gfx_buffer_resource() : nullptr,
+        count_buffer ? count_buffer->rhi_buffer() : nullptr,
         count_offset
     ));
 }
@@ -331,10 +893,10 @@ ref<TransientShaderObject> RayTracingCommandEncoder::bind_pipeline(const RayTrac
     SGL_CHECK_NOT_NULL(pipeline);
 
     m_bound_pipeline = pipeline;
-    gfx::IShaderObject* gfx_shader_object;
-    SLANG_CALL(m_gfx_ray_tracing_command_encoder->bindPipeline(pipeline->gfx_pipeline_state(), &gfx_shader_object));
+    rhi::IShaderObject* rhi_shader_object;
+    SLANG_CALL(m_rhi_ray_tracing_command_encoder->bindPipeline(pipeline->rhi_pipeline(), &rhi_shader_object));
     ref<TransientShaderObject> transient_shader_object
-        = make_ref<TransientShaderObject>(ref<Device>(m_command_buffer->device()), gfx_shader_object, m_command_buffer);
+        = make_ref<TransientShaderObject>(ref<Device>(m_command_buffer->device()), rhi_shader_object, m_command_buffer);
     if (m_command_buffer->device()->debug_printer())
         m_command_buffer->device()->debug_printer()->bind(ShaderCursor(transient_shader_object));
     m_bound_shader_object = transient_shader_object;
@@ -349,8 +911,8 @@ void RayTracingCommandEncoder::bind_pipeline(const RayTracingPipeline* pipeline,
     m_bound_pipeline = pipeline;
     m_bound_shader_object = ref<const ShaderObject>(shader_object);
     static_cast<const MutableShaderObject*>(shader_object)->set_resource_states(m_command_buffer);
-    SLANG_CALL(m_gfx_ray_tracing_command_encoder
-                   ->bindPipelineWithRootObject(pipeline->gfx_pipeline_state(), shader_object->gfx_shader_object()));
+    SLANG_CALL(m_rhi_ray_tracing_command_encoder
+                   ->bindPipelineWithRootObject(pipeline->rhi_pipeline(), shader_object->rhi_shader_object()));
 }
 
 void RayTracingCommandEncoder::dispatch_rays(
@@ -364,94 +926,15 @@ void RayTracingCommandEncoder::dispatch_rays(
 
     m_bound_shader_object->get_cuda_interop_buffers(m_command_buffer->m_cuda_interop_buffers);
 
-    SLANG_CALL(m_gfx_ray_tracing_command_encoder->dispatchRays(
-        narrow_cast<gfx::GfxIndex>(ray_gen_shader_index),
-        shader_table->gfx_shader_table(),
-        narrow_cast<gfx::GfxCount>(dimensions.x),
-        narrow_cast<gfx::GfxCount>(dimensions.y),
-        narrow_cast<gfx::GfxCount>(dimensions.z)
+    SLANG_CALL(m_rhi_ray_tracing_command_encoder->dispatchRays(
+        narrow_cast<rhi::GfxIndex>(ray_gen_shader_index),
+        shader_table->rhi_shader_table(),
+        narrow_cast<rhi::GfxCount>(dimensions.x),
+        narrow_cast<rhi::GfxCount>(dimensions.y),
+        narrow_cast<rhi::GfxCount>(dimensions.z)
     ));
 }
 
-void RayTracingCommandEncoder::build_acceleration_structure(
-    const AccelerationStructureBuildDesc& desc,
-    std::span<AccelerationStructureQueryDesc> queries
-)
-{
-    gfx::IAccelerationStructure::BuildDesc gfx_build_desc{
-        .inputs = reinterpret_cast<const gfx::IAccelerationStructure::BuildInputs&>(desc.inputs),
-        .source = desc.src ? desc.src->gfx_acceleration_structure() : nullptr,
-        .dest = desc.dst ? desc.dst->gfx_acceleration_structure() : nullptr,
-        .scratchData = desc.scratch_data,
-    };
-
-    short_vector<gfx::AccelerationStructureQueryDesc, 16> gfx_query_descs(queries.size(), {});
-    for (size_t i = 0; i < queries.size(); i++) {
-        gfx_query_descs[i] = {
-            .queryType = static_cast<gfx::QueryType>(queries[i].query_type),
-            .queryPool = queries[i].query_pool->gfx_query_pool(),
-            .firstQueryIndex = narrow_cast<gfx::GfxIndex>(queries[i].first_query_index),
-        };
-    }
-
-    m_gfx_ray_tracing_command_encoder->buildAccelerationStructure(
-        gfx_build_desc,
-        narrow_cast<gfx::GfxCount>(gfx_query_descs.size()),
-        gfx_query_descs.data()
-    );
-}
-
-void RayTracingCommandEncoder::copy_acceleration_structure(
-    AccelerationStructure* dst,
-    const AccelerationStructure* src,
-    AccelerationStructureCopyMode mode
-)
-{
-    SGL_CHECK_NOT_NULL(dst);
-    SGL_CHECK_NOT_NULL(src);
-
-    m_gfx_ray_tracing_command_encoder->copyAccelerationStructure(
-        dst->gfx_acceleration_structure(),
-        src->gfx_acceleration_structure(),
-        static_cast<gfx::AccelerationStructureCopyMode>(mode)
-    );
-}
-
-void RayTracingCommandEncoder::query_acceleration_structure_properties(
-    std::span<const AccelerationStructure*> acceleration_structures,
-    std::span<AccelerationStructureQueryDesc> queries
-)
-{
-    short_vector<gfx::IAccelerationStructure*, 16> gfx_acceleration_structures(acceleration_structures.size(), nullptr);
-    for (size_t i = 0; i < acceleration_structures.size(); i++)
-        gfx_acceleration_structures[i] = acceleration_structures[i]->gfx_acceleration_structure();
-
-    short_vector<gfx::AccelerationStructureQueryDesc, 16> gfx_queries(queries.size(), {});
-    for (size_t i = 0; i < queries.size(); i++) {
-        gfx_queries[i] = {
-            .queryType = static_cast<gfx::QueryType>(queries[i].query_type),
-            .queryPool = queries[i].query_pool->gfx_query_pool(),
-            .firstQueryIndex = narrow_cast<gfx::GfxIndex>(queries[i].first_query_index),
-        };
-    }
-
-    m_gfx_ray_tracing_command_encoder->queryAccelerationStructureProperties(
-        narrow_cast<gfx::GfxCount>(gfx_acceleration_structures.size()),
-        gfx_acceleration_structures.data(),
-        narrow_cast<gfx::GfxCount>(gfx_queries.size()),
-        gfx_queries.data()
-    );
-}
-
-void RayTracingCommandEncoder::serialize_acceleration_structure(DeviceAddress dst, const AccelerationStructure* src)
-{
-    m_gfx_ray_tracing_command_encoder->serializeAccelerationStructure(dst, src->gfx_acceleration_structure());
-}
-
-void RayTracingCommandEncoder::deserialize_acceleration_structure(AccelerationStructure* dst, DeviceAddress src)
-{
-    m_gfx_ray_tracing_command_encoder->deserializeAccelerationStructure(dst->gfx_acceleration_structure(), src);
-}
 
 // ----------------------------------------------------------------------------
 // CommandBuffer
@@ -475,8 +958,8 @@ void CommandBuffer::open()
 
     m_device->_set_open_command_buffer(this);
 
-    m_gfx_transient_resource_heap = m_device->_get_or_create_transient_resource_heap();
-    SLANG_CALL(m_gfx_transient_resource_heap->createCommandBuffer(m_gfx_command_buffer.writeRef()));
+    m_rhi_transient_resource_heap = m_device->_get_or_create_transient_resource_heap();
+    SLANG_CALL(m_rhi_transient_resource_heap->createCommandBuffer(m_rhi_command_buffer.writeRef()));
     m_open = true;
 }
 
@@ -490,8 +973,8 @@ void CommandBuffer::close()
 
     m_device->_set_open_command_buffer(nullptr);
 
-    end_current_gfx_encoder();
-    m_gfx_command_buffer->close();
+    end_current_rhi_encoder();
+    m_rhi_command_buffer->close();
     m_open = false;
 }
 
@@ -501,38 +984,10 @@ uint64_t CommandBuffer::submit(CommandQueueType queue)
     return m_device->submit_command_buffer(this, queue);
 }
 
-void CommandBuffer::write_timestamp(QueryPool* query_pool, uint32_t index)
-{
-    SGL_CHECK(m_open, "Command buffer is closed");
-    SGL_CHECK_NOT_NULL(query_pool);
-    SGL_CHECK_LE(index, query_pool->desc().count);
-
-    get_gfx_resource_command_encoder()->writeTimestamp(query_pool->gfx_query_pool(), index);
-}
-
-void CommandBuffer::resolve_query(
-    QueryPool* query_pool,
-    uint32_t index,
-    uint32_t count,
-    Buffer* buffer,
-    DeviceOffset offset
-)
-{
-    SGL_CHECK(m_open, "Command buffer is closed");
-    SGL_CHECK_NOT_NULL(query_pool);
-    SGL_CHECK_NOT_NULL(buffer);
-    SGL_CHECK_LE(index + count, query_pool->desc().count);
-    SGL_CHECK_LE(offset + count * sizeof(uint64_t), buffer->size());
-
-    set_buffer_state(buffer, ResourceState::resolve_destination);
-
-    get_gfx_resource_command_encoder()
-        ->resolveQuery(query_pool->gfx_query_pool(), index, count, buffer->gfx_buffer_resource(), offset);
-}
 
 bool CommandBuffer::set_resource_state(const Resource* resource, ResourceState new_state)
 {
-    SGL_CHECK(m_open, "Command buffer is closed");
+    SGL_CHECK(m_open, "Command encoder is closed");
     SGL_CHECK_NOT_NULL(resource);
 
     if (resource->type() == ResourceType::buffer) {
@@ -544,7 +999,7 @@ bool CommandBuffer::set_resource_state(const Resource* resource, ResourceState n
 
 bool CommandBuffer::set_resource_state(const ResourceView* resource_view, ResourceState new_state)
 {
-    SGL_CHECK(m_open, "Command buffer is closed");
+    SGL_CHECK(m_open, "Command encoder is closed");
     SGL_CHECK_NOT_NULL(resource_view);
 
     if (resource_view->resource()->type() == ResourceType::buffer) {
@@ -561,159 +1016,33 @@ bool CommandBuffer::set_resource_state(const ResourceView* resource_view, Resour
     }
 }
 
-bool CommandBuffer::set_buffer_state(const Buffer* buffer, ResourceState new_state)
-{
-    SGL_CHECK(m_open, "Command buffer is closed");
-    SGL_CHECK_NOT_NULL(buffer);
-
-    // In D3D12, it's an error to set resource barriers on upload and readback buffers.
-    // We can skip setting the state in this case.
-    if (buffer->desc().memory_type != MemoryType::device_local && buffer->device()->type() == DeviceType::d3d12)
-        return true;
-
-    ResourceStateTracker& state_tracker = buffer->state_tracker();
-    SGL_ASSERT(state_tracker.has_global_state());
-    ResourceState current_state = state_tracker.global_state();
-    if (new_state == current_state)
-        return false;
-
-    state_tracker.set_global_state(new_state);
-
-    get_gfx_resource_command_encoder()->bufferBarrier(
-        buffer->gfx_buffer_resource(),
-        static_cast<gfx::ResourceState>(current_state),
-        static_cast<gfx::ResourceState>(new_state)
-    );
-
-    return true;
-}
-
-bool CommandBuffer::set_texture_state(const Texture* texture, ResourceState new_state)
-{
-    SGL_CHECK(m_open, "Command buffer is closed");
-    SGL_CHECK_NOT_NULL(texture);
-
-    ResourceStateTracker& state_tracker = texture->state_tracker();
-    if (state_tracker.has_global_state()) {
-        ResourceState current_state = state_tracker.global_state();
-        if (new_state == current_state)
-            return false;
-
-        state_tracker.set_global_state(new_state);
-
-        get_gfx_resource_command_encoder()->textureBarrier(
-            texture->gfx_texture_resource(),
-            static_cast<gfx::ResourceState>(current_state),
-            static_cast<gfx::ResourceState>(new_state)
-        );
-
-        return true;
-    } else {
-        bool changed = false;
-        for (uint32_t a = 0; a < texture->array_size(); ++a) {
-            for (uint32_t m = 0; m < texture->mip_count(); ++m) {
-                uint32_t subresource = texture->get_subresource_index(m, a);
-                ResourceState old_state = state_tracker.subresource_state(subresource);
-                if (old_state != new_state) {
-                    get_gfx_resource_command_encoder()->textureSubresourceBarrier(
-                        texture->gfx_texture_resource(),
-                        {
-                            .mipLevel = narrow_cast<gfx::GfxIndex>(m),
-                            .mipLevelCount = 1,
-                            .baseArrayLayer = narrow_cast<gfx::GfxIndex>(a),
-                            .layerCount = 1,
-                        },
-                        static_cast<gfx::ResourceState>(old_state),
-                        static_cast<gfx::ResourceState>(new_state)
-                    );
-                    changed = true;
-                }
-            }
-        }
-        state_tracker.set_global_state(new_state);
-        return changed;
-    }
-}
-
-bool CommandBuffer::set_texture_subresource_state(
-    const Texture* texture,
-    SubresourceRange range,
-    ResourceState new_state
-)
-{
-    SGL_CHECK(m_open, "Command buffer is closed");
-    SGL_CHECK_NOT_NULL(texture);
-
-    uint32_t mip_count = range.mip_count;
-    if (mip_count == SubresourceRange::ALL)
-        mip_count = texture->mip_count() - range.mip_level;
-    uint32_t layer_count = range.layer_count;
-    if (layer_count == SubresourceRange::ALL)
-        layer_count = texture->array_size() - range.base_array_layer;
-
-    // Set state on the entire resource if possible.
-    bool entire_resource = (range.mip_level == 0) && (mip_count == texture->mip_count())
-        && (range.base_array_layer == 0) && (layer_count == texture->array_size());
-    if (entire_resource)
-        return set_texture_state(texture, new_state);
-
-    SGL_CHECK(range.mip_level + mip_count <= texture->mip_count(), "Invalid mip level range");
-
-    SGL_CHECK(range.base_array_layer + layer_count <= texture->layer_count(), "Invalid array layer range");
-
-    // Change state on each subresource.
-    ResourceStateTracker& state_tracker = texture->state_tracker();
-    bool changed = false;
-    for (uint32_t m = range.mip_level; m < range.mip_level + mip_count; ++m) {
-        for (uint32_t a = range.base_array_layer; a < range.base_array_layer + layer_count; ++a) {
-            uint32_t subresource = texture->get_subresource_index(m, a);
-            ResourceState old_state = state_tracker.subresource_state(subresource);
-            if (old_state != new_state) {
-                state_tracker.set_subresource_state(subresource, new_state);
-                get_gfx_resource_command_encoder()->textureSubresourceBarrier(
-                    texture->gfx_texture_resource(),
-                    {
-                        .mipLevel = narrow_cast<gfx::GfxIndex>(m),
-                        .mipLevelCount = 1,
-                        .baseArrayLayer = narrow_cast<gfx::GfxIndex>(a),
-                        .layerCount = 1,
-                    },
-                    static_cast<gfx::ResourceState>(old_state),
-                    static_cast<gfx::ResourceState>(new_state)
-                );
-                changed = true;
-            }
-        }
-    }
-    return changed;
-}
 
 void CommandBuffer::uav_barrier(const Resource* resource)
 {
-    SGL_CHECK(m_open, "Command buffer is closed");
+    SGL_CHECK(m_open, "Command encoder is closed");
     SGL_CHECK_NOT_NULL(resource);
 
     if (set_resource_state(resource, ResourceState::unordered_access))
         return;
 
     if (resource->type() == ResourceType::buffer) {
-        get_gfx_resource_command_encoder()->bufferBarrier(
-            resource->as_buffer()->gfx_buffer_resource(),
-            gfx::ResourceState::UnorderedAccess,
-            gfx::ResourceState::UnorderedAccess
+        get_rhi_resource_command_encoder()->bufferBarrier(
+            resource->as_buffer()->rhi_buffer(),
+            rhi::ResourceState::UnorderedAccess,
+            rhi::ResourceState::UnorderedAccess
         );
     } else {
-        get_gfx_resource_command_encoder()->textureBarrier(
-            resource->as_texture()->gfx_texture_resource(),
-            gfx::ResourceState::UnorderedAccess,
-            gfx::ResourceState::UnorderedAccess
+        get_rhi_resource_command_encoder()->textureBarrier(
+            resource->as_texture()->rhi_texture(),
+            rhi::ResourceState::UnorderedAccess,
+            rhi::ResourceState::UnorderedAccess
         );
     }
 }
 
 void CommandBuffer::clear_resource_view(ResourceView* resource_view, float4 clear_value)
 {
-    SGL_CHECK(m_open, "Command buffer is closed");
+    SGL_CHECK(m_open, "Command encoder is closed");
     SGL_CHECK_NOT_NULL(resource_view);
 
     switch (resource_view->type()) {
@@ -730,21 +1059,21 @@ void CommandBuffer::clear_resource_view(ResourceView* resource_view, float4 clea
         SGL_THROW("Invalid resource view type");
     }
 
-    gfx::ClearValue gfx_clear_value = {};
-    gfx_clear_value.color.floatValues[0] = clear_value[0];
-    gfx_clear_value.color.floatValues[1] = clear_value[1];
-    gfx_clear_value.color.floatValues[2] = clear_value[2];
-    gfx_clear_value.color.floatValues[3] = clear_value[3];
-    get_gfx_resource_command_encoder()->clearResourceView(
-        resource_view->gfx_resource_view(),
-        &gfx_clear_value,
-        gfx::ClearResourceViewFlags::FloatClearValues
+    rhi::ClearValue rhi_clear_value = {};
+    rhi_clear_value.color.floatValues[0] = clear_value[0];
+    rhi_clear_value.color.floatValues[1] = clear_value[1];
+    rhi_clear_value.color.floatValues[2] = clear_value[2];
+    rhi_clear_value.color.floatValues[3] = clear_value[3];
+    get_rhi_resource_command_encoder()->clearResourceView(
+        resource_view->rhi_resource_view(),
+        &rhi_clear_value,
+        rhi::ClearResourceViewFlags::FloatClearValues
     );
 }
 
 void CommandBuffer::clear_resource_view(ResourceView* resource_view, uint4 clear_value)
 {
-    SGL_CHECK(m_open, "Command buffer is closed");
+    SGL_CHECK(m_open, "Command encoder is closed");
     SGL_CHECK_NOT_NULL(resource_view);
 
     switch (resource_view->type()) {
@@ -761,13 +1090,13 @@ void CommandBuffer::clear_resource_view(ResourceView* resource_view, uint4 clear
         SGL_THROW("Invalid resource view type");
     }
 
-    gfx::ClearValue gfx_clear_value = {};
-    gfx_clear_value.color.uintValues[0] = clear_value[0];
-    gfx_clear_value.color.uintValues[1] = clear_value[1];
-    gfx_clear_value.color.uintValues[2] = clear_value[2];
-    gfx_clear_value.color.uintValues[3] = clear_value[3];
-    get_gfx_resource_command_encoder()
-        ->clearResourceView(resource_view->gfx_resource_view(), &gfx_clear_value, gfx::ClearResourceViewFlags::None);
+    rhi::ClearValue rhi_clear_value = {};
+    rhi_clear_value.color.uintValues[0] = clear_value[0];
+    rhi_clear_value.color.uintValues[1] = clear_value[1];
+    rhi_clear_value.color.uintValues[2] = clear_value[2];
+    rhi_clear_value.color.uintValues[3] = clear_value[3];
+    get_rhi_resource_command_encoder()
+        ->clearResourceView(resource_view->rhi_resource_view(), &rhi_clear_value, rhi::ClearResourceViewFlags::None);
 }
 
 void CommandBuffer::clear_resource_view(
@@ -778,7 +1107,7 @@ void CommandBuffer::clear_resource_view(
     bool clear_stencil
 )
 {
-    SGL_CHECK(m_open, "Command buffer is closed");
+    SGL_CHECK(m_open, "Command encoder is closed");
     SGL_CHECK_NOT_NULL(resource_view);
 
     switch (resource_view->type()) {
@@ -789,24 +1118,24 @@ void CommandBuffer::clear_resource_view(
         SGL_THROW("Invalid resource view type");
     }
 
-    gfx::ClearValue gfx_clear_value = {};
-    gfx_clear_value.depthStencil.depth = depth_value;
-    gfx_clear_value.depthStencil.stencil = stencil_value;
-    uint32_t gfx_flags = gfx::ClearResourceViewFlags::None;
+    rhi::ClearValue rhi_clear_value = {};
+    rhi_clear_value.depthStencil.depth = depth_value;
+    rhi_clear_value.depthStencil.stencil = stencil_value;
+    uint32_t rhi_flags = rhi::ClearResourceViewFlags::None;
     if (clear_depth)
-        gfx_flags |= gfx::ClearResourceViewFlags::ClearDepth;
+        rhi_flags |= rhi::ClearResourceViewFlags::ClearDepth;
     if (clear_stencil)
-        gfx_flags |= gfx::ClearResourceViewFlags::ClearStencil;
-    get_gfx_resource_command_encoder()->clearResourceView(
-        resource_view->gfx_resource_view(),
-        &gfx_clear_value,
-        gfx::ClearResourceViewFlags::Enum(gfx_flags)
+        rhi_flags |= rhi::ClearResourceViewFlags::ClearStencil;
+    get_rhi_resource_command_encoder()->clearResourceView(
+        resource_view->rhi_resource_view(),
+        &rhi_clear_value,
+        rhi::ClearResourceViewFlags::Enum(rhi_flags)
     );
 }
 
 void CommandBuffer::clear_texture(Texture* texture, float4 clear_value)
 {
-    SGL_CHECK(m_open, "Command buffer is closed");
+    SGL_CHECK(m_open, "Command encoder is closed");
     SGL_CHECK_NOT_NULL(texture);
     FormatType format_type = get_format_info(texture->format()).type;
     SGL_CHECK(
@@ -825,7 +1154,7 @@ void CommandBuffer::clear_texture(Texture* texture, float4 clear_value)
 
 void CommandBuffer::clear_texture(Texture* texture, uint4 clear_value)
 {
-    SGL_CHECK(m_open, "Command buffer is closed");
+    SGL_CHECK(m_open, "Command encoder is closed");
     SGL_CHECK_NOT_NULL(texture);
     FormatType format_type = get_format_info(texture->format()).type;
     SGL_CHECK(
@@ -844,7 +1173,7 @@ void CommandBuffer::clear_texture(Texture* texture, uint4 clear_value)
 
 void CommandBuffer::copy_resource(Resource* dst, const Resource* src)
 {
-    SGL_CHECK(m_open, "Command buffer is closed");
+    SGL_CHECK(m_open, "Command encoder is closed");
     SGL_CHECK_NOT_NULL(dst);
     SGL_CHECK_NOT_NULL(src);
     SGL_CHECK(dst->type() == src->type(), "Resources must be of the same type");
@@ -858,205 +1187,38 @@ void CommandBuffer::copy_resource(Resource* dst, const Resource* src)
 
         SGL_CHECK(src_buffer->size() <= dst_buffer->size(), "Source buffer is larger than destination buffer");
 
-        get_gfx_resource_command_encoder()->copyBuffer(
-            dst_buffer->gfx_buffer_resource(),
+        get_rhi_resource_command_encoder()->copyBuffer(
+            dst_buffer->rhi_buffer(),
             0,
-            src_buffer->gfx_buffer_resource(),
+            src_buffer->rhi_buffer(),
             0,
             src_buffer->size()
         );
     } else {
         const Texture* dst_texture = dst->as_texture();
         const Texture* src_texture = src->as_texture();
-        gfx::SubresourceRange sr_range = {};
+        rhi::SubresourceRange sr_range = {};
 
-        get_gfx_resource_command_encoder()->copyTexture(
-            dst_texture->gfx_texture_resource(),
-            gfx::ResourceState::CopyDestination,
+        get_rhi_resource_command_encoder()->copyTexture(
+            dst_texture->rhi_texture(),
+            rhi::ResourceState::CopyDestination,
             sr_range,
-            gfx::ITextureResource::Offset3D(0, 0, 0),
-            src_texture->gfx_texture_resource(),
-            gfx::ResourceState::CopySource,
+            rhi::ITextureResource::Offset3D(0, 0, 0),
+            src_texture->rhi_texture(),
+            rhi::ResourceState::CopySource,
             sr_range,
-            gfx::ITextureResource::Offset3D(0, 0, 0),
-            gfx::ITextureResource::Extents{0, 0, 0}
+            rhi::ITextureResource::Offset3D(0, 0, 0),
+            rhi::ITextureResource::Extents{0, 0, 0}
         );
     }
 }
 
-void CommandBuffer::copy_buffer_region(
-    Buffer* dst,
-    DeviceOffset dst_offset,
-    const Buffer* src,
-    DeviceOffset src_offset,
-    DeviceSize size
-)
-{
-    SGL_CHECK(m_open, "Command buffer is closed");
-    SGL_CHECK_NOT_NULL(dst);
-    SGL_CHECK_NOT_NULL(src);
-    SGL_CHECK_LE(dst_offset + size, dst->size());
-    SGL_CHECK_LE(src_offset + size, src->size());
 
-    set_buffer_state(dst, ResourceState::copy_destination);
-    set_buffer_state(src, ResourceState::copy_source);
 
-    get_gfx_resource_command_encoder()
-        ->copyBuffer(dst->gfx_buffer_resource(), dst_offset, src->gfx_buffer_resource(), src_offset, size);
-}
-
-void CommandBuffer::copy_texture_region(
-    Texture* dst,
-    uint32_t dst_subresource,
-    uint3 dst_offset,
-    const Texture* src,
-    uint32_t src_subresource,
-    uint3 src_offset,
-    uint3 extent
-)
-{
-    SGL_CHECK(m_open, "Command buffer is closed");
-    SGL_CHECK_NOT_NULL(dst);
-    SGL_CHECK_NOT_NULL(src);
-    SGL_CHECK_LT(dst_subresource, dst->subresource_count());
-    SGL_CHECK_LT(src_subresource, src->subresource_count());
-
-    // TODO: set subresource state instead
-    set_texture_state(dst, ResourceState::copy_destination);
-    set_texture_state(src, ResourceState::copy_source);
-
-    gfx::SubresourceRange dst_sr = detail::gfx_subresource_range(dst, dst_subresource);
-    gfx::SubresourceRange src_sr = detail::gfx_subresource_range(src, src_subresource);
-
-    if (all(extent == uint3(-1)))
-        extent = src->get_mip_dimensions(src_sr.mipLevel) - src_offset;
-
-    gfx::ITextureResource::Extents gfx_extent
-        = {narrow_cast<gfx::GfxCount>(extent.x),
-           narrow_cast<gfx::GfxCount>(extent.y),
-           narrow_cast<gfx::GfxCount>(extent.z)};
-
-    get_gfx_resource_command_encoder()->copyTexture(
-        dst->gfx_texture_resource(),
-        gfx::ResourceState::CopyDestination,
-        dst_sr,
-        gfx::ITextureResource::Offset3D(dst_offset.x, dst_offset.y, dst_offset.z),
-        src->gfx_texture_resource(),
-        gfx::ResourceState::CopySource,
-        src_sr,
-        gfx::ITextureResource::Offset3D(src_offset.x, src_offset.y, src_offset.z),
-        gfx_extent
-    );
-}
-
-void CommandBuffer::copy_texture_to_buffer(
-    Buffer* dst,
-    DeviceOffset dst_offset,
-    DeviceSize dst_size,
-    DeviceSize dst_row_stride,
-    const Texture* src,
-    uint32_t src_subresource,
-    uint3 src_offset,
-    uint3 extent
-)
-{
-    SGL_CHECK(m_open, "Command buffer is closed");
-    SGL_CHECK_NOT_NULL(dst);
-    SGL_CHECK(dst_offset + dst_size <= dst->size(), "Destination buffer is too small");
-    SGL_CHECK_NOT_NULL(src);
-    SGL_CHECK_LT(src_subresource, src->subresource_count());
-
-    const FormatInfo& info = get_format_info(src->format());
-    SGL_CHECK(
-        (src_offset.x % info.block_width == 0) && (src_offset.y % info.block_height == 0),
-        "Source offset ({},{}) must be a multiple of the block size ({}x{})",
-        src_offset.x,
-        src_offset.y,
-        info.block_width,
-        info.block_height
-    );
-
-    // TODO: set subresource state instead
-    set_texture_state(src, ResourceState::copy_source);
-    set_buffer_state(dst, ResourceState::copy_destination);
-
-    if (all(extent == uint3(-1))) {
-        extent = src->get_mip_dimensions(src->get_subresource_mip_level(src_subresource)) - src_offset;
-    }
-
-    // TODO: in D3D12, the extent must be a multiple of the block size (this should be fixed in gfx instead)
-    if (m_device->type() == DeviceType::d3d12) {
-        extent.x = align_to(info.block_width, extent.x);
-        extent.y = align_to(info.block_height, extent.y);
-    }
-
-    gfx::SubresourceRange src_sr = detail::gfx_subresource_range(src, src_subresource);
-    get_gfx_resource_command_encoder()->copyTextureToBuffer(
-        dst->gfx_buffer_resource(),
-        dst_offset,
-        dst_size,
-        dst_row_stride,
-        src->gfx_texture_resource(),
-        gfx::ResourceState::CopySource,
-        src_sr,
-        gfx::ITextureResource::Offset3D(src_offset.x, src_offset.y, src_offset.z),
-        gfx::ITextureResource::Extents{
-            narrow_cast<gfx::GfxCount>(extent.x),
-            narrow_cast<gfx::GfxCount>(extent.y),
-            narrow_cast<gfx::GfxCount>(extent.z)}
-    );
-}
-
-void CommandBuffer::upload_buffer_data(Buffer* buffer, size_t offset, size_t size, const void* data)
-{
-    SGL_CHECK(m_open, "Command buffer is closed");
-    SGL_CHECK_NOT_NULL(buffer);
-    SGL_CHECK(offset + size <= buffer->size(), "Buffer upload is out of bounds");
-    SGL_CHECK_NOT_NULL(data);
-
-    set_buffer_state(buffer, ResourceState::copy_destination);
-
-    get_gfx_resource_command_encoder()
-        ->uploadBufferData(buffer->gfx_buffer_resource(), offset, size, const_cast<void*>(data));
-}
-
-void CommandBuffer::upload_texture_data(Texture* texture, uint32_t subresource, SubresourceData subresource_data)
-{
-    SGL_CHECK(m_open, "Command buffer is closed");
-    SGL_CHECK_NOT_NULL(texture);
-    SGL_CHECK_LT(subresource, texture->subresource_count());
-
-    set_texture_subresource_state(
-        texture,
-        {
-            .mip_level = texture->get_subresource_mip_level(subresource),
-            .mip_count = 1,
-            .base_array_layer = texture->get_subresource_array_slice(subresource),
-            .layer_count = 1,
-        },
-        ResourceState::copy_destination
-    );
-
-    gfx::ITextureResource::SubresourceData gfx_subresource_data = {
-        .data = const_cast<void*>(subresource_data.data),
-        .strideY = subresource_data.row_pitch,
-        .strideZ = subresource_data.slice_pitch,
-    };
-
-    gfx::SubresourceRange sr = detail::gfx_subresource_range(texture, subresource);
-    get_gfx_resource_command_encoder()->uploadTextureData(
-        texture->gfx_texture_resource(),
-        sr,
-        gfx::ITextureResource::Offset3D(0, 0, 0),
-        gfx::ITextureResource::Extents{-1, -1, -1},
-        &gfx_subresource_data,
-        1
-    );
-}
 
 void CommandBuffer::resolve_texture(Texture* dst, const Texture* src)
 {
-    SGL_CHECK(m_open, "Command buffer is closed");
+    SGL_CHECK(m_open, "Command encoder is closed");
     SGL_CHECK_NOT_NULL(dst);
     SGL_CHECK_NOT_NULL(src);
     SGL_CHECK(dst->desc().sample_count == 1, "Destination texture must not be multi-sampled.");
@@ -1078,19 +1240,19 @@ void CommandBuffer::resolve_texture(Texture* dst, const Texture* src)
     set_texture_state(dst, ResourceState::resolve_destination);
     set_texture_state(src, ResourceState::resolve_source);
 
-    gfx::SubresourceRange dst_sr = {};
+    rhi::SubresourceRange dst_sr = {};
     dst_sr.layerCount = dst->array_size();
     dst_sr.mipLevelCount = dst->mip_count();
-    gfx::SubresourceRange src_sr = {};
+    rhi::SubresourceRange src_sr = {};
     src_sr.layerCount = src->array_size();
     src_sr.mipLevelCount = src->mip_count();
 
-    get_gfx_resource_command_encoder()->resolveResource(
-        src->gfx_texture_resource(),
-        gfx::ResourceState::ResolveSource,
+    get_rhi_resource_command_encoder()->resolveResource(
+        src->rhi_texture(),
+        rhi::ResourceState::ResolveSource,
         src_sr,
-        dst->gfx_texture_resource(),
-        gfx::ResourceState::ResolveDestination,
+        dst->rhi_texture(),
+        rhi::ResourceState::ResolveDestination,
         dst_sr
     );
 }
@@ -1102,7 +1264,7 @@ void CommandBuffer::resolve_subresource(
     uint32_t src_subresource
 )
 {
-    SGL_CHECK(m_open, "Command buffer is closed");
+    SGL_CHECK(m_open, "Command encoder is closed");
     SGL_CHECK_NOT_NULL(dst);
     SGL_CHECK_NOT_NULL(src);
     SGL_CHECK_LT(dst_subresource, dst->subresource_count());
@@ -1123,63 +1285,47 @@ void CommandBuffer::resolve_subresource(
     set_texture_state(dst, ResourceState::resolve_destination);
     set_texture_state(src, ResourceState::resolve_source);
 
-    gfx::SubresourceRange dst_sr = {
-        .mipLevel = narrow_cast<gfx::GfxIndex>(dst_mip_level),
+    rhi::SubresourceRange dst_sr = {
+        .mipLevel = narrow_cast<rhi::GfxIndex>(dst_mip_level),
         .mipLevelCount = 1,
-        .baseArrayLayer = narrow_cast<gfx::GfxIndex>(dst_array_slice),
+        .baseArrayLayer = narrow_cast<rhi::GfxIndex>(dst_array_slice),
         .layerCount = 1,
     };
-    gfx::SubresourceRange src_sr = {
-        .mipLevel = narrow_cast<gfx::GfxIndex>(src_mip_level),
+    rhi::SubresourceRange src_sr = {
+        .mipLevel = narrow_cast<rhi::GfxIndex>(src_mip_level),
         .mipLevelCount = 1,
-        .baseArrayLayer = narrow_cast<gfx::GfxIndex>(src_array_slice),
+        .baseArrayLayer = narrow_cast<rhi::GfxIndex>(src_array_slice),
         .layerCount = 1,
     };
 
-    get_gfx_resource_command_encoder()->resolveResource(
-        src->gfx_texture_resource(),
-        gfx::ResourceState::ResolveSource,
+    get_rhi_resource_command_encoder()->resolveResource(
+        src->rhi_texture(),
+        rhi::ResourceState::ResolveSource,
         src_sr,
-        dst->gfx_texture_resource(),
-        gfx::ResourceState::ResolveDestination,
+        dst->rhi_texture(),
+        rhi::ResourceState::ResolveDestination,
         dst_sr
     );
 }
 
-void CommandBuffer::blit(ResourceView* dst, ResourceView* src, TextureFilteringMode filter)
-{
-    SGL_CHECK(m_open, "Command buffer is closed");
-    SGL_CHECK_NOT_NULL(dst);
-    SGL_CHECK_NOT_NULL(src);
-    m_device->_blitter()->blit(this, dst, src, filter);
-}
-
-void CommandBuffer::blit(Texture* dst, Texture* src, TextureFilteringMode filter)
-{
-    SGL_CHECK(m_open, "Command buffer is closed");
-    SGL_CHECK_NOT_NULL(dst);
-    SGL_CHECK_NOT_NULL(src);
-    m_device->_blitter()->blit(this, dst->get_rtv(), src->get_srv(), filter);
-}
-
 ComputeCommandEncoder CommandBuffer::encode_compute_commands()
 {
-    SGL_CHECK(m_open, "Command buffer is closed");
+    SGL_CHECK(m_open, "Command encoder is closed");
     SGL_CHECK(!m_encoder_open, "CommandBuffer already has an active encoder");
 
-    if (m_active_gfx_encoder != EncoderType::compute) {
-        end_current_gfx_encoder();
-        m_gfx_command_encoder = m_gfx_command_buffer->encodeComputeCommands();
-        m_active_gfx_encoder = EncoderType::compute;
+    if (m_active_rhi_encoder != EncoderType::compute) {
+        end_current_rhi_encoder();
+        m_rhi_command_encoder = m_rhi_command_buffer->encodeComputeCommands();
+        m_active_rhi_encoder = EncoderType::compute;
     }
 
     m_encoder_open = true;
-    return ComputeCommandEncoder(this, (static_cast<gfx::IComputeCommandEncoder*>(m_gfx_command_encoder.get())));
+    return ComputeCommandEncoder(this, (static_cast<rhi::IComputeCommandEncoder*>(m_rhi_command_encoder.get())));
 }
 
 RenderCommandEncoder CommandBuffer::encode_render_commands(Framebuffer* framebuffer)
 {
-    SGL_CHECK(m_open, "Command buffer is closed");
+    SGL_CHECK(m_open, "Command encoder is closed");
     SGL_CHECK(!m_encoder_open, "CommandBuffer already has an active encoder");
     SGL_CHECK_NOT_NULL(framebuffer);
 
@@ -1199,45 +1345,34 @@ RenderCommandEncoder CommandBuffer::encode_render_commands(Framebuffer* framebuf
         );
     }
 
-    if (m_active_gfx_encoder != EncoderType::render) {
-        end_current_gfx_encoder();
-        m_gfx_command_encoder = m_gfx_command_buffer->encodeRenderCommands(
-            framebuffer->gfx_render_pass_layout(),
-            framebuffer->gfx_framebuffer()
+    if (m_active_rhi_encoder != EncoderType::render) {
+        end_current_rhi_encoder();
+        m_rhi_command_encoder = m_rhi_command_buffer->encodeRenderCommands(
+            framebuffer->rhi_render_pass_layout(),
+            framebuffer->rhi_framebuffer()
         );
-        m_active_gfx_encoder = EncoderType::render;
+        m_active_rhi_encoder = EncoderType::render;
     }
 
     m_encoder_open = true;
-    return RenderCommandEncoder(this, (static_cast<gfx::IRenderCommandEncoder*>(m_gfx_command_encoder.get())));
+    return RenderCommandEncoder(this, (static_cast<rhi::IRenderCommandEncoder*>(m_rhi_command_encoder.get())));
 }
 
 RayTracingCommandEncoder CommandBuffer::encode_ray_tracing_commands()
 {
-    SGL_CHECK(m_open, "Command buffer is closed");
+    SGL_CHECK(m_open, "Command encoder is closed");
     SGL_CHECK(!m_encoder_open, "CommandBuffer already has an active encoder");
 
-    if (m_active_gfx_encoder != EncoderType::raytracing) {
-        end_current_gfx_encoder();
-        m_gfx_command_encoder = m_gfx_command_buffer->encodeRayTracingCommands();
-        m_active_gfx_encoder = EncoderType::raytracing;
+    if (m_active_rhi_encoder != EncoderType::raytracing) {
+        end_current_rhi_encoder();
+        m_rhi_command_encoder = m_rhi_command_buffer->encodeRayTracingCommands();
+        m_active_rhi_encoder = EncoderType::raytracing;
     }
 
     m_encoder_open = true;
-    return RayTracingCommandEncoder(this, (static_cast<gfx::IRayTracingCommandEncoder*>(m_gfx_command_encoder.get())));
+    return RayTracingCommandEncoder(this, (static_cast<rhi::IRayTracingCommandEncoder*>(m_rhi_command_encoder.get())));
 }
 
-void CommandBuffer::begin_debug_event(const char* name, float3 color)
-{
-    SGL_CHECK(m_open, "Command buffer is closed");
-    get_gfx_resource_command_encoder()->beginDebugEvent(name, &color.x);
-}
-
-void CommandBuffer::end_debug_event()
-{
-    SGL_CHECK(m_open, "Command buffer is closed");
-    get_gfx_resource_command_encoder()->endDebugEvent();
-}
 
 std::string CommandBuffer::to_string() const
 {
@@ -1253,26 +1388,28 @@ void CommandBuffer::end_encoder()
 {
     SGL_ASSERT(m_encoder_open);
     m_encoder_open = false;
-    end_current_gfx_encoder();
+    end_current_rhi_encoder();
 }
 
-gfx::IResourceCommandEncoder* CommandBuffer::get_gfx_resource_command_encoder()
+rhi::IResourceCommandEncoder* CommandBuffer::get_rhi_resource_command_encoder()
 {
     SGL_ASSERT(m_open);
-    if (m_active_gfx_encoder == EncoderType::none) {
-        m_gfx_command_encoder = m_gfx_command_buffer->encodeResourceCommands();
-        m_active_gfx_encoder = EncoderType::resource;
+    if (m_active_rhi_encoder == EncoderType::none) {
+        m_rhi_command_encoder = m_rhi_command_buffer->encodeResourceCommands();
+        m_active_rhi_encoder = EncoderType::resource;
     }
-    return static_cast<gfx::IResourceCommandEncoder*>(m_gfx_command_encoder.get());
+    return static_cast<rhi::IResourceCommandEncoder*>(m_rhi_command_encoder.get());
 }
 
-void CommandBuffer::end_current_gfx_encoder()
+void CommandBuffer::end_current_rhi_encoder()
 {
-    if (m_active_gfx_encoder != EncoderType::none) {
-        m_gfx_command_encoder->endEncoding();
-        m_gfx_command_encoder = nullptr;
-        m_active_gfx_encoder = EncoderType::none;
+    if (m_active_rhi_encoder != EncoderType::none) {
+        m_rhi_command_encoder->endEncoding();
+        m_rhi_command_encoder = nullptr;
+        m_active_rhi_encoder = EncoderType::none;
     }
 }
+
+#endif
 
 } // namespace sgl

@@ -10,7 +10,7 @@
 #include "sgl/core/macros.h"
 #include "sgl/core/object.h"
 
-#include <slang-gfx.h>
+#include <slang-rhi.h>
 
 namespace sgl {
 
@@ -69,11 +69,11 @@ public:
      */
     uint64_t update_signaled_value(uint64_t value = AUTO);
 
-    gfx::IFence* gfx_fence() const { return m_gfx_fence; }
+    rhi::IFence* rhi_fence() const { return m_rhi_fence; }
 
     /// Get the shared fence handle.
     /// Throws if the fence was not created with the \c FenceDesc::shared flag.
-    SharedFenceHandle get_shared_handle() const;
+    NativeHandle get_shared_handle() const;
 
     /// Returns the native API handle:
     /// - D3D12: ID3D12Fence*
@@ -84,7 +84,7 @@ public:
 
 public:
     FenceDesc m_desc;
-    Slang::ComPtr<gfx::IFence> m_gfx_fence;
+    Slang::ComPtr<rhi::IFence> m_rhi_fence;
     uint64_t m_signaled_value;
 };
 

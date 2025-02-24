@@ -5,7 +5,6 @@
 #include "sgl/device/command.h"
 #include "sgl/device/query.h"
 #include "sgl/device/pipeline.h"
-#include "sgl/device/framebuffer.h"
 #include "sgl/device/shader_object.h"
 #include "sgl/device/raytracing.h"
 

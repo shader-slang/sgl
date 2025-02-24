@@ -257,15 +257,15 @@ DebugPrinter::DebugPrinter(Device* device, size_t buffer_size)
 {
     m_buffer = m_device->create_buffer({
         .size = buffer_size,
-        .usage = ResourceUsage::unordered_access,
-        .debug_name = "debug_printer_buffer",
+        .usage = BufferUsage::unordered_access | BufferUsage::copy_source,
+        .label = "debug_printer_buffer",
     });
 
     m_readback_buffer = m_device->create_buffer({
         .size = buffer_size,
-        .usage = ResourceUsage::none,
         .memory_type = MemoryType::read_back,
-        .debug_name = "debug_printer_readback_buffer",
+        .usage = BufferUsage::copy_destination,
+        .label = "debug_printer_readback_buffer",
     });
 }
 
@@ -316,10 +316,12 @@ void DebugPrinter::bind(ShaderCursor cursor)
 
 void DebugPrinter::flush_device(bool wait)
 {
-    CommandBuffer* command_buffer = m_device->_begin_shared_command_buffer();
-    command_buffer->copy_resource(m_readback_buffer, m_buffer);
-    command_buffer->clear_resource_view(m_buffer->get_uav({.offset = 0, .size = 4}), uint4(0));
-    m_device->_end_shared_command_buffer(wait);
+    ref<CommandEncoder> command_encoder = m_device->create_command_encoder();
+    command_encoder->copy_buffer(m_readback_buffer, 0, m_buffer, 0, m_buffer->size());
+    command_encoder->clear_buffer(m_buffer);
+    m_device->submit_command_buffer(command_encoder->finish());
+    if (wait)
+        m_device->wait_for_idle();
 }
 
 } // namespace sgl

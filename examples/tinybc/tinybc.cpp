@@ -87,7 +87,7 @@ int main(int argc, const char* argv[])
             .width = w,
             .height = h,
             .mip_count = 1,
-            .usage = ResourceUsage::shader_resource,
+            .usage = TextureUsage::shader_resource,
             .data = input->data(),
             .data_size = input->buffer_size(),
         });
@@ -102,7 +102,7 @@ int main(int argc, const char* argv[])
             .width = w,
             .height = h,
             .mip_count = 1,
-            .usage = ResourceUsage::unordered_access,
+            .usage = TextureUsage::unordered_access,
         });
 
         std::string constants = fmt::format(

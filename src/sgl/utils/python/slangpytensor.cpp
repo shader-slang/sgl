@@ -148,7 +148,7 @@ ref<NativeTensor> NativeTensor::with_grads(ref<NativeTensor> grad_in, ref<Native
 
         // Create a new structured buffer for storage.
         BufferDesc buffer_desc;
-        buffer_desc.usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access | ResourceUsage::shared;
+        buffer_desc.usage = BufferUsage::shader_resource | BufferUsage::unordered_access | BufferUsage::shared;
         buffer_desc.struct_size = layout->stride();
         buffer_desc.element_count = element_count();
         ref<Buffer> buffer = device()->create_buffer(buffer_desc);
@@ -346,7 +346,7 @@ nb::object NativeTensorMarshall::create_output(CallContext* context, NativeBound
 
     // Create a new structured buffer for storage.
     BufferDesc buffer_desc;
-    buffer_desc.usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access | ResourceUsage::shared;
+    buffer_desc.usage = BufferUsage::shader_resource | BufferUsage::unordered_access | BufferUsage::shared;
     buffer_desc.struct_size = layout->stride();
     buffer_desc.element_count = shape.element_count();
     ref<Buffer> buffer = context->device()->create_buffer(buffer_desc);

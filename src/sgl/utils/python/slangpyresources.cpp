@@ -217,7 +217,7 @@ SGL_PY_EXPORT(utils_slangpy_resources)
     nb::class_<NativeBufferMarshall, NativeMarshall>(slangpy, "NativeBufferMarshall") //
         .def(
             "__init__",
-            [](NativeBufferMarshall& self, ref<NativeSlangType> slang_type, ResourceUsage usage)
+            [](NativeBufferMarshall& self, ref<NativeSlangType> slang_type, BufferUsage usage)
             { new (&self) NativeBufferMarshall(slang_type, usage); },
             "slang_type"_a,
             "usage"_a,
@@ -245,7 +245,7 @@ SGL_PY_EXPORT(utils_slangpy_resources)
                ref<NativeSlangType> element_type,
                TypeReflection::ResourceShape resource_shape,
                Format format,
-               ResourceUsage usage,
+               TextureUsage usage,
                int dims)
             { new (&self) NativeTextureMarshall(slang_type, element_type, resource_shape, format, usage, dims); },
             "slang_type"_a,

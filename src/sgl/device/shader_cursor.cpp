@@ -584,15 +584,21 @@ SGL_API void ShaderCursor::set(const ref<Buffer>& value) const
 }
 
 template<>
+SGL_API void ShaderCursor::set(const ref<BufferView>& value) const
+{
+    set_buffer_view(value);
+}
+
+template<>
 SGL_API void ShaderCursor::set(const ref<Texture>& value) const
 {
     set_texture(value);
 }
 
 template<>
-SGL_API void ShaderCursor::set(const ref<ResourceView>& value) const
+SGL_API void ShaderCursor::set(const ref<TextureView>& value) const
 {
-    set_resource(value);
+    set_texture_view(value);
 }
 
 template<>

@@ -16,7 +16,7 @@ SGL_DICT_TO_DESC_FIELD(load_as_srgb, bool)
 SGL_DICT_TO_DESC_FIELD(extend_alpha, bool)
 SGL_DICT_TO_DESC_FIELD(allocate_mips, bool)
 SGL_DICT_TO_DESC_FIELD(generate_mips, bool)
-SGL_DICT_TO_DESC_FIELD(usage, ResourceUsage)
+SGL_DICT_TO_DESC_FIELD(usage, TextureUsage)
 SGL_DICT_TO_DESC_END()
 } // namespace sgl
 

@@ -5,7 +5,6 @@
 #include "sgl/app/app.h"
 #include "sgl/device/command.h"
 #include "sgl/device/resource.h"
-#include "sgl/device/framebuffer.h"
 #include "sgl/ui/widgets.h"
 
 namespace sgl {

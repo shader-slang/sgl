@@ -155,7 +155,7 @@ def test_texture_add_f32(device_type: sgl.DeviceType, dimension: int):
         width=2,
         height=2 if dimension > 1 else 0,
         depth=2 if dimension > 2 else 0,
-        usage=sgl.ResourceUsage.unordered_access,
+        usage=sgl.TextureUsage.unordered_access,
     )
 
     ctx = helpers.dispatch_compute(

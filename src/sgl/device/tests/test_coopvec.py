@@ -128,11 +128,11 @@ def test_matrix_convert_matrix_device(device_type: sgl.DeviceType):
 
     data = np.random.random((128, 128)).astype(np.float32)
 
-    data_buf = device.create_buffer(data=data, usage=sgl.ResourceUsage.shader_resource)
+    data_buf = device.create_buffer(data=data, usage=sgl.BufferUsage.shader_resource)
     result_buf = device.create_buffer(
         element_count=data.size,
         struct_size=4,
-        usage=sgl.ResourceUsage.shader_resource | sgl.ResourceUsage.unordered_access,
+        usage=sgl.BufferUsage.shader_resource | sgl.BufferUsage.unordered_access,
     )
 
     data_desc = device.coopvec_create_matrix_desc(

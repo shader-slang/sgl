@@ -14,7 +14,7 @@
 #include "sgl/core/object.h"
 #include "sgl/core/enum.h"
 
-#include <slang-gfx.h>
+#include <slang-rhi.h>
 
 namespace sgl {
 
@@ -25,17 +25,16 @@ struct AccelerationStructureQueryDesc {
 };
 
 struct AccelerationStructureBuildDesc {
-    AccelerationStructureBuildInputs inputs;
+    // TODO(slang-rhi)
+    // AccelerationStructureBuildInputs inputs;
     AccelerationStructure* src;
     AccelerationStructure* dst;
     DeviceAddress scratch_data;
 };
 
 struct AccelerationStructureDesc {
-    AccelerationStructureKind kind;
-    ref<Buffer> buffer;
-    DeviceOffset offset{0};
     DeviceSize size{0};
+    std::string label;
 };
 
 class SGL_API AccelerationStructure : public DeviceResource {
@@ -46,17 +45,15 @@ public:
 
     const AccelerationStructureDesc& desc() const { return m_desc; }
 
-    AccelerationStructureKind kind() const { return m_desc.kind; }
-
     DeviceAddress device_address() const;
 
-    gfx::IAccelerationStructure* gfx_acceleration_structure() const { return m_gfx_acceleration_structure; }
+    rhi::IAccelerationStructure* rhi_acceleration_structure() const { return m_rhi_acceleration_structure; }
 
     std::string to_string() const override;
 
 private:
     AccelerationStructureDesc m_desc;
-    Slang::ComPtr<gfx::IAccelerationStructure> m_gfx_acceleration_structure;
+    Slang::ComPtr<rhi::IAccelerationStructure> m_rhi_acceleration_structure;
 };
 
 struct ShaderTableDesc {
@@ -73,12 +70,12 @@ public:
     ShaderTable(ref<Device> device, ShaderTableDesc desc);
     ~ShaderTable();
 
-    gfx::IShaderTable* gfx_shader_table() const { return m_gfx_shader_table; }
+    rhi::IShaderTable* rhi_shader_table() const { return m_rhi_shader_table; }
 
     std::string to_string() const override;
 
 private:
-    Slang::ComPtr<gfx::IShaderTable> m_gfx_shader_table;
+    Slang::ComPtr<rhi::IShaderTable> m_rhi_shader_table;
 };
 
 } // namespace sgl

@@ -41,7 +41,7 @@ int main()
         ref<Buffer> buffer_a = device->create_buffer({
             .element_count = N,
             .struct_type = kernel->reflection()["processor"]["a"],
-            .usage = ResourceUsage::shader_resource,
+            .usage = BufferUsage::shader_resource,
             .data = data_a.data(),
             .data_size = data_a.size() * sizeof(uint32_t),
         });
@@ -49,7 +49,7 @@ int main()
         ref<Buffer> buffer_b = device->create_buffer({
             .element_count = N,
             .struct_type = kernel->reflection()["processor"]["b"],
-            .usage = ResourceUsage::shader_resource,
+            .usage = BufferUsage::shader_resource,
             .data = data_b.data(),
             .data_size = data_b.size() * sizeof(uint32_t),
         });
@@ -57,7 +57,7 @@ int main()
         ref<Buffer> buffer_c = device->create_buffer({
             .element_count = N,
             .struct_type = kernel->reflection()["processor"]["c"],
-            .usage = ResourceUsage::unordered_access,
+            .usage = BufferUsage::unordered_access,
         });
 
         if (true) {

@@ -88,8 +88,8 @@ def test_memory_heap_lifetime(device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
     heap = device.create_memory_heap(
         memory_type=sgl.MemoryType.upload,
-        usage=sgl.ResourceUsage.none,
-        debug_name="test_heap",
+        usage=sgl.BufferUsage.none,
+        label="test_heap",
     )
     device = None
     allocs = []

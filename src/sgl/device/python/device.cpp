@@ -12,9 +12,8 @@
 #include "sgl/device/raytracing.h"
 #include "sgl/device/query.h"
 #include "sgl/device/input_layout.h"
-#include "sgl/device/framebuffer.h"
 #include "sgl/device/memory_heap.h"
-#include "sgl/device/swapchain.h"
+#include "sgl/device/surface.h"
 #include "sgl/device/shader.h"
 #include "sgl/device/command.h"
 
@@ -354,9 +353,9 @@ SGL_PY_EXPORT(device_device)
            size_t struct_size,
            nb::object struct_type,
            Format format,
-           ResourceUsage usage,
+           BufferUsage usage,
            MemoryType memory_type,
-           std::string debug_name,
+           std::string label,
            std::optional<nb::ndarray<nb::numpy>> data)
         {
             if (data) {
@@ -385,7 +384,7 @@ SGL_PY_EXPORT(device_device)
                 .format = format,
                 .usage = usage,
                 .memory_type = memory_type,
-                .debug_name = std::move(debug_name),
+                .label = std::move(label),
                 .data = data ? data->data() : nullptr,
                 .data_size = data ? data->nbytes() : 0,
             });
@@ -397,7 +396,7 @@ SGL_PY_EXPORT(device_device)
         "format"_a = BufferDesc().format,
         "usage"_a = BufferDesc().usage,
         "memory_type"_a = BufferDesc().memory_type,
-        "debug_name"_a = BufferDesc().debug_name,
+        "label"_a = BufferDesc().label,
         "data"_a.none() = nb::none(),
         D(Device, create_buffer)
     );
@@ -411,7 +410,7 @@ SGL_PY_EXPORT(device_device)
     device.def(
         "create_texture",
         [](Device* self,
-           ResourceType type,
+           TextureType type,
            Format format,
            uint32_t width,
            uint32_t height,
@@ -420,9 +419,9 @@ SGL_PY_EXPORT(device_device)
            uint32_t mip_count,
            uint32_t sample_count,
            uint32_t quality,
-           ResourceUsage usage,
+           TextureUsage usage,
            MemoryType memory_type,
-           std::string debug_name,
+           std::string label,
            std::optional<nb::ndarray<nb::numpy>> data)
         {
             if (data) {
@@ -437,10 +436,10 @@ SGL_PY_EXPORT(device_device)
                 .array_size = array_size,
                 .mip_count = mip_count,
                 .sample_count = sample_count,
-                .quality = quality,
+                .sample_quality = sample_quality,
                 .usage = usage,
                 .memory_type = memory_type,
-                .debug_name = std::move(debug_name),
+                .label = std::move(label),
                 .data = data ? data->data() : nullptr,
                 .data_size = data ? data->nbytes() : 0,
             });
@@ -453,10 +452,10 @@ SGL_PY_EXPORT(device_device)
         "array_size"_a = TextureDesc().array_size,
         "mip_count"_a = TextureDesc().mip_count,
         "sample_count"_a = TextureDesc().sample_count,
-        "quality"_a = TextureDesc().quality,
+        "sample_quality"_a = TextureDesc().sample_quality,
         "usage"_a = TextureDesc().usage,
         "memory_type"_a = TextureDesc().memory_type,
-        "debug_name"_a = TextureDesc().debug_name,
+        "label"_a = TextureDesc().label,
         "data"_a.none() = nb::none(),
         D(Device, create_texture)
     );
@@ -808,24 +807,24 @@ SGL_PY_EXPORT(device_device)
         "create_memory_heap",
         [](Device* self,
            MemoryType memory_type,
-           ResourceUsage usage,
+           BufferUsage usage,
            DeviceSize page_size,
            bool retain_large_pages,
-           std::string debug_name)
+           std::string label)
         {
             return self->create_memory_heap({
                 .memory_type = memory_type,
                 .usage = usage,
                 .page_size = page_size,
                 .retain_large_pages = retain_large_pages,
-                .debug_name = std::move(debug_name),
+                .label = std::move(label),
             });
         },
         "memory_type"_a,
         "usage"_a,
         "page_size"_a = MemoryHeapDesc().page_size,
         "retain_large_pages"_a = MemoryHeapDesc().retain_large_pages,
-        "debug_name"_a = MemoryHeapDesc().debug_name,
+        "label"_a = MemoryHeapDesc().label,
         D(Device, create_memory_heap)
     );
     device.def("create_memory_heap", &Device::create_memory_heap, "desc"_a, D(Device, create_memory_heap));

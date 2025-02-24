@@ -96,7 +96,7 @@ static void run_and_verify(
     ref<Buffer> buffer = ctx.device->create_buffer({
         .element_count = 1024,
         .struct_size = 4,
-        .usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access,
+        .usage = BufferUsage::shader_resource | BufferUsage::unordered_access,
         .data = g_zeros,
         .data_size = sizeof(g_zeros),
     });

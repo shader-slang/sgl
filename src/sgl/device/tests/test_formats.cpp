@@ -57,17 +57,16 @@ TEST_CASE("validate_format_infos")
     };
 
     for (uint32_t i = 0; i < uint32_t(Format::count); ++i) {
-        const auto& info = get_format_info(Format(i));
-        gfx::FormatInfo gfx_info;
-        SLANG_CALL(gfx::gfxGetFormatInfo(gfx::Format(i), &gfx_info));
+        const FormatInfo& info = get_format_info(Format(i));
+        const rhi::FormatInfo& rhi_info = rhi::getFormatInfo(rhi::Format(i));
 
         CAPTURE(info.name);
-        // CHECK_EQ(format_type_to_slang_type(info.type), gfx_info.channelType);
-        CHECK_EQ(info.bytes_per_block, gfx_info.blockSizeInBytes);
-        CHECK_EQ(info.channel_count, gfx_info.channelCount);
-        CHECK_EQ(info.block_width * info.block_height, gfx_info.pixelsPerBlock);
-        CHECK_EQ(info.block_width, gfx_info.blockWidth);
-        CHECK_EQ(info.block_height, gfx_info.blockHeight);
+        // CHECK_EQ(format_type_to_slang_type(info.type), rhi_info.channelType);
+        CHECK_EQ(info.bytes_per_block, rhi_info.blockSizeInBytes);
+        CHECK_EQ(info.channel_count, rhi_info.channelCount);
+        CHECK_EQ(info.block_width * info.block_height, rhi_info.pixelsPerBlock);
+        CHECK_EQ(info.block_width, rhi_info.blockWidth);
+        CHECK_EQ(info.block_height, rhi_info.blockHeight);
     }
 }
 

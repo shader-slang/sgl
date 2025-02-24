@@ -16,9 +16,9 @@ SGL_DICT_TO_DESC_FIELD(size, size_t)
 SGL_DICT_TO_DESC_FIELD(struct_size, size_t)
 SGL_DICT_TO_DESC_FIELD(format, Format)
 SGL_DICT_TO_DESC_FIELD(initial_state, ResourceState)
-SGL_DICT_TO_DESC_FIELD(usage, ResourceUsage)
+SGL_DICT_TO_DESC_FIELD(usage, BufferUsage)
 SGL_DICT_TO_DESC_FIELD(memory_type, MemoryType)
-SGL_DICT_TO_DESC_FIELD(debug_name, std::string)
+SGL_DICT_TO_DESC_FIELD(label, std::string)
 SGL_DICT_TO_DESC_END()
 
 SGL_DICT_TO_DESC_BEGIN(TextureDesc)
@@ -32,9 +32,9 @@ SGL_DICT_TO_DESC_FIELD(mip_count, uint32_t)
 SGL_DICT_TO_DESC_FIELD(sample_count, uint32_t)
 SGL_DICT_TO_DESC_FIELD(quality, uint32_t)
 SGL_DICT_TO_DESC_FIELD(initial_state, ResourceState)
-SGL_DICT_TO_DESC_FIELD(usage, ResourceUsage)
+SGL_DICT_TO_DESC_FIELD(usage, TextureUsage)
 SGL_DICT_TO_DESC_FIELD(memory_type, MemoryType)
-SGL_DICT_TO_DESC_FIELD(debug_name, std::string)
+SGL_DICT_TO_DESC_FIELD(label, std::string)
 SGL_DICT_TO_DESC_END()
 
 
@@ -284,7 +284,7 @@ SGL_PY_EXPORT(device_resource)
         .def_rw("initial_state", &BufferDesc::initial_state, D(BufferDesc, initial_state))
         .def_rw("usage", &BufferDesc::usage, D(BufferDesc, usage))
         .def_rw("memory_type", &BufferDesc::memory_type, D(BufferDesc, memory_type))
-        .def_rw("debug_name", &BufferDesc::debug_name, D(BufferDesc, debug_name));
+        .def_rw("label", &BufferDesc::label, D(BufferDesc, label));
     nb::implicitly_convertible<nb::dict, BufferDesc>();
 
     nb::class_<Buffer, Resource>(m, "Buffer", D(Buffer))
@@ -345,7 +345,7 @@ SGL_PY_EXPORT(device_resource)
         .def_rw("initial_state", &TextureDesc::initial_state, D(TextureDesc, initial_state))
         .def_rw("usage", &TextureDesc::usage, D(TextureDesc, usage))
         .def_rw("memory_type", &TextureDesc::memory_type, D(TextureDesc, memory_type))
-        .def_rw("debug_name", &TextureDesc::debug_name, D(TextureDesc, debug_name));
+        .def_rw("label", &TextureDesc::label, D(TextureDesc, label));
     nb::implicitly_convertible<nb::dict, TextureDesc>();
 
     nb::class_<SubresourceLayout>(m, "SubresourceLayout", D(SubresourceLayout))

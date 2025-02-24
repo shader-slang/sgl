@@ -34,15 +34,15 @@ int main()
         std::vector<uint32_t> indices{0, 1, 2};
 
         ref<Buffer> vertex_buffer = device->create_buffer({
-            .usage = ResourceUsage::shader_resource,
-            .debug_name = "vertex_buffer",
+            .usage = BufferUsage::shader_resource,
+            .label = "vertex_buffer",
             .data = vertices.data(),
             .data_size = vertices.size() * sizeof(float2),
         });
 
         ref<Buffer> index_buffer = device->create_buffer({
-            .usage = ResourceUsage::shader_resource,
-            .debug_name = "index_buffer",
+            .usage = BufferUsage::shader_resource,
+            .label = "index_buffer",
             .data = indices.data(),
             .data_size = indices.size() * sizeof(uint32_t),
         });
@@ -51,8 +51,8 @@ int main()
             .format = Format::rgba32_float,
             .width = 1024,
             .height = 1024,
-            .usage = ResourceUsage::render_target,
-            .debug_name = "render_texture",
+            .usage = TextureUsage::render_target,
+            .label = "render_texture",
         });
 
         ref<InputLayout> input_layout = device->create_input_layout({

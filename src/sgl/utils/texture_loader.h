@@ -33,8 +33,8 @@ public:
         /// Generate mip levels for the texture.
         bool generate_mips{false};
         /// Resource usage flags for the texture.
-        /// \c ResourceUsage::render_target will be added automatically if \c generate_mips is true.
-        ResourceUsage usage{ResourceUsage::shader_resource};
+        /// \c TextureUsage::render_target will be added automatically if \c generate_mips is true.
+        TextureUsage usage{TextureUsage::shader_resource};
 
         Options();
     };

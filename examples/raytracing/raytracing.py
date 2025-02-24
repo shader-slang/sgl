@@ -15,20 +15,20 @@ vertices = np.array([-1, -1, 0, 1, -1, 0, 0, 1, 0], dtype=np.float32)
 indices = np.array([0, 1, 2], dtype=np.uint32)
 
 vertex_buffer = device.create_buffer(
-    usage=sgl.ResourceUsage.shader_resource,
-    debug_name="vertex_buffer",
+    usage=sgl.BufferUsage.shader_resource,
+    label="vertex_buffer",
     data=vertices,
 )
 
 index_buffer = device.create_buffer(
-    usage=sgl.ResourceUsage.shader_resource,
-    debug_name="index_buffer",
+    usage=sgl.BufferUsage.shader_resource,
+    label="index_buffer",
     data=indices,
 )
 
 transform_buffer = device.create_buffer(
-    usage=sgl.ResourceUsage.shader_resource,
-    debug_name="transform_buffer",
+    usage=sgl.BufferUsage.shader_resource,
+    label="transform_buffer",
     data=sgl.float3x4.identity().to_numpy(),
 )
 
@@ -53,14 +53,14 @@ blas_prebuild_info = device.get_acceleration_structure_prebuild_info(blas_build_
 
 blas_scratch_buffer = device.create_buffer(
     size=blas_prebuild_info.scratch_data_size,
-    usage=sgl.ResourceUsage.unordered_access,
-    debug_name="blas_scratch_buffer",
+    usage=sgl.BufferUsage.unordered_access,
+    label="blas_scratch_buffer",
 )
 
 blas_buffer = device.create_buffer(
     size=blas_prebuild_info.result_data_max_size,
-    usage=sgl.ResourceUsage.acceleration_structure,
-    debug_name="blas_buffer",
+    usage=sgl.BufferUsage.acceleration_structure,
+    label="blas_buffer",
 )
 
 blas = device.create_acceleration_structure(
@@ -87,8 +87,8 @@ instance_desc.flags = sgl.RayTracingInstanceFlags.none
 instance_desc.acceleration_structure = blas.device_address
 
 instance_buffer = device.create_buffer(
-    usage=sgl.ResourceUsage.shader_resource,
-    debug_name="instance_buffer",
+    usage=sgl.BufferUsage.shader_resource,
+    label="instance_buffer",
     data=instance_desc.to_numpy(),
 )
 
@@ -102,14 +102,14 @@ tlas_prebuild_info = device.get_acceleration_structure_prebuild_info(tlas_build_
 
 tlas_scratch_buffer = device.create_buffer(
     size=tlas_prebuild_info.scratch_data_size,
-    usage=sgl.ResourceUsage.unordered_access,
-    debug_name="tlas_scratch_buffer",
+    usage=sgl.BufferUsage.unordered_access,
+    label="tlas_scratch_buffer",
 )
 
 tlas_buffer = device.create_buffer(
     size=tlas_prebuild_info.result_data_max_size,
-    usage=sgl.ResourceUsage.acceleration_structure,
-    debug_name="tlas_buffer",
+    usage=sgl.BufferUsage.acceleration_structure,
+    label="tlas_buffer",
 )
 
 tlas = device.create_acceleration_structure(
@@ -131,8 +131,8 @@ render_texture = device.create_texture(
     format=sgl.Format.rgba32_float,
     width=1024,
     height=1024,
-    usage=sgl.ResourceUsage.unordered_access,
-    debug_name="render_texture",
+    usage=sgl.TextureUsage.unordered_access,
+    label="render_texture",
 )
 
 program = device.load_program("raytracing.slang", ["main"])

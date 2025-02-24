@@ -16,7 +16,7 @@ tex = device.create_texture(
     width=IMAGE_WIDTH,
     height=IMAGE_HEIGHT,
     mip_count=1,
-    usage=sgl.ResourceUsage.unordered_access,
+    usage=sgl.TextureUsage.unordered_access,
 )
 
 program = device.load_program("checkerboard.slang", ["main"])

@@ -16,42 +16,32 @@ Sampler::Sampler(ref<Device> device, SamplerDesc desc)
     : DeviceResource(std::move(device))
     , m_desc(std::move(desc))
 {
-    gfx::ISamplerState::Desc gfx_desc{
-        .minFilter = static_cast<gfx::TextureFilteringMode>(m_desc.min_filter),
-        .magFilter = static_cast<gfx::TextureFilteringMode>(m_desc.mag_filter),
-        .mipFilter = static_cast<gfx::TextureFilteringMode>(m_desc.mip_filter),
-        .reductionOp = static_cast<gfx::TextureReductionOp>(m_desc.reduction_op),
-        .addressU = static_cast<gfx::TextureAddressingMode>(m_desc.address_u),
-        .addressV = static_cast<gfx::TextureAddressingMode>(m_desc.address_v),
-        .addressW = static_cast<gfx::TextureAddressingMode>(m_desc.address_w),
+    rhi::SamplerDesc rhi_desc{
+        .minFilter = static_cast<rhi::TextureFilteringMode>(m_desc.min_filter),
+        .magFilter = static_cast<rhi::TextureFilteringMode>(m_desc.mag_filter),
+        .mipFilter = static_cast<rhi::TextureFilteringMode>(m_desc.mip_filter),
+        .reductionOp = static_cast<rhi::TextureReductionOp>(m_desc.reduction_op),
+        .addressU = static_cast<rhi::TextureAddressingMode>(m_desc.address_u),
+        .addressV = static_cast<rhi::TextureAddressingMode>(m_desc.address_v),
+        .addressW = static_cast<rhi::TextureAddressingMode>(m_desc.address_w),
         .mipLODBias = m_desc.mip_lod_bias,
         .maxAnisotropy = m_desc.max_anisotropy,
-        .comparisonFunc = static_cast<gfx::ComparisonFunc>(m_desc.comparison_func),
+        .comparisonFunc = static_cast<rhi::ComparisonFunc>(m_desc.comparison_func),
         .borderColor = {m_desc.border_color.x, m_desc.border_color.y, m_desc.border_color.z, m_desc.border_color.w},
         .minLOD = m_desc.min_lod,
         .maxLOD = m_desc.max_lod,
+        .label = m_desc.label.empty() ? nullptr : m_desc.label.c_str(),
     };
-    SLANG_CALL(m_device->gfx_device()->createSamplerState(gfx_desc, m_gfx_sampler_state.writeRef()));
+    SLANG_CALL(m_device->rhi_device()->createSampler(rhi_desc, m_rhi_sampler.writeRef()));
 }
 
-Sampler::~Sampler()
-{
-    m_device->deferred_release(m_gfx_sampler_state);
-}
+Sampler::~Sampler() { }
 
 NativeHandle Sampler::get_native_handle() const
 {
-    gfx::InteropHandle handle = {};
-    SLANG_CALL(m_gfx_sampler_state->getNativeHandle(&handle));
-#if SGL_HAS_D3D12
-    if (m_device->type() == DeviceType::d3d12)
-        return NativeHandle(D3D12_CPU_DESCRIPTOR_HANDLE{handle.handleValue});
-#endif
-#if SGL_HAS_VULKAN
-    if (m_device->type() == DeviceType::vulkan)
-        return NativeHandle(reinterpret_cast<VkSampler>(handle.handleValue));
-#endif
-    return {};
+    rhi::NativeHandle rhi_handle = {};
+    SLANG_CALL(m_rhi_sampler->getNativeHandle(&rhi_handle));
+    return NativeHandle(rhi_handle);
 }
 
 std::string Sampler::to_string() const
@@ -71,7 +61,8 @@ std::string Sampler::to_string() const
         "  comparison_func = {},\n"
         "  border_color = {},\n"
         "  min_lod = {},\n"
-        "  max_lod = {}\n"
+        "  max_lod = {},\n"
+        "  label = {}\n"
         ")",
         m_device,
         m_desc.min_filter,
@@ -86,7 +77,8 @@ std::string Sampler::to_string() const
         m_desc.comparison_func,
         m_desc.border_color,
         m_desc.min_lod,
-        m_desc.max_lod
+        m_desc.max_lod,
+        m_desc.label
     );
 }
 

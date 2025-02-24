@@ -276,7 +276,7 @@ def test_fill_from_kernel(device_type: sgl.DeviceType, seed: int):
     buffer = kernel.device.create_buffer(
         element_count=count,
         struct_type=buffer_layout,
-        usage=sgl.ResourceUsage.shader_resource | sgl.ResourceUsage.unordered_access,
+        usage=sgl.BufferUsage.shader_resource | sgl.BufferUsage.unordered_access,
     )
 
     # Dispatch the kernel
@@ -311,7 +311,7 @@ def test_wrap_buffer(device_type: sgl.DeviceType, seed: int):
     buffer = kernel.device.create_buffer(
         element_count=count,
         struct_type=buffer_layout,
-        usage=sgl.ResourceUsage.shader_resource | sgl.ResourceUsage.unordered_access,
+        usage=sgl.BufferUsage.shader_resource | sgl.BufferUsage.unordered_access,
     )
     cursor = sgl.BufferCursor(buffer_layout.element_type_layout, buffer)
 
@@ -376,13 +376,13 @@ def test_apply_changes(device_type: sgl.DeviceType, seed: int):
     src = kernel.device.create_buffer(
         element_count=count,
         struct_type=buffer_layout,
-        usage=sgl.ResourceUsage.shader_resource | sgl.ResourceUsage.unordered_access,
+        usage=sgl.BufferUsage.shader_resource | sgl.BufferUsage.unordered_access,
         data=np.zeros(buffer_layout.element_type_layout.stride * count, dtype=np.uint8),
     )
     dest = kernel.device.create_buffer(
         element_count=count,
         struct_type=buffer_layout,
-        usage=sgl.ResourceUsage.shader_resource | sgl.ResourceUsage.unordered_access,
+        usage=sgl.BufferUsage.shader_resource | sgl.BufferUsage.unordered_access,
         data=np.zeros(buffer_layout.element_type_layout.stride * count, dtype=np.uint8),
     )
     src_cursor = sgl.BufferCursor(buffer_layout.element_type_layout, src)

@@ -58,9 +58,10 @@ public:
 
     void set_object(const ref<MutableShaderObject>& object) const;
 
-    void set_resource(const ref<ResourceView>& resource_view) const;
     void set_buffer(const ref<Buffer>& buffer) const;
+    void set_buffer_view(const ref<BufferView>& buffer_view) const;
     void set_texture(const ref<Texture>& texture) const;
+    void set_texture_view(const ref<TextureView>& texture_view) const;
     void set_sampler(const ref<Sampler>& sampler) const;
     void set_acceleration_structure(const ref<AccelerationStructure>& acceleration_structure) const;
 

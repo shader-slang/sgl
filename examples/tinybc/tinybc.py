@@ -55,7 +55,7 @@ input_tex = device.create_texture(
     width=w,
     height=h,
     mip_count=1,
-    usage=sgl.ResourceUsage.shader_resource,
+    usage=sgl.TextureUsage.shader_resource,
     data=input,
 )
 
@@ -69,7 +69,7 @@ decoded_tex = device.create_texture(
     width=w,
     height=h,
     mip_count=1,
-    usage=sgl.ResourceUsage.unordered_access,
+    usage=sgl.TextureUsage.unordered_access,
 )
 
 # Load shader module

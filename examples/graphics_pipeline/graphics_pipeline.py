@@ -15,14 +15,14 @@ vertices = np.array([-1, -1, 1, -1, 0, 1], dtype=np.float32)
 indices = np.array([0, 1, 2], dtype=np.uint32)
 
 vertex_buffer = device.create_buffer(
-    usage=sgl.ResourceUsage.vertex | sgl.ResourceUsage.shader_resource,
-    debug_name="vertex_buffer",
+    usage=sgl.BufferUsage.vertex | sgl.BufferUsage.shader_resource,
+    label="vertex_buffer",
     data=vertices,
 )
 
 index_buffer = device.create_buffer(
-    usage=sgl.ResourceUsage.index | sgl.ResourceUsage.shader_resource,
-    debug_name="index_buffer",
+    usage=sgl.BufferUsage.index | sgl.BufferUsage.shader_resource,
+    label="index_buffer",
     data=indices,
 )
 
@@ -30,8 +30,8 @@ render_texture = device.create_texture(
     format=sgl.Format.rgba32_float,
     width=1024,
     height=1024,
-    usage=sgl.ResourceUsage.render_target,
-    debug_name="render_texture",
+    usage=sgl.TextureUsage.render_target,
+    label="render_texture",
 )
 
 input_layout = device.create_input_layout(
