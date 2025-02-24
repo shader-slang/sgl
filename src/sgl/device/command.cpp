@@ -92,9 +92,7 @@ ShaderObject* RenderPassEncoder::bind_pipeline(RenderPipeline* pipeline)
     SGL_CHECK_NOT_NULL(pipeline);
 
     rhi::IShaderObject* rhi_shader_object = m_rhi_render_pass_encoder->bindPipeline(pipeline->rhi_pipeline());
-
-    // TODO(slang-rhi) return ShaderObject
-    return nullptr;
+    return m_command_encoder->_get_root_object(rhi_shader_object);
 }
 
 void RenderPassEncoder::bind_pipeline(RenderPipeline* pipeline, ShaderObject* root_object)
@@ -181,9 +179,7 @@ ShaderObject* ComputePassEncoder::bind_pipeline(ComputePipeline* pipeline)
 
     rhi::IShaderObject* rhi_shader_object = m_rhi_compute_pass_encoder->bindPipeline(pipeline->rhi_pipeline());
     m_thread_group_size = pipeline->thread_group_size();
-
-    // TODO(slang-rhi) return ShaderObject
-    return nullptr;
+    return m_command_encoder->_get_root_object(rhi_shader_object);
 }
 
 void ComputePassEncoder::bind_pipeline(ComputePipeline* pipeline, ShaderObject* root_object)
@@ -230,9 +226,7 @@ ShaderObject* RayTracingPassEncoder::bind_pipeline(RayTracingPipeline* pipeline,
 
     rhi::IShaderObject* rhi_shader_object
         = m_rhi_ray_tracing_pass_encoder->bindPipeline(pipeline->rhi_pipeline(), shader_table->rhi_shader_table());
-
-    // TODO(slang-rhi) return ShaderObject
-    return nullptr;
+    return m_command_encoder->_get_root_object(rhi_shader_object);
 }
 
 void RayTracingPassEncoder::bind_pipeline(
@@ -267,6 +261,7 @@ void RayTracingPassEncoder::end()
 CommandEncoder::CommandEncoder(ref<Device> device, Slang::ComPtr<rhi::ICommandEncoder> rhi_command_encoder)
     : DeviceResource(std::move(device))
     , m_rhi_command_encoder(std::move(rhi_command_encoder))
+    , m_open(true)
 {
 }
 
@@ -308,6 +303,7 @@ ref<RenderPassEncoder> CommandEncoder::begin_render_pass(const RenderPassDesc& d
         m_render_pass_encoder = make_ref<RenderPassEncoder>();
     }
 
+    m_render_pass_encoder->m_command_encoder = this;
     m_render_pass_encoder->m_rhi_render_pass_encoder = m_rhi_command_encoder->beginRenderPass(rhi_desc);
     m_render_pass_encoder->m_rhi_pass_encoder = m_render_pass_encoder->m_rhi_render_pass_encoder;
     return m_render_pass_encoder;
@@ -319,6 +315,7 @@ ref<ComputePassEncoder> CommandEncoder::begin_compute_pass()
         m_compute_pass_encoder = make_ref<ComputePassEncoder>();
     }
 
+    m_compute_pass_encoder->m_command_encoder = this;
     m_compute_pass_encoder->m_rhi_compute_pass_encoder = m_rhi_command_encoder->beginComputePass();
     m_compute_pass_encoder->m_rhi_pass_encoder = m_compute_pass_encoder->m_rhi_compute_pass_encoder;
     return m_compute_pass_encoder;
@@ -330,9 +327,16 @@ ref<RayTracingPassEncoder> CommandEncoder::begin_ray_tracing_pass()
         m_ray_tracing_pass_encoder = make_ref<RayTracingPassEncoder>();
     }
 
+    m_ray_tracing_pass_encoder->m_command_encoder = this;
     m_ray_tracing_pass_encoder->m_rhi_ray_tracing_pass_encoder = m_rhi_command_encoder->beginRayTracingPass();
     m_ray_tracing_pass_encoder->m_rhi_pass_encoder = m_ray_tracing_pass_encoder->m_rhi_ray_tracing_pass_encoder;
     return m_ray_tracing_pass_encoder;
+}
+
+ShaderObject* CommandEncoder::_get_root_object(rhi::IShaderObject* rhi_shader_object)
+{
+    m_root_object = make_ref<ShaderObject>(m_device, rhi_shader_object, false);
+    return m_root_object.get();
 }
 
 void CommandEncoder::copy_buffer(
@@ -343,7 +347,7 @@ void CommandEncoder::copy_buffer(
     DeviceSize size
 )
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(dst);
     SGL_CHECK_NOT_NULL(src);
     SGL_CHECK_LE(dst_offset + size, dst->size());
@@ -362,7 +366,7 @@ void CommandEncoder::copy_texture(
     uint3 extent
 )
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(dst);
     SGL_CHECK_NOT_NULL(src);
     SGL_CHECK_LT(dst_subresource, dst->subresource_count());
@@ -399,7 +403,7 @@ void CommandEncoder::copy_texture_to_buffer(
     uint3 extent
 )
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(dst);
     SGL_CHECK(dst_offset + dst_size <= dst->size(), "Destination buffer is too small");
     SGL_CHECK_NOT_NULL(src);
@@ -440,7 +444,7 @@ void CommandEncoder::copy_texture_to_buffer(
 
 void CommandEncoder::upload_buffer_data(Buffer* buffer, size_t offset, size_t size, const void* data)
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(buffer);
     SGL_CHECK(offset + size <= buffer->size(), "Buffer upload is out of bounds");
     SGL_CHECK_NOT_NULL(data);
@@ -452,7 +456,7 @@ void CommandEncoder::upload_buffer_data(Buffer* buffer, size_t offset, size_t si
 
 void CommandEncoder::upload_texture_data(Texture* texture, uint32_t subresource, SubresourceData subresource_data)
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(texture);
     SGL_CHECK_LT(subresource, texture->subresource_count());
 
@@ -475,7 +479,7 @@ void CommandEncoder::upload_texture_data(Texture* texture, uint32_t subresource,
 
 void CommandEncoder::clear_buffer(Buffer* buffer, BufferRange range)
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(buffer);
 
     m_rhi_command_encoder->clearBuffer(buffer->rhi_buffer(), range.offset, range.size);
@@ -509,7 +513,7 @@ void CommandEncoder::clear_texture(
 
 void CommandEncoder::blit(TextureView* dst, TextureView* src, TextureFilteringMode filter)
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(dst);
     SGL_CHECK_NOT_NULL(src);
     m_device->_blitter()->blit(this, dst, src, filter);
@@ -517,7 +521,7 @@ void CommandEncoder::blit(TextureView* dst, TextureView* src, TextureFilteringMo
 
 void CommandEncoder::blit(Texture* dst, Texture* src, TextureFilteringMode filter)
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(dst);
     SGL_CHECK_NOT_NULL(src);
     // TODO(slang-rhi)
@@ -533,7 +537,7 @@ void CommandEncoder::resolve_query(
     DeviceOffset offset
 )
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(query_pool);
     SGL_CHECK_NOT_NULL(buffer);
     SGL_CHECK_LE(index + count, query_pool->desc().count);
@@ -580,7 +584,7 @@ void CommandEncoder::copy_acceleration_structure(
     AccelerationStructureCopyMode mode
 )
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(dst);
 
     m_rhi_command_encoder->copyAccelerationStructure(
@@ -595,7 +599,7 @@ void CommandEncoder::query_acceleration_structure_properties(
     std::span<AccelerationStructureQueryDesc> queries
 )
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
 
     short_vector<rhi::IAccelerationStructure*, 16> rhi_acceleration_structures(acceleration_structures.size(), nullptr);
     for (size_t i = 0; i < acceleration_structures.size(); i++)
@@ -620,7 +624,7 @@ void CommandEncoder::query_acceleration_structure_properties(
 
 void CommandEncoder::serialize_acceleration_structure(BufferWithOffset dst, AccelerationStructure* src)
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(dst.buffer);
     SGL_CHECK_NOT_NULL(src);
 
@@ -629,7 +633,7 @@ void CommandEncoder::serialize_acceleration_structure(BufferWithOffset dst, Acce
 
 void CommandEncoder::deserialize_acceleration_structure(AccelerationStructure* dst, BufferWithOffset src)
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(dst);
     SGL_CHECK_NOT_NULL(src.buffer);
 
@@ -638,7 +642,7 @@ void CommandEncoder::deserialize_acceleration_structure(AccelerationStructure* d
 
 void CommandEncoder::set_buffer_state(Buffer* buffer, ResourceState state)
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(buffer);
 
     m_rhi_command_encoder->setBufferState(buffer->rhi_buffer(), static_cast<rhi::ResourceState>(state));
@@ -646,7 +650,7 @@ void CommandEncoder::set_buffer_state(Buffer* buffer, ResourceState state)
 
 void CommandEncoder::set_texture_state(Texture* texture, ResourceState state)
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(texture);
 
     m_rhi_command_encoder->setTextureState(texture->rhi_texture(), static_cast<rhi::ResourceState>(state));
@@ -654,7 +658,7 @@ void CommandEncoder::set_texture_state(Texture* texture, ResourceState state)
 
 void CommandEncoder::set_texture_state(Texture* texture, SubresourceRange range, ResourceState state)
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(texture);
 
     m_rhi_command_encoder->setTextureState(
@@ -671,28 +675,28 @@ void CommandEncoder::set_texture_state(Texture* texture, SubresourceRange range,
 
 void CommandEncoder::push_debug_group(const char* name, float3 color)
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
 
     m_rhi_command_encoder->pushDebugGroup(name, &color[0]);
 }
 
 void CommandEncoder::pop_debug_group()
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
 
     m_rhi_command_encoder->popDebugGroup();
 }
 
 void CommandEncoder::insert_debug_marker(const char* name, float3 color)
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
 
     m_rhi_command_encoder->insertDebugMarker(name, &color[0]);
 }
 
 void CommandEncoder::write_timestamp(QueryPool* query_pool, uint32_t index)
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(query_pool);
     SGL_CHECK_LE(index, query_pool->desc().count);
 
@@ -701,7 +705,12 @@ void CommandEncoder::write_timestamp(QueryPool* query_pool, uint32_t index)
 
 ref<CommandBuffer> CommandEncoder::finish()
 {
-    return nullptr;
+    SGL_CHECK(m_open, "Command encoder is finished");
+    Slang::ComPtr<rhi::ICommandBuffer> rhi_command_buffer;
+    SLANG_CALL(m_rhi_command_encoder->finish(rhi_command_buffer.writeRef()));
+    ref<CommandBuffer> command_buffer = make_ref<CommandBuffer>(m_device, rhi_command_buffer);
+    m_open = false;
+    return command_buffer;
 }
 
 NativeHandle CommandEncoder::get_native_handle() const
@@ -725,8 +734,9 @@ std::string CommandEncoder::to_string() const
 // CommandBuffer
 // ----------------------------------------------------------------------------
 
-CommandBuffer::CommandBuffer(ref<Device> device)
+CommandBuffer::CommandBuffer(ref<Device> device, Slang::ComPtr<rhi::ICommandBuffer> command_buffer)
     : DeviceResource(std::move(device))
+    , m_rhi_command_buffer(std::move(command_buffer))
 {
 }
 
@@ -1131,7 +1141,7 @@ uint64_t CommandBuffer::submit(CommandQueueType queue)
 
 bool CommandBuffer::set_resource_state(const Resource* resource, ResourceState new_state)
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(resource);
 
     if (resource->type() == ResourceType::buffer) {
@@ -1143,7 +1153,7 @@ bool CommandBuffer::set_resource_state(const Resource* resource, ResourceState n
 
 bool CommandBuffer::set_resource_state(const ResourceView* resource_view, ResourceState new_state)
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(resource_view);
 
     if (resource_view->resource()->type() == ResourceType::buffer) {
@@ -1163,7 +1173,7 @@ bool CommandBuffer::set_resource_state(const ResourceView* resource_view, Resour
 
 void CommandBuffer::uav_barrier(const Resource* resource)
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(resource);
 
     if (set_resource_state(resource, ResourceState::unordered_access))
@@ -1186,7 +1196,7 @@ void CommandBuffer::uav_barrier(const Resource* resource)
 
 void CommandBuffer::clear_resource_view(ResourceView* resource_view, float4 clear_value)
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(resource_view);
 
     switch (resource_view->type()) {
@@ -1217,7 +1227,7 @@ void CommandBuffer::clear_resource_view(ResourceView* resource_view, float4 clea
 
 void CommandBuffer::clear_resource_view(ResourceView* resource_view, uint4 clear_value)
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(resource_view);
 
     switch (resource_view->type()) {
@@ -1251,7 +1261,7 @@ void CommandBuffer::clear_resource_view(
     bool clear_stencil
 )
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(resource_view);
 
     switch (resource_view->type()) {
@@ -1279,7 +1289,7 @@ void CommandBuffer::clear_resource_view(
 
 void CommandBuffer::clear_texture(Texture* texture, float4 clear_value)
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(texture);
     FormatType format_type = get_format_info(texture->format()).type;
     SGL_CHECK(
@@ -1298,7 +1308,7 @@ void CommandBuffer::clear_texture(Texture* texture, float4 clear_value)
 
 void CommandBuffer::clear_texture(Texture* texture, uint4 clear_value)
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(texture);
     FormatType format_type = get_format_info(texture->format()).type;
     SGL_CHECK(
@@ -1317,7 +1327,7 @@ void CommandBuffer::clear_texture(Texture* texture, uint4 clear_value)
 
 void CommandBuffer::copy_resource(Resource* dst, const Resource* src)
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(dst);
     SGL_CHECK_NOT_NULL(src);
     SGL_CHECK(dst->type() == src->type(), "Resources must be of the same type");
@@ -1362,7 +1372,7 @@ void CommandBuffer::copy_resource(Resource* dst, const Resource* src)
 
 void CommandBuffer::resolve_texture(Texture* dst, const Texture* src)
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(dst);
     SGL_CHECK_NOT_NULL(src);
     SGL_CHECK(dst->desc().sample_count == 1, "Destination texture must not be multi-sampled.");
@@ -1408,7 +1418,7 @@ void CommandBuffer::resolve_subresource(
     uint32_t src_subresource
 )
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(dst);
     SGL_CHECK_NOT_NULL(src);
     SGL_CHECK_LT(dst_subresource, dst->subresource_count());
@@ -1454,7 +1464,7 @@ void CommandBuffer::resolve_subresource(
 
 ComputeCommandEncoder CommandBuffer::encode_compute_commands()
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK(!m_encoder_open, "CommandBuffer already has an active encoder");
 
     if (m_active_rhi_encoder != EncoderType::compute) {
@@ -1469,7 +1479,7 @@ ComputeCommandEncoder CommandBuffer::encode_compute_commands()
 
 RenderCommandEncoder CommandBuffer::encode_render_commands(Framebuffer* framebuffer)
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK(!m_encoder_open, "CommandBuffer already has an active encoder");
     SGL_CHECK_NOT_NULL(framebuffer);
 
@@ -1504,7 +1514,7 @@ RenderCommandEncoder CommandBuffer::encode_render_commands(Framebuffer* framebuf
 
 RayTracingCommandEncoder CommandBuffer::encode_ray_tracing_commands()
 {
-    SGL_CHECK(m_open, "Command encoder is closed");
+    SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK(!m_encoder_open, "CommandBuffer already has an active encoder");
 
     if (m_active_rhi_encoder != EncoderType::raytracing) {

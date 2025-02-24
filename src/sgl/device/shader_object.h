@@ -14,14 +14,15 @@
 
 #include <string_view>
 #include <vector>
-#include <map>
+#include <set>
 
 namespace sgl {
 
 class SGL_API ShaderObject : public Object {
     SGL_OBJECT(ShaderObject)
 public:
-    ShaderObject(ref<Device> device, rhi::IShaderObject* shader_object);
+    ShaderObject(ref<Device> device, rhi::IShaderObject* shader_object, bool retain = true);
+    virtual ~ShaderObject();
 
     virtual ref<const TypeLayoutReflection> element_type_layout() const;
 
@@ -50,7 +51,9 @@ public:
 protected:
     ref<Device> m_device;
     rhi::IShaderObject* m_shader_object;
+    bool m_retain;
     std::vector<ref<cuda::InteropBuffer>> m_cuda_interop_buffers;
+    std::set<ref<ShaderObject>> m_objects;
 };
 
 } // namespace sgl

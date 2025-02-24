@@ -78,6 +78,7 @@ public:
     virtual void end();
 
 protected:
+    CommandEncoder* m_command_encoder;
     rhi::IPassEncoder* m_rhi_pass_encoder;
 
     friend class CommandEncoder;
@@ -155,6 +156,8 @@ public:
     ref<RenderPassEncoder> begin_render_pass(const RenderPassDesc& desc);
     ref<ComputePassEncoder> begin_compute_pass();
     ref<RayTracingPassEncoder> begin_ray_tracing_pass();
+
+    ShaderObject* _get_root_object(rhi::IShaderObject* rhi_shader_object);
 
     /**
      * \brief Copy a buffer region.
@@ -355,6 +358,7 @@ private:
     ref<RenderPassEncoder> m_render_pass_encoder;
     ref<ComputePassEncoder> m_compute_pass_encoder;
     ref<RayTracingPassEncoder> m_ray_tracing_pass_encoder;
+    ref<ShaderObject> m_root_object;
 };
 
 #if 0
@@ -531,7 +535,7 @@ private:
 class SGL_API CommandBuffer : public DeviceResource {
     SGL_OBJECT(CommandBuffer)
 public:
-    CommandBuffer(ref<Device> device);
+    CommandBuffer(ref<Device> device, Slang::ComPtr<rhi::ICommandBuffer> rhi_command_buffer);
     ~CommandBuffer();
 
     rhi::ICommandBuffer* rhi_command_buffer() const { return m_rhi_command_buffer; }

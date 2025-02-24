@@ -37,16 +37,16 @@ buffer_c = device.create_buffer(
 )
 
 if True:
-    # Method 1: Manual command buffer
-    command_buffer = device.create_command_buffer()
-    with command_buffer.encode_compute_commands() as encoder:
-        shader_object = encoder.bind_pipeline(kernel.pipeline)
+    # Method 1: Manual command encoding
+    command_encoder = device.create_command_encoder()
+    with command_encoder.begin_compute_pass() as pass_encoder:
+        shader_object = pass_encoder.bind_pipeline(kernel.pipeline)
         processor = sgl.ShaderCursor(shader_object)["processor"]
         processor["a"] = buffer_a
         processor["b"] = buffer_b
         processor["c"] = buffer_c
-        encoder.dispatch([N, 1, 1])
-    command_buffer.submit()
+        pass_encoder.dispatch([N, 1, 1])
+    device.submit_command_buffer(command_encoder.finish())
 
     result = buffer_c.to_numpy().view(np.uint32)
     print(result)
@@ -62,7 +62,7 @@ if True:
     print(result)
 
 if True:
-    # Method 3: Use mutable shader object
+    # Method 3: Use shader object
     processor_object = device.create_shader_object(kernel.reflection["processor"])
     processor = sgl.ShaderCursor(processor_object)
     processor.a = buffer_a

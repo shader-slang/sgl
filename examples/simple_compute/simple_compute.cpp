@@ -61,17 +61,17 @@ int main()
         });
 
         if (true) {
-            // Method 1: Manual command buffer
-            ref<CommandBuffer> command_buffer = device->create_command_buffer();
-            auto encoder = command_buffer->encode_compute_commands();
-            auto shader_object = encoder.bind_pipeline(kernel->pipeline());
+            // Method 1: Manual command encoding
+            ref<CommandEncoder> command_encoder = device->create_command_encoder();
+            auto pass_encoder = command_encoder->begin_compute_pass();
+            auto shader_object = pass_encoder->bind_pipeline(kernel->pipeline());
             auto processor = ShaderCursor(shader_object)["processor"];
             processor["a"] = buffer_a;
             processor["b"] = buffer_b;
             processor["c"] = buffer_c;
-            encoder.dispatch_thread_groups(uint3{N / 16, 1, 1});
-            encoder.end();
-            command_buffer->submit();
+            pass_encoder->dispatch_thread_groups(uint3{N / 16, 1, 1});
+            pass_encoder->end();
+            device->submit_command_buffer(command_encoder->finish());
 
             std::vector<uint32_t> data_c = buffer_c->get_elements<uint>();
             log_info("{}", data_c);
@@ -95,7 +95,7 @@ int main()
         }
 
         if (true) {
-            // Method 3: Use mutable shader object
+            // Method 3: Use shader object
             ref<ShaderObject> processor_object = device->create_shader_object(kernel->reflection()["processor"]);
             {
                 auto processor = ShaderCursor(processor_object);

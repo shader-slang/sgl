@@ -494,8 +494,9 @@ ref<ShaderProgram> SlangSession::link_program(
         SGL_CHECK(entry_point->module()->session() == this, "All entry points must belong to this session.");
 
     // Link NVAPI module if available.
-    if (SGL_HAS_NVAPI && m_device->type() == DeviceType::d3d12)
-        modules.push_back(m_nvapi_module);
+    // TODO(slang-rhi) this currently breaks slang-rhi because the nvapi UAV slot has no resource bound.
+    // if (SGL_HAS_NVAPI && m_device->type() == DeviceType::d3d12)
+    //     modules.push_back(m_nvapi_module);
 
     ShaderProgramDesc desc;
     desc.modules = modules;

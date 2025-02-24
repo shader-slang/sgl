@@ -26,10 +26,20 @@ inline rhi::ShaderOffset rhi_shader_offset(const ShaderOffset& offset)
 // ShaderObject
 //
 
-ShaderObject::ShaderObject(ref<Device> device, rhi::IShaderObject* shader_object)
+ShaderObject::ShaderObject(ref<Device> device, rhi::IShaderObject* shader_object, bool retain)
     : m_device(std::move(device))
     , m_shader_object(shader_object)
+    , m_retain(retain)
+
 {
+    if (m_retain)
+        m_shader_object->addRef();
+}
+
+ShaderObject::~ShaderObject()
+{
+    if (m_retain)
+        m_shader_object->release();
 }
 
 ref<const TypeLayoutReflection> ShaderObject::element_type_layout() const
@@ -49,12 +59,19 @@ uint32_t ShaderObject::get_entry_point_count() const
 
 ref<ShaderObject> ShaderObject::get_entry_point(uint32_t index)
 {
-    return make_ref<ShaderObject>(m_device, m_shader_object->getEntryPoint(index));
+    ref<ShaderObject> shader_object = make_ref<ShaderObject>(m_device, m_shader_object->getEntryPoint(index));
+    // TODO(slang-rhi) this is required to keep shader object's alive (shader cursor uses weak references)
+    m_objects.insert(shader_object);
+    return shader_object;
 }
 
 ref<ShaderObject> ShaderObject::get_object(const ShaderOffset& offset)
 {
-    return make_ref<ShaderObject>(m_device, m_shader_object->getObject(rhi_shader_offset(offset)));
+    ref<ShaderObject> shader_object
+        = make_ref<ShaderObject>(m_device, m_shader_object->getObject(rhi_shader_offset(offset)));
+    // TODO(slang-rhi) this is required to keep shader object's alive (shader cursor uses weak references)
+    m_objects.insert(shader_object);
+    return shader_object;
 }
 
 void ShaderObject::set_object(const ShaderOffset& offset, const ref<ShaderObject>& object)
