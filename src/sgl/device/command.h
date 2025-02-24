@@ -26,7 +26,10 @@ struct RenderState {
     IndexFormat index_format{IndexFormat::uint32};
 };
 
-struct RenderPassDesc { };
+struct RenderPassDesc {
+    std::vector<RenderPassColorAttachment> color_attachments;
+    std::optional<RenderPassDepthStencilAttachment> depth_stencil_attachment;
+};
 
 struct DrawArguments {
     uint32_t vertex_count{0};
@@ -34,6 +37,89 @@ struct DrawArguments {
     uint32_t start_vertex_location{0};
     uint32_t start_instance_location{0};
     uint32_t start_index_location{0};
+};
+
+class SGL_API PassEncoder {
+public:
+    /// Push a debug group.
+    void push_debug_group(const char* name, float3 color);
+
+    /// Pop a debug group.
+    void pop_debug_group();
+
+    /**
+     * Insert a debug marker.
+     * \param name Name of the marker.
+     * \param color Color of the marker.
+     */
+    void insert_debug_marker(const char* name, float3 color);
+
+    virtual void end() = 0;
+
+protected:
+    rhi::IPassEncoder* m_rhi_pass_encoder;
+
+    friend class CommandEncoder;
+};
+
+class SGL_API RenderPassEncoder : public PassEncoder {
+public:
+    ShaderObject* bind_pipeline(RenderPipeline* pipeline);
+    void bind_pipeline(RenderPipeline* pipeline, ShaderObject* root_object);
+
+    void set_render_state(const RenderState& state);
+
+    void draw(const DrawArguments& args);
+    void draw_indexed(const DrawArguments& args);
+
+    void draw_indirect(uint32_t max_draw_count, BufferWithOffset arg_buffer, BufferWithOffset count_buffer = {});
+
+    void
+    draw_indexed_indirect(uint32_t max_draw_count, BufferWithOffset arg_buffer, BufferWithOffset count_buffer = {});
+
+    void draw_mesh_tasks(uint3 dimensions);
+
+    void end() override;
+
+private:
+    rhi::IRenderPassEncoder* m_rhi_render_pass_encoder;
+
+    friend class CommandEncoder;
+};
+
+class SGL_API ComputePassEncoder : public PassEncoder {
+public:
+    ShaderObject* bind_pipeline(ComputePipeline* pipeline);
+    void bind_pipeline(ComputePipeline* pipeline, ShaderObject* root_object);
+
+    void dispatch(uint3 thread_count);
+    void dispatch_thread_groups(uint3 thread_group_count);
+    void dispatch_thread_groups_indirect(const Buffer* cmd_buffer, DeviceOffset offset);
+
+    // virtual SLANG_NO_THROW void SLANG_MCALL dispatchCompute(uint32_t x, uint32_t y, uint32_t z) = 0;
+    // virtual SLANG_NO_THROW void SLANG_MCALL dispatchComputeIndirect(IBuffer* argBuffer, uint64_t offset) = 0;
+
+    void end() override;
+
+private:
+    rhi::IComputePassEncoder* m_rhi_compute_pass_encoder;
+
+    friend class CommandEncoder;
+};
+
+class SGL_API RayTracingPassEncoder : public PassEncoder {
+public:
+    ShaderObject* bind_pipeline(RayTracingPipeline* pipeline, ShaderTable* shader_table);
+    void bind_pipeline(RayTracingPipeline* pipeline, ShaderTable* shader_table, ShaderObject* root_object);
+
+    void dispatch_rays(uint32_t ray_gen_shader_index, uint3 dimensions);
+
+    void end() override;
+
+private:
+    rhi::IRayTracingPassEncoder* m_rhi_ray_tracing_pass_encoder;
+
+    friend class CommandEncoder;
 };
 
 class SGL_API CommandEncoder : public DeviceResource {
@@ -227,14 +313,6 @@ public:
     void dispatch_compute(uint3 thread_count);
     void dispatch_compute_indirect(BufferWithOffset arg_buffer);
 
-    void begin_ray_tracing_pass();
-    void end_ray_tracing_pass();
-
-    void set_ray_tracing_state(const RayTracingState& state);
-
-    void dispatch_rays(uint32_t ray_gen_shader_index, uint3 dimensions);
-
-
     ref<CommandBuffer> finish();
 
     NativeHandle get_native_handle() const;
@@ -249,84 +327,11 @@ private:
     std::vector<ref<cuda::InteropBuffer>> m_cuda_interop_buffers;
 
     bool m_open{false};
+
+    RenderPassEncoder m_render_pass_encoder;
+    ComputePassEncoder m_compute_pass_encoder;
+    RayTracingPassEncoder m_ray_tracing_pass_encoder;
 };
-
-class SGL_API PassEncoder {
-public:
-    /// Push a debug group.
-    void push_debug_group(const char* name, float3 color);
-
-    /// Pop a debug group.
-    void pop_debug_group();
-
-    /**
-     * Insert a debug marker.
-     * \param name Name of the marker.
-     * \param color Color of the marker.
-     */
-    void insert_debug_marker(const char* name, float3 color);
-
-    virtual void end() = 0;
-
-protected:
-    rhi::IPassEncoder* m_rhi_pass_encoder;
-};
-
-class SGL_API RenderPassEncoder : public PassEncoder {
-public:
-    ShaderObject* bind_pipeline(RenderPipeline* pipeline);
-    void bind_pipeline(RenderPipeline* pipeline, ShaderObject* root_object);
-
-    void set_render_state(const RenderState& state);
-
-    void draw(const DrawArguments& args);
-    void draw_indexed(const DrawArguments& args);
-
-    void draw_indirect(uint32_t max_draw_count, BufferWithOffset arg_buffer, BufferWithOffset count_buffer = {});
-
-    void
-    draw_indexed_indirect(uint32_t max_draw_count, BufferWithOffset arg_buffer, BufferWithOffset count_buffer = {});
-
-    void draw_mesh_tasks(uint3 dimensions);
-
-    void end() override;
-
-private:
-    rhi::IRenderPassEncoder* m_rhi_render_pass_encoder;
-};
-
-class SGL_API ComputePassEncoder : public PassEncoder {
-public:
-    ShaderObject* bind_pipeline(ComputePipeline* pipeline);
-    void bind_pipeline(ComputePipeline* pipeline, ShaderObject* root_object);
-
-    void dispatch(uint3 thread_count);
-    void dispatch_thread_groups(uint3 thread_group_count);
-    void dispatch_thread_groups_indirect(const Buffer* cmd_buffer, DeviceOffset offset);
-
-
-    virtual SLANG_NO_THROW void SLANG_MCALL dispatchCompute(uint32_t x, uint32_t y, uint32_t z) = 0;
-    virtual SLANG_NO_THROW void SLANG_MCALL dispatchComputeIndirect(IBuffer* argBuffer, uint64_t offset) = 0;
-
-    void end() override;
-
-private:
-    rhi::IComputePassEncoder* m_rhi_compute_pass_encoder;
-};
-
-class SGL_API RayTracingPassEncoder : public PassEncoder {
-public:
-    ShaderObject* bind_pipeline(RayTracingPipeline* pipeline, ShaderTable* shader_table);
-    void bind_pipeline(RayTracingPipeline* pipeline, ShaderTable* shader_table, ShaderObject* root_object);
-
-    void dispatch_rays(uint32_t ray_gen_shader_index, uint32_t width, uint32_t height, uint32_t depth);
-
-    void end() override;
-
-private:
-    rhi::IRayTracingPassEncoder* m_rhi_ray_tracing_pass_encoder;
-};
-
 
 #if 0
 

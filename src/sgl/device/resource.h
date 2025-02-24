@@ -403,6 +403,7 @@ public:
     NativeHandle get_native_handle() const;
 
     std::string to_string() const;
+
 private:
     ref<Buffer> m_buffer;
     BufferViewDesc m_desc;

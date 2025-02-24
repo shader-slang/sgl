@@ -25,8 +25,7 @@ class PipelineTestContext:
             label="render_texture",
         )
         self.count_buffer = self.device.create_buffer(
-            usage=sgl.BufferUsage.unordered_access
-            | sgl.BufferUsage.shader_resource,
+            usage=sgl.BufferUsage.unordered_access | sgl.BufferUsage.shader_resource,
             size=16,
             label="count_buffer",
             data=np.array([0, 0, 0, 0], dtype=np.uint32),

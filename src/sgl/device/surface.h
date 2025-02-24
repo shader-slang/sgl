@@ -16,8 +16,7 @@ namespace sgl {
 
 class Window;
 
-struct SurfaceInfo
-{
+struct SurfaceInfo {
     /// Preferred format for the surface.
     Format preferred_format;
     /// Supported texture usages.
@@ -26,8 +25,7 @@ struct SurfaceInfo
     std::vector<Format> formats;
 };
 
-struct SurfaceConfig
-{
+struct SurfaceConfig {
     /// Surface texture format.
     Format format = Format::unknown;
     /// Surface texture usage.

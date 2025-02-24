@@ -43,7 +43,7 @@ Surface::~Surface() { }
 
 void Surface::configure(const SurfaceConfig& config)
 {
-    rhi::SurfaceConfig rhi_config {
+    rhi::SurfaceConfig rhi_config{
         .format = static_cast<rhi::Format>(config.format),
         .usage = static_cast<rhi::TextureUsage>(config.usage),
         .width = static_cast<rhi::Size>(config.width),

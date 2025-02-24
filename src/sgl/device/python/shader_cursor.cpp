@@ -29,7 +29,7 @@ namespace detail {
         ShaderCursorWriteConverterTable()
             : WriteConverterTable<ShaderCursor>()
         {
-            add_type(MutableShaderObject, set_object);
+            add_type(ShaderObject, set_object);
             add_type(ResourceView, set_resource);
             add_type(Buffer, set_buffer);
             add_type(Texture, set_texture);
