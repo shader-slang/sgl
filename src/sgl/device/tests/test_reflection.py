@@ -13,6 +13,7 @@ from sglhelpers import test_id  # type: ignore (pytest fixture)
 # raises RuntimeError instead of SlangCompileError
 SlangCompileError = RuntimeError if sys.platform == "darwin" else sgl.SlangCompileError
 
+
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_type_layout(test_id: str, device_type: sgl.DeviceType):
 

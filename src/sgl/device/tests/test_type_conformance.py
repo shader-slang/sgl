@@ -11,6 +11,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent))
 import sglhelpers as helpers
 
+
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_type_conformance(device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
