@@ -78,8 +78,6 @@ target_sources(sgl PRIVATE
     sgl/device/command.h
     sgl/device/coopvec.h
     sgl/device/coopvec.cpp
-    sgl/device/cuda_api.cpp
-    sgl/device/cuda_api.h
     sgl/device/cuda_interop.cpp
     sgl/device/cuda_interop.h
     sgl/device/cuda_utils.cpp

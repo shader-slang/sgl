@@ -6,7 +6,8 @@
 
 #include "sgl/device/fwd.h"
 #include "sgl/device/fence.h"
-#include "sgl/device/cuda_api.h"
+
+#include <slang-rhi/cuda-driver-api.h>
 
 #define SGL_CU_CHECK(call)                                                                                             \
     do {                                                                                                               \
