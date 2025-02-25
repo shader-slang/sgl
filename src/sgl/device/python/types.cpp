@@ -36,7 +36,7 @@ SGL_DICT_TO_DESC_FIELD(dst_factor, BlendFactor)
 SGL_DICT_TO_DESC_FIELD(op, BlendOp)
 SGL_DICT_TO_DESC_END()
 
-SGL_DICT_TO_DESC_BEGIN(ColorTargetState)
+SGL_DICT_TO_DESC_BEGIN(ColorTargetDesc)
 SGL_DICT_TO_DESC_FIELD(format, Format)
 SGL_DICT_TO_DESC_FIELD_DICT(color, AspectBlendDesc)
 SGL_DICT_TO_DESC_FIELD_DICT(alpha, AspectBlendDesc)
@@ -45,7 +45,7 @@ SGL_DICT_TO_DESC_FIELD(logic_op, LogicOp)
 SGL_DICT_TO_DESC_FIELD(write_mask, RenderTargetWriteMask)
 SGL_DICT_TO_DESC_END()
 
-SGL_DICT_TO_DESC_BEGIN(MultisampleState)
+SGL_DICT_TO_DESC_BEGIN(MultisampleDesc)
 SGL_DICT_TO_DESC_FIELD(sample_count, uint32_t)
 SGL_DICT_TO_DESC_FIELD(sample_mask, uint32_t)
 SGL_DICT_TO_DESC_FIELD(alpha_to_coverage_enable, bool)
@@ -59,7 +59,7 @@ SGL_DICT_TO_DESC_FIELD(stencil_pass_op, StencilOp)
 SGL_DICT_TO_DESC_FIELD(stencil_func, ComparisonFunc)
 SGL_DICT_TO_DESC_END()
 
-SGL_DICT_TO_DESC_BEGIN(DepthStencilState)
+SGL_DICT_TO_DESC_BEGIN(DepthStencilDesc)
 SGL_DICT_TO_DESC_FIELD(format, Format)
 SGL_DICT_TO_DESC_FIELD(depth_test_enable, bool)
 SGL_DICT_TO_DESC_FIELD(depth_write_enable, bool)
@@ -71,7 +71,7 @@ SGL_DICT_TO_DESC_FIELD(front_face, DepthStencilOpDesc)
 SGL_DICT_TO_DESC_FIELD(back_face, DepthStencilOpDesc)
 SGL_DICT_TO_DESC_END()
 
-SGL_DICT_TO_DESC_BEGIN(RasterizerState)
+SGL_DICT_TO_DESC_BEGIN(RasterizerDesc)
 SGL_DICT_TO_DESC_FIELD(fill_mode, FillMode)
 SGL_DICT_TO_DESC_FIELD(cull_mode, CullMode)
 SGL_DICT_TO_DESC_FIELD(front_face, FrontFaceMode)
@@ -165,38 +165,38 @@ SGL_PY_EXPORT(device_types)
         .def_rw("op", &AspectBlendDesc::op, D(AspectBlendDesc, op));
     nb::implicitly_convertible<nb::dict, AspectBlendDesc>();
 
-    nb::class_<ColorTargetState>(m, "ColorTargetState", D_NA(ColorTargetState))
+    nb::class_<ColorTargetDesc>(m, "ColorTargetDesc", D_NA(ColorTargetDesc))
         .def(nb::init<>())
         .def(
             "__init__",
-            [](ColorTargetState* self, nb::dict dict) { new (self) ColorTargetState(dict_to_ColorTargetState(dict)); }
+            [](ColorTargetDesc* self, nb::dict dict) { new (self) ColorTargetDesc(dict_to_ColorTargetDesc(dict)); }
         )
-        .def_rw("format", &ColorTargetState::format, D_NA(ColorTargetState, format))
-        .def_rw("write_mask", &ColorTargetState::write_mask, D_NA(ColorTargetState, write_mask))
-        .def_rw("enable_blend", &ColorTargetState::enable_blend, D_NA(ColorTargetState, enable_blend))
-        .def_rw("logic_op", &ColorTargetState::logic_op, D_NA(ColorTargetState, logic_op))
-        .def_rw("write_mask", &ColorTargetState::write_mask, D_NA(ColorTargetState, write_mask));
-    nb::implicitly_convertible<nb::dict, ColorTargetState>();
+        .def_rw("format", &ColorTargetDesc::format, D_NA(ColorTargetDesc, format))
+        .def_rw("write_mask", &ColorTargetDesc::write_mask, D_NA(ColorTargetDesc, write_mask))
+        .def_rw("enable_blend", &ColorTargetDesc::enable_blend, D_NA(ColorTargetDesc, enable_blend))
+        .def_rw("logic_op", &ColorTargetDesc::logic_op, D_NA(ColorTargetDesc, logic_op))
+        .def_rw("write_mask", &ColorTargetDesc::write_mask, D_NA(ColorTargetDesc, write_mask));
+    nb::implicitly_convertible<nb::dict, ColorTargetDesc>();
 
-    nb::class_<MultisampleState>(m, "MultisampleState", D_NA(MultisampleState))
+    nb::class_<MultisampleDesc>(m, "MultisampleDesc", D_NA(MultisampleDesc))
         .def(nb::init<>())
         .def(
             "__init__",
-            [](MultisampleState* self, nb::dict dict) { new (self) MultisampleState(dict_to_MultisampleState(dict)); }
+            [](MultisampleDesc* self, nb::dict dict) { new (self) MultisampleDesc(dict_to_MultisampleDesc(dict)); }
         )
-        .def_rw("sample_count", &MultisampleState::sample_count, D_NA(MultisampleState, sample_count))
-        .def_rw("sample_mask", &MultisampleState::sample_mask, D_NA(MultisampleState, sample_mask))
+        .def_rw("sample_count", &MultisampleDesc::sample_count, D_NA(MultisampleDesc, sample_count))
+        .def_rw("sample_mask", &MultisampleDesc::sample_mask, D_NA(MultisampleDesc, sample_mask))
         .def_rw(
             "alpha_to_coverage_enable",
-            &MultisampleState::alpha_to_coverage_enable,
-            D_NA(MultisampleState, alpha_to_coverage_enable)
+            &MultisampleDesc::alpha_to_coverage_enable,
+            D_NA(MultisampleDesc, alpha_to_coverage_enable)
         )
         .def_rw(
             "alpha_to_one_enable",
-            &MultisampleState::alpha_to_one_enable,
-            D_NA(MultisampleState, alpha_to_one_enable)
+            &MultisampleDesc::alpha_to_one_enable,
+            D_NA(MultisampleDesc, alpha_to_one_enable)
         );
-    nb::implicitly_convertible<nb::dict, MultisampleState>();
+    nb::implicitly_convertible<nb::dict, MultisampleDesc>();
 
     nb::class_<DepthStencilOpDesc>(m, "DepthStencilOpDesc", D(DepthStencilOpDesc))
         .def(nb::init<>())
@@ -215,67 +215,54 @@ SGL_PY_EXPORT(device_types)
         .def_rw("stencil_func", &DepthStencilOpDesc::stencil_func, D(DepthStencilOpDesc, stencil_func));
     nb::implicitly_convertible<nb::dict, DepthStencilOpDesc>();
 
-    nb::class_<DepthStencilState>(m, "DepthStencilState", D_NA(DepthStencilState))
+    nb::class_<DepthStencilDesc>(m, "DepthStencilDesc", D_NA(DepthStencilDesc))
         .def(nb::init<>())
         .def(
             "__init__",
-            [](DepthStencilState* self, nb::dict dict)
-            { new (self) DepthStencilState(dict_to_DepthStencilState(dict)); }
+            [](DepthStencilDesc* self, nb::dict dict) { new (self) DepthStencilDesc(dict_to_DepthStencilDesc(dict)); }
         )
-        .def_rw("format", &DepthStencilState::format, D_NA(DepthStencilState, format))
-        .def_rw("depth_test_enable", &DepthStencilState::depth_test_enable, D_NA(DepthStencilState, depth_test_enable))
-        .def_rw(
-            "depth_write_enable",
-            &DepthStencilState::depth_write_enable,
-            D_NA(DepthStencilState, depth_write_enable)
-        )
-        .def_rw("depth_func", &DepthStencilState::depth_func, D_NA(DepthStencilState, depth_func))
-        .def_rw("stencil_enable", &DepthStencilState::stencil_enable, D_NA(DepthStencilState, stencil_enable))
-        .def_rw("stencil_read_mask", &DepthStencilState::stencil_read_mask, D_NA(DepthStencilState, stencil_read_mask))
-        .def_rw(
-            "stencil_write_mask",
-            &DepthStencilState::stencil_write_mask,
-            D_NA(DepthStencilState, stencil_write_mask)
-        )
-        .def_rw("front_face", &DepthStencilState::front_face, D_NA(DepthStencilState, front_face))
-        .def_rw("back_face", &DepthStencilState::back_face, D_NA(DepthStencilState, back_face));
-    nb::implicitly_convertible<nb::dict, DepthStencilState>();
+        .def_rw("format", &DepthStencilDesc::format, D_NA(DepthStencilDesc, format))
+        .def_rw("depth_test_enable", &DepthStencilDesc::depth_test_enable, D_NA(DepthStencilDesc, depth_test_enable))
+        .def_rw("depth_write_enable", &DepthStencilDesc::depth_write_enable, D_NA(DepthStencilDesc, depth_write_enable))
+        .def_rw("depth_func", &DepthStencilDesc::depth_func, D_NA(DepthStencilDesc, depth_func))
+        .def_rw("stencil_enable", &DepthStencilDesc::stencil_enable, D_NA(DepthStencilDesc, stencil_enable))
+        .def_rw("stencil_read_mask", &DepthStencilDesc::stencil_read_mask, D_NA(DepthStencilDesc, stencil_read_mask))
+        .def_rw("stencil_write_mask", &DepthStencilDesc::stencil_write_mask, D_NA(DepthStencilDesc, stencil_write_mask))
+        .def_rw("front_face", &DepthStencilDesc::front_face, D_NA(DepthStencilDesc, front_face))
+        .def_rw("back_face", &DepthStencilDesc::back_face, D_NA(DepthStencilDesc, back_face));
+    nb::implicitly_convertible<nb::dict, DepthStencilDesc>();
 
-    nb::class_<RasterizerState>(m, "RasterizerState", D_NA(RasterizerState))
+    nb::class_<RasterizerDesc>(m, "RasterizerDesc", D_NA(RasterizerDesc))
         .def(nb::init<>())
         .def(
             "__init__",
-            [](RasterizerState* self, nb::dict dict) { new (self) RasterizerState(dict_to_RasterizerState(dict)); }
+            [](RasterizerDesc* self, nb::dict dict) { new (self) RasterizerDesc(dict_to_RasterizerDesc(dict)); }
         )
-        .def_rw("fill_mode", &RasterizerState::fill_mode, D_NA(RasterizerState, fill_mode))
-        .def_rw("cull_mode", &RasterizerState::cull_mode, D_NA(RasterizerState, cull_mode))
-        .def_rw("front_face", &RasterizerState::front_face, D_NA(RasterizerState, front_face))
-        .def_rw("depth_bias", &RasterizerState::depth_bias, D_NA(RasterizerState, depth_bias))
-        .def_rw("depth_bias_clamp", &RasterizerState::depth_bias_clamp, D_NA(RasterizerState, depth_bias_clamp))
+        .def_rw("fill_mode", &RasterizerDesc::fill_mode, D_NA(RasterizerDesc, fill_mode))
+        .def_rw("cull_mode", &RasterizerDesc::cull_mode, D_NA(RasterizerDesc, cull_mode))
+        .def_rw("front_face", &RasterizerDesc::front_face, D_NA(RasterizerDesc, front_face))
+        .def_rw("depth_bias", &RasterizerDesc::depth_bias, D_NA(RasterizerDesc, depth_bias))
+        .def_rw("depth_bias_clamp", &RasterizerDesc::depth_bias_clamp, D_NA(RasterizerDesc, depth_bias_clamp))
         .def_rw(
             "slope_scaled_depth_bias",
-            &RasterizerState::slope_scaled_depth_bias,
-            D_NA(RasterizerState, slope_scaled_depth_bias)
+            &RasterizerDesc::slope_scaled_depth_bias,
+            D_NA(RasterizerDesc, slope_scaled_depth_bias)
         )
-        .def_rw("depth_clip_enable", &RasterizerState::depth_clip_enable, D_NA(RasterizerState, depth_clip_enable))
-        .def_rw("scissor_enable", &RasterizerState::scissor_enable, D_NA(RasterizerState, scissor_enable))
-        .def_rw("multisample_enable", &RasterizerState::multisample_enable, D_NA(RasterizerState, multisample_enable))
+        .def_rw("depth_clip_enable", &RasterizerDesc::depth_clip_enable, D_NA(RasterizerDesc, depth_clip_enable))
+        .def_rw("scissor_enable", &RasterizerDesc::scissor_enable, D_NA(RasterizerDesc, scissor_enable))
+        .def_rw("multisample_enable", &RasterizerDesc::multisample_enable, D_NA(RasterizerDesc, multisample_enable))
         .def_rw(
             "antialiased_line_enable",
-            &RasterizerState::antialiased_line_enable,
-            D_NA(RasterizerState, antialiased_line_enable)
+            &RasterizerDesc::antialiased_line_enable,
+            D_NA(RasterizerDesc, antialiased_line_enable)
         )
         .def_rw(
             "enable_conservative_rasterization",
-            &RasterizerState::enable_conservative_rasterization,
-            D_NA(RasterizerState, enable_conservative_rasterization)
+            &RasterizerDesc::enable_conservative_rasterization,
+            D_NA(RasterizerDesc, enable_conservative_rasterization)
         )
-        .def_rw(
-            "forced_sample_count",
-            &RasterizerState::forced_sample_count,
-            D_NA(RasterizerState, forced_sample_count)
-        );
-    nb::implicitly_convertible<nb::dict, RasterizerState>();
+        .def_rw("forced_sample_count", &RasterizerDesc::forced_sample_count, D_NA(RasterizerDesc, forced_sample_count));
+    nb::implicitly_convertible<nb::dict, RasterizerDesc>();
 
     // ------------------------------------------------------------------------
     // Queries

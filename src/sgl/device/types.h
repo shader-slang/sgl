@@ -510,7 +510,7 @@ struct AspectBlendDesc {
     BlendOp op{BlendOp::add};
 };
 
-struct ColorTargetState {
+struct ColorTargetDesc {
     Format format{Format::unknown};
     AspectBlendDesc color;
     AspectBlendDesc alpha;
@@ -519,7 +519,7 @@ struct ColorTargetState {
     RenderTargetWriteMask write_mask{RenderTargetWriteMask::enable_all};
 };
 
-struct MultisampleState {
+struct MultisampleDesc {
     uint32_t sample_count{1};
     uint32_t sample_mask{0xffffffff};
     bool alpha_to_coverage_enable{false};
@@ -533,7 +533,7 @@ struct DepthStencilOpDesc {
     ComparisonFunc stencil_func{ComparisonFunc::always};
 };
 
-struct DepthStencilState {
+struct DepthStencilDesc {
     Format format{Format::unknown};
 
     bool depth_test_enable{false};
@@ -547,7 +547,7 @@ struct DepthStencilState {
     DepthStencilOpDesc back_face;
 };
 
-struct RasterizerState {
+struct RasterizerDesc {
     FillMode fill_mode{FillMode::solid};
     CullMode cull_mode{CullMode::none};
     FrontFaceMode front_face{FrontFaceMode::counter_clockwise};
