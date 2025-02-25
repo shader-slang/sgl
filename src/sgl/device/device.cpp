@@ -561,8 +561,23 @@ uint64_t Device::submit_command_buffer(CommandBuffer* command_buffer, CommandQue
         sync_to_cuda(cuda_stream);
     }
 
-    uint64_t fence_value = m_global_fence->update_signaled_value();
-    m_rhi_graphics_queue->submit(command_buffer->rhi_command_buffer(), m_global_fence->rhi_fence(), fence_value);
+    rhi::ICommandBuffer* rhi_command_buffers[] = {command_buffer->rhi_command_buffer()};
+    rhi::IFence* rhi_wait_fences[] = {m_global_fence->rhi_fence()};
+    uint64_t rhi_wait_fence_values[] = {m_global_fence->signaled_value()};
+    rhi::IFence* rhi_signal_fences[] = {m_global_fence->rhi_fence()};
+    uint64_t rhi_signal_fence_values[] = {m_global_fence->update_signaled_value()};
+    rhi::SubmitDesc rhi_submit_desc{
+        .commandBuffers = rhi_command_buffers,
+        .commandBufferCount = 1,
+        .waitFences = m_wait_global_fence ? rhi_wait_fences : nullptr,
+        .waitFenceValues = m_wait_global_fence ? rhi_wait_fence_values : nullptr,
+        .waitFenceCount = m_wait_global_fence ? 1u : 0u,
+        .signalFences = rhi_signal_fences,
+        .signalFenceValues = rhi_signal_fence_values,
+        .signalFenceCount = 1,
+    };
+    m_rhi_graphics_queue->submit(rhi_submit_desc);
+    m_wait_global_fence = false;
 
     if (m_supports_cuda_interop && command_buffer->m_cuda_interop_buffers.size() > 0) {
         sync_to_device(cuda_stream);
@@ -572,7 +587,7 @@ uint64_t Device::submit_command_buffer(CommandBuffer* command_buffer, CommandQue
                 buffer->copy_to_cuda(cuda_stream);
     }
 
-    return fence_value;
+    return m_global_fence->signaled_value();
 }
 
 bool Device::is_command_buffer_complete(uint64_t id)
@@ -597,8 +612,7 @@ void Device::sync_to_cuda(void* cuda_stream)
     SGL_CU_SCOPE(this);
     uint64_t signal_value = m_global_fence->update_signaled_value();
     m_cuda_semaphore->signal(signal_value, CUstream(cuda_stream));
-    rhi::IFence* fence = m_global_fence->rhi_fence();
-    m_rhi_graphics_queue->waitForFenceValuesOnDevice(1, &fence, &signal_value);
+    m_wait_global_fence = true;
 }
 
 void Device::sync_to_device(void* cuda_stream)
