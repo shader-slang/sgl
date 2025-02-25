@@ -51,13 +51,6 @@ struct RenderPassDesc {
     std::optional<RenderPassDepthStencilAttachment> depth_stencil_attachment;
 };
 
-struct DrawArguments {
-    uint32_t vertex_count{0};
-    uint32_t instance_count{1};
-    uint32_t start_vertex_location{0};
-    uint32_t start_instance_location{0};
-    uint32_t start_index_location{0};
-};
 
 class SGL_API PassEncoder : public Object {
     SGL_OBJECT(PassEncoder)
