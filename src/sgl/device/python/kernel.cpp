@@ -36,7 +36,11 @@ SGL_PY_EXPORT(device_kernel)
         .def_prop_ro("pipeline", &ComputeKernel::pipeline, D(ComputeKernel, pipeline))
         .def(
             "dispatch",
-            [](ComputeKernel* self, uint3 thread_count, nb::dict vars, CommandBuffer* command_buffer, nb::kwargs kwargs)
+            [](ComputeKernel* self,
+               uint3 thread_count,
+               nb::dict vars,
+               CommandEncoder* command_encoder,
+               nb::kwargs kwargs)
             {
                 auto bind_vars = [&](ShaderCursor cursor)
                 {
@@ -46,11 +50,11 @@ SGL_PY_EXPORT(device_kernel)
                     // bind globals
                     bind_python_var(cursor, vars);
                 };
-                self->dispatch(thread_count, bind_vars, command_buffer);
+                self->dispatch(thread_count, bind_vars, command_encoder);
             },
             "thread_count"_a,
             "vars"_a = nb::dict(),
-            "command_buffer"_a = nullptr,
+            "command_encoder"_a = nullptr,
             "kwargs"_a,
             D(ComputeKernel, dispatch)
         );

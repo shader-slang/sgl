@@ -305,6 +305,36 @@ SGL_ENUM_INFO(
 );
 SGL_ENUM_REGISTER(PrimitiveTopology);
 
+enum class LoadOp : uint8_t {
+    load = static_cast<uint8_t>(rhi::LoadOp::Load),
+    clear = static_cast<uint8_t>(rhi::LoadOp::Clear),
+    dont_care = static_cast<uint8_t>(rhi::LoadOp::DontCare),
+};
+
+SGL_ENUM_INFO(
+    LoadOp,
+    {
+        {LoadOp::load, "load"},
+        {LoadOp::clear, "clear"},
+        {LoadOp::dont_care, "dont_care"},
+    }
+);
+SGL_ENUM_REGISTER(LoadOp);
+
+enum class StoreOp : uint8_t {
+    store = static_cast<uint8_t>(rhi::StoreOp::Store),
+    dont_care = static_cast<uint8_t>(rhi::StoreOp::DontCare),
+};
+
+SGL_ENUM_INFO(
+    StoreOp,
+    {
+        {StoreOp::store, "store"},
+        {StoreOp::dont_care, "dont_care"},
+    }
+);
+SGL_ENUM_REGISTER(StoreOp);
+
 enum class StencilOp : uint8_t {
     keep = static_cast<uint8_t>(rhi::StencilOp::Keep),
     zero = static_cast<uint8_t>(rhi::StencilOp::Keep),
@@ -517,7 +547,7 @@ struct DepthStencilState {
     DepthStencilOpDesc back_face;
 };
 
-struct RasterizerDesc {
+struct RasterizerState {
     FillMode fill_mode{FillMode::solid};
     CullMode cull_mode{CullMode::none};
     FrontFaceMode front_face{FrontFaceMode::counter_clockwise};
@@ -531,36 +561,6 @@ struct RasterizerDesc {
     bool enable_conservative_rasterization{false};
     uint32_t forced_sample_count{0};
 };
-
-enum class LoadOp : uint8_t {
-    load = static_cast<uint8_t>(rhi::LoadOp::Load),
-    clear = static_cast<uint8_t>(rhi::LoadOp::Clear),
-    dont_care = static_cast<uint8_t>(rhi::LoadOp::DontCare),
-};
-
-SGL_ENUM_INFO(
-    LoadOp,
-    {
-        {LoadOp::load, "load"},
-        {LoadOp::clear, "clear"},
-        {LoadOp::dont_care, "dont_care"},
-    }
-);
-SGL_ENUM_REGISTER(LoadOp);
-
-enum class StoreOp : uint8_t {
-    store = static_cast<uint8_t>(rhi::StoreOp::Store),
-    dont_care = static_cast<uint8_t>(rhi::StoreOp::DontCare),
-};
-
-SGL_ENUM_INFO(
-    StoreOp,
-    {
-        {StoreOp::store, "store"},
-        {StoreOp::dont_care, "dont_care"},
-    }
-);
-SGL_ENUM_REGISTER(StoreOp);
 
 // ----------------------------------------------------------------------------
 // Queries

@@ -15,14 +15,14 @@ SGL_DICT_TO_DESC_BEGIN(BufferDesc)
 SGL_DICT_TO_DESC_FIELD(size, size_t)
 SGL_DICT_TO_DESC_FIELD(struct_size, size_t)
 SGL_DICT_TO_DESC_FIELD(format, Format)
-SGL_DICT_TO_DESC_FIELD(initial_state, ResourceState)
-SGL_DICT_TO_DESC_FIELD(usage, BufferUsage)
 SGL_DICT_TO_DESC_FIELD(memory_type, MemoryType)
+SGL_DICT_TO_DESC_FIELD(usage, BufferUsage)
+SGL_DICT_TO_DESC_FIELD(default_state, ResourceState)
 SGL_DICT_TO_DESC_FIELD(label, std::string)
 SGL_DICT_TO_DESC_END()
 
 SGL_DICT_TO_DESC_BEGIN(TextureDesc)
-SGL_DICT_TO_DESC_FIELD(type, ResourceType)
+SGL_DICT_TO_DESC_FIELD(type, TextureType)
 SGL_DICT_TO_DESC_FIELD(format, Format)
 SGL_DICT_TO_DESC_FIELD(width, uint32_t)
 SGL_DICT_TO_DESC_FIELD(height, uint32_t)
@@ -30,10 +30,10 @@ SGL_DICT_TO_DESC_FIELD(depth, uint32_t)
 SGL_DICT_TO_DESC_FIELD(array_size, uint32_t)
 SGL_DICT_TO_DESC_FIELD(mip_count, uint32_t)
 SGL_DICT_TO_DESC_FIELD(sample_count, uint32_t)
-SGL_DICT_TO_DESC_FIELD(quality, uint32_t)
-SGL_DICT_TO_DESC_FIELD(initial_state, ResourceState)
-SGL_DICT_TO_DESC_FIELD(usage, TextureUsage)
+SGL_DICT_TO_DESC_FIELD(sample_quality, uint32_t)
 SGL_DICT_TO_DESC_FIELD(memory_type, MemoryType)
+SGL_DICT_TO_DESC_FIELD(usage, TextureUsage)
+SGL_DICT_TO_DESC_FIELD(default_state, ResourceState)
 SGL_DICT_TO_DESC_FIELD(label, std::string)
 SGL_DICT_TO_DESC_END()
 
@@ -203,16 +203,16 @@ inline void texture_from_numpy(Texture* self, nb::ndarray<nb::numpy> data, uint3
     if (auto dtype = resource_format_to_dtype(self->format())) {
         std::vector<size_t> expected_shape;
         switch (self->type()) {
-        case ResourceType::texture_1d:
+        case TextureType::texture_1d:
             expected_shape = {size_t(dimensions.x)};
             break;
-        case ResourceType::texture_2d:
+        case TextureType::texture_2d:
             expected_shape = {size_t(dimensions.y), size_t(dimensions.x)};
             break;
-        case ResourceType::texture_3d:
+        case TextureType::texture_3d:
             expected_shape = {size_t(dimensions.z), size_t(dimensions.y), size_t(dimensions.x)};
             break;
-        case ResourceType::texture_cube:
+        case TextureType::texture_cube:
             expected_shape = {size_t(dimensions.y), size_t(dimensions.x)};
             break;
         }
@@ -239,18 +239,13 @@ SGL_PY_EXPORT(device_resource)
 {
     using namespace sgl;
 
-    nb::sgl_enum<ResourceType>(m, "ResourceType");
     nb::sgl_enum<ResourceState>(m, "ResourceState");
-
-    nb::sgl_enum_flags<ResourceUsage>(m, "ResourceUsage");
-
+    nb::sgl_enum_flags<BufferUsage>(m, "BufferUsage");
+    nb::sgl_enum_flags<TextureUsage>(m, "TextureUsage");
+    nb::sgl_enum<TextureType>(m, "TextureType");
     nb::sgl_enum<MemoryType>(m, "MemoryType");
 
-    nb::class_<Resource, DeviceResource>(m, "Resource", D(Resource))
-        .def_prop_ro("type", &Resource::type, D(Resource, type))
-        .def_prop_ro("format", &Resource::format, D(Resource, format));
-
-    nb::sgl_enum<ResourceViewType>(m, "ResourceViewType");
+    nb::class_<Resource, DeviceResource>(m, "Resource", D(Resource));
 
     nb::sgl_enum<TextureAspect>(m, "TextureAspect");
 

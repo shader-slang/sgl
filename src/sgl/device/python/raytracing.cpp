@@ -29,6 +29,7 @@ SGL_PY_EXPORT(device_raytracing)
         D(AccelerationStructure)
     );
 
+#if 0 // TODO(slang-rhi)
     nb::class_<AccelerationStructurePrebuildInfo>(m, "AccelerationStructurePrebuildInfo")
         .def_ro(
             "result_data_max_size",
@@ -75,6 +76,6 @@ SGL_PY_EXPORT(device_raytracing)
             D(ShaderTableDesc, callable_entry_points)
         );
     nb::implicitly_convertible<nb::dict, ShaderTableDesc>();
-
+#endif
     nb::class_<ShaderTable, DeviceResource>(m, "ShaderTable", D(ShaderTable));
 }

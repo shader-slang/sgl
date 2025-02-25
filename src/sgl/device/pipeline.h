@@ -80,7 +80,7 @@ struct RenderPipelineDesc {
     PrimitiveTopology primitive_topology{PrimitiveTopology::triangle_list};
     std::vector<ColorTargetState> targets;
     DepthStencilState depth_stencil;
-    RasterizerDesc rasterizer;
+    RasterizerState rasterizer;
     MultisampleState multisample;
 };
 

@@ -270,80 +270,21 @@ SGL_PY_EXPORT(device_device)
     device.def_prop_ro("supported_shader_model", &Device::supported_shader_model, D(Device, supported_shader_model));
     device.def_prop_ro("features", &Device::features, D(Device, features));
     device.def_prop_ro("supports_cuda_interop", &Device::supports_cuda_interop, D(Device, supports_cuda_interop));
-    device.def(
-        "get_format_supported_resource_states",
-        &Device::get_format_supported_resource_states,
-        "format"_a,
-        D(Device, get_format_supported_resource_states)
-    );
+    device.def("get_format_support", &Device::get_format_support, "format"_a, D_NA(Device, get_format_support));
 
     device.def_prop_ro("slang_session", &Device::slang_session, D(Device, slang_session));
     device.def("close", &Device::close, D(Device, close));
     device.def(
-        "create_swapchain",
-        [](Device* self,
-           ref<Window> window,
-           Format format,
-           uint32_t width,
-           uint32_t height,
-           uint32_t image_count,
-           bool enable_vsync)
-        {
-            return self->create_swapchain(
-                {
-                    .format = format,
-                    .width = width,
-                    .height = height,
-                    .image_count = image_count,
-                    .enable_vsync = enable_vsync,
-                },
-                window
-            );
-        },
+        "create_surface",
+        [](Device* self, ref<Window> window) { return self->create_surface(window); },
         "window"_a,
-        "format"_a = SwapchainDesc().format,
-        "width"_a = SwapchainDesc().width,
-        "height"_a = SwapchainDesc().height,
-        "image_count"_a = SwapchainDesc().image_count,
-        "enable_vsync"_a = SwapchainDesc().enable_vsync,
-        D(Device, create_swapchain)
+        D_NA(Device, create_surface)
     );
     device.def(
-        "create_swapchain",
-        [](Device* self,
-           WindowHandle window_handle,
-           Format format,
-           uint32_t width,
-           uint32_t height,
-           uint32_t image_count,
-           bool enable_vsync)
-        {
-            return self->create_swapchain(
-                {
-                    .format = format,
-                    .width = width,
-                    .height = height,
-                    .image_count = image_count,
-                    .enable_vsync = enable_vsync,
-                },
-                window_handle
-            );
-        },
+        "create_surface",
+        [](Device* self, WindowHandle window_handle) { return self->create_surface(window_handle); },
         "window_handle"_a,
-        "format"_a = SwapchainDesc().format,
-        "width"_a = SwapchainDesc().width,
-        "height"_a = SwapchainDesc().height,
-        "image_count"_a = SwapchainDesc().image_count,
-        "enable_vsync"_a = SwapchainDesc().enable_vsync,
-        D(Device, create_swapchain, 2)
-    );
-    device.def(
-        "create_swapchain",
-        [](Device* self, const SwapchainDesc& desc, ref<Window> window)
-        { return self->create_swapchain(desc, window); },
-        "desc"_a,
-        "window"_a,
-        D(Device, create_swapchain)
+        D_NA(Device, create_swapchain, 2)
     );
     device.def(
         "create_buffer",
@@ -353,8 +294,8 @@ SGL_PY_EXPORT(device_device)
            size_t struct_size,
            nb::object struct_type,
            Format format,
-           BufferUsage usage,
            MemoryType memory_type,
+           BufferUsage usage,
            std::string label,
            std::optional<nb::ndarray<nb::numpy>> data)
         {
@@ -382,8 +323,8 @@ SGL_PY_EXPORT(device_device)
                 .struct_size = struct_size,
                 .struct_type = resolved_struct_type,
                 .format = format,
-                .usage = usage,
                 .memory_type = memory_type,
+                .usage = usage,
                 .label = std::move(label),
                 .data = data ? data->data() : nullptr,
                 .data_size = data ? data->nbytes() : 0,
@@ -394,8 +335,8 @@ SGL_PY_EXPORT(device_device)
         "struct_size"_a = BufferDesc().struct_size,
         "struct_type"_a.none() = nb::none(),
         "format"_a = BufferDesc().format,
-        "usage"_a = BufferDesc().usage,
         "memory_type"_a = BufferDesc().memory_type,
+        "usage"_a = BufferDesc().usage,
         "label"_a = BufferDesc().label,
         "data"_a.none() = nb::none(),
         D(Device, create_buffer)
@@ -418,9 +359,9 @@ SGL_PY_EXPORT(device_device)
            uint32_t array_size,
            uint32_t mip_count,
            uint32_t sample_count,
-           uint32_t quality,
-           TextureUsage usage,
+           uint32_t sample_quality,
            MemoryType memory_type,
+           TextureUsage usage,
            std::string label,
            std::optional<nb::ndarray<nb::numpy>> data)
         {
@@ -437,8 +378,8 @@ SGL_PY_EXPORT(device_device)
                 .mip_count = mip_count,
                 .sample_count = sample_count,
                 .sample_quality = sample_quality,
-                .usage = usage,
                 .memory_type = memory_type,
+                .usage = usage,
                 .label = std::move(label),
                 .data = data ? data->data() : nullptr,
                 .data_size = data ? data->nbytes() : 0,
@@ -453,8 +394,8 @@ SGL_PY_EXPORT(device_device)
         "mip_count"_a = TextureDesc().mip_count,
         "sample_count"_a = TextureDesc().sample_count,
         "sample_quality"_a = TextureDesc().sample_quality,
-        "usage"_a = TextureDesc().usage,
         "memory_type"_a = TextureDesc().memory_type,
+        "usage"_a = TextureDesc().usage,
         "label"_a = TextureDesc().label,
         "data"_a.none() = nb::none(),
         D(Device, create_texture)
@@ -551,26 +492,11 @@ SGL_PY_EXPORT(device_device)
     device.def("create_input_layout", &Device::create_input_layout, "desc"_a, D(Device, create_input_layout));
 
     device.def(
-        "create_framebuffer",
-        [](Device* self,
-           std::vector<ref<ResourceView>> render_targets,
-           ref<ResourceView> depth_stencil,
-           ref<FramebufferLayout> layout)
-        {
-            return self->create_framebuffer({
-                .render_targets = std::move(render_targets),
-                .depth_stencil = std::move(depth_stencil),
-                .layout = std::move(layout),
-            });
-        },
-        "render_targets"_a,
-        "depth_stencil"_a.none() = nb::none(),
-        "layout"_a.none() = nb::none(),
-        D(Device, create_framebuffer)
+        "create_command_encoder",
+        &Device::create_command_encoder,
+        "queue"_a = CommandQueueType::graphics,
+        D_NA(Device, create_command_encoder)
     );
-    device.def("create_framebuffer", &Device::create_framebuffer, "desc"_a, D(Device, create_framebuffer));
-
-    device.def("create_command_buffer", &Device::create_command_buffer, D(Device, create_command_buffer));
     device.def(
         "submit_command_buffer",
         &Device::submit_command_buffer,
@@ -599,6 +525,7 @@ SGL_PY_EXPORT(device_device)
         "cuda_stream"_a = 0,
         D(Device, sync_to_device)
     );
+#if 0 // TODO(slang-rhi)
     device.def(
         "get_acceleration_structure_prebuild_info",
         &Device::get_acceleration_structure_prebuild_info,
@@ -622,6 +549,7 @@ SGL_PY_EXPORT(device_device)
         "size"_a = 0,
         D(Device, create_acceleration_structure)
     );
+#endif
     device.def(
         "create_shader_table",
         [](Device* self,
@@ -723,41 +651,35 @@ SGL_PY_EXPORT(device_device)
         .def("create_compute_pipeline", &Device::create_compute_pipeline, "desc"_a, D(Device, create_compute_pipeline));
 
     device.def(
-        "create_graphics_pipeline",
+        "create_render_pipeline",
         [](Device* self,
            ref<ShaderProgram> program,
            ref<InputLayout> input_layout,
-           ref<FramebufferLayout> framebuffer_layout,
-           PrimitiveType primitive_type,
-           std::optional<DepthStencilDesc> depth_stencil,
-           std::optional<RasterizerDesc> rasterizer,
-           std::optional<BlendDesc> blend)
+           PrimitiveTopology primitive_topology,
+           std::vector<ColorTargetState> targets,
+           std::optional<DepthStencilState> depth_stencil,
+           std::optional<RasterizerState> rasterizer,
+           std::optional<MultisampleState> multisample)
         {
-            return self->create_graphics_pipeline({
+            return self->create_render_pipeline({
                 .program = std::move(program),
                 .input_layout = input_layout,
-                .framebuffer_layout = framebuffer_layout,
-                .primitive_type = primitive_type,
-                .depth_stencil = depth_stencil.value_or(DepthStencilDesc{}),
-                .rasterizer = rasterizer.value_or(RasterizerDesc{}),
-                .blend = blend.value_or(BlendDesc{}),
+                .primitive_topology = primitive_topology,
+                .depth_stencil = depth_stencil.value_or(DepthStencilState{}),
+                .rasterizer = rasterizer.value_or(RasterizerState{}),
+                .multisample = multisample.value_or(MultisampleState{}),
             });
         },
         "program"_a,
         "input_layout"_a.none(),
-        "framebuffer_layout"_a,
-        "primitive_type"_a = GraphicsPipelineDesc().primitive_type,
+        "primitive_topology"_a = RenderPipelineDesc().primitive_topology,
         "depth_stencil"_a.none() = nb::none(),
         "rasterizer"_a.none() = nb::none(),
-        "blend"_a.none() = nb::none(),
-        D(Device, create_graphics_pipeline)
+        "multisample"_a.none() = nb::none(),
+        D_NA(Device, create_render_pipeline)
     );
-    device.def(
-        "create_graphics_pipeline",
-        &Device::create_graphics_pipeline,
-        "desc"_a,
-        D(Device, create_graphics_pipeline)
-    );
+    device
+        .def("create_render_pipeline", &Device::create_render_pipeline, "desc"_a, D_NA(Device, create_render_pipeline));
 
     device.def(
         "create_ray_tracing_pipeline",
