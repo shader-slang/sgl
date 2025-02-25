@@ -238,7 +238,7 @@ private:
         // and convert to target matrix type. The only expcetion is when column is 2, because it's just satisfies
         // the alignment requirement.
         if (ValType::cols < 4 && ValType::cols != 2) {
-            using elementType = ValType::value_type;
+            using elementType = typename ValType::value_type;
             int rows = ValType::rows;
             sgl::math::matrix<elementType, ValType::rows, 4> internal_res;
             self.get(internal_res);
@@ -574,7 +574,7 @@ private:
         // and convert to target matrix type. The only expcetion is when column is 2, because it's just satisfies
         // the alignment requirement.
         if (ValType::cols < 4 && ValType::cols != 2) {
-            using elementType = ValType::value_type;
+            using elementType = typename ValType::value_type;
             int rows = ValType::rows;
             sgl::math::matrix<elementType, ValType::rows, 4> internal_val(val);
             self.set(internal_val);

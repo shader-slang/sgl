@@ -264,6 +264,7 @@ SGL_PY_EXPORT(device_resource)
         .def_ro("layer_count", &SubresourceRange::layer_count, D_NA(SubresourceRange, layer_count))
         .def("__repr__", &SubresourceRange::to_string, D_NA(SubresourceRange, to_string));
 
+#if 0 // TODO(slang-rhi)
     nb::class_<ResourceView, Object>(m, "ResourceView", D(ResourceView))
         .def_prop_ro("type", &ResourceView::type, D(ResourceView, type))
         .def_prop_ro("resource", &ResourceView::resource, D(ResourceView, resource))
@@ -464,4 +465,5 @@ SGL_PY_EXPORT(device_resource)
             "array_slice"_a = 0,
             D(texture_from_numpy)
         );
+#endif
 }

@@ -656,23 +656,24 @@ SGL_PY_EXPORT(device_device)
            ref<ShaderProgram> program,
            ref<InputLayout> input_layout,
            PrimitiveTopology primitive_topology,
-           std::vector<ColorTargetState> targets,
-           std::optional<DepthStencilState> depth_stencil,
-           std::optional<RasterizerState> rasterizer,
-           std::optional<MultisampleState> multisample)
+           std::vector<ColorTargetDesc> targets,
+           std::optional<DepthStencilDesc> depth_stencil,
+           std::optional<RasterizerDesc> rasterizer,
+           std::optional<MultisampleDesc> multisample)
         {
             return self->create_render_pipeline({
                 .program = std::move(program),
                 .input_layout = input_layout,
                 .primitive_topology = primitive_topology,
-                .depth_stencil = depth_stencil.value_or(DepthStencilState{}),
-                .rasterizer = rasterizer.value_or(RasterizerState{}),
-                .multisample = multisample.value_or(MultisampleState{}),
+                .depth_stencil = depth_stencil.value_or(DepthStencilDesc{}),
+                .rasterizer = rasterizer.value_or(RasterizerDesc{}),
+                .multisample = multisample.value_or(MultisampleDesc{}),
             });
         },
         "program"_a,
         "input_layout"_a.none(),
         "primitive_topology"_a = RenderPipelineDesc().primitive_topology,
+        "targets"_a = std::vector<ColorTargetDesc>{},
         "depth_stencil"_a.none() = nb::none(),
         "rasterizer"_a.none() = nb::none(),
         "multisample"_a.none() = nb::none(),

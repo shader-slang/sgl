@@ -12,6 +12,7 @@ SGL_PY_EXPORT(device_command)
 {
     using namespace sgl;
 
+#if 0 // TODO(slang-rhi)
     nb::class_<CommandBuffer, DeviceResource>(m, "CommandBuffer", D(CommandBuffer))
         .def("open", &CommandBuffer::open, D(CommandBuffer, open))
         .def("close", &CommandBuffer::close, D(CommandBuffer, close))
@@ -360,4 +361,6 @@ SGL_PY_EXPORT(device_command)
             "mode"_a,
             D(RayTracingCommandEncoder, copy_acceleration_structure)
         );
+
+#endif
 }

@@ -78,10 +78,10 @@ struct RenderPipelineDesc {
     ref<ShaderProgram> program;
     ref<InputLayout> input_layout;
     PrimitiveTopology primitive_topology{PrimitiveTopology::triangle_list};
-    std::vector<ColorTargetState> targets;
-    DepthStencilState depth_stencil;
-    RasterizerState rasterizer;
-    MultisampleState multisample;
+    std::vector<ColorTargetDesc> targets;
+    DepthStencilDesc depth_stencil;
+    RasterizerDesc rasterizer;
+    MultisampleDesc multisample;
 };
 
 /// Render pipeline.

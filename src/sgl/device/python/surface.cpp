@@ -18,7 +18,7 @@ SGL_DICT_TO_DESC_END()
 
 } // namespace sgl
 
-SGL_PY_EXPORT(device_swapchain)
+SGL_PY_EXPORT(device_surface)
 {
     using namespace sgl;
 
