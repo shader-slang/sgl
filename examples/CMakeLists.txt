@@ -4,4 +4,4 @@
 # add_subdirectory(raytracing)
 add_subdirectory(render_pipeline)
 add_subdirectory(simple_compute)
-# add_subdirectory(tinybc)
+add_subdirectory(tinybc)
