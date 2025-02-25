@@ -274,10 +274,11 @@ SGL_PY_EXPORT(device_types)
     // Raytracing
     // ------------------------------------------------------------------------
 
-#if 0 // TODO(slang-rhi)
     nb::sgl_enum_flags<RayTracingPipelineFlags>(m, "RayTracingPipelineFlags");
-    nb::sgl_enum<RayTracingGeometryType>(m, "RayTracingGeometryType");
     nb::sgl_enum_flags<RayTracingGeometryFlags>(m, "RayTracingGeometryFlags");
+
+#if 0 // TODO(slang-rhi)
+    nb::sgl_enum<RayTracingGeometryType>(m, "RayTracingGeometryType");
     nb::sgl_enum_flags<RayTracingInstanceFlags>(m, "RayTracingInstanceFlags");
 
     nb::class_<RayTracingTrianglesDesc>(m, "RayTracingTrianglesDesc", D(RayTracingTrianglesDesc))
