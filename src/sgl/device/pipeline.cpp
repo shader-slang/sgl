@@ -95,7 +95,7 @@ void RenderPipeline::recreate()
 {
     const RenderPipelineDesc& desc = m_desc;
 
-    short_vector<rhi::ColorTargetState, 8> rhi_targets;
+    short_vector<rhi::ColorTargetDesc, 8> rhi_targets;
     for (size_t i = 0; i < desc.targets.size(); ++i) {
         const auto& target = desc.targets[i];
         rhi_targets.push_back({
