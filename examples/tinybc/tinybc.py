@@ -21,7 +21,7 @@ parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose
 # args = parser.parse_args()
 args = parser.parse_args(
     [
-        "C:/projects/sgl/data/test_images/monalisa.jpg",
+        "C:/src/sgl/data/test_images/monalisa.jpg",
         "-o",
         "monalisa_bc7.jpg",
         "-t",
@@ -75,7 +75,7 @@ decoded_tex = device.create_texture(
 # Load shader module
 constants = f"export static const bool USE_ADAM = true;\nexport static const uint OPT_STEPS = {args.opt_steps};\n"
 program = device.load_program("tinybc.slang", ["main"], constants)
-encoder = device.create_compute_kernel(program)
+kernel = device.create_compute_kernel(program)
 
 t = sgl.Timer()
 
@@ -86,10 +86,10 @@ num_iters = 1000 if args.benchmark else 1
 queries = device.create_query_pool(sgl.QueryType.timestamp, num_iters * 2)
 
 # Compress!
-command_buffer = device.create_command_buffer()
+command_encoder = device.create_command_encoder()
 for i in range(num_iters):
-    command_buffer.write_timestamp(queries, i * 2)
-    encoder.dispatch(
+    command_encoder.write_timestamp(queries, i * 2)
+    kernel.dispatch(
         thread_count=[w, h, 1],
         vars={
             "input_tex": input_tex,
@@ -98,10 +98,10 @@ for i in range(num_iters):
             "adam_beta_1": 0.9,
             "adam_beta_2": 0.999,
         },
-        command_buffer=command_buffer,
+        command_encoder=command_encoder,
     )
-    command_buffer.write_timestamp(queries, i * 2 + 1)
-command_buffer.submit()
+    command_encoder.write_timestamp(queries, i * 2 + 1)
+device.submit_command_buffer(command_encoder.finish())
 
 # Wait for GPU to finish and get timestamps
 device.wait()
