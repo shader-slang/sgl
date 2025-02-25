@@ -46,7 +46,7 @@ input_layout = device.create_input_layout(
 )
 
 program = device.load_program("render_pipeline.slang", ["vertex_main", "fragment_main"])
-pipeline = device.create_graphics_pipeline(
+pipeline = device.create_render_pipeline(
     program=program,
     input_layout=input_layout,
     targets=[{"format": sgl.Format.rgba32_float}],
@@ -65,7 +65,7 @@ with command_encoder.begin_render_pass(
             "scissor_rects": [
                 {"width": render_texture.width, "height": render_texture.height}
             ],
-            "vertex_buffers": [vertex_buffer]
+            "vertex_buffers": [vertex_buffer],
         }
     )
     pass_encoder.draw({"vertex_count": 3})

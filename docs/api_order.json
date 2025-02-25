@@ -106,8 +106,6 @@
         "sgl.FunctionReflection",
         "sgl.FunctionReflectionParameterList",
         "sgl.get_format_info",
-        "sgl.GraphicsPipeline",
-        "sgl.GraphicsPipelineDesc",
         "sgl.HitGroupDesc",
         "sgl.InputElementDesc",
         "sgl.InputLayout",
@@ -128,7 +126,7 @@
         "sgl.QueryPool",
         "sgl.QueryPoolDesc",
         "sgl.QueryType",
-        "sgl.RasterizerDesc",
+        "sgl.RasterizerState",
         "sgl.RayTracingAABB",
         "sgl.RayTracingAABBsDesc",
         "sgl.RayTracingCommandEncoder",
@@ -143,6 +141,8 @@
         "sgl.RayTracingTrianglesDesc",
         "sgl.ReflectionCursor",
         "sgl.RenderCommandEncoder",
+        "sgl.RenderPipeline",
+        "sgl.RenderPipelineDesc",
         "sgl.RenderTargetWriteMask",
         "sgl.Resource",
         "sgl.ResourceState",
@@ -192,7 +192,8 @@
         "sgl.VariableReflection",
         "sgl.VertexStreamDesc",
         "sgl.Viewport",
-        "sgl.WindowHandle"
+        "sgl.WindowHandle",
+        "sgl.DrawArguments"
     ],
     "Application": [
         "sgl.AppDesc",

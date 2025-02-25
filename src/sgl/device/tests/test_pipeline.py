@@ -218,8 +218,8 @@ class GfxContext:
         command_buffer.submit()
 
     # Helper to create pipeline with given set of args + correct program/layouts.
-    def create_graphics_pipeline(self, **kwargs: Any):
-        return self.ctx.device.create_graphics_pipeline(
+    def create_render_pipeline(self, **kwargs: Any):
+        return self.ctx.device.create_render_pipeline(
             program=self.program,
             input_layout=self.input_layout,
             framebuffer_layout=self.framebuffer.layout,
@@ -237,7 +237,7 @@ class GfxContext:
         viewport: Optional[sgl.Viewport] = None,
         **kwargs: Any,
     ):
-        pipeline = self.create_graphics_pipeline(**kwargs)
+        pipeline = self.create_render_pipeline(**kwargs)
         self.draw(
             pipeline,
             color=color,

@@ -14,7 +14,7 @@ SGL_PY_EXPORT(device_memory_heap)
         .def_rw("usage", &MemoryHeapDesc::usage, D(MemoryHeapDesc, usage))
         .def_rw("page_size", &MemoryHeapDesc::page_size, D(MemoryHeapDesc, page_size))
         .def_rw("retain_large_pages", &MemoryHeapDesc::retain_large_pages, D(MemoryHeapDesc, retain_large_pages))
-        .def_rw("label", &MemoryHeapDesc::label, D(MemoryHeapDesc, label));
+        .def_rw("label", &MemoryHeapDesc::label, D_NA(MemoryHeapDesc, label));
 
     nb::class_<MemoryHeap, DeviceResource> memory_heap(m, "MemoryHeap", D(MemoryHeap));
 

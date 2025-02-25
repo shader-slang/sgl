@@ -30,9 +30,10 @@ namespace detail {
             : WriteConverterTable<ShaderCursor>()
         {
             add_type(ShaderObject, set_object);
-            add_type(ResourceView, set_resource);
             add_type(Buffer, set_buffer);
+            add_type(BufferView, set_buffer_view);
             add_type(Texture, set_texture);
+            add_type(TextureView, set_texture_view);
             add_type(Sampler, set_sampler);
             add_type(AccelerationStructure, set_acceleration_structure);
         }

@@ -11,6 +11,7 @@ SGL_PY_EXPORT(device_formats)
     nb::sgl_enum<Format>(m, "Format");
     nb::sgl_enum<FormatType>(m, "FormatType");
     nb::sgl_enum_flags<FormatChannels>(m, "FormatChannels");
+    nb::sgl_enum_flags<FormatSupport>(m, "FormatSupport");
 
     nb::class_<FormatInfo>(m, "FormatInfo", D(FormatInfo))
         .def_ro("format", &FormatInfo::format, D(FormatInfo, format))
