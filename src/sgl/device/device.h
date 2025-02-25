@@ -67,6 +67,7 @@ enum class DeviceType {
     d3d12 = rhi::DeviceType::D3D12,
     vulkan = rhi::DeviceType::Vulkan,
     metal = rhi::DeviceType::Metal,
+    wgpu = rhi::DeviceType::WGPU,
     cpu = rhi::DeviceType::CPU,
     cuda = rhi::DeviceType::CUDA,
 };
@@ -78,6 +79,7 @@ SGL_ENUM_INFO(
         {DeviceType::d3d12, "d3d12"},
         {DeviceType::vulkan, "vulkan"},
         {DeviceType::metal, "metal"},
+        {DeviceType::wgpu, "wgpu"},
         {DeviceType::cpu, "cpu"},
         {DeviceType::cuda, "cuda"},
     }

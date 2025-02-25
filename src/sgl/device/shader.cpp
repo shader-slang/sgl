@@ -355,12 +355,16 @@ void SlangSession::create_session(SlangSessionBuild& build)
         target_desc.format = SLANG_METAL_LIB;
         target_define = "__TARGET_METAL__";
         break;
+    case DeviceType::wgpu:
+        target_desc.format = SLANG_WGSL;
+        target_define = "__TARGET_WGPU__";
+        break;
     case DeviceType::cpu:
         target_desc.format = SLANG_SHADER_HOST_CALLABLE;
         target_define = "__TARGET_CPU__";
         break;
     case DeviceType::cuda:
-        target_desc.format = SLANG_OBJECT_CODE;
+        target_desc.format = SLANG_PTX;
         target_define = "__TARGET_CUDA__";
         break;
     default:
