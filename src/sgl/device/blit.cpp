@@ -84,8 +84,8 @@ void Blitter::blit(CommandEncoder* command_encoder, TextureView* dst, TextureVie
         auto pass_encoder = command_encoder->begin_render_pass({.color_attachments = {{.view = dst}}});
         ShaderCursor cursor = ShaderCursor(pass_encoder->bind_pipeline(pipeline));
         pass_encoder->set_render_state({
-            .viewports = {Viewport(float(dst_size.x), float(dst_size.y))},
-            .scissor_rects = {ScissorRect(dst_size.x, dst_size.y)},
+            .viewports = {Viewport::from_size(float(dst_size.x), float(dst_size.y))},
+            .scissor_rects = {ScissorRect::from_size(dst_size.x, dst_size.y)},
         });
         cursor["src"] = ref(src);
         cursor["sampler"] = filter == TextureFilteringMode::linear ? m_linear_sampler : m_point_sampler;

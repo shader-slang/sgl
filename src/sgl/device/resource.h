@@ -403,7 +403,7 @@ public:
 
     NativeHandle get_native_handle() const;
 
-    std::string to_string() const;
+    std::string to_string() const override;
 
 private:
     ref<Buffer> m_buffer;
@@ -592,7 +592,7 @@ public:
 
     rhi::ITextureView* rhi_texture_view() const { return m_rhi_texture_view.get(); }
 
-    std::string to_string() const;
+    std::string to_string() const override;
 
 private:
     ref<Texture> m_texture;

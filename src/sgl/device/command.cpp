@@ -108,10 +108,10 @@ void RenderPassEncoder::set_render_state(const RenderState& state)
     rhi::RenderState rhi_state = {};
     rhi_state.stencilRef = state.stencil_ref;
     for (size_t i = 0; i < state.viewports.size(); ++i)
-        rhi_state.viewports[i] = stdx::bit_cast<rhi::Viewport>(state.viewports[i]);
+        rhi_state.viewports[i] = reinterpret_cast<const rhi::Viewport&>(state.viewports[i]);
     rhi_state.viewportCount = narrow_cast<uint32_t>(state.viewports.size());
     for (size_t i = 0; i < state.scissor_rects.size(); ++i)
-        rhi_state.scissorRects[i] = stdx::bit_cast<rhi::ScissorRect>(state.scissor_rects[i]);
+        rhi_state.scissorRects[i] = reinterpret_cast<const rhi::ScissorRect&>(state.scissor_rects[i]);
     rhi_state.scissorRectCount = narrow_cast<uint32_t>(state.scissor_rects.size());
     for (size_t i = 0; i < state.vertex_buffers.size(); i++)
         rhi_state.vertexBuffers[i] = detail::to_rhi(state.vertex_buffers[i]);

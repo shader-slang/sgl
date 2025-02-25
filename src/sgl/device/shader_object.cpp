@@ -92,7 +92,7 @@ void ShaderObject::set_buffer_view(const ShaderOffset& offset, const ref<BufferV
         rhi_shader_offset(offset),
         rhi::Binding(
             buffer_view->buffer()->rhi_buffer(),
-            rhi::BufferRange(buffer_view->range().offset, buffer_view->range().size)
+            rhi::BufferRange{buffer_view->range().offset, buffer_view->range().size}
         )
     ));
 }

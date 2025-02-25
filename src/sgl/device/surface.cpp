@@ -46,9 +46,9 @@ void Surface::configure(const SurfaceConfig& config)
     rhi::SurfaceConfig rhi_config{
         .format = static_cast<rhi::Format>(config.format),
         .usage = static_cast<rhi::TextureUsage>(config.usage),
-        .width = static_cast<rhi::Size>(config.width),
-        .height = static_cast<rhi::Size>(config.height),
-        .desiredImageCount = static_cast<rhi::Size>(config.desired_image_count),
+        .width = config.width,
+        .height = config.height,
+        .desiredImageCount = config.desired_image_count,
         .vsync = config.vsync,
     };
 

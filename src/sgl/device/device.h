@@ -62,14 +62,14 @@ struct AdapterInfo {
     }
 };
 
-enum class DeviceType {
-    automatic = rhi::DeviceType::Default,
-    d3d12 = rhi::DeviceType::D3D12,
-    vulkan = rhi::DeviceType::Vulkan,
-    metal = rhi::DeviceType::Metal,
-    wgpu = rhi::DeviceType::WGPU,
-    cpu = rhi::DeviceType::CPU,
-    cuda = rhi::DeviceType::CUDA,
+enum class DeviceType : uint32_t {
+    automatic = static_cast<uint32_t>(rhi::DeviceType::Default),
+    d3d12 = static_cast<uint32_t>(rhi::DeviceType::D3D12),
+    vulkan = static_cast<uint32_t>(rhi::DeviceType::Vulkan),
+    metal = static_cast<uint32_t>(rhi::DeviceType::Metal),
+    wgpu = static_cast<uint32_t>(rhi::DeviceType::WGPU),
+    cpu = static_cast<uint32_t>(rhi::DeviceType::CPU),
+    cuda = static_cast<uint32_t>(rhi::DeviceType::CUDA),
 };
 
 SGL_ENUM_INFO(
