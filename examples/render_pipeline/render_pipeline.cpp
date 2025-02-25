@@ -10,7 +10,6 @@
 #include "sgl/device/kernel.h"
 #include "sgl/device/agility_sdk.h"
 #include "sgl/device/input_layout.h"
-#include "sgl/device/framebuffer.h"
 #include "sgl/device/pipeline.h"
 #include "sgl/utils/tev.h"
 
@@ -68,34 +67,30 @@ int main()
             },
         });
 
-        ref<Framebuffer> framebuffer = device->create_framebuffer({
-            .render_targets{
-                render_texture->get_rtv(),
-            },
-        });
-
-        ref<ShaderProgram> program = device->load_program("graphics_pipeline.slang", {"vertex_main", "fragment_main"});
-        ref<GraphicsPipeline> pipeline = device->create_graphics_pipeline({
+        ref<ShaderProgram> program = device->load_program("render_pipeline.slang", {"vertex_main", "fragment_main"});
+        ref<RenderPipeline> pipeline = device->create_render_pipeline({
             .program = program,
             .input_layout = input_layout,
-            .framebuffer_layout = framebuffer->layout(),
+            .targets = {{.format = Format::rgba32_float}},
         });
 
-        ref<CommandBuffer> command_buffer = device->create_command_buffer();
+        ref<CommandEncoder> command_encoder = device->create_command_encoder();
         {
-            auto encoder = command_buffer->encode_render_commands(framebuffer);
-            encoder.bind_pipeline(pipeline);
-            encoder.set_vertex_buffer(0, vertex_buffer);
-            encoder.set_primitive_topology(sgl::PrimitiveTopology::triangle_list);
-            encoder.set_viewport_and_scissor_rect({
-                .width = float(render_texture->width()),
-                .height = float(render_texture->height()),
+            auto pass_encoder = command_encoder->begin_render_pass({
+                .color_attachments = {{.view = render_texture->create_view({})}},
             });
-            encoder.draw(3);
+            pass_encoder->bind_pipeline(pipeline);
+            pass_encoder->set_render_state({
+                .viewports = {{Viewport::from_size(float(render_texture->width()), float(render_texture->height()))}},
+                .scissor_rects = {{ScissorRect::from_size(render_texture->width(), render_texture->height())}},
+                .vertex_buffers = {{vertex_buffer}},
+            });
+            pass_encoder->draw({.vertex_count = 3});
+            pass_encoder->end();
         }
-        command_buffer->submit();
+        device->submit_command_buffer(command_encoder->finish());
 
-        tev::show(render_texture, "graphics_pipeline");
+        tev::show(render_texture, "render_pipeline");
 
         device->close();
     }
