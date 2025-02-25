@@ -82,6 +82,7 @@ enum class BufferUsage : uint32_t {
     acceleration_structure = static_cast<uint32_t>(rhi::BufferUsage::AccelerationStructure),
     acceleration_structure_build_input = static_cast<uint32_t>(rhi::BufferUsage::AccelerationStructureBuildInput),
     shader_table = static_cast<uint32_t>(rhi::BufferUsage::ShaderTable),
+    shared = static_cast<uint32_t>(rhi::BufferUsage::Shared),
 };
 SGL_ENUM_CLASS_OPERATORS(BufferUsage);
 
@@ -100,6 +101,7 @@ SGL_ENUM_INFO(
         {BufferUsage::acceleration_structure, "acceleration_structure"},
         {BufferUsage::acceleration_structure_build_input, "acceleration_structure_build_input"},
         {BufferUsage::shader_table, "shader_table"},
+        {BufferUsage::shared, "shared"},
     }
 );
 SGL_ENUM_REGISTER(BufferUsage);
@@ -116,6 +118,7 @@ enum class TextureUsage : uint32_t {
     copy_destination = static_cast<uint32_t>(rhi::TextureUsage::CopyDestination),
     resolve_source = static_cast<uint32_t>(rhi::TextureUsage::ResolveSource),
     resolve_destination = static_cast<uint32_t>(rhi::TextureUsage::ResolveDestination),
+    shared = static_cast<uint32_t>(rhi::TextureUsage::Shared),
 };
 SGL_ENUM_CLASS_OPERATORS(TextureUsage);
 
@@ -133,6 +136,7 @@ SGL_ENUM_INFO(
         {TextureUsage::copy_destination, "copy_destination"},
         {TextureUsage::resolve_source, "resolve_source"},
         {TextureUsage::resolve_destination, "resolve_destination"},
+        {TextureUsage::shared, "shared"},
     }
 );
 SGL_ENUM_REGISTER(TextureUsage);
@@ -263,8 +267,6 @@ struct BufferDesc {
     BufferUsage usage{BufferUsage::none};
     /// Initial resource state.
     ResourceState default_state{ResourceState::undefined};
-
-    bool shared{false};
 
     /// Debug label.
     std::string label;
@@ -451,8 +453,6 @@ struct TextureDesc {
 
     TextureUsage usage{TextureUsage::none};
     ResourceState default_state{ResourceState::undefined};
-
-    bool shared{false};
 
     /// Debug label.
     std::string label;

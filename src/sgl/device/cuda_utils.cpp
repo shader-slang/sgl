@@ -52,7 +52,7 @@ CUexternalMemory import_external_memory(const Buffer* buffer)
     SGL_CU_SCOPE(buffer->device());
 
     SGL_CHECK_NOT_NULL(buffer);
-    SGL_CHECK(buffer->desc().shared, "Buffer was not created with shared flag.");
+    SGL_CHECK(is_set(buffer->desc().usage, BufferUsage::shared), "Buffer was not created with shared usage.");
     NativeHandle shared_handle = buffer->get_shared_handle();
     SGL_CHECK(shared_handle, "Buffer shared handle creation failed.");
 

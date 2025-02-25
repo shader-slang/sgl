@@ -92,7 +92,6 @@ Buffer::Buffer(ref<Device> device, BufferDesc desc)
     rhi_desc.memoryType = static_cast<rhi::MemoryType>(m_desc.memory_type);
     rhi_desc.usage = static_cast<rhi::BufferUsage>(m_desc.usage);
     rhi_desc.defaultState = static_cast<rhi::ResourceState>(m_desc.default_state);
-    rhi_desc.isShared = m_desc.shared;
     rhi_desc.label = m_desc.label.empty() ? nullptr : m_desc.label.c_str();
 
     SLANG_CALL(m_device->rhi_device()->createBuffer(rhi_desc, nullptr, m_rhi_buffer.writeRef()));
@@ -351,7 +350,6 @@ Texture::Texture(ref<Device> device, TextureDesc desc)
     rhi_desc.memoryType = static_cast<rhi::MemoryType>(m_desc.memory_type);
     rhi_desc.usage = static_cast<rhi::TextureUsage>(m_desc.usage);
     rhi_desc.defaultState = static_cast<rhi::ResourceState>(m_desc.default_state);
-    rhi_desc.isShared = m_desc.shared;
     rhi_desc.size.width = static_cast<rhi::Size>(m_desc.width);
     rhi_desc.size.height = static_cast<rhi::Size>(m_desc.height);
     rhi_desc.size.depth = static_cast<rhi::Size>(m_desc.depth);
