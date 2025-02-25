@@ -45,27 +45,30 @@ input_layout = device.create_input_layout(
     vertex_streams=[{"stride": 8}],
 )
 
-framebuffer = device.create_framebuffer(render_targets=[render_texture.get_rtv()])
-
-program = device.load_program(
-    "graphics_pipeline.slang", ["vertex_main", "fragment_main"]
-)
+program = device.load_program("render_pipeline.slang", ["vertex_main", "fragment_main"])
 pipeline = device.create_graphics_pipeline(
     program=program,
     input_layout=input_layout,
-    framebuffer_layout=framebuffer.layout,
+    targets=[{"format": sgl.Format.rgba32_float}],
 )
 
-command_buffer = device.create_command_buffer()
-with command_buffer.encode_render_commands(framebuffer) as encoder:
-    shader_object = encoder.bind_pipeline(pipeline)
-    encoder.set_vertex_buffer(0, vertex_buffer)
-    encoder.set_primitive_topology(sgl.PrimitiveTopology.triangle_list)
-    encoder.set_viewport_and_scissor_rect(
-        {"width": render_texture.width, "height": render_texture.height}
+command_encoder = device.create_command_encoder()
+with command_encoder.begin_render_pass(
+    {"color_attachments": [{"view": render_texture.create_view({})}]}
+) as pass_encoder:
+    pass_encoder.bind_pipeline(pipeline)
+    pass_encoder.set_render_state(
+        {
+            "viewports": [
+                {"width": render_texture.width, "height": render_texture.height}
+            ],
+            "scissor_rects": [
+                {"width": render_texture.width, "height": render_texture.height}
+            ],
+            "vertex_buffers": [vertex_buffer]
+        }
     )
-    encoder.draw(3)
-command_buffer.submit()
+    pass_encoder.draw({"vertex_count": 3})
+device.submit_command_buffer(command_encoder.finish())
 
-
-sgl.tev.show(render_texture, "graphics_pipeline")
+sgl.tev.show(render_texture, "render_pipeline")
