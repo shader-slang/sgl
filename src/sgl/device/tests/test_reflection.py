@@ -14,14 +14,6 @@ from sglhelpers import test_id  # type: ignore (pytest fixture)
 SlangCompileError = RuntimeError if sys.platform == "darwin" else sgl.SlangCompileError
 
 
-@pytest.fixture(autouse=True)
-def skip_metal(device_type: sgl.DeviceType):
-    if device_type == sgl.DeviceType.metal:
-        pytest.skip(
-            "Skipping test for Metal device, trace by https://github.com/shader-slang/slang/issues/6387"
-        )
-
-
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_type_layout(test_id: str, device_type: sgl.DeviceType):
 
@@ -124,7 +116,7 @@ MODULE_SOURCE = """
         uniform int hello;
         [shader("compute")]
         [numthreads(1, 1, 1)]
-        void main() {
+        void computeMain() {
         }
     """
 
@@ -186,7 +178,7 @@ def test_cursor_child_lifetime(test_id: str, device_type: sgl.DeviceType):
         module_name=f"module_from_source_{test_id}",
         source=MODULE_SOURCE,
     )
-    program = session.link_program([module], [module.entry_point("main")])
+    program = session.link_program([module], [module.entry_point("computeMain")])
 
     # Get cursor for the program and go straight to its child field.
     cursor = sgl.ReflectionCursor(program).find_field("hello")
@@ -1182,9 +1174,9 @@ def test_hot_reload_invalid(test_id: str, device_type: sgl.DeviceType):
         module_name=f"module_from_source_{test_id}",
         source=MODULE_SOURCE,
     )
-    func = module.layout.find_function_by_name("main")
+    func = module.layout.find_function_by_name("computeMain")
     assert func is not None
-    assert func.name == "main"
+    assert func.name == "computeMain"
 
     device.reload_all_programs()
 
