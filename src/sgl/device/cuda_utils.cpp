@@ -201,7 +201,7 @@ inline int get_device_attribute(CUdevice device, CUdevice_attribute attribute)
 Device::Device(const sgl::Device* device)
 {
     SGL_CHECK_NOT_NULL(device);
-    SGL_CHECK(sgl_cuda_api_init(), "Failed to load CUDA driver API.");
+    SGL_CHECK(rhiCudaDriverApiInit(), "Failed to load CUDA driver API.");
     SGL_CU_CHECK(cuInit(0));
 
     // Get number of available CUDA devices.

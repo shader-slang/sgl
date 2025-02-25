@@ -240,7 +240,7 @@ Device::Device(const DeviceDesc& desc)
 
     // Setup CUDA interop.
     if (m_desc.enable_cuda_interop) {
-        SGL_CHECK(sgl_cuda_api_init(), "Failed to initialize CUDA driver API.");
+        SGL_CHECK(rhiCudaDriverApiInit(), "Failed to initialize CUDA driver API.");
         m_cuda_device = make_ref<cuda::Device>(this);
         m_cuda_semaphore = make_ref<cuda::ExternalSemaphore>(m_global_fence);
         m_supports_cuda_interop = true;
