@@ -270,6 +270,7 @@ SGL_PY_EXPORT(device_resource)
         .def_prop_ro("resource", &ResourceView::resource, D(ResourceView, resource))
         .def_prop_ro("buffer_range", &ResourceView::buffer_range, D_NA(ResourceView, buffer_range))
         .def_prop_ro("subresource_range", &ResourceView::subresource_range, D_NA(ResourceView, subresource_range));
+#endif
 
     nb::class_<BufferDesc>(m, "BufferDesc", D(BufferDesc))
         .def(nb::init<>())
@@ -277,12 +278,13 @@ SGL_PY_EXPORT(device_resource)
         .def_rw("size", &BufferDesc::size, D(BufferDesc, size))
         .def_rw("struct_size", &BufferDesc::struct_size, D(BufferDesc, struct_size))
         .def_rw("format", &BufferDesc::format, D(BufferDesc, format))
-        .def_rw("initial_state", &BufferDesc::initial_state, D(BufferDesc, initial_state))
-        .def_rw("usage", &BufferDesc::usage, D(BufferDesc, usage))
         .def_rw("memory_type", &BufferDesc::memory_type, D(BufferDesc, memory_type))
-        .def_rw("label", &BufferDesc::label, D(BufferDesc, label));
+        .def_rw("usage", &BufferDesc::usage, D(BufferDesc, usage))
+        .def_rw("default_state", &BufferDesc::default_state, D_NA(BufferDesc, default_state))
+        .def_rw("label", &BufferDesc::label, D_NA(BufferDesc, label));
     nb::implicitly_convertible<nb::dict, BufferDesc>();
 
+#if 0 // TODO(slang-rhi)
     nb::class_<Buffer, Resource>(m, "Buffer", D(Buffer))
         .def_prop_ro("desc", &Buffer::desc, D(Buffer, desc))
         .def_prop_ro("size", &Buffer::size, D(Buffer, size))

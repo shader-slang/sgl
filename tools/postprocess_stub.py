@@ -11,36 +11,34 @@ import libcst.matchers as m
 DESCRIPTOR_CONVERT_TYPES = {
     "AppDesc": True,
     "AppWindowDesc": True,
+    "AspectBlendDesc": True,
+    "BufferDesc": True,
+    "ColorTargetDesc": True,
+    "ComputePipelineDesc": True,
+    "DepthStencilDesc": True,
+    "DepthStencilOpDesc": True,
     "DeviceDesc": True,
     "FenceDesc": True,
-    "FramebufferLayoutTargetDesc": True,
-    "FramebufferLayoutDesc": True,
-    "FramebufferDesc": True,
-    "InputElementDesc": True,
-    "VertexStreamDesc": True,
-    "InputLayoutDesc": True,
-    "ComputePipelineDesc": True,
-    "RenderPipelineDesc": True,
     "HitGroupDesc": True,
-    "RayTracingPipelineDesc": True,
+    "InputElementDesc": True,
+    "InputLayoutDesc": True,
+    "MultisampleDesc": True,
     "QueryPoolDesc": True,
-    "ShaderTableDesc": True,
-    "BufferDesc": True,
-    "TextureDesc": True,
+    "RasterizerDesc": True,
+    "RayTracingPipelineDesc": True,
+    "RenderPipelineDesc": True,
     "SamplerDesc": True,
+    "ScissorRect": True,
+    # "ShaderTableDesc": True,
     "SlangCompilerOptions": True,
     "SlangLinkOptions": True,
     "SlangSessionDesc": True,
-    "SwapchainDesc": True,
-    "Viewport": True,
-    "ScissorRect": True,
-    "DepthStencilDesc": True,
-    "RasterizerState": True,
-    "AspectBlendDesc": True,
-    "ColorTargetState": True,
-    "TargetBlendDesc": True,
-    "BlendDesc": True,
+    "SurfaceConfig": True,
+    # "TextureDesc": True,
     "TextureLoader.Options": True,
+    "VertexStreamDesc": True,
+    "Viewport": True,
+    "SurfaceConfig": True,
 }
 
 QUIET = False
@@ -609,7 +607,7 @@ def find_convertable_descriptors(tree: cst.Module) -> list[FCDStackInfo]:
     for result in find_convertable_types_visitor.results:
         if not result.full_name in DESCRIPTOR_CONVERT_TYPES:
             raise Exception(
-                f"Discovered descriptor class {result.full_name}, but not in list of types to convert. Add it to the list in extend_pyi.py."
+                f"Discovered descriptor class {result.full_name}, but not in list of types to convert. Add it to the list in postprocess_stub.py."
             )
     for conv_type in DESCRIPTOR_CONVERT_TYPES:
         if not any(
@@ -617,7 +615,7 @@ def find_convertable_descriptors(tree: cst.Module) -> list[FCDStackInfo]:
             for result in find_convertable_types_visitor.results
         ):
             raise Exception(
-                f"Type {conv_type} is in list of types to convert but no corresponding descriptor class was discovered. Remove it from the list in extend_pyi.py."
+                f"Type {conv_type} is in list of types to convert but no corresponding descriptor class was discovered. Remove it from the list in postprocess_stub.py."
             )
 
     # Filter only results for which DESCRIPTOR_CONVERT_TYPES is true.
