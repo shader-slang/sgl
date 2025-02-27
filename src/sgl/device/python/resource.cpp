@@ -284,38 +284,11 @@ SGL_PY_EXPORT(device_resource)
         .def_rw("label", &BufferDesc::label, D_NA(BufferDesc, label));
     nb::implicitly_convertible<nb::dict, BufferDesc>();
 
-#if 0 // TODO(slang-rhi)
     nb::class_<Buffer, Resource>(m, "Buffer", D(Buffer))
         .def_prop_ro("desc", &Buffer::desc, D(Buffer, desc))
         .def_prop_ro("size", &Buffer::size, D(Buffer, size))
         .def_prop_ro("struct_size", &Buffer::struct_size, D(Buffer, struct_size))
         .def_prop_ro("device_address", &Buffer::device_address, D(Buffer, device_address))
-        .def(
-            "get_srv",
-            [](Buffer* self, uint64_t offset, uint64_t size)
-            {
-                return self->get_srv({
-                    .offset = offset,
-                    .size = size,
-                });
-            },
-            "offset"_a = 0,
-            "size"_a = BufferRange::ALL,
-            D(Buffer, get_srv)
-        )
-        .def(
-            "get_uav",
-            [](Buffer* self, uint64_t offset, uint64_t size)
-            {
-                return self->get_uav({
-                    .offset = offset,
-                    .size = size,
-                });
-            },
-            "offset"_a = 0,
-            "size"_a = BufferRange::ALL,
-            D(Buffer, get_uav)
-        )
         .def("to_numpy", &buffer_to_numpy, D(buffer_to_numpy))
         .def("copy_from_numpy", &buffer_copy_from_numpy, "data"_a, D(buffer_from_numpy))
         .def(
@@ -328,6 +301,8 @@ SGL_PY_EXPORT(device_resource)
             D(buffer_to_torch)
         );
 
+    // TODO(slang-rhi)
+#if 0
     nb::class_<TextureDesc>(m, "TextureDesc", D(TextureDesc))
         .def(nb::init<>())
         .def("__init__", [](TextureDesc* self, nb::dict dict) { new (self) TextureDesc(dict_to_TextureDesc(dict)); })

@@ -12,109 +12,27 @@ SGL_PY_EXPORT(device_command)
 {
     using namespace sgl;
 
-#if 0 // TODO(slang-rhi)
-    nb::class_<CommandBuffer, DeviceResource>(m, "CommandBuffer", D(CommandBuffer))
-        .def("open", &CommandBuffer::open, D(CommandBuffer, open))
-        .def("close", &CommandBuffer::close, D(CommandBuffer, close))
-        .def("submit", &CommandBuffer::submit, "queue"_a = CommandQueueType::graphics, D(CommandBuffer, submit))
+    nb::class_<CommandEncoder, DeviceResource>(m, "CommandEncoder", D_NA(CommandEncoder))
+        .def("begin_render_pass", &CommandEncoder::begin_render_pass, "desc"_a, D_NA(CommandEncoder, begin_render_pass))
+        .def("begin_compute_pass", &CommandEncoder::begin_compute_pass, D_NA(CommandEncoder, begin_compute_pass))
         .def(
-            "write_timestamp",
-            &CommandBuffer::write_timestamp,
-            "query_pool"_a,
-            "index"_a,
-            D(CommandBuffer, write_timestamp)
+            "begin_ray_tracing_pass",
+            &CommandEncoder::begin_ray_tracing_pass,
+            D_NA(CommandEncoder, begin_ray_tracing_pass)
         )
         .def(
-            "resolve_query",
-            &CommandBuffer::resolve_query,
-            "query_pool"_a,
-            "index"_a,
-            "count"_a,
-            "buffer"_a,
-            "offset"_a,
-            D(CommandBuffer, resolve_query)
-        )
-        .def(
-            "set_resource_state",
-            nb::overload_cast<const Resource*, ResourceState>(&CommandBuffer::set_resource_state),
-            "resource"_a,
-            "new_state"_a,
-            D(CommandBuffer, set_resource_state)
-        )
-        .def(
-            "set_resource_state",
-            nb::overload_cast<const ResourceView*, ResourceState>(&CommandBuffer::set_resource_state),
-            "resource_view"_a,
-            "new_state"_a,
-            D(CommandBuffer, set_resource_state, 2)
-        )
-        .def(
-            "set_buffer_state",
-            &CommandBuffer::set_buffer_state,
-            "buffer"_a,
-            "new_state"_a,
-            D(CommandBuffer, set_buffer_state)
-        )
-        .def(
-            "set_texture_state",
-            &CommandBuffer::set_texture_state,
-            "texture"_a,
-            "new_state"_a,
-            D(CommandBuffer, set_texture_state)
-        )
-        .def("uav_barrier", &CommandBuffer::uav_barrier, "resource"_a, D(CommandBuffer, uav_barrier))
-        .def(
-            "clear_resource_view",
-            nb::overload_cast<ResourceView*, float4>(&CommandBuffer::clear_resource_view),
-            "resource_view"_a,
-            "clear_value"_a,
-            D(CommandBuffer, clear_resource_view)
-        )
-        .def(
-            "clear_resource_view",
-            nb::overload_cast<ResourceView*, uint4>(&CommandBuffer::clear_resource_view),
-            "resource_view"_a,
-            "clear_value"_a,
-            D(CommandBuffer, clear_resource_view, 2)
-        )
-        .def(
-            "clear_resource_view",
-            nb::overload_cast<ResourceView*, float, uint32_t, bool, bool>(&CommandBuffer::clear_resource_view),
-            "resource_view"_a,
-            "depth_value"_a,
-            "stencil_value"_a,
-            "clear_depth"_a,
-            "clear_stencil"_a,
-            D(CommandBuffer, clear_resource_view, 3)
-        )
-        .def(
-            "clear_texture",
-            nb::overload_cast<Texture*, float4>(&CommandBuffer::clear_texture),
-            "texture"_a,
-            "clear_value"_a,
-            D(CommandBuffer, clear_texture)
-        )
-        .def(
-            "clear_texture",
-            nb::overload_cast<Texture*, uint4>(&CommandBuffer::clear_texture),
-            "texture"_a,
-            "clear_value"_a,
-            D(CommandBuffer, clear_texture, 2)
-        )
-        .def("copy_resource", &CommandBuffer::copy_resource, "dst"_a, "src"_a, D(CommandBuffer, copy_resource))
-        .def(
-            "copy_buffer_region",
-            &CommandBuffer::copy_buffer_region,
+            "copy_buffer",
+            &CommandEncoder::copy_buffer,
             "dst"_a,
             "dst_offset"_a,
             "src"_a,
             "src_offset"_a,
             "size"_a,
-            D(CommandBuffer, copy_buffer_region)
+            D_NA(CommandEncoder, copy_buffer)
         )
         .def(
-            "copy_texture_region",
-            &CommandBuffer::copy_texture_region,
+            "copy_texture",
+            &CommandEncoder::copy_texture,
             "dst"_a,
             "dst_subresource"_a,
             "dst_offset"_a,
@@ -122,43 +40,212 @@ SGL_PY_EXPORT(device_command)
             "src_subresource"_a,
             "src_offset"_a,
             "extent"_a = uint3(-1),
-            D(CommandBuffer, copy_texture_region)
+            D_NA(CommandEncoder, copy_texture)
+        )
+    // TODO(slang-rhi)
+    // copy_texture_to_buffer
+    // upload_buffer_data
+    // upload_texture_data
+    // clear_buffer
+#if 0
+        .def(
+            "clear_texture",
+            nb::overload_cast<Texture*, float4>(&CommandEncoder::clear_texture),
+            "texture"_a,
+            "clear_value"_a,
+            "range" D(CommandEncoder, clear_texture)
         )
         .def(
+            "clear_texture",
+            nb::overload_cast<Texture*, uint4>(&CommandEncoder::clear_texture),
+            "texture"_a,
+            "clear_value"_a,
+            D(CommandEncoder, clear_texture, 2)
+        )
+#endif
+        .def(
             "blit",
-            nb::overload_cast<ResourceView*, ResourceView*, TextureFilteringMode>(&CommandBuffer::blit),
+            nb::overload_cast<TextureView*, TextureView*, TextureFilteringMode>(&CommandEncoder::blit),
             "dst"_a,
             "src"_a,
             "filter"_a = TextureFilteringMode::linear,
-            D(CommandBuffer, blit)
+            D_NA(CommandEncoder, blit)
         )
         .def(
             "blit",
-            nb::overload_cast<Texture*, Texture*, TextureFilteringMode>(&CommandBuffer::blit),
+            nb::overload_cast<Texture*, Texture*, TextureFilteringMode>(&CommandEncoder::blit),
             "dst"_a,
             "src"_a,
             "filter"_a = TextureFilteringMode::linear,
-            D(CommandBuffer, blit, 2)
+            D_NA(CommandEncoder, blit, 2)
         )
         .def(
-            "encode_compute_commands",
-            &CommandBuffer::encode_compute_commands,
-            nb::rv_policy::reference_internal,
-            D(CommandBuffer, encode_compute_commands)
+            "resolve_query",
+            &CommandEncoder::resolve_query,
+            "query_pool"_a,
+            "index"_a,
+            "count"_a,
+            "buffer"_a,
+            "offset"_a,
+            D_NA(CommandEncoder, resolve_query)
+        )
+        // TODO(slang-rhi)
+        // .def(
+        //     "build_acceleration_structure",
+        //     [](CommandEncoder* self,
+        //        const AccelerationStructureBuildInputs& inputs,
+        //        AccelerationStructure* dst,
+        //        DeviceAddress scratch_data,
+        //        AccelerationStructure* src) {
+        //         self->build_acceleration_structure(
+        //             {.inputs = inputs, .src = src, .dst = dst, .scratch_data = scratch_data}
+        //         );
+        //     },
+        //     "inputs"_a,
+        //     "dst"_a,
+        //     "scratch_data"_a,
+        //     "src"_a = nullptr,
+        //     D(CommandEncoder, build_acceleration_structure)
+        // )
+        // .def(
+        //     "copy_acceleration_structure",
+        //     &CommandEncoder::copy_acceleration_structure,
+        //     "src"_a,
+        //     "dst"_a,
+        //     "mode"_a,
+        //     D(CommandEncoder, copy_acceleration_structure)
+        // )
+        // TODO(slang-rhi)
+        // query_acceleration_structure_properties
+        // serialize_acceleration_structure
+        // deserialize_acceleration_structure
+        .def(
+            "set_buffer_state",
+            &CommandEncoder::set_buffer_state,
+            "buffer"_a,
+            "state"_a,
+            D_NA(CommandEncoder, set_buffer_state)
         )
         .def(
-            "encode_render_commands",
-            &CommandBuffer::encode_render_commands,
-            nb::rv_policy::reference_internal,
-            D(CommandBuffer, encode_render_commands)
+            "set_texture_state",
+            nb::overload_cast<Texture*, ResourceState>(&CommandEncoder::set_texture_state),
+            "texture"_a,
+            "state"_a,
+            D_NA(CommandEncoder, set_texture_state)
         )
         .def(
-            "encode_ray_tracing_commands",
-            &CommandBuffer::encode_ray_tracing_commands,
-            nb::rv_policy::reference_internal,
-            D(CommandBuffer, encode_ray_tracing_commands)
+            "set_texture_state",
+            nb::overload_cast<Texture*, SubresourceRange, ResourceState>(&CommandEncoder::set_texture_state),
+            "texture"_a,
+            "range"_a,
+            "state"_a,
+            D_NA(CommandEncoder, set_texture_state)
+        )
+        .def(
+            "push_debug_group",
+            &CommandEncoder::push_debug_group,
+            "name"_a,
+            "color"_a,
+            D_NA(CommandEncoder, push_debug_group)
+        )
+        .def("pop_debug_group", &CommandEncoder::pop_debug_group, D_NA(CommandEncoder, pop_debug_group))
+        .def(
+            "insert_debug_marker",
+            &CommandEncoder::insert_debug_marker,
+            "name"_a,
+            "color"_a,
+            D_NA(CommandEncoder, insert_debug_marker)
+        )
+        .def(
+            "write_timestamp",
+            &CommandEncoder::write_timestamp,
+            "query_pool"_a,
+            "index"_a,
+            D_NA(CommandEncoder, write_timestamp)
+        )
+        .def("finish", &CommandEncoder::finish, D_NA(CommandEncoder, finish));
+
+    nb::class_<PassEncoder, Object>(m, "PassEncoder", D_NA(PassEncoder))
+        .def("end", &PassEncoder::end, D_NA(PassEncoder, end))
+        .def(
+            "push_debug_group",
+            &PassEncoder::push_debug_group,
+            "name"_a,
+            "color"_a,
+            D_NA(PassEncoder, push_debug_group)
+        )
+        .def("pop_debug_group", &PassEncoder::pop_debug_group, D_NA(PassEncoder, pop_debug_group))
+        .def(
+            "insert_debug_marker",
+            &PassEncoder::insert_debug_marker,
+            "name"_a,
+            "color"_a,
+            D_NA(PassEncoder, insert_debug_marker)
         );
 
+    nb::class_<RenderPassEncoder, PassEncoder>(m, "RenderPassEncoder", D_NA(RenderPassEncoder));
+
+    nb::class_<ComputePassEncoder, PassEncoder>(m, "ComputePassEncoder", D_NA(ComputePassEncoder))
+        .def("__enter__", [](ComputePassEncoder* self) { return self; })
+        .def(
+            "__exit__",
+            [](ComputePassEncoder* self, nb::object, nb::object, nb::object) { self->end(); },
+            "exc_type"_a = nb::none(),
+            "exc_value"_a = nb::none(),
+            "traceback"_a = nb::none()
+        )
+        .def(
+            "bind_pipeline",
+            nb::overload_cast<ComputePipeline*>(&ComputePassEncoder::bind_pipeline),
+            "pipeline"_a,
+            D_NA(ComputePassEncoder, bind_pipeline)
+        )
+        .def(
+            "bind_pipeline",
+            nb::overload_cast<ComputePipeline*, ShaderObject*>(&ComputePassEncoder::bind_pipeline),
+            "pipeline"_a,
+            "root_object"_a,
+            D_NA(ComputePassEncoder, bind_pipeline, 2)
+        )
+        .def("dispatch", &ComputePassEncoder::dispatch, "thread_count"_a, D_NA(ComputePassEncoder, dispatch))
+        .def(
+            "dispatch_thread_groups",
+            &ComputePassEncoder::dispatch_thread_groups,
+            "thread_group_count"_a,
+            D_NA(ComputePassEncoder, dispatch_thread_groups)
+        )
+        .def(
+            "dispatch_thread_groups_indirect",
+            &ComputePassEncoder::dispatch_thread_groups_indirect,
+            "arg_buffer"_a,
+            D_NA(ComputePassEncoder, dispatch_thread_groups_indirect)
+        );
+
+    nb::class_<RayTracingPassEncoder, PassEncoder>(m, "RayTracingPassEncoder", D_NA(RayTracingPassEncoder))
+        .def(
+            "bind_pipeline",
+            nb::overload_cast<RayTracingPipeline*, ShaderTable*>(&RayTracingPassEncoder::bind_pipeline),
+            "pipeline"_a,
+            "shader_table"_a,
+            D_NA(RayTracingPassEncoder, bind_pipeline)
+        )
+        .def(
+            "bind_pipeline",
+            nb::overload_cast<RayTracingPipeline*, ShaderTable*, ShaderObject*>(&RayTracingPassEncoder::bind_pipeline),
+            "pipeline"_a,
+            "shader_table"_a,
+            "root_object"_a,
+            D_NA(RayTracingPassEncoder, bind_pipeline, 2)
+        )
+        .def(
+            "dispatch_rays",
+            &RayTracingPassEncoder::dispatch_rays,
+            "ray_gen_shader_index"_a,
+            "dimensions"_a,
+            D_NA(RayTracingPassEncoder, dispatch_rays)
+        );
+
+#if 0
     nb::class_<ComputeCommandEncoder>(m, "ComputeCommandEncoder", D(ComputeCommandEncoder))
         .def("__enter__", [](ComputeCommandEncoder* self) { return self; })
         .def(
@@ -336,31 +423,7 @@ SGL_PY_EXPORT(device_command)
             "dimensions"_a,
             D(RayTracingCommandEncoder, dispatch_rays)
         )
-        .def(
-            "build_acceleration_structure",
-            [](RayTracingCommandEncoder* self,
-               const AccelerationStructureBuildInputs& inputs,
-               AccelerationStructure* dst,
-               DeviceAddress scratch_data,
-               AccelerationStructure* src) {
-                self->build_acceleration_structure(
-                    {.inputs = inputs, .src = src, .dst = dst, .scratch_data = scratch_data}
-                );
-            },
-            "inputs"_a,
-            "dst"_a,
-            "scratch_data"_a,
-            "src"_a = nullptr,
-            D(RayTracingCommandEncoder, build_acceleration_structure)
-        )
-        .def(
-            "copy_acceleration_structure",
-            &RayTracingCommandEncoder::copy_acceleration_structure,
-            "src"_a,
-            "dst"_a,
-            "mode"_a,
-            D(RayTracingCommandEncoder, copy_acceleration_structure)
-        );
 
 #endif
+    nb::class_<CommandBuffer, DeviceResource>(m, "CommandBuffer", D(CommandBuffer));
 }

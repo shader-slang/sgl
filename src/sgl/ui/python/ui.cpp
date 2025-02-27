@@ -32,9 +32,20 @@ SGL_PY_EXPORT(ui)
     nb::class_<ui::Context, Object>(ui, "Context", gc_helper_type_slots<ui::Context>(), D(Context))
         .def(nb::init<ref<Device>>(), "device"_a)
         .def("new_frame", &ui::Context::new_frame, "width"_a, "height"_a, D(Context, new_frame))
-#if 0 // TODO(slang-rhi)
-        .def("render", &ui::Context::render, "framebuffer"_a, "command_buffer"_a, D(Context, render))
-#endif
+        .def(
+            "render",
+            nb::overload_cast<TextureView*, CommandEncoder*>(&ui::Context::render),
+            "texture_view"_a,
+            "command_encoder"_a,
+            D(Context, render)
+        )
+        .def(
+            "render",
+            nb::overload_cast<Texture*, CommandEncoder*>(&ui::Context::render),
+            "texture"_a,
+            "command_encoder"_a,
+            D_NA(Context, render, 2)
+        )
         .def("handle_keyboard_event", &ui::Context::handle_keyboard_event, "event"_a, D(Context, handle_keyboard_event))
         .def("handle_mouse_event", &ui::Context::handle_mouse_event, "event"_a, D(Context, handle_mouse_event))
         .def("process_events", &ui::Context::process_events, D(Context, process_events))
