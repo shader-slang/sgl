@@ -32,7 +32,7 @@ NativeNDBuffer::NativeNDBuffer(Device* device, NativeNDBufferDesc desc)
     m_storage = device->create_buffer(buffer_desc);
 
     set_slangpy_signature(
-        fmt::format("[{},{},{}]", desc.dtype->get_type_reflection()->name(), desc.shape.size(), desc.usage)
+        fmt::format("[{},{},{}]", desc.dtype->get_type_reflection()->full_name(), desc.shape.size(), desc.usage)
     );
 }
 

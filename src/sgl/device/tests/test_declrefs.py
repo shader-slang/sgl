@@ -805,10 +805,7 @@ def test_ast_cursor_hashgrid_nogenerics(device_type: sgl.DeviceType):
 
     #  print_ast(module.module_decl, device)
     dump = ast_to_dict(module.module_decl, device)
-    diff = DeepDiff(
-        dump,
-        HASHGRID_NO_GENERICS_DUMP,
-    )
+    diff = DeepDiff(dump, HASHGRID_NO_GENERICS_DUMP)  # type: ignore (deepdiff issue)
     assert not diff
 
 
