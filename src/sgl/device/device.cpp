@@ -322,8 +322,10 @@ Device::Device(const DeviceDesc& desc)
     if (m_desc.type == DeviceType::automatic) {
 #if SGL_WINDOWS
         m_desc.type = DeviceType::d3d12;
-#elif SGL_LINUX || SGL_MACOS
+#elif SGL_LINUX
         m_desc.type = DeviceType::vulkan;
+#elif SGL_MACOS
+        m_desc.type = DeviceType::metal;
 #endif
     }
 

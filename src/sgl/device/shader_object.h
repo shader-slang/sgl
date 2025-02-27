@@ -44,6 +44,7 @@ public:
 
     gfx::IShaderObject* gfx_shader_object() const { return m_shader_object; }
 
+    slang::ISession* get_slang_session() const;
 protected:
     ref<Device> m_device;
     gfx::IShaderObject* m_shader_object;

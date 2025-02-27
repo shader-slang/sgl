@@ -85,6 +85,9 @@ ShaderCursor ShaderCursor::find_field(std::string_view name) const
     // If the cursor is valid, we want to consider the type of data
     // it is referencing.
     //
+    slang::ParameterCategory parameter_category = m_type_layout->getParameterCategory();
+    printf("parameter_category: %d\n", parameter_category);
+
     switch ((TypeReflection::Kind)m_type_layout->getKind()) {
         // The easy/expected case is when the value has a structure type.
         //
@@ -153,13 +156,20 @@ ShaderCursor ShaderCursor::find_field(std::string_view name) const
     // from a cursor that references a constant buffer or parameter block,
     // and in these cases we want the access to Just Work.
     //
-    case TypeReflection::Kind::constant_buffer:
+    case TypeReflection::Kind::constant_buffer: {
+        ShaderCursor d = dereference();
+        return d.find_field(name);
+    }
     case TypeReflection::Kind::parameter_block: {
         // We basically need to "dereference" the current cursor
         // to go from a pointer to a constant buffer to a pointer
         // to the *contents* of the constant buffer.
         //
         ShaderCursor d = dereference();
+        d.m_type_layout = m_shader_object->get_slang_session()->getTypeLayout(
+            m_type_layout->getElementTypeLayout()->getType(),
+            0,
+            slang::LayoutRules::MetalArgumentBufferTier2);
         return d.find_field(name);
     }
 
