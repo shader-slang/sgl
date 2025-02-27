@@ -68,7 +68,7 @@ NativeTensor::NativeTensor(
     , m_grad_in(grad_in)
     , m_grad_out(grad_out)
 {
-    set_slangpy_signature(fmt::format("[{},{},{}]", desc.dtype->get_type_reflection()->name(), dims(), usage()));
+    set_slangpy_signature(fmt::format("[{},{},{}]", desc.dtype->get_type_reflection()->full_name(), dims(), usage()));
 }
 
 ref<NativeTensor> NativeTensor::broadcast_to(const Shape& new_shape) const
