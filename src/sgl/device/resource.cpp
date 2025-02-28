@@ -418,9 +418,9 @@ SubresourceLayout Texture::get_subresource_layout(uint32_t subresource) const
     // getTextureRowAlignment does not take format as an argument, so we have to use getTextureAllocationInfo
     // to get the alignment.
     size_t size;
-    SLANG_CALL(m_device->gfx_device()->getTextureAllocationInfo(*m_gfx_texture->getDesc(), &size, &alignment));
+    SLANG_CALL(m_device->rhi_device()->getTextureAllocationInfo(*m_rhi_texture->getDesc(), &size, &alignment));
 #else
-    SLANG_CALL(m_device->gfx_device()->getTextureRowAlignment(&alignment));
+    SLANG_CALL(m_device->rhi_device()->getTextureRowAlignment(&alignment));
 #endif
 
     uint32_t mip_level = get_subresource_mip_level(subresource);
