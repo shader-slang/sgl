@@ -38,8 +38,8 @@ SGL_DICT_TO_DESC_END()
 
 SGL_DICT_TO_DESC_BEGIN(ColorTargetDesc)
 SGL_DICT_TO_DESC_FIELD(format, Format)
-SGL_DICT_TO_DESC_FIELD_DICT(color, AspectBlendDesc)
-SGL_DICT_TO_DESC_FIELD_DICT(alpha, AspectBlendDesc)
+SGL_DICT_TO_DESC_FIELD(color, AspectBlendDesc)
+SGL_DICT_TO_DESC_FIELD(alpha, AspectBlendDesc)
 SGL_DICT_TO_DESC_FIELD(enable_blend, bool)
 SGL_DICT_TO_DESC_FIELD(logic_op, LogicOp)
 SGL_DICT_TO_DESC_FIELD(write_mask, RenderTargetWriteMask)
@@ -121,24 +121,53 @@ SGL_PY_EXPORT(device_types)
     // Graphics
     // ------------------------------------------------------------------------
 
+    nb::class_<DrawArguments>(m, "DrawArguments", D_NA(DrawArguments))
+        .def(nb::init<>())
+        .def(
+            "__init__",
+            [](DrawArguments* self, nb::dict dict) { new (self) DrawArguments(dict_to_DrawArguments(dict)); }
+        )
+        .def_rw("vertex_count", &DrawArguments::vertex_count, D_NA(DrawArguments, vertex_count))
+        .def_rw("instance_count", &DrawArguments::instance_count, D_NA(DrawArguments, instance_count))
+        .def_rw(
+            "start_vertex_location",
+            &DrawArguments::start_vertex_location,
+            D_NA(DrawArguments, start_vertex_location)
+        )
+        .def_rw(
+            "start_instance_location",
+            &DrawArguments::start_instance_location,
+            D_NA(DrawArguments, start_instance_location)
+        )
+        .def_rw(
+            "start_index_location",
+            &DrawArguments::start_index_location,
+            D_NA(DrawArguments, start_index_location)
+        );
+    nb::implicitly_convertible<nb::dict, DrawArguments>();
+
     nb::class_<Viewport>(m, "Viewport", D(Viewport))
         .def(nb::init<>())
         .def("__init__", [](Viewport* self, nb::dict dict) { new (self) Viewport(dict_to_Viewport(dict)); })
+        .def_static("from_size", &Viewport::from_size, "width"_a, "height"_a, D_NA(Viewport, from_size))
         .def_rw("x", &Viewport::x, D(Viewport, x))
         .def_rw("y", &Viewport::y, D(Viewport, y))
         .def_rw("width", &Viewport::width, D(Viewport, width))
         .def_rw("height", &Viewport::height, D(Viewport, height))
         .def_rw("min_depth", &Viewport::min_depth, D(Viewport, min_depth))
-        .def_rw("max_depth", &Viewport::max_depth, D(Viewport, max_depth));
+        .def_rw("max_depth", &Viewport::max_depth, D(Viewport, max_depth))
+        .def("__repr__", &Viewport::to_string);
     nb::implicitly_convertible<nb::dict, Viewport>();
 
     nb::class_<ScissorRect>(m, "ScissorRect", D(ScissorRect))
         .def(nb::init<>())
         .def("__init__", [](ScissorRect* self, nb::dict dict) { new (self) ScissorRect(dict_to_ScissorRect(dict)); })
+        .def_static("from_size", &ScissorRect::from_size, "width"_a, "height"_a, D_NA(ScissorRect, from_size))
         .def_rw("min_x", &ScissorRect::min_x, D(ScissorRect, min_x))
         .def_rw("min_y", &ScissorRect::min_y, D(ScissorRect, min_y))
         .def_rw("max_x", &ScissorRect::max_x, D(ScissorRect, max_x))
-        .def_rw("max_y", &ScissorRect::max_y, D(ScissorRect, max_y));
+        .def_rw("max_y", &ScissorRect::max_y, D(ScissorRect, max_y))
+        .def("__repr__", &ScissorRect::to_string);
     nb::implicitly_convertible<nb::dict, ScissorRect>();
 
     nb::sgl_enum<IndexFormat>(m, "IndexFormat");

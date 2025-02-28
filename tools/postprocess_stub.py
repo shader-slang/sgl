@@ -34,11 +34,18 @@ DESCRIPTOR_CONVERT_TYPES = {
     "SlangLinkOptions": True,
     "SlangSessionDesc": True,
     "SurfaceConfig": True,
-    # "TextureDesc": True,
+    "TextureDesc": True,
+    "TextureViewDesc": True,
     "TextureLoader.Options": True,
     "VertexStreamDesc": True,
     "Viewport": True,
     "SurfaceConfig": True,
+    "RenderPassColorAttachment": True,
+    "RenderPassDepthStencilAttachment": True,
+    "RenderState": True,
+    "RenderPassDesc": True,
+    "DrawArguments": True,
+    "BufferOffsetPair": True,
 }
 
 QUIET = False

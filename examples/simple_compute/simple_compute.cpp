@@ -26,7 +26,7 @@ int main()
             .compiler_options = {.include_paths = {EXAMPLE_DIR}},
         });
 
-        ref<ShaderProgram> program = device->load_program("simple_compute.slang", {"main"});
+        ref<ShaderProgram> program = device->load_program("simple_compute.slang", {"compute_main"});
         ref<ComputeKernel> kernel = device->create_compute_kernel({.program = program});
 
         const uint32_t N = 1024;
@@ -69,7 +69,7 @@ int main()
             processor["a"] = buffer_a;
             processor["b"] = buffer_b;
             processor["c"] = buffer_c;
-            pass_encoder->dispatch_thread_groups(uint3{N / 16, 1, 1});
+            pass_encoder->dispatch(uint3{N, 1, 1});
             pass_encoder->end();
             device->submit_command_buffer(command_encoder->finish());
 

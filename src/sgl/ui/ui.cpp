@@ -419,8 +419,8 @@ void Context::render(TextureView* texture_view, CommandEncoder* command_encoder)
         RenderState render_state = {
             .viewports = {Viewport::from_size(io.DisplaySize.x, io.DisplaySize.y)},
             .scissor_rects = {ScissorRect{}},
-            .vertex_buffers = {BufferWithOffset{vertex_buffer}},
-            .index_buffer = BufferWithOffset{index_buffer},
+            .vertex_buffers = {vertex_buffer},
+            .index_buffer = index_buffer,
             .index_format = sizeof(ImDrawIdx) == 2 ? IndexFormat::uint16 : IndexFormat::uint32,
         };
 

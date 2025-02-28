@@ -8,9 +8,146 @@
 #include "sgl/device/shader_object.h"
 #include "sgl/device/raytracing.h"
 
+namespace sgl {
+
+SGL_DICT_TO_DESC_BEGIN(RenderState)
+SGL_DICT_TO_DESC_FIELD(stencil_ref, uint32_t)
+SGL_DICT_TO_DESC_FIELD_LIST(viewports, Viewport)
+SGL_DICT_TO_DESC_FIELD_LIST(scissor_rects, ScissorRect)
+SGL_DICT_TO_DESC_FIELD_LIST(vertex_buffers, BufferOffsetPair)
+SGL_DICT_TO_DESC_FIELD(index_buffer, BufferOffsetPair)
+SGL_DICT_TO_DESC_FIELD(index_format, IndexFormat)
+SGL_DICT_TO_DESC_END()
+
+SGL_DICT_TO_DESC_BEGIN(RenderPassColorAttachment)
+SGL_DICT_TO_DESC_FIELD(view, TextureView*)
+SGL_DICT_TO_DESC_FIELD(resolve_target, TextureView*)
+SGL_DICT_TO_DESC_FIELD(load_op, LoadOp)
+SGL_DICT_TO_DESC_FIELD(store_op, StoreOp)
+SGL_DICT_TO_DESC_FIELD(clear_value, float4)
+SGL_DICT_TO_DESC_END()
+
+SGL_DICT_TO_DESC_BEGIN(RenderPassDepthStencilAttachment)
+SGL_DICT_TO_DESC_FIELD(view, TextureView*)
+SGL_DICT_TO_DESC_FIELD(depth_load_op, LoadOp)
+SGL_DICT_TO_DESC_FIELD(depth_store_op, StoreOp)
+SGL_DICT_TO_DESC_FIELD(depth_clear_value, float)
+SGL_DICT_TO_DESC_FIELD(depth_read_only, bool)
+SGL_DICT_TO_DESC_FIELD(stencil_load_op, LoadOp)
+SGL_DICT_TO_DESC_FIELD(stencil_store_op, StoreOp)
+SGL_DICT_TO_DESC_FIELD(stencil_clear_value, uint8_t)
+SGL_DICT_TO_DESC_FIELD(stencil_read_only, bool)
+SGL_DICT_TO_DESC_END()
+
+SGL_DICT_TO_DESC_BEGIN(RenderPassDesc)
+SGL_DICT_TO_DESC_FIELD_LIST(color_attachments, RenderPassColorAttachment)
+SGL_DICT_TO_DESC_FIELD(depth_stencil_attachment, RenderPassDepthStencilAttachment)
+SGL_DICT_TO_DESC_END()
+
+} // namespace sgl
+
 SGL_PY_EXPORT(device_command)
 {
     using namespace sgl;
+
+    // TODO(slang-rhi) move to types?
+
+    nb::class_<RenderState>(m, "RenderState", D_NA(RenderState))
+        .def(nb::init<>())
+        .def("__init__", [](RenderState* self, nb::dict dict) { new (self) RenderState(dict_to_RenderState(dict)); })
+        .def_rw("stencil_ref", &RenderState::stencil_ref, D_NA(RenderState, stencil_ref))
+        .def_rw("viewports", &RenderState::viewports, D_NA(RenderState, viewports))
+        .def_rw("scissor_rects", &RenderState::scissor_rects, D_NA(RenderState, scissor_rects))
+        .def_rw("vertex_buffers", &RenderState::vertex_buffers, D_NA(RenderState, vertex_buffers))
+        .def_rw("index_buffer", &RenderState::index_buffer, D_NA(RenderState, index_buffer))
+        .def_rw("index_format", &RenderState::index_format, D_NA(RenderState, index_format));
+    nb::implicitly_convertible<nb::dict, RenderState>();
+
+    nb::class_<RenderPassColorAttachment>(m, "RenderPassColorAttachment", D_NA(RenderPassColorAttachment))
+        .def(nb::init<>())
+        .def(
+            "__init__",
+            [](RenderPassColorAttachment* self, nb::dict dict)
+            { new (self) RenderPassColorAttachment(dict_to_RenderPassColorAttachment(dict)); }
+        )
+        .def_rw("view", &RenderPassColorAttachment::view, D_NA(RenderPassColorAttachment, view))
+        .def_rw(
+            "resolve_target",
+            &RenderPassColorAttachment::resolve_target,
+            D_NA(RenderPassColorAttachment, resolve_target)
+        )
+        .def_rw("load_op", &RenderPassColorAttachment::load_op, D_NA(RenderPassColorAttachment, load_op))
+        .def_rw("store_op", &RenderPassColorAttachment::store_op, D_NA(RenderPassColorAttachment, store_op))
+        .def_rw("clear_value", &RenderPassColorAttachment::clear_value, D_NA(RenderPassColorAttachment, clear_value));
+    nb::implicitly_convertible<nb::dict, RenderPassColorAttachment>();
+
+    nb::class_<RenderPassDepthStencilAttachment>(
+        m,
+        "RenderPassDepthStencilAttachment",
+        D_NA(RenderPassDepthStencilAttachment)
+    )
+        .def(nb::init<>())
+        .def(
+            "__init__",
+            [](RenderPassDepthStencilAttachment* self, nb::dict dict)
+            { new (self) RenderPassDepthStencilAttachment(dict_to_RenderPassDepthStencilAttachment(dict)); }
+        )
+        .def_rw("view", &RenderPassDepthStencilAttachment::view, D_NA(RenderPassDepthStencilAttachment, view))
+        .def_rw(
+            "depth_load_op",
+            &RenderPassDepthStencilAttachment::depth_load_op,
+            D_NA(RenderPassDepthStencilAttachment, depth_load_op)
+        )
+        .def_rw(
+            "depth_store_op",
+            &RenderPassDepthStencilAttachment::depth_store_op,
+            D_NA(RenderPassDepthStencilAttachment, depth_store_op)
+        )
+        .def_rw(
+            "depth_clear_value",
+            &RenderPassDepthStencilAttachment::depth_clear_value,
+            D_NA(RenderPassDepthStencilAttachment, depth_clear_value)
+        )
+        .def_rw(
+            "depth_read_only",
+            &RenderPassDepthStencilAttachment::depth_read_only,
+            D_NA(RenderPassDepthStencilAttachment, depth_read_only)
+        )
+        .def_rw(
+            "stencil_load_op",
+            &RenderPassDepthStencilAttachment::stencil_load_op,
+            D_NA(RenderPassDepthStencilAttachment, stencil_load_op)
+        )
+        .def_rw(
+            "stencil_store_op",
+            &RenderPassDepthStencilAttachment::stencil_store_op,
+            D_NA(RenderPassDepthStencilAttachment, stencil_store_op)
+        )
+        .def_rw(
+            "stencil_clear_value",
+            &RenderPassDepthStencilAttachment::stencil_clear_value,
+            D_NA(RenderPassDepthStencilAttachment, stencil_clear_value)
+        )
+        .def_rw(
+            "stencil_read_only",
+            &RenderPassDepthStencilAttachment::stencil_read_only,
+            D_NA(RenderPassDepthStencilAttachment, stencil_read_only)
+        );
+    nb::implicitly_convertible<nb::dict, RenderPassDepthStencilAttachment>();
+
+    nb::class_<RenderPassDesc>(m, "RenderPassDesc", D_NA(RenderPassDesc))
+        .def(nb::init<>())
+        .def(
+            "__init__",
+            [](RenderPassDesc* self, nb::dict dict) { new (self) RenderPassDesc(dict_to_RenderPassDesc(dict)); }
+        )
+        .def_rw("color_attachments", &RenderPassDesc::color_attachments, D_NA(RenderPassDesc, color_attachments))
+        .def_rw(
+            "depth_stencil_attachment",
+            &RenderPassDesc::depth_stencil_attachment,
+            D_NA(RenderPassDesc, depth_stencil_attachment)
+        );
+    nb::implicitly_convertible<nb::dict, RenderPassDesc>();
 
     nb::class_<CommandEncoder, DeviceResource>(m, "CommandEncoder", D_NA(CommandEncoder))
         .def("begin_render_pass", &CommandEncoder::begin_render_pass, "desc"_a, D_NA(CommandEncoder, begin_render_pass))
@@ -183,7 +320,59 @@ SGL_PY_EXPORT(device_command)
             D_NA(PassEncoder, insert_debug_marker)
         );
 
-    nb::class_<RenderPassEncoder, PassEncoder>(m, "RenderPassEncoder", D_NA(RenderPassEncoder));
+    nb::class_<RenderPassEncoder, PassEncoder>(m, "RenderPassEncoder", D_NA(RenderPassEncoder))
+        .def("__enter__", [](RenderPassEncoder* self) { return self; })
+        .def(
+            "__exit__",
+            [](RenderPassEncoder* self, nb::object, nb::object, nb::object) { self->end(); },
+            "exc_type"_a = nb::none(),
+            "exc_value"_a = nb::none(),
+            "traceback"_a = nb::none()
+        )
+        .def(
+            "bind_pipeline",
+            nb::overload_cast<RenderPipeline*>(&RenderPassEncoder::bind_pipeline),
+            "pipeline"_a,
+            D_NA(RenderPassEncoder, bind_pipeline)
+        )
+        .def(
+            "bind_pipeline",
+            nb::overload_cast<RenderPipeline*, ShaderObject*>(&RenderPassEncoder::bind_pipeline),
+            "pipeline"_a,
+            "root_object"_a,
+            D_NA(RenderPassEncoder, bind_pipeline, 2)
+        )
+        .def(
+            "set_render_state",
+            &RenderPassEncoder::set_render_state,
+            "state"_a,
+            D_NA(RenderPassEncoder, set_render_state)
+        )
+        .def("draw", &RenderPassEncoder::draw, "args"_a, D_NA(RenderPassEncoder, draw))
+        .def("draw_indexed", &RenderPassEncoder::draw_indexed, "args"_a, D_NA(RenderPassEncoder, draw_indexed))
+        .def(
+            "draw_indirect",
+            &RenderPassEncoder::draw_indirect,
+            "max_draw_count"_a,
+            "arg_buffer"_a,
+            "count_buffer"_a = BufferOffsetPair{},
+            D_NA(RenderPassEncoder, draw_indirect)
+        )
+        .def(
+            "draw_indexed_indirect",
+            &RenderPassEncoder::draw_indexed_indirect,
+            "max_draw_count"_a,
+            "arg_buffer"_a,
+            "count_buffer"_a = BufferOffsetPair{},
+            D_NA(RenderPassEncoder, draw_indexed_indirect)
+        )
+        .def(
+            "draw_mesh_tasks",
+            &RenderPassEncoder::draw_mesh_tasks,
+            "dimensions"_a,
+            D_NA(RenderPassEncoder, draw_mesh_tasks)
+        );
+
 
     nb::class_<ComputePassEncoder, PassEncoder>(m, "ComputePassEncoder", D_NA(ComputePassEncoder))
         .def("__enter__", [](ComputePassEncoder* self) { return self; })
@@ -209,16 +398,16 @@ SGL_PY_EXPORT(device_command)
         )
         .def("dispatch", &ComputePassEncoder::dispatch, "thread_count"_a, D_NA(ComputePassEncoder, dispatch))
         .def(
-            "dispatch_thread_groups",
-            &ComputePassEncoder::dispatch_thread_groups,
+            "dispatch_compute",
+            &ComputePassEncoder::dispatch_compute,
             "thread_group_count"_a,
-            D_NA(ComputePassEncoder, dispatch_thread_groups)
+            D_NA(ComputePassEncoder, dispatch_compute)
         )
         .def(
-            "dispatch_thread_groups_indirect",
-            &ComputePassEncoder::dispatch_thread_groups_indirect,
+            "dispatch_compute_indirect",
+            &ComputePassEncoder::dispatch_compute_indirect,
             "arg_buffer"_a,
-            D_NA(ComputePassEncoder, dispatch_thread_groups_indirect)
+            D_NA(ComputePassEncoder, dispatch_compute_indirect)
         );
 
     nb::class_<RayTracingPassEncoder, PassEncoder>(m, "RayTracingPassEncoder", D_NA(RayTracingPassEncoder))

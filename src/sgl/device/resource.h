@@ -411,9 +411,21 @@ private:
     // Slang::ComPtr<rhi::IBufferView> m_rhi_buffer_view;
 };
 
-struct BufferWithOffset {
+struct BufferOffsetPair {
     Buffer* buffer{nullptr};
     DeviceOffset offset{0};
+
+    BufferOffsetPair() = default;
+    BufferOffsetPair(Buffer* buffer, DeviceOffset offset = 0)
+        : buffer(buffer)
+        , offset(offset)
+    {
+    }
+    BufferOffsetPair(const ref<Buffer>& buffer, DeviceOffset offset = 0)
+        : buffer(buffer.get())
+        , offset(offset)
+    {
+    }
 };
 
 struct SubresourceData {

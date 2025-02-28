@@ -83,7 +83,7 @@ int main()
             pass_encoder->set_render_state({
                 .viewports = {{Viewport::from_size(float(render_texture->width()), float(render_texture->height()))}},
                 .scissor_rects = {{ScissorRect::from_size(render_texture->width(), render_texture->height())}},
-                .vertex_buffers = {{vertex_buffer}},
+                .vertex_buffers = {vertex_buffer},
             });
             pass_encoder->draw({.vertex_count = 3});
             pass_encoder->end();

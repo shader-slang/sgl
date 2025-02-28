@@ -230,7 +230,7 @@ struct IndirectDrawIndexedArguments {
     uint32_t start_instance_location{0};
 };
 
-struct Viewport {
+struct SGL_API Viewport {
     float x{0.f};
     float y{0.f};
     float width{0.f};
@@ -239,6 +239,8 @@ struct Viewport {
     float max_depth{1.f};
 
     static Viewport from_size(float width, float height) { return {0.f, 0.f, width, height, 0.f, 1.f}; }
+
+    std::string to_string() const;
 };
 
 static_assert(
@@ -251,13 +253,15 @@ static_assert(
     "Viewport struct mismatch"
 );
 
-struct ScissorRect {
+struct SGL_API ScissorRect {
     int32_t min_x{0};
     int32_t min_y{0};
     int32_t max_x{0};
     int32_t max_y{0};
 
     static ScissorRect from_size(int32_t width, int32_t height) { return {0, 0, width, height}; }
+
+    std::string to_string() const;
 };
 
 static_assert(

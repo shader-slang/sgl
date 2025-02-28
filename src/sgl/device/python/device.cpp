@@ -27,7 +27,7 @@ SGL_DICT_TO_DESC_FIELD(enable_cuda_interop, bool)
 SGL_DICT_TO_DESC_FIELD(enable_print, bool)
 SGL_DICT_TO_DESC_FIELD(enable_hot_reload, bool)
 SGL_DICT_TO_DESC_FIELD(adapter_luid, AdapterLUID)
-SGL_DICT_TO_DESC_FIELD_DICT(compiler_options, SlangCompilerOptions)
+SGL_DICT_TO_DESC_FIELD(compiler_options, SlangCompilerOptions)
 SGL_DICT_TO_DESC_FIELD(shader_cache_path, std::filesystem::path)
 SGL_DICT_TO_DESC_END()
 

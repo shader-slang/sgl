@@ -131,6 +131,7 @@ target_sources(sgl PRIVATE
     sgl/device/slang_utils.h
     sgl/device/surface.cpp
     sgl/device/surface.h
+    sgl/device/types.cpp
     sgl/device/types.h
 
     sgl/math/constants.h

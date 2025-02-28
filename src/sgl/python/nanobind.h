@@ -454,17 +454,11 @@ inline constexpr uint64_t const_hash(std::string_view str)
         desc.name = nb::cast<type>(v);                                                                                 \
         break;
 
-#define SGL_DICT_TO_DESC_FIELD_DICT(name, type)                                                                        \
-    case ::sgl::detail::const_hash(#name):                                                                             \
-        extern type dict_to_##type(nb::dict dict);                                                                     \
-        desc.name = dict_to_##type(nb::cast<nb::dict>(v));                                                             \
-        break;
-
 #define SGL_DICT_TO_DESC_FIELD_LIST(name, type)                                                                        \
     case ::sgl::detail::const_hash(#name):                                                                             \
         desc.name = {};                                                                                                \
         for (const auto& item : v)                                                                                     \
-            desc.name.push_back(dict_to_##type(nb::cast<nb::dict>(item)));                                             \
+            desc.name.push_back(nb::cast<type>(item));                                                                 \
         break;
 
 #define SGL_DICT_TO_DESC_FIELD_CUSTOM(name, code)                                                                      \

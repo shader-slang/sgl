@@ -15,13 +15,13 @@ vertices = np.array([-1, -1, 1, -1, 0, 1], dtype=np.float32)
 indices = np.array([0, 1, 2], dtype=np.uint32)
 
 vertex_buffer = device.create_buffer(
-    usage=sgl.BufferUsage.vertex | sgl.BufferUsage.shader_resource,
+    usage=sgl.BufferUsage.vertex_buffer | sgl.BufferUsage.shader_resource,
     label="vertex_buffer",
     data=vertices,
 )
 
 index_buffer = device.create_buffer(
-    usage=sgl.BufferUsage.index | sgl.BufferUsage.shader_resource,
+    usage=sgl.BufferUsage.index_buffer | sgl.BufferUsage.shader_resource,
     label="index_buffer",
     data=indices,
 )
@@ -60,14 +60,17 @@ with command_encoder.begin_render_pass(
     pass_encoder.set_render_state(
         {
             "viewports": [
-                {"width": render_texture.width, "height": render_texture.height}
+                sgl.Viewport.from_size(render_texture.width, render_texture.height)
             ],
             "scissor_rects": [
-                {"width": render_texture.width, "height": render_texture.height}
+                sgl.ScissorRect.from_size(render_texture.width, render_texture.height)
             ],
             "vertex_buffers": [vertex_buffer],
+            "index_buffer": index_buffer,
+            "index_format": sgl.IndexFormat.uint32,
         }
     )
+
     pass_encoder.draw({"vertex_count": 3})
 device.submit_command_buffer(command_encoder.finish())
 

@@ -11,7 +11,7 @@ ParameterBlock<Processor> processor;
 
 [shader("compute")]
 [numthreads(32, 1, 1)]
-void main(uint3 tid: SV_DispatchThreadID)
+void compute_main(uint3 tid: SV_DispatchThreadID)
 {
     uint index = tid.x;
     if (index < 1024)

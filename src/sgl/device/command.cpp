@@ -36,9 +36,9 @@ namespace detail {
         };
     }
 
-    rhi::BufferWithOffset to_rhi(const BufferWithOffset& buffer_with_offset)
+    rhi::BufferOffsetPair to_rhi(const BufferOffsetPair& buffer_with_offset)
     {
-        return rhi::BufferWithOffset(
+        return rhi::BufferOffsetPair(
             buffer_with_offset.buffer ? buffer_with_offset.buffer->rhi_buffer() : nullptr,
             buffer_with_offset.offset
         );
@@ -134,28 +134,21 @@ void RenderPassEncoder::draw_indexed(const DrawArguments& args)
 
 void RenderPassEncoder::draw_indirect(
     uint32_t max_draw_count,
-    BufferWithOffset arg_buffer,
-    BufferWithOffset count_buffer
+    BufferOffsetPair arg_buffer,
+    BufferOffsetPair count_buffer
 )
 {
-    // TODO(slang-rhi)
-    SGL_UNUSED(max_draw_count, arg_buffer, count_buffer);
-    SGL_UNIMPLEMENTED();
-    // m_rhi_render_pass_encoder->drawIndirect(max_draw_count, detail::to_rhi(arg_buffer),
-    // detail::to_rhi(count_buffer));
+    m_rhi_render_pass_encoder->drawIndirect(max_draw_count, detail::to_rhi(arg_buffer), detail::to_rhi(count_buffer));
 }
 
 void RenderPassEncoder::draw_indexed_indirect(
     uint32_t max_draw_count,
-    BufferWithOffset arg_buffer,
-    BufferWithOffset count_buffer
+    BufferOffsetPair arg_buffer,
+    BufferOffsetPair count_buffer
 )
 {
-    // TODO(slang-rhi)
-    SGL_UNUSED(max_draw_count, arg_buffer, count_buffer);
-    SGL_UNIMPLEMENTED();
-    // m_rhi_render_pass_encoder->drawIndexedIndirect(max_draw_count, detail::to_rhi(arg_buffer),
-    // detail::to_rhi(count_buffer));
+    m_rhi_render_pass_encoder
+        ->drawIndexedIndirect(max_draw_count, detail::to_rhi(arg_buffer), detail::to_rhi(count_buffer));
 }
 
 void RenderPassEncoder::draw_mesh_tasks(uint3 dimensions)
@@ -197,17 +190,17 @@ void ComputePassEncoder::dispatch(uint3 thread_count)
         div_round_up(thread_count.x, m_thread_group_size.x),
         div_round_up(thread_count.y, m_thread_group_size.y),
         div_round_up(thread_count.z, m_thread_group_size.z)};
-    dispatch_thread_groups(thread_group_count);
+    dispatch_compute(thread_group_count);
 }
 
-void ComputePassEncoder::dispatch_thread_groups(uint3 thread_group_count)
+void ComputePassEncoder::dispatch_compute(uint3 thread_group_count)
 {
     m_rhi_compute_pass_encoder->dispatchCompute(thread_group_count.x, thread_group_count.y, thread_group_count.z);
 }
 
-void ComputePassEncoder::dispatch_thread_groups_indirect(BufferWithOffset arg_buffer)
+void ComputePassEncoder::dispatch_compute_indirect(BufferOffsetPair arg_buffer)
 {
-    m_rhi_compute_pass_encoder->dispatchComputeIndirect(arg_buffer.buffer->rhi_buffer(), arg_buffer.offset);
+    m_rhi_compute_pass_encoder->dispatchComputeIndirect(detail::to_rhi(arg_buffer));
 }
 
 void ComputePassEncoder::end()
@@ -622,7 +615,7 @@ void CommandEncoder::query_acceleration_structure_properties(
     );
 }
 
-void CommandEncoder::serialize_acceleration_structure(BufferWithOffset dst, AccelerationStructure* src)
+void CommandEncoder::serialize_acceleration_structure(BufferOffsetPair dst, AccelerationStructure* src)
 {
     SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(dst.buffer);
@@ -631,7 +624,7 @@ void CommandEncoder::serialize_acceleration_structure(BufferWithOffset dst, Acce
     m_rhi_command_encoder->serializeAccelerationStructure(detail::to_rhi(dst), src->rhi_acceleration_structure());
 }
 
-void CommandEncoder::deserialize_acceleration_structure(AccelerationStructure* dst, BufferWithOffset src)
+void CommandEncoder::deserialize_acceleration_structure(AccelerationStructure* dst, BufferOffsetPair src)
 {
     SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(dst);

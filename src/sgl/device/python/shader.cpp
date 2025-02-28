@@ -38,7 +38,7 @@ SGL_DICT_TO_DESC_FIELD(dump_intermediates_prefix, std::string)
 SGL_DICT_TO_DESC_END()
 
 SGL_DICT_TO_DESC_BEGIN(SlangSessionDesc)
-SGL_DICT_TO_DESC_FIELD_DICT(compiler_options, SlangCompilerOptions)
+SGL_DICT_TO_DESC_FIELD(compiler_options, SlangCompilerOptions)
 SGL_DICT_TO_DESC_FIELD(add_default_include_paths, bool)
 SGL_DICT_TO_DESC_FIELD(cache_path, std::filesystem::path)
 SGL_DICT_TO_DESC_END()

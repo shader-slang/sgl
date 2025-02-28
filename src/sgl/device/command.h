@@ -21,8 +21,8 @@ struct RenderState {
     uint32_t stencil_ref{0};
     static_vector<Viewport, 16> viewports;
     static_vector<ScissorRect, 16> scissor_rects;
-    static_vector<BufferWithOffset, 16> vertex_buffers;
-    BufferWithOffset index_buffer;
+    static_vector<BufferOffsetPair, 16> vertex_buffers;
+    BufferOffsetPair index_buffer;
     IndexFormat index_format{IndexFormat::uint32};
 };
 
@@ -88,10 +88,10 @@ public:
     void draw(const DrawArguments& args);
     void draw_indexed(const DrawArguments& args);
 
-    void draw_indirect(uint32_t max_draw_count, BufferWithOffset arg_buffer, BufferWithOffset count_buffer = {});
+    void draw_indirect(uint32_t max_draw_count, BufferOffsetPair arg_buffer, BufferOffsetPair count_buffer = {});
 
     void
-    draw_indexed_indirect(uint32_t max_draw_count, BufferWithOffset arg_buffer, BufferWithOffset count_buffer = {});
+    draw_indexed_indirect(uint32_t max_draw_count, BufferOffsetPair arg_buffer, BufferOffsetPair count_buffer = {});
 
     void draw_mesh_tasks(uint3 dimensions);
 
@@ -110,11 +110,8 @@ public:
     void bind_pipeline(ComputePipeline* pipeline, ShaderObject* root_object);
 
     void dispatch(uint3 thread_count);
-    void dispatch_thread_groups(uint3 thread_group_count);
-    void dispatch_thread_groups_indirect(BufferWithOffset arg_buffer);
-
-    // virtual SLANG_NO_THROW void SLANG_MCALL dispatchCompute(uint32_t x, uint32_t y, uint32_t z) = 0;
-    // virtual SLANG_NO_THROW void SLANG_MCALL dispatchComputeIndirect(IBuffer* argBuffer, uint64_t offset) = 0;
+    void dispatch_compute(uint3 thread_group_count);
+    void dispatch_compute_indirect(BufferOffsetPair arg_buffer);
 
     void end() override;
 
@@ -272,7 +269,7 @@ public:
         const AccelerationStructureBuildDesc& desc,
         AccelerationStructure* dst,
         AccelerationStructure* src,
-        BufferWithOffset scratch_buffer,
+        BufferOffsetPair scratch_buffer,
         std::span<AccelerationStructureQueryDesc> queries = std::span<AccelerationStructureQueryDesc>()
     );
 
@@ -287,8 +284,8 @@ public:
         std::span<AccelerationStructureQueryDesc> queries
     );
 
-    void serialize_acceleration_structure(BufferWithOffset dst, AccelerationStructure* src);
-    void deserialize_acceleration_structure(AccelerationStructure* dst, BufferWithOffset src);
+    void serialize_acceleration_structure(BufferOffsetPair dst, AccelerationStructure* src);
+    void deserialize_acceleration_structure(AccelerationStructure* dst, BufferOffsetPair src);
 
     /**
      * Transition resource state of a buffer and add a barrier if state has changed.
