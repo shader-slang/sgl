@@ -403,25 +403,31 @@ ref<InputLayout> Device::create_input_layout(InputLayoutDesc desc)
     return make_ref<InputLayout>(ref<Device>(this), std::move(desc));
 }
 
-#if 0
-AccelerationStructurePrebuildInfo
-Device::get_acceleration_structure_prebuild_info(const AccelerationStructureBuildInputs& build_inputs)
+AccelerationStructureSizes Device::get_acceleration_structure_sizes(const AccelerationStructureBuildDesc& desc)
 {
-    const rhi::IAccelerationStructure::BuildInputs& rhi_build_inputs
-        = reinterpret_cast<const rhi::IAccelerationStructure::BuildInputs&>(build_inputs);
-    rhi::IAccelerationStructure::PrebuildInfo rhi_prebuild_info;
-    SLANG_CALL(m_rhi_device->getAccelerationStructurePrebuildInfo(rhi_build_inputs, &rhi_prebuild_info));
-    return AccelerationStructurePrebuildInfo{
-        .result_data_max_size = rhi_prebuild_info.resultDataMaxSize,
-        .scratch_data_size = rhi_prebuild_info.scratchDataSize,
-        .update_scratch_data_size = rhi_prebuild_info.updateScratchDataSize,
+    AccelerationStructureBuildDescConverter converter(desc);
+    rhi::AccelerationStructureSizes rhi_sizes;
+    SLANG_CALL(m_rhi_device->getAccelerationStructureSizes(converter.rhi_desc, &rhi_sizes));
+    return {
+        .acceleration_structure_size = rhi_sizes.accelerationStructureSize,
+        .scratch_size = rhi_sizes.scratchSize,
+        .update_scratch_size = rhi_sizes.updateScratchSize,
     };
 }
-#endif
 
 ref<AccelerationStructure> Device::create_acceleration_structure(AccelerationStructureDesc desc)
 {
     return make_ref<AccelerationStructure>(ref<Device>(this), std::move(desc));
+}
+
+ref<AccelerationStructureInstanceList> Device::create_acceleration_structure_instance_list(size_t size)
+{
+    return make_ref<AccelerationStructureInstanceList>(ref<Device>(this), size);
+}
+
+ref<ShaderTable> Device::create_shader_table(ShaderTableDesc desc)
+{
+    return make_ref<ShaderTable>(ref<Device>(this), std::move(desc));
 }
 
 /*size_t Device::query_coopvec_matrix_size(uint32_t rows, uint32_t columns, CoopVecMatrixLayout layout)
@@ -434,11 +440,6 @@ ref<CoopVec> Device::get_or_create_coop_vec()
     if (!m_coop_vec)
         m_coop_vec.reset(new CoopVec(ref<Device>(this)));
     return m_coop_vec;
-}
-
-ref<ShaderTable> Device::create_shader_table(ShaderTableDesc desc)
-{
-    return make_ref<ShaderTable>(ref<Device>(this), std::move(desc));
 }
 
 ref<SlangSession> Device::create_slang_session(SlangSessionDesc desc)

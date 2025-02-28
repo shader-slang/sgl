@@ -179,11 +179,18 @@ SGL_PY_EXPORT(device_command)
             "extent"_a = uint3(-1),
             D_NA(CommandEncoder, copy_texture)
         )
+        // TODO(slang-rhi)
+        // copy_texture_to_buffer
+        // upload_buffer_data
+        // upload_texture_data
+        .def(
+            "clear_buffer",
+            &CommandEncoder::clear_buffer,
+            "buffer"_a,
+            "range"_a = BufferRange{},
+            D_NA(CommandEncoder, clear_buffer)
+        )
     // TODO(slang-rhi)
-    // copy_texture_to_buffer
-    // upload_buffer_data
-    // upload_texture_data
-    // clear_buffer
 #if 0
         .def(
             "clear_texture",
@@ -244,18 +251,35 @@ SGL_PY_EXPORT(device_command)
         //     "src"_a = nullptr,
         //     D(CommandEncoder, build_acceleration_structure)
         // )
-        // .def(
-        //     "copy_acceleration_structure",
-        //     &CommandEncoder::copy_acceleration_structure,
-        //     "src"_a,
-        //     "dst"_a,
-        //     "mode"_a,
-        //     D(CommandEncoder, copy_acceleration_structure)
-        // )
-        // TODO(slang-rhi)
-        // query_acceleration_structure_properties
-        // serialize_acceleration_structure
-        // deserialize_acceleration_structure
+        .def(
+            "copy_acceleration_structure",
+            &CommandEncoder::copy_acceleration_structure,
+            "src"_a,
+            "dst"_a,
+            "mode"_a,
+            D_NA(CommandEncoder, copy_acceleration_structure)
+        )
+        .def(
+            "query_acceleration_structure_properties",
+            &CommandEncoder::query_acceleration_structure_properties,
+            "acceleration_structures"_a,
+            "queries"_a,
+            D_NA(CommandEncoder, query_acceleration_structure_properties)
+        )
+        .def(
+            "serialize_acceleration_structure",
+            &CommandEncoder::serialize_acceleration_structure,
+            "dst"_a,
+            "src"_a,
+            D_NA(CommandEncoder, serialize_acceleration_structure)
+        )
+        .def(
+            "deserialize_acceleration_structure",
+            &CommandEncoder::deserialize_acceleration_structure,
+            "dst"_a,
+            "src"_a,
+            D_NA(CommandEncoder, deserialize_acceleration_structure)
+        )
         .def(
             "set_buffer_state",
             &CommandEncoder::set_buffer_state,

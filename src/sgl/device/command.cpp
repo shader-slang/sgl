@@ -517,9 +517,7 @@ void CommandEncoder::blit(Texture* dst, Texture* src, TextureFilteringMode filte
     SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(dst);
     SGL_CHECK_NOT_NULL(src);
-    // TODO(slang-rhi)
-    SGL_UNUSED(dst, src, filter);
-    SGL_UNIMPLEMENTED();
+    m_device->_blitter()->blit(this, dst, src, filter);
 }
 
 void CommandEncoder::resolve_query(
@@ -538,6 +536,39 @@ void CommandEncoder::resolve_query(
 
     m_rhi_command_encoder->resolveQuery(query_pool->rhi_query_pool(), index, count, buffer->rhi_buffer(), offset);
 }
+
+void CommandEncoder::build_acceleration_structure(
+    const AccelerationStructureBuildDesc& desc,
+    AccelerationStructure* dst,
+    AccelerationStructure* src,
+    BufferOffsetPair scratch_buffer,
+    std::span<AccelerationStructureQueryDesc> queries
+)
+{
+    SGL_CHECK(m_open, "Command encoder is finished");
+    SGL_CHECK_NOT_NULL(dst);
+
+    AccelerationStructureBuildDescConverter converter(desc);
+
+    short_vector<rhi::AccelerationStructureQueryDesc, 16> rhi_queries;
+    for (const auto& q : queries) {
+        rhi_queries.push_back({
+            .queryType = static_cast<rhi::QueryType>(q.query_type),
+            .queryPool = q.query_pool->rhi_query_pool(),
+            .firstQueryIndex = q.first_query_index,
+        });
+    }
+
+    m_rhi_command_encoder->buildAccelerationStructure(
+        converter.rhi_desc,
+        dst->rhi_acceleration_structure(),
+        src ? src->rhi_acceleration_structure() : nullptr,
+        detail::to_rhi(scratch_buffer),
+        narrow_cast<uint32_t>(rhi_queries.size()),
+        rhi_queries.data()
+    );
+}
+
 
 #if 0
 void CommandEncoder::build_acceleration_structure(

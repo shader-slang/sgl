@@ -208,9 +208,11 @@ void RayTracingPipeline::recreate()
     for (const auto& hit_group : desc.hit_groups) {
         rhi_hit_groups.push_back({
             .hitGroupName = hit_group.hit_group_name.c_str(),
-            .closestHitEntryPoint = hit_group.closest_hit_entry_point.c_str(),
-            .anyHitEntryPoint = hit_group.any_hit_entry_point.c_str(),
-            .intersectionEntryPoint = hit_group.intersection_entry_point.c_str(),
+            .closestHitEntryPoint
+            = hit_group.closest_hit_entry_point.empty() ? nullptr : hit_group.closest_hit_entry_point.c_str(),
+            .anyHitEntryPoint = hit_group.any_hit_entry_point.empty() ? nullptr : hit_group.any_hit_entry_point.c_str(),
+            .intersectionEntryPoint
+            = hit_group.intersection_entry_point.empty() ? nullptr : hit_group.intersection_entry_point.c_str(),
         });
     }
 

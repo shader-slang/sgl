@@ -420,7 +420,9 @@ SubresourceLayout Texture::get_subresource_layout(uint32_t subresource) const
     size_t size;
     SLANG_CALL(m_device->rhi_device()->getTextureAllocationInfo(*m_rhi_texture->getDesc(), &size, &alignment));
 #else
-    SLANG_CALL(m_device->rhi_device()->getTextureRowAlignment(&alignment));
+    // TODO(slang-rhi) not implemented for CUDA
+    alignment = 1;
+    // SLANG_CALL(m_device->rhi_device()->getTextureRowAlignment(&alignment));
 #endif
 
     uint32_t mip_level = get_subresource_mip_level(subresource);

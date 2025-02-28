@@ -42,6 +42,13 @@ public:
         TextureFilteringMode filter = TextureFilteringMode::linear
     );
 
+    void blit(
+        CommandEncoder* command_encoder,
+        Texture* dst,
+        Texture* src,
+        TextureFilteringMode filter = TextureFilteringMode::linear
+    );
+
     /**
      * \brief Generate mipmaps for a texture.
      *

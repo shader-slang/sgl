@@ -9,7 +9,75 @@
 #include "sgl/core/type_utils.h"
 #include "sgl/core/short_vector.h"
 
+#include <slang-rhi/acceleration-structure-utils.h>
+
 namespace sgl {
+
+namespace detail {
+    // TODO(slang-rhi) this is also in command.cpp and should be shared
+    rhi::BufferOffsetPair to_rhi(const BufferOffsetPair& buffer_with_offset);
+} // namespace detail
+
+AccelerationStructureBuildDescConverter::AccelerationStructureBuildDescConverter(
+    const AccelerationStructureBuildDesc& desc
+)
+{
+    for (const auto& input : desc.inputs) {
+        if (auto* instances = std::get_if<AccelerationStructureBuildInputInstances>(&input)) {
+            rhi::AccelerationStructureBuildInput rhi_build_input{
+                .type = rhi::AccelerationStructureBuildInputType::Instances,
+                .instances{
+                    .instanceBuffer = detail::to_rhi(instances->instance_buffer),
+                    .instanceStride = instances->instance_stride,
+                    .instanceCount = instances->instance_count,
+                },
+            };
+            rhi_build_inputs.push_back(rhi_build_input);
+        } else if (auto* triangles = std::get_if<AccelerationStructureBuildInputTriangles>(&input)) {
+            rhi::AccelerationStructureBuildInput rhi_build_input{
+                .type = rhi::AccelerationStructureBuildInputType::Triangles,
+                .triangles{
+                    .vertexBufferCount = narrow_cast<uint32_t>(triangles->vertex_buffers.size()),
+                    .vertexFormat = static_cast<rhi::Format>(triangles->vertex_format),
+                    .vertexCount = triangles->vertex_count,
+                    .vertexStride = triangles->vertex_stride,
+                    .indexBuffer = detail::to_rhi(triangles->index_buffer),
+                    .indexFormat = static_cast<rhi::IndexFormat>(triangles->index_format),
+                    .indexCount = triangles->index_count,
+                    .preTransformBuffer = detail::to_rhi(triangles->pre_transform_buffer),
+                    .flags = static_cast<rhi::AccelerationStructureGeometryFlags>(triangles->flags),
+                },
+            };
+            for (size_t i = 0; i < triangles->vertex_buffers.size(); ++i)
+                rhi_build_input.triangles.vertexBuffers[i] = detail::to_rhi(triangles->vertex_buffers[i]);
+            rhi_build_inputs.push_back(rhi_build_input);
+        } else if (auto* proceduralPrimitives = std::get_if<AccelerationStructureBuildInputProceduralPrimitives>(&input)) {
+            rhi::AccelerationStructureBuildInput rhi_build_input{
+                .type = rhi::AccelerationStructureBuildInputType::ProceduralPrimitives,
+                .proceduralPrimitives{
+                    .aabbBufferCount = narrow_cast<uint32_t>(proceduralPrimitives->aabb_buffers.size()),
+                    .aabbStride = proceduralPrimitives->aabb_stride,
+                    .primitiveCount = proceduralPrimitives->primitive_count,
+                    .flags = static_cast<rhi::AccelerationStructureGeometryFlags>(proceduralPrimitives->flags),
+                },
+            };
+            for (size_t i = 0; i < proceduralPrimitives->aabb_buffers.size(); ++i)
+                rhi_build_input.proceduralPrimitives.aabbBuffers[i]
+                    = detail::to_rhi(proceduralPrimitives->aabb_buffers[i]);
+            rhi_build_inputs.push_back(rhi_build_input);
+        }
+    }
+
+    rhi_desc.inputs = rhi_build_inputs.data();
+    rhi_desc.inputCount = narrow_cast<uint32_t>(rhi_build_inputs.size());
+
+    rhi_desc.motionOptions.keyCount = desc.motion_options.key_count;
+    rhi_desc.motionOptions.timeStart = desc.motion_options.time_start;
+    rhi_desc.motionOptions.timeEnd = desc.motion_options.time_end;
+
+    rhi_desc.mode = static_cast<rhi::AccelerationStructureBuildMode>(desc.mode);
+    rhi_desc.flags = static_cast<rhi::AccelerationStructureBuildFlags>(desc.flags);
+}
 
 AccelerationStructure::AccelerationStructure(ref<Device> device, AccelerationStructureDesc desc)
     : DeviceResource(std::move(device))
@@ -24,9 +92,9 @@ AccelerationStructure::AccelerationStructure(ref<Device> device, AccelerationStr
 
 AccelerationStructure::~AccelerationStructure() { }
 
-DeviceAddress AccelerationStructure::device_address() const
+AccelerationStructureHandle AccelerationStructure::handle() const
 {
-    return m_rhi_acceleration_structure->getDeviceAddress();
+    return m_rhi_acceleration_structure->getHandle();
 }
 
 std::string AccelerationStructure::to_string() const
@@ -40,6 +108,58 @@ std::string AccelerationStructure::to_string() const
         m_device,
         m_desc.size,
         m_desc.label
+    );
+}
+
+AccelerationStructureInstanceList::AccelerationStructureInstanceList(ref<Device> device, size_t size)
+    : DeviceResource(std::move(device))
+{
+    resize(size);
+}
+
+AccelerationStructureInstanceList::~AccelerationStructureInstanceList() { }
+
+ref<Buffer> AccelerationStructureInstanceList::buffer() const
+{
+    if (m_dirty) {
+        rhi::AccelerationStructureInstanceDescType native_type
+            = rhi::getAccelerationStructureInstanceDescType(static_cast<rhi::DeviceType>(m_device->type()));
+        size_t native_stride = rhi::getAccelerationStructureInstanceDescSize(native_type);
+
+        size_t native_size = m_instances.size() * native_stride;
+
+        std::unique_ptr<uint8_t[]> native_descs(new uint8_t[native_size]);
+
+        rhi::convertAccelerationStructureInstanceDescs(
+            m_instances.size(),
+            native_type,
+            native_descs.get(),
+            native_stride,
+            reinterpret_cast<const rhi::AccelerationStructureInstanceDescGeneric*>(m_instances.data()),
+            sizeof(rhi::AccelerationStructureInstanceDescGeneric)
+        );
+
+        m_buffer = m_device->create_buffer({
+            .usage = BufferUsage::acceleration_structure_build_input,
+            .data = native_descs.get(),
+            .data_size = native_size,
+        });
+
+        m_dirty = false;
+    }
+
+    return m_buffer;
+}
+
+std::string AccelerationStructureInstanceList::to_string() const
+{
+    return fmt::format(
+        "AccelerationStructureInstanceList(\n"
+        "  device = {}\n"
+        "  size = {}\n"
+        ")",
+        m_device,
+        m_instances.size()
     );
 }
 

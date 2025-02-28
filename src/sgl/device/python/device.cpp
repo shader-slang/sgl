@@ -525,13 +525,28 @@ SGL_PY_EXPORT(device_device)
         "cuda_stream"_a = 0,
         D(Device, sync_to_device)
     );
-#if 0 // TODO(slang-rhi)
     device.def(
-        "get_acceleration_structure_prebuild_info",
-        &Device::get_acceleration_structure_prebuild_info,
-        "build_inputs"_a,
-        D(Device, get_acceleration_structure_prebuild_info)
+        "get_acceleration_structure_sizes",
+        &Device::get_acceleration_structure_sizes,
+        "desc"_a,
+        D_NA(Device, get_acceleration_structure_sizes)
     );
+    device.def(
+        "create_acceleration_structure",
+        [](Device* self, size_t size, std::string label)
+        { return self->create_acceleration_structure({.size = size, .label = std::move(label)}); },
+        "size"_a = AccelerationStructureDesc().size,
+        "label"_a = AccelerationStructureDesc().label,
+        D(Device, create_acceleration_structure)
+    );
+    device.def(
+        "create_acceleration_structure",
+        &Device::create_acceleration_structure,
+        "desc"_a,
+        D(Device, create_acceleration_structure)
+    );
+    // TODO(slang-rhi)
+#if 0
     device.def(
         "create_acceleration_structure",
         [](Device* self, AccelerationStructureKind kind, ref<Buffer> buffer, DeviceOffset offset, DeviceSize size)

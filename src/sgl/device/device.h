@@ -7,6 +7,7 @@
 #include "sgl/device/native_handle.h"
 #include "sgl/device/resource.h"
 #include "sgl/device/shader.h"
+#include "sgl/device/raytracing.h"
 #include "sgl/device/coopvec.h"
 
 #include "sgl/core/fwd.h"
@@ -347,21 +348,25 @@ public:
      */
     ref<InputLayout> create_input_layout(InputLayoutDesc desc);
 
-#if 0
-    AccelerationStructureSizes get_acceleration_structure_sizes(const AccelerationStructureBuildInputs& build_inputs);
-    AccelerationStructurePrebuildInfo
-    get_acceleration_structure_prebuild_info(const AccelerationStructureBuildInputs& build_inputs);
-#endif
+    /**
+     * \brief Query the device for buffer sizes required for acceleration structure builds.
+     *
+     * \param desc Acceleration structure build description.
+     * \return Acceleration structure sizes.
+     */
+    AccelerationStructureSizes get_acceleration_structure_sizes(const AccelerationStructureBuildDesc& desc);
 
     ref<AccelerationStructure> create_acceleration_structure(AccelerationStructureDesc desc);
+
+    ref<AccelerationStructureInstanceList> create_acceleration_structure_instance_list(size_t size = 0);
+
+    ref<ShaderTable> create_shader_table(ShaderTableDesc desc);
 
     /**
      * Get coop vec instance
      */
     ref<CoopVec> get_or_create_coop_vec();
 
-
-    ref<ShaderTable> create_shader_table(ShaderTableDesc desc);
 
     /**
      * \brief Create a new slang session.
