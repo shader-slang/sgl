@@ -1,5 +1,4 @@
-# TODO(slang-rhi)
-# add_subdirectory(pathtracer)
+add_subdirectory(pathtracer)
 add_subdirectory(raytracing_pipeline)
 add_subdirectory(raytracing)
 add_subdirectory(render_pipeline)

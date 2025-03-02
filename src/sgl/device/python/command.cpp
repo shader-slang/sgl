@@ -233,24 +233,16 @@ SGL_PY_EXPORT(device_command)
             "offset"_a,
             D_NA(CommandEncoder, resolve_query)
         )
-        // TODO(slang-rhi)
-        // .def(
-        //     "build_acceleration_structure",
-        //     [](CommandEncoder* self,
-        //        const AccelerationStructureBuildInputs& inputs,
-        //        AccelerationStructure* dst,
-        //        DeviceAddress scratch_data,
-        //        AccelerationStructure* src) {
-        //         self->build_acceleration_structure(
-        //             {.inputs = inputs, .src = src, .dst = dst, .scratch_data = scratch_data}
-        //         );
-        //     },
-        //     "inputs"_a,
-        //     "dst"_a,
-        //     "scratch_data"_a,
-        //     "src"_a = nullptr,
-        //     D(CommandEncoder, build_acceleration_structure)
-        // )
+        .def(
+            "build_acceleration_structure",
+            &CommandEncoder::build_acceleration_structure,
+            "desc"_a,
+            "dst"_a,
+            "src"_a.none(),
+            "scratch_buffer"_a,
+            "queries"_a = std::span<AccelerationStructureQueryDesc>(),
+            D_NA(CommandEncoder, build_acceleration_structure)
+        )
         .def(
             "copy_acceleration_structure",
             &CommandEncoder::copy_acceleration_structure,
@@ -435,6 +427,14 @@ SGL_PY_EXPORT(device_command)
         );
 
     nb::class_<RayTracingPassEncoder, PassEncoder>(m, "RayTracingPassEncoder", D_NA(RayTracingPassEncoder))
+        .def("__enter__", [](RayTracingPassEncoder* self) { return self; })
+        .def(
+            "__exit__",
+            [](RayTracingPassEncoder* self, nb::object, nb::object, nb::object) { self->end(); },
+            "exc_type"_a = nb::none(),
+            "exc_value"_a = nb::none(),
+            "traceback"_a = nb::none()
+        )
         .def(
             "bind_pipeline",
             nb::overload_cast<RayTracingPipeline*, ShaderTable*>(&RayTracingPassEncoder::bind_pipeline),

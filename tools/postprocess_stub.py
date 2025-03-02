@@ -9,6 +9,14 @@ import libcst.matchers as m
 # will be generated. If 'False', it will be ignored. If a type
 # is discovered but not in this list it will be treated as an error.
 DESCRIPTOR_CONVERT_TYPES = {
+    "AccelerationStructureBuildDesc": True,
+    "AccelerationStructureBuildInputInstances": True,
+    "AccelerationStructureBuildInputMotionOptions": True,
+    "AccelerationStructureBuildInputProceduralPrimitives": True,
+    "AccelerationStructureBuildInputTriangles": True,
+    "AccelerationStructureDesc": True,
+    "AccelerationStructureInstanceDesc": True,
+    "AccelerationStructureQueryDesc": True,
     "AppDesc": True,
     "AppWindowDesc": True,
     "AspectBlendDesc": True,
@@ -46,13 +54,6 @@ DESCRIPTOR_CONVERT_TYPES = {
     "TextureViewDesc": True,
     "VertexStreamDesc": True,
     "Viewport": True,
-    "AccelerationStructureBuildDesc": True,
-    "AccelerationStructureBuildInputInstances": True,
-    "AccelerationStructureBuildInputTriangles": True,
-    "AccelerationStructureBuildInputProceduralPrimitives": True,
-    "AccelerationStructureBuildInputMotionOptions": True,
-    "AccelerationStructureQueryDesc": True,
-    "AccelerationStructureDesc": True,
 }
 
 QUIET = False

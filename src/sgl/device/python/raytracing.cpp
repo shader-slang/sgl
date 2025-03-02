@@ -8,6 +8,15 @@
 
 namespace sgl {
 
+SGL_DICT_TO_DESC_BEGIN(AccelerationStructureInstanceDesc)
+SGL_DICT_TO_DESC_FIELD(transform, float3x4)
+SGL_DICT_TO_DESC_FIELD(instance_id, uint32_t)
+SGL_DICT_TO_DESC_FIELD(instance_mask, uint32_t)
+SGL_DICT_TO_DESC_FIELD(instance_contribution_to_hit_group_index, uint32_t)
+SGL_DICT_TO_DESC_FIELD(flags, AccelerationStructureInstanceFlags)
+SGL_DICT_TO_DESC_FIELD(acceleration_structure, AccelerationStructureHandle)
+SGL_DICT_TO_DESC_END()
+
 SGL_DICT_TO_DESC_BEGIN(AccelerationStructureBuildInputInstances)
 SGL_DICT_TO_DESC_FIELD(instance_buffer, BufferOffsetPair)
 SGL_DICT_TO_DESC_FIELD(instance_stride, uint32_t)
@@ -83,6 +92,11 @@ SGL_PY_EXPORT(device_raytracing)
         D_NA(AccelerationStructureInstanceDesc)
     )
         .def(nb::init<>())
+        .def(
+            "__init__",
+            [](AccelerationStructureInstanceDesc* self, nb::dict dict)
+            { new (self) AccelerationStructureInstanceDesc(dict_to_AccelerationStructureInstanceDesc(dict)); }
+        )
         .def_rw(
             "transform",
             &AccelerationStructureInstanceDesc::transform,
@@ -109,8 +123,9 @@ SGL_PY_EXPORT(device_raytracing)
         )
         .def_prop_rw(
             "flags",
-            &AccelerationStructureInstanceDesc::flags,
-            &AccelerationStructureInstanceDesc::set_flags,
+            [](AccelerationStructureInstanceDesc& self) { return self.flags; },
+            [](AccelerationStructureInstanceDesc& self, AccelerationStructureInstanceFlags value)
+            { self.flags = value; },
             D_NA(AccelerationStructureInstanceDesc, flags)
         )
         .def_rw(
@@ -126,6 +141,7 @@ SGL_PY_EXPORT(device_raytracing)
                 return nb::ndarray<nb::numpy, const uint8_t, nb::shape<64>>(&self, 1, shape, nb::handle());
             }
         );
+    nb::implicitly_convertible<nb::dict, AccelerationStructureInstanceDesc>();
 
     nb::class_<AccelerationStructureBuildInputInstances>(
         m,
@@ -190,11 +206,11 @@ SGL_PY_EXPORT(device_raytracing)
         .def_rw("flags", &AccelerationStructureBuildInputProceduralPrimitives::flags);
     nb::implicitly_convertible<nb::dict, AccelerationStructureBuildInputProceduralPrimitives>();
 
-    nb::class_<AccelerationStructureBuildInput>(
-        m,
-        "AccelerationStructureBuildInput",
-        D_NA(AccelerationStructureBuildInput)
-    );
+    // nb::class_<AccelerationStructureBuildInput>(
+    //     m,
+    //     "AccelerationStructureBuildInput",
+    //     D_NA(AccelerationStructureBuildInput)
+    // );
 
     nb::class_<AccelerationStructureBuildInputMotionOptions>(
         m,
@@ -226,7 +242,8 @@ SGL_PY_EXPORT(device_raytracing)
         .def(nb::init<>())
         .def(
             "__init__",
-            [](ShaderTableDesc* self, nb::dict dict) { new (self) ShaderTableDesc(dict_to_ShaderTableDesc(dict)); }
+            [](AccelerationStructureBuildDesc* self, nb::dict dict)
+            { new (self) AccelerationStructureBuildDesc(dict_to_AccelerationStructureBuildDesc(dict)); }
         )
         .def_rw("inputs", &AccelerationStructureBuildDesc::inputs, D_NA(AccelerationStructureBuildDesc, inputs))
         .def_rw(
@@ -296,150 +313,51 @@ SGL_PY_EXPORT(device_raytracing)
         .def_rw("label", &AccelerationStructureDesc::label, D_NA(AccelerationStructureDesc, label));
     nb::implicitly_convertible<nb::dict, AccelerationStructureDesc>();
 
-#if 0 // TODO(slang-rhi)
-    nb::sgl_enum<RayTracingGeometryType>(m, "RayTracingGeometryType");
+    nb::class_<AccelerationStructure, DeviceResource>(m, "AccelerationStructure", D(AccelerationStructure))
+        .def_prop_ro("desc", &AccelerationStructure::desc, D_NA(AccelerationStructure, desc))
+        .def_prop_ro("handle", &AccelerationStructure::handle, D_NA(AccelerationStructure, handle));
 
-    nb::class_<RayTracingTrianglesDesc>(m, "RayTracingTrianglesDesc", D(RayTracingTrianglesDesc))
-        .def(nb::init<>())
-        .def_rw("transform3x4", &RayTracingTrianglesDesc::transform3x4, D(RayTracingTrianglesDesc, transform3x4))
-        .def_rw("index_format", &RayTracingTrianglesDesc::index_format, D(RayTracingTrianglesDesc, index_format))
-        .def_rw("vertex_format", &RayTracingTrianglesDesc::vertex_format, D(RayTracingTrianglesDesc, vertex_format))
-        .def_rw("index_count", &RayTracingTrianglesDesc::index_count, D(RayTracingTrianglesDesc, index_count))
-        .def_rw("vertex_count", &RayTracingTrianglesDesc::vertex_count, D(RayTracingTrianglesDesc, vertex_count))
-        .def_rw("index_data", &RayTracingTrianglesDesc::index_data, D(RayTracingTrianglesDesc, index_data))
-        .def_rw("vertex_data", &RayTracingTrianglesDesc::vertex_data, D(RayTracingTrianglesDesc, vertex_data))
-        .def_rw("vertex_stride", &RayTracingTrianglesDesc::vertex_stride, D(RayTracingTrianglesDesc, vertex_stride));
-
-    nb::class_<RayTracingAABB>(m, "RayTracingAABB", D(RayTracingAABB))
-        .def(nb::init<>())
-        .def_rw("min", &RayTracingAABB::min, D(RayTracingAABB, min))
-        .def_rw("max", &RayTracingAABB::max, D(RayTracingAABB, max));
-
-    nb::class_<RayTracingAABBsDesc>(m, "RayTracingAABBsDesc", D(RayTracingAABBsDesc))
-        .def(nb::init<>())
-        .def_rw("count", &RayTracingAABBsDesc::count, D(RayTracingAABBsDesc, count))
-        .def_rw("data", &RayTracingAABBsDesc::data, D(RayTracingAABBsDesc, data))
-        .def_rw("stride", &RayTracingAABBsDesc::stride, D(RayTracingAABBsDesc, stride));
-
-    nb::class_<RayTracingGeometryDesc>(m, "RayTracingGeometryDesc", D(RayTracingGeometryDesc))
-        .def(nb::init<>())
-        .def_rw("type", &RayTracingGeometryDesc::type, D(RayTracingGeometryDesc, type))
-        .def_rw("flags", &RayTracingGeometryDesc::flags, D(RayTracingGeometryDesc, flags))
-        .def_prop_rw(
-            "triangles",
-            [](RayTracingGeometryDesc& self) -> RayTracingTrianglesDesc&
-            {
-                SGL_CHECK(self.type == RayTracingGeometryType::triangles, "geometry type is not triangles");
-                return self.triangles;
-            },
-            [](RayTracingGeometryDesc& self, const RayTracingTrianglesDesc& value)
-            {
-                self.type = RayTracingGeometryType::triangles;
-                self.triangles = value;
-            },
-            nb::rv_policy::reference_internal
-        )
-        .def_prop_rw(
-            "aabbs",
-            [](RayTracingGeometryDesc& self) -> RayTracingAABBsDesc&
-            {
-                SGL_CHECK(
-                    self.type == RayTracingGeometryType::procedural_primitives,
-                    "geometry type is not proecedural_primitives"
-                );
-                return self.aabbs;
-            },
-            [](RayTracingGeometryDesc& self, const RayTracingAABBsDesc& value)
-            {
-                self.type = RayTracingGeometryType::procedural_primitives;
-                self.aabbs = value;
-            }
-        );
-
-
-    nb::sgl_enum<AccelerationStructureKind>(m, "AccelerationStructureKind");
-
-    nb::class_<AccelerationStructureBuildInputs>(m, "AccelerationStructureBuildInputsBase");
-
-    nb::class_<PyAccelerationStructureBuildInputs, AccelerationStructureBuildInputs>(
+    nb::class_<AccelerationStructureInstanceList, DeviceResource>(
         m,
-        "AccelerationStructureBuildInputs",
-        D(AccelerationStructureBuildInputs)
+        "AccelerationStructureInstanceList",
+        D_NA(AccelerationStructureInstanceList)
     )
-        .def(nb::init<>())
-        .def_rw("kind", &PyAccelerationStructureBuildInputs::kind, D(AccelerationStructureBuildInputs, kind))
-        .def_rw("flags", &PyAccelerationStructureBuildInputs::flags, D(AccelerationStructureBuildInputs, flags))
-        .def_rw(
-            "desc_count",
-            &PyAccelerationStructureBuildInputs::desc_count,
-            D(AccelerationStructureBuildInputs, desc_count)
-        )
-        .def_prop_rw(
-            "instance_descs",
-            [](PyAccelerationStructureBuildInputs& self)
-            {
-                SGL_CHECK(self.kind == AccelerationStructureKind::top_level, "kind is not top_level");
-                return self.instance_descs;
-            },
-            [](PyAccelerationStructureBuildInputs& self, DeviceAddress instance_descs)
-            {
-                self.kind = AccelerationStructureKind::top_level;
-                self.instance_descs = instance_descs;
-            },
-            D(AccelerationStructureBuildInputs, instance_descs)
-        )
-        .def_prop_rw(
-            "geometry_descs",
-            [](PyAccelerationStructureBuildInputs& self)
-            {
-                SGL_CHECK(self.kind == AccelerationStructureKind::bottom_level, "kind is not bottom_level");
-                return self.geometry_descs_data;
-            },
-            [](PyAccelerationStructureBuildInputs& self, std::vector<RayTracingGeometryDesc> geometry_descs)
-            {
-                self.kind = AccelerationStructureKind::bottom_level;
-                self.geometry_descs_data = geometry_descs;
-                self.geometry_descs = self.geometry_descs_data.data();
-                self.desc_count = narrow_cast<uint32_t>(geometry_descs.size());
-            },
-            D(AccelerationStructureBuildInputs, geometry_descs)
-        );
-#endif
-
-
-    nb::class_<AccelerationStructure, DeviceResource> acceleration_structure(
-        m,
-        "AccelerationStructure",
-        D(AccelerationStructure)
-    );
-
-#if 0 // TODO(slang-rhi)
-    nb::class_<AccelerationStructurePrebuildInfo>(m, "AccelerationStructurePrebuildInfo")
-        .def_ro(
-            "result_data_max_size",
-            &AccelerationStructurePrebuildInfo::result_data_max_size,
-            D(AccelerationStructurePrebuildInfo, result_data_max_size)
-        )
-        .def_ro(
-            "scratch_data_size",
-            &AccelerationStructurePrebuildInfo::scratch_data_size,
-            D(AccelerationStructurePrebuildInfo, scratch_data_size)
-        )
-        .def_ro(
-            "update_scratch_data_size",
-            &AccelerationStructurePrebuildInfo::update_scratch_data_size,
-            D(AccelerationStructurePrebuildInfo, update_scratch_data_size)
-        );
-
-
-    acceleration_structure //
-        .def("kind", &AccelerationStructure::kind, D(AccelerationStructure, kind))
+        .def_prop_ro("size", &AccelerationStructureInstanceList::size, D_NA(AccelerationStructureInstanceList, size))
         .def_prop_ro(
-            "device_address",
-            &AccelerationStructure::device_address,
-            D(AccelerationStructure, device_address)
+            "instance_stride",
+            &AccelerationStructureInstanceList::instance_stride,
+            D_NA(AccelerationStructureInstanceList, instance_stride)
+        )
+        .def(
+            "resize",
+            &AccelerationStructureInstanceList::resize,
+            "size"_a,
+            D_NA(AccelerationStructureInstanceList, resize)
+        )
+        .def(
+            "write",
+            nb::overload_cast<size_t, const AccelerationStructureInstanceDesc&>(
+                &AccelerationStructureInstanceList::write
+            ),
+            "index"_a,
+            "instance"_a,
+            D_NA(AccelerationStructureInstanceList, write)
+        )
+        .def(
+            "write",
+            nb::overload_cast<size_t, std::span<AccelerationStructureInstanceDesc>>(
+                &AccelerationStructureInstanceList::write
+            ),
+            "index"_a,
+            "instances"_a,
+            D_NA(AccelerationStructureInstanceList, write, 2)
+        )
+        .def("buffer", &AccelerationStructureInstanceList::buffer, D_NA(AccelerationStructureInstanceList, buffer))
+        .def(
+            "build_input_instances",
+            &AccelerationStructureInstanceList::build_input_instances,
+            D_NA(AccelerationStructureInstanceList, build_input_instances)
         );
-#endif
 
     nb::class_<ShaderTableDesc>(m, "ShaderTableDesc", D(ShaderTableDesc))
         .def(nb::init<>())

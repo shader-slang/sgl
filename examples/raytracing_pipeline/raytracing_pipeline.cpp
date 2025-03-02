@@ -24,7 +24,6 @@ int main()
 
     {
         ref<Device> device = Device::create({
-            .type = DeviceType::cuda,
             .enable_debug_layers = true,
             .compiler_options = {.include_paths = {EXAMPLE_DIR}},
         });
@@ -46,14 +45,6 @@ int main()
             .data_size = indices.size() * sizeof(uint32_t),
         });
 
-        float3x4 identity_transform = float3x4::identity();
-        ref<Buffer> transform_buffer = device->create_buffer({
-            .usage = BufferUsage::shader_resource,
-            .label = "transform_buffer",
-            .data = &identity_transform,
-            .data_size = sizeof(identity_transform),
-        });
-
         AccelerationStructureBuildInputTriangles blas_input_triangles{
             .vertex_buffers = {vertex_buffer},
             .vertex_format = Format::rgb32_float,
@@ -64,11 +55,11 @@ int main()
             .index_count = narrow_cast<uint32_t>(indices.size()),
             .flags = AccelerationStructureGeometryFlags::opaque,
         };
+
         AccelerationStructureBuildDesc blas_build_desc{
             .inputs = {blas_input_triangles},
-            .mode = AccelerationStructureBuildMode::build,
-            .flags = AccelerationStructureBuildFlags::none,
         };
+
         AccelerationStructureSizes blas_sizes = device->get_acceleration_structure_sizes(blas_build_desc);
 
         ref<Buffer> blas_scratch_buffer = device->create_buffer({
@@ -90,24 +81,22 @@ int main()
         }
 
         ref<AccelerationStructureInstanceList> instance_list = device->create_acceleration_structure_instance_list(1);
-        (*instance_list)[0] = {
-            .transform = identity_transform,
-            .instance_id = 0,
-            .instance_mask = 0xff,
-            .instance_contribution_to_hit_group_index = 0,
-            .flags_ = AccelerationStructureInstanceFlags::none,
-            .acceleration_structure = blas->handle()};
+        instance_list->write(
+            0,
+            {
+                .transform = float3x4::identity(),
+                .instance_id = 0,
+                .instance_mask = 0xff,
+                .instance_contribution_to_hit_group_index = 0,
+                .flags = AccelerationStructureInstanceFlags::none,
+                .acceleration_structure = blas->handle(),
+            }
+        );
 
-        AccelerationStructureBuildInputInstances tlas_input_instances{
-            .instance_buffer = instance_list->buffer(),
-            .instance_stride = sizeof(AccelerationStructureInstanceDesc),
-            .instance_count = 1,
-        };
         AccelerationStructureBuildDesc tlas_build_desc{
-            .inputs = {tlas_input_instances},
-            .mode = AccelerationStructureBuildMode::build,
-            .flags = AccelerationStructureBuildFlags::none,
+            .inputs = {instance_list->build_input_instances()},
         };
+
         AccelerationStructureSizes tlas_sizes = device->get_acceleration_structure_sizes(tlas_build_desc);
 
         ref<Buffer> tlas_scratch_buffer = device->create_buffer({

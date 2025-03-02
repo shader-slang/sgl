@@ -88,16 +88,6 @@ SGL_DICT_TO_DESC_END()
 
 } // namespace sgl
 
-namespace sgl {
-
-#if 0 // TODO(slang-rhi)
-struct PyAccelerationStructureBuildInputs : AccelerationStructureBuildInputs {
-    std::vector<RayTracingGeometryDesc> geometry_descs_data;
-};
-#endif
-
-} // namespace sgl
-
 SGL_PY_EXPORT(device_types)
 {
     using namespace sgl;

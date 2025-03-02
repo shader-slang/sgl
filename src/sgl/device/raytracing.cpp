@@ -114,27 +114,43 @@ std::string AccelerationStructure::to_string() const
 AccelerationStructureInstanceList::AccelerationStructureInstanceList(ref<Device> device, size_t size)
     : DeviceResource(std::move(device))
 {
+    m_instance_type = rhi::getAccelerationStructureInstanceDescType(static_cast<rhi::DeviceType>(m_device->type()));
+    m_instance_stride = rhi::getAccelerationStructureInstanceDescSize(m_instance_type);
     resize(size);
 }
 
 AccelerationStructureInstanceList::~AccelerationStructureInstanceList() { }
 
+void AccelerationStructureInstanceList::resize(size_t size)
+{
+    m_instances.resize(size);
+    m_dirty = true;
+}
+
+void AccelerationStructureInstanceList::write(size_t index, const AccelerationStructureInstanceDesc& instance)
+{
+    m_instances[index] = instance;
+    m_dirty = true;
+}
+
+void AccelerationStructureInstanceList::write(size_t index, std::span<AccelerationStructureInstanceDesc> instances)
+{
+    std::copy(instances.begin(), instances.end(), m_instances.begin() + index);
+    m_dirty = true;
+}
+
 ref<Buffer> AccelerationStructureInstanceList::buffer() const
 {
     if (m_dirty) {
-        rhi::AccelerationStructureInstanceDescType native_type
-            = rhi::getAccelerationStructureInstanceDescType(static_cast<rhi::DeviceType>(m_device->type()));
-        size_t native_stride = rhi::getAccelerationStructureInstanceDescSize(native_type);
-
-        size_t native_size = m_instances.size() * native_stride;
+        size_t native_size = m_instances.size() * m_instance_stride;
 
         std::unique_ptr<uint8_t[]> native_descs(new uint8_t[native_size]);
 
         rhi::convertAccelerationStructureInstanceDescs(
             m_instances.size(),
-            native_type,
+            m_instance_type,
             native_descs.get(),
-            native_stride,
+            m_instance_stride,
             reinterpret_cast<const rhi::AccelerationStructureInstanceDescGeneric*>(m_instances.data()),
             sizeof(rhi::AccelerationStructureInstanceDescGeneric)
         );
@@ -149,6 +165,15 @@ ref<Buffer> AccelerationStructureInstanceList::buffer() const
     }
 
     return m_buffer;
+}
+
+AccelerationStructureBuildInputInstances AccelerationStructureInstanceList::build_input_instances() const
+{
+    return AccelerationStructureBuildInputInstances{
+        .instance_buffer = BufferOffsetPair{buffer(), 0},
+        .instance_stride = narrow_cast<uint32_t>(m_instance_stride),
+        .instance_count = narrow_cast<uint32_t>(m_instances.size()),
+    };
 }
 
 std::string AccelerationStructureInstanceList::to_string() const

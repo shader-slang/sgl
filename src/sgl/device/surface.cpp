@@ -61,14 +61,15 @@ ref<Texture> Surface::get_current_texture()
 {
     Slang::ComPtr<rhi::ITexture> texture;
     SLANG_CALL(m_rhi_surface->getCurrentTexture(texture.writeRef()));
+    rhi::TextureDesc texture_desc = texture->getDesc();
     return m_device->create_texture_from_resource(
         {
             .type = TextureType::texture_2d,
-            .format = m_config.format,
-            .width = m_config.width,
-            .height = m_config.height,
-            .mip_count = 1,
-            .usage = m_config.usage,
+            .format = static_cast<Format>(texture_desc.format),
+            .width = narrow_cast<uint32_t>(texture_desc.size.width),
+            .height = narrow_cast<uint32_t>(texture_desc.size.height),
+            .mip_count = texture_desc.mipLevelCount,
+            .usage = static_cast<TextureUsage>(m_config.usage),
         },
         texture
     );

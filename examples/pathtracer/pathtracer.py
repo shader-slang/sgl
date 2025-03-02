@@ -453,12 +453,6 @@ class Scene:
             data=np.stack([t.to_numpy() for t in self.inverse_transpose_transforms]),
         )
 
-        self.identity_buffer = device.create_buffer(
-            usage=sgl.BufferUsage.shader_resource,
-            label="identity_buffer",
-            data=sgl.float3x4.identity().to_numpy(),
-        )
-
         # Build BLASes
         self.blases = [self.build_blas(mesh_desc) for mesh_desc in self.mesh_descs]
 
@@ -466,118 +460,93 @@ class Scene:
         self.tlas = self.build_tlas()
 
     def build_blas(self, mesh_desc: MeshDesc):
-        blas_geometry_desc = sgl.RayTracingGeometryDesc()
-        blas_geometry_desc.type = sgl.RayTracingGeometryType.triangles
-        blas_geometry_desc.flags = sgl.RayTracingGeometryFlags.opaque
-        blas_geometry_desc.triangles.transform3x4 = self.identity_buffer.device_address
-        blas_geometry_desc.triangles.index_format = sgl.Format.r32_uint
-        blas_geometry_desc.triangles.vertex_format = sgl.Format.rgb32_float
-        blas_geometry_desc.triangles.index_count = mesh_desc.index_count
-        blas_geometry_desc.triangles.vertex_count = mesh_desc.vertex_count
-        blas_geometry_desc.triangles.index_data = (
-            self.index_buffer.device_address + mesh_desc.index_offset * 4
+        build_input = sgl.AccelerationStructureBuildInputTriangles(
+            {
+                "vertex_buffers": [
+                    {
+                        "buffer": self.vertex_buffer,
+                        "offset": mesh_desc.vertex_offset * 32,
+                    }
+                ],
+                "vertex_format": sgl.Format.rgb32_float,
+                "vertex_count": mesh_desc.vertex_count,
+                "vertex_stride": 32,
+                "index_buffer": {
+                    "buffer": self.index_buffer,
+                    "offset": mesh_desc.index_offset * 4,
+                },
+                "index_format": sgl.IndexFormat.uint32,
+                "index_count": mesh_desc.index_count,
+                "flags": sgl.AccelerationStructureGeometryFlags.opaque,
+            }
         )
-        blas_geometry_desc.triangles.vertex_data = (
-            self.vertex_buffer.device_address + mesh_desc.vertex_offset * 32
-        )
-        blas_geometry_desc.triangles.vertex_stride = 32
 
-        blas_build_inputs = sgl.AccelerationStructureBuildInputs()
-        blas_build_inputs.kind = sgl.AccelerationStructureKind.bottom_level
-        blas_build_inputs.flags = sgl.AccelerationStructureBuildFlags.none
-        blas_build_inputs.geometry_descs = [blas_geometry_desc]
+        build_desc = sgl.AccelerationStructureBuildDesc({"inputs": [build_input]})
 
-        blas_prebuild_info = self.device.get_acceleration_structure_prebuild_info(
-            blas_build_inputs
-        )
+        sizes = self.device.get_acceleration_structure_sizes(build_desc)
 
         blas_scratch_buffer = self.device.create_buffer(
-            size=blas_prebuild_info.scratch_data_size,
+            size=sizes.scratch_size,
             usage=sgl.BufferUsage.unordered_access,
             label="blas_scratch_buffer",
         )
 
-        blas_buffer = self.device.create_buffer(
-            size=blas_prebuild_info.result_data_max_size,
-            usage=sgl.BufferUsage.acceleration_structure,
-            label="blas_buffer",
-        )
-
         blas = self.device.create_acceleration_structure(
-            kind=sgl.AccelerationStructureKind.bottom_level,
-            buffer=blas_buffer,
-            size=blas_buffer.size,
+            size=sizes.acceleration_structure_size,
+            label="blas",
         )
 
-        command_buffer = self.device.create_command_buffer()
-        with command_buffer.encode_ray_tracing_commands() as encoder:
-            encoder.build_acceleration_structure(
-                inputs=blas_build_inputs,
-                dst=blas,
-                scratch_data=blas_scratch_buffer.device_address,
-            )
-        command_buffer.submit()
+        command_encoder = self.device.create_command_encoder()
+        command_encoder.build_acceleration_structure(
+            desc=build_desc, dst=blas, src=None, scratch_buffer=blas_scratch_buffer
+        )
+        self.device.submit_command_buffer(command_encoder.finish())
 
         return blas
 
     def build_tlas(self):
-        rt_instance_descs = []
+        instance_list = self.device.create_acceleration_structure_instance_list(
+            size=len(self.instance_descs)
+        )
         for instance_id, instance_desc in enumerate(self.instance_descs):
-            rt_instance_desc = sgl.RayTracingInstanceDesc()
-            rt_instance_desc.transform = sgl.float3x4(
-                self.transforms[instance_desc.transform_id]
+            instance_list.write(
+                instance_id,
+                {
+                    "transform": sgl.float3x4(
+                        self.transforms[instance_desc.transform_id]
+                    ),
+                    "instance_id": instance_id,
+                    "instance_mask": 0xFF,
+                    "instance_contribution_to_hit_group_index": 0,
+                    "flags": sgl.AccelerationStructureInstanceFlags.none,
+                    "acceleration_structure": self.blases[instance_desc.mesh_id].handle,
+                },
             )
-            rt_instance_desc.instance_id = instance_id
-            rt_instance_desc.instance_mask = 0xFF
-            rt_instance_desc.instance_contribution_to_hit_group_index = 0
-            rt_instance_desc.flags = sgl.RayTracingInstanceFlags.none
-            rt_instance_desc.acceleration_structure = self.blases[
-                instance_desc.mesh_id
-            ].device_address
-            rt_instance_descs.append(rt_instance_desc)
 
-        rt_instance_buffer = self.device.create_buffer(
-            usage=sgl.BufferUsage.shader_resource,
-            label="rt_instance_buffer",
-            data=np.stack([i.to_numpy() for i in rt_instance_descs]),
+        build_desc = sgl.AccelerationStructureBuildDesc(
+            {
+                "inputs": [instance_list.build_input_instances()],
+            }
         )
 
-        tlas_build_inputs = sgl.AccelerationStructureBuildInputs()
-        tlas_build_inputs.kind = sgl.AccelerationStructureKind.top_level
-        tlas_build_inputs.flags = sgl.AccelerationStructureBuildFlags.none
-        tlas_build_inputs.desc_count = len(rt_instance_descs)
-        tlas_build_inputs.instance_descs = rt_instance_buffer.device_address
-
-        tlas_prebuild_info = self.device.get_acceleration_structure_prebuild_info(
-            tlas_build_inputs
-        )
+        sizes = self.device.get_acceleration_structure_sizes(build_desc)
 
         tlas_scratch_buffer = self.device.create_buffer(
-            size=tlas_prebuild_info.scratch_data_size,
+            size=sizes.scratch_size,
             usage=sgl.BufferUsage.unordered_access,
             label="tlas_scratch_buffer",
         )
 
-        tlas_buffer = self.device.create_buffer(
-            size=tlas_prebuild_info.result_data_max_size,
-            usage=sgl.BufferUsage.acceleration_structure,
-            label="tlas_buffer",
-        )
-
         tlas = self.device.create_acceleration_structure(
-            kind=sgl.AccelerationStructureKind.top_level,
-            buffer=tlas_buffer,
-            size=tlas_buffer.size,
+            size=sizes.acceleration_structure_size,
+            label="tlas",
         )
 
-        command_buffer = self.device.create_command_buffer()
-        with command_buffer.encode_ray_tracing_commands() as encoder:
-            encoder.build_acceleration_structure(
-                inputs=tlas_build_inputs,
-                dst=tlas,
-                scratch_data=tlas_scratch_buffer.device_address,
-            )
-        command_buffer.submit()
+        command_encoder = self.device.create_command_encoder()
+        command_encoder.build_acceleration_structure(
+            desc=build_desc, dst=tlas, src=None, scratch_buffer=tlas_scratch_buffer
+        )
+        self.device.submit_command_buffer(command_encoder.finish())
 
         return tlas
 
@@ -605,7 +574,7 @@ class PathTracer:
         self.pipeline = self.device.create_compute_pipeline(self.program)
 
     def execute(
-        self, command_buffer: sgl.CommandBuffer, output: sgl.Texture, frame: int
+        self, command_encoder: sgl.CommandEncoder, output: sgl.Texture, frame: int
     ):
         w = output.width
         h = output.height
@@ -614,13 +583,13 @@ class PathTracer:
         self.scene.camera.height = h
         self.scene.camera.recompute()
 
-        with command_buffer.encode_compute_commands() as encoder:
-            shader_object = encoder.bind_pipeline(self.pipeline)
+        with command_encoder.begin_compute_pass() as pass_encoder:
+            shader_object = pass_encoder.bind_pipeline(self.pipeline)
             cursor = sgl.ShaderCursor(shader_object)
             cursor.g_output = output
             cursor.g_frame = frame
             self.scene.bind(cursor.g_scene)
-            encoder.dispatch(thread_count=[w, h, 1])
+            pass_encoder.dispatch(thread_count=[w, h, 1])
 
 
 class Accumulator:
@@ -633,7 +602,7 @@ class Accumulator:
 
     def execute(
         self,
-        command_buffer: sgl.CommandBuffer,
+        command_encoder: sgl.CommandEncoder,
         input: sgl.Texture,
         output: sgl.Texture,
         reset: bool = False,
@@ -662,7 +631,7 @@ class Accumulator:
                     "reset": reset,
                 }
             },
-            command_buffer=command_buffer,
+            command_encoder=command_encoder,
         )
 
 
@@ -674,7 +643,10 @@ class ToneMapper:
         self.kernel = self.device.create_compute_kernel(self.program)
 
     def execute(
-        self, command_buffer: sgl.CommandBuffer, input: sgl.Texture, output: sgl.Texture
+        self,
+        command_encoder: sgl.CommandEncoder,
+        input: sgl.Texture,
+        output: sgl.Texture,
     ):
         self.kernel.dispatch(
             thread_count=[input.width, input.height, 1],
@@ -684,7 +656,7 @@ class ToneMapper:
                     "output": output,
                 }
             },
-            command_buffer=command_buffer,
+            command_encoder=command_encoder,
         )
 
 
@@ -698,11 +670,9 @@ class App:
             enable_debug_layers=False,
             compiler_options={"include_paths": [EXAMPLE_DIR]},
         )
-        self.swapchain = self.device.create_swapchain(
-            width=self.window.width,
-            height=self.window.height,
-            window=self.window,
-            enable_vsync=False,
+        self.surface = self.device.create_surface(self.window)
+        self.surface.configure(
+            {"width": self.window.width, "height": self.window.height}
         )
 
         self.render_texture: sgl.Texture = None  # type: ignore (will be set immediately)
@@ -745,7 +715,7 @@ class App:
 
     def on_resize(self, width: int, height: int):
         self.device.wait()
-        self.swapchain.resize(width, height)
+        self.surface.configure({"width": width, "height": height})
 
     def main_loop(self):
         frame = 0
@@ -759,20 +729,19 @@ class App:
             if self.camera_controller.update(dt):
                 frame = 0
 
-            index = self.swapchain.acquire_next_image()
-            if index < 0:
+            surface_texture = self.surface.get_current_texture()
+            if not surface_texture:
                 continue
 
-            image = self.swapchain.get_image(index)
             if (
                 self.output_texture == None
-                or self.output_texture.width != image.width
-                or self.output_texture.height != image.height
+                or self.output_texture.width != surface_texture.width
+                or self.output_texture.height != surface_texture.height
             ):
                 self.output_texture = self.device.create_texture(
                     format=sgl.Format.rgba32_float,
-                    width=image.width,
-                    height=image.height,
+                    width=surface_texture.width,
+                    height=surface_texture.height,
                     mip_count=1,
                     usage=sgl.TextureUsage.shader_resource
                     | sgl.TextureUsage.unordered_access,
@@ -780,8 +749,8 @@ class App:
                 )
                 self.render_texture = self.device.create_texture(
                     format=sgl.Format.rgba32_float,
-                    width=image.width,
-                    height=image.height,
+                    width=surface_texture.width,
+                    height=surface_texture.height,
                     mip_count=1,
                     usage=sgl.TextureUsage.shader_resource
                     | sgl.TextureUsage.unordered_access,
@@ -789,30 +758,29 @@ class App:
                 )
                 self.accum_texture = self.device.create_texture(
                     format=sgl.Format.rgba32_float,
-                    width=image.width,
-                    height=image.height,
+                    width=surface_texture.width,
+                    height=surface_texture.height,
                     mip_count=1,
                     usage=sgl.TextureUsage.shader_resource
                     | sgl.TextureUsage.unordered_access,
                     label="accum_texture",
                 )
 
-            command_buffer = self.device.create_command_buffer()
+            command_encoder = self.device.create_command_encoder()
 
-            self.path_tracer.execute(command_buffer, self.render_texture, frame)
+            self.path_tracer.execute(command_encoder, self.render_texture, frame)
             self.accumulator.execute(
-                command_buffer, self.render_texture, self.accum_texture, frame == 0
+                command_encoder, self.render_texture, self.accum_texture, frame == 0
             )
             self.tone_mapper.execute(
-                command_buffer, self.accum_texture, self.output_texture
+                command_encoder, self.accum_texture, self.output_texture
             )
 
-            command_buffer.blit(image, self.output_texture)
-            command_buffer.set_texture_state(image, sgl.ResourceState.present)
-            command_buffer.submit()
-            del image
+            command_encoder.blit(surface_texture, self.output_texture)
+            self.device.submit_command_buffer(command_encoder.finish())
+            del surface_texture
 
-            self.swapchain.present()
+            self.surface.present()
 
             self.device.run_garbage_collection()
 

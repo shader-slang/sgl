@@ -96,9 +96,8 @@ void Blitter::blit(CommandEncoder* command_encoder, TextureView* dst, TextureVie
 
 void Blitter::blit(CommandEncoder* command_encoder, Texture* dst, Texture* src, TextureFilteringMode filter)
 {
-    // TODO(slang-rhi)
-    SGL_UNUSED(command_encoder, dst, src, filter);
-    SGL_UNIMPLEMENTED();
+    // TODO(slang-rhi) use default views when available
+    blit(command_encoder, dst->create_view({}), src->create_view({}), filter);
 }
 
 void Blitter::generate_mips(CommandEncoder* command_encoder, Texture* texture, uint32_t array_layer)

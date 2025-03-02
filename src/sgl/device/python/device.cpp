@@ -545,26 +545,12 @@ SGL_PY_EXPORT(device_device)
         "desc"_a,
         D(Device, create_acceleration_structure)
     );
-    // TODO(slang-rhi)
-#if 0
     device.def(
-        "create_acceleration_structure",
-        [](Device* self, AccelerationStructureKind kind, ref<Buffer> buffer, DeviceOffset offset, DeviceSize size)
-        {
-            return self->create_acceleration_structure({
-                .kind = kind,
-                .buffer = std::move(buffer),
-                .offset = offset,
-                .size = size,
-            });
-        },
-        "kind"_a,
-        "buffer"_a,
-        "offset"_a = 0,
-        "size"_a = 0,
-        D(Device, create_acceleration_structure)
+        "create_acceleration_structure_instance_list",
+        &Device::create_acceleration_structure_instance_list,
+        "size"_a,
+        D_NA(Device, create_acceleration_structure_instance_list)
     );
-#endif
     device.def(
         "create_shader_table",
         [](Device* self,

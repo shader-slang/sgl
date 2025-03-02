@@ -45,6 +45,33 @@ SGL_PY_EXPORT(device_surface)
     nb::class_<Surface, Object>(m, "Surface", D_NA(Surface))
         .def_prop_ro("info", &Surface::info, D_NA(Surface, info))
         .def_prop_ro("config", &Surface::config, D_NA(Surface, config))
+        .def(
+            "configure",
+            [](Surface* self,
+               uint32_t width,
+               uint32_t height,
+               Format format,
+               TextureUsage usage,
+               uint32_t desired_image_count,
+               bool vsync)
+            {
+                self->configure({
+                    .format = format,
+                    .usage = usage,
+                    .width = width,
+                    .height = height,
+                    .desired_image_count = desired_image_count,
+                    .vsync = vsync,
+                });
+            },
+            "width"_a,
+            "height"_a,
+            "format"_a = SurfaceConfig().format,
+            "usage"_a = SurfaceConfig().usage,
+            "desired_image_count"_a = SurfaceConfig().desired_image_count,
+            "vsync"_a = SurfaceConfig().vsync,
+            D_NA(Surface, configure)
+        )
         .def("configure", &Surface::configure, "config"_a, D_NA(Surface, configure))
         .def("get_current_texture", &Surface::get_current_texture, D_NA(Surface, get_current_texture))
         .def("present", &Surface::present, D_NA(Surface, present));

@@ -358,7 +358,7 @@ public:
 
     ref<AccelerationStructure> create_acceleration_structure(AccelerationStructureDesc desc);
 
-    ref<AccelerationStructureInstanceList> create_acceleration_structure_instance_list(size_t size = 0);
+    ref<AccelerationStructureInstanceList> create_acceleration_structure_instance_list(size_t size);
 
     ref<ShaderTable> create_shader_table(ShaderTableDesc desc);
 
