@@ -26,10 +26,6 @@ target_link_libraries(d3d12 INTERFACE dxgi.lib d3d12.lib dxguid.lib)
 set(FMT_INSTALL OFF)
 add_subdirectory(fmt)
 
-# vulkan-headers
-
-add_subdirectory(vulkan-headers)
-
 # glfw
 
 set(GLFW_BUILD_EXAMPLES OFF)

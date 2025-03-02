@@ -339,7 +339,7 @@ target_link_libraries(sgl
         fmt::fmt
         slang
         slang-rhi
-        Vulkan::Headers
+        slang-rhi-vulkan-headers
         header_only
         $<$<NOT:$<BOOL:${SGL_USE_DYNAMIC_CUDA}>>:CUDA::cuda_driver>
         sgl_data
