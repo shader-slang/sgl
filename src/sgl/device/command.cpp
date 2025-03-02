@@ -578,39 +578,6 @@ void CommandEncoder::build_acceleration_structure(
     );
 }
 
-
-#if 0
-void CommandEncoder::build_acceleration_structure(
-    const AccelerationStructureBuildDesc& desc,
-    std::span<AccelerationStructureQueryDesc> queries
-)
-{
-    rhi::IAccelerationStructure::BuildDesc rhi_build_desc{
-        .inputs = reinterpret_cast<const rhi::IAccelerationStructure::BuildInputs&>(desc.inputs),
-        .source = desc.src ? desc.src->rhi_acceleration_structure() : nullptr,
-        .dest = desc.dst ? desc.dst->rhi_acceleration_structure() : nullptr,
-        .scratchData = desc.scratch_data,
-    };
-
-    short_vector<rhi::AccelerationStructureQueryDesc, 16> rhi_query_descs(queries.size(), {});
-    for (size_t i = 0; i < queries.size(); i++) {
-        rhi_query_descs[i] = {
-            .queryType = static_cast<rhi::QueryType>(queries[i].query_type),
-            .queryPool = queries[i].query_pool->rhi_query_pool(),
-            .firstQueryIndex = narrow_cast<rhi::GfxIndex>(queries[i].first_query_index),
-        };
-    }
-
-    m_rhi_ray_tracing_command_encoder->buildAccelerationStructure(
-        rhi_build_desc,
-        narrow_cast<rhi::GfxCount>(rhi_query_descs.size()),
-        rhi_query_descs.data()
-    );
-
-    m_rhi_command_encoder->buildAccelerationStructure()
-}
-#endif
-
 void CommandEncoder::copy_acceleration_structure(
     AccelerationStructure* dst,
     AccelerationStructure* src,
@@ -785,66 +752,12 @@ std::string CommandBuffer::to_string() const
     );
 }
 
-
+// TODO(slang-rhi)
 #if 0
 
 // ----------------------------------------------------------------------------
 // ComputeCommandEncoder
 // ----------------------------------------------------------------------------
-
-ComputeCommandEncoder::~ComputeCommandEncoder()
-{
-    end();
-}
-
-void ComputeCommandEncoder::end()
-{
-    if (m_command_buffer) {
-        m_command_buffer->end_encoder();
-        m_command_buffer = nullptr;
-    }
-}
-
-ref<TransientShaderObject> ComputeCommandEncoder::bind_pipeline(const ComputePipeline* pipeline)
-{
-    SGL_CHECK_NOT_NULL(pipeline);
-
-    m_bound_pipeline = pipeline;
-    rhi::IShaderObject* rhi_shader_object;
-    SLANG_CALL(m_rhi_compute_command_encoder->bindPipeline(pipeline->rhi_pipeline(), &rhi_shader_object));
-    ref<TransientShaderObject> transient_shader_object
-        = make_ref<TransientShaderObject>(ref<Device>(m_command_buffer->device()), rhi_shader_object, m_command_buffer);
-    if (m_command_buffer->device()->debug_printer())
-        m_command_buffer->device()->debug_printer()->bind(ShaderCursor(transient_shader_object));
-    m_bound_shader_object = transient_shader_object;
-    return transient_shader_object;
-}
-
-void ComputeCommandEncoder::bind_pipeline(const ComputePipeline* pipeline, const ShaderObject* shader_object)
-{
-    SGL_CHECK_NOT_NULL(pipeline);
-    SGL_CHECK_NOT_NULL(shader_object);
-
-    m_bound_pipeline = pipeline;
-    // TODO we should probably take shader_object by ref<const ShaderObject>
-    // alternatively we could process CUDA buffers at bind time
-    m_bound_shader_object = ref<const ShaderObject>(shader_object);
-    static_cast<const MutableShaderObject*>(shader_object)->set_resource_states(m_command_buffer);
-    SLANG_CALL(m_rhi_compute_command_encoder
-                   ->bindPipelineWithRootObject(pipeline->rhi_pipeline(), shader_object->rhi_shader_object()));
-}
-
-void ComputeCommandEncoder::dispatch(uint3 thread_count)
-{
-    SGL_CHECK(m_bound_pipeline, "No pipeline bound");
-
-    uint3 thread_group_size = m_bound_pipeline->thread_group_size();
-    uint3 thread_group_count{
-        div_round_up(thread_count.x, thread_group_size.x),
-        div_round_up(thread_count.y, thread_group_size.y),
-        div_round_up(thread_count.z, thread_group_size.z)};
-    dispatch_thread_groups(thread_group_count);
-}
 
 void ComputeCommandEncoder::dispatch_thread_groups(uint3 thread_group_count)
 {
@@ -869,105 +782,6 @@ void ComputeCommandEncoder::dispatch_thread_groups_indirect(const Buffer* cmd_bu
 // RenderCommandEncoder
 // ----------------------------------------------------------------------------
 
-RenderCommandEncoder::~RenderCommandEncoder()
-{
-    end();
-}
-
-void RenderCommandEncoder::end()
-{
-    if (m_command_buffer) {
-        m_command_buffer->end_encoder();
-        m_command_buffer = nullptr;
-    }
-}
-
-ref<TransientShaderObject> RenderCommandEncoder::bind_pipeline(const GraphicsPipeline* pipeline)
-{
-    SGL_CHECK_NOT_NULL(pipeline);
-
-    m_bound_pipeline = pipeline;
-    rhi::IShaderObject* rhi_shader_object;
-    SLANG_CALL(m_rhi_render_command_encoder->bindPipeline(pipeline->rhi_pipeline(), &rhi_shader_object));
-    ref<TransientShaderObject> transient_shader_object
-        = make_ref<TransientShaderObject>(ref<Device>(m_command_buffer->device()), rhi_shader_object, m_command_buffer);
-    if (m_command_buffer->device()->debug_printer())
-        m_command_buffer->device()->debug_printer()->bind(ShaderCursor(transient_shader_object));
-    m_bound_shader_object = transient_shader_object;
-    return transient_shader_object;
-}
-
-void RenderCommandEncoder::bind_pipeline(const GraphicsPipeline* pipeline, const ShaderObject* shader_object)
-{
-    SGL_CHECK_NOT_NULL(pipeline);
-    SGL_CHECK_NOT_NULL(shader_object);
-
-    m_bound_pipeline = pipeline;
-    m_bound_shader_object = ref<const ShaderObject>(shader_object);
-    static_cast<const MutableShaderObject*>(shader_object)->set_resource_states(m_command_buffer);
-    SLANG_CALL(m_rhi_render_command_encoder
-                   ->bindPipelineWithRootObject(pipeline->rhi_pipeline(), shader_object->rhi_shader_object()));
-}
-
-void RenderCommandEncoder::set_viewports(std::span<Viewport> viewports)
-{
-    m_rhi_render_command_encoder->setViewports(
-        narrow_cast<rhi::GfxCount>(viewports.size()),
-        reinterpret_cast<const rhi::Viewport*>(viewports.data())
-    );
-}
-
-void RenderCommandEncoder::set_scissor_rects(std::span<ScissorRect> scissor_rects)
-{
-    m_rhi_render_command_encoder->setScissorRects(
-        narrow_cast<rhi::GfxCount>(scissor_rects.size()),
-        reinterpret_cast<const rhi::ScissorRect*>(scissor_rects.data())
-    );
-}
-
-void RenderCommandEncoder::set_viewport_and_scissor_rect(const Viewport& viewport)
-{
-    m_rhi_render_command_encoder->setViewportAndScissor(reinterpret_cast<const rhi::Viewport&>(viewport));
-}
-
-void RenderCommandEncoder::set_primitive_topology(PrimitiveTopology topology)
-{
-    m_rhi_render_command_encoder->setPrimitiveTopology(static_cast<rhi::PrimitiveTopology>(topology));
-}
-
-void RenderCommandEncoder::set_stencil_reference(uint32_t reference_value)
-{
-    m_rhi_render_command_encoder->setStencilReference(reference_value);
-}
-
-void RenderCommandEncoder::set_vertex_buffers(uint32_t start_slot, std::span<Slot> slots)
-{
-    short_vector<rhi::IBufferResource*, 16> rhi_buffers(slots.size(), nullptr);
-    short_vector<rhi::Offset, 16> rhi_offsets(slots.size(), 0);
-    for (size_t i = 0; i < slots.size(); i++) {
-        rhi_buffers[i] = slots[i].buffer->rhi_buffer();
-        rhi_offsets[i] = slots[i].offset;
-    }
-    m_rhi_render_command_encoder->setVertexBuffers(
-        start_slot,
-        narrow_cast<rhi::GfxCount>(slots.size()),
-        rhi_buffers.data(),
-        rhi_offsets.data()
-    );
-}
-
-void RenderCommandEncoder::set_vertex_buffer(uint32_t slot, const Buffer* buffer, DeviceOffset offset)
-{
-    rhi::IBufferResource* rhi_buffer = buffer->rhi_buffer();
-    m_rhi_render_command_encoder->setVertexBuffer(slot, rhi_buffer, offset);
-}
-
-void RenderCommandEncoder::set_index_buffer(const Buffer* buffer, Format index_format, DeviceOffset offset)
-{
-    m_rhi_render_command_encoder
-        ->setIndexBuffer(buffer->rhi_buffer(), static_cast<rhi::Format>(index_format), offset);
-}
-
 void RenderCommandEncoder::draw(uint32_t vertex_count, uint32_t start_vertex)
 {
     SGL_CHECK(m_bound_pipeline, "No pipeline bound");
@@ -986,121 +800,9 @@ void RenderCommandEncoder::draw_indexed(uint32_t index_count, uint32_t start_ind
     SLANG_CALL(m_rhi_render_command_encoder->drawIndexed(index_count, start_index, base_vertex));
 }
 
-void RenderCommandEncoder::draw_instanced(
-    uint32_t vertex_count,
-    uint32_t instance_count,
-    uint32_t start_vertex,
-    uint32_t start_instance
-)
-{
-    SGL_CHECK(m_bound_pipeline, "No pipeline bound");
-
-    m_bound_shader_object->get_cuda_interop_buffers(m_command_buffer->m_cuda_interop_buffers);
-
-    SLANG_CALL(m_rhi_render_command_encoder->drawInstanced(vertex_count, instance_count, start_vertex, start_instance));
-}
-
-void RenderCommandEncoder::draw_indexed_instanced(
-    uint32_t index_count,
-    uint32_t instance_count,
-    uint32_t start_index,
-    uint32_t base_vertex,
-    uint32_t start_instance
-)
-{
-    SGL_CHECK(m_bound_pipeline, "No pipeline bound");
-
-    m_bound_shader_object->get_cuda_interop_buffers(m_command_buffer->m_cuda_interop_buffers);
-
-    SLANG_CALL(m_rhi_render_command_encoder
-                   ->drawIndexedInstanced(index_count, instance_count, start_index, base_vertex, start_instance));
-}
-
-void RenderCommandEncoder::draw_indirect(
-    uint32_t max_draw_count,
-    const Buffer* arg_buffer,
-    DeviceOffset arg_offset,
-    const Buffer* count_buffer,
-    DeviceOffset count_offset
-)
-{
-    SGL_CHECK(m_bound_pipeline, "No pipeline bound");
-
-    m_bound_shader_object->get_cuda_interop_buffers(m_command_buffer->m_cuda_interop_buffers);
-
-    SLANG_CALL(m_rhi_render_command_encoder->drawIndirect(
-        max_draw_count,
-        arg_buffer->rhi_buffer(),
-        arg_offset,
-        count_buffer ? count_buffer->rhi_buffer() : nullptr,
-        count_offset
-    ));
-}
-
-void RenderCommandEncoder::draw_indexed_indirect(
-    uint32_t max_draw_count,
-    const Buffer* arg_buffer,
-    DeviceOffset arg_offset,
-    const Buffer* count_buffer,
-    DeviceOffset count_offset
-)
-{
-    SGL_CHECK(m_bound_pipeline, "No pipeline bound");
-
-    m_bound_shader_object->get_cuda_interop_buffers(m_command_buffer->m_cuda_interop_buffers);
-
-    SLANG_CALL(m_rhi_render_command_encoder->drawIndexedIndirect(
-        max_draw_count,
-        arg_buffer->rhi_buffer(),
-        arg_offset,
-        count_buffer ? count_buffer->rhi_buffer() : nullptr,
-        count_offset
-    ));
-}
-
 // ----------------------------------------------------------------------------
 // RayTracingCommandEncoder
 // ----------------------------------------------------------------------------
-
-RayTracingCommandEncoder::~RayTracingCommandEncoder()
-{
-    end();
-}
-
-void RayTracingCommandEncoder::end()
-{
-    if (m_command_buffer) {
-        m_command_buffer->end_encoder();
-        m_command_buffer = nullptr;
-    }
-}
-
-ref<TransientShaderObject> RayTracingCommandEncoder::bind_pipeline(const RayTracingPipeline* pipeline)
-{
-    SGL_CHECK_NOT_NULL(pipeline);
-
-    m_bound_pipeline = pipeline;
-    rhi::IShaderObject* rhi_shader_object;
-    SLANG_CALL(m_rhi_ray_tracing_command_encoder->bindPipeline(pipeline->rhi_pipeline(), &rhi_shader_object));
-    ref<TransientShaderObject> transient_shader_object
-        = make_ref<TransientShaderObject>(ref<Device>(m_command_buffer->device()), rhi_shader_object, m_command_buffer);
-    if (m_command_buffer->device()->debug_printer())
-        m_command_buffer->device()->debug_printer()->bind(ShaderCursor(transient_shader_object));
-    m_bound_shader_object = transient_shader_object;
-    return transient_shader_object;
-}
-
-void RayTracingCommandEncoder::bind_pipeline(const RayTracingPipeline* pipeline, const ShaderObject* shader_object)
-{
-    SGL_CHECK_NOT_NULL(pipeline);
-    SGL_CHECK_NOT_NULL(shader_object);
-
-    m_bound_pipeline = pipeline;
-    m_bound_shader_object = ref<const ShaderObject>(shader_object);
-    static_cast<const MutableShaderObject*>(shader_object)->set_resource_states(m_command_buffer);
-    SLANG_CALL(m_rhi_ray_tracing_command_encoder
-                   ->bindPipelineWithRootObject(pipeline->rhi_pipeline(), shader_object->rhi_shader_object()));
-}
 
 void RayTracingCommandEncoder::dispatch_rays(
     uint32_t ray_gen_shader_index,
@@ -1123,109 +825,6 @@ void RayTracingCommandEncoder::dispatch_rays(
 }
 
 
-// ----------------------------------------------------------------------------
-// CommandBuffer
-// ----------------------------------------------------------------------------
-
-CommandBuffer::CommandBuffer(ref<Device> device)
-    : DeviceResource(std::move(device))
-{
-    open();
-}
-
-CommandBuffer::~CommandBuffer()
-{
-    close();
-}
-
-void CommandBuffer::open()
-{
-    if (m_open)
-        return;
-
-    m_device->_set_open_command_buffer(this);
-
-    m_rhi_transient_resource_heap = m_device->_get_or_create_transient_resource_heap();
-    SLANG_CALL(m_rhi_transient_resource_heap->createCommandBuffer(m_rhi_command_buffer.writeRef()));
-    m_open = true;
-}
-
-void CommandBuffer::close()
-{
-    if (!m_open)
-        return;
-
-    if (m_encoder_open)
-        SGL_THROW("Cannot close command buffer with an open encoder.");
-
-    m_device->_set_open_command_buffer(nullptr);
-
-    end_current_rhi_encoder();
-    m_rhi_command_buffer->close();
-    m_open = false;
-}
-
-uint64_t CommandBuffer::submit(CommandQueueType queue)
-{
-    close();
-    return m_device->submit_command_buffer(this, queue);
-}
-
-
-bool CommandBuffer::set_resource_state(const Resource* resource, ResourceState new_state)
-{
-    SGL_CHECK(m_open, "Command encoder is finished");
-    SGL_CHECK_NOT_NULL(resource);
-
-    if (resource->type() == ResourceType::buffer) {
-        return set_buffer_state(resource->as_buffer(), new_state);
-    } else {
-        return set_texture_state(resource->as_texture(), new_state);
-    }
-}
-
-bool CommandBuffer::set_resource_state(const ResourceView* resource_view, ResourceState new_state)
-{
-    SGL_CHECK(m_open, "Command encoder is finished");
-    SGL_CHECK_NOT_NULL(resource_view);
-
-    if (resource_view->resource()->type() == ResourceType::buffer) {
-        return set_buffer_state(resource_view->resource()->as_buffer(), new_state);
-    } else {
-        if (resource_view->all_subresources())
-            return set_texture_state(resource_view->resource()->as_texture(), new_state);
-        else
-            return set_texture_subresource_state(
-                resource_view->resource()->as_texture(),
-                resource_view->desc().subresource_range,
-                new_state
-            );
-    }
-}
-
-
-void CommandBuffer::uav_barrier(const Resource* resource)
-{
-    SGL_CHECK(m_open, "Command encoder is finished");
-    SGL_CHECK_NOT_NULL(resource);
-
-    if (set_resource_state(resource, ResourceState::unordered_access))
-        return;
-
-    if (resource->type() == ResourceType::buffer) {
-        get_rhi_resource_command_encoder()->bufferBarrier(
-            resource->as_buffer()->rhi_buffer(),
-            rhi::ResourceState::UnorderedAccess,
-            rhi::ResourceState::UnorderedAccess
-        );
-    } else {
-        get_rhi_resource_command_encoder()->textureBarrier(
-            resource->as_texture()->rhi_texture(),
-            rhi::ResourceState::UnorderedAccess,
-            rhi::ResourceState::UnorderedAccess
-        );
-    }
-}
 
 void CommandBuffer::clear_resource_view(ResourceView* resource_view, float4 clear_value)
 {
@@ -1400,9 +999,6 @@ void CommandBuffer::copy_resource(Resource* dst, const Resource* src)
     }
 }
 
-
-
-
 void CommandBuffer::resolve_texture(Texture* dst, const Texture* src)
 {
     SGL_CHECK(m_open, "Command encoder is finished");
@@ -1558,32 +1154,6 @@ RayTracingCommandEncoder CommandBuffer::encode_ray_tracing_commands()
 
     m_encoder_open = true;
     return RayTracingCommandEncoder(this, (static_cast<rhi::IRayTracingCommandEncoder*>(m_rhi_command_encoder.get())));
-}
-
-void CommandBuffer::end_encoder()
-{
-    SGL_ASSERT(m_encoder_open);
-    m_encoder_open = false;
-    end_current_rhi_encoder();
-}
-
-rhi::IResourceCommandEncoder* CommandBuffer::get_rhi_resource_command_encoder()
-{
-    SGL_ASSERT(m_open);
-    if (m_active_rhi_encoder == EncoderType::none) {
-        m_rhi_command_encoder = m_rhi_command_buffer->encodeResourceCommands();
-        m_active_rhi_encoder = EncoderType::resource;
-    }
-    return static_cast<rhi::IResourceCommandEncoder*>(m_rhi_command_encoder.get());
-}
-
-void CommandBuffer::end_current_rhi_encoder()
-{
-    if (m_active_rhi_encoder != EncoderType::none) {
-        m_rhi_command_encoder->endEncoding();
-        m_rhi_command_encoder = nullptr;
-        m_active_rhi_encoder = EncoderType::none;
-    }
 }
 
 #endif
