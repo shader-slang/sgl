@@ -91,8 +91,11 @@ ShaderObject* RenderPassEncoder::bind_pipeline(RenderPipeline* pipeline)
 {
     SGL_CHECK_NOT_NULL(pipeline);
 
-    rhi::IShaderObject* rhi_shader_object = m_rhi_render_pass_encoder->bindPipeline(pipeline->rhi_pipeline());
-    return m_command_encoder->_get_root_object(rhi_shader_object);
+    rhi::IShaderObject* rhi_root_object = m_rhi_render_pass_encoder->bindPipeline(pipeline->rhi_pipeline());
+    ShaderObject* root_object = m_command_encoder->_get_root_object(rhi_root_object);
+    if (m_command_encoder->device()->debug_printer())
+        m_command_encoder->device()->debug_printer()->bind(ShaderCursor(root_object));
+    return root_object;
 }
 
 void RenderPassEncoder::bind_pipeline(RenderPipeline* pipeline, ShaderObject* root_object)
@@ -170,9 +173,12 @@ ShaderObject* ComputePassEncoder::bind_pipeline(ComputePipeline* pipeline)
 {
     SGL_CHECK_NOT_NULL(pipeline);
 
-    rhi::IShaderObject* rhi_shader_object = m_rhi_compute_pass_encoder->bindPipeline(pipeline->rhi_pipeline());
     m_thread_group_size = pipeline->thread_group_size();
-    return m_command_encoder->_get_root_object(rhi_shader_object);
+    rhi::IShaderObject* rhi_root_object = m_rhi_compute_pass_encoder->bindPipeline(pipeline->rhi_pipeline());
+    ShaderObject* root_object = m_command_encoder->_get_root_object(rhi_root_object);
+    if (m_command_encoder->device()->debug_printer())
+        m_command_encoder->device()->debug_printer()->bind(ShaderCursor(root_object));
+    return root_object;
 }
 
 void ComputePassEncoder::bind_pipeline(ComputePipeline* pipeline, ShaderObject* root_object)
@@ -180,8 +186,8 @@ void ComputePassEncoder::bind_pipeline(ComputePipeline* pipeline, ShaderObject* 
     SGL_CHECK_NOT_NULL(pipeline);
     SGL_CHECK_NOT_NULL(root_object);
 
-    m_rhi_compute_pass_encoder->bindPipeline(pipeline->rhi_pipeline(), root_object->rhi_shader_object());
     m_thread_group_size = pipeline->thread_group_size();
+    m_rhi_compute_pass_encoder->bindPipeline(pipeline->rhi_pipeline(), root_object->rhi_shader_object());
 }
 
 void ComputePassEncoder::dispatch(uint3 thread_count)
@@ -217,9 +223,12 @@ ShaderObject* RayTracingPassEncoder::bind_pipeline(RayTracingPipeline* pipeline,
 {
     SGL_CHECK_NOT_NULL(pipeline);
 
-    rhi::IShaderObject* rhi_shader_object
+    rhi::IShaderObject* rhi_root_object
         = m_rhi_ray_tracing_pass_encoder->bindPipeline(pipeline->rhi_pipeline(), shader_table->rhi_shader_table());
-    return m_command_encoder->_get_root_object(rhi_shader_object);
+    ShaderObject* root_object = m_command_encoder->_get_root_object(rhi_root_object);
+    if (m_command_encoder->device()->debug_printer())
+        m_command_encoder->device()->debug_printer()->bind(ShaderCursor(root_object));
+    return root_object;
 }
 
 void RayTracingPassEncoder::bind_pipeline(
