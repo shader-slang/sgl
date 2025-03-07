@@ -37,7 +37,7 @@ CMAKE_EXE = {
 CMAKE_PRESET = {
     "windows": "windows-msvc",
     "linux": "linux-gcc",
-    "macos": "macos-clang",
+    "macos": "macos-arm64-clang",
 }[PLATFORM]
 
 
