@@ -1001,11 +1001,11 @@ void Device::read_buffer_data(const Buffer* buffer, void* data, size_t size, siz
     command_buffer->copy_buffer_region(alloc->buffer, alloc->offset, buffer, offset, size);
     _end_shared_command_buffer(true);
     
-    printf("Read back buffer data:\n");
-    for (size_t i = 0; i < size / sizeof(uint32_t); ++i) {
-        printf("%.8x ", *reinterpret_cast<uint32_t*>(alloc->data + i * sizeof(uint32_t)));
-    }
-    printf("\n");
+    // printf("Read back buffer data:\n");
+    // for (size_t i = 0; i < size / sizeof(uint32_t); ++i) {
+    //     printf("%.8x ", *reinterpret_cast<uint32_t*>(alloc->data + i * sizeof(uint32_t)));
+    // }
+    // printf("\n");
     std::memcpy(data, alloc->data, size);
 }
 
