@@ -66,7 +66,7 @@ void ComputeKernel::dispatch(uint3 thread_count, BindVarsCallback bind_vars, Com
     }
 
     if (temp_command_buffer)
-        m_device->_end_shared_command_buffer(false);
+        m_device->_end_shared_command_buffer(true);
 }
 
 // ----------------------------------------------------------------------------

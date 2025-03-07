@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
+#include <cstdint>
 #include <sstream>
 
 #include "nanobind.h"
@@ -11,6 +12,7 @@
 #include "sgl/device/kernel.h"
 #include "sgl/device/command.h"
 
+#include "sgl/device/shader_cursor.h"
 #include "sgl/utils/python/slangpy.h"
 #include "sgl/utils/python/slangpyvalue.h"
 #include "sgl/utils/python/slangpybuffer.h"
@@ -421,7 +423,19 @@ nb::object NativeCallData::exec(
             }
         }
     };
+
     m_kernel->dispatch(uint3(total_threads, 1, 1), bind_vars, command_buffer);
+
+    // ref<CommandBuffer> temp_command_buffer = context->device()->create_command_buffer();
+    // auto computeEncoder = temp_command_buffer->encode_compute_commands();
+    // auto shaderObject = computeEncoder.bind_pipeline(m_kernel->pipeline());
+    // ShaderCursor cursor(shaderObject);
+    // bind_vars(cursor);
+
+    // computeEncoder.dispatch(uint3(total_threads, 1, 1));
+    // computeEncoder.end();
+    // uint64_t fence_value = temp_command_buffer->submit();
+    // context->device()->wait_command_buffer(fence_value);
 
     // If command_buffer is not null, return early.
     if (command_buffer != nullptr) {

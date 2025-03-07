@@ -29,6 +29,13 @@ def test_parameter_block(device_type: sgl.DeviceType):
         usage=sgl.ResourceUsage.unordered_access | sgl.ResourceUsage.shader_resource,
     )
     
+    input_buffer = device.create_buffer(
+        element_count=1,  # Only need one element as we're only launching one thread
+        struct_size=4,    # float is 4 bytes
+        usage=sgl.ResourceUsage.unordered_access | sgl.ResourceUsage.shader_resource,
+        data=np.array([6.0], dtype=np.float32),
+    )
+
     # Create a command buffer
     command_buffer = device.create_command_buffer()
     
@@ -41,21 +48,24 @@ def test_parameter_block(device_type: sgl.DeviceType):
         cursor = sgl.ShaderCursor(shader_object)
         
         # Fill in the parameter block values
-        cursor["inputStruct"]["a"] = 1.0
-        cursor["inputStruct"]["b"] = 2
-        cursor["inputStruct"]["c"] = 3
-        cursor["inputStruct"]["d"] = output_buffer
+        cursor["inputStruct"]["a"]["aa"] = 1.0
+        cursor["inputStruct"]["a"]["bb"] = 2
+        cursor["inputStruct"]["b"] = 3
+        cursor["inputStruct"]["c"] = output_buffer
 
-        # cursor["output"]["d"] = output_buffer
-        
+        cursor["inputStruct"]["nestParamBlock"]["aa"] = 4.0
+        cursor["inputStruct"]["nestParamBlock"]["bb"] = 5
+        cursor["inputStruct"]["nestParamBlock"]["nc"] = input_buffer
+
         # Dispatch a single thread
         encoder.dispatch(thread_count=[1, 1, 1])
     
     # Submit the command buffer
-    command_buffer.submit()
+    fenceValue = command_buffer.submit()
+    device.wait_command_buffer(fenceValue)
     
     # Read back the result
     result = output_buffer.to_numpy().view(np.float32)[0]
     
     # Verify the result
-    assert result == 6.0, f"Expected 6.0, got {result}"
+    assert result == 21.0, f"Expected 6.0, got {result}"

@@ -51,7 +51,16 @@ ShaderCursor ShaderCursor::dereference() const
     switch ((TypeReflection::Kind)m_type_layout->getKind()) {
     case TypeReflection::Kind::constant_buffer:
     case TypeReflection::Kind::parameter_block:
-        return ShaderCursor(m_shader_object->get_object(m_offset));
+    {
+        ShaderCursor d = ShaderCursor(m_shader_object->get_object(m_offset));
+#if SGL_MACOS
+        d.m_type_layout = m_shader_object->get_slang_session()->getTypeLayout(
+                m_type_layout->getElementTypeLayout()->getType(),
+                0,
+                slang::LayoutRules::MetalArgumentBufferTier2);
+#endif
+        return d;
+    }
     default:
         return {};
     }
@@ -77,6 +86,30 @@ ShaderCursor ShaderCursor::operator[](uint32_t index) const
     return result;
 }
 
+inline std::string KindToString(sgl::TypeReflection::Kind kind) {
+    switch (kind) {
+        case sgl::TypeReflection::Kind::none:                    return "none";
+        case sgl::TypeReflection::Kind::struct_:                 return "struct";
+        case sgl::TypeReflection::Kind::array:                   return "array";
+        case sgl::TypeReflection::Kind::matrix:                  return "matrix";
+        case sgl::TypeReflection::Kind::vector:                  return "vector";
+        case sgl::TypeReflection::Kind::scalar:                  return "scalar";
+        case sgl::TypeReflection::Kind::constant_buffer:         return "constant_buffer";
+        case sgl::TypeReflection::Kind::resource:                return "resource";
+        case sgl::TypeReflection::Kind::sampler_state:          return "sampler_state";
+        case sgl::TypeReflection::Kind::texture_buffer:         return "texture_buffer";
+        case sgl::TypeReflection::Kind::shader_storage_buffer:  return "shader_storage_buffer";
+        case sgl::TypeReflection::Kind::parameter_block:        return "parameter_block";
+        case sgl::TypeReflection::Kind::generic_type_parameter: return "generic_type_parameter";
+        case sgl::TypeReflection::Kind::interface:              return "interface";
+        case sgl::TypeReflection::Kind::output_stream:          return "output_stream";
+        case sgl::TypeReflection::Kind::specialized:            return "specialized";
+        case sgl::TypeReflection::Kind::feedback:               return "feedback";
+        case sgl::TypeReflection::Kind::pointer:               return "pointer";
+        default:                                                return "unknown";
+    }
+}
+
 ShaderCursor ShaderCursor::find_field(std::string_view name) const
 {
     if (!is_valid())
@@ -86,7 +119,7 @@ ShaderCursor ShaderCursor::find_field(std::string_view name) const
     // it is referencing.
     //
     slang::ParameterCategory parameter_category = m_type_layout->getParameterCategory();
-    printf("parameter_category: %d\n", parameter_category);
+    printf("parameter_category: %d, name: %s, kind: %s\n", parameter_category, name.data(), KindToString((TypeReflection::Kind)m_type_layout->getKind()).c_str());
 
     switch ((TypeReflection::Kind)m_type_layout->getKind()) {
         // The easy/expected case is when the value has a structure type.
@@ -156,20 +189,9 @@ ShaderCursor ShaderCursor::find_field(std::string_view name) const
     // from a cursor that references a constant buffer or parameter block,
     // and in these cases we want the access to Just Work.
     //
-    case TypeReflection::Kind::constant_buffer: {
-        ShaderCursor d = dereference();
-        return d.find_field(name);
-    }
+    case TypeReflection::Kind::constant_buffer:
     case TypeReflection::Kind::parameter_block: {
-        // We basically need to "dereference" the current cursor
-        // to go from a pointer to a constant buffer to a pointer
-        // to the *contents* of the constant buffer.
-        //
         ShaderCursor d = dereference();
-        d.m_type_layout = m_shader_object->get_slang_session()->getTypeLayout(
-            m_type_layout->getElementTypeLayout()->getType(),
-            0,
-            slang::LayoutRules::MetalArgumentBufferTier2);
         return d.find_field(name);
     }
 

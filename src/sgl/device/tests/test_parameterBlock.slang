@@ -1,23 +1,25 @@
+
+struct NestedStruct
+{
+    float aa;
+    int bb;
+    RWStructuredBuffer<float> nc;
+}
+
 struct MyStruct
 {
-    float a;
-    int b;
-    uint c;
-    RWStructuredBuffer<float> d;
+    NestedStruct a;
+    uint b;
+    ParameterBlock<NestedStruct> nestParamBlock;
+    RWStructuredBuffer<float> c;
 };
 
 ParameterBlock<MyStruct> inputStruct;
-
-struct Output
-{
-    RWStructuredBuffer<float> d;
-}
-
-uniform Output output;
 
 [shader("compute")]
 [numthreads(1, 1, 1)]
 void computeMain(uint3 tid: SV_DispatchThreadID)
 {
-    inputStruct.d[0] = inputStruct.a + inputStruct.b + inputStruct.c;
+    inputStruct.c[0] = inputStruct.a.aa + inputStruct.a.bb + inputStruct.b +
+        inputStruct.nestParamBlock.aa + inputStruct.nestParamBlock.bb + inputStruct.nestParamBlock.nc[0];
 }

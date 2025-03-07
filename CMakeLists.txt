@@ -22,6 +22,8 @@ elseif(UNIX)
   set(SGL_ORIGIN "$ORIGIN")
 endif()
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # TODO we should probably set install RPATH on individual targets instead
 set(CMAKE_INSTALL_RPATH "${SGL_ORIGIN};${SGL_ORIGIN}/../lib")
 
