@@ -101,6 +101,11 @@ slang::ISession* ShaderObject::get_slang_session() const
     return m_device->slang_session()->get_slang_session();
 }
 
+sgl::DeviceType ShaderObject::get_device_type() const
+{
+    return m_device->type();
+}
+
 //
 // TransientShaderObject
 //

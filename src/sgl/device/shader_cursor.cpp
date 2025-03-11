@@ -53,12 +53,12 @@ ShaderCursor ShaderCursor::dereference() const
     case TypeReflection::Kind::parameter_block:
     {
         ShaderCursor d = ShaderCursor(m_shader_object->get_object(m_offset));
-#if SGL_MACOS
-        d.m_type_layout = m_shader_object->get_slang_session()->getTypeLayout(
+        if (m_shader_object->get_device_type() == DeviceType::metal) {
+            d.m_type_layout = m_shader_object->get_slang_session()->getTypeLayout(
                 m_type_layout->getElementTypeLayout()->getType(),
                 0,
                 slang::LayoutRules::MetalArgumentBufferTier2);
-#endif
+        }
         return d;
     }
     default:
@@ -164,6 +164,10 @@ ShaderCursor ShaderCursor::find_field(std::string_view name) const
     //
     case TypeReflection::Kind::constant_buffer:
     case TypeReflection::Kind::parameter_block: {
+        // We basically need to "dereference" the current cursor
+        // to go from a pointer to a constant buffer to a pointer
+        // to the *contents* of the constant buffer.
+        //
         ShaderCursor d = dereference();
         return d.find_field(name);
     }

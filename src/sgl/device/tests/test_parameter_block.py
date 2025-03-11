@@ -26,7 +26,7 @@ def test_parameter_block(device_type: sgl.DeviceType):
     device = helpers.get_device(type=device_type)
     
     # Load the shader program
-    program = device.load_program("test_parameterBlock.slang", ["computeMain"])
+    program = device.load_program("test_parameter_block.slang", ["computeMain"])
     kernel = device.create_compute_kernel(program)
     
     # Create a buffer for the output
@@ -55,14 +55,14 @@ def test_parameter_block(device_type: sgl.DeviceType):
         cursor = sgl.ShaderCursor(shader_object)
         
         # Fill in the parameter block values
-        cursor["inputStruct"]["a"]["aa"] = 1.0
-        cursor["inputStruct"]["a"]["bb"] = 2
-        cursor["inputStruct"]["b"] = 3
-        cursor["inputStruct"]["c"] = output_buffer
+        cursor["input_struct"]["a"]["aa"] = 1.0
+        cursor["input_struct"]["a"]["bb"] = 2
+        cursor["input_struct"]["b"] = 3
+        cursor["input_struct"]["c"] = output_buffer
 
-        cursor["inputStruct"]["nestParamBlock"]["aa"] = 4.0
-        cursor["inputStruct"]["nestParamBlock"]["bb"] = 5
-        cursor["inputStruct"]["nestParamBlock"]["nc"] = input_buffer
+        cursor["input_struct"]["nest_param_block"]["aa"] = 4.0
+        cursor["input_struct"]["nest_param_block"]["bb"] = 5
+        cursor["input_struct"]["nest_param_block"]["nc"] = input_buffer
 
         # Dispatch a single thread
         encoder.dispatch(thread_count=[1, 1, 1])
