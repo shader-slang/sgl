@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include <cstdint>
 #include <sstream>
 
 #include "nanobind.h"
@@ -12,7 +11,6 @@
 #include "sgl/device/kernel.h"
 #include "sgl/device/command.h"
 
-#include "sgl/device/shader_cursor.h"
 #include "sgl/utils/python/slangpy.h"
 #include "sgl/utils/python/slangpyvalue.h"
 #include "sgl/utils/python/slangpybuffer.h"
@@ -423,7 +421,6 @@ nb::object NativeCallData::exec(
             }
         }
     };
-
     m_kernel->dispatch(uint3(total_threads, 1, 1), bind_vars, command_buffer);
 
     // If command_buffer is not null, return early.

@@ -86,30 +86,6 @@ ShaderCursor ShaderCursor::operator[](uint32_t index) const
     return result;
 }
 
-inline std::string KindToString(sgl::TypeReflection::Kind kind) {
-    switch (kind) {
-        case sgl::TypeReflection::Kind::none:                    return "none";
-        case sgl::TypeReflection::Kind::struct_:                 return "struct";
-        case sgl::TypeReflection::Kind::array:                   return "array";
-        case sgl::TypeReflection::Kind::matrix:                  return "matrix";
-        case sgl::TypeReflection::Kind::vector:                  return "vector";
-        case sgl::TypeReflection::Kind::scalar:                  return "scalar";
-        case sgl::TypeReflection::Kind::constant_buffer:         return "constant_buffer";
-        case sgl::TypeReflection::Kind::resource:                return "resource";
-        case sgl::TypeReflection::Kind::sampler_state:          return "sampler_state";
-        case sgl::TypeReflection::Kind::texture_buffer:         return "texture_buffer";
-        case sgl::TypeReflection::Kind::shader_storage_buffer:  return "shader_storage_buffer";
-        case sgl::TypeReflection::Kind::parameter_block:        return "parameter_block";
-        case sgl::TypeReflection::Kind::generic_type_parameter: return "generic_type_parameter";
-        case sgl::TypeReflection::Kind::interface:              return "interface";
-        case sgl::TypeReflection::Kind::output_stream:          return "output_stream";
-        case sgl::TypeReflection::Kind::specialized:            return "specialized";
-        case sgl::TypeReflection::Kind::feedback:               return "feedback";
-        case sgl::TypeReflection::Kind::pointer:               return "pointer";
-        default:                                                return "unknown";
-    }
-}
-
 ShaderCursor ShaderCursor::find_field(std::string_view name) const
 {
     if (!is_valid())
@@ -118,9 +94,6 @@ ShaderCursor ShaderCursor::find_field(std::string_view name) const
     // If the cursor is valid, we want to consider the type of data
     // it is referencing.
     //
-    slang::ParameterCategory parameter_category = m_type_layout->getParameterCategory();
-    printf("parameter_category: %d, name: %s, kind: %s\n", parameter_category, name.data(), KindToString((TypeReflection::Kind)m_type_layout->getKind()).c_str());
-
     switch ((TypeReflection::Kind)m_type_layout->getKind()) {
         // The easy/expected case is when the value has a structure type.
         //
