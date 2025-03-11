@@ -48,6 +48,7 @@ public:
 
     slang::ISession* get_slang_session() const;
     sgl::DeviceType get_device_type() const;
+
 protected:
     ref<Device> m_device;
     gfx::IShaderObject* m_shader_object;

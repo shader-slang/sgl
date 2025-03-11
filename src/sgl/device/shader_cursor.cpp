@@ -50,14 +50,14 @@ ShaderCursor ShaderCursor::dereference() const
     SGL_CHECK(is_valid(), "Invalid cursor");
     switch ((TypeReflection::Kind)m_type_layout->getKind()) {
     case TypeReflection::Kind::constant_buffer:
-    case TypeReflection::Kind::parameter_block:
-    {
+    case TypeReflection::Kind::parameter_block: {
         ShaderCursor d = ShaderCursor(m_shader_object->get_object(m_offset));
         if (m_shader_object->get_device_type() == DeviceType::metal) {
             d.m_type_layout = m_shader_object->get_slang_session()->getTypeLayout(
                 m_type_layout->getElementTypeLayout()->getType(),
                 0,
-                slang::LayoutRules::MetalArgumentBufferTier2);
+                slang::LayoutRules::MetalArgumentBufferTier2
+            );
         }
         return d;
     }
