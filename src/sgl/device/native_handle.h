@@ -11,7 +11,7 @@
 namespace sgl {
 
 enum class NativeHandleType {
-    unknown = static_cast<uint32_t>(rhi::NativeHandleType::Unknown),
+    undefined = static_cast<uint32_t>(rhi::NativeHandleType::Undefined),
 
     win32 = static_cast<uint32_t>(rhi::NativeHandleType::Win32),
     file_descriptor = static_cast<uint32_t>(rhi::NativeHandleType::FileDescriptor),
@@ -100,7 +100,7 @@ public:
     NativeHandleType type() const { return m_type; }
     uint64_t value() const { return m_value; }
 
-    bool is_valid() const { return m_type != NativeHandleType::unknown; }
+    bool is_valid() const { return m_type != NativeHandleType::undefined; }
 
     operator bool() const { return is_valid(); }
 
@@ -112,7 +112,7 @@ public:
     }
 
 private:
-    NativeHandleType m_type{NativeHandleType::unknown};
+    NativeHandleType m_type{NativeHandleType::undefined};
     uint64_t m_value{0};
 };
 

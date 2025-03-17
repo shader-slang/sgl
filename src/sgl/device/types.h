@@ -274,8 +274,8 @@ static_assert(
 );
 
 enum class IndexFormat : uint8_t {
-    uint16 = static_cast<uint8_t>(rhi::IndexFormat::UInt16),
-    uint32 = static_cast<uint8_t>(rhi::IndexFormat::UInt32),
+    uint16 = static_cast<uint8_t>(rhi::IndexFormat::Uint16),
+    uint32 = static_cast<uint8_t>(rhi::IndexFormat::Uint32),
 };
 
 SGL_ENUM_INFO(

@@ -260,7 +260,7 @@ SGL_PY_EXPORT(device_resource)
 
     nb::sgl_enum<TextureAspect>(m, "TextureAspect");
 
-    nb::class_<BufferRange>(m, "BufferRange", D(SubresourceRange))
+    nb::class_<BufferRange>(m, "BufferRange", D_NA(BufferRange))
         .def(nb::init<>())
         .def_ro("offset", &BufferRange::offset, D_NA(BufferRange, offset))
         .def_ro("size", &BufferRange::size, D_NA(BufferRange, size))
@@ -372,6 +372,7 @@ SGL_PY_EXPORT(device_resource)
 
     nb::class_<Texture, Resource>(m, "Texture", D(Texture))
         .def_prop_ro("desc", &Texture::desc, D(Texture, desc))
+        .def_prop_ro("type", &Texture::type, D_NA(Texture, type))
         .def_prop_ro("width", &Texture::width, D(Texture, width))
         .def_prop_ro("height", &Texture::height, D(Texture, height))
         .def_prop_ro("depth", &Texture::depth, D(Texture, depth))
