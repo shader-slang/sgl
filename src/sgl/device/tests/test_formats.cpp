@@ -37,8 +37,6 @@ TEST_CASE("validate_format_infos")
         switch (type) {
         case FormatType::unknown:
             return SLANG_SCALAR_TYPE_NONE;
-        case FormatType::typeless:
-            return SLANG_SCALAR_TYPE_VOID;
         case FormatType::float_:
             return SLANG_SCALAR_TYPE_FLOAT32;
         case FormatType::unorm:
@@ -91,7 +89,6 @@ TEST_CASE("rgba32_float")
     CHECK_EQ(info.vk_format, VK_FORMAT_R32G32B32A32_SFLOAT);
 
     CHECK_EQ(info.is_depth_stencil(), false);
-    CHECK_EQ(info.is_typeless_format(), false);
     CHECK_EQ(info.is_float_format(), true);
     CHECK_EQ(info.is_integer_format(), false);
     CHECK_EQ(info.is_normalized_format(), false);
@@ -125,7 +122,6 @@ TEST_CASE("rg16_uint")
     CHECK_EQ(info.vk_format, VK_FORMAT_R16G16_UINT);
 
     CHECK_EQ(info.is_depth_stencil(), false);
-    CHECK_EQ(info.is_typeless_format(), false);
     CHECK_EQ(info.is_float_format(), false);
     CHECK_EQ(info.is_integer_format(), true);
     CHECK_EQ(info.is_normalized_format(), false);
@@ -159,7 +155,6 @@ TEST_CASE("r8_snorm")
     CHECK_EQ(info.vk_format, VK_FORMAT_R8_SNORM);
 
     CHECK_EQ(info.is_depth_stencil(), false);
-    CHECK_EQ(info.is_typeless_format(), false);
     CHECK_EQ(info.is_float_format(), false);
     CHECK_EQ(info.is_integer_format(), false);
     CHECK_EQ(info.is_normalized_format(), true);
@@ -193,7 +188,6 @@ TEST_CASE("d32_float_s8_uint")
     CHECK_EQ(info.vk_format, VK_FORMAT_D32_SFLOAT_S8_UINT);
 
     CHECK_EQ(info.is_depth_stencil(), true);
-    CHECK_EQ(info.is_typeless_format(), false);
     CHECK_EQ(info.is_float_format(), true);
     CHECK_EQ(info.is_integer_format(), false);
     CHECK_EQ(info.is_normalized_format(), false);
@@ -206,14 +200,14 @@ TEST_CASE("d32_float_s8_uint")
     CHECK_EQ(info.get_channel_bits(FormatChannels::rgba), 40);
 }
 
-TEST_CASE("r10g10b10a2_typeless")
+TEST_CASE("rgb10a2_uint")
 {
-    const FormatInfo& info = get_format_info(Format::r10g10b10a2_typeless);
-    CHECK_EQ(info.format, Format::r10g10b10a2_typeless);
-    CHECK_EQ(info.name, "r10g10b10a2_typeless");
+    const FormatInfo& info = get_format_info(Format::rgb10a2_uint);
+    CHECK_EQ(info.format, Format::rgb10a2_uint);
+    CHECK_EQ(info.name, "rgb10a2_uint");
     CHECK_EQ(info.bytes_per_block, 4);
     CHECK_EQ(info.channel_count, 4);
-    CHECK_EQ(info.type, FormatType::typeless);
+    CHECK_EQ(info.type, FormatType::uint);
     CHECK_EQ(info.is_depth, false);
     CHECK_EQ(info.is_stencil, false);
     CHECK_EQ(info.is_compressed, false);
@@ -223,13 +217,12 @@ TEST_CASE("r10g10b10a2_typeless")
     CHECK_EQ(info.channel_bit_count[1], 10);
     CHECK_EQ(info.channel_bit_count[2], 10);
     CHECK_EQ(info.channel_bit_count[3], 2);
-    CHECK_EQ(info.dxgi_format, DXGI_FORMAT_R10G10B10A2_TYPELESS);
-    CHECK_EQ(info.vk_format, VK_FORMAT_UNDEFINED);
+    CHECK_EQ(info.dxgi_format, DXGI_FORMAT_R10G10B10A2_UINT);
+    CHECK_EQ(info.vk_format, VK_FORMAT_A2R10G10B10_UINT_PACK32);
 
     CHECK_EQ(info.is_depth_stencil(), false);
-    CHECK_EQ(info.is_typeless_format(), true);
     CHECK_EQ(info.is_float_format(), false);
-    CHECK_EQ(info.is_integer_format(), false);
+    CHECK_EQ(info.is_integer_format(), true);
     CHECK_EQ(info.is_normalized_format(), false);
     CHECK_EQ(info.is_srgb_format(), false);
     CHECK_EQ(info.get_channels(), FormatChannels::rgba);
@@ -261,7 +254,6 @@ TEST_CASE("bc7_unorm_srgb")
     CHECK_EQ(info.vk_format, VK_FORMAT_BC7_SRGB_BLOCK);
 
     CHECK_EQ(info.is_depth_stencil(), false);
-    CHECK_EQ(info.is_typeless_format(), false);
     CHECK_EQ(info.is_float_format(), false);
     CHECK_EQ(info.is_integer_format(), false);
     CHECK_EQ(info.is_normalized_format(), true);

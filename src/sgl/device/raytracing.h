@@ -84,7 +84,7 @@ struct AccelerationStructureBuildInputInstances {
 struct AccelerationStructureBuildInputTriangles {
     /// List of vertex buffers, one for each motion step.
     static_vector<BufferOffsetPair, 16> vertex_buffers;
-    Format vertex_format{Format::unknown};
+    Format vertex_format{Format::undefined};
     uint32_t vertex_count{0};
     uint32_t vertex_stride{0};
 

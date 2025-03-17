@@ -279,7 +279,7 @@ std::string BufferView::to_string() const
 
 inline void process_texture_desc(TextureDesc& desc)
 {
-    SGL_CHECK(desc.format != Format::unknown, "Invalid texture format.");
+    SGL_CHECK(desc.format != Format::undefined, "Invalid texture format.");
 
     switch (desc.type) {
     case TextureType::texture_1d:
@@ -481,8 +481,6 @@ ref<Bitmap> Texture::to_bitmap(uint32_t mip_level, uint32_t array_slice) const
         SGL_THROW("Cannot convert compressed texture to bitmap.");
     if (info.is_depth_stencil())
         SGL_THROW("Cannot convert depth/stencil texture to bitmap.");
-    if (info.is_typeless_format())
-        SGL_THROW("Cannot convert typeless texture to bitmap.");
     if (!info.has_equal_channel_bits())
         SGL_THROW("Cannot convert texture with unequal channel bits to bitmap.");
     uint32_t channel_bit_count = info.channel_bit_count[0];
@@ -765,7 +763,7 @@ NativeHandle ResourceView::get_native_handle() const
     if (m_resource->m_device->type() == DeviceType::vulkan) {
         if (m_resource) {
             if (m_resource->type() == ResourceType::buffer) {
-                if (m_desc.format == Format::unknown)
+                if (m_desc.format == Format::undefined)
                     return NativeHandle(reinterpret_cast<VkBuffer>(handle.handleValue));
                 else
                     return NativeHandle(reinterpret_cast<VkBufferView>(handle.handleValue));

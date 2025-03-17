@@ -27,7 +27,7 @@ struct SurfaceInfo {
 
 struct SurfaceConfig {
     /// Surface texture format.
-    Format format = Format::unknown;
+    Format format = Format::undefined;
     /// Surface texture usage.
     TextureUsage usage = TextureUsage::render_target;
     /// Surface texture width.

@@ -25,7 +25,7 @@ static constexpr size_t BATCH_SIZE = 32;
 struct SourceImage {
     ref<Bitmap> bitmap;
     ref<DDSFile> dds_file;
-    Format format{Format::unknown};
+    Format format{Format::undefined};
 };
 
 /**
@@ -294,7 +294,7 @@ inline ref<Texture> create_texture_array(
     ref<Texture> texture;
     uint32_t first_width = 0;
     uint32_t first_height = 0;
-    Format first_format = Format::unknown;
+    Format first_format = Format::undefined;
 
     ref<CommandEncoder> command_encoder = device->create_command_encoder();
 

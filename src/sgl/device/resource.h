@@ -111,13 +111,13 @@ enum class TextureUsage : uint32_t {
     shader_resource = static_cast<uint32_t>(rhi::TextureUsage::ShaderResource),
     unordered_access = static_cast<uint32_t>(rhi::TextureUsage::UnorderedAccess),
     render_target = static_cast<uint32_t>(rhi::TextureUsage::RenderTarget),
-    depth_read = static_cast<uint32_t>(rhi::TextureUsage::DepthRead),
-    depth_write = static_cast<uint32_t>(rhi::TextureUsage::DepthWrite),
+    depth_stencil = static_cast<uint32_t>(rhi::TextureUsage::DepthStencil),
     present = static_cast<uint32_t>(rhi::TextureUsage::Present),
     copy_source = static_cast<uint32_t>(rhi::TextureUsage::CopySource),
     copy_destination = static_cast<uint32_t>(rhi::TextureUsage::CopyDestination),
     resolve_source = static_cast<uint32_t>(rhi::TextureUsage::ResolveSource),
     resolve_destination = static_cast<uint32_t>(rhi::TextureUsage::ResolveDestination),
+    typeless = static_cast<uint32_t>(rhi::TextureUsage::Typeless),
     shared = static_cast<uint32_t>(rhi::TextureUsage::Shared),
 };
 SGL_ENUM_CLASS_OPERATORS(TextureUsage);
@@ -129,13 +129,13 @@ SGL_ENUM_INFO(
         {TextureUsage::shader_resource, "shader_resource"},
         {TextureUsage::unordered_access, "unordered_access"},
         {TextureUsage::render_target, "render_target"},
-        {TextureUsage::depth_read, "depth_read"},
-        {TextureUsage::depth_write, "depth_write"},
+        {TextureUsage::depth_stencil, "depth_stencil"},
         {TextureUsage::present, "present"},
         {TextureUsage::copy_source, "copy_source"},
         {TextureUsage::copy_destination, "copy_destination"},
         {TextureUsage::resolve_source, "resolve_source"},
         {TextureUsage::resolve_destination, "resolve_destination"},
+        {TextureUsage::typeless, "typeless"},
         {TextureUsage::shared, "shared"},
     }
 );
@@ -143,18 +143,28 @@ SGL_ENUM_REGISTER(TextureUsage);
 
 enum class TextureType : uint32_t {
     texture_1d = static_cast<uint32_t>(rhi::TextureType::Texture1D),
+    texture_1d_array = static_cast<uint32_t>(rhi::TextureType::Texture1DArray),
     texture_2d = static_cast<uint32_t>(rhi::TextureType::Texture2D),
+    texture_2d_array = static_cast<uint32_t>(rhi::TextureType::Texture2DArray),
+    texture_2d_ms = static_cast<uint32_t>(rhi::TextureType::Texture2DMS),
+    texture_2d_ms_array = static_cast<uint32_t>(rhi::TextureType::Texture2DMSArray),
     texture_3d = static_cast<uint32_t>(rhi::TextureType::Texture3D),
     texture_cube = static_cast<uint32_t>(rhi::TextureType::TextureCube),
+    texture_cube_array = static_cast<uint32_t>(rhi::TextureType::TextureCubeArray),
 };
 
 SGL_ENUM_INFO(
     TextureType,
     {
         {TextureType::texture_1d, "texture_1d"},
+        {TextureType::texture_1d_array, "texture_1d_array"},
         {TextureType::texture_2d, "texture_2d"},
+        {TextureType::texture_2d_array, "texture_2d_array"},
+        {TextureType::texture_2d_ms, "texture_2d_ms"},
+        {TextureType::texture_2d_ms_array, "texture_2d_ms_array"},
         {TextureType::texture_3d, "texture_3d"},
         {TextureType::texture_cube, "texture_cube"},
+        {TextureType::texture_cube_array, "texture_cube_array"},
     }
 );
 SGL_ENUM_REGISTER(TextureType);
@@ -258,7 +268,7 @@ struct BufferDesc {
     ref<const TypeLayoutReflection> struct_type;
 
     /// Buffer format. Used when creating typed buffer views.
-    Format format{Format::unknown};
+    Format format{Format::undefined};
 
     /// Memory type.
     MemoryType memory_type{MemoryType::device_local};
@@ -383,7 +393,7 @@ private:
 };
 
 struct BufferViewDesc {
-    Format format{Format::unknown};
+    Format format{Format::undefined};
     BufferRange range;
     std::string label;
 };
@@ -443,7 +453,7 @@ struct TextureDesc {
     /// Texture type.
     TextureType type{TextureType::texture_2d};
     /// Texture format.
-    Format format{Format::unknown};
+    Format format{Format::undefined};
     /// Width in pixels.
     uint32_t width{0};
     /// Height in pixels.
@@ -580,7 +590,7 @@ private:
 };
 
 struct TextureViewDesc {
-    Format format{Format::unknown};
+    Format format{Format::undefined};
     TextureAspect aspect{TextureAspect::all};
     SubresourceRange subresource_range;
     std::string label;

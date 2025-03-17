@@ -34,7 +34,7 @@ struct InputElementDesc {
     /// Only needed if multiple parameters share a semantic name.
     uint32_t semantic_index{0};
     /// The format of the data being fetched for this element.
-    Format format{Format::unknown};
+    Format format{Format::undefined};
     /// The offset in bytes of this element from the start of the corresponding chunk of vertex stream data.
     size_t offset{0};
     /// The index of the vertex stream to fetch this element's data from.

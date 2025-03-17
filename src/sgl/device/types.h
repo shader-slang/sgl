@@ -515,7 +515,7 @@ struct AspectBlendDesc {
 };
 
 struct ColorTargetDesc {
-    Format format{Format::unknown};
+    Format format{Format::undefined};
     AspectBlendDesc color;
     AspectBlendDesc alpha;
     bool enable_blend{false};
@@ -538,7 +538,7 @@ struct DepthStencilOpDesc {
 };
 
 struct DepthStencilDesc {
-    Format format{Format::unknown};
+    Format format{Format::undefined};
 
     bool depth_test_enable{false};
     bool depth_write_enable{true};

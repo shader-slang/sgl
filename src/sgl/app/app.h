@@ -59,7 +59,7 @@ struct AppWindowDesc {
     /// Whether the window is resizable.
     bool resizable{true};
     /// Format of the swapchain images.
-    Format surface_format{Format::unknown};
+    Format surface_format{Format::undefined};
     /// Enable/disable vertical synchronization.
     bool enable_vsync{false};
 };

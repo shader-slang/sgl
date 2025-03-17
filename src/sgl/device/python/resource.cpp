@@ -53,8 +53,8 @@ inline std::optional<nb::dlpack::dtype> resource_format_to_dtype(Format format)
 {
     const auto& info = get_format_info(format);
 
-    // Unknown and compressed formats are not supported.
-    if (format == Format::unknown || info.is_compressed)
+    // Undefined and compressed formats are not supported.
+    if (format == Format::undefined || info.is_compressed)
         return {};
 
     // Formats with different bits per channel are not supported.

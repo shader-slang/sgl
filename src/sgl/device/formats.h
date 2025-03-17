@@ -14,107 +14,93 @@ namespace sgl {
 
 /// Resource formats.
 enum class Format : uint32_t {
-    unknown = static_cast<uint32_t>(rhi::Format::Unknown),
+    undefined = static_cast<uint32_t>(rhi::Format::Undefined),
 
-    rgba32_typeless = static_cast<uint32_t>(rhi::Format::R32G32B32A32_TYPELESS),
-    rgb32_typeless = static_cast<uint32_t>(rhi::Format::R32G32B32_TYPELESS),
-    rg32_typeless = static_cast<uint32_t>(rhi::Format::R32G32_TYPELESS),
-    r32_typeless = static_cast<uint32_t>(rhi::Format::R32_TYPELESS),
+    r8_uint = static_cast<uint32_t>(rhi::Format::R8Uint),
+    r8_sint = static_cast<uint32_t>(rhi::Format::R8Sint),
+    r8_unorm = static_cast<uint32_t>(rhi::Format::R8Unorm),
+    r8_snorm = static_cast<uint32_t>(rhi::Format::R8Snorm),
 
-    rgba16_typeless = static_cast<uint32_t>(rhi::Format::R16G16B16A16_TYPELESS),
-    rg16_typeless = static_cast<uint32_t>(rhi::Format::R16G16_TYPELESS),
-    r16_typeless = static_cast<uint32_t>(rhi::Format::R16_TYPELESS),
+    rg8_uint = static_cast<uint32_t>(rhi::Format::RG8Uint),
+    rg8_sint = static_cast<uint32_t>(rhi::Format::RG8Sint),
+    rg8_unorm = static_cast<uint32_t>(rhi::Format::RG8Unorm),
+    rg8_snorm = static_cast<uint32_t>(rhi::Format::RG8Snorm),
 
-    rgba8_typeless = static_cast<uint32_t>(rhi::Format::R8G8B8A8_TYPELESS),
-    rg8_typeless = static_cast<uint32_t>(rhi::Format::R8G8_TYPELESS),
-    r8_typeless = static_cast<uint32_t>(rhi::Format::R8_TYPELESS),
-    bgra8_typeless = static_cast<uint32_t>(rhi::Format::B8G8R8A8_TYPELESS),
+    rgba8_uint = static_cast<uint32_t>(rhi::Format::RGBA8Uint),
+    rgba8_sint = static_cast<uint32_t>(rhi::Format::RGBA8Sint),
+    rgba8_unorm = static_cast<uint32_t>(rhi::Format::RGBA8Unorm),
+    rgba8_unorm_srgb = static_cast<uint32_t>(rhi::Format::RGBA8UnormSrgb),
+    rgba8_snorm = static_cast<uint32_t>(rhi::Format::RGBA8Snorm),
 
-    rgba32_float = static_cast<uint32_t>(rhi::Format::R32G32B32A32_FLOAT),
-    rgb32_float = static_cast<uint32_t>(rhi::Format::R32G32B32_FLOAT),
-    rg32_float = static_cast<uint32_t>(rhi::Format::R32G32_FLOAT),
-    r32_float = static_cast<uint32_t>(rhi::Format::R32_FLOAT),
+    bgra8_unorm = static_cast<uint32_t>(rhi::Format::BGRA8Unorm),
+    bgra8_unorm_srgb = static_cast<uint32_t>(rhi::Format::BGRA8UnormSrgb),
+    bgrx8_unorm = static_cast<uint32_t>(rhi::Format::BGRX8Unorm),
+    bgrx8_unorm_srgb = static_cast<uint32_t>(rhi::Format::BGRX8UnormSrgb),
 
-    rgba16_float = static_cast<uint32_t>(rhi::Format::R16G16B16A16_FLOAT),
-    rg16_float = static_cast<uint32_t>(rhi::Format::R16G16_FLOAT),
-    r16_float = static_cast<uint32_t>(rhi::Format::R16_FLOAT),
+    r16_uint = static_cast<uint32_t>(rhi::Format::R16Uint),
+    r16_sint = static_cast<uint32_t>(rhi::Format::R16Sint),
+    r16_unorm = static_cast<uint32_t>(rhi::Format::R16Unorm),
+    r16_snorm = static_cast<uint32_t>(rhi::Format::R16Snorm),
+    r16_float = static_cast<uint32_t>(rhi::Format::R16Float),
 
-    rgba32_uint = static_cast<uint32_t>(rhi::Format::R32G32B32A32_UINT),
-    rgb32_uint = static_cast<uint32_t>(rhi::Format::R32G32B32_UINT),
-    rg32_uint = static_cast<uint32_t>(rhi::Format::R32G32_UINT),
-    r32_uint = static_cast<uint32_t>(rhi::Format::R32_UINT),
+    rg16_uint = static_cast<uint32_t>(rhi::Format::RG16Uint),
+    rg16_sint = static_cast<uint32_t>(rhi::Format::RG16Sint),
+    rg16_unorm = static_cast<uint32_t>(rhi::Format::RG16Unorm),
+    rg16_snorm = static_cast<uint32_t>(rhi::Format::RG16Snorm),
+    rg16_float = static_cast<uint32_t>(rhi::Format::RG16Float),
 
-    rgba16_uint = static_cast<uint32_t>(rhi::Format::R16G16B16A16_UINT),
-    rg16_uint = static_cast<uint32_t>(rhi::Format::R16G16_UINT),
-    r16_uint = static_cast<uint32_t>(rhi::Format::R16_UINT),
+    rgba16_uint = static_cast<uint32_t>(rhi::Format::RGBA16Uint),
+    rgba16_sint = static_cast<uint32_t>(rhi::Format::RGBA16Sint),
+    rgba16_unorm = static_cast<uint32_t>(rhi::Format::RGBA16Unorm),
+    rgba16_snorm = static_cast<uint32_t>(rhi::Format::RGBA16Snorm),
+    rgba16_float = static_cast<uint32_t>(rhi::Format::RGBA16Float),
 
-    rgba8_uint = static_cast<uint32_t>(rhi::Format::R8G8B8A8_UINT),
-    rg8_uint = static_cast<uint32_t>(rhi::Format::R8G8_UINT),
-    r8_uint = static_cast<uint32_t>(rhi::Format::R8_UINT),
+    r32_uint = static_cast<uint32_t>(rhi::Format::R32Uint),
+    r32_sint = static_cast<uint32_t>(rhi::Format::R32Sint),
+    r32_float = static_cast<uint32_t>(rhi::Format::R32Float),
 
-    rgba32_sint = static_cast<uint32_t>(rhi::Format::R32G32B32A32_SINT),
-    rgb32_sint = static_cast<uint32_t>(rhi::Format::R32G32B32_SINT),
-    rg32_sint = static_cast<uint32_t>(rhi::Format::R32G32_SINT),
-    r32_sint = static_cast<uint32_t>(rhi::Format::R32_SINT),
+    rg32_uint = static_cast<uint32_t>(rhi::Format::RG32Uint),
+    rg32_sint = static_cast<uint32_t>(rhi::Format::RG32Sint),
+    rg32_float = static_cast<uint32_t>(rhi::Format::RG32Float),
 
-    rgba16_sint = static_cast<uint32_t>(rhi::Format::R16G16B16A16_SINT),
-    rg16_sint = static_cast<uint32_t>(rhi::Format::R16G16_SINT),
-    r16_sint = static_cast<uint32_t>(rhi::Format::R16_SINT),
+    rgb32_uint = static_cast<uint32_t>(rhi::Format::RGB32Uint),
+    rgb32_sint = static_cast<uint32_t>(rhi::Format::RGB32Sint),
+    rgb32_float = static_cast<uint32_t>(rhi::Format::RGB32Float),
 
-    rgba8_sint = static_cast<uint32_t>(rhi::Format::R8G8B8A8_SINT),
-    rg8_sint = static_cast<uint32_t>(rhi::Format::R8G8_SINT),
-    r8_sint = static_cast<uint32_t>(rhi::Format::R8_SINT),
+    rgba32_uint = static_cast<uint32_t>(rhi::Format::RGBA32Uint),
+    rgba32_sint = static_cast<uint32_t>(rhi::Format::RGBA32Sint),
+    rgba32_float = static_cast<uint32_t>(rhi::Format::RGBA32Float),
 
-    rgba16_unorm = static_cast<uint32_t>(rhi::Format::R16G16B16A16_UNORM),
-    rg16_unorm = static_cast<uint32_t>(rhi::Format::R16G16_UNORM),
-    r16_unorm = static_cast<uint32_t>(rhi::Format::R16_UNORM),
+    r64_uint = static_cast<uint32_t>(rhi::Format::R64Uint),
+    r64_sint = static_cast<uint32_t>(rhi::Format::R64Sint),
 
-    rgba8_unorm = static_cast<uint32_t>(rhi::Format::R8G8B8A8_UNORM),
-    rgba8_unorm_srgb = static_cast<uint32_t>(rhi::Format::R8G8B8A8_UNORM_SRGB),
-    rg8_unorm = static_cast<uint32_t>(rhi::Format::R8G8_UNORM),
-    r8_unorm = static_cast<uint32_t>(rhi::Format::R8_UNORM),
-    bgra8_unorm = static_cast<uint32_t>(rhi::Format::B8G8R8A8_UNORM),
-    bgra8_unorm_srgb = static_cast<uint32_t>(rhi::Format::B8G8R8A8_UNORM_SRGB),
-    bgrx8_unorm = static_cast<uint32_t>(rhi::Format::B8G8R8X8_UNORM),
-    bgrx8_unorm_srgb = static_cast<uint32_t>(rhi::Format::B8G8R8X8_UNORM_SRGB),
+    bgra4_unorm = static_cast<uint32_t>(rhi::Format::BGRA4Unorm),
+    b5g6r5_unorm = static_cast<uint32_t>(rhi::Format::B5G6R5Unorm),
+    bgr5a1_unorm = static_cast<uint32_t>(rhi::Format::BGR5A1Unorm),
 
-    rgba16_snorm = static_cast<uint32_t>(rhi::Format::R16G16B16A16_SNORM),
-    rg16_snorm = static_cast<uint32_t>(rhi::Format::R16G16_SNORM),
-    r16_snorm = static_cast<uint32_t>(rhi::Format::R16_SNORM),
+    rgb9e5_ufloat = static_cast<uint32_t>(rhi::Format::RGB9E5Ufloat),
+    rgb10a2_uint = static_cast<uint32_t>(rhi::Format::RGB10A2Uint),
+    rgb10a2_unorm = static_cast<uint32_t>(rhi::Format::RGB10A2Unorm),
+    r11g11b10_float = static_cast<uint32_t>(rhi::Format::R11G11B10Float),
 
-    rgba8_snorm = static_cast<uint32_t>(rhi::Format::R8G8B8A8_SNORM),
-    rg8_snorm = static_cast<uint32_t>(rhi::Format::R8G8_SNORM),
-    r8_snorm = static_cast<uint32_t>(rhi::Format::R8_SNORM),
+    d32_float = static_cast<uint32_t>(rhi::Format::D32Float),
+    d16_unorm = static_cast<uint32_t>(rhi::Format::D16Unorm),
+    d32_float_s8_uint = static_cast<uint32_t>(rhi::Format::D32FloatS8Uint),
 
-    d32_float = static_cast<uint32_t>(rhi::Format::D32_FLOAT),
-    d16_unorm = static_cast<uint32_t>(rhi::Format::D16_UNORM),
-    d32_float_s8_uint = static_cast<uint32_t>(rhi::Format::D32_FLOAT_S8_UINT),
-    r32_float_x32_typeless = static_cast<uint32_t>(rhi::Format::R32_FLOAT_X32_TYPELESS),
-
-    bgra4_unorm = static_cast<uint32_t>(rhi::Format::B4G4R4A4_UNORM),
-    b5g6r5_unorm = static_cast<uint32_t>(rhi::Format::B5G6R5_UNORM),
-    b5g5r5a1_unorm = static_cast<uint32_t>(rhi::Format::B5G5R5A1_UNORM),
-
-    r9g9b9e5_sharedexp = static_cast<uint32_t>(rhi::Format::R9G9B9E5_SHAREDEXP),
-    r10g10b10a2_typeless = static_cast<uint32_t>(rhi::Format::R10G10B10A2_TYPELESS),
-    r10g10b10a2_unorm = static_cast<uint32_t>(rhi::Format::R10G10B10A2_UNORM),
-    r10g10b10a2_uint = static_cast<uint32_t>(rhi::Format::R10G10B10A2_UINT),
-    r11g11b10_float = static_cast<uint32_t>(rhi::Format::R11G11B10_FLOAT),
-
-    bc1_unorm = static_cast<uint32_t>(rhi::Format::BC1_UNORM),
-    bc1_unorm_srgb = static_cast<uint32_t>(rhi::Format::BC1_UNORM_SRGB),
-    bc2_unorm = static_cast<uint32_t>(rhi::Format::BC2_UNORM),
-    bc2_unorm_srgb = static_cast<uint32_t>(rhi::Format::BC2_UNORM_SRGB),
-    bc3_unorm = static_cast<uint32_t>(rhi::Format::BC3_UNORM),
-    bc3_unorm_srgb = static_cast<uint32_t>(rhi::Format::BC3_UNORM_SRGB),
-    bc4_unorm = static_cast<uint32_t>(rhi::Format::BC4_UNORM),
-    bc4_snorm = static_cast<uint32_t>(rhi::Format::BC4_SNORM),
-    bc5_unorm = static_cast<uint32_t>(rhi::Format::BC5_UNORM),
-    bc5_snorm = static_cast<uint32_t>(rhi::Format::BC5_SNORM),
-    bc6h_uf16 = static_cast<uint32_t>(rhi::Format::BC6H_UF16),
-    bc6h_sf16 = static_cast<uint32_t>(rhi::Format::BC6H_SF16),
-    bc7_unorm = static_cast<uint32_t>(rhi::Format::BC7_UNORM),
-    bc7_unorm_srgb = static_cast<uint32_t>(rhi::Format::BC7_UNORM_SRGB),
+    bc1_unorm = static_cast<uint32_t>(rhi::Format::BC1Unorm),
+    bc1_unorm_srgb = static_cast<uint32_t>(rhi::Format::BC1UnormSrgb),
+    bc2_unorm = static_cast<uint32_t>(rhi::Format::BC2Unorm),
+    bc2_unorm_srgb = static_cast<uint32_t>(rhi::Format::BC2UnormSrgb),
+    bc3_unorm = static_cast<uint32_t>(rhi::Format::BC3Unorm),
+    bc3_unorm_srgb = static_cast<uint32_t>(rhi::Format::BC3UnormSrgb),
+    bc4_unorm = static_cast<uint32_t>(rhi::Format::BC4Unorm),
+    bc4_snorm = static_cast<uint32_t>(rhi::Format::BC4Snorm),
+    bc5_unorm = static_cast<uint32_t>(rhi::Format::BC5Unorm),
+    bc5_snorm = static_cast<uint32_t>(rhi::Format::BC5Snorm),
+    bc6h_ufloat = static_cast<uint32_t>(rhi::Format::BC6HUfloat),
+    bc6h_sfloat = static_cast<uint32_t>(rhi::Format::BC6HSfloat),
+    bc7_unorm = static_cast<uint32_t>(rhi::Format::BC7Unorm),
+    bc7_unorm_srgb = static_cast<uint32_t>(rhi::Format::BC7UnormSrgb),
 
     count,
 };
@@ -123,8 +109,6 @@ enum class Format : uint32_t {
 enum class FormatType {
     /// Unknown format.
     unknown,
-    /// Typeless formats.
-    typeless,
     /// Floating-point formats.
     float_,
     /// Unsigned normalized formats.
@@ -143,7 +127,6 @@ SGL_ENUM_INFO(
     FormatType,
     {
         {FormatType::unknown, "unknown"},
-        {FormatType::typeless, "typeless"},
         {FormatType::float_, "float"},
         {FormatType::unorm, "unorm"},
         {FormatType::unorm_srgb, "unorm_srgb"},
@@ -213,8 +196,6 @@ struct SGL_API FormatInfo {
     /// True if format has a depth or stencil component.
     bool is_depth_stencil() const { return is_depth || is_stencil; }
 
-    /// True if format is typeless.
-    bool is_typeless_format() const { return type == FormatType::typeless; }
     /// True if format is floating point.
     bool is_float_format() const { return type == FormatType::float_; }
     /// True if format is integer.
@@ -304,7 +285,7 @@ SGL_ENUM_REGISTER(FormatSupport);
 namespace detail {
     template<typename T>
     struct HostTypeToFormat {
-        static constexpr Format value = Format::unknown;
+        static constexpr Format value = Format::undefined;
     };
 
 #define SGL_HOST_TYPE_TO_FORMAT(type, format)                                                                          \
