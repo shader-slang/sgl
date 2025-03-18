@@ -101,8 +101,6 @@ target_sources(sgl PRIVATE
     sgl/device/input_layout.h
     sgl/device/kernel.cpp
     sgl/device/kernel.h
-    sgl/device/memory_heap.cpp
-    sgl/device/memory_heap.h
     sgl/device/native_formats.h
     sgl/device/nvapi.slang
     sgl/device/nvapi.slangh
@@ -408,7 +406,6 @@ if(SGL_BUILD_PYTHON)
         sgl/device/python/formats.cpp
         sgl/device/python/input_layout.cpp
         sgl/device/python/kernel.cpp
-        sgl/device/python/memory_heap.cpp
         sgl/device/python/pipeline.cpp
         sgl/device/python/query.cpp
         sgl/device/python/raytracing.cpp

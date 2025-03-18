@@ -787,7 +787,7 @@ struct App {
             if (camera_controller->update(dt))
                 frame = 0;
 
-            ref<Texture> surface_texture = surface->get_current_texture();
+            ref<Texture> surface_texture = surface->acquire_next_image();
             if (!surface_texture)
                 continue;
 

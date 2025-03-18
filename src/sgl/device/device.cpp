@@ -13,7 +13,6 @@
 #include "sgl/device/pipeline.h"
 #include "sgl/device/kernel.h"
 #include "sgl/device/raytracing.h"
-#include "sgl/device/memory_heap.h"
 #include "sgl/device/command.h"
 #include "sgl/device/helpers.h"
 #include "sgl/device/native_handle_traits.h"
@@ -39,8 +38,6 @@
 #include <mutex>
 
 namespace sgl {
-
-static constexpr size_t TEXTURE_UPLOAD_ALIGNMENT = 512;
 
 static std::vector<Device*> s_devices;
 static std::mutex s_devices_mutex;
@@ -246,20 +243,6 @@ Device::Device(const DeviceDesc& desc)
         m_supports_cuda_interop = true;
     }
 
-    m_upload_heap = create_memory_heap(
-        {.memory_type = MemoryType::upload,
-         .usage = BufferUsage::copy_source,
-         .page_size = 1024 * 1024 * 4,
-         .label = "default_upload_heap"}
-    );
-
-    m_read_back_heap = create_memory_heap(
-        {.memory_type = MemoryType::read_back,
-         .usage = BufferUsage::copy_destination,
-         .page_size = 1024 * 1024 * 4,
-         .label = "default_read_back_heap"}
-    );
-
     if (m_desc.enable_print)
         m_debug_printer = std::make_unique<DebugPrinter>(this);
 
@@ -324,9 +307,6 @@ void Device::close()
 
     m_blitter.reset();
     m_debug_printer.reset();
-
-    m_read_back_heap.reset();
-    m_upload_heap.reset();
 
     m_global_fence.reset();
 
@@ -626,20 +606,11 @@ void Device::run_garbage_collection()
 {
     uint64_t signaled_value = m_global_fence->signaled_value();
 
-    // Execute deferred releases on the upload and read-back heaps.
-    m_upload_heap->execute_deferred_releases();
-    m_read_back_heap->execute_deferred_releases();
-
     uint64_t current_value = m_global_fence->current_value();
 
     // Update hot reload system if created.
     if (m_hot_reload)
         m_hot_reload->update();
-}
-
-ref<MemoryHeap> Device::create_memory_heap(MemoryHeapDesc desc)
-{
-    return make_ref<MemoryHeap>(ref<Device>(this), m_global_fence, std::move(desc));
 }
 
 void Device::flush_print()
@@ -659,18 +630,10 @@ void Device::wait()
     run_garbage_collection();
 }
 
-void Device::upload_buffer_data(Buffer* buffer, const void* data, size_t size, size_t offset)
+void Device::upload_buffer_data(Buffer* buffer, size_t offset, size_t size, const void* data)
 {
-    SGL_CHECK_NOT_NULL(buffer);
-    SGL_CHECK(offset + size <= buffer->size(), "Buffer write is out of bounds");
-    SGL_CHECK_NOT_NULL(data);
-
-    auto alloc = m_upload_heap->allocate(size, TEXTURE_UPLOAD_ALIGNMENT);
-
-    std::memcpy(alloc->data, data, size);
-
     auto command_encoder = create_command_encoder();
-    command_encoder->copy_buffer(buffer, offset, alloc->buffer, alloc->offset, size);
+    command_encoder->upload_buffer_data(buffer, offset, size, data);
     submit_command_buffer(command_encoder->finish());
 }
 
@@ -680,64 +643,55 @@ void Device::read_buffer_data(const Buffer* buffer, void* data, size_t size, siz
     SGL_CHECK(offset + size <= buffer->size(), "Buffer read is out of bounds");
     SGL_CHECK_NOT_NULL(data);
 
-    auto alloc = m_read_back_heap->allocate(size, TEXTURE_UPLOAD_ALIGNMENT);
-
-    ref<CommandEncoder> command_encoder = create_command_encoder();
-    command_encoder->copy_buffer(alloc->buffer, alloc->offset, buffer, offset, size);
-    submit_command_buffer(command_encoder->finish());
-    wait_for_idle();
-
-    std::memcpy(data, alloc->data, size);
+    // TODO(slang-rhi) use readBuffer function that takes data pointer instead of doing extra copy
+    Slang::ComPtr<ISlangBlob> blob;
+    SLANG_CALL(m_rhi_device->readBuffer(buffer->rhi_buffer(), offset, size, blob.writeRef()));
+    SGL_ASSERT(blob->getBufferSize() == size);
+    std::memcpy(data, blob->getBufferPointer(), size);
 }
 
-void Device::upload_texture_data(Texture* texture, uint32_t subresource, SubresourceData subresource_data)
+void Device::upload_texture_data(
+    Texture* texture,
+    SubresourceRange subresource_range,
+    uint3 offset,
+    uint3 extent,
+    std::span<SubresourceData> subresource_data
+)
 {
-    SGL_CHECK_NOT_NULL(texture);
-    SGL_CHECK_LT(subresource, texture->subresource_count());
-
     ref<CommandEncoder> command_encoder = create_command_encoder();
-    command_encoder->upload_texture_data(texture, subresource, subresource_data);
+    command_encoder->upload_texture_data(texture, subresource_range, offset, extent, subresource_data);
     submit_command_buffer(command_encoder->finish());
 }
 
-OwnedSubresourceData Device::read_texture_data(const Texture* texture, uint32_t subresource)
+void Device::upload_texture_data(Texture* texture, uint32_t layer, uint32_t mip_level, SubresourceData subresource_data)
+{
+    ref<CommandEncoder> command_encoder = create_command_encoder();
+    command_encoder->upload_texture_data(texture, layer, mip_level, subresource_data);
+    submit_command_buffer(command_encoder->finish());
+}
+
+OwnedSubresourceData Device::read_texture_data(const Texture* texture, uint32_t layer, uint32_t mip_level)
 {
     SGL_CHECK_NOT_NULL(texture);
-    SGL_CHECK_LT(subresource, texture->subresource_count());
+    SGL_CHECK_LT(layer, texture->layer_count());
+    SGL_CHECK_LT(mip_level, texture->mip_count());
 
-    SubresourceLayout layout = texture->get_subresource_layout(subresource);
-
-    size_t size = layout.total_size_aligned();
-    auto alloc = m_read_back_heap->allocate(size, TEXTURE_UPLOAD_ALIGNMENT);
-
-    ref<CommandEncoder> command_encoder = create_command_encoder();
-    command_encoder->copy_texture_to_buffer(
-        alloc->buffer,
-        alloc->offset,
-        alloc->size,
-        layout.row_pitch_aligned,
-        texture,
-        subresource
-    );
-    submit_command_buffer(command_encoder->finish());
-    wait_for_idle();
+    // TODO(slang-rhi) use readTexture function that takes data pointer instead of doing extra copy
+    Slang::ComPtr<ISlangBlob> blob;
+    rhi::Size row_pitch{0};
+    SLANG_CALL(m_rhi_device->readTexture(texture->rhi_texture(), layer, mip_level, blob.writeRef(), &row_pitch));
 
     OwnedSubresourceData subresource_data;
-    subresource_data.size = layout.total_size();
-    subresource_data.owned_data = std::make_unique<uint8_t[]>(subresource_data.size);
+    subresource_data.size = blob->getBufferSize();
+    subresource_data.owned_data = std::make_unique<uint8_t[]>(blob->getBufferSize());
     subresource_data.data = subresource_data.owned_data.get();
-    subresource_data.row_pitch = layout.row_pitch;
-    subresource_data.slice_pitch = layout.row_count * layout.row_pitch;
+    subresource_data.row_pitch = row_pitch;
+    // TODO(slang-rhi)
+    subresource_data.slice_pitch = 0; // layout.row_count * layout.row_pitch;
 
-    const uint8_t* src = alloc->data;
-    uint8_t* dst = subresource_data.owned_data.get();
-    for (uint32_t depth = 0; depth < layout.depth; ++depth) {
-        for (uint32_t row = 0; row < layout.row_count; ++row) {
-            std::memcpy(dst, src, layout.row_pitch);
-            src += layout.row_pitch_aligned;
-            dst += layout.row_pitch;
-        }
-    }
+    SubresourceLayout layout = texture->get_subresource_layout(mip_level);
+
+    std::memcpy(subresource_data.owned_data.get(), blob->getBufferPointer(), subresource_data.size);
 
     return subresource_data;
 }

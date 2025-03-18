@@ -128,11 +128,6 @@ class ShaderObject;
 struct InputLayoutDesc;
 class InputLayout;
 
-// memory_heap.h
-
-struct MemoryHeapDesc;
-class MemoryHeap;
-
 // blit.h
 
 class Blitter;

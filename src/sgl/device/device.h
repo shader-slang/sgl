@@ -279,14 +279,14 @@ public:
     /**
      * \brief Create a new texture.
      *
-     * \param type Resource type (optional). Type is inferred from width, height, depth if not specified.
+     * \param type Texture type.
      * \param format Texture format.
      * \param width Width in pixels.
      * \param height Height in pixels.
      * \param depth Depth in pixels.
-     * \param array_size Number of array slices (1 for non-array textures).
-     * \param mip_count Number of mip levels (0 for auto-generated mips).
-     * \param sample_count Number of samples per pixel (1 for non-multisampled textures).
+     * \param array_length Array length.
+     * \param mip_count Mip level count. Number of mip levels (0 for auto-generated mips).
+     * \param sample_count Number of samples for multisampled textures.
      * \param quality Quality level for multisampled textures.
      * \param usage Resource usage.
      * \param memory_type Memory type.
@@ -473,11 +473,6 @@ public:
      */
     void run_garbage_collection();
 
-    ref<MemoryHeap> create_memory_heap(MemoryHeapDesc desc);
-
-    MemoryHeap* upload_heap() const { return m_upload_heap; }
-    MemoryHeap* read_back_heap() const { return m_read_back_heap; }
-
     DebugPrinter* debug_printer() const { return m_debug_printer.get(); }
 
     /// Block and flush all shader side debug print output.
@@ -493,11 +488,11 @@ public:
      * Upload host memory to buffer.
      *
      * \param buffer Buffer to write to.
-     * \param data Data to write.
-     * \param size Size of the data in bytes.
      * \param offset Offset in the buffer to write to.
+     * \param size Size of the data in bytes.
+     * \param data Data to write.
      */
-    void upload_buffer_data(Buffer* buffer, const void* data, size_t size, size_t offset = 0);
+    void upload_buffer_data(Buffer* buffer, size_t offset, size_t size, const void* data);
 
     /**
      * Read buffer data to host memory.
@@ -517,17 +512,31 @@ public:
      * \param subresource Subresource index.
      * \param subresource_data Subresource data.
      */
-    void upload_texture_data(Texture* texture, uint32_t subresource, SubresourceData subresource_data);
+    void upload_texture_data(
+        Texture* texture,
+        SubresourceRange subresource_range,
+        uint3 offset,
+        uint3 extent,
+        std::span<SubresourceData> subresource_data
+    );
+
+    void upload_texture_data(
+        Texture* texture,
+        uint32_t layer,
+        uint32_t mip_level,
+        SubresourceData subresource_data
+    );
 
     /**
      * Read texture data to host memory.
      * \note This will wait until the data is copied back to host memory.
      *
      * \param texture Texture to read from.
-     * \param subresource Subresource index.
+     * \param layer Layer index.
+     * \param mip_level Mip level.
      * \return Subresource data in host memory.
      */
-    OwnedSubresourceData read_texture_data(const Texture* texture, uint32_t subresource);
+    OwnedSubresourceData read_texture_data(const Texture* texture, uint32_t layer, uint32_t mip_level);
 
     rhi::IDevice* rhi_device() const { return m_rhi_device; }
     rhi::ICommandQueue* rhi_graphics_queue() const { return m_rhi_graphics_queue; }
@@ -614,9 +623,6 @@ private:
     std::vector<std::string> m_features;
 
     ref<Fence> m_global_fence;
-
-    ref<MemoryHeap> m_upload_heap;
-    ref<MemoryHeap> m_read_back_heap;
 
     std::unique_ptr<DebugPrinter> m_debug_printer;
 

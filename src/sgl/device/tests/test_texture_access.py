@@ -12,22 +12,22 @@ import sglhelpers as helpers
 
 
 # Generate random data for a texture with a given array size and mip count.
-def make_rand_data(type: sgl.ResourceType, array_size: int, mip_count: int):
+def make_rand_data(type: sgl.TextureType, array_size: int, mip_count: int):
 
-    if type == sgl.ResourceType.texture_cube:
+    if type == sgl.TextureType.texture_cube:
         array_size *= 6
-        type = sgl.ResourceType.texture_2d
+        type = sgl.TextureType.texture_2d
 
     levels = []
     for i in range(0, array_size):
         sz = 32
         mips = []
         for i in range(0, mip_count):
-            if type == sgl.ResourceType.texture_1d:
+            if type == sgl.TextureType.texture_1d:
                 mips.append(np.random.rand(sz, 4).astype(np.float32))
-            elif type == sgl.ResourceType.texture_2d:
+            elif type == sgl.TextureType.texture_2d:
                 mips.append(np.random.rand(sz, sz, 4).astype(np.float32))
-            elif type == sgl.ResourceType.texture_3d:
+            elif type == sgl.TextureType.texture_3d:
                 mips.append(np.random.rand(sz, sz, sz, 4).astype(np.float32))
             else:
                 raise ValueError(f"Unsupported resource type: {type}")
@@ -37,20 +37,20 @@ def make_rand_data(type: sgl.ResourceType, array_size: int, mip_count: int):
 
 
 # Generate dictionary of arguments for creating a texture.
-def make_args(type: sgl.ResourceType, array_size: int, mips: int):
+def make_args(type: sgl.TextureType, array_size: int, mips: int):
     args = {
         "format": sgl.Format.rgba32_float,
         "usage": sgl.TextureUsage.shader_resource | sgl.TextureUsage.unordered_access,
         "mip_count": mips,
         "array_size": array_size,
     }
-    if type == sgl.ResourceType.texture_1d:
+    if type == sgl.TextureType.texture_1d:
         args.update({"type": type, "width": 32})
-    elif type == sgl.ResourceType.texture_2d:
+    elif type == sgl.TextureType.texture_2d:
         args.update({"type": type, "width": 32, "height": 32})
-    elif type == sgl.ResourceType.texture_3d:
+    elif type == sgl.TextureType.texture_3d:
         args.update({"type": type, "width": 32, "height": 32, "depth": 32})
-    elif type == sgl.ResourceType.texture_cube:
+    elif type == sgl.TextureType.texture_cube:
         args.update({"type": type, "width": 32, "height": 32})
     else:
         raise ValueError(f"Unsupported resource type: {type}")
@@ -60,28 +60,28 @@ def make_args(type: sgl.ResourceType, array_size: int, mips: int):
 @pytest.mark.parametrize(
     "type",
     [
-        sgl.ResourceType.texture_1d,
-        sgl.ResourceType.texture_2d,
-        sgl.ResourceType.texture_3d,
-        sgl.ResourceType.texture_cube,
+        sgl.TextureType.texture_1d,
+        sgl.TextureType.texture_2d,
+        sgl.TextureType.texture_3d,
+        sgl.TextureType.texture_cube,
     ],
 )
 @pytest.mark.parametrize("slices", [1, 4, 16])
 @pytest.mark.parametrize("mips", [0, 1, 4])
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_read_write_texture(
-    device_type: sgl.DeviceType, slices: int, mips: int, type: sgl.ResourceType
+    device_type: sgl.DeviceType, slices: int, mips: int, type: sgl.TextureType
 ):
     device = helpers.get_device(device_type)
     assert device is not None
 
     # No 3d texture arrays.
-    if type == sgl.ResourceType.texture_3d and slices > 1:
+    if type == sgl.TextureType.texture_3d and slices > 1:
         return
 
     if (
         device_type == sgl.DeviceType.metal
-        and type == sgl.ResourceType.texture_1d
+        and type == sgl.TextureType.texture_1d
         and mips > 1
     ):
         pytest.skip("Metal does not support 1d texture with mips")
@@ -105,35 +105,35 @@ def test_read_write_texture(
 @pytest.mark.parametrize(
     "type",
     [
-        sgl.ResourceType.texture_1d,
-        sgl.ResourceType.texture_2d,
-        sgl.ResourceType.texture_3d,
+        sgl.TextureType.texture_1d,
+        sgl.TextureType.texture_2d,
+        sgl.TextureType.texture_3d,
     ],
 )
 @pytest.mark.parametrize("slices", [1, 4])
 @pytest.mark.parametrize("mips", [0, 1, 4])
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_shader_read_write_texture(
-    device_type: sgl.DeviceType, slices: int, mips: int, type: sgl.ResourceType
+    device_type: sgl.DeviceType, slices: int, mips: int, type: sgl.TextureType
 ):
     device = helpers.get_device(device_type)
     assert device is not None
 
     # No 3d texture arrays.
-    if type == sgl.ResourceType.texture_3d and slices > 1:
+    if type == sgl.TextureType.texture_3d and slices > 1:
         return
 
     # Skip 1d texture arrays until slang fix is in
-    if type == sgl.ResourceType.texture_1d and slices > 1:
+    if type == sgl.TextureType.texture_1d and slices > 1:
         pytest.skip("Pending slang crash using 1d texture array as UAV")
 
     # Skip 3d textures with mips until slang fix is in
-    if type == sgl.ResourceType.texture_3d and mips != 1:
+    if type == sgl.TextureType.texture_3d and mips != 1:
         pytest.skip("Pending slang fix for 3d textures with mips")
 
     if (
         device_type == sgl.DeviceType.metal
-        and type == sgl.ResourceType.texture_1d
+        and type == sgl.TextureType.texture_1d
         and mips > 1
     ):
         pytest.skip("Metal does not support 1d texture with mips")
@@ -172,22 +172,22 @@ def test_shader_read_write_texture(
                 device.link_program([module], [module.entry_point("copy_color")])
             )
 
-            srv = src_tex.get_srv(mip)
-            assert srv.subresource_range.base_array_layer == 0
-            assert srv.subresource_range.layer_count == 1
-            assert srv.subresource_range.mip_level == mip
+            src_view = src_tex.create_view({"subresource_range": {"mip_level": mip}})
+            assert src_view.subresource_range.base_array_layer == 0
+            assert src_view.subresource_range.layer_count == 1
+            assert src_view.subresource_range.mip_level == mip
             assert srv.subresource_range.mip_count == src_tex.mip_count - mip
 
-            uav = dest_tex.get_uav(mip)
-            assert uav.subresource_range.base_array_layer == 0
-            assert uav.subresource_range.layer_count == 1
-            assert uav.subresource_range.mip_level == mip
-            assert uav.subresource_range.mip_count == dest_tex.mip_count - mip
+            dst_view = dest_tex.create_view({"subresource_range": {"mip_level": mip}})
+            assert dst_view.subresource_range.base_array_layer == 0
+            assert dst_view.subresource_range.layer_count == 1
+            assert dst_view.subresource_range.mip_level == mip
+            assert dst_view.subresource_range.mip_count == dest_tex.mip_count - mip
 
             copy_kernel.dispatch(
                 [src_tex.width, src_tex.height, src_tex.depth],
-                src=srv,
-                dest=uav,
+                src=src_view,
+                dest=dst_view,
             )
         else:
 

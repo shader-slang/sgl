@@ -120,16 +120,16 @@ void AppWindow::_run_frame()
     m_window->process_events();
     m_ui_context->process_events();
 
-    ref<Texture> texture = m_surface->get_current_texture();
+    ref<Texture> texture = m_surface->acquire_next_image();
     if (!texture)
         return;
 
     ref<CommandEncoder> command_encoder = m_device->create_command_encoder();
 
     if (get_format_info(texture->format()).is_float_format())
-        command_encoder->clear_texture(texture, float4{0.f, 0.f, 0.f, 1.f});
+        command_encoder->clear_texture_float(texture, {}, float4{0.f, 0.f, 0.f, 1.f});
     else
-        command_encoder->clear_texture(texture, uint4{0, 0, 0, 255});
+        command_encoder->clear_texture_uint(texture, {}, uint4{0, 0, 0, 255});
 
     struct RenderContext render_context {
         .surface_texture = texture, .command_encoder = command_encoder,

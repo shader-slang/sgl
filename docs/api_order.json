@@ -113,8 +113,6 @@
         "sgl.InputSlotClass",
         "sgl.Kernel",
         "sgl.LogicOp",
-        "sgl.MemoryHeap",
-        "sgl.MemoryHeapDesc",
         "sgl.MemoryType",
         "sgl.ModifierID",
         "sgl.Pipeline",

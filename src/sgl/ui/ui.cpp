@@ -306,14 +306,18 @@ Context::Context(ref<Device> device)
         int width;
         int height;
         io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
+        SubresourceData data[1] = {{
+            .data = pixels,
+            .size = size_t(width * height * 4),
+            .row_pitch = size_t(width * 4),
+        }};
         m_font_texture = m_device->create_texture({
             .format = Format::rgba8_unorm,
             .width = narrow_cast<uint32_t>(width),
             .height = narrow_cast<uint32_t>(height),
             .mip_count = 1,
             .usage = TextureUsage::shader_resource,
-            .data = pixels,
-            .data_size = size_t(width * height * 4),
+            .data = data,
         });
 
         io.Fonts->SetTexID(static_cast<ImTextureID>(m_font_texture.get()));

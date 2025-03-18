@@ -12,7 +12,6 @@
 #include "sgl/device/raytracing.h"
 #include "sgl/device/query.h"
 #include "sgl/device/input_layout.h"
-#include "sgl/device/memory_heap.h"
 #include "sgl/device/surface.h"
 #include "sgl/device/shader.h"
 #include "sgl/device/command.h"
@@ -356,7 +355,7 @@ SGL_PY_EXPORT(device_device)
            uint32_t width,
            uint32_t height,
            uint32_t depth,
-           uint32_t array_size,
+           uint32_t array_length,
            uint32_t mip_count,
            uint32_t sample_count,
            uint32_t sample_quality,
@@ -365,6 +364,7 @@ SGL_PY_EXPORT(device_device)
            std::string label,
            std::optional<nb::ndarray<nb::numpy>> data)
         {
+            SubresourceData subresourceData[1];
             if (data) {
                 SGL_CHECK(is_ndarray_contiguous(*data), "Data is not contiguous.");
             }
@@ -374,15 +374,14 @@ SGL_PY_EXPORT(device_device)
                 .width = width,
                 .height = height,
                 .depth = depth,
-                .array_size = array_size,
+                .array_length = array_length,
                 .mip_count = mip_count,
                 .sample_count = sample_count,
                 .sample_quality = sample_quality,
                 .memory_type = memory_type,
                 .usage = usage,
                 .label = std::move(label),
-                .data = data ? data->data() : nullptr,
-                .data_size = data ? data->nbytes() : 0,
+                .data = data ? subresourceData : {},
             });
         },
         "type"_a = TextureDesc().type,
@@ -390,7 +389,7 @@ SGL_PY_EXPORT(device_device)
         "width"_a = TextureDesc().width,
         "height"_a = TextureDesc().height,
         "depth"_a = TextureDesc().depth,
-        "array_size"_a = TextureDesc().array_size,
+        "array_length"_a = TextureDesc().array_length,
         "mip_count"_a = TextureDesc().mip_count,
         "sample_count"_a = TextureDesc().sample_count,
         "sample_quality"_a = TextureDesc().sample_quality,
@@ -726,34 +725,6 @@ SGL_PY_EXPORT(device_device)
     );
     device.def("create_compute_kernel", &Device::create_compute_kernel, "desc"_a, D(Device, create_compute_kernel));
 
-    device.def(
-        "create_memory_heap",
-        [](Device* self,
-           MemoryType memory_type,
-           BufferUsage usage,
-           DeviceSize page_size,
-           bool retain_large_pages,
-           std::string label)
-        {
-            return self->create_memory_heap({
-                .memory_type = memory_type,
-                .usage = usage,
-                .page_size = page_size,
-                .retain_large_pages = retain_large_pages,
-                .label = std::move(label),
-            });
-        },
-        "memory_type"_a,
-        "usage"_a,
-        "page_size"_a = MemoryHeapDesc().page_size,
-        "retain_large_pages"_a = MemoryHeapDesc().retain_large_pages,
-        "label"_a = MemoryHeapDesc().label,
-        D(Device, create_memory_heap)
-    );
-    device.def("create_memory_heap", &Device::create_memory_heap, "desc"_a, D(Device, create_memory_heap));
-
-    device.def_prop_ro("upload_heap", &Device::upload_heap, D(Device, upload_heap));
-    device.def_prop_ro("read_back_heap", &Device::read_back_heap, D(Device, read_back_heap));
     device.def("flush_print", &Device::flush_print, D(Device, flush_print));
     device.def("flush_print_to_string", &Device::flush_print_to_string, D(Device, flush_print_to_string));
     device.def("run_garbage_collection", &Device::run_garbage_collection, D(Device, run_garbage_collection));

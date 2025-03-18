@@ -73,6 +73,6 @@ SGL_PY_EXPORT(device_surface)
             D_NA(Surface, configure)
         )
         .def("configure", &Surface::configure, "config"_a, D_NA(Surface, configure))
-        .def("get_current_texture", &Surface::get_current_texture, D_NA(Surface, get_current_texture))
+        .def("acquire_next_image", &Surface::acquire_next_image, D_NA(Surface, acquire_next_image))
         .def("present", &Surface::present, D_NA(Surface, present));
 }

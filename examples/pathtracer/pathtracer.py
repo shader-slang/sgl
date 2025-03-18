@@ -729,7 +729,7 @@ class App:
             if self.camera_controller.update(dt):
                 frame = 0
 
-            surface_texture = self.surface.get_current_texture()
+            surface_texture = self.surface.acquire_next_image()
             if not surface_texture:
                 continue
 

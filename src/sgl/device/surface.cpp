@@ -57,10 +57,10 @@ void Surface::configure(const SurfaceConfig& config)
     m_config = config;
 }
 
-ref<Texture> Surface::get_current_texture()
+ref<Texture> Surface::acquire_next_image()
 {
     Slang::ComPtr<rhi::ITexture> texture;
-    SLANG_CALL(m_rhi_surface->getCurrentTexture(texture.writeRef()));
+    SLANG_CALL(m_rhi_surface->acquireNextImage(texture.writeRef()));
     rhi::TextureDesc texture_desc = texture->getDesc();
     return m_device->create_texture_from_resource(
         {

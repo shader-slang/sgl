@@ -74,7 +74,7 @@ decoded_tex = device.create_texture(
 
 # Load shader module
 constants = f"export static const bool USE_ADAM = true;\nexport static const uint OPT_STEPS = {args.opt_steps};\n"
-program = device.load_program("tinybc.slang", ["main"], constants)
+program = device.load_program("tinybc.slang", ["compute_main"], constants)
 kernel = device.create_compute_kernel(program)
 
 t = sgl.Timer()

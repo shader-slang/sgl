@@ -118,7 +118,7 @@ class App:
             self.fps_avg = 0.95 * self.fps_avg + 0.05 * (1.0 / elapsed)
             self.fps_text.text = f"FPS: {self.fps_avg:.2f}"
 
-            surface_texture = self.surface.get_current_texture()
+            surface_texture = self.surface.acquire_next_image()
             if not surface_texture:
                 continue
 

@@ -66,7 +66,7 @@ class PipelineTestContext:
         indices = np.array([0, 1, 2, 1, 3, 2], dtype=np.uint32)
 
         vertex_buffer = self.device.create_buffer(
-            usage=sgl.BufferUsage.shader_resource | sgl.BufferUsage.vertex,
+            usage=sgl.BufferUsage.shader_resource | sgl.BufferUsage.vertex_buffer,
             label="vertex_buffer",
             data=vertices,
         )
@@ -82,7 +82,7 @@ class PipelineTestContext:
             vertex_streams=[{"stride": 12}],
         )
         index_buffer = self.device.create_buffer(
-            usage=sgl.BufferUsage.shader_resource | sgl.BufferUsage.index,
+            usage=sgl.BufferUsage.shader_resource | sgl.BufferUsage.index_buffer,
             label="index_buffer",
             data=indices,
         )
@@ -153,11 +153,11 @@ def test_gfx_clear(device_type: sgl.DeviceType):
         pytest.skip("Graphics pipeline tests not supported on Metal")
     ctx = PipelineTestContext(device_type)
 
-    command_buffer = ctx.device.create_command_buffer()
-    command_buffer.clear_resource_view(
-        ctx.output_texture.get_rtv(), [1.0, 0.0, 1.0, 0.0]
+    command_encoder = ctx.device.create_command_encoder()
+    command_encoder.clear_texture_float(
+        ctx.output_texture, clear_value=[1.0, 0.0, 1.0, 0.0]
     )
-    command_buffer.submit()
+    ctx.device.submit_command_buffer(command_encoder.finish())
 
     area = ctx.output_texture.width * ctx.output_texture.height
 
@@ -174,55 +174,76 @@ class GfxContext:
         self.vertex_buffer, self.index_buffer, self.input_layout = (
             ctx.create_quad_mesh()
         )
-        self.framebuffer = ctx.device.create_framebuffer(
-            render_targets=[ctx.output_texture.get_rtv()]
-        )
 
     # Draw a quad with the given pipeline and color, optionally clearing to black first.
     # The quad is [-1,-1]->[1,1] so if offset/scale aren't specified will fill the whole screen.
     def draw(
         self,
-        pipeline: sgl.GraphicsPipeline,
+        pipeline: sgl.RenderPipeline,
         vert_offset: sgl.float2 = sgl.float2(0, 0),
         vert_scale: sgl.float2 = sgl.float2(1, 1),
         vert_z: float = 0.0,
         color: sgl.float4 = sgl.float4(0, 0, 0, 0),
         viewport: Optional[sgl.Viewport] = None,
+        scissor_rect: Optional[sgl.ScissorRect] = None,
         clear: bool = True,
     ):
-        command_buffer = self.ctx.device.create_command_buffer()
-        if clear:
-            command_buffer.clear_resource_view(
-                self.ctx.output_texture.get_rtv(), [0.0, 0.0, 0.0, 1.0]
-            )
-        with command_buffer.encode_render_commands(self.framebuffer) as encoder:
-            if viewport:
-                encoder.set_viewport_and_scissor_rect(viewport)
-            else:
-                encoder.set_viewport_and_scissor_rect(
+        command_encoder = self.ctx.device.create_command_encoder()
+        with command_encoder.begin_render_pass(
+            {
+                "color_attachments": [
                     {
-                        "width": self.ctx.output_texture.width,
-                        "height": self.ctx.output_texture.height,
+                        "view": self.ctx.output_texture.create_view({}),
+                        "clear_value": [0.0, 0.0, 0.0, 1.0],
+                        "load_op": sgl.LoadOp.clear if clear else sgl.LoadOp.dont_care,
+                        "store_op": sgl.StoreOp.store,
                     }
-                )
+                ]
+            }
+        ) as encoder:
+            encoder.set_render_state(
+                {
+                    "vertex_buffers": [self.vertex_buffer],
+                    "index_buffer": self.index_buffer,
+                    "index_format": sgl.IndexFormat.uint32,
+                    "viewports": [
+                        (
+                            viewport
+                            if viewport
+                            else sgl.Viewport.from_size(
+                                self.ctx.output_texture.width,
+                                self.ctx.output_texture.height,
+                            )
+                        )
+                    ],
+                    "scissor_rects": [
+                        (
+                            scissor_rect
+                            if scissor_rect
+                            else sgl.ScissorRect.from_size(
+                                self.ctx.output_texture.width,
+                                self.ctx.output_texture.height,
+                            )
+                        )
+                    ],
+                }
+            )
             shader_object = encoder.bind_pipeline(pipeline)
             cursor = sgl.ShaderCursor(shader_object)
             cursor.vert_offset = vert_offset
             cursor.vert_scale = vert_scale
             cursor.vert_z = float(vert_z)
             cursor.frag_color = color
-            encoder.set_vertex_buffer(0, self.vertex_buffer)
-            encoder.set_index_buffer(self.index_buffer, sgl.Format.r32_uint, 0)
-            encoder.set_primitive_topology(sgl.PrimitiveTopology.triangle_list)
-            encoder.draw_indexed(int(self.index_buffer.size / 4))
-        command_buffer.submit()
+            encoder.draw_indexed({"vertex_count": self.index_buffer.size // 4})
+        self.ctx.device.submit_command_buffer(command_encoder.finish())
 
     # Helper to create pipeline with given set of args + correct program/layouts.
     def create_render_pipeline(self, **kwargs: Any):
         return self.ctx.device.create_render_pipeline(
             program=self.program,
             input_layout=self.input_layout,
-            framebuffer_layout=self.framebuffer.layout,
+            primitive_topology=sgl.PrimitiveTopology.triangle_list,
+            targets=[{"format": sgl.Format.rgba32_float}],
             **kwargs,
         )
 
@@ -535,21 +556,15 @@ class RayContext:
         indices = np.array([0, 1, 2, 1, 3, 2], dtype=np.uint32)
 
         vertex_buffer = ctx.device.create_buffer(
-            usage=sgl.BufferUsage.shader_resource,
+            usage=sgl.BufferUsage.shader_resource | sgl.BufferUsage.acceleration_structure_build_input,
             label="vertex_buffer",
             data=vertices,
         )
 
         index_buffer = ctx.device.create_buffer(
-            usage=sgl.BufferUsage.shader_resource,
+            usage=sgl.BufferUsage.shader_resource | sgl.BufferUsage.acceleration_structure_build_input,
             label="index_buffer",
             data=indices,
-        )
-
-        transform_buffer = ctx.device.create_buffer(
-            usage=sgl.BufferUsage.shader_resource,
-            label="transform_buffer",
-            data=sgl.float3x4.identity().to_numpy(),
         )
 
         blas_geometry_desc = sgl.RayTracingGeometryDesc()

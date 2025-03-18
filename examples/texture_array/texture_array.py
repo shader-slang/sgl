@@ -43,7 +43,7 @@ class DemoWindow(sgl.AppWindow):
         window = sgl.ui.Window(self.screen, "Settings", size=sgl.float2(500, 300))
 
         self.layer = sgl.ui.SliderInt(
-            window, "Layer", value=0, min=0, max=self.texture.array_size - 1
+            window, "Layer", value=0, min=0, max=self.texture.array_length - 1
         )
         self.mip_level = sgl.ui.SliderFloat(
             window, "MIP Level", value=0, min=0, max=self.texture.mip_count - 1

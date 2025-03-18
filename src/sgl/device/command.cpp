@@ -29,10 +29,20 @@ namespace detail {
     rhi::SubresourceRange rhi_subresource_range(const Texture* texture, uint32_t subresource_index)
     {
         return rhi::SubresourceRange{
-            .mipLevel = texture->get_subresource_mip_level(subresource_index),
+            .mipLevel = subresource_index % texture->mip_count(),
             .mipLevelCount = 1,
-            .baseArrayLayer = texture->get_subresource_array_slice(subresource_index),
+            .baseArrayLayer = subresource_index / texture->mip_count(),
             .layerCount = 1,
+        };
+    }
+
+    rhi::SubresourceRange to_rhi(const SubresourceRange& range)
+    {
+        return rhi::SubresourceRange{
+            .mipLevel = range.mip_level,
+            .mipLevelCount = range.mip_count,
+            .baseArrayLayer = range.base_array_layer,
+            .layerCount = range.layer_count,
         };
     }
 
@@ -378,7 +388,7 @@ void CommandEncoder::copy_texture(
     rhi::SubresourceRange src_sr = detail::rhi_subresource_range(src, src_subresource);
 
     if (all(extent == uint3(-1)))
-        extent = src->get_mip_dimensions(src_sr.mipLevel) - src_offset;
+        extent = src->get_mip_size(src_sr.mipLevel) - src_offset;
 
     rhi::Extents rhi_extent
         = {narrow_cast<int32_t>(extent.x), narrow_cast<int32_t>(extent.y), narrow_cast<int32_t>(extent.z)};
@@ -394,6 +404,7 @@ void CommandEncoder::copy_texture(
     );
 }
 
+#if 0
 void CommandEncoder::copy_texture_to_buffer(
     Buffer* dst,
     DeviceOffset dst_offset,
@@ -422,7 +433,7 @@ void CommandEncoder::copy_texture_to_buffer(
     );
 
     if (all(extent == uint3(-1))) {
-        extent = src->get_mip_dimensions(src->get_subresource_mip_level(src_subresource)) - src_offset;
+        extent = src->get_mip_size(src->get_subresource_mip_level(src_subresource)) - src_offset;
     }
 
     // TODO: in D3D12, the extent must be a multiple of the block size (this should be fixed in gfx instead)
@@ -443,6 +454,7 @@ void CommandEncoder::copy_texture_to_buffer(
         rhi::Extents{narrow_cast<int32_t>(extent.x), narrow_cast<int32_t>(extent.y), narrow_cast<int32_t>(extent.z)}
     );
 }
+#endif
 
 void CommandEncoder::upload_buffer_data(Buffer* buffer, size_t offset, size_t size, const void* data)
 {
@@ -453,14 +465,57 @@ void CommandEncoder::upload_buffer_data(Buffer* buffer, size_t offset, size_t si
 
     set_buffer_state(buffer, ResourceState::copy_destination);
 
-    m_rhi_command_encoder->uploadBufferData(buffer->rhi_buffer(), offset, size, const_cast<void*>(data));
+    SLANG_CALL(m_rhi_command_encoder->uploadBufferData(buffer->rhi_buffer(), offset, size, const_cast<void*>(data)));
 }
 
-void CommandEncoder::upload_texture_data(Texture* texture, uint32_t subresource, SubresourceData subresource_data)
+void CommandEncoder::upload_texture_data(
+    Texture* texture,
+    SubresourceRange subresource_range,
+    uint3 offset,
+    uint3 extent,
+    std::span<SubresourceData> subresource_data
+)
 {
     SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(texture);
-    SGL_CHECK_LT(subresource, texture->subresource_count());
+
+    short_vector<rhi::SubresourceData, 16> rhi_subresource_data;
+    for (const auto& data : subresource_data) {
+        rhi_subresource_data.push_back({
+            .data = const_cast<void*>(data.data),
+            .strideY = data.row_pitch,
+            .strideZ = data.slice_pitch,
+        });
+    }
+
+    SLANG_CALL(m_rhi_command_encoder->uploadTextureData(
+        texture->rhi_texture(),
+        detail::to_rhi(subresource_range),
+        rhi::Offset3D(offset.x, offset.y, offset.z),
+        rhi::Extents{narrow_cast<int32_t>(extent.x), narrow_cast<int32_t>(extent.y), narrow_cast<int32_t>(extent.z)},
+        rhi_subresource_data.data(),
+        narrow_cast<uint32_t>(rhi_subresource_data.size())
+    ));
+}
+
+void CommandEncoder::upload_texture_data(
+    Texture* texture,
+    uint32_t layer,
+    uint32_t mip_level,
+    SubresourceData subresource_data
+)
+{
+    SGL_CHECK(m_open, "Command encoder is finished");
+    SGL_CHECK_NOT_NULL(texture);
+    SGL_CHECK_LT(layer, texture->layer_count());
+    SGL_CHECK_LT(mip_level, texture->mip_count());
+
+    rhi::SubresourceRange rhi_subresource_range = {
+        .mipLevel = mip_level,
+        .mipLevelCount = 1,
+        .baseArrayLayer = layer,
+        .layerCount = 1,
+    };
 
     rhi::SubresourceData rhi_subresource_data = {
         .data = const_cast<void*>(subresource_data.data),
@@ -468,15 +523,14 @@ void CommandEncoder::upload_texture_data(Texture* texture, uint32_t subresource,
         .strideZ = subresource_data.slice_pitch,
     };
 
-    rhi::SubresourceRange sr = detail::rhi_subresource_range(texture, subresource);
-    m_rhi_command_encoder->uploadTextureData(
+    SLANG_CALL(m_rhi_command_encoder->uploadTextureData(
         texture->rhi_texture(),
-        sr,
-        rhi::Offset3D(0, 0, 0),
-        rhi::Extents{-1, -1, -1},
+        rhi_subresource_range,
+        rhi::Offset3D{0, 0, 0},
+        rhi::Extents::kWholeTexture,
         &rhi_subresource_data,
         1
-    );
+    ));
 }
 
 void CommandEncoder::clear_buffer(Buffer* buffer, BufferRange range)
@@ -487,30 +541,47 @@ void CommandEncoder::clear_buffer(Buffer* buffer, BufferRange range)
     m_rhi_command_encoder->clearBuffer(buffer->rhi_buffer(), range.offset, range.size);
 }
 
-void CommandEncoder::clear_texture(
-    Texture* texture,
-    float4 clear_value,
-    SubresourceRange range,
-    bool clear_depth,
-    bool clear_stencil
-)
+void CommandEncoder::clear_texture_float(Texture* texture, SubresourceRange subresource_range, float4 clear_value)
 {
-    // TODO(slang-rhi)
-    SGL_UNUSED(texture, clear_value, range, clear_depth, clear_stencil);
-    SGL_UNIMPLEMENTED();
+    SGL_CHECK(m_open, "Command encoder is finished");
+    SGL_CHECK_NOT_NULL(texture);
+    m_rhi_command_encoder
+        ->clearTextureFloat(texture->rhi_texture(), detail::to_rhi(subresource_range), &clear_value[0]);
 }
 
-void CommandEncoder::clear_texture(
+void CommandEncoder::clear_texture_uint(Texture* texture, SubresourceRange subresource_range, uint4 clear_value)
+{
+    SGL_CHECK(m_open, "Command encoder is finished");
+    SGL_CHECK_NOT_NULL(texture);
+    m_rhi_command_encoder->clearTextureUint(texture->rhi_texture(), detail::to_rhi(subresource_range), &clear_value[0]);
+}
+
+void CommandEncoder::clear_texture_sint(Texture* texture, SubresourceRange subresource_range, int4 clear_value)
+{
+    SGL_CHECK(m_open, "Command encoder is finished");
+    SGL_CHECK_NOT_NULL(texture);
+    m_rhi_command_encoder->clearTextureSint(texture->rhi_texture(), detail::to_rhi(subresource_range), &clear_value[0]);
+}
+
+void CommandEncoder::clear_texture_depth_stencil(
     Texture* texture,
-    uint4 clear_value,
-    SubresourceRange range,
+    SubresourceRange subresource_range,
     bool clear_depth,
-    bool clear_stencil
+    float depth_value,
+    bool clear_stencil,
+    uint8_t stencil_value
 )
 {
-    // TODO(slang-rhi)
-    SGL_UNUSED(texture, clear_value, range, clear_depth, clear_stencil);
-    SGL_UNIMPLEMENTED();
+    SGL_CHECK(m_open, "Command encoder is finished");
+    SGL_CHECK_NOT_NULL(texture);
+    m_rhi_command_encoder->clearTextureDepthStencil(
+        texture->rhi_texture(),
+        detail::to_rhi(subresource_range),
+        clear_depth,
+        depth_value,
+        clear_stencil,
+        stencil_value
+    );
 }
 
 void CommandEncoder::blit(TextureView* dst, TextureView* src, TextureFilteringMode filter)

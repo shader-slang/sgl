@@ -190,23 +190,41 @@ SGL_PY_EXPORT(device_command)
             "range"_a = BufferRange{},
             D_NA(CommandEncoder, clear_buffer)
         )
-    // TODO(slang-rhi)
-#if 0
         .def(
-            "clear_texture",
-            nb::overload_cast<Texture*, float4>(&CommandEncoder::clear_texture),
+            "clear_texture_float",
+            &CommandEncoder::clear_texture_float,
             "texture"_a,
-            "clear_value"_a,
-            "range" D(CommandEncoder, clear_texture)
+            "range"_a = SubresourceRange{},
+            "clear_value"_a = float4(0.f),
+            D_NA(CommandEncoder, clear_texture_float)
         )
         .def(
-            "clear_texture",
-            nb::overload_cast<Texture*, uint4>(&CommandEncoder::clear_texture),
+            "clear_texture_uint",
+            &CommandEncoder::clear_texture_uint,
             "texture"_a,
-            "clear_value"_a,
-            D(CommandEncoder, clear_texture, 2)
+            "range"_a = SubresourceRange{},
+            "clear_value"_a = uint4(0),
+            D_NA(CommandEncoder, clear_texture_uint)
         )
-#endif
+        .def(
+            "clear_texture_sint",
+            &CommandEncoder::clear_texture_sint,
+            "texture"_a,
+            "range"_a = SubresourceRange{},
+            "clear_value"_a = int4(0),
+            D_NA(CommandEncoder, clear_texture_sint)
+        )
+        .def(
+            "clear_texture_depth_stencil",
+            &CommandEncoder::clear_texture_depth_stencil,
+            "texture"_a,
+            "range"_a = SubresourceRange{},
+            "clear_depth"_a = true,
+            "depth_value"_a = 0.f,
+            "clear_stencil"_a = true,
+            "stencil_value"_a = 0,
+            D_NA(CommandEncoder, clear_texture_depth_stencil)
+        )
         .def(
             "blit",
             nb::overload_cast<TextureView*, TextureView*, TextureFilteringMode>(&CommandEncoder::blit),

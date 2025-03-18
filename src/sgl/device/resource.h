@@ -212,8 +212,6 @@ SGL_ENUM_REGISTER(TextureAspect);
 
 struct SubresourceRange {
     static constexpr uint32_t ALL = std::numeric_limits<uint32_t>::max();
-    /// Texture aspect.
-    TextureAspect texture_aspect{TextureAspect::all};
     /// Most detailed mip level.
     uint32_t mip_level{0};
     /// Number of mip levels.
@@ -228,8 +226,7 @@ struct SubresourceRange {
     std::string to_string() const
     {
         return fmt::format(
-            "SubresourceRange(texture_aspect={}, mip_level={}, mip_count={}, base_array_layer={}, layer_count={}",
-            texture_aspect,
+            "SubresourceRange(mip_level={}, mip_count={}, base_array_layer={}, layer_count={}",
             mip_level,
             mip_count,
             base_array_layer,
@@ -281,6 +278,7 @@ struct BufferDesc {
     /// Debug label.
     std::string label;
 
+    // TODO(slang-rhi) we might want to move this out of the buffer desc
     /// Initial data to upload to the buffer.
     const void* data{nullptr};
     /// Size of the initial data in bytes.
@@ -449,22 +447,24 @@ struct OwnedSubresourceData : SubresourceData {
     std::unique_ptr<uint8_t[]> owned_data;
 };
 
+static constexpr uint32_t ALL_MIP_LEVELS = std::numeric_limits<uint32_t>::max();
+
 struct TextureDesc {
     /// Texture type.
     TextureType type{TextureType::texture_2d};
     /// Texture format.
     Format format{Format::undefined};
     /// Width in pixels.
-    uint32_t width{0};
+    uint32_t width{1};
     /// Height in pixels.
-    uint32_t height{0};
+    uint32_t height{1};
     /// Depth in pixels.
-    uint32_t depth{0};
-    /// Number of array slices (1 for non-array textures).
-    uint32_t array_size{1};
+    uint32_t depth{1};
+    /// Array length.
+    uint32_t array_length{1};
     /// Number of mip levels (0 for auto-generated mips).
     uint32_t mip_count{0};
-    /// Number of samples per pixel (1 for non-multisampled textures).
+    /// Number of samples per pixel.
     uint32_t sample_count{1};
     /// Quality level for multisampled textures.
     uint32_t sample_quality{0};
@@ -479,25 +479,35 @@ struct TextureDesc {
     /// Debug label.
     std::string label;
 
-    const void* data{nullptr};
-    size_t data_size{0};
+    // TODO(slang-rhi) we might want to move this out of the texture desc
+    std::span<SubresourceData> data;
+    // const void* data{nullptr};
+    // size_t data_size{0};
 };
 
 struct SubresourceLayout {
-    /// Size of a single row in bytes (unaligned).
+    /// Dimensions of the subresource (in texels).
+    uint3 size;
+
+    /// Stride in bytes between rows of the subresource tensor.
     size_t row_pitch;
-    /// Size of a single row in bytes (aligned to device texture alignment).
-    size_t row_pitch_aligned;
+
+    /// Stride in bytes between slices of the subresource tensor.
+    size_t slice_pitch;
+
+    /// Overall size required to fit the subresource data (typically size.z * slice_pitch).
+    size_t size_in_bytes;
+
+    /// Block width in texels (1 for uncompressed formats).
+    size_t block_width;
+
+    /// Block height in texels (1 for uncompressed formats).
+    size_t block_height;
+
     /// Number of rows.
+    /// For uncompressed formats this matches size.y.
+    /// For compressed formats this matches align_up(size.y, block_height) / block_height.
     size_t row_count;
-    /// Number of depth slices.
-    size_t depth;
-
-    /// Get the total size of the subresource in bytes (unaligned).
-    size_t total_size() const { return row_pitch * row_count * depth; }
-
-    /// Get the total size of the subresource in bytes (aligned to device texture alignment).
-    size_t total_size_aligned() const { return row_pitch_aligned * row_count * depth; }
 };
 
 class SGL_API Texture : public Resource {
@@ -516,59 +526,56 @@ public:
     uint32_t height() const { return m_desc.height; }
     uint32_t depth() const { return m_desc.depth; }
 
-    uint32_t array_size() const { return m_desc.array_size; }
+    uint32_t array_length() const { return m_desc.array_length; }
     uint32_t mip_count() const { return m_desc.mip_count; }
-    uint32_t layer_count() const { return array_size() * (type() == TextureType::texture_cube ? 6 : 1); }
+    uint32_t layer_count() const
+    {
+        return m_desc.array_length
+            * ((m_desc.type == TextureType::texture_cube || m_desc.type == TextureType::texture_cube_array) ? 6 : 1);
+    }
 
     uint32_t subresource_count() const { return layer_count() * mip_count(); }
 
-    uint32_t get_subresource_index(uint32_t mip_level, uint32_t array_slice) const
-    {
-        return mip_level + array_slice * mip_count();
-    }
-
-    uint32_t get_subresource_array_slice(uint32_t subresource) const { return subresource / mip_count(); }
-
-    uint32_t get_subresource_mip_level(uint32_t subresource) const { return subresource % mip_count(); }
-
     uint32_t get_mip_width(uint32_t mip_level = 0) const
     {
-        return (mip_level == 0) || (mip_level < mip_count()) ? std::max(1U, width() >> mip_level) : 0;
+        return mip_level < mip_count() ? std::max(1U, width() >> mip_level) : 0;
     }
 
     uint32_t get_mip_height(uint32_t mip_level = 0) const
     {
-        return (mip_level == 0) || (mip_level < mip_count()) ? std::max(1U, height() >> mip_level) : 0;
+        return mip_level < mip_count() ? std::max(1U, height() >> mip_level) : 0;
     }
 
     uint32_t get_mip_depth(uint32_t mip_level = 0) const
     {
-        return (mip_level == 0) || (mip_level < mip_count()) ? std::max(1U, depth() >> mip_level) : 0;
+        return mip_level < mip_count() ? std::max(1U, depth() >> mip_level) : 0;
     }
 
-    uint3 get_mip_dimensions(uint32_t mip_level = 0) const
+    uint3 get_mip_size(uint32_t mip_level = 0) const
     {
         return uint3(get_mip_width(mip_level), get_mip_height(mip_level), get_mip_depth(mip_level));
     }
 
-    SubresourceLayout get_subresource_layout(uint32_t subresource) const;
+    SubresourceLayout get_subresource_layout(uint32_t mip_level) const;
 
     /**
      * Set subresource data from host memory.
      *
-     * \param subresource Subresource index.
+     * \param layer Layer index.
+     * \param mip_level Mip level.
      * \param subresource_data Subresource data.
      */
-    void set_subresource_data(uint32_t subresource, SubresourceData subresource_data);
+    void set_subresource_data(uint32_t layer, uint32_t mip_level, SubresourceData subresource_data);
 
     /**
      * Get subresource data to host memory.
      * \note This will wait until the data is copied back to host memory.
      *
-     * \param subresource Subresource index.
+     * \param layer Layer index.
+     * \param mip_level Mip level.
      * \return Subresource data.
      */
-    OwnedSubresourceData get_subresource_data(uint32_t subresource) const;
+    OwnedSubresourceData get_subresource_data(uint32_t layer, uint32_t mip_level) const;
 
     ref<TextureView> create_view(TextureViewDesc desc);
 
@@ -580,7 +587,7 @@ public:
 
     MemoryUsage memory_usage() const override;
 
-    ref<Bitmap> to_bitmap(uint32_t mip_level = 0, uint32_t array_slice = 0) const;
+    ref<Bitmap> to_bitmap(uint32_t layer = 0, uint32_t mip_level = 0) const;
 
     std::string to_string() const override;
 

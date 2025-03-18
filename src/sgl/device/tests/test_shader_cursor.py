@@ -328,14 +328,14 @@ def test_shader_cursor(device_type: sgl.DeviceType, use_numpy: bool):
                 else:
                     write_var(cursor, i, var, name_prefix)
 
-    command_buffer = device.create_command_buffer()
-    with command_buffer.encode_compute_commands() as encoder:
-        shader_object = encoder.bind_pipeline(kernel.pipeline)
+    command_encoder = device.create_command_encoder()
+    with command_encoder.begin_compute_pass() as pass_encoder:
+        shader_object = pass_encoder.bind_pipeline(kernel.pipeline)
         cursor = sgl.ShaderCursor(shader_object)
         cursor["results"] = result_buffer
         write_vars(cursor, TEST_VARS)
-        encoder.dispatch(thread_count=[1, 1, 1])
-    command_buffer.submit()
+        pass_encoder.dispatch(thread_count=[1, 1, 1])
+    device.submit_command_buffer(command_encoder.finish())
 
     data = result_buffer.to_numpy().tobytes()
     results = []

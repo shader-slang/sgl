@@ -81,6 +81,12 @@ int main(int argc, const char* argv[])
             .compiler_options = {.include_paths = {EXAMPLE_DIR}},
         });
 
+        SubresourceData initial_data[1] = {{
+            .data = input->data(),
+            .size = input->buffer_size(),
+            .row_pitch = input->width() * 4 * sizeof(float),
+        }};
+
         // Create input texture
         ref<Texture> input_tex = device->create_texture({
             .format = Format::rgba32_float,
@@ -88,8 +94,7 @@ int main(int argc, const char* argv[])
             .height = h,
             .mip_count = 1,
             .usage = TextureUsage::shader_resource,
-            .data = input->data(),
-            .data_size = input->buffer_size(),
+            .data = initial_data,
         });
 
         // Show input texture in tev

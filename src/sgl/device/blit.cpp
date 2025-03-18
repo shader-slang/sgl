@@ -42,21 +42,23 @@ void Blitter::blit(CommandEncoder* command_encoder, TextureView* dst, TextureVie
     Texture* dst_texture = dst->texture();
     Texture* src_texture = src->texture();
 
-    SGL_CHECK(dst_texture->type() == TextureType::texture_2d, "dst must be a 2D texture");
-    SGL_CHECK(is_set(dst_texture->desc().usage, TextureUsage::render_target), "dst must be a render target");
-    SGL_CHECK(src_texture->type() == TextureType::texture_2d, "src must be a 2D texture");
-    SGL_CHECK(is_set(src_texture->desc().usage, TextureUsage::shader_resource), "src must be a shader resource");
     SGL_CHECK(
-        dst_texture->desc().sample_count == 1 && src_texture->desc().sample_count == 1,
-        "src and dst must be not be multi-sampled textures"
+        dst_texture->type() == TextureType::texture_2d || dst_texture->type() == TextureType::texture_2d_array,
+        "dst must be a 2D texture"
     );
+    SGL_CHECK(is_set(dst_texture->desc().usage, TextureUsage::render_target), "dst must be a render target");
+    SGL_CHECK(
+        src_texture->type() == TextureType::texture_2d || src_texture->type() == TextureType::texture_2d_array,
+        "src must be a 2D texture"
+    );
+    SGL_CHECK(is_set(src_texture->desc().usage, TextureUsage::shader_resource), "src must be a shader resource");
 
     uint32_t dst_mip_level = dst->subresource_range().mip_level;
     uint32_t dst_base_array_layer = dst->subresource_range().base_array_layer;
     uint32_t src_mip_level = src->subresource_range().mip_level;
 
-    uint2 dst_size = src_texture->get_mip_dimensions(dst_mip_level).xy();
-    uint2 src_size = src_texture->get_mip_dimensions(src_mip_level).xy();
+    uint2 dst_size = src_texture->get_mip_size(dst_mip_level).xy();
+    uint2 src_size = src_texture->get_mip_size(src_mip_level).xy();
 
     auto determine_texture_type = [](Format resource_format) -> TextureDataType
     {
@@ -69,7 +71,7 @@ void Blitter::blit(CommandEncoder* command_encoder, TextureView* dst, TextureVie
     TextureDataType dst_type = determine_texture_type(dst_texture->format());
     TextureDataType src_type = determine_texture_type(src_texture->format());
     TextureLayout src_layout
-        = src_texture->array_size() > 1 ? TextureLayout::texture_2d_array : TextureLayout::texture_2d;
+        = src_texture->type() == TextureType::texture_2d ? TextureLayout::texture_2d : TextureLayout::texture_2d_array;
 
     ref<RenderPipeline> pipeline = get_pipeline(
         {
@@ -104,7 +106,7 @@ void Blitter::generate_mips(CommandEncoder* command_encoder, Texture* texture, u
 {
     SGL_CHECK_NOT_NULL(command_encoder);
     SGL_CHECK_NOT_NULL(texture);
-    SGL_CHECK_LT(array_layer, texture->array_size());
+    SGL_CHECK_LT(array_layer, texture->array_length());
 
     for (uint32_t i = 0; i < texture->mip_count() - 1; ++i) {
         ref<TextureView> src = texture->create_view({

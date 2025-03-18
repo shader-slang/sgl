@@ -83,21 +83,5 @@ def test_load_module_and_cleanup_through_assert(device_type: sgl.DeviceType):
         asserting_creation(device_type)
 
 
-@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_memory_heap_lifetime(device_type: sgl.DeviceType):
-    device = helpers.get_device(type=device_type)
-    heap = device.create_memory_heap(
-        memory_type=sgl.MemoryType.upload,
-        usage=sgl.BufferUsage.none,
-        label="test_heap",
-    )
-    device = None
-    allocs = []
-    for _ in range(10):
-        allocs.append(heap.allocate(1024 * 1024))
-    heap = None
-    allocs = None
-
-
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "-s"])

@@ -94,6 +94,9 @@ Buffer::Buffer(ref<Device> device, BufferDesc desc)
     rhi_desc.defaultState = static_cast<rhi::ResourceState>(m_desc.default_state);
     rhi_desc.label = m_desc.label.empty() ? nullptr : m_desc.label.c_str();
 
+    if (m_desc.memory_type == MemoryType::device_local)
+        rhi_desc.usage |= rhi::BufferUsage::CopySource | rhi::BufferUsage::CopyDestination;
+
     SLANG_CALL(m_device->rhi_device()->createBuffer(rhi_desc, nullptr, m_rhi_buffer.writeRef()));
 
     // Upload init data.
@@ -148,7 +151,7 @@ void Buffer::set_data(const void* data, size_t size, DeviceOffset offset)
 
     switch (m_desc.memory_type) {
     case MemoryType::device_local:
-        m_device->upload_buffer_data(this, data, size, offset);
+        m_device->upload_buffer_data(this, offset, size, data);
         break;
     case MemoryType::upload: {
         bool was_mapped = is_mapped();
@@ -335,7 +338,7 @@ inline void process_texture_desc(TextureDesc& desc)
             desc.mip_count = stdx::bit_width(std::max({desc.width, desc.height, desc.depth}));
         }
     }
-    SGL_CHECK(desc.array_size >= 1, "Invalid array size.");
+    SGL_CHECK(desc.array_length >= 1, "Invalid array length.");
     SGL_CHECK(desc.sample_count >= 1, "Invalid sample count.");
 }
 
@@ -353,7 +356,7 @@ Texture::Texture(ref<Device> device, TextureDesc desc)
     rhi_desc.size.width = static_cast<rhi::Size>(m_desc.width);
     rhi_desc.size.height = static_cast<rhi::Size>(m_desc.height);
     rhi_desc.size.depth = static_cast<rhi::Size>(m_desc.depth);
-    rhi_desc.arrayLength = m_desc.array_size;
+    rhi_desc.arrayLength = m_desc.array_length;
     rhi_desc.mipLevelCount = m_desc.mip_count;
     rhi_desc.format = static_cast<rhi::Format>(m_desc.format);
     rhi_desc.sampleCount = m_desc.sample_count;
@@ -361,36 +364,25 @@ Texture::Texture(ref<Device> device, TextureDesc desc)
     rhi_desc.optimalClearValue = nullptr; // TODO(slang-rhi)
     rhi_desc.label = m_desc.label.empty() ? nullptr : m_desc.label.c_str();
 
+    if (m_desc.memory_type == MemoryType::device_local)
+        rhi_desc.usage |= rhi::TextureUsage::CopySource | rhi::TextureUsage::CopyDestination;
+
     SLANG_CALL(m_device->rhi_device()->createTexture(rhi_desc, nullptr, m_rhi_texture.writeRef()));
 
     // Upload init data.
-    if (m_desc.data) {
-        uint32_t subresource = 0;
-        const uint8_t* data = reinterpret_cast<const uint8_t*>(m_desc.data);
-        size_t data_size = m_desc.data_size;
-        while (true) {
-            SubresourceLayout subresource_layout = get_subresource_layout(subresource);
-            size_t subresource_size = subresource_layout.total_size();
-            if (data_size < subresource_size)
-                break;
-            SubresourceData subresource_data{
-                .data = data,
-                .size = subresource_size,
-                .row_pitch = subresource_layout.row_pitch,
-                .slice_pitch = subresource_layout.row_count * subresource_layout.row_pitch,
-            };
-            set_subresource_data(subresource, subresource_data);
-            data += subresource_size;
-            data_size -= subresource_size;
+    if (!m_desc.data.empty()) {
+        for (uint32_t subresource = 0; subresource < m_desc.data.size(); ++subresource) {
+            uint32_t layer = subresource / m_desc.mip_count;
+            uint32_t mip_level = subresource % m_desc.mip_count;
+            set_subresource_data(layer, mip_level, m_desc.data[subresource]);
         }
         if (m_desc.mip_count > 1) {
             // TODO generate mip maps
         }
     }
 
-    // Clear initial data fields in desc.
-    m_desc.data = nullptr;
-    m_desc.data_size = 0;
+    // Clear initial data field in desc.
+    m_desc.data = {};
 }
 
 Texture::Texture(ref<Device> device, TextureDesc desc, rhi::ITexture* resource)
@@ -404,51 +396,39 @@ Texture::Texture(ref<Device> device, TextureDesc desc, rhi::ITexture* resource)
 
 Texture::~Texture() { }
 
-SubresourceLayout Texture::get_subresource_layout(uint32_t subresource) const
+SubresourceLayout Texture::get_subresource_layout(uint32_t mip_level) const
 {
-    SGL_CHECK_LT(subresource, subresource_count());
+    SGL_CHECK_LT(mip_level, mip_count());
 
-    const rhi::FormatInfo& rhi_format_info = rhi::getFormatInfo(rhi_texture()->getDesc().format);
-    size_t alignment;
+    rhi::SubresourceLayout rhi_layout;
+    SLANG_CALL(m_rhi_texture->getSubresourceLayout(mip_level, &rhi_layout));
 
-    // TODO(slang-rhi)
-#if SGL_MACOS
-    // On macOS, getTextureRowAlignment is not a right interface to get the alignment, because MacOS does not
-    // have a unify alignment for all formats, we have to provide the format to get the alignment. However,
-    // getTextureRowAlignment does not take format as an argument, so we have to use getTextureAllocationInfo
-    // to get the alignment.
-    size_t size;
-    SLANG_CALL(m_device->rhi_device()->getTextureAllocationInfo(*m_rhi_texture->getDesc(), &size, &alignment));
-#else
-    // TODO(slang-rhi) not implemented for CUDA
-    alignment = 1;
-    // SLANG_CALL(m_device->rhi_device()->getTextureRowAlignment(&alignment));
-#endif
-
-    uint32_t mip_level = get_subresource_mip_level(subresource);
-    uint3 mip_dimensions = get_mip_dimensions(mip_level);
-
-    SubresourceLayout layout;
-    layout.row_pitch
-        = div_round_up(mip_dimensions.x, uint32_t(rhi_format_info.blockWidth)) * rhi_format_info.blockSizeInBytes;
-    layout.row_pitch_aligned = align_to(alignment, layout.row_pitch);
-    layout.row_count = div_round_up(mip_dimensions.y, uint32_t(rhi_format_info.blockHeight));
-    layout.depth = mip_dimensions.z;
-    return layout;
+    return {
+        .size = {rhi_layout.size.width, rhi_layout.size.height, rhi_layout.size.depth},
+        // TODO(slang-rhi) rename to rowPitch/slicePitch in rhi
+        .row_pitch = rhi_layout.strideY,
+        .slice_pitch = rhi_layout.strideZ,
+        .size_in_bytes = rhi_layout.sizeInBytes,
+        .block_width = rhi_layout.blockWidth,
+        .block_height = rhi_layout.blockHeight,
+        .row_count = rhi_layout.rowCount,
+    };
 }
 
-void Texture::set_subresource_data(uint32_t subresource, SubresourceData subresource_data)
+void Texture::set_subresource_data(uint32_t layer, uint32_t mip_level, SubresourceData subresource_data)
 {
-    SGL_CHECK_LT(subresource, subresource_count());
+    SGL_CHECK_LT(layer, layer_count());
+    SGL_CHECK_LT(mip_level, mip_count());
 
-    m_device->upload_texture_data(this, subresource, subresource_data);
+    m_device->upload_texture_data(this, layer, mip_level, subresource_data);
 }
 
-OwnedSubresourceData Texture::get_subresource_data(uint32_t subresource) const
+OwnedSubresourceData Texture::get_subresource_data(uint32_t layer, uint32_t mip_level) const
 {
-    SGL_CHECK_LT(subresource, subresource_count());
+    SGL_CHECK_LT(layer, layer_count());
+    SGL_CHECK_LT(mip_level, mip_count());
 
-    return m_device->read_texture_data(this, subresource);
+    return m_device->read_texture_data(this, layer, mip_level);
 }
 
 ref<TextureView> Texture::create_view(TextureViewDesc desc)
@@ -470,11 +450,14 @@ DeviceResource::MemoryUsage Texture::memory_usage() const
     return {.device = size};
 }
 
-ref<Bitmap> Texture::to_bitmap(uint32_t mip_level, uint32_t array_slice) const
+ref<Bitmap> Texture::to_bitmap(uint32_t layer, uint32_t mip_level) const
 {
+    SGL_CHECK_LT(layer, layer_count());
     SGL_CHECK_LT(mip_level, mip_count());
-    SGL_CHECK_LT(array_slice, array_size());
-    SGL_CHECK(m_desc.type == TextureType::texture_2d, "Cannot convert non-2D texture to bitmap.");
+    SGL_CHECK(
+        m_desc.type == TextureType::texture_2d || m_desc.type == TextureType::texture_2d_array,
+        "Cannot convert non-2D texture to bitmap."
+    );
 
     const FormatInfo& info = get_format_info(m_desc.format);
     if (info.is_compressed)
@@ -551,8 +534,7 @@ ref<Bitmap> Texture::to_bitmap(uint32_t mip_level, uint32_t array_slice) const
         SGL_THROW("Unsupported channel bits.");
     Bitmap::ComponentType component_type = it2->second;
 
-    uint32_t subresource = get_subresource_index(mip_level, array_slice);
-    OwnedSubresourceData subresource_data = get_subresource_data(subresource);
+    OwnedSubresourceData subresource_data = get_subresource_data(layer, mip_level);
 
     uint32_t width = get_mip_width(mip_level);
     uint32_t height = get_mip_height(mip_level);
@@ -577,7 +559,7 @@ std::string Texture::to_string() const
         "  height = {},\n"
         "  depth = {},\n"
         "  mip_count = {},\n"
-        "  array_size = {},\n"
+        "  array_length = {},\n"
         "  sample_count = {},\n"
         "  format = {},\n"
         "  usage = {},\n"
@@ -591,7 +573,7 @@ std::string Texture::to_string() const
         m_desc.height,
         m_desc.depth,
         m_desc.mip_count,
-        m_desc.array_size,
+        m_desc.array_length,
         m_desc.sample_count,
         m_desc.format,
         m_desc.usage,
@@ -620,15 +602,15 @@ TextureView::TextureView(ref<Device> device, ref<Texture> texture, TextureViewDe
     if (m_desc.subresource_range.mip_count == SubresourceRange::ALL) {
         m_desc.subresource_range.mip_count = mip_count - m_desc.subresource_range.mip_level;
     }
-    uint32_t array_size = m_texture->array_size();
-    SGL_CHECK(m_desc.subresource_range.base_array_layer < array_size, "'base_array_layer' out of range");
+    uint32_t layer_count = m_texture->layer_count();
+    SGL_CHECK(m_desc.subresource_range.base_array_layer < layer_count, "'base_array_layer' out of range");
     SGL_CHECK(
         (m_desc.subresource_range.layer_count == SubresourceRange::ALL)
-            || (m_desc.subresource_range.base_array_layer + m_desc.subresource_range.layer_count <= array_size),
+            || (m_desc.subresource_range.base_array_layer + m_desc.subresource_range.layer_count <= layer_count),
         "'layer_count' out of range"
     );
     if (m_desc.subresource_range.layer_count == SubresourceRange::ALL) {
-        m_desc.subresource_range.layer_count = array_size - m_desc.subresource_range.base_array_layer;
+        m_desc.subresource_range.layer_count = layer_count - m_desc.subresource_range.base_array_layer;
     }
 
     rhi::TextureViewDesc rhi_desc{

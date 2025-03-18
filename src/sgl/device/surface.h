@@ -56,10 +56,10 @@ public:
     /// Configure the surface.
     void configure(const SurfaceConfig& config);
 
-    /// Returns the current surface image texture.
-    ref<Texture> get_current_texture();
+    /// Acquries the next surface image.
+    ref<Texture> acquire_next_image();
 
-    /// Present the current surface image texture.
+    /// Present the previously acquire image.
     void present();
 
 private:

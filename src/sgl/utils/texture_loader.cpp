@@ -149,17 +149,25 @@ inline std::pair<Format, bool> determine_texture_format(const Bitmap* bitmap, co
     return {it->second, convert_to_rgba};
 }
 
-inline TextureType get_texture_type(DDSFile::TextureType type)
+inline std::pair<TextureType, uint32_t>
+get_texture_type_and_array_length(DDSFile::TextureType type, uint32_t array_size)
 {
     switch (type) {
     case DDSFile::TextureType::texture_1d:
-        return TextureType::texture_1d;
+        if (array_size > 1)
+            return {TextureType::texture_1d_array, array_size};
+        return {TextureType::texture_1d, 1};
     case DDSFile::TextureType::texture_2d:
-        return TextureType::texture_2d;
+        if (array_size > 1)
+            return {TextureType::texture_2d_array, array_size};
+        return {TextureType::texture_2d, 1};
     case DDSFile::TextureType::texture_3d:
-        return TextureType::texture_3d;
+        return {TextureType::texture_3d, 1};
     case DDSFile::TextureType::texture_cube:
-        return TextureType::texture_cube;
+        SGL_CHECK(array_size % 6 == 0, "Invalid cube map array size");
+        if (array_size > 6)
+            return {TextureType::texture_cube_array, array_size / 6};
+        return {TextureType::texture_cube, 1};
     default:
         SGL_THROW("Invalid DDS texture type {}", type);
     }
@@ -216,10 +224,11 @@ inline ref<Texture> create_texture(
             usage |= TextureUsage::render_target;
 
         ref<Texture> texture = device->create_texture({
+            .type = TextureType::texture_2d,
             .format = source_image.format,
             .width = bitmap->width(),
             .height = bitmap->height(),
-            .mip_count = allocate_mips ? 0u : 1u,
+            .mip_count = allocate_mips ? ALL_MIP_LEVELS : 1u,
             .usage = usage,
         });
 
@@ -228,7 +237,7 @@ inline ref<Texture> create_texture(
             .row_pitch = bitmap->width() * bitmap->bytes_per_pixel(),
         };
 
-        command_encoder->upload_texture_data(texture, 0, subresource_data);
+        command_encoder->upload_texture_data(texture, 0, 0, subresource_data);
         if (options.generate_mips) {
             blitter->generate_mips(command_encoder, texture);
         }
@@ -236,17 +245,34 @@ inline ref<Texture> create_texture(
         return texture;
     } else if (source_image.dds_file) {
         const DDSFile* dds_file = source_image.dds_file;
+        const auto& [texture_type, array_length]
+            = get_texture_type_and_array_length(dds_file->type(), dds_file->array_size());
+        short_vector<SubresourceData, 16> subresource_data;
+        for (uint32_t layer_index = 0; layer_index < dds_file->array_size(); ++layer_index) {
+            for (uint32_t mip_index = 0; mip_index < dds_file->mip_count(); ++mip_index) {
+                uint32_t row_pitch;
+                uint32_t slice_pitch;
+                dds_file->get_subresource_pitch(mip_index, &row_pitch, &slice_pitch);
+                subresource_data.push_back({
+                    .data = dds_file->get_subresource_data(mip_index, layer_index),
+                    .size = dds_file->resource_size(),
+                    .row_pitch = row_pitch,
+                    .slice_pitch = slice_pitch,
+                });
+            }
+        }
+
         return device->create_texture({
-            .type = get_texture_type(dds_file->type()),
+            .type = texture_type,
             .format = source_image.format,
             .width = dds_file->width(),
             .height = dds_file->height(),
             .depth = dds_file->depth(),
-            .array_size = dds_file->array_size(),
+            // TODO(slang-rhi) is DDS array size the same as array length? (cube maps)
+            .array_length = array_length,
             .mip_count = dds_file->mip_count(),
             .usage = options.usage,
-            .data = dds_file->resource_data(),
-            .data_size = dds_file->resource_size(),
+            .data = subresource_data,
         });
     } else {
         SGL_THROW("Unsupported source image type");
@@ -306,10 +332,11 @@ inline ref<Texture> create_texture_array(
 
         if (i == 0) {
             texture = device->create_texture({
+                .type = TextureType::texture_2d_array,
                 .format = source_image.format,
                 .width = bitmap->width(),
                 .height = bitmap->height(),
-                .array_size = narrow_cast<uint32_t>(source_images.size()),
+                .array_length = narrow_cast<uint32_t>(source_images.size()),
                 .mip_count = allocate_mips ? 0u : 1u,
                 .usage = usage,
             });
@@ -328,13 +355,12 @@ inline ref<Texture> create_texture_array(
             command_encoder = device->create_command_encoder();
         }
 
-        uint32_t subresource = texture->get_subresource_index(0, narrow_cast<uint32_t>(i));
         SubresourceData subresource_data{
             .data = bitmap->data(),
             .size = bitmap->buffer_size(),
             .row_pitch = bitmap->width() * bitmap->bytes_per_pixel(),
         };
-        command_encoder->upload_texture_data(texture, subresource, subresource_data);
+        command_encoder->upload_texture_data(texture, narrow_cast<uint32_t>(i), 0, subresource_data);
 
         if (options.generate_mips)
             blitter->generate_mips(command_encoder, texture, narrow_cast<uint32_t>(i));
