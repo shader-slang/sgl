@@ -449,6 +449,9 @@ struct OwnedSubresourceData : SubresourceData {
 
 static constexpr uint32_t ALL_MIP_LEVELS = std::numeric_limits<uint32_t>::max();
 
+static constexpr uint32_t DEFAULT_ALIGNMENT = rhi::kDefaultAlignment;
+
+
 struct TextureDesc {
     /// Texture type.
     TextureType type{TextureType::texture_2d};
@@ -556,7 +559,10 @@ public:
         return uint3(get_mip_width(mip_level), get_mip_height(mip_level), get_mip_depth(mip_level));
     }
 
-    SubresourceLayout get_subresource_layout(uint32_t mip_level) const;
+    /// Get layout of a texture subresource. By default, the row alignment used is
+    /// that required by the target for direct buffer upload/download. Pass in 1
+    /// for a completely packed layout.
+    SubresourceLayout get_subresource_layout(uint32_t mip_level, uint32_t row_alignment = DEFAULT_ALIGNMENT) const;
 
     /**
      * Set subresource data from host memory.

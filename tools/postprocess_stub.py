@@ -47,6 +47,7 @@ DESCRIPTOR_CONVERT_TYPES = {
     "SlangCompilerOptions": True,
     "SlangLinkOptions": True,
     "SlangSessionDesc": True,
+    "SubresourceRange": True,
     "SurfaceConfig": True,
     "SurfaceConfig": True,
     "TextureDesc": True,

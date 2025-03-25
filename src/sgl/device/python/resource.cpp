@@ -42,6 +42,13 @@ SGL_DICT_TO_DESC_FIELD(default_state, ResourceState)
 SGL_DICT_TO_DESC_FIELD(label, std::string)
 SGL_DICT_TO_DESC_END()
 
+SGL_DICT_TO_DESC_BEGIN(SubresourceRange)
+SGL_DICT_TO_DESC_FIELD(mip_level, uint32_t)
+SGL_DICT_TO_DESC_FIELD(mip_count, uint32_t)
+SGL_DICT_TO_DESC_FIELD(base_array_layer, uint32_t)
+SGL_DICT_TO_DESC_FIELD(layer_count, uint32_t)
+SGL_DICT_TO_DESC_END()
+
 SGL_DICT_TO_DESC_BEGIN(TextureViewDesc)
 SGL_DICT_TO_DESC_FIELD(format, Format)
 SGL_DICT_TO_DESC_FIELD(aspect, TextureAspect)
@@ -210,7 +217,7 @@ inline void texture_from_numpy(Texture* self, nb::ndarray<nb::numpy> data, uint3
     SGL_CHECK_LT(mip_level, self->mip_count());
 
     uint3 mip_size = self->get_mip_size(mip_level);
-    SubresourceLayout subresource_layout = self->get_subresource_layout(mip_level);
+    SubresourceLayout subresource_layout = self->get_subresource_layout(mip_level, 1);
     SubresourceData subresource_data{
         .data = data.data(),
         .size = data.nbytes(),
@@ -222,16 +229,19 @@ inline void texture_from_numpy(Texture* self, nb::ndarray<nb::numpy> data, uint3
         std::vector<size_t> expected_shape;
         switch (self->type()) {
         case TextureType::texture_1d:
+        case TextureType::texture_1d_array:
             expected_shape = {size_t(mip_size.x)};
             break;
         case TextureType::texture_2d:
+        case TextureType::texture_2d_array:
+        case TextureType::texture_2d_ms:
+        case TextureType::texture_2d_ms_array:
+        case TextureType::texture_cube:
+        case TextureType::texture_cube_array:
             expected_shape = {size_t(mip_size.y), size_t(mip_size.x)};
             break;
         case TextureType::texture_3d:
             expected_shape = {size_t(mip_size.z), size_t(mip_size.y), size_t(mip_size.x)};
-            break;
-        case TextureType::texture_cube:
-            expected_shape = {size_t(mip_size.y), size_t(mip_size.x)};
             break;
         }
         uint32_t channel_count = get_format_info(self->format()).channel_count;
@@ -275,6 +285,10 @@ SGL_PY_EXPORT(device_resource)
 
     nb::class_<SubresourceRange>(m, "SubresourceRange", D(SubresourceRange))
         .def(nb::init<>())
+        .def(
+            "__init__",
+            [](SubresourceRange* self, nb::dict dict) { new (self) SubresourceRange(dict_to_SubresourceRange(dict)); }
+        )
         .def_ro("mip_level", &SubresourceRange::mip_level, D_NA(SubresourceRange, mip_level))
         .def_ro("mip_count", &SubresourceRange::mip_count, D_NA(SubresourceRange, mip_count))
         .def_ro("base_array_layer", &SubresourceRange::base_array_layer, D_NA(SubresourceRange, base_array_layer))
@@ -395,9 +409,16 @@ SGL_PY_EXPORT(device_resource)
             "get_subresource_layout",
             &Texture::get_subresource_layout,
             "subresource"_a,
+            "row_alignment"_a = DEFAULT_ALIGNMENT,
             D(Texture, get_subresource_layout)
         )
         .def("create_view", &Texture::create_view, "desc"_a, D_NA(Texture, create_view))
+        .def(
+            "create_view",
+            [](Texture* self, nb::dict dict) { return self->create_view(dict_to_TextureViewDesc(dict)); },
+            "dict"_a,
+            D_NA(Texture, create_view)
+        )
         .def("to_bitmap", &Texture::to_bitmap, "layer"_a = 0, "mip_level"_a = 0, D(Texture, to_bitmap))
         .def("to_numpy", &texture_to_numpy, "layer"_a = 0, "mip_level"_a = 0, D(texture_to_numpy))
         .def("copy_from_numpy", &texture_from_numpy, "data"_a, "layer"_a = 0, "mip_level"_a = 0, D(texture_from_numpy));

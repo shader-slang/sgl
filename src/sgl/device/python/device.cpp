@@ -381,7 +381,7 @@ SGL_PY_EXPORT(device_device)
                 .memory_type = memory_type,
                 .usage = usage,
                 .label = std::move(label),
-                .data = data ? subresourceData : {},
+                .data = data ? subresourceData : std::span<SubresourceData>(),
             });
         },
         "type"_a = TextureDesc().type,

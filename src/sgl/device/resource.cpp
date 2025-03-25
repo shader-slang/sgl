@@ -396,12 +396,12 @@ Texture::Texture(ref<Device> device, TextureDesc desc, rhi::ITexture* resource)
 
 Texture::~Texture() { }
 
-SubresourceLayout Texture::get_subresource_layout(uint32_t mip_level) const
+SubresourceLayout Texture::get_subresource_layout(uint32_t mip_level, uint32_t row_alignment) const
 {
     SGL_CHECK_LT(mip_level, mip_count());
 
     rhi::SubresourceLayout rhi_layout;
-    SLANG_CALL(m_rhi_texture->getSubresourceLayout(mip_level, &rhi_layout));
+    SLANG_CALL(m_rhi_texture->getSubresourceLayout(mip_level, row_alignment, &rhi_layout));
 
     return {
         .size = {rhi_layout.size.width, rhi_layout.size.height, rhi_layout.size.depth},

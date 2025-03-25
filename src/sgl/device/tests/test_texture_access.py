@@ -14,20 +14,21 @@ import sglhelpers as helpers
 # Generate random data for a texture with a given array size and mip count.
 def make_rand_data(type: sgl.TextureType, array_size: int, mip_count: int):
 
-    if type == sgl.TextureType.texture_cube:
-        array_size *= 6
-        type = sgl.TextureType.texture_2d
+    layer_count = array_size
+    if type in [sgl.TextureType.texture_cube, sgl.TextureType.texture_cube_array]:
+        layer_count *= 6
 
     levels = []
-    for i in range(0, array_size):
+    for i in range(0, layer_count):
         sz = 32
         mips = []
         for i in range(0, mip_count):
-            if type == sgl.TextureType.texture_1d:
+            if type in [sgl.TextureType.texture_1d, sgl.TextureType.texture_1d_array]:
                 mips.append(np.random.rand(sz, 4).astype(np.float32))
-            elif type == sgl.TextureType.texture_2d:
+            elif type in [sgl.TextureType.texture_2d, sgl.TextureType.texture_2d_array, sgl.TextureType.texture_2d_ms, sgl.TextureType.texture_2d_ms_array,
+                          sgl.TextureType.texture_cube, sgl.TextureType.texture_cube_array]:
                 mips.append(np.random.rand(sz, sz, 4).astype(np.float32))
-            elif type == sgl.TextureType.texture_3d:
+            elif type in [sgl.TextureType.texture_3d]:
                 mips.append(np.random.rand(sz, sz, sz, 4).astype(np.float32))
             else:
                 raise ValueError(f"Unsupported resource type: {type}")
@@ -37,21 +38,20 @@ def make_rand_data(type: sgl.TextureType, array_size: int, mip_count: int):
 
 
 # Generate dictionary of arguments for creating a texture.
-def make_args(type: sgl.TextureType, array_size: int, mips: int):
+def make_args(type: sgl.TextureType, array_length: int, mip_count: int):
     args = {
         "format": sgl.Format.rgba32_float,
         "usage": sgl.TextureUsage.shader_resource | sgl.TextureUsage.unordered_access,
-        "mip_count": mips,
-        "array_size": array_size,
+        "mip_count": mip_count,
+        "array_length": array_length,
     }
-    if type == sgl.TextureType.texture_1d:
+    if type in [sgl.TextureType.texture_1d, sgl.TextureType.texture_1d_array]:
         args.update({"type": type, "width": 32})
-    elif type == sgl.TextureType.texture_2d:
+    elif type in [sgl.TextureType.texture_2d, sgl.TextureType.texture_2d_array, sgl.TextureType.texture_2d_ms, sgl.TextureType.texture_2d_ms_array,
+                  sgl.TextureType.texture_cube, sgl.TextureType.texture_cube_array]:
         args.update({"type": type, "width": 32, "height": 32})
-    elif type == sgl.TextureType.texture_3d:
+    elif type in [sgl.TextureType.texture_3d]:
         args.update({"type": type, "width": 32, "height": 32, "depth": 32})
-    elif type == sgl.TextureType.texture_cube:
-        args.update({"type": type, "width": 32, "height": 32})
     else:
         raise ValueError(f"Unsupported resource type: {type}")
     return args
@@ -66,18 +66,18 @@ def make_args(type: sgl.TextureType, array_size: int, mips: int):
         sgl.TextureType.texture_cube,
     ],
 )
-@pytest.mark.parametrize("slices", [1, 4, 16])
+@pytest.mark.parametrize("array_length", [1, 4, 16])
 @pytest.mark.parametrize("mips", [0, 1, 4])
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_read_write_texture(
-    device_type: sgl.DeviceType, slices: int, mips: int, type: sgl.TextureType
+    device_type: sgl.DeviceType, array_length: int, mips: int, type: sgl.TextureType
 ):
     device = helpers.get_device(device_type)
     assert device is not None
 
     # No 3d texture arrays.
-    if type == sgl.TextureType.texture_3d and slices > 1:
-        return
+    if type == sgl.TextureType.texture_3d and array_length > 1:
+        pytest.skip("3d texture arrays not supported")
 
     if (
         device_type == sgl.DeviceType.metal
@@ -86,19 +86,30 @@ def test_read_write_texture(
     ):
         pytest.skip("Metal does not support 1d texture with mips")
 
+    # Adjust texture type to account for arrayness
+    if array_length > 1:
+        if type == sgl.TextureType.texture_1d:
+            type = sgl.TextureType.texture_1d_array
+        elif type == sgl.TextureType.texture_2d:
+            type = sgl.TextureType.texture_2d_array
+        elif type == sgl.TextureType.texture_2d_ms:
+            type = sgl.TextureType.texture_2d_ms_array
+        elif type == sgl.TextureType.texture_cube:
+            type = sgl.TextureType.texture_cube_array
+
     # Create texture and build random data
-    tex = device.create_texture(**make_args(type, slices, mips))
-    rand_data = make_rand_data(tex.type, tex.array_size, tex.mip_count)
+    tex = device.create_texture(**make_args(type, array_length, mips))
+    rand_data = make_rand_data(tex.type, tex.array_length, tex.mip_count)
 
     # Write random data to texture
-    for slice_idx, slice_data in enumerate(rand_data):
-        for mip_idx, mip_data in enumerate(slice_data):
-            tex.copy_from_numpy(mip_data, array_slice=slice_idx, mip_level=mip_idx)
+    for layer_idx, layer_data in enumerate(rand_data):
+        for mip_idx, mip_data in enumerate(layer_data):
+            tex.copy_from_numpy(mip_data, layer=layer_idx, mip_level=mip_idx)
 
     # Read back data and compare
-    for slice_idx, slice_data in enumerate(rand_data):
-        for mip_idx, mip_data in enumerate(slice_data):
-            data = tex.to_numpy(array_slice=slice_idx, mip_level=mip_idx)
+    for layer_idx, layer_data in enumerate(rand_data):
+        for mip_idx, mip_data in enumerate(layer_data):
+            data = tex.to_numpy(layer=layer_idx, mip_level=mip_idx)
             assert np.allclose(data, mip_data)
 
 
@@ -110,21 +121,21 @@ def test_read_write_texture(
         sgl.TextureType.texture_3d,
     ],
 )
-@pytest.mark.parametrize("slices", [1, 4])
+@pytest.mark.parametrize("array_length", [1, 4])
 @pytest.mark.parametrize("mips", [0, 1, 4])
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_shader_read_write_texture(
-    device_type: sgl.DeviceType, slices: int, mips: int, type: sgl.TextureType
+    device_type: sgl.DeviceType, array_length: int, mips: int, type: sgl.TextureType
 ):
     device = helpers.get_device(device_type)
     assert device is not None
 
     # No 3d texture arrays.
-    if type == sgl.TextureType.texture_3d and slices > 1:
-        return
+    if type == sgl.TextureType.texture_3d and array_length > 1:
+        pytest.skip("3d texture arrays not supported")
 
     # Skip 1d texture arrays until slang fix is in
-    if type == sgl.TextureType.texture_1d and slices > 1:
+    if type == sgl.TextureType.texture_1d and array_length > 1:
         pytest.skip("Pending slang crash using 1d texture array as UAV")
 
     # Skip 3d textures with mips until slang fix is in
@@ -138,19 +149,30 @@ def test_shader_read_write_texture(
     ):
         pytest.skip("Metal does not support 1d texture with mips")
 
+    # Adjust texture type to account for arrayness
+    if array_length > 1:
+        if type == sgl.TextureType.texture_1d:
+            type = sgl.TextureType.texture_1d_array
+        elif type == sgl.TextureType.texture_2d:
+            type = sgl.TextureType.texture_2d_array
+        elif type == sgl.TextureType.texture_2d_ms:
+            type = sgl.TextureType.texture_2d_ms_array
+        elif type == sgl.TextureType.texture_cube:
+            type = sgl.TextureType.texture_cube_array
+
     # Create texture and build random data
-    src_tex = device.create_texture(**make_args(type, slices, mips))
-    dest_tex = device.create_texture(**make_args(type, slices, mips))
-    rand_data = make_rand_data(src_tex.type, src_tex.array_size, src_tex.mip_count)
+    src_tex = device.create_texture(**make_args(type, array_length, mips))
+    dest_tex = device.create_texture(**make_args(type, array_length, mips))
+    rand_data = make_rand_data(src_tex.type, src_tex.array_length, src_tex.mip_count)
 
     # Write random data to texture
-    for slice_idx, slice_data in enumerate(rand_data):
+    for layer_idx, slice_data in enumerate(rand_data):
         for mip_idx, mip_data in enumerate(slice_data):
-            src_tex.copy_from_numpy(mip_data, array_slice=slice_idx, mip_level=mip_idx)
+            src_tex.copy_from_numpy(mip_data, layer=layer_idx, mip_level=mip_idx)
 
     for mip in range(src_tex.mip_count):
         dims = len(rand_data[0][0].shape) - 1
-        if slices == 1:
+        if array_length == 1:
 
             COPY_TEXTURE_SHADER = f"""
         [shader("compute")]
@@ -165,20 +187,20 @@ def test_shader_read_write_texture(
         }}
         """
             module = device.load_module_from_source(
-                module_name=f"test_shader_read_write_texture_{slices}_{dims}",
+                module_name=f"test_shader_read_write_texture_{array_length}_{dims}",
                 source=COPY_TEXTURE_SHADER,
             )
             copy_kernel = device.create_compute_kernel(
                 device.link_program([module], [module.entry_point("copy_color")])
             )
 
-            src_view = src_tex.create_view({"subresource_range": {"mip_level": mip}})
+            src_view = src_tex.create_view({"subresource_range": sgl.SubresourceRange({"mip_level": mip})})
             assert src_view.subresource_range.base_array_layer == 0
             assert src_view.subresource_range.layer_count == 1
             assert src_view.subresource_range.mip_level == mip
-            assert srv.subresource_range.mip_count == src_tex.mip_count - mip
+            assert src_view.subresource_range.mip_count == src_tex.mip_count - mip
 
-            dst_view = dest_tex.create_view({"subresource_range": {"mip_level": mip}})
+            dst_view = dest_tex.create_view({"subresource_range": sgl.SubresourceRange({"mip_level": mip})})
             assert dst_view.subresource_range.base_array_layer == 0
             assert dst_view.subresource_range.layer_count == 1
             assert dst_view.subresource_range.mip_level == mip
@@ -205,20 +227,24 @@ def test_shader_read_write_texture(
         }}
         """
             module = device.load_module_from_source(
-                module_name=f"test_shader_read_write_texture_{slices}_{dims}",
+                module_name=f"test_shader_read_write_texture_{array_length}_{dims}",
                 source=COPY_TEXTURE_SHADER,
             )
             copy_kernel = device.create_compute_kernel(
                 device.link_program([module], [module.entry_point("copy_color")])
             )
-            for i in range(0, slices):
-                srv = src_tex.get_srv(mip_level=mip, base_array_layer=i, layer_count=1)
+            for i in range(0, array_length):
+                desc = sgl.TextureViewDesc({
+                    "subresource_range": sgl.SubresourceRange({"mip_level": mip, "base_array_layer": i, "layer_count": 1})
+                })
+
+                srv = src_tex.create_view(desc)
                 assert srv.subresource_range.base_array_layer == i
                 assert srv.subresource_range.layer_count == 1
                 assert srv.subresource_range.mip_level == mip
                 assert srv.subresource_range.mip_count == src_tex.mip_count - mip
 
-                uav = dest_tex.get_uav(mip_level=mip, base_array_layer=i, layer_count=1)
+                uav = dest_tex.create_view(desc)
                 assert uav.subresource_range.base_array_layer == i
                 assert uav.subresource_range.layer_count == 1
                 assert uav.subresource_range.mip_level == mip
@@ -229,9 +255,9 @@ def test_shader_read_write_texture(
                 )
 
     # Read back data and compare
-    for slice_idx, slice_data in enumerate(rand_data):
+    for layer_idx, slice_data in enumerate(rand_data):
         for mip_idx, mip_data in enumerate(slice_data):
-            data = dest_tex.to_numpy(array_slice=slice_idx, mip_level=mip_idx)
+            data = dest_tex.to_numpy(layer=layer_idx, mip_level=mip_idx)
             assert np.allclose(data, mip_data)
 
 
