@@ -585,111 +585,89 @@ class RayContext:
             data=indices,
         )
 
-        blas_geometry_desc = sgl.RayTracingGeometryDesc()
-        blas_geometry_desc.type = sgl.RayTracingGeometryType.triangles
-        blas_geometry_desc.flags = sgl.RayTracingGeometryFlags.opaque
-        blas_geometry_desc.triangles.transform3x4 = transform_buffer.device_address
-        blas_geometry_desc.triangles.index_format = sgl.Format.r32_uint
-        blas_geometry_desc.triangles.vertex_format = sgl.Format.rgb32_float
-        blas_geometry_desc.triangles.index_count = indices.size
-        blas_geometry_desc.triangles.vertex_count = vertices.size // 3
-        blas_geometry_desc.triangles.index_data = index_buffer.device_address
-        blas_geometry_desc.triangles.vertex_data = vertex_buffer.device_address
-        blas_geometry_desc.triangles.vertex_stride = vertices.itemsize * 3
+        blas_geometry_desc = sgl.AccelerationStructureBuildInputTriangles()
+        blas_geometry_desc.flags = sgl.AccelerationStructureGeometryFlags.opaque
+        blas_geometry_desc.vertex_buffers = [sgl.BufferOffsetPair(vertex_buffer)]
+        blas_geometry_desc.vertex_format = sgl.Format.rgb32_float
+        blas_geometry_desc.vertex_count = vertices.size // 3
+        blas_geometry_desc.vertex_stride = vertices.itemsize * 3
+        blas_geometry_desc.index_buffer = index_buffer
+        blas_geometry_desc.index_format = sgl.IndexFormat.uint32
+        blas_geometry_desc.index_count = indices.size
 
-        blas_build_inputs = sgl.AccelerationStructureBuildInputs()
-        blas_build_inputs.kind = sgl.AccelerationStructureKind.bottom_level
-        blas_build_inputs.flags = sgl.AccelerationStructureBuildFlags.none
-        blas_build_inputs.geometry_descs = [blas_geometry_desc]
 
-        blas_prebuild_info = ctx.device.get_acceleration_structure_prebuild_info(
-            blas_build_inputs
+        blas_build_desc = sgl.AccelerationStructureBuildDesc()
+        blas_build_desc.inputs = [blas_geometry_desc]
+
+        blas_sizes = ctx.device.get_acceleration_structure_sizes(
+            blas_build_desc
         )
 
         blas_scratch_buffer = ctx.device.create_buffer(
-            size=blas_prebuild_info.scratch_data_size,
+            size=blas_sizes.scratch_size,
             usage=sgl.BufferUsage.unordered_access,
             label="blas_scratch_buffer",
         )
 
         blas_buffer = ctx.device.create_buffer(
-            size=blas_prebuild_info.result_data_max_size,
+            size=blas_sizes.acceleration_structure_size,
             usage=sgl.BufferUsage.acceleration_structure,
             label="blas_buffer",
         )
 
         blas = ctx.device.create_acceleration_structure(
-            kind=sgl.AccelerationStructureKind.bottom_level,
-            buffer=blas_buffer,
             size=blas_buffer.size,
+            label="blas",
         )
 
-        command_buffer = ctx.device.create_command_buffer()
-        with command_buffer.encode_ray_tracing_commands() as encoder:
-            encoder.build_acceleration_structure(
-                inputs=blas_build_inputs,
-                dst=blas,
-                scratch_data=blas_scratch_buffer.device_address,
-            )
-        command_buffer.submit()
+        command_encoder = ctx.device.create_command_encoder()
+        command_encoder.build_acceleration_structure(
+            desc=blas_build_desc, dst=blas, src=None, scratch_buffer=blas_scratch_buffer
+        )
+        ctx.device.submit_command_buffer(command_encoder.finish())
 
         self.blas = blas
 
     def create_instances(self, instance_transforms: Any):
 
-        instances: list[sgl.RayTracingInstanceDesc] = []
-        for i, transform in enumerate(instance_transforms):
-            instance_desc = sgl.RayTracingInstanceDesc()
-            instance_desc.transform = transform
-            instance_desc.instance_id = i
-            instance_desc.instance_mask = 0xFF
-            instance_desc.instance_contribution_to_hit_group_index = 0
-            instance_desc.flags = sgl.RayTracingInstanceFlags.none
-            instance_desc.acceleration_structure = self.blas.device_address
-            instances.append(instance_desc)
+        instance_list = self.ctx.device.create_acceleration_structure_instance_list(len(instance_transforms))
+        for idx,trans in enumerate(instance_transforms):
+            instance_list.write(
+                idx,
+                {
+                    "transform": trans,
+                    "instance_id": idx,
+                    "instance_mask": 0xFF,
+                    "instance_contribution_to_hit_group_index": 0,
+                    "flags": sgl.AccelerationStructureInstanceFlags.none,
+                    "acceleration_structure": self.blas.handle,
+                },
+            )
 
-        instance_buffer = self.ctx.device.create_buffer(
-            usage=sgl.BufferUsage.shader_resource,
-            label="instance_buffer",
-            data=np.stack([i.to_numpy() for i in instances]),
+        tlas_build_desc = sgl.AccelerationStructureBuildDesc(
+            {
+                "inputs": [instance_list.build_input_instances()],
+            }
         )
 
-        tlas_build_inputs = sgl.AccelerationStructureBuildInputs()
-        tlas_build_inputs.kind = sgl.AccelerationStructureKind.top_level
-        tlas_build_inputs.flags = sgl.AccelerationStructureBuildFlags.none
-        tlas_build_inputs.desc_count = len(instances)
-        tlas_build_inputs.instance_descs = instance_buffer.device_address
-
-        tlas_prebuild_info = self.ctx.device.get_acceleration_structure_prebuild_info(
-            tlas_build_inputs
-        )
+        tlas_sizes = self.ctx.device.get_acceleration_structure_sizes(tlas_build_desc)
 
         tlas_scratch_buffer = self.ctx.device.create_buffer(
-            size=tlas_prebuild_info.scratch_data_size,
+            size=tlas_sizes.scratch_size,
             usage=sgl.BufferUsage.unordered_access,
             label="tlas_scratch_buffer",
         )
 
-        tlas_buffer = self.ctx.device.create_buffer(
-            size=tlas_prebuild_info.result_data_max_size,
-            usage=sgl.BufferUsage.acceleration_structure,
-            label="tlas_buffer",
-        )
-
         tlas = self.ctx.device.create_acceleration_structure(
-            kind=sgl.AccelerationStructureKind.top_level,
-            buffer=tlas_buffer,
-            size=tlas_buffer.size,
+            size=tlas_sizes.acceleration_structure_size,
+            label="tlas",
         )
 
-        command_buffer = self.ctx.device.create_command_buffer()
-        with command_buffer.encode_ray_tracing_commands() as encoder:
-            encoder.build_acceleration_structure(
-                inputs=tlas_build_inputs,
-                dst=tlas,
-                scratch_data=tlas_scratch_buffer.device_address,
-            )
-        command_buffer.submit()
+        command_encoder = self.ctx.device.create_command_encoder()
+        command_encoder.build_acceleration_structure(
+            desc=tlas_build_desc, dst=tlas, src=None, scratch_buffer=tlas_scratch_buffer
+        )
+        self.ctx.device.submit_command_buffer(command_encoder.finish())
 
         return tlas
 
@@ -741,19 +719,14 @@ class RayContext:
             hit_group_names=["hit_group"],
         )
 
-        command_buffer = self.ctx.device.create_command_buffer()
-        with command_buffer.encode_ray_tracing_commands() as encoder:
-            shader_object = encoder.bind_pipeline(pipeline)
+        command_encoder = self.ctx.device.create_command_encoder()
+        with command_encoder.begin_ray_tracing_pass() as pass_encoder:
+            shader_object = pass_encoder.bind_pipeline(pipeline, shader_table)
             cursor = sgl.ShaderCursor(shader_object)
             cursor.rt_tlas = tlas
             cursor.rt_render_texture = self.ctx.output_texture
-            encoder.dispatch_rays(
-                0,
-                shader_table,
-                [self.ctx.output_texture.width, self.ctx.output_texture.height, 1],
-            )
-        command_buffer.submit()
-
+            pass_encoder.dispatch_rays(0, [1024, 1024, 1])
+        self.ctx.device.submit_command_buffer(command_encoder.finish())
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 @pytest.mark.parametrize("mode", ["compute", "ray"])
