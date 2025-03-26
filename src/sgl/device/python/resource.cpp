@@ -174,33 +174,90 @@ nb::ndarray<nb::numpy> texture_to_numpy(Texture* self, uint32_t layer, uint32_t 
     SGL_CHECK_LT(layer, self->layer_count());
     SGL_CHECK_LT(mip_level, self->mip_count());
 
-    uint3 mip_size = self->get_mip_size(mip_level);
+    // Get the subresource data and corresponding layout. Depending on platform, these
+    // may not be tightly packed.
     OwnedSubresourceData subresource_data = self->get_subresource_data(layer, mip_level);
+    SubresourceLayout src_layout = self->get_subresource_layout(mip_level);
+    SGL_ASSERT(subresource_data.size == src_layout.size_in_bytes);
+    SGL_ASSERT(subresource_data.row_pitch == src_layout.row_pitch);
+    SGL_ASSERT(subresource_data.slice_pitch == src_layout.slice_pitch);
 
-    size_t size = subresource_data.size;
-    void* data = subresource_data.owned_data.release();
+    // Get tightly packed layout for numpy array.
+    SubresourceLayout dst_layout = self->get_subresource_layout(mip_level, 1);
+
+    // Double check assumptions about column (aka block) size and dimensions
+    // being consistent regardless of packing are correct.
+    SGL_ASSERT(src_layout.col_pitch == dst_layout.col_pitch);
+    SGL_ASSERT(src_layout.row_count == dst_layout.row_count);
+    SGL_ASSERT(src_layout.size.x == dst_layout.size.x);
+    SGL_ASSERT(src_layout.size.y == dst_layout.size.y);
+    SGL_ASSERT(src_layout.size.z == dst_layout.size.z);
+
+    // Dest is tightly packed, so pitch must be <= source pitch.
+    SGL_ASSERT(src_layout.row_pitch >= dst_layout.row_pitch);
+
+    //TODO: Could have fast path here if layouts are the same, but for now its
+    //better to stress-test the full copy operation.
+    uint8_t* src_data = (uint8_t*)subresource_data.data;
+    uint8_t* dst_data = new uint8_t[dst_layout.size_in_bytes];
+    for (uint32_t slice_idx = 0; slice_idx < src_layout.size.z; slice_idx++)
+    {
+        uint8_t* src_slice = src_data + slice_idx * src_layout.slice_pitch;
+        uint8_t* dst_slice = dst_data + slice_idx * dst_layout.slice_pitch;
+        for (uint32_t row_idx = 0; row_idx < src_layout.row_count; row_idx++) {
+            uint8_t* src_row = src_slice + row_idx * src_layout.row_pitch;
+            uint8_t* dst_row = dst_slice + row_idx * dst_layout.row_pitch;
+            std::memcpy(dst_row, src_row, dst_layout.row_pitch);
+        }
+    }
+
+    size_t size = dst_layout.size_in_bytes;
+    void* data = dst_data;
+    uint3 mip_size = dst_layout.size;
 
     nb::capsule owner(data, [](void* p) noexcept { delete[] reinterpret_cast<uint8_t*>(p); });
 
     if (auto dtype = resource_format_to_dtype(self->format())) {
-        uint32_t channel_count = get_format_info(self->format()).channel_count;
-        int64_t row_stride = subresource_data.row_pitch / get_format_info(self->format()).bytes_per_block;
+
+        // Select shape based on texture type.
         std::vector<size_t> shape;
-        std::vector<int64_t> strides;
-        if (mip_size.z > 1) {
-            shape.push_back(mip_size.z);
-            strides.push_back(mip_size.y * row_stride * channel_count);
+        switch (self->type()) {
+        case TextureType::texture_1d:
+        case TextureType::texture_1d_array:
+            shape = {size_t(mip_size.x)};
+            break;
+        case TextureType::texture_2d:
+        case TextureType::texture_2d_array:
+        case TextureType::texture_2d_ms:
+        case TextureType::texture_2d_ms_array:
+        case TextureType::texture_cube:
+        case TextureType::texture_cube_array:
+            shape = {size_t(mip_size.y), size_t(mip_size.x)};
+            break;
+        case TextureType::texture_3d:
+            shape = {size_t(mip_size.z), size_t(mip_size.y), size_t(mip_size.x)};
+            break;
         }
-        if (mip_size.y > 1) {
-            shape.push_back(mip_size.y);
-            strides.push_back(row_stride * channel_count);
-        }
-        shape.push_back(mip_size.x);
-        strides.push_back(channel_count);
-        if (channel_count > 1) {
+
+        // Get format info and check assumptions about matching format/layout.
+        const FormatInfo& format_info = get_format_info(self->format());
+        SGL_ASSERT(format_info.bytes_per_block == dst_layout.col_pitch);
+        SGL_ASSERT(format_info.block_width == 1);
+        SGL_ASSERT(format_info.block_height == 1);
+
+        // Add extra dimension for multi-channel textures.
+        uint32_t channel_count = format_info.channel_count;
+        if (channel_count > 1)
             shape.push_back(channel_count);
-            strides.push_back(1);
+
+        // Calculate contiguous strides.
+        std::vector<int64_t> strides(shape.size());
+        int64_t stride = 1;
+        for (int i = (int)shape.size() - 1; i >= 0; --i) {
+            strides[i] = stride;
+            stride *= shape[i];
         }
+
         return nb::ndarray<nb::numpy>(data, shape.size(), shape.data(), owner, strides.data(), *dtype, nb::device::cpu::value);
     } else {
         size_t shape[1] = {size};
@@ -216,15 +273,19 @@ inline void texture_from_numpy(Texture* self, nb::ndarray<nb::numpy> data, uint3
     SGL_CHECK_LT(layer, self->layer_count());
     SGL_CHECK_LT(mip_level, self->mip_count());
 
-    uint3 mip_size = self->get_mip_size(mip_level);
+    // Get the sub resource layout with 1B alignment so rows/slices are tightly packed.
     SubresourceLayout subresource_layout = self->get_subresource_layout(mip_level, 1);
+
+    // Setup subresource data from the numpy array information.
     SubresourceData subresource_data{
         .data = data.data(),
         .size = data.nbytes(),
         .row_pitch = subresource_layout.row_pitch,
         .slice_pitch = subresource_layout.slice_pitch,
     };
+    uint3 mip_size = subresource_layout.size;
 
+    // Validate the numpy array shape.
     if (auto dtype = resource_format_to_dtype(self->format())) {
         std::vector<size_t> expected_shape;
         switch (self->type()) {
@@ -257,7 +318,10 @@ inline void texture_from_numpy(Texture* self, nb::ndarray<nb::numpy> data, uint3
             SGL_CHECK(data.shape(i) == expected_shape[i], "numpy array has wrong shape (expected {})", expected_shape);
     }
 
+    // Check numpy array size in bytes matches the sub resource layotu size in bytes.
     SGL_CHECK(data.nbytes() == subresource_layout.size_in_bytes, "numpy array doesn't match the subresource size");
+
+    // Write numpy data to the texture.
     self->set_subresource_data(layer, mip_level, subresource_data);
 }
 

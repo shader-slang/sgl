@@ -20,6 +20,25 @@
 namespace sgl {
 
 // ----------------------------------------------------------------------------
+// Helpers
+// ----------------------------------------------------------------------------
+
+SubresourceLayout layout_from_rhilayout(const rhi::SubresourceLayout& rhi_layout)
+{
+    return {
+        .size = {rhi_layout.size.width, rhi_layout.size.height, rhi_layout.size.depth},
+        // TODO(slang-rhi) rename to rowPitch/slicePitch in rhi
+        .col_pitch = rhi_layout.strideX,
+        .row_pitch = rhi_layout.strideY,
+        .slice_pitch = rhi_layout.strideZ,
+        .size_in_bytes = rhi_layout.sizeInBytes,
+        .block_width = rhi_layout.blockWidth,
+        .block_height = rhi_layout.blockHeight,
+        .row_count = rhi_layout.rowCount,
+    };
+}
+
+// ----------------------------------------------------------------------------
 // Resource
 // ----------------------------------------------------------------------------
 
@@ -286,6 +305,7 @@ inline void process_texture_desc(TextureDesc& desc)
 
     switch (desc.type) {
     case TextureType::texture_1d:
+    case TextureType::texture_1d_array:
         SGL_CHECK(
             desc.width > 0 && desc.height <= 1 && desc.depth <= 1,
             "Invalid dimensions (width={}, height={}, depth={}) for 1D texture.",
@@ -295,6 +315,9 @@ inline void process_texture_desc(TextureDesc& desc)
         );
         break;
     case TextureType::texture_2d:
+    case TextureType::texture_2d_array:
+    case TextureType::texture_2d_ms:
+    case TextureType::texture_2d_ms_array:
         SGL_CHECK(
             desc.width > 0 && desc.height > 0 && desc.depth <= 1,
             "Invalid dimensions (width={}, height={}, depth={}) for 2D texture.",
@@ -313,6 +336,7 @@ inline void process_texture_desc(TextureDesc& desc)
         );
         break;
     case TextureType::texture_cube:
+    case TextureType::texture_cube_array:
         SGL_CHECK(
             desc.width > 0 && desc.height > 0 && desc.depth <= 1,
             "Invalid dimensions (width={}, height={}, depth={}) for cube texture.",
@@ -374,6 +398,19 @@ Texture::Texture(ref<Device> device, TextureDesc desc)
         for (uint32_t subresource = 0; subresource < m_desc.data.size(); ++subresource) {
             uint32_t layer = subresource / m_desc.mip_count;
             uint32_t mip_level = subresource % m_desc.mip_count;
+
+            SubresourceData subresource_data = m_desc.data[subresource];
+            if (subresource_data.row_pitch == 0 && subresource_data.slice_pitch == 0 && subresource_data.size == 0)
+            {
+                SubresourceLayout subresource_layout = get_subresource_layout(0, 1);
+                subresource_data.row_pitch = subresource_layout.row_pitch;
+                subresource_data.slice_pitch = subresource_layout.slice_pitch;
+                subresource_data.size = subresource_layout.size_in_bytes;
+            }
+            SGL_CHECK(subresource_data.row_pitch > 0, "Invalid row pitch.");
+            SGL_CHECK(subresource_data.slice_pitch > 0, "Invalid slice pitch.");
+            SGL_CHECK(subresource_data.size > 0, "Invalid size.");
+
             set_subresource_data(layer, mip_level, m_desc.data[subresource]);
         }
         if (m_desc.mip_count > 1) {
@@ -403,16 +440,7 @@ SubresourceLayout Texture::get_subresource_layout(uint32_t mip_level, uint32_t r
     rhi::SubresourceLayout rhi_layout;
     SLANG_CALL(m_rhi_texture->getSubresourceLayout(mip_level, row_alignment, &rhi_layout));
 
-    return {
-        .size = {rhi_layout.size.width, rhi_layout.size.height, rhi_layout.size.depth},
-        // TODO(slang-rhi) rename to rowPitch/slicePitch in rhi
-        .row_pitch = rhi_layout.strideY,
-        .slice_pitch = rhi_layout.strideZ,
-        .size_in_bytes = rhi_layout.sizeInBytes,
-        .block_width = rhi_layout.blockWidth,
-        .block_height = rhi_layout.blockHeight,
-        .row_count = rhi_layout.rowCount,
-    };
+    return layout_from_rhilayout(rhi_layout);
 }
 
 void Texture::set_subresource_data(uint32_t layer, uint32_t mip_level, SubresourceData subresource_data)

@@ -678,18 +678,19 @@ OwnedSubresourceData Device::read_texture_data(const Texture* texture, uint32_t 
 
     // TODO(slang-rhi) use readTexture function that takes data pointer instead of doing extra copy
     Slang::ComPtr<ISlangBlob> blob;
-    rhi::Size row_pitch{0};
-    SLANG_CALL(m_rhi_device->readTexture(texture->rhi_texture(), layer, mip_level, blob.writeRef(), &row_pitch));
+    rhi::SubresourceLayout rhi_layout;
+    SLANG_CALL(m_rhi_device->readTexture(texture->rhi_texture(), layer, mip_level, blob.writeRef(), &rhi_layout));
 
+    // Setup owned sub resource data that can contain the results.
     OwnedSubresourceData subresource_data;
-    subresource_data.size = blob->getBufferSize();
     subresource_data.owned_data = std::make_unique<uint8_t[]>(blob->getBufferSize());
     subresource_data.data = subresource_data.owned_data.get();
-    subresource_data.row_pitch = row_pitch;
-    // TODO(slang-rhi)
-    subresource_data.slice_pitch = 0; // layout.row_count * layout.row_pitch;
 
-    SubresourceLayout layout = texture->get_subresource_layout(mip_level);
+    // Store additional layout information.
+    SubresourceLayout layout = layout_from_rhilayout(rhi_layout);
+    subresource_data.row_pitch = layout.row_pitch;
+    subresource_data.slice_pitch = layout.slice_pitch;
+    subresource_data.size = layout.size_in_bytes;
 
     std::memcpy(subresource_data.owned_data.get(), blob->getBufferPointer(), subresource_data.size);
 
