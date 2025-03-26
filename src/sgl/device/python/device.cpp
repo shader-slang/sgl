@@ -366,7 +366,19 @@ SGL_PY_EXPORT(device_device)
         {
             SubresourceData subresourceData[1];
             if (data) {
+                SGL_CHECK(
+                    array_length == 1,
+                    "Texture arrays cannot be populated on construction - use upload_texture_data"
+                );
+                SGL_CHECK(
+                    type != TextureType::texture_cube && type != TextureType::texture_cube_array,
+                    "Cube textures cannot be populated on construction - use upload_texture_data"
+                );
                 SGL_CHECK(is_ndarray_contiguous(*data), "Data is not contiguous.");
+                subresourceData[0].data = data->data();
+                subresourceData[0].size = data->nbytes();
+                subresourceData[0].slice_pitch = subresourceData[0].size / depth;
+                subresourceData[0].row_pitch = subresourceData[0].slice_pitch / height;
             }
             return self->create_texture({
                 .type = type,

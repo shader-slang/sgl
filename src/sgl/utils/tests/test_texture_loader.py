@@ -265,7 +265,10 @@ def test_load_texture_from_dds_file(device_type: sgl.DeviceType, filename: str):
     ref_data = np.load(path.with_name(path.stem + "-ref.npz"))
     for subresource in range(texture.subresource_count):
         key = f"subresource_{subresource}"
-        assert np.all(data[key] == ref_data[key])
+        sr_data = data[key]
+        sr_ref_data = ref_data[key]
+        assert sr_data.shape == sr_ref_data.shape
+        assert np.all(sr_data == sr_ref_data)
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)

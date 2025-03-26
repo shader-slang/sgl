@@ -492,6 +492,9 @@ struct SubresourceLayout {
     /// Dimensions of the subresource (in texels).
     uint3 size;
 
+    /// Stride in bytes between columns (i.e. blocks) of the subresource tensor.
+    size_t col_pitch;
+
     /// Stride in bytes between rows of the subresource tensor.
     size_t row_pitch;
 
@@ -512,6 +515,8 @@ struct SubresourceLayout {
     /// For compressed formats this matches align_up(size.y, block_height) / block_height.
     size_t row_count;
 };
+
+SubresourceLayout layout_from_rhilayout(const rhi::SubresourceLayout& rhi_layout);
 
 class SGL_API Texture : public Resource {
     SGL_OBJECT(Texture)
