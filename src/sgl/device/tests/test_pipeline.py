@@ -397,6 +397,7 @@ def test_gfx_depth(device_type: sgl.DeviceType):
             "depth_test_enable": True,
             "depth_write_enable": True,
             "depth_func": sgl.ComparisonFunc.less,
+            "format": depth_texture.format,
         },
         depth_texture=depth_texture,
     )
@@ -404,7 +405,7 @@ def test_gfx_depth(device_type: sgl.DeviceType):
 
     # Write a great big quad at z=0.75, which should do nothing.
     gfx.draw_graphics_pipeline(
-        color=sgl.float4(1, 1, 1, 1),
+        color=sgl.float4(1, 1, 0, 1),
         clear=False,
         vert_z=0.75,
         rasterizer={"cull_mode": sgl.CullMode.back},
@@ -412,6 +413,7 @@ def test_gfx_depth(device_type: sgl.DeviceType):
             "depth_test_enable": True,
             "depth_write_enable": True,
             "depth_func": sgl.ComparisonFunc.less,
+            "format": depth_texture.format,
         },
         depth_texture=depth_texture,
     )
@@ -427,6 +429,7 @@ def test_gfx_depth(device_type: sgl.DeviceType):
             "depth_test_enable": True,
             "depth_write_enable": True,
             "depth_func": sgl.ComparisonFunc.less,
+            "format": depth_texture.format,
         },
         depth_texture=depth_texture,
     )
@@ -442,6 +445,7 @@ def test_gfx_depth(device_type: sgl.DeviceType):
             "depth_test_enable": True,
             "depth_write_enable": True,
             "depth_func": sgl.ComparisonFunc.always,
+            "format": depth_texture.format,
         },
         depth_texture=depth_texture,
     )
@@ -461,6 +465,7 @@ def test_gfx_depth(device_type: sgl.DeviceType):
             "depth_test_enable": True,
             "depth_write_enable": True,
             "depth_func": sgl.ComparisonFunc.less,
+            "format": depth_texture.format,
         },
         depth_texture=depth_texture,
     )
@@ -476,6 +481,7 @@ def test_gfx_depth(device_type: sgl.DeviceType):
             "depth_test_enable": True,
             "depth_write_enable": True,
             "depth_func": sgl.ComparisonFunc.less,
+            "format": depth_texture.format,
         },
         depth_texture=depth_texture,
     )
