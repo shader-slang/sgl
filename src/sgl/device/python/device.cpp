@@ -677,6 +677,7 @@ SGL_PY_EXPORT(device_device)
                 .program = std::move(program),
                 .input_layout = input_layout,
                 .primitive_topology = primitive_topology,
+                .targets = targets,
                 .depth_stencil = depth_stencil.value_or(DepthStencilDesc{}),
                 .rasterizer = rasterizer.value_or(RasterizerDesc{}),
                 .multisample = multisample.value_or(MultisampleDesc{}),
