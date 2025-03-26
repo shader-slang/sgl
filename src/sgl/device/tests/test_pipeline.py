@@ -719,19 +719,14 @@ class RayContext:
             hit_group_names=["hit_group"],
         )
 
-        command_buffer = self.ctx.device.create_command_buffer()
-        with command_buffer.encode_ray_tracing_commands() as encoder:
-            shader_object = encoder.bind_pipeline(pipeline)
+        command_encoder = self.ctx.device.create_command_encoder()
+        with command_encoder.begin_ray_tracing_pass() as pass_encoder:
+            shader_object = pass_encoder.bind_pipeline(pipeline, shader_table)
             cursor = sgl.ShaderCursor(shader_object)
             cursor.rt_tlas = tlas
             cursor.rt_render_texture = self.ctx.output_texture
-            encoder.dispatch_rays(
-                0,
-                shader_table,
-                [self.ctx.output_texture.width, self.ctx.output_texture.height, 1],
-            )
-        command_buffer.submit()
-
+            pass_encoder.dispatch_rays(0, [1024, 1024, 1])
+        self.ctx.device.submit_command_buffer(command_encoder.finish())
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 @pytest.mark.parametrize("mode", ["compute", "ray"])
