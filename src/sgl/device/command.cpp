@@ -137,11 +137,13 @@ void RenderPassEncoder::set_render_state(const RenderState& state)
 
 void RenderPassEncoder::draw(const DrawArguments& args)
 {
+    m_command_encoder->store_cuda_interop_buffers();
     m_rhi_render_pass_encoder->draw(detail::to_rhi(args));
 }
 
 void RenderPassEncoder::draw_indexed(const DrawArguments& args)
 {
+    m_command_encoder->store_cuda_interop_buffers();
     m_rhi_render_pass_encoder->drawIndexed(detail::to_rhi(args));
 }
 
@@ -151,6 +153,7 @@ void RenderPassEncoder::draw_indirect(
     BufferOffsetPair count_buffer
 )
 {
+    m_command_encoder->store_cuda_interop_buffers();
     m_rhi_render_pass_encoder->drawIndirect(max_draw_count, detail::to_rhi(arg_buffer), detail::to_rhi(count_buffer));
 }
 
@@ -160,12 +163,14 @@ void RenderPassEncoder::draw_indexed_indirect(
     BufferOffsetPair count_buffer
 )
 {
+    m_command_encoder->store_cuda_interop_buffers();
     m_rhi_render_pass_encoder
         ->drawIndexedIndirect(max_draw_count, detail::to_rhi(arg_buffer), detail::to_rhi(count_buffer));
 }
 
 void RenderPassEncoder::draw_mesh_tasks(uint3 dimensions)
 {
+    m_command_encoder->store_cuda_interop_buffers();
     m_rhi_render_pass_encoder->drawMeshTasks(dimensions.x, dimensions.y, dimensions.z);
 }
 
@@ -211,11 +216,13 @@ void ComputePassEncoder::dispatch(uint3 thread_count)
 
 void ComputePassEncoder::dispatch_compute(uint3 thread_group_count)
 {
+    m_command_encoder->store_cuda_interop_buffers();
     m_rhi_compute_pass_encoder->dispatchCompute(thread_group_count.x, thread_group_count.y, thread_group_count.z);
 }
 
 void ComputePassEncoder::dispatch_compute_indirect(BufferOffsetPair arg_buffer)
 {
+    m_command_encoder->store_cuda_interop_buffers();
     m_rhi_compute_pass_encoder->dispatchComputeIndirect(detail::to_rhi(arg_buffer));
 }
 
@@ -257,6 +264,7 @@ void RayTracingPassEncoder::bind_pipeline(
 
 void RayTracingPassEncoder::dispatch_rays(uint32_t ray_gen_shader_index, uint3 dimensions)
 {
+    m_command_encoder->store_cuda_interop_buffers();
     m_rhi_ray_tracing_pass_encoder->dispatchRays(ray_gen_shader_index, dimensions.x, dimensions.y, dimensions.z);
 }
 
@@ -780,6 +788,9 @@ ref<CommandBuffer> CommandEncoder::finish()
     Slang::ComPtr<rhi::ICommandBuffer> rhi_command_buffer;
     SLANG_CALL(m_rhi_command_encoder->finish(rhi_command_buffer.writeRef()));
     ref<CommandBuffer> command_buffer = make_ref<CommandBuffer>(m_device, rhi_command_buffer);
+
+    command_buffer->set_cuda_interop_buffers(m_cuda_interop_buffers);
+
     m_open = false;
     return command_buffer;
 }
@@ -799,6 +810,11 @@ std::string CommandEncoder::to_string() const
         ")",
         m_device
     );
+}
+
+void CommandEncoder::store_cuda_interop_buffers()
+{
+    m_root_object->get_cuda_interop_buffers(m_cuda_interop_buffers);
 }
 
 // ----------------------------------------------------------------------------

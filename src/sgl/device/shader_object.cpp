@@ -145,8 +145,11 @@ void ShaderObject::set_cuda_tensor_view(const ShaderOffset& offset, const cuda::
 
 void ShaderObject::get_cuda_interop_buffers(std::vector<ref<cuda::InteropBuffer>>& cuda_interop_buffers) const
 {
-    cuda_interop_buffers
-        .insert(cuda_interop_buffers.end(), m_cuda_interop_buffers.begin(), m_cuda_interop_buffers.end());
+    // Add cuda interop buffers from this shader object that aren't already in the list
+    for (const auto& buffer : m_cuda_interop_buffers) {
+        if (std::find(cuda_interop_buffers.begin(), cuda_interop_buffers.end(), buffer) == cuda_interop_buffers.end())
+            cuda_interop_buffers.push_back(buffer);
+    }
 }
 
 } // namespace sgl

@@ -342,6 +342,8 @@ public:
 
     std::string to_string() const override;
 
+    void store_cuda_interop_buffers();
+
 private:
     Slang::ComPtr<rhi::ICommandEncoder> m_rhi_command_encoder;
 
@@ -364,6 +366,11 @@ public:
     rhi::ICommandBuffer* rhi_command_buffer() const { return m_rhi_command_buffer; }
 
     std::string to_string() const override;
+
+    void set_cuda_interop_buffers(const std::vector<ref<cuda::InteropBuffer>>& cuda_interop_buffers)
+    {
+        m_cuda_interop_buffers = cuda_interop_buffers;
+    }
 
 private:
     Slang::ComPtr<rhi::ICommandBuffer> m_rhi_command_buffer;
