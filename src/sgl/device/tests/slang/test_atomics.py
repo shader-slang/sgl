@@ -150,11 +150,14 @@ def test_texture_add_f32(device_type: sgl.DeviceType, dimension: int):
     np.random.seed(123)
     data = np.random.rand(ELEMENT_COUNT).astype(np.float32)
 
+    types = [sgl.TextureType.texture_1d, sgl.TextureType.texture_2d, sgl.TextureType.texture_3d]
+
     texture = device.create_texture(
         format=sgl.Format.r32_float,
+        type=types[dimension - 1],
         width=2,
-        height=2 if dimension > 1 else 0,
-        depth=2 if dimension > 2 else 0,
+        height=2 if dimension > 1 else 1,
+        depth=2 if dimension > 2 else 1,
         usage=sgl.TextureUsage.unordered_access,
     )
 
