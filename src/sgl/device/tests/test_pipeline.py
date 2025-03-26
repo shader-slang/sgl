@@ -536,6 +536,14 @@ def test_rhi_alpha_coverage(device_type: sgl.DeviceType):
     gfx = GfxContext(ctx)
     area = ctx.output_texture.width * ctx.output_texture.height
 
+    ctdesc: sgl.ColorTargetDesc = sgl.ColorTargetDesc({
+        "format": sgl.Format.rgba32_float,
+        "enable_blend": True,
+        "color": {
+            "src_factor": sgl.BlendFactor.src_alpha,
+        },
+    })
+
     # Clear and then draw semi transparent red quad, and should end up
     # with 1/8 of the pixels red due to alpha coverage.
     gfx.draw_graphics_pipeline(
@@ -543,17 +551,10 @@ def test_rhi_alpha_coverage(device_type: sgl.DeviceType):
         color=sgl.float4(1, 0, 0, 0.5),
         vert_scale=sgl.float2(0.5),
         rasterizer={"cull_mode": sgl.CullMode.back},
-        blend=sgl.BlendDesc(
-            {
+        targets = [ctdesc],
+        multisample = sgl.MultisampleDesc({
                 "alpha_to_coverage_enable": True,
-                "targets": [
-                    {
-                        "enable_blend": True,
-                        "color": {"src_factor": sgl.BlendFactor.src_alpha},
-                    }
-                ],
-            }
-        ),
+        })
     )
 
     pixels = ctx.output_texture.to_numpy()
