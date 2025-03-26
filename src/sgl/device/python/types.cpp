@@ -191,6 +191,8 @@ SGL_PY_EXPORT(device_types)
             [](ColorTargetDesc* self, nb::dict dict) { new (self) ColorTargetDesc(dict_to_ColorTargetDesc(dict)); }
         )
         .def_rw("format", &ColorTargetDesc::format, D_NA(ColorTargetDesc, format))
+        .def_rw("color", &ColorTargetDesc::color, D_NA(ColorTargetDesc, color))
+        .def_rw("alpha", &ColorTargetDesc::alpha, D_NA(ColorTargetDesc, alpha))
         .def_rw("write_mask", &ColorTargetDesc::write_mask, D_NA(ColorTargetDesc, write_mask))
         .def_rw("enable_blend", &ColorTargetDesc::enable_blend, D_NA(ColorTargetDesc, enable_blend))
         .def_rw("logic_op", &ColorTargetDesc::logic_op, D_NA(ColorTargetDesc, logic_op))

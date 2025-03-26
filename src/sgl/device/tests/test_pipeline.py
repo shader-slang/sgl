@@ -187,20 +187,27 @@ class GfxContext:
         viewport: Optional[sgl.Viewport] = None,
         scissor_rect: Optional[sgl.ScissorRect] = None,
         clear: bool = True,
+        depth_texture: Optional[sgl.Texture] = None,
     ):
         command_encoder = self.ctx.device.create_command_encoder()
-        with command_encoder.begin_render_pass(
-            {
-                "color_attachments": [
+
+        rp_args: Any = {
+            "color_attachments": [
                     {
                         "view": self.ctx.output_texture.create_view({}),
                         "clear_value": [0.0, 0.0, 0.0, 1.0],
                         "load_op": sgl.LoadOp.clear if clear else sgl.LoadOp.dont_care,
                         "store_op": sgl.StoreOp.store,
                     }
-                ]
+                ]}
+        if depth_texture:
+            rp_args["depth_stencil_attachment"] = {
+                "view": depth_texture.create_view({}),
+                "depth_load_op": sgl.LoadOp.load,
+                "depth_store_op": sgl.StoreOp.store,
             }
-        ) as encoder:
+
+        with command_encoder.begin_render_pass(rp_args) as encoder:
             encoder.set_render_state(
                 {
                     "vertex_buffers": [self.vertex_buffer],
@@ -239,12 +246,16 @@ class GfxContext:
 
     # Helper to create pipeline with given set of args + correct program/layouts.
     def create_render_pipeline(self, **kwargs: Any):
+        base_args = {
+            'primitive_topology': sgl.PrimitiveTopology.triangle_list,
+            'targets': [{"format": sgl.Format.rgba32_float}],
+        }
+        base_args.update(kwargs)
+
         return self.ctx.device.create_render_pipeline(
             program=self.program,
             input_layout=self.input_layout,
-            primitive_topology=sgl.PrimitiveTopology.triangle_list,
-            targets=[{"format": sgl.Format.rgba32_float}],
-            **kwargs,
+            **base_args,
         )
 
     # Helper to both create pipeline and then use it to draw quad.
@@ -256,6 +267,7 @@ class GfxContext:
         color: sgl.float4 = sgl.float4(0, 0, 0, 0),
         clear: bool = True,
         viewport: Optional[sgl.Viewport] = None,
+        depth_texture: Optional[sgl.Texture] = None,
         **kwargs: Any,
     ):
         pipeline = self.create_render_pipeline(**kwargs)
@@ -267,6 +279,7 @@ class GfxContext:
             vert_scale=vert_scale,
             vert_z=vert_z,
             viewport=viewport,
+            depth_texture=depth_texture,
         )
 
 
@@ -363,20 +376,14 @@ def test_gfx_depth(device_type: sgl.DeviceType):
         usage=sgl.TextureUsage.shader_resource | sgl.TextureUsage.depth_stencil,
         label="depth_texture",
     )
-    gfx.framebuffer = ctx.device.create_framebuffer(
-        render_targets=[ctx.output_texture.get_rtv()],
-        depth_stencil=depth_texture.get_dsv(),
-    )
 
     area = ctx.output_texture.width * ctx.output_texture.height
 
     # Manually clear both buffers and verify results.
-    command_buffer = ctx.device.create_command_buffer()
-    command_buffer.clear_resource_view(
-        ctx.output_texture.get_rtv(), [0.0, 0.0, 0.0, 1.0]
-    )
-    command_buffer.clear_resource_view(depth_texture.get_dsv(), 0.5, 0, True, True)
-    command_buffer.submit()
+    command_encoder = ctx.device.create_command_encoder()
+    command_encoder.clear_texture_float(ctx.output_texture, clear_value=[0.0, 0.0, 0.0, 1.0])
+    command_encoder.clear_texture_depth_stencil(depth_texture, depth_value=0.5)
+    ctx.device.submit_command_buffer(command_encoder.finish())
     ctx.expect_counts([0, 0, 0, area])
 
     # Write quad with z=0.25, which is close than the z buffer clear value of 0.5 so should come through.
@@ -390,13 +397,15 @@ def test_gfx_depth(device_type: sgl.DeviceType):
             "depth_test_enable": True,
             "depth_write_enable": True,
             "depth_func": sgl.ComparisonFunc.less,
+            "format": depth_texture.format,
         },
+        depth_texture=depth_texture,
     )
     ctx.expect_counts([int(area / 4), 0, 0, area])
 
     # Write a great big quad at z=0.75, which should do nothing.
     gfx.draw_graphics_pipeline(
-        color=sgl.float4(1, 1, 1, 1),
+        color=sgl.float4(1, 1, 0, 1),
         clear=False,
         vert_z=0.75,
         rasterizer={"cull_mode": sgl.CullMode.back},
@@ -404,7 +413,9 @@ def test_gfx_depth(device_type: sgl.DeviceType):
             "depth_test_enable": True,
             "depth_write_enable": True,
             "depth_func": sgl.ComparisonFunc.less,
+            "format": depth_texture.format,
         },
+        depth_texture=depth_texture,
     )
     ctx.expect_counts([int(area / 4), 0, 0, area])
 
@@ -418,7 +429,9 @@ def test_gfx_depth(device_type: sgl.DeviceType):
             "depth_test_enable": True,
             "depth_write_enable": True,
             "depth_func": sgl.ComparisonFunc.less,
+            "format": depth_texture.format,
         },
+        depth_texture=depth_texture,
     )
     ctx.expect_counts([area, area - int(area / 4), area - int(area / 4), area])
 
@@ -432,7 +445,9 @@ def test_gfx_depth(device_type: sgl.DeviceType):
             "depth_test_enable": True,
             "depth_write_enable": True,
             "depth_func": sgl.ComparisonFunc.always,
+            "format": depth_texture.format,
         },
+        depth_texture=depth_texture,
     )
     ctx.expect_counts([0, 0, area, area])
 
@@ -450,7 +465,9 @@ def test_gfx_depth(device_type: sgl.DeviceType):
             "depth_test_enable": True,
             "depth_write_enable": True,
             "depth_func": sgl.ComparisonFunc.less,
+            "format": depth_texture.format,
         },
+        depth_texture=depth_texture,
     )
     ctx.expect_counts([0, 0, area, area])
 
@@ -464,7 +481,9 @@ def test_gfx_depth(device_type: sgl.DeviceType):
             "depth_test_enable": True,
             "depth_write_enable": True,
             "depth_func": sgl.ComparisonFunc.less,
+            "format": depth_texture.format,
         },
+        depth_texture=depth_texture,
     )
     ctx.expect_counts([area, 0, 0, area])
 
@@ -477,32 +496,30 @@ def test_gfx_blend(device_type: sgl.DeviceType):
     gfx = GfxContext(ctx)
     area = ctx.output_texture.width * ctx.output_texture.height
 
+    ctdesc: sgl.ColorTargetDesc = sgl.ColorTargetDesc({
+        "format": sgl.Format.rgba32_float,
+        "enable_blend": True,
+        "color": {
+            "src_factor": sgl.BlendFactor.src_alpha,
+            "dst_factor": sgl.BlendFactor.inv_src_alpha,
+            "op": sgl.BlendOp.add,
+        },
+        "alpha": {
+            "src_factor": sgl.BlendFactor.zero,
+            "dst_factor": sgl.BlendFactor.one,
+            "op": sgl.BlendOp.add,
+        },
+    })
+
     # Clear and then draw semi transparent red quad, and should get 1/4 dark red pixels.
     gfx.draw_graphics_pipeline(
         clear=True,
         color=sgl.float4(1, 0, 0, 0.5),
         vert_scale=sgl.float2(0.5),
-        rasterizer={"cull_mode": sgl.CullMode.back},
-        blend=sgl.BlendDesc(
-            {
-                "alpha_to_coverage_enable": False,
-                "targets": [
-                    {
-                        "enable_blend": True,
-                        "color": {
-                            "src_factor": sgl.BlendFactor.src_alpha,
-                            "dst_factor": sgl.BlendFactor.inv_src_alpha,
-                            "op": sgl.BlendOp.add,
-                        },
-                        "alpha": {
-                            "src_factor": sgl.BlendFactor.zero,
-                            "dst_factor": sgl.BlendFactor.one,
-                            "op": sgl.BlendOp.add,
-                        },
-                    }
-                ],
-            }
-        ),
+        rasterizer={
+            "cull_mode": sgl.CullMode.back
+        },
+        targets = [ctdesc],
     )
     pixels = ctx.output_texture.to_numpy()
     is_pixel_red = np.all(pixels[:, :, :3] == [0.5, 0, 0], axis=2)
@@ -519,6 +536,14 @@ def test_rhi_alpha_coverage(device_type: sgl.DeviceType):
     gfx = GfxContext(ctx)
     area = ctx.output_texture.width * ctx.output_texture.height
 
+    ctdesc: sgl.ColorTargetDesc = sgl.ColorTargetDesc({
+        "format": sgl.Format.rgba32_float,
+        "enable_blend": True,
+        "color": {
+            "src_factor": sgl.BlendFactor.src_alpha,
+        },
+    })
+
     # Clear and then draw semi transparent red quad, and should end up
     # with 1/8 of the pixels red due to alpha coverage.
     gfx.draw_graphics_pipeline(
@@ -526,17 +551,10 @@ def test_rhi_alpha_coverage(device_type: sgl.DeviceType):
         color=sgl.float4(1, 0, 0, 0.5),
         vert_scale=sgl.float2(0.5),
         rasterizer={"cull_mode": sgl.CullMode.back},
-        blend=sgl.BlendDesc(
-            {
+        targets = [ctdesc],
+        multisample = sgl.MultisampleDesc({
                 "alpha_to_coverage_enable": True,
-                "targets": [
-                    {
-                        "enable_blend": True,
-                        "color": {"src_factor": sgl.BlendFactor.src_alpha},
-                    }
-                ],
-            }
-        ),
+        })
     )
 
     pixels = ctx.output_texture.to_numpy()
