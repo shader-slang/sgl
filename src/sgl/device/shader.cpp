@@ -47,6 +47,17 @@ std::string TypeConformance::to_string() const
 /// Helper class for creating slang::CompilerOptionEntry entries.
 class CompilerOptionEntries {
 public:
+    void add(slang::CompilerOptionName name, int value)
+    {
+        m_entries.push_back({
+            .name = name,
+            .value = {
+                .kind = slang::CompilerOptionValueKind::Int,
+                .int0 = value,
+            },
+        });
+    }
+
     void add(slang::CompilerOptionName name, bool value)
     {
         m_entries.push_back({
@@ -296,6 +307,12 @@ void SlangSession::create_session(SlangSessionBuild& build)
     session_options.add(slang::CompilerOptionName::DumpIntermediates, options.dump_intermediates);
     session_options.add(slang::CompilerOptionName::DumpIntermediatePrefix, options.dump_intermediates_prefix);
 
+    // Add hlsl_nvapi capability.
+    session_options.add(
+        slang::CompilerOptionName::Capability,
+        int(m_device->global_session()->findCapability("hlsl_nvapi"))
+    );
+
     // TODO: We enable loop inversion as it was the default in older versions of Slang,
     //       and leads to artifacts in one project using sgl.
     session_options.add(slang::CompilerOptionName::LoopInversion, true);
@@ -498,9 +515,8 @@ ref<ShaderProgram> SlangSession::link_program(
         SGL_CHECK(entry_point->module()->session() == this, "All entry points must belong to this session.");
 
     // Link NVAPI module if available.
-    // TODO(slang-rhi) this currently breaks slang-rhi because the nvapi UAV slot has no resource bound.
-    // if (SGL_HAS_NVAPI && m_device->type() == DeviceType::d3d12)
-    //     modules.push_back(m_nvapi_module);
+    if (SGL_HAS_NVAPI && m_device->type() == DeviceType::d3d12)
+        modules.push_back(m_nvapi_module);
 
     ShaderProgramDesc desc;
     desc.modules = modules;

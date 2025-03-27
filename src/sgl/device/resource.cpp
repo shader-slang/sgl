@@ -400,8 +400,7 @@ Texture::Texture(ref<Device> device, TextureDesc desc)
             uint32_t mip_level = subresource % m_desc.mip_count;
 
             SubresourceData subresource_data = m_desc.data[subresource];
-            if (subresource_data.row_pitch == 0 && subresource_data.slice_pitch == 0 && subresource_data.size == 0)
-            {
+            if (subresource_data.row_pitch == 0 && subresource_data.slice_pitch == 0 && subresource_data.size == 0) {
                 SubresourceLayout subresource_layout = get_subresource_layout(0, 1);
                 subresource_data.row_pitch = subresource_layout.row_pitch;
                 subresource_data.slice_pitch = subresource_layout.slice_pitch;

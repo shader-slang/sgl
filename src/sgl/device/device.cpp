@@ -141,6 +141,8 @@ Device::Device(const DeviceDesc& desc)
         .slang{
             .slangGlobalSession = m_global_session,
         },
+        // This needs to match NV_SHADER_EXTN_SLOT set in shader.cpp
+        .nvapiExtUavSlot = 999,
         // TODO(slang-rhi) make configurable but default to true
         .enableValidation = true,
         .debugCallback = &DebugLogger::get(),

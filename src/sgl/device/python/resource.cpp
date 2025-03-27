@@ -196,12 +196,11 @@ nb::ndarray<nb::numpy> texture_to_numpy(Texture* self, uint32_t layer, uint32_t 
     // Dest is tightly packed, so pitch must be <= source pitch.
     SGL_ASSERT(src_layout.row_pitch >= dst_layout.row_pitch);
 
-    //TODO: Could have fast path here if layouts are the same, but for now its
-    //better to stress-test the full copy operation.
+    // TODO: Could have fast path here if layouts are the same, but for now its
+    // better to stress-test the full copy operation.
     uint8_t* src_data = (uint8_t*)subresource_data.data;
     uint8_t* dst_data = new uint8_t[dst_layout.size_in_bytes];
-    for (uint32_t slice_idx = 0; slice_idx < src_layout.size.z; slice_idx++)
-    {
+    for (uint32_t slice_idx = 0; slice_idx < src_layout.size.z; slice_idx++) {
         uint8_t* src_slice = src_data + slice_idx * src_layout.slice_pitch;
         uint8_t* dst_slice = dst_data + slice_idx * dst_layout.slice_pitch;
         for (uint32_t row_idx = 0; row_idx < src_layout.row_count; row_idx++) {
@@ -258,7 +257,8 @@ nb::ndarray<nb::numpy> texture_to_numpy(Texture* self, uint32_t layer, uint32_t 
             stride *= shape[i];
         }
 
-        return nb::ndarray<nb::numpy>(data, shape.size(), shape.data(), owner, strides.data(), *dtype, nb::device::cpu::value);
+        return nb::ndarray<
+            nb::numpy>(data, shape.size(), shape.data(), owner, strides.data(), *dtype, nb::device::cpu::value);
     } else {
         size_t shape[1] = {size};
         return nb::ndarray<nb::numpy>(data, 1, shape, owner, nullptr, nb::dtype<uint8_t>(), nb::device::cpu::value);
