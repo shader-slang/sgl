@@ -25,8 +25,14 @@ def make_rand_data(type: sgl.TextureType, array_size: int, mip_count: int):
         for i in range(0, mip_count):
             if type in [sgl.TextureType.texture_1d, sgl.TextureType.texture_1d_array]:
                 mips.append(np.random.rand(sz, 4).astype(np.float32))
-            elif type in [sgl.TextureType.texture_2d, sgl.TextureType.texture_2d_array, sgl.TextureType.texture_2d_ms, sgl.TextureType.texture_2d_ms_array,
-                          sgl.TextureType.texture_cube, sgl.TextureType.texture_cube_array]:
+            elif type in [
+                sgl.TextureType.texture_2d,
+                sgl.TextureType.texture_2d_array,
+                sgl.TextureType.texture_2d_ms,
+                sgl.TextureType.texture_2d_ms_array,
+                sgl.TextureType.texture_cube,
+                sgl.TextureType.texture_cube_array,
+            ]:
                 mips.append(np.random.rand(sz, sz, 4).astype(np.float32))
             elif type in [sgl.TextureType.texture_3d]:
                 mips.append(np.random.rand(sz, sz, sz, 4).astype(np.float32))
@@ -47,8 +53,14 @@ def make_args(type: sgl.TextureType, array_length: int, mip_count: int):
     }
     if type in [sgl.TextureType.texture_1d, sgl.TextureType.texture_1d_array]:
         args.update({"type": type, "width": 32})
-    elif type in [sgl.TextureType.texture_2d, sgl.TextureType.texture_2d_array, sgl.TextureType.texture_2d_ms, sgl.TextureType.texture_2d_ms_array,
-                  sgl.TextureType.texture_cube, sgl.TextureType.texture_cube_array]:
+    elif type in [
+        sgl.TextureType.texture_2d,
+        sgl.TextureType.texture_2d_array,
+        sgl.TextureType.texture_2d_ms,
+        sgl.TextureType.texture_2d_ms_array,
+        sgl.TextureType.texture_cube,
+        sgl.TextureType.texture_cube_array,
+    ]:
         args.update({"type": type, "width": 32, "height": 32})
     elif type in [sgl.TextureType.texture_3d]:
         args.update({"type": type, "width": 32, "height": 32, "depth": 32})
@@ -194,13 +206,17 @@ def test_shader_read_write_texture(
                 device.link_program([module], [module.entry_point("copy_color")])
             )
 
-            src_view = src_tex.create_view({"subresource_range": sgl.SubresourceRange({"mip_level": mip})})
+            src_view = src_tex.create_view(
+                {"subresource_range": sgl.SubresourceRange({"mip_level": mip})}
+            )
             assert src_view.subresource_range.base_array_layer == 0
             assert src_view.subresource_range.layer_count == 1
             assert src_view.subresource_range.mip_level == mip
             assert src_view.subresource_range.mip_count == src_tex.mip_count - mip
 
-            dst_view = dest_tex.create_view({"subresource_range": sgl.SubresourceRange({"mip_level": mip})})
+            dst_view = dest_tex.create_view(
+                {"subresource_range": sgl.SubresourceRange({"mip_level": mip})}
+            )
             assert dst_view.subresource_range.base_array_layer == 0
             assert dst_view.subresource_range.layer_count == 1
             assert dst_view.subresource_range.mip_level == mip
@@ -234,9 +250,13 @@ def test_shader_read_write_texture(
                 device.link_program([module], [module.entry_point("copy_color")])
             )
             for i in range(0, array_length):
-                desc = sgl.TextureViewDesc({
-                    "subresource_range": sgl.SubresourceRange({"mip_level": mip, "base_array_layer": i, "layer_count": 1})
-                })
+                desc = sgl.TextureViewDesc(
+                    {
+                        "subresource_range": sgl.SubresourceRange(
+                            {"mip_level": mip, "base_array_layer": i, "layer_count": 1}
+                        )
+                    }
+                )
 
                 srv = src_tex.create_view(desc)
                 assert srv.subresource_range.base_array_layer == i

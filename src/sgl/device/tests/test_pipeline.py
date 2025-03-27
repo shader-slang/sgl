@@ -193,13 +193,14 @@ class GfxContext:
 
         rp_args: Any = {
             "color_attachments": [
-                    {
-                        "view": self.ctx.output_texture.create_view({}),
-                        "clear_value": [0.0, 0.0, 0.0, 1.0],
-                        "load_op": sgl.LoadOp.clear if clear else sgl.LoadOp.dont_care,
-                        "store_op": sgl.StoreOp.store,
-                    }
-                ]}
+                {
+                    "view": self.ctx.output_texture.create_view({}),
+                    "clear_value": [0.0, 0.0, 0.0, 1.0],
+                    "load_op": sgl.LoadOp.clear if clear else sgl.LoadOp.dont_care,
+                    "store_op": sgl.StoreOp.store,
+                }
+            ]
+        }
         if depth_texture:
             rp_args["depth_stencil_attachment"] = {
                 "view": depth_texture.create_view({}),
@@ -247,8 +248,8 @@ class GfxContext:
     # Helper to create pipeline with given set of args + correct program/layouts.
     def create_render_pipeline(self, **kwargs: Any):
         base_args = {
-            'primitive_topology': sgl.PrimitiveTopology.triangle_list,
-            'targets': [{"format": sgl.Format.rgba32_float}],
+            "primitive_topology": sgl.PrimitiveTopology.triangle_list,
+            "targets": [{"format": sgl.Format.rgba32_float}],
         }
         base_args.update(kwargs)
 
@@ -381,7 +382,9 @@ def test_gfx_depth(device_type: sgl.DeviceType):
 
     # Manually clear both buffers and verify results.
     command_encoder = ctx.device.create_command_encoder()
-    command_encoder.clear_texture_float(ctx.output_texture, clear_value=[0.0, 0.0, 0.0, 1.0])
+    command_encoder.clear_texture_float(
+        ctx.output_texture, clear_value=[0.0, 0.0, 0.0, 1.0]
+    )
     command_encoder.clear_texture_depth_stencil(depth_texture, depth_value=0.5)
     ctx.device.submit_command_buffer(command_encoder.finish())
     ctx.expect_counts([0, 0, 0, area])
@@ -496,30 +499,30 @@ def test_gfx_blend(device_type: sgl.DeviceType):
     gfx = GfxContext(ctx)
     area = ctx.output_texture.width * ctx.output_texture.height
 
-    ctdesc: sgl.ColorTargetDesc = sgl.ColorTargetDesc({
-        "format": sgl.Format.rgba32_float,
-        "enable_blend": True,
-        "color": {
-            "src_factor": sgl.BlendFactor.src_alpha,
-            "dst_factor": sgl.BlendFactor.inv_src_alpha,
-            "op": sgl.BlendOp.add,
-        },
-        "alpha": {
-            "src_factor": sgl.BlendFactor.zero,
-            "dst_factor": sgl.BlendFactor.one,
-            "op": sgl.BlendOp.add,
-        },
-    })
+    ctdesc: sgl.ColorTargetDesc = sgl.ColorTargetDesc(
+        {
+            "format": sgl.Format.rgba32_float,
+            "enable_blend": True,
+            "color": {
+                "src_factor": sgl.BlendFactor.src_alpha,
+                "dst_factor": sgl.BlendFactor.inv_src_alpha,
+                "op": sgl.BlendOp.add,
+            },
+            "alpha": {
+                "src_factor": sgl.BlendFactor.zero,
+                "dst_factor": sgl.BlendFactor.one,
+                "op": sgl.BlendOp.add,
+            },
+        }
+    )
 
     # Clear and then draw semi transparent red quad, and should get 1/4 dark red pixels.
     gfx.draw_graphics_pipeline(
         clear=True,
         color=sgl.float4(1, 0, 0, 0.5),
         vert_scale=sgl.float2(0.5),
-        rasterizer={
-            "cull_mode": sgl.CullMode.back
-        },
-        targets = [ctdesc],
+        rasterizer={"cull_mode": sgl.CullMode.back},
+        targets=[ctdesc],
     )
     pixels = ctx.output_texture.to_numpy()
     is_pixel_red = np.all(pixels[:, :, :3] == [0.5, 0, 0], axis=2)
@@ -536,13 +539,15 @@ def test_rhi_alpha_coverage(device_type: sgl.DeviceType):
     gfx = GfxContext(ctx)
     area = ctx.output_texture.width * ctx.output_texture.height
 
-    ctdesc: sgl.ColorTargetDesc = sgl.ColorTargetDesc({
-        "format": sgl.Format.rgba32_float,
-        "enable_blend": True,
-        "color": {
-            "src_factor": sgl.BlendFactor.src_alpha,
-        },
-    })
+    ctdesc: sgl.ColorTargetDesc = sgl.ColorTargetDesc(
+        {
+            "format": sgl.Format.rgba32_float,
+            "enable_blend": True,
+            "color": {
+                "src_factor": sgl.BlendFactor.src_alpha,
+            },
+        }
+    )
 
     # Clear and then draw semi transparent red quad, and should end up
     # with 1/8 of the pixels red due to alpha coverage.
@@ -551,10 +556,12 @@ def test_rhi_alpha_coverage(device_type: sgl.DeviceType):
         color=sgl.float4(1, 0, 0, 0.5),
         vert_scale=sgl.float2(0.5),
         rasterizer={"cull_mode": sgl.CullMode.back},
-        targets = [ctdesc],
-        multisample = sgl.MultisampleDesc({
+        targets=[ctdesc],
+        multisample=sgl.MultisampleDesc(
+            {
                 "alpha_to_coverage_enable": True,
-        })
+            }
+        ),
     )
 
     pixels = ctx.output_texture.to_numpy()
@@ -574,13 +581,15 @@ class RayContext:
         indices = np.array([0, 1, 2, 1, 3, 2], dtype=np.uint32)
 
         vertex_buffer = ctx.device.create_buffer(
-            usage=sgl.BufferUsage.shader_resource | sgl.BufferUsage.acceleration_structure_build_input,
+            usage=sgl.BufferUsage.shader_resource
+            | sgl.BufferUsage.acceleration_structure_build_input,
             label="vertex_buffer",
             data=vertices,
         )
 
         index_buffer = ctx.device.create_buffer(
-            usage=sgl.BufferUsage.shader_resource | sgl.BufferUsage.acceleration_structure_build_input,
+            usage=sgl.BufferUsage.shader_resource
+            | sgl.BufferUsage.acceleration_structure_build_input,
             label="index_buffer",
             data=indices,
         )
@@ -595,13 +604,10 @@ class RayContext:
         blas_geometry_desc.index_format = sgl.IndexFormat.uint32
         blas_geometry_desc.index_count = indices.size
 
-
         blas_build_desc = sgl.AccelerationStructureBuildDesc()
         blas_build_desc.inputs = [blas_geometry_desc]
 
-        blas_sizes = ctx.device.get_acceleration_structure_sizes(
-            blas_build_desc
-        )
+        blas_sizes = ctx.device.get_acceleration_structure_sizes(blas_build_desc)
 
         blas_scratch_buffer = ctx.device.create_buffer(
             size=blas_sizes.scratch_size,
@@ -630,8 +636,10 @@ class RayContext:
 
     def create_instances(self, instance_transforms: Any):
 
-        instance_list = self.ctx.device.create_acceleration_structure_instance_list(len(instance_transforms))
-        for idx,trans in enumerate(instance_transforms):
+        instance_list = self.ctx.device.create_acceleration_structure_instance_list(
+            len(instance_transforms)
+        )
+        for idx, trans in enumerate(instance_transforms):
             instance_list.write(
                 idx,
                 {
@@ -727,6 +735,7 @@ class RayContext:
             cursor.rt_render_texture = self.ctx.output_texture
             pass_encoder.dispatch_rays(0, [1024, 1024, 1])
         self.ctx.device.submit_command_buffer(command_encoder.finish())
+
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 @pytest.mark.parametrize("mode", ["compute", "ray"])

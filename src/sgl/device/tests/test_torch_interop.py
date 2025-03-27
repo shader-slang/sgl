@@ -10,8 +10,6 @@ sys.path.append(str(Path(__file__).parent))
 import sglhelpers as helpers
 
 
-
-
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_buffer_to_torch(device_type):
     try:
@@ -48,6 +46,7 @@ def test_buffer_to_torch(device_type):
         == torch.tensor(np.reshape(data, [4, 4]), dtype=torch.float32, device="cuda:0")
     )
 
+
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_torch_interop(device_type):
     try:
@@ -76,16 +75,22 @@ def test_torch_interop(device_type):
     b = torch.linspace(1024, 1, 1024, device=torch_device, dtype=torch.float32)
 
     # Create some buffers and use torch to copy into them
-    a_buffer = device.create_buffer(size=1024 * 4, usage=sgl.BufferUsage.shared | sgl.BufferUsage.shader_resource)
+    a_buffer = device.create_buffer(
+        size=1024 * 4, usage=sgl.BufferUsage.shared | sgl.BufferUsage.shader_resource
+    )
     a_buffer.to_torch(sgl.DataType.float32).copy_(a)
-    b_buffer = device.create_buffer(size=1024 * 4, usage=sgl.BufferUsage.shared | sgl.BufferUsage.shader_resource)
+    b_buffer = device.create_buffer(
+        size=1024 * 4, usage=sgl.BufferUsage.shared | sgl.BufferUsage.shader_resource
+    )
     b_buffer.to_torch(sgl.DataType.float32).copy_(b)
 
     # Sync device with cuda
     device.sync_to_cuda()
 
     # Prepare buffer for results
-    c_buffer = device.create_buffer(size=1024 * 4, usage=sgl.BufferUsage.shared | sgl.BufferUsage.unordered_access)
+    c_buffer = device.create_buffer(
+        size=1024 * 4, usage=sgl.BufferUsage.shared | sgl.BufferUsage.unordered_access
+    )
 
     # Dispatch compute kernel
     # (CUDA tensors are internally copied to/from sgl buffers)
@@ -99,6 +104,7 @@ def test_torch_interop(device_type):
 
     # Check result
     assert torch.all(c == a + b)
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

@@ -520,12 +520,7 @@ public:
         std::span<SubresourceData> subresource_data
     );
 
-    void upload_texture_data(
-        Texture* texture,
-        uint32_t layer,
-        uint32_t mip_level,
-        SubresourceData subresource_data
-    );
+    void upload_texture_data(Texture* texture, uint32_t layer, uint32_t mip_level, SubresourceData subresource_data);
 
     /**
      * Read texture data to host memory.
