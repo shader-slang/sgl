@@ -396,7 +396,7 @@ struct BufferViewDesc {
     std::string label;
 };
 
-class BufferView : public DeviceResource {
+class SGL_API BufferView : public DeviceResource {
     SGL_OBJECT(BufferView)
 public:
     BufferView(ref<Device> device, ref<Buffer> buffer, BufferViewDesc desc);
