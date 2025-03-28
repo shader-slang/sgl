@@ -352,9 +352,10 @@ inline void process_texture_desc(TextureDesc& desc)
     desc.depth = std::max(desc.depth, 1u);
 
     if (desc.mip_count == 0) {
+        // TODO(slang-rhi)
 #if SGL_MACOS
         // On macOS, mipmap is not supported for 1D textures.
-        if (desc.type == ResourceType::texture_1d) {
+        if (desc.type == TextureType::texture_1d) {
             desc.mip_count = 1;
         } else
 #endif
