@@ -419,7 +419,7 @@ private:
     // Slang::ComPtr<rhi::IBufferView> m_rhi_buffer_view;
 };
 
-struct BufferOffsetPair {
+struct SGL_API BufferOffsetPair {
     Buffer* buffer{nullptr};
     DeviceOffset offset{0};
 
