@@ -558,7 +558,7 @@ struct Scene {
             const InstanceDesc& instance_desc = instance_descs[instance_id];
             instance_list->write(
                 instance_id,
-                {
+                AccelerationStructureInstanceDesc{
                     .transform = float3x4(transforms[instance_desc.transform_id]),
                     .instance_id = narrow_cast<uint32_t>(instance_id),
                     .instance_mask = 0xFF,

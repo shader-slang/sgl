@@ -82,7 +82,7 @@ int main()
         ref<AccelerationStructureInstanceList> instance_list = device->create_acceleration_structure_instance_list(1);
         instance_list->write(
             0,
-            {
+            AccelerationStructureInstanceDesc{
                 .transform = float3x4::identity(),
                 .instance_id = 0,
                 .instance_mask = 0xff,
