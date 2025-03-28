@@ -81,9 +81,11 @@ struct AccelerationStructureBuildInputInstances {
     uint32_t instance_count{0};
 };
 
+static constexpr size_t MAX_ACCELERATION_STRUCTURE_MOTION_KEY_COUNT = 2;
+
 struct AccelerationStructureBuildInputTriangles {
     /// List of vertex buffers, one for each motion step.
-    static_vector<BufferOffsetPair, 16> vertex_buffers;
+    static_vector<BufferOffsetPair, MAX_ACCELERATION_STRUCTURE_MOTION_KEY_COUNT> vertex_buffers;
     Format vertex_format{Format::undefined};
     uint32_t vertex_count{0};
     uint32_t vertex_stride{0};
@@ -100,7 +102,7 @@ struct AccelerationStructureBuildInputTriangles {
 
 struct AccelerationStructureBuildInputProceduralPrimitives {
     /// List of AABB buffers, one for each motion step.
-    static_vector<BufferOffsetPair, 16> aabb_buffers;
+    static_vector<BufferOffsetPair, MAX_ACCELERATION_STRUCTURE_MOTION_KEY_COUNT> aabb_buffers;
     uint32_t aabb_stride{0};
     uint32_t primitive_count{0};
 

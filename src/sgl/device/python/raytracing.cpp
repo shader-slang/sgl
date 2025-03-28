@@ -76,6 +76,8 @@ SGL_DICT_TO_DESC_END()
 
 } // namespace sgl
 
+NB_MAKE_OPAQUE(sgl::static_vector<sgl::BufferOffsetPair, sgl::MAX_ACCELERATION_STRUCTURE_MOTION_KEY_COUNT>)
+
 SGL_PY_EXPORT(device_raytracing)
 {
     using namespace sgl;
