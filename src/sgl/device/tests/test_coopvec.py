@@ -7,13 +7,8 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent))
 import sglhelpers as helpers
 
-COOPVEC_DEVICE_TYPES = [sgl.DeviceType.vulkan]
-
 
 def get_coop_vec_device(device_type: sgl.DeviceType) -> sgl.Device:
-    if sys.platform == "darwin":
-        pytest.skip("Cooperative vector tests not supported on MacOS")
-
     device = helpers.get_device(device_type)
     if not "cooperative-vector" in device.features:
         pytest.skip("Device does not support cooperative vector")
@@ -30,7 +25,7 @@ SIZE_CHECKS = [
 ]
 
 
-@pytest.mark.parametrize("device_type", COOPVEC_DEVICE_TYPES)
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 @pytest.mark.parametrize("rows, cols, dtype, expected_size", SIZE_CHECKS)
 def test_matrix_size(
     device_type: sgl.DeviceType,
@@ -52,7 +47,7 @@ def test_matrix_size(
     assert sz == expected_size
 
 
-@pytest.mark.parametrize("device_type", COOPVEC_DEVICE_TYPES)
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 @pytest.mark.parametrize("rows", [4, 8])
 @pytest.mark.parametrize("cols", [4, 8])
 @pytest.mark.parametrize("dtype", [sgl.DataType.float32, sgl.DataType.float16])
@@ -82,7 +77,7 @@ def test_matrix_desc(
     assert desc.element_type == dtype
 
 
-@pytest.mark.parametrize("device_type", COOPVEC_DEVICE_TYPES)
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_matrix_convert_matrix_host(device_type: sgl.DeviceType):
     device = get_coop_vec_device(device_type)
 
@@ -102,7 +97,7 @@ def test_matrix_convert_matrix_host(device_type: sgl.DeviceType):
     assert np.allclose(data_t, result)
 
 
-@pytest.mark.parametrize("device_type", COOPVEC_DEVICE_TYPES)
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_matrix_convert_huge_matrix_host(device_type: sgl.DeviceType):
     device = get_coop_vec_device(device_type)
 
@@ -122,7 +117,7 @@ def test_matrix_convert_huge_matrix_host(device_type: sgl.DeviceType):
     assert np.allclose(data_t, result)
 
 
-@pytest.mark.parametrize("device_type", COOPVEC_DEVICE_TYPES)
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_matrix_convert_matrix_device(device_type: sgl.DeviceType):
     device = get_coop_vec_device(device_type)
 

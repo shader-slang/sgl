@@ -12,60 +12,7 @@ namespace sgl {
 CoopVec::CoopVec(Device* device)
     : m_device(device)
 {
-#if SGL_WINDOWS || SGL_LINUX
-    SGL_CHECK(device->type() == DeviceType::vulkan, "CoopVec requires a Vulkan device");
-    bool have_coop_vec = false;
-    for (const auto& f : device->features())
-        have_coop_vec = have_coop_vec || f == "cooperative-vector";
-    SGL_CHECK(have_coop_vec, "Requires a Vulkan device with CoopVec support.");
-
-#if SGL_WINDOWS
-    const char* dll_name = "vulkan-1.dll";
-#elif SGL_LINUX
-    const char* dll_name = "libvulkan.so.1";
-#endif
-
-    m_vk_module = platform::load_shared_library(dll_name);
-    SGL_CHECK(m_vk_module != nullptr, "Failed to load Vulkan module '{}'.", dll_name);
-
-    auto vk_instance = device->get_native_handle(0).as<VkInstance>();
-    SGL_CHECK(vk_instance != VK_NULL_HANDLE, "Failed to get Vulkan instance handle from GFX.");
-
-    m_vk_device = device->get_native_handle(2).as<VkDevice>();
-    SGL_CHECK(m_vk_device != VK_NULL_HANDLE, "Failed to get Vulkan device handle from GFX.");
-
-    auto vkGetInstanceProcAddr
-        = (PFN_vkGetInstanceProcAddr)platform::get_proc_address(m_vk_module, "vkGetInstanceProcAddr");
-    SGL_CHECK(vkGetInstanceProcAddr != nullptr, "Failed to get Vulkan function 'vkGetInstanceProcAddr'.");
-
-    auto vkGetDeviceProcAddr = (PFN_vkGetDeviceProcAddr)vkGetInstanceProcAddr(vk_instance, "vkGetDeviceProcAddr");
-    SGL_CHECK(vkGetDeviceProcAddr != nullptr, "Failed to get Vulkan function 'vkGetDeviceProcAddr'.");
-
-    m_VkConvertCooperativeVectorMatrixNV = (PFN_vkConvertCooperativeVectorMatrixNV
-    )vkGetDeviceProcAddr(m_vk_device, "vkConvertCooperativeVectorMatrixNV");
-    SGL_CHECK(
-        m_VkConvertCooperativeVectorMatrixNV != nullptr,
-        "Failed to get Vulkan function 'vkConvertCooperativeVectorMatrixNV'."
-    );
-
-    m_VkCmdConvertCooperativeVectorMatrixNV = (PFN_vkCmdConvertCooperativeVectorMatrixNV
-    )vkGetDeviceProcAddr(m_vk_device, "vkCmdConvertCooperativeVectorMatrixNV");
-    SGL_CHECK(
-        m_VkCmdConvertCooperativeVectorMatrixNV != nullptr,
-        "Failed to get Vulkan function 'vkCmdConvertCooperativeVectorMatrixNV'."
-    );
-#else
-    SGL_THROW("Platform does not support CoopVec");
-    return;
-#endif
-}
-
-CoopVec::~CoopVec()
-{
-    if (m_vk_module != nullptr) {
-        platform::release_shared_library(m_vk_module);
-        m_vk_module = nullptr;
-    }
+    SGL_CHECK(m_device->has_feature("cooperative-vector"), "Device does not support cooperative vectors.");
 }
 
 static uint32_t calc_element_stride(uint32_t rows, uint32_t cols, CoopVecMatrixLayout layout)
@@ -95,84 +42,60 @@ static size_t get_element_size(DataType dtype)
     case DataType::uint64:
         return 8;
     default:
-        SGL_THROW("\"%d\" is not a valid component type of a coop_vector matrix", dtype);
+        SGL_THROW("\"%s\" is not a valid component type for cooperative vector matrix", dtype);
     }
 }
 
-static VkCooperativeVectorMatrixLayoutNV get_vk_layout(CoopVecMatrixLayout layout)
-{
-    switch (layout) {
-    case CoopVecMatrixLayout::row_major:
-        return VK_COOPERATIVE_VECTOR_MATRIX_LAYOUT_ROW_MAJOR_NV;
-    case CoopVecMatrixLayout::column_major:
-        return VK_COOPERATIVE_VECTOR_MATRIX_LAYOUT_COLUMN_MAJOR_NV;
-    case CoopVecMatrixLayout::inferencing_optimal:
-        return VK_COOPERATIVE_VECTOR_MATRIX_LAYOUT_INFERENCING_OPTIMAL_NV;
-    case CoopVecMatrixLayout::training_optimal:
-        return VK_COOPERATIVE_VECTOR_MATRIX_LAYOUT_TRAINING_OPTIMAL_NV;
-    default:
-        SGL_UNREACHABLE();
-    }
-}
-
-static VkComponentTypeKHR get_vk_component_type(DataType dtype)
+static rhi::CooperativeVectorComponentType get_rhi_component_type(DataType dtype)
 {
     switch (dtype) {
     case DataType::float16:
-        return VK_COMPONENT_TYPE_FLOAT16_NV;
+        return rhi::CooperativeVectorComponentType::Float16;
     case DataType::float32:
-        return VK_COMPONENT_TYPE_FLOAT32_NV;
+        return rhi::CooperativeVectorComponentType::Float32;
     case DataType::float64:
-        return VK_COMPONENT_TYPE_FLOAT64_NV;
+        return rhi::CooperativeVectorComponentType::Float64;
     case DataType::int8:
-        return VK_COMPONENT_TYPE_SINT8_NV;
+        return rhi::CooperativeVectorComponentType::Sint8;
     case DataType::int16:
-        return VK_COMPONENT_TYPE_SINT16_NV;
+        return rhi::CooperativeVectorComponentType::Sint16;
     case DataType::int32:
-        return VK_COMPONENT_TYPE_SINT32_NV;
+        return rhi::CooperativeVectorComponentType::Sint32;
     case DataType::uint8:
-        return VK_COMPONENT_TYPE_UINT8_NV;
+        return rhi::CooperativeVectorComponentType::Uint8;
     case DataType::uint16:
-        return VK_COMPONENT_TYPE_UINT16_NV;
+        return rhi::CooperativeVectorComponentType::Uint16;
     case DataType::uint32:
-        return VK_COMPONENT_TYPE_UINT32_NV;
+        return rhi::CooperativeVectorComponentType::Uint32;
     case DataType::uint64:
-        return VK_COMPONENT_TYPE_UINT64_NV;
+        return rhi::CooperativeVectorComponentType::Uint64;
     default:
-        SGL_THROW("\"%d\" is not a valid component of a coopvector matrix", dtype);
+        SGL_THROW("\"%s\" is not a valid component type for cooperative vector matrix", dtype);
     }
 }
 
 size_t CoopVec::query_matrix_size(uint32_t rows, uint32_t cols, CoopVecMatrixLayout layout, DataType element_type)
 {
-    SGL_ASSERT(m_vk_device);
-    SGL_ASSERT(m_VkConvertCooperativeVectorMatrixNV);
     SGL_CHECK(rows > 0 && rows <= 128, "Number of rows must be 1..128.");
     SGL_CHECK(cols > 0 && cols <= 128, "Number of columns must be 1..128.");
 
     size_t required_size = 0;
 
-    VkConvertCooperativeVectorMatrixInfoNV info = {};
-    info.sType = VK_STRUCTURE_TYPE_CONVERT_COOPERATIVE_VECTOR_MATRIX_INFO_NV;
-    info.numRows = rows;
-    info.numColumns = cols;
-    info.srcComponentType = get_vk_component_type(element_type);
-    info.srcLayout = get_vk_layout(layout);
-    info.srcStride = calc_element_stride(rows, cols, layout) * get_element_size(element_type);
-    info.srcSize = 0;
-    info.srcData.hostAddress = nullptr;
-    info.dstComponentType = get_vk_component_type(element_type);
-    info.dstLayout = get_vk_layout(layout);
-    info.dstStride = calc_element_stride(rows, cols, layout) * get_element_size(element_type);
-    info.pDstSize = &required_size;
-    info.dstData.hostAddress = nullptr;
+    rhi::ConvertCooperativeVectorMatrixDesc desc = {};
+    desc.srcSize = 0;
+    desc.srcData.hostAddress = nullptr;
+    desc.dstSize = &required_size;
+    desc.dstData.hostAddress = nullptr;
+    desc.srcComponentType = get_rhi_component_type(element_type);
+    desc.dstComponentType = get_rhi_component_type(element_type);
+    desc.rowCount = rows;
+    desc.colCount = cols;
+    desc.srcLayout = static_cast<rhi::CooperativeVectorMatrixLayout>(layout);
+    desc.srcStride = calc_element_stride(rows, cols, layout) * get_element_size(element_type);
+    desc.dstLayout = static_cast<rhi::CooperativeVectorMatrixLayout>(layout);
+    desc.dstStride = calc_element_stride(rows, cols, layout) * get_element_size(element_type);
 
-    VkResult res = m_VkConvertCooperativeVectorMatrixNV(m_vk_device, &info);
-    SGL_CHECK(
-        res == VK_SUCCESS,
-        "Call to vkConvertCooperativeVectorMatrixNV failed with return code ({}).",
-        (uint32_t)res
-    );
+    SLANG_CALL(m_device->rhi_device()->convertCooperativeVectorMatrix(&desc, 1));
     SGL_CHECK(required_size > 0, "Expected matrix size to be larger than zero.");
 
     return required_size;
@@ -202,10 +125,10 @@ CoopVecMatrixDesc CoopVec::create_matrix_desc(
     return result;
 }
 
-static VkConvertCooperativeVectorMatrixInfoNV build_vk_matrix_info(
-    VkDeviceOrHostAddressConstKHR src,
+static rhi::ConvertCooperativeVectorMatrixDesc build_rhi_matrix_desc(
+    rhi::DeviceOrHostAddressConst src,
     CoopVecMatrixDesc src_desc,
-    VkDeviceOrHostAddressKHR dst,
+    rhi::DeviceOrHostAddress dst,
     CoopVecMatrixDesc dst_desc,
     size_t* dst_size
 )
@@ -222,51 +145,40 @@ static VkConvertCooperativeVectorMatrixInfoNV build_vk_matrix_info(
     SGL_CHECK(src_desc.rows > 0 && src_desc.rows <= 128, "Number of rows must be 1..128.");
     SGL_CHECK(src_desc.cols > 0 && src_desc.cols <= 128, "Number of columns must be 1..128.");
 
-    VkConvertCooperativeVectorMatrixInfoNV info = {};
-    info.sType = VK_STRUCTURE_TYPE_CONVERT_COOPERATIVE_VECTOR_MATRIX_INFO_NV;
-    info.numRows = src_desc.rows;
-    info.numColumns = src_desc.cols;
-    info.srcComponentType = get_vk_component_type(src_desc.element_type);
-    info.srcLayout = get_vk_layout(src_desc.layout);
-    // Bytes between a consecutive row or column (if row/column-major layout).
-    info.srcStride
-        = calc_element_stride(src_desc.rows, src_desc.cols, src_desc.layout) * get_element_size(src_desc.element_type);
-    info.srcSize = src_desc.size;
-    info.srcData = src;
-
-    info.dstComponentType = get_vk_component_type(dst_desc.element_type);
-    info.dstLayout = get_vk_layout(dst_desc.layout);
-    // Bytes between a consecutive row or column (if row/column-major layout).
-    info.dstStride
-        = calc_element_stride(dst_desc.rows, dst_desc.cols, dst_desc.layout) * get_element_size(dst_desc.element_type);
+    rhi::ConvertCooperativeVectorMatrixDesc desc = {};
+    desc.srcSize = src_desc.size;
+    desc.srcData = src;
+    desc.dstData = dst;
     *dst_size = dst_desc.size;
-    info.pDstSize = dst_size;
-    info.dstData = dst;
+    desc.dstSize = dst_size;
+    desc.srcComponentType = get_rhi_component_type(src_desc.element_type);
+    desc.dstComponentType = get_rhi_component_type(dst_desc.element_type);
+    desc.rowCount = src_desc.rows;
+    desc.colCount = src_desc.cols;
+    desc.srcLayout = static_cast<rhi::CooperativeVectorMatrixLayout>(src_desc.layout);
+    // Bytes between a consecutive row or column (if row/column-major layout).
+    desc.srcStride
+        = calc_element_stride(src_desc.rows, src_desc.cols, src_desc.layout) * get_element_size(src_desc.element_type);
+    desc.dstLayout = static_cast<rhi::CooperativeVectorMatrixLayout>(dst_desc.layout);
+    // Bytes between a consecutive row or column (if row/column-major layout).
+    desc.dstStride
+        = calc_element_stride(dst_desc.rows, dst_desc.cols, dst_desc.layout) * get_element_size(dst_desc.element_type);
 
-    return info;
+    return desc;
 }
 
 size_t CoopVec::convert_matrix_host(const void* src, CoopVecMatrixDesc src_desc, void* dst, CoopVecMatrixDesc dst_desc)
 {
-    SGL_ASSERT(m_vk_device);
-    SGL_ASSERT(m_VkConvertCooperativeVectorMatrixNV);
-
-    VkDeviceOrHostAddressConstKHR vk_src;
-    vk_src.hostAddress = reinterpret_cast<const uint8_t*>(src) + src_desc.offset;
-    VkDeviceOrHostAddressKHR vk_dst;
-    vk_dst.hostAddress = reinterpret_cast<uint8_t*>(dst) + dst_desc.offset;
+    rhi::DeviceOrHostAddressConst rhi_src;
+    rhi_src.hostAddress = reinterpret_cast<const uint8_t*>(src) + src_desc.offset;
+    rhi::DeviceOrHostAddress rhi_dst;
+    rhi_dst.hostAddress = reinterpret_cast<uint8_t*>(dst) + dst_desc.offset;
 
     size_t actual_size;
-    VkConvertCooperativeVectorMatrixInfoNV info
-        = build_vk_matrix_info(vk_src, src_desc, vk_dst, dst_desc, &actual_size);
+    rhi::ConvertCooperativeVectorMatrixDesc desc
+        = build_rhi_matrix_desc(rhi_src, src_desc, rhi_dst, dst_desc, &actual_size);
 
-    VkResult res = m_VkConvertCooperativeVectorMatrixNV(m_vk_device, &info);
-
-    SGL_CHECK(
-        res == VK_SUCCESS,
-        "Call to vkConvertCooperativeVectorMatrixNV failed with return code ({}).",
-        (uint32_t)res
-    );
+    SLANG_CALL(m_device->rhi_device()->convertCooperativeVectorMatrix(&desc, 1));
     SGL_CHECK(actual_size > 0, "Expected matrix size to be larger than zero.");
 
     return actual_size;
@@ -277,10 +189,10 @@ void CoopVec::convert_matrix_device(
     CoopVecMatrixDesc src_desc,
     const Buffer* dst,
     CoopVecMatrixDesc dst_desc,
-    CommandBuffer* cmd
+    CommandEncoder* encoder
 )
 {
-    convert_matrix_device(src, &src_desc, dst, &dst_desc, 1, cmd);
+    convert_matrix_device(src, &src_desc, dst, &dst_desc, 1, encoder);
 }
 
 void CoopVec::convert_matrix_device(
@@ -288,7 +200,7 @@ void CoopVec::convert_matrix_device(
     const std::vector<CoopVecMatrixDesc>& src_desc,
     const Buffer* dst,
     const std::vector<CoopVecMatrixDesc>& dst_desc,
-    CommandBuffer* cmd
+    CommandEncoder* encoder
 )
 {
     SGL_CHECK(
@@ -298,7 +210,7 @@ void CoopVec::convert_matrix_device(
         dst_desc.size()
     );
 
-    convert_matrix_device(src, &src_desc[0], dst, &dst_desc[0], uint32_t(src_desc.size()), cmd);
+    convert_matrix_device(src, &src_desc[0], dst, &dst_desc[0], uint32_t(src_desc.size()), encoder);
 }
 
 void CoopVec::convert_matrix_device(
@@ -307,19 +219,13 @@ void CoopVec::convert_matrix_device(
     const Buffer* dst,
     const CoopVecMatrixDesc* dst_desc,
     uint32_t matrix_count,
-    CommandBuffer* cmd
+    CommandEncoder* encoder
 )
 {
-    // TODO(slang-rhi)
-    SGL_UNUSED(src, src_desc, dst, dst_desc, matrix_count, cmd);
-    SGL_UNIMPLEMENTED();
-#if 0
-    SGL_ASSERT(m_vk_device);
-    SGL_ASSERT(m_VkCmdConvertCooperativeVectorMatrixNV);
     SGL_CHECK(matrix_count > 0, "Matrix count must be 1 or more.");
 
     size_t actual_size;
-    std::vector<VkConvertCooperativeVectorMatrixInfoNV> infos(matrix_count);
+    std::vector<rhi::ConvertCooperativeVectorMatrixDesc> descs(matrix_count);
     for (size_t i = 0; i < matrix_count; i++) {
         SGL_CHECK(
             dst->size() >= dst_desc[i].offset + dst_desc[i].size,
@@ -336,40 +242,36 @@ void CoopVec::convert_matrix_device(
             src->size()
         );
 
-        VkDeviceOrHostAddressConstKHR vk_src;
-        vk_src.deviceAddress = src->device_address() + src_desc[i].offset;
-        VkDeviceOrHostAddressKHR vk_dst;
-        vk_dst.deviceAddress = dst->device_address() + dst_desc[i].offset;
+        rhi::DeviceOrHostAddressConst rhi_src;
+        rhi_src.deviceAddress = src->device_address() + src_desc[i].offset;
+        rhi::DeviceOrHostAddress rhi_dst;
+        rhi_dst.deviceAddress = dst->device_address() + dst_desc[i].offset;
 
-        infos[i] = build_vk_matrix_info(vk_src, src_desc[i], vk_dst, dst_desc[i], &actual_size);
+        descs[i] = build_rhi_matrix_desc(rhi_src, src_desc[i], rhi_dst, dst_desc[i], &actual_size);
     }
 
-    CommandBuffer* actual_cmd = cmd;
-    if (cmd == nullptr)
-        actual_cmd = m_device->_begin_shared_command_buffer();
+    ref<CommandEncoder> temp_encoder;
+    if (encoder == nullptr) {
+        temp_encoder = m_device->create_command_encoder();
+        encoder = temp_encoder.get();
+    }
 
     // TODO: The API defines a new pipeline stage bit VK_PIPELINE_STAGE_2_CONVERT_COOPERATIVE_VECTOR_MATRIX_BIT_NV
     // that can be used for synchronization with VK_ACCESS_2_TRANSFER_READ_BIT / VK_ACCESS_2_TRANSFER_WRITE_BIT.
     // Slang GFX doesn't expose this yet, so we use regular ShaderResource / UnorderedAccess states for now.
 
     // Insert barriers to transition source to ShaderResource, and explicit UAV barrier for destination.
-    actual_cmd->set_resource_state(src, ResourceState::shader_resource);
-    actual_cmd->uav_barrier(dst);
+    encoder->rhi_command_encoder()->setBufferState(src->rhi_buffer(), rhi::ResourceState::ShaderResource);
+    encoder->rhi_command_encoder()->setBufferState(dst->rhi_buffer(), rhi::ResourceState::UnorderedAccess);
 
-    gfx::InteropHandle handle = {};
-    SLANG_CALL(actual_cmd->gfx_command_buffer()->getNativeHandle(&handle));
-
-    VkCommandBuffer vkCommandBuffer = reinterpret_cast<VkCommandBuffer>(handle.handleValue);
-
-    m_VkCmdConvertCooperativeVectorMatrixNV(vkCommandBuffer, matrix_count, infos.data());
+    encoder->rhi_command_encoder()->convertCooperativeVectorMatrix(descs.data(), matrix_count);
 
     // Insert barriers to transition destination to ShaderResource.
     // After this point it should be safe to access.
-    actual_cmd->set_resource_state(dst, ResourceState::shader_resource);
+    encoder->rhi_command_encoder()->setBufferState(dst->rhi_buffer(), rhi::ResourceState::ShaderResource);
 
-    if (cmd == nullptr)
-        m_device->_end_shared_command_buffer(false);
-#endif
+    if (temp_encoder)
+        m_device->submit_command_buffer(temp_encoder->finish());
 }
 
 } // namespace sgl

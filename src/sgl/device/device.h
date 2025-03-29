@@ -211,6 +211,9 @@ public:
     /// List of features supported by the device.
     const std::vector<std::string>& features() const { return m_features; }
 
+    /// Check if the device supports a given feature.
+    bool has_feature(std::string_view feature) const;
+
     /// True if the device supports CUDA interoperability.
     bool supports_cuda_interop() const { return m_supports_cuda_interop; }
 
