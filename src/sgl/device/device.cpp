@@ -279,6 +279,11 @@ ShaderCacheStats Device::shader_cache_stats() const
     };
 }
 
+bool Device::has_feature(std::string_view feature) const
+{
+    return std::find(m_features.begin(), m_features.end(), feature) != m_features.end();
+}
+
 FormatSupport Device::get_format_support(Format format) const
 {
     rhi::FormatSupport rhi_format_support;

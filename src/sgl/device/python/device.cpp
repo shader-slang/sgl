@@ -791,13 +791,13 @@ SGL_PY_EXPORT(device_device)
            CoopVecMatrixDesc srcDesc,
            const ref<Buffer>& dst,
            CoopVecMatrixDesc dstDesc,
-           CommandBuffer* cmd)
-        { return self->get_or_create_coop_vec()->convert_matrix_device(src, srcDesc, dst, dstDesc, cmd); },
+           CommandEncoder* encoder)
+        { return self->get_or_create_coop_vec()->convert_matrix_device(src, srcDesc, dst, dstDesc, encoder); },
         "src"_a,
         "src_desc"_a,
         "dst"_a,
         "dst_desc"_a,
-        "cmd"_a = nullptr,
+        "encoder"_a = nullptr,
         D_NA(Device, coopvec_convert_matrix_device)
     );
     device.def(
@@ -807,13 +807,13 @@ SGL_PY_EXPORT(device_device)
            const std::vector<CoopVecMatrixDesc>& srcDesc,
            const ref<Buffer>& dst,
            const std::vector<CoopVecMatrixDesc>& dstDesc,
-           CommandBuffer* cmd)
-        { return self->get_or_create_coop_vec()->convert_matrix_device(src, srcDesc, dst, dstDesc, cmd); },
+           CommandEncoder* encoder)
+        { return self->get_or_create_coop_vec()->convert_matrix_device(src, srcDesc, dst, dstDesc, encoder); },
         "src"_a,
         "src_desc"_a,
         "dst"_a,
         "dst_desc"_a,
-        "cmd"_a = nullptr,
+        "encoder"_a = nullptr,
         D_NA(Device, coopvec_convert_matrix_device)
     );
     device.def(
