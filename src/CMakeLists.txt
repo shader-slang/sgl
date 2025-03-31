@@ -492,7 +492,7 @@ if(SGL_BUILD_PYTHON)
             INCLUDE_PRIVATE # allow us to have functions/variables that start with _
         )
 
-        # Post-process the main stub file.
+        # Post-process the submodule stub file.
         postprocess_stub(${SGL_OUTPUT_DIRECTORY}/python/sgl/${submodule_path}/__init__.pyi "--submodule")
 
     endforeach()
