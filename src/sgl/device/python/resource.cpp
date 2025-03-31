@@ -485,10 +485,15 @@ SGL_PY_EXPORT(device_resource)
         )
         .def(
             "create_view",
-            [](Texture* self, uint32_t mip_level, uint32_t mip_count, uint32_t base_array_layer, uint32_t layer_count, Format format)
+            [](Texture* self,
+               uint32_t mip_level,
+               uint32_t mip_count,
+               uint32_t base_array_layer,
+               uint32_t layer_count,
+               Format format)
             {
                 TextureViewDesc desc;
-                desc.format = format == Format::undefined ? self->format() : format;                
+                desc.format = format == Format::undefined ? self->format() : format;
                 desc.subresource_range = {
                     .mip_level = mip_level,
                     .mip_count = mip_count,

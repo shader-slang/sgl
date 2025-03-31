@@ -753,7 +753,9 @@ if __name__ == "__main__":
         "--quiet", action="store_true", help="Suppress output to console"
     )
     parser.add_argument(
-        "--submodule", action="store_true", help="Mark as a submodule with reduced post processing."
+        "--submodule",
+        action="store_true",
+        help="Mark as a submodule with reduced post processing.",
     )
     args = vars(parser.parse_args())
     input_filename = args["file"]
