@@ -39,9 +39,9 @@ void NativeBufferMarshall::write_shader_cursor_pre_dispatch(
         SGL_UNUSED(binding);
         SGL_UNUSED(context);
         ShaderCursor field = cursor[binding->get_variable_name()]["value"];
-        ref<ResourceView> view;
+        ref<BufferView> view;
         if (nb::try_cast(value, view)) {
-            field.set_resource(view);
+            field.set_buffer_view(view);
         } else {
             field.set_buffer(nb::cast<ref<Buffer>>(value));
         }
@@ -61,9 +61,9 @@ void NativeTextureMarshall::write_shader_cursor_pre_dispatch(
     if (primal_access != AccessType::none) {
 
         ShaderCursor field = cursor[binding->get_variable_name()]["value"];
-        ref<ResourceView> view;
+        ref<TextureView> view;
         if (nb::try_cast(value, view)) {
-            field.set_resource(view);
+            field.set_texture_view(view);
         } else {
             field.set_texture(nb::cast<ref<Texture>>(value));
         }
@@ -76,12 +76,12 @@ Shape NativeTextureMarshall::get_shape(nb::object value) const
     const Texture* texture;
 
     // Get texture pointer and mip level.
-    ResourceView* view;
+    TextureView* view;
     if (value.is_none()) {
         texture = nullptr;
         mip = 0;
     } else if (nb::try_cast(value, view)) {
-        texture = view->resource()->as_texture();
+        texture = view->texture();
         SGL_CHECK(texture, "NativeTextureMarshall ResourceView must point at a texture");
         mip = view->subresource_range().mip_level;
     } else {
@@ -119,14 +119,14 @@ Shape NativeTextureMarshall::get_texture_shape(const Texture* texture, int mip) 
         return Shape({6, (int)texture->height() >> mip, (int)texture->width() >> mip});
 
     case TypeReflection::ResourceShape::texture_1d_array:
-        return Shape({(int)texture->array_size(), (int)texture->width() >> mip});
+        return Shape({(int)texture->array_length(), (int)texture->width() >> mip});
 
     case TypeReflection::ResourceShape::texture_2d_array:
     case TypeReflection::ResourceShape::texture_2d_multisample_array:
-        return Shape({(int)texture->array_size(), (int)texture->height() >> mip, (int)texture->width() >> mip});
+        return Shape({(int)texture->array_length(), (int)texture->height() >> mip, (int)texture->width() >> mip});
 
     case TypeReflection::ResourceShape::texture_cube_array:
-        return Shape({(int)texture->array_size(), 6, (int)texture->height() >> mip, (int)texture->width() >> mip});
+        return Shape({(int)texture->array_length(), 6, (int)texture->height() >> mip, (int)texture->width() >> mip});
 
     default:
         SGL_THROW("Unsupported resource shape: {}", m_resource_shape);
@@ -138,9 +138,9 @@ nb::object NativeTextureMarshall::create_output(CallContext* context, NativeBoun
     size_t dims = context->call_shape().size();
     SGL_CHECK(dims > 0 && dims <= 3, "Invalid call shape (must be 1D, 2D or 3D) for texture output");
 
-    ResourceType type = dims == 1 ? ResourceType::texture_1d
-        : dims == 2               ? ResourceType::texture_2d
-                                  : ResourceType::texture_3d;
+    TextureType type = dims == 1 ? TextureType::texture_1d
+        : dims == 2              ? TextureType::texture_2d
+                                 : TextureType::texture_3d;
 
     SGL_UNUSED(binding);
     TextureDesc desc;
@@ -169,37 +169,25 @@ NativeTextureMarshall::read_output(CallContext* context, NativeBoundVariableRunt
 
 Shape get_texture_shape(const Texture* texture, int mip)
 {
-    if (texture->array_size() == 1) {
-        switch (texture->type()) {
-        case ResourceType::texture_1d:
-            return Shape({(int)texture->width() >> mip});
-        case ResourceType::texture_2d:
-            return Shape({(int)texture->height() >> mip, (int)texture->width() >> mip});
-        case ResourceType::texture_3d:
-            return Shape({(int)texture->depth() >> mip, (int)texture->height() >> mip, (int)texture->width() >> mip});
-        case ResourceType::texture_cube:
-            return Shape({6, (int)texture->height() >> mip, (int)texture->width() >> mip});
-        default:
-            SGL_THROW("Invalid texture shape: {}", texture->type());
-        }
-    } else {
-        switch (texture->type()) {
-        case ResourceType::texture_1d:
-            return Shape({(int)texture->array_size(), (int)texture->width() >> mip});
-        case ResourceType::texture_2d:
-            return Shape({(int)texture->array_size(), (int)texture->height() >> mip, (int)texture->width() >> mip});
-        case ResourceType::texture_3d:
-            return Shape(
-                {(int)texture->array_size(),
-                 (int)texture->depth() >> mip,
-                 (int)texture->height() >> mip,
-                 (int)texture->width() >> mip}
-            );
-        case ResourceType::texture_cube:
-            return Shape({(int)texture->array_size(), 6, (int)texture->height() >> mip, (int)texture->width() >> mip});
-        default:
-            SGL_THROW("Invalid texture shape: {}", texture->type());
-        }
+    switch (texture->type()) {
+    case TextureType::texture_1d:
+        return Shape({(int)texture->width() >> mip});
+    case TextureType::texture_1d_array:
+        return Shape({(int)texture->array_length(), (int)texture->width() >> mip});
+    case TextureType::texture_2d:
+    case TextureType::texture_2d_ms:
+        return Shape({(int)texture->height() >> mip, (int)texture->width() >> mip});
+    case TextureType::texture_2d_array:
+    case TextureType::texture_2d_ms_array:
+        return Shape({(int)texture->array_length(), (int)texture->height() >> mip, (int)texture->width() >> mip});
+    case TextureType::texture_3d:
+        return Shape({(int)texture->depth() >> mip, (int)texture->height() >> mip, (int)texture->width() >> mip});
+    case TextureType::texture_cube:
+        return Shape({6, (int)texture->height() >> mip, (int)texture->width() >> mip});
+    case TextureType::texture_cube_array:
+        return Shape({(int)texture->array_length(), 6, (int)texture->height() >> mip, (int)texture->width() >> mip});
+    default:
+        SGL_THROW("Invalid texture shape: {}", texture->type());
     }
 }
 

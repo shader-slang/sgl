@@ -353,10 +353,10 @@ SGL_PY_EXPORT(device_resource)
             "__init__",
             [](SubresourceRange* self, nb::dict dict) { new (self) SubresourceRange(dict_to_SubresourceRange(dict)); }
         )
-        .def_ro("mip_level", &SubresourceRange::mip_level, D_NA(SubresourceRange, mip_level))
-        .def_ro("mip_count", &SubresourceRange::mip_count, D_NA(SubresourceRange, mip_count))
-        .def_ro("base_array_layer", &SubresourceRange::base_array_layer, D_NA(SubresourceRange, base_array_layer))
-        .def_ro("layer_count", &SubresourceRange::layer_count, D_NA(SubresourceRange, layer_count))
+        .def_rw("mip_level", &SubresourceRange::mip_level, D_NA(SubresourceRange, mip_level))
+        .def_rw("mip_count", &SubresourceRange::mip_count, D_NA(SubresourceRange, mip_count))
+        .def_rw("base_array_layer", &SubresourceRange::base_array_layer, D_NA(SubresourceRange, base_array_layer))
+        .def_rw("layer_count", &SubresourceRange::layer_count, D_NA(SubresourceRange, layer_count))
         .def("__repr__", &SubresourceRange::to_string, D_NA(SubresourceRange, to_string));
 
 #if 0 // TODO(slang-rhi)
@@ -481,6 +481,27 @@ SGL_PY_EXPORT(device_resource)
             "create_view",
             [](Texture* self, nb::dict dict) { return self->create_view(dict_to_TextureViewDesc(dict)); },
             "dict"_a,
+            D_NA(Texture, create_view)
+        )
+        .def(
+            "create_view",
+            [](Texture* self, uint32_t mip_level, uint32_t mip_count, uint32_t base_array_layer, uint32_t layer_count, Format format)
+            {
+                TextureViewDesc desc;
+                desc.format = format == Format::undefined ? self->format() : format;                
+                desc.subresource_range = {
+                    .mip_level = mip_level,
+                    .mip_count = mip_count,
+                    .base_array_layer = base_array_layer,
+                    .layer_count = layer_count,
+                };
+                return self->create_view(desc);
+            },
+            "mip_level"_a = 0,
+            "mip_count"_a = SubresourceRange::ALL,
+            "base_array_layer"_a = 0,
+            "layer_count"_a = SubresourceRange::ALL,
+            "format"_a = Format::undefined,
             D_NA(Texture, create_view)
         )
         .def("to_bitmap", &Texture::to_bitmap, "layer"_a = 0, "mip_level"_a = 0, D(Texture, to_bitmap))
