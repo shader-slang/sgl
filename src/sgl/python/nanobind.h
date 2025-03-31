@@ -136,8 +136,8 @@ struct type_caster<std::span<T>> {
     }
 };
 
-template<typename Type, int Size>
-struct type_caster<sgl::static_vector<Type, Size>> : list_caster<sgl::static_vector<Type, Size>, Type> { };
+template<typename T, std::size_t N>
+struct type_caster<sgl::static_vector<T, N>> : list_caster<sgl::static_vector<T, N>, T> { };
 
 
 NAMESPACE_END(detail)
