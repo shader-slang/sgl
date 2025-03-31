@@ -157,7 +157,7 @@ private:
 /// Bare minimum overridable functions to allow python marshall
 /// extensions to utilize the majority of native functionality.
 struct PyNativeTensorMarshall : public NativeTensorMarshall {
-    NB_TRAMPOLINE(NativeTensorMarshall, 4);
+    NB_TRAMPOLINE(NativeTensorMarshall, 5);
 
     Shape get_shape(nb::object data) const override { NB_OVERRIDE(get_shape, data); }
 
@@ -166,6 +166,13 @@ struct PyNativeTensorMarshall : public NativeTensorMarshall {
     {
         NB_OVERRIDE(create_calldata, context, binding, data);
     }
+
+    void read_calldata(CallContext* context, NativeBoundVariableRuntime* binding, nb::object data, nb::object result)
+        const override
+    {
+        NB_OVERRIDE(read_calldata, context, binding, data, result);
+    }
+
 
     nb::object create_output(CallContext* context, NativeBoundVariableRuntime* binding) const override
     {
