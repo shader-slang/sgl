@@ -752,9 +752,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--quiet", action="store_true", help="Suppress output to console"
     )
+    parser.add_argument(
+        "--submodule", action="store_true", help="Mark as a submodule with reduced post processing."
+    )
     args = vars(parser.parse_args())
     input_filename = args["file"]
     output_filename = args.get("out")
+    submodule = args.get("submodule", False)
     if output_filename is None:
         output_filename = input_filename
     QUIET = args.get("quiet", False)
@@ -773,15 +777,17 @@ if __name__ == "__main__":
 
     tree = load_file(input_filename)
 
-    convertable_types = find_convertable_descriptors(tree)
+    if not submodule:
+        convertable_types = find_convertable_descriptors(tree)
 
-    tree = insert_converted_descriptors(tree, convertable_types)
+        tree = insert_converted_descriptors(tree, convertable_types)
 
     tree = insert_typing_imports(tree)
 
-    tree = replace_types(tree, convertable_types)
+    if not submodule:
+        tree = replace_types(tree, convertable_types)
 
-    tree = extend_vector_types(tree)
+        tree = extend_vector_types(tree)
 
     tree = fix_numpy_types(tree)
 

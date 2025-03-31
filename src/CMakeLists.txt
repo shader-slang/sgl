@@ -458,11 +458,11 @@ if(SGL_BUILD_PYTHON)
     )
 
     # Post processes (and overwrites) a stub file.
-    function(postprocess_stub stub_file)
+    function(postprocess_stub stub_file args)
         add_custom_command(
             APPEND
             OUTPUT ${stub_file}
-            COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/../tools/postprocess_stub.py --file=${stub_file} --quiet
+            COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/../tools/postprocess_stub.py --file=${stub_file} ${args} --quiet
             COMMENT "Post-processing stub ${stub_file}"
         )
     endfunction()
@@ -478,7 +478,7 @@ if(SGL_BUILD_PYTHON)
     )
 
     # Post-process the main stub file.
-    postprocess_stub(${SGL_OUTPUT_DIRECTORY}/python/sgl/__init__.pyi)
+    postprocess_stub(${SGL_OUTPUT_DIRECTORY}/python/sgl/__init__.pyi "")
 
     # Generate submodule stub files.
     foreach(submodule IN ITEMS platform thread math ui tev renderdoc slangpy)
@@ -491,6 +491,10 @@ if(SGL_BUILD_PYTHON)
             DEPENDS sgl_ext
             INCLUDE_PRIVATE # allow us to have functions/variables that start with _
         )
+
+        # Post-process the main stub file.
+        postprocess_stub(${SGL_OUTPUT_DIRECTORY}/python/sgl/${submodule_path}/__init__.pyi "--submodule")
+
     endforeach()
 
     if(SGL_MASTER_PROJECT)
