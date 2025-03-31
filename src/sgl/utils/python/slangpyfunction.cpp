@@ -64,7 +64,7 @@ nb::object NativeFunctionNode::call(NativeCallDataCache* cache, nb::args args, n
 
 void NativeFunctionNode::append_to(
     NativeCallDataCache* cache,
-    CommandBuffer* command_buffer,
+    CommandEncoder* command_encoder,
     nb::args args,
     nb::kwargs kwargs
 )
@@ -86,11 +86,11 @@ void NativeFunctionNode::append_to(
     NativeCallData* call_data = cache->find_call_data(sig);
 
     if (call_data) {
-        call_data->append_to(options, command_buffer, args, kwargs);
+        call_data->append_to(options, command_encoder, args, kwargs);
     } else {
         ref<NativeCallData> new_call_data = generate_call_data(args, kwargs);
         cache->add_call_data(sig, new_call_data);
-        new_call_data->append_to(options, command_buffer, args, kwargs);
+        new_call_data->append_to(options, command_encoder, args, kwargs);
     }
 }
 

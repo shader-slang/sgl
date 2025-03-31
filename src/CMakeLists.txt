@@ -424,19 +424,18 @@ if(SGL_BUILD_PYTHON)
         sgl/ui/python/ui.cpp
         sgl/ui/python/widgets.cpp
         sgl/utils/python/renderdoc.cpp
-        # TODO(slang-rhi)
-        # sgl/utils/python/slangpy.h
-        # sgl/utils/python/slangpy.cpp
-        # sgl/utils/python/slangpyvalue.h
-        # sgl/utils/python/slangpyvalue.cpp
-        # sgl/utils/python/slangpybuffer.h
-        # sgl/utils/python/slangpybuffer.cpp
-        # sgl/utils/python/slangpyfunction.h
-        # sgl/utils/python/slangpyfunction.cpp
-        # sgl/utils/python/slangpyresources.h
-        # sgl/utils/python/slangpyresources.cpp
-        # sgl/utils/python/slangpytensor.h
-        # sgl/utils/python/slangpytensor.cpp
+        sgl/utils/python/slangpy.h
+        sgl/utils/python/slangpy.cpp
+        sgl/utils/python/slangpyvalue.h
+        sgl/utils/python/slangpyvalue.cpp
+        sgl/utils/python/slangpybuffer.h
+        sgl/utils/python/slangpybuffer.cpp
+        sgl/utils/python/slangpyfunction.h
+        sgl/utils/python/slangpyfunction.cpp
+        sgl/utils/python/slangpyresources.h
+        sgl/utils/python/slangpyresources.cpp
+        sgl/utils/python/slangpytensor.h
+        sgl/utils/python/slangpytensor.cpp
         sgl/utils/python/tev.cpp
         sgl/utils/python/texture_loader.cpp
     )

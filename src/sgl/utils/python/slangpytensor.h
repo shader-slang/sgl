@@ -66,7 +66,7 @@ public:
     ref<NativeTensor> broadcast_to(const Shape& shape) const;
 
     /// Clear tensor to 0s
-    void clear(CommandBuffer* cmd = nullptr);
+    void clear(CommandEncoder* cmd = nullptr);
 
     /// Create a new version of this tensor with associated grads. It is valid for
     /// both input and output grads to refer to the same tensor. If neither grad_in

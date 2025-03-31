@@ -135,13 +135,12 @@ NB_MODULE(sgl_ext, m_)
     SGL_PY_IMPORT(utils_renderdoc);
 
     m.def_submodule("slangpy", "SlangPy module");
-    // TODO(slang-rhi)
-    // SGL_PY_IMPORT(utils_slangpy);
-    // SGL_PY_IMPORT(utils_slangpy_buffer);
-    // SGL_PY_IMPORT(utils_slangpy_function);
-    // SGL_PY_IMPORT(utils_slangpy_resources);
-    // SGL_PY_IMPORT(utils_slangpy_tensor);
-    // SGL_PY_IMPORT(utils_slangpy_value);
+    SGL_PY_IMPORT(utils_slangpy);
+    SGL_PY_IMPORT(utils_slangpy_buffer);
+    SGL_PY_IMPORT(utils_slangpy_function);
+    SGL_PY_IMPORT(utils_slangpy_resources);
+    SGL_PY_IMPORT(utils_slangpy_tensor);
+    SGL_PY_IMPORT(utils_slangpy_value);
 
     m.def_submodule("tev", "tev image viewer module");
     SGL_PY_IMPORT(utils_tev);

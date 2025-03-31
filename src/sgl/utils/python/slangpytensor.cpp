@@ -108,14 +108,14 @@ ref<NativeTensor> NativeTensor::broadcast_to(const Shape& new_shape) const
     return make_ref<NativeTensor>(new_desc, m_storage, m_grad_in, m_grad_out);
 }
 
-void NativeTensor::clear(CommandBuffer* cmd)
+void NativeTensor::clear(CommandEncoder* cmd)
 {
     if (cmd) {
-        cmd->clear_resource_view(m_storage->get_uav(), uint4(0, 0, 0, 0));
+        cmd->clear_buffer(m_storage);
     } else {
-        ref<CommandBuffer> temp_cmd = device()->create_command_buffer();
-        temp_cmd->clear_resource_view(m_storage->get_uav(), uint4(0, 0, 0, 0));
-        temp_cmd->submit();
+        ref<CommandEncoder> temp_cmd = device()->create_command_encoder();
+        temp_cmd->clear_buffer(m_storage);
+        device()->submit_command_buffer(temp_cmd->finish());
     }
 }
 
