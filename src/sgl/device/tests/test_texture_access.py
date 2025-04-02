@@ -94,7 +94,7 @@ def test_read_write_texture(
     if (
         device_type == sgl.DeviceType.metal
         and type == sgl.TextureType.texture_1d
-        and mips > 1
+        and mips != 1
     ):
         pytest.skip("Metal does not support 1d texture with mips")
 
@@ -146,10 +146,6 @@ def test_shader_read_write_texture(
     if type == sgl.TextureType.texture_3d and array_length > 1:
         pytest.skip("3d texture arrays not supported")
 
-    # Skip 1d texture arrays until slang fix is in
-    if type == sgl.TextureType.texture_1d and array_length > 1:
-        pytest.skip("Pending slang crash using 1d texture array as UAV")
-
     # Skip 3d textures with mips until slang fix is in
     if type == sgl.TextureType.texture_3d and mips != 1:
         pytest.skip("Pending slang fix for 3d textures with mips")
@@ -157,7 +153,7 @@ def test_shader_read_write_texture(
     if (
         device_type == sgl.DeviceType.metal
         and type == sgl.TextureType.texture_1d
-        and mips > 1
+        and mips != 1
     ):
         pytest.skip("Metal does not support 1d texture with mips")
 
