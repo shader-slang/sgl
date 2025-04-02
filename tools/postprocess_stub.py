@@ -57,6 +57,10 @@ DESCRIPTOR_CONVERT_TYPES = {
     "Viewport": True,
 }
 
+ADDITIONAL_DESCRIPTOR_CONVERTIONS = {
+    "BufferOffsetPair": ("Buffer",)
+}
+
 QUIET = False
 
 
@@ -301,6 +305,22 @@ class InsertTypesTransformer(cst.CSTTransformer):
             ]
         )
 
+        # Check for additional types to union with the descriptor
+        # dictionary. This is used for types like BufferOffsetPair which
+        # are a union of Buffer and BufferOffsetPair.
+        if result.class_type.name.value in ADDITIONAL_DESCRIPTOR_CONVERTIONS:
+            additional =[
+                cst.SubscriptElement(
+                    slice=cst.Index(
+                        value=cst.Name(
+                            x
+                        )
+                    )
+                ) for x in  ADDITIONAL_DESCRIPTOR_CONVERTIONS[result.class_type.name.value]
+            ]
+        else:
+            additional = []
+
         # Also generate a corresponding union that combines the source type with the new TypedDict.
         union_type_alias = cst.SimpleStatementLine(
             body=[
@@ -325,7 +345,7 @@ class InsertTypesTransformer(cst.CSTTransformer):
                                     )
                                 )
                             ),
-                        ],
+                        ]+additional,
                     ),
                 )
             ]
