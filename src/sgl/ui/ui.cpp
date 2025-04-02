@@ -310,6 +310,7 @@ Context::Context(ref<Device> device)
             .data = pixels,
             .size = size_t(width * height * 4),
             .row_pitch = size_t(width * 4),
+            .slice_pitch = size_t(width * height * 4),
         }};
         m_font_texture = m_device->create_texture({
             .format = Format::rgba8_unorm,
