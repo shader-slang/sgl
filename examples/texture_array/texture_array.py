@@ -23,7 +23,7 @@ class DemoWindow(sgl.AppWindow):
         )
 
         loader = sgl.TextureLoader(self.device)
-        files = glob("C:/projects/train/images/*.jpg")
+        files = glob(str(Path(__file__).parent.parent.parent) + "/data/test_images/*.jpg", recursive=True)
         files = sorted(files)
         timer = sgl.Timer()
         self.texture = loader.load_texture_array(
@@ -53,8 +53,8 @@ class DemoWindow(sgl.AppWindow):
         )
 
     def render(self, render_context: sgl.AppWindow.RenderContext):
-        image = render_context.swapchain_image
-        command_buffer = render_context.command_buffer
+        image = render_context.surface_texture
+        command_buffer = render_context.command_encoder
 
         if (
             self.render_texture == None
