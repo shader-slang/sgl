@@ -23,7 +23,10 @@ class DemoWindow(sgl.AppWindow):
         )
 
         loader = sgl.TextureLoader(self.device)
-        files = glob(str(Path(__file__).parent.parent.parent) + "/data/test_images/*.jpg", recursive=True)
+        files = glob(
+            str(Path(__file__).parent.parent.parent) + "/data/test_images/*.jpg",
+            recursive=True,
+        )
         files = sorted(files)
         timer = sgl.Timer()
         self.texture = loader.load_texture_array(

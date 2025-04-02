@@ -57,9 +57,7 @@ DESCRIPTOR_CONVERT_TYPES = {
     "Viewport": True,
 }
 
-ADDITIONAL_DESCRIPTOR_CONVERTIONS = {
-    "BufferOffsetPair": ("Buffer",)
-}
+ADDITIONAL_DESCRIPTOR_CONVERTIONS = {"BufferOffsetPair": ("Buffer",)}
 
 QUIET = False
 
@@ -309,14 +307,9 @@ class InsertTypesTransformer(cst.CSTTransformer):
         # dictionary. This is used for types like BufferOffsetPair which
         # are a union of Buffer and BufferOffsetPair.
         if result.class_type.name.value in ADDITIONAL_DESCRIPTOR_CONVERTIONS:
-            additional =[
-                cst.SubscriptElement(
-                    slice=cst.Index(
-                        value=cst.Name(
-                            x
-                        )
-                    )
-                ) for x in  ADDITIONAL_DESCRIPTOR_CONVERTIONS[result.class_type.name.value]
+            additional = [
+                cst.SubscriptElement(slice=cst.Index(value=cst.Name(x)))
+                for x in ADDITIONAL_DESCRIPTOR_CONVERTIONS[result.class_type.name.value]
             ]
         else:
             additional = []
@@ -345,7 +338,8 @@ class InsertTypesTransformer(cst.CSTTransformer):
                                     )
                                 )
                             ),
-                        ]+additional,
+                        ]
+                        + additional,
                     ),
                 )
             ]
