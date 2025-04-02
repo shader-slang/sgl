@@ -149,8 +149,7 @@ inline std::pair<Format, bool> determine_texture_format(const Bitmap* bitmap, co
     return {it->second, convert_to_rgba};
 }
 
-inline std::pair<TextureType, uint32_t>
-get_texture_type_and_layer_count(DDSFile::TextureType type, uint32_t array_size)
+inline std::pair<TextureType, uint32_t> get_texture_type_and_layer_count(DDSFile::TextureType type, uint32_t array_size)
 {
     switch (type) {
     case DDSFile::TextureType::texture_1d:
@@ -165,7 +164,7 @@ get_texture_type_and_layer_count(DDSFile::TextureType type, uint32_t array_size)
         return {TextureType::texture_3d, 1};
     case DDSFile::TextureType::texture_cube:
         if (array_size > 1)
-            return {TextureType::texture_cube_array, array_size*6};       
+            return {TextureType::texture_cube_array, array_size * 6};
         return {TextureType::texture_cube, 6};
     default:
         SGL_THROW("Invalid DDS texture type {}", type);
