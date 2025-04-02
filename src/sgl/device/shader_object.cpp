@@ -96,16 +96,6 @@ void ShaderObject::get_cuda_interop_buffers(std::vector<ref<cuda::InteropBuffer>
         .insert(cuda_interop_buffers.end(), m_cuda_interop_buffers.begin(), m_cuda_interop_buffers.end());
 }
 
-slang::ISession* ShaderObject::get_slang_session() const
-{
-    return m_device->slang_session()->get_slang_session();
-}
-
-sgl::DeviceType ShaderObject::get_device_type() const
-{
-    return m_device->type();
-}
-
 //
 // TransientShaderObject
 //

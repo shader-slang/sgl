@@ -29,6 +29,29 @@ ShaderCursor::ShaderCursor(ShaderObject* shader_object)
     SGL_ASSERT(m_offset.is_valid());
 }
 
+ShaderCursor::ShaderCursor(ShaderObject* shader_object, bool need_dereference, slang::TypeLayoutReflection* parent_type_layout)
+    : m_type_layout(shader_object->slang_element_type_layout())
+    , m_shader_object(shader_object)
+    , m_offset(ShaderOffset::zero())
+{
+    SGL_ASSERT(m_type_layout);
+    SGL_ASSERT(m_shader_object);
+    SGL_ASSERT(m_offset.is_valid());
+
+    if (need_dereference) {
+        ref<Device> device = m_shader_object->get_device();
+
+        if (device->type() == DeviceType::metal) {
+            slang::ISession* session = device->slang_session()->get_slang_session();
+            m_type_layout = session->getTypeLayout(
+                parent_type_layout->getElementTypeLayout()->getType(),
+                0,
+                slang::LayoutRules::MetalArgumentBufferTier2
+            );
+        }
+    }
+}
+
 std::string ShaderCursor::to_string() const
 {
     return "ShaderCursor()";
@@ -51,14 +74,7 @@ ShaderCursor ShaderCursor::dereference() const
     switch ((TypeReflection::Kind)m_type_layout->getKind()) {
     case TypeReflection::Kind::constant_buffer:
     case TypeReflection::Kind::parameter_block: {
-        ShaderCursor d = ShaderCursor(m_shader_object->get_object(m_offset));
-        if (m_shader_object->get_device_type() == DeviceType::metal) {
-            d.m_type_layout = m_shader_object->get_slang_session()->getTypeLayout(
-                m_type_layout->getElementTypeLayout()->getType(),
-                0,
-                slang::LayoutRules::MetalArgumentBufferTier2
-            );
-        }
+        ShaderCursor d = ShaderCursor(m_shader_object->get_object(m_offset), true, m_type_layout);
         return d;
     }
     default:
