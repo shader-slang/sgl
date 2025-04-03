@@ -359,14 +359,6 @@ SGL_PY_EXPORT(device_resource)
         .def_rw("layer_count", &SubresourceRange::layer_count, D_NA(SubresourceRange, layer_count))
         .def("__repr__", &SubresourceRange::to_string, D_NA(SubresourceRange, to_string));
 
-#if 0 // TODO(slang-rhi)
-    nb::class_<ResourceView, Object>(m, "ResourceView", D(ResourceView))
-        .def_prop_ro("type", &ResourceView::type, D(ResourceView, type))
-        .def_prop_ro("resource", &ResourceView::resource, D(ResourceView, resource))
-        .def_prop_ro("buffer_range", &ResourceView::buffer_range, D_NA(ResourceView, buffer_range))
-        .def_prop_ro("subresource_range", &ResourceView::subresource_range, D_NA(ResourceView, subresource_range));
-#endif
-
     nb::class_<BufferDesc>(m, "BufferDesc", D(BufferDesc))
         .def(nb::init<>())
         .def("__init__", [](BufferDesc* self, nb::dict dict) { new (self) BufferDesc(dict_to_BufferDesc(dict)); })
@@ -439,20 +431,16 @@ SGL_PY_EXPORT(device_resource)
         .def_rw("label", &TextureViewDesc::label, D_NA(TextureViewDesc, label));
     nb::implicitly_convertible<nb::dict, TextureViewDesc>();
 
-// TODO(slang-rhi)
-#if 0
-    nb::class_<SubresourceLayout>(m, "SubresourceLayout", D(SubresourceLayout))
-        .def_ro("row_pitch", &SubresourceLayout::row_pitch, D(SubresourceLayout, row_pitch))
-        .def_ro("row_pitch_aligned", &SubresourceLayout::row_pitch_aligned, D(SubresourceLayout, row_pitch_aligned))
-        .def_ro("row_count", &SubresourceLayout::row_count, D(SubresourceLayout, row_count))
-        .def_ro("depth", &SubresourceLayout::depth, D(SubresourceLayout, depth))
-        .def_prop_ro("total_size", &SubresourceLayout::total_size, D(SubresourceLayout, total_size))
-        .def_prop_ro(
-            "total_size_aligned",
-            &SubresourceLayout::total_size_aligned,
-            D(SubresourceLayout, total_size_aligned)
-        );
-#endif
+    nb::class_<SubresourceLayout>(m, "SubresourceLayout", D_NA(SubresourceLayout))
+        .def(nb::init<>())
+        .def_rw("size", &SubresourceLayout::size, D_NA(SubresourceLayout, size))
+        .def_rw("col_pitch", &SubresourceLayout::col_pitch, D_NA(SubresourceLayout, col_pitch))
+        .def_rw("row_pitch", &SubresourceLayout::row_pitch, D_NA(SubresourceLayout, row_pitch))
+        .def_rw("slice_pitch", &SubresourceLayout::slice_pitch, D_NA(SubresourceLayout, slice_pitch))
+        .def_rw("size_in_bytes", &SubresourceLayout::size_in_bytes, D_NA(SubresourceLayout, size_in_bytes))
+        .def_rw("block_width", &SubresourceLayout::block_width, D_NA(SubresourceLayout, block_width))
+        .def_rw("block_height", &SubresourceLayout::block_height, D_NA(SubresourceLayout, block_height))
+        .def_rw("row_count", &SubresourceLayout::row_count, D_NA(SubresourceLayout, row_count));
 
     nb::class_<Texture, Resource>(m, "Texture", D(Texture))
         .def_prop_ro("desc", &Texture::desc, D(Texture, desc))
@@ -472,7 +460,7 @@ SGL_PY_EXPORT(device_resource)
         .def(
             "get_subresource_layout",
             &Texture::get_subresource_layout,
-            "subresource"_a,
+            "mip_level"_a,
             "row_alignment"_a = DEFAULT_ALIGNMENT,
             D(Texture, get_subresource_layout)
         )
