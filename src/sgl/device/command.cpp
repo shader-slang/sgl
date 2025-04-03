@@ -483,8 +483,8 @@ void CommandEncoder::upload_texture_data(
     for (const auto& data : subresource_data) {
         rhi_subresource_data.push_back({
             .data = const_cast<void*>(data.data),
-            .strideY = data.row_pitch,
-            .strideZ = data.slice_pitch,
+            .rowPitch = data.row_pitch,
+            .slicePitch = data.slice_pitch,
         });
     }
 
@@ -519,8 +519,8 @@ void CommandEncoder::upload_texture_data(
 
     rhi::SubresourceData rhi_subresource_data = {
         .data = const_cast<void*>(subresource_data.data),
-        .strideY = subresource_data.row_pitch,
-        .strideZ = subresource_data.slice_pitch,
+        .rowPitch = subresource_data.row_pitch,
+        .slicePitch = subresource_data.slice_pitch,
     };
 
     SLANG_CALL(m_rhi_command_encoder->uploadTextureData(

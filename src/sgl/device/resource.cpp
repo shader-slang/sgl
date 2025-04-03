@@ -28,9 +28,9 @@ SubresourceLayout layout_from_rhilayout(const rhi::SubresourceLayout& rhi_layout
     return {
         .size = {rhi_layout.size.width, rhi_layout.size.height, rhi_layout.size.depth},
         // TODO(slang-rhi) rename to rowPitch/slicePitch in rhi
-        .col_pitch = rhi_layout.strideX,
-        .row_pitch = rhi_layout.strideY,
-        .slice_pitch = rhi_layout.strideZ,
+        .col_pitch = rhi_layout.colPitch,
+        .row_pitch = rhi_layout.rowPitch,
+        .slice_pitch = rhi_layout.slicePitch,
         .size_in_bytes = rhi_layout.sizeInBytes,
         .block_width = rhi_layout.blockWidth,
         .block_height = rhi_layout.blockHeight,
