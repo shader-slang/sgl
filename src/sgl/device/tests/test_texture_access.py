@@ -44,10 +44,17 @@ def make_rand_data(type: sgl.TextureType, array_size: int, mip_count: int):
 
 
 # Generate dictionary of arguments for creating a texture.
-def make_args(type: sgl.TextureType, array_length: int, mip_count: int):
+def make_args(
+    type: sgl.TextureType,
+    array_length: int,
+    mip_count: int,
+    format: sgl.Format = sgl.Format.rgba32_float,
+    usage: sgl.TextureUsage = sgl.TextureUsage.shader_resource
+    | sgl.TextureUsage.unordered_access,
+):
     args = {
-        "format": sgl.Format.rgba32_float,
-        "usage": sgl.TextureUsage.shader_resource | sgl.TextureUsage.unordered_access,
+        "format": format,
+        "usage": usage,
         "mip_count": mip_count,
         "array_length": array_length,
     }
@@ -123,6 +130,118 @@ def test_read_write_texture(
         for mip_idx, mip_data in enumerate(layer_data):
             data = tex.to_numpy(layer=layer_idx, mip_level=mip_idx)
             assert np.allclose(data, mip_data)
+
+
+@pytest.mark.parametrize(
+    "type",
+    [
+        sgl.TextureType.texture_1d,
+        sgl.TextureType.texture_2d,
+        sgl.TextureType.texture_3d,
+        sgl.TextureType.texture_cube,
+    ],
+)
+@pytest.mark.parametrize("array_length", [1, 4])
+@pytest.mark.parametrize("mips", [1, 4])
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+@pytest.mark.parametrize(
+    "format", [sgl.Format.rgba32_float, sgl.Format.rgba8_unorm, sgl.Format.bc1_unorm]
+)
+def test_texture_layout(
+    device_type: sgl.DeviceType,
+    array_length: int,
+    mips: int,
+    type: sgl.TextureType,
+    format: sgl.Format,
+):
+    device = helpers.get_device(device_type)
+    assert device is not None
+
+    # No 3d texture arrays.
+    if type == sgl.TextureType.texture_3d and array_length > 1:
+        pytest.skip("3d texture arrays not supported")
+
+    if (
+        device_type == sgl.DeviceType.metal
+        and type == sgl.TextureType.texture_1d
+        and mips != 1
+    ):
+        pytest.skip("Metal does not support 1d texture with mips")
+
+    # Adjust texture type to account for arrayness
+    if array_length > 1:
+        if type == sgl.TextureType.texture_1d:
+            type = sgl.TextureType.texture_1d_array
+        elif type == sgl.TextureType.texture_2d:
+            type = sgl.TextureType.texture_2d_array
+        elif type == sgl.TextureType.texture_2d_ms:
+            type = sgl.TextureType.texture_2d_ms_array
+        elif type == sgl.TextureType.texture_cube:
+            type = sgl.TextureType.texture_cube_array
+
+    formatinfo = sgl.get_format_info(format)
+    if formatinfo.is_compressed and type != sgl.TextureType.texture_2d:
+        pytest.skip("Compressed formats only supported for 2D textures")
+
+    # Create texture with specific format, using only shader resource as compressed formats don't support UAV
+    tex = device.create_texture(
+        **make_args(type, array_length, mips, format, sgl.TextureUsage.shader_resource)
+    )
+
+    def alignUp(value: int, alignment: int):
+        return (value + alignment - 1) & ~(alignment - 1)
+
+    # Validate sizes using row_alignment of 1 (i.e. packed)
+    w = tex.width
+    h = tex.height
+    d = tex.depth
+    for mip in range(tex.mip_count):
+        layout = tex.get_subresource_layout(mip, row_alignment=1)
+        assert layout.size.x == w
+        assert layout.size.y == h
+        assert layout.size.z == d
+        assert layout.col_pitch == formatinfo.bytes_per_block
+        assert (
+            layout.row_pitch
+            == layout.col_pitch
+            * alignUp(w, formatinfo.block_width)
+            // formatinfo.block_width
+        )
+        assert (
+            layout.slice_pitch
+            == layout.row_pitch
+            * alignUp(h, formatinfo.block_height)
+            // formatinfo.block_height
+        )
+        w = max(1, w // 2)
+        h = max(1, h // 2)
+        d = max(1, d // 2)
+
+    # Validate sizes using row_alignment of 256 (i.e. D3D12)
+    w = tex.width
+    h = tex.height
+    d = tex.depth
+    for mip in range(tex.mip_count):
+        layout = tex.get_subresource_layout(mip, row_alignment=256)
+        assert layout.size.x == w
+        assert layout.size.y == h
+        assert layout.size.z == d
+        assert layout.col_pitch == formatinfo.bytes_per_block
+        assert layout.row_pitch == alignUp(
+            layout.col_pitch
+            * alignUp(w, formatinfo.block_width)
+            // formatinfo.block_width,
+            256,
+        )
+        assert (
+            layout.slice_pitch
+            == layout.row_pitch
+            * alignUp(h, formatinfo.block_height)
+            // formatinfo.block_height
+        )
+        w = max(1, w // 2)
+        h = max(1, h // 2)
+        d = max(1, d // 2)
 
 
 @pytest.mark.parametrize(
