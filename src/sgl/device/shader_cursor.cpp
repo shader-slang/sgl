@@ -29,7 +29,11 @@ ShaderCursor::ShaderCursor(ShaderObject* shader_object)
     SGL_ASSERT(m_offset.is_valid());
 }
 
-ShaderCursor::ShaderCursor(ShaderObject* shader_object, bool need_dereference, slang::TypeLayoutReflection* parent_type_layout)
+ShaderCursor::ShaderCursor(
+    ShaderObject* shader_object,
+    bool need_dereference,
+    slang::TypeLayoutReflection* parent_type_layout
+)
     : m_type_layout(shader_object->slang_element_type_layout())
     , m_shader_object(shader_object)
     , m_offset(ShaderOffset::zero())
