@@ -76,6 +76,65 @@ def make_args(
     return args
 
 
+def create_test_textures(
+    device: sgl.Device,
+    count: int,
+    type: sgl.TextureType,
+    array_length: int,
+    mips: int,
+    format: sgl.Format = sgl.Format.rgba32_float,
+    usage: sgl.TextureUsage = sgl.TextureUsage.shader_resource
+    | sgl.TextureUsage.unordered_access,
+):
+    # No 3d texture arrays.
+    if type == sgl.TextureType.texture_3d and array_length > 1:
+        pytest.skip("3d texture arrays not supported")
+
+    # No 1D textures with mips on Metal.
+    if (
+        device.desc.type == sgl.DeviceType.metal
+        and type == sgl.TextureType.texture_1d
+        and mips != 1
+    ):
+        pytest.skip("Metal does not support 1d texture with mips")
+
+    # Adjust texture type to account for arrayness
+    if array_length > 1:
+        if type == sgl.TextureType.texture_1d:
+            type = sgl.TextureType.texture_1d_array
+        elif type == sgl.TextureType.texture_2d:
+            type = sgl.TextureType.texture_2d_array
+        elif type == sgl.TextureType.texture_2d_ms:
+            type = sgl.TextureType.texture_2d_ms_array
+        elif type == sgl.TextureType.texture_cube:
+            type = sgl.TextureType.texture_cube_array
+
+    # Skip none-2d compressed format
+    formatinfo = sgl.get_format_info(format)
+    if formatinfo.is_compressed and type != sgl.TextureType.texture_2d:
+        pytest.skip("Compressed formats only supported for 2D textures")
+
+    # Create textures and build random data
+    return tuple(
+        [
+            device.create_texture(**make_args(type, array_length, mips))
+            for _ in range(count)
+        ]
+    )
+
+
+def create_test_texture(
+    device: sgl.Device,
+    type: sgl.TextureType,
+    array_length: int,
+    mips: int,
+    format: sgl.Format = sgl.Format.rgba32_float,
+    usage: sgl.TextureUsage = sgl.TextureUsage.shader_resource
+    | sgl.TextureUsage.unordered_access,
+):
+    return create_test_textures(device, 1, type, array_length, mips, format, usage)[0]
+
+
 @pytest.mark.parametrize(
     "type",
     [
@@ -94,30 +153,8 @@ def test_read_write_texture(
     device = helpers.get_device(device_type)
     assert device is not None
 
-    # No 3d texture arrays.
-    if type == sgl.TextureType.texture_3d and array_length > 1:
-        pytest.skip("3d texture arrays not supported")
-
-    if (
-        device_type == sgl.DeviceType.metal
-        and type == sgl.TextureType.texture_1d
-        and mips != 1
-    ):
-        pytest.skip("Metal does not support 1d texture with mips")
-
-    # Adjust texture type to account for arrayness
-    if array_length > 1:
-        if type == sgl.TextureType.texture_1d:
-            type = sgl.TextureType.texture_1d_array
-        elif type == sgl.TextureType.texture_2d:
-            type = sgl.TextureType.texture_2d_array
-        elif type == sgl.TextureType.texture_2d_ms:
-            type = sgl.TextureType.texture_2d_ms_array
-        elif type == sgl.TextureType.texture_cube:
-            type = sgl.TextureType.texture_cube_array
-
     # Create texture and build random data
-    tex = device.create_texture(**make_args(type, array_length, mips))
+    tex = create_test_texture(device, type, array_length, mips)
     rand_data = make_rand_data(tex.type, tex.array_length, tex.mip_count)
 
     # Write random data to texture
@@ -157,36 +194,9 @@ def test_texture_layout(
     device = helpers.get_device(device_type)
     assert device is not None
 
-    # No 3d texture arrays.
-    if type == sgl.TextureType.texture_3d and array_length > 1:
-        pytest.skip("3d texture arrays not supported")
-
-    if (
-        device_type == sgl.DeviceType.metal
-        and type == sgl.TextureType.texture_1d
-        and mips != 1
-    ):
-        pytest.skip("Metal does not support 1d texture with mips")
-
-    # Adjust texture type to account for arrayness
-    if array_length > 1:
-        if type == sgl.TextureType.texture_1d:
-            type = sgl.TextureType.texture_1d_array
-        elif type == sgl.TextureType.texture_2d:
-            type = sgl.TextureType.texture_2d_array
-        elif type == sgl.TextureType.texture_2d_ms:
-            type = sgl.TextureType.texture_2d_ms_array
-        elif type == sgl.TextureType.texture_cube:
-            type = sgl.TextureType.texture_cube_array
-
-    formatinfo = sgl.get_format_info(format)
-    if formatinfo.is_compressed and type != sgl.TextureType.texture_2d:
-        pytest.skip("Compressed formats only supported for 2D textures")
-
-    # Create texture with specific format, using only shader resource as compressed formats don't support UAV
-    tex = device.create_texture(
-        **make_args(type, array_length, mips, format, sgl.TextureUsage.shader_resource)
-    )
+    # Create texture + get format info
+    tex = create_test_texture(device, type, array_length, mips, format)
+    formatinfo = sgl.get_format_info(tex.format)
 
     def alignUp(value: int, alignment: int):
         return (value + alignment - 1) & ~(alignment - 1)
@@ -261,35 +271,8 @@ def test_shader_read_write_texture(
     device = helpers.get_device(device_type)
     assert device is not None
 
-    # No 3d texture arrays.
-    if type == sgl.TextureType.texture_3d and array_length > 1:
-        pytest.skip("3d texture arrays not supported")
-
-    # Skip 3d textures with mips until slang fix is in
-    if type == sgl.TextureType.texture_3d and mips != 1:
-        pytest.skip("Pending slang fix for 3d textures with mips")
-
-    if (
-        device_type == sgl.DeviceType.metal
-        and type == sgl.TextureType.texture_1d
-        and mips != 1
-    ):
-        pytest.skip("Metal does not support 1d texture with mips")
-
-    # Adjust texture type to account for arrayness
-    if array_length > 1:
-        if type == sgl.TextureType.texture_1d:
-            type = sgl.TextureType.texture_1d_array
-        elif type == sgl.TextureType.texture_2d:
-            type = sgl.TextureType.texture_2d_array
-        elif type == sgl.TextureType.texture_2d_ms:
-            type = sgl.TextureType.texture_2d_ms_array
-        elif type == sgl.TextureType.texture_cube:
-            type = sgl.TextureType.texture_cube_array
-
     # Create texture and build random data
-    src_tex = device.create_texture(**make_args(type, array_length, mips))
-    dest_tex = device.create_texture(**make_args(type, array_length, mips))
+    (src_tex, dest_tex) = create_test_textures(device, 2, type, array_length, mips)
     rand_data = make_rand_data(src_tex.type, src_tex.array_length, src_tex.mip_count)
 
     # Write random data to texture
@@ -394,6 +377,115 @@ def test_shader_read_write_texture(
         for mip_idx, mip_data in enumerate(slice_data):
             data = dest_tex.to_numpy(layer=layer_idx, mip_level=mip_idx)
             assert np.allclose(data, mip_data)
+
+
+@pytest.mark.parametrize(
+    "type",
+    [
+        sgl.TextureType.texture_2d,
+    ],
+)
+@pytest.mark.parametrize("array_length", [1, 4])
+@pytest.mark.parametrize("mips", [1, 4])
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_copy_texture(
+    device_type: sgl.DeviceType, array_length: int, mips: int, type: sgl.TextureType
+):
+    device = helpers.get_device(device_type)
+    assert device is not None
+
+    # Create texture and build random data
+    (src, dst) = create_test_textures(device, 2, type, array_length, mips)
+    rand_data = make_rand_data(src.type, src.array_length, src.mip_count)
+
+    # Write random data to texture
+    for layer_idx, layer_data in enumerate(rand_data):
+        for mip_idx, mip_data in enumerate(layer_data):
+            src.copy_from_numpy(mip_data, layer=layer_idx, mip_level=mip_idx)
+
+    # Copy src to dst
+    encoder = device.create_command_encoder()
+    idx = 0
+    for layer_idx in range(array_length):
+        for mip_idx in range(mips):
+            encoder.copy_texture(dst, idx, sgl.uint3(0), src, idx, sgl.uint3(0))
+            idx += 1
+    device.submit_command_buffer(encoder.finish())
+
+    # Read back data and compare
+    for layer_idx, layer_data in enumerate(rand_data):
+        for mip_idx, mip_data in enumerate(layer_data):
+            data = dst.to_numpy(layer=layer_idx, mip_level=mip_idx)
+            assert np.allclose(data, mip_data)
+
+
+@pytest.mark.parametrize(
+    "type",
+    [
+        sgl.TextureType.texture_2d,
+    ],
+)
+@pytest.mark.parametrize("array_length", [1, 4])
+@pytest.mark.parametrize("mips", [1, 4])
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_copy_texture_to_buffer_and_back(
+    device_type: sgl.DeviceType, array_length: int, mips: int, type: sgl.TextureType
+):
+    device = helpers.get_device(device_type)
+    assert device is not None
+
+    # Create texture and build random data
+    (src, dst) = create_test_textures(device, 2, type, array_length, mips)
+    rand_data = make_rand_data(src.type, src.array_length, src.mip_count)
+
+    # Write random data to texture
+    for layer_idx, layer_data in enumerate(rand_data):
+        for mip_idx, mip_data in enumerate(layer_data):
+            src.copy_from_numpy(mip_data, layer=layer_idx, mip_level=mip_idx)
+
+    buffers: list[sgl.Buffer] = []
+
+    # Copy src to dst
+    encoder = device.create_command_encoder()
+    for layer_idx in range(array_length):
+        for mip_idx in range(mips):
+            layout = src.get_subresource_layout(mip_idx)
+            buffer = device.create_buffer(
+                size=layout.size_in_bytes,
+                usage=sgl.BufferUsage.copy_source | sgl.BufferUsage.copy_destination,
+            )
+            buffers.append(buffer)
+            encoder.copy_texture_to_buffer(
+                buffer,
+                0,
+                buffer.size,
+                layout.row_pitch,
+                src,
+                layer_idx,
+                mip_idx,
+                sgl.uint3(0),
+            )
+            encoder.copy_buffer_to_texture(
+                dst,
+                layer_idx,
+                mip_idx,
+                sgl.uint3(0),
+                buffer,
+                0,
+                buffer.size,
+                layout.row_pitch,
+            )
+    device.submit_command_buffer(encoder.finish())
+    device.wait_for_idle()
+
+    # Read back data and compare
+    idx = 0
+    for layer_idx, layer_data in enumerate(rand_data):
+        for mip_idx, mip_data in enumerate(layer_data):
+            data = dst.to_numpy(layer=layer_idx, mip_level=mip_idx)
+            buffer_data = buffers[idx].to_numpy().view(dtype=np.float32)
+            assert np.allclose(data, mip_data)
+            idx += 1
 
 
 if __name__ == "__main__":

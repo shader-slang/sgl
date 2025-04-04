@@ -368,6 +368,7 @@ void CommandEncoder::copy_buffer(
     m_rhi_command_encoder->copyBuffer(dst->rhi_buffer(), dst_offset, src->rhi_buffer(), src_offset, size);
 }
 
+// TODO(slang-rhi): This should really use layer/mip instead of sr idx to be consistent
 void CommandEncoder::copy_texture(
     Texture* dst,
     uint32_t dst_subresource,
@@ -391,7 +392,7 @@ void CommandEncoder::copy_texture(
         extent = src->get_mip_size(src_sr.mipLevel) - src_offset;
 
     rhi::Extents rhi_extent
-        = {narrow_cast<int32_t>(extent.x), narrow_cast<int32_t>(extent.y), narrow_cast<int32_t>(extent.z)};
+        = {static_cast<int32_t>(extent.x), static_cast<int32_t>(extent.y), static_cast<int32_t>(extent.z)};
 
     m_rhi_command_encoder->copyTexture(
         dst->rhi_texture(),
@@ -404,14 +405,14 @@ void CommandEncoder::copy_texture(
     );
 }
 
-#if 0
 void CommandEncoder::copy_texture_to_buffer(
     Buffer* dst,
     DeviceOffset dst_offset,
     DeviceSize dst_size,
-    DeviceSize dst_row_stride,
+    DeviceSize dst_row_pitch,
     const Texture* src,
-    uint32_t src_subresource,
+    uint32_t src_layer_index,
+    uint32_t src_mip_level,
     uint3 src_offset,
     uint3 extent
 )
@@ -420,41 +421,51 @@ void CommandEncoder::copy_texture_to_buffer(
     SGL_CHECK_NOT_NULL(dst);
     SGL_CHECK(dst_offset + dst_size <= dst->size(), "Destination buffer is too small");
     SGL_CHECK_NOT_NULL(src);
-    SGL_CHECK_LT(src_subresource, src->subresource_count());
 
-    const FormatInfo& info = get_format_info(src->format());
-    SGL_CHECK(
-        (src_offset.x % info.block_width == 0) && (src_offset.y % info.block_height == 0),
-        "Source offset ({},{}) must be a multiple of the block size ({}x{})",
-        src_offset.x,
-        src_offset.y,
-        info.block_width,
-        info.block_height
-    );
-
-    if (all(extent == uint3(-1))) {
-        extent = src->get_mip_size(src->get_subresource_mip_level(src_subresource)) - src_offset;
-    }
-
-    // TODO: in D3D12, the extent must be a multiple of the block size (this should be fixed in gfx instead)
-    if (m_device->type() == DeviceType::d3d12) {
-        extent.x = align_to(info.block_width, extent.x);
-        extent.y = align_to(info.block_height, extent.y);
-    }
-
-    rhi::SubresourceRange src_sr = detail::rhi_subresource_range(src, src_subresource);
     m_rhi_command_encoder->copyTextureToBuffer(
         dst->rhi_buffer(),
         dst_offset,
         dst_size,
-        dst_row_stride,
+        dst_row_pitch,
         src->rhi_texture(),
-        src_sr,
+        src_layer_index,
+        src_mip_level,
         rhi::Offset3D(src_offset.x, src_offset.y, src_offset.z),
-        rhi::Extents{narrow_cast<int32_t>(extent.x), narrow_cast<int32_t>(extent.y), narrow_cast<int32_t>(extent.z)}
+        rhi::Extents{static_cast<int32_t>(extent.x), static_cast<int32_t>(extent.y), static_cast<int32_t>(extent.z)}
     );
 }
-#endif
+
+void CommandEncoder::copy_buffer_to_texture(
+    Texture* dst,
+    uint32_t dst_layer_index,
+    uint32_t dst_mip_level,
+    uint3 dst_offset,
+    const Buffer* src,
+    DeviceOffset src_offset,
+    DeviceSize src_size,
+    DeviceSize src_row_pitch,
+    uint3 extents
+)
+{
+    SGL_CHECK(m_open, "Command encoder is finished");
+    SGL_CHECK_NOT_NULL(dst);
+    SGL_CHECK_NOT_NULL(src);
+    SGL_CHECK(src_offset + src_size <= src->size(), "Source buffer is too small");
+    SGL_CHECK_LT(dst_layer_index, dst->layer_count());
+    SGL_CHECK_LT(dst_mip_level, dst->mip_count());
+
+    m_rhi_command_encoder->copyBufferToTexture(
+        dst->rhi_texture(),
+        dst_layer_index,
+        dst_mip_level,
+        rhi::Offset3D(dst_offset.x, dst_offset.y, dst_offset.z),
+        src->rhi_buffer(),
+        src_offset,
+        src_size,
+        src_row_pitch,
+        rhi::Extents{static_cast<int32_t>(extents.x), static_cast<int32_t>(extents.y), static_cast<int32_t>(extents.z)}
+    );
+}
 
 void CommandEncoder::upload_buffer_data(Buffer* buffer, size_t offset, size_t size, const void* data)
 {

@@ -179,8 +179,35 @@ SGL_PY_EXPORT(device_command)
             "extent"_a = uint3(-1),
             D_NA(CommandEncoder, copy_texture)
         )
+        .def(
+            "copy_texture_to_buffer",
+            &CommandEncoder::copy_texture_to_buffer,
+            "dst"_a,
+            "dst_offset"_a,
+            "dst_size"_a,
+            "dst_row_pitch"_a,
+            "src"_a,
+            "src_layer_index"_a,
+            "src_mip_level"_a,
+            "src_offset"_a = uint3(0),
+            "extent"_a = uint3(-1),
+            D_NA(CommandEncoder, copy_texture_to_buffer)
+        )
+        .def(
+            "copy_buffer_to_texture",
+            &CommandEncoder::copy_buffer_to_texture,
+            "dst"_a,
+            "dst_layer_index"_a,
+            "dst_mip_level"_a,
+            "dst_offset"_a,
+            "src"_a,
+            "src_offset"_a,
+            "src_size"_a,
+            "src_row_pitch"_a,
+            "extents"_a = uint3(-1),
+            D_NA(CommandEncoder, copy_buffer_to_texture)
+        )
         // TODO(slang-rhi)
-        // copy_texture_to_buffer
         // upload_buffer_data
         // upload_texture_data
         .def(

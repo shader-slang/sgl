@@ -181,17 +181,16 @@ public:
         uint3 extent = uint3(-1)
     );
 
-    // TODO(slang-rhi)
-#if 0
     /**
      * \brief Copy a texture to a buffer.
      *
      * \param dst Destination buffer.
      * \param dst_offset Destination offset in bytes.
      * \param dst_size Destination size in bytes.
-     * \param dst_row_stride Destination row stride in bytes.
+     * \param dst_row_pitch Destination row stride in bytes.
      * \param src Source texture.
-     * \param src_subresource Source subresource index.
+     * \param src_layer_index Source layer.
+     * \param src_mip_level Source mip level.
      * \param src_offset Source offset in texels.
      * \param extent Extent in texels (-1 for maximum possible extent).
      */
@@ -199,13 +198,39 @@ public:
         Buffer* dst,
         DeviceOffset dst_offset,
         DeviceSize dst_size,
-        DeviceSize dst_row_stride,
+        DeviceSize dst_row_pitch,
         const Texture* src,
-        uint32_t src_subresource,
+        uint32_t src_layer_index,
+        uint32_t src_mip_level,
         uint3 src_offset = uint3(0),
         uint3 extent = uint3(-1)
     );
-#endif
+
+    /**
+     * \brief Copy a buffer to a texture.
+     *
+     * \param dst Destination texture.
+     * \param dst_layer_index Destination layer.
+     * \param dst_mip_level Destination mip level.
+     * \param dst_offset Destination offset in texels.
+     * \param src Source buffer.
+     * \param src_offset Source offset in bytes.
+     * \param src_size Size in bytes.
+     * \param src_row_pitch Source row stride in bytes.
+     * \param extents Extent in texels (-1 for maximum possible extent).
+     */
+    void copy_buffer_to_texture(
+        Texture* dst,
+        uint32_t dst_layer_index,
+        uint32_t dst_mip_level,
+        uint3 dst_offset,
+        const Buffer* src,
+        DeviceOffset src_offset,
+        DeviceSize src_size,
+        DeviceSize src_row_pitch,
+        uint3 extents = uint3(-1)
+    );
+
 
     /**
      * \brief Upload host memory to a buffer.
