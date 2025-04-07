@@ -537,6 +537,10 @@ void NativeCallDataCache::get_value_signature(const ref<SignatureBuilder> builde
         *builder << "bool\n";
         return;
     }
+    if (nb::isinstance<nb::str>(o)) {
+        *builder << "string\n";
+        return;
+    }
 
     // Python tuple/list
     nb::tuple tuple;
@@ -581,8 +585,17 @@ void NativeCallDataCache::get_value_signature(const ref<SignatureBuilder> builde
     if (nb::try_cast(o, dict)) {
         *builder << "\n";
         for (const auto& [k, v] : dict) {
-            *builder << nb::str(k).c_str() << ":";
-            get_value_signature(builder, v);
+            nb::str key(k);
+            *builder << key.c_str() << ":";
+
+            nb::str _type;
+            if (strcmp(key.c_str(), "_type") == 0 && nb::try_cast<nb::str>(v, _type)) {
+                // If the dictionary contains a _type key with string value,
+                // we have to encode the value directly, as it affects type resolution
+                *builder << _type.c_str() << "\n";
+            } else {
+                get_value_signature(builder, v);
+            }
         }
         return;
     }
