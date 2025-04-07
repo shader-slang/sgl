@@ -46,6 +46,18 @@ void Fence::wait(uint64_t value, uint64_t timeout_ns)
     }
 }
 
+uint64_t Fence::signal_device(uint64_t value, CommandQueueType queue)
+{
+    uint64_t signal_value = update_signaled_value(value);
+    m_device->signal_fence_device(this, value, queue);
+    return signal_value;
+}
+
+void Fence::wait_device(uint64_t value, CommandQueueType queue)
+{
+    m_device->wait_fence_device(this, value, queue);
+}
+
 uint64_t Fence::current_value() const
 {
     uint64_t value;

@@ -588,6 +588,24 @@ SGL_PY_EXPORT(device_device)
     device.def("wait_command_buffer", &Device::wait_command_buffer, "id"_a, D(Device, wait_command_buffer));
     device
         .def("wait_for_idle", &Device::wait_for_idle, "queue"_a = CommandQueueType::graphics, D(Device, wait_for_idle));
+
+    device.def(
+        "signal_fence_device",
+        &Device::signal_fence_device,
+        "fence"_a,
+        "value"_a,
+        "queue"_a = CommandQueueType::graphics,
+        D_NA(Device, signal_fence_device)
+    );
+    device.def(
+        "wait_fence_device",
+        &Device::wait_fence_device,
+        "fence"_a,
+        "value"_a,
+        "queue"_a = CommandQueueType::graphics,
+        D_NA(Device, wait_fence_device)
+    );
+
     device.def(
         "sync_to_cuda",
         [](Device* self, uint64_t cuda_stream) { self->sync_to_cuda(reinterpret_cast<void*>(cuda_stream)); },

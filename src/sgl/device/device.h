@@ -438,6 +438,24 @@ public:
     uint64_t submit_command_buffer(CommandBuffer* command_buffer, CommandQueueType queue = CommandQueueType::graphics);
 
     /**
+     * \brief Signals a fence on the device on the specified command queue.
+     *
+     * \param fence The fence to signal
+     * \param value The value to signal
+     * \param queue Command queue to submit to.
+     */
+    void signal_fence_device(Fence* fence, uint64_t value, CommandQueueType queue = CommandQueueType::graphics);
+
+    /**
+     * \brief Inserts a device wait for a fence value on the specified command queue
+     *
+     * \param fence The fence to wait for
+     * \param value The value to wait for
+     * \param queue Command queue to submit to.
+     */
+    void wait_fence_device(Fence* fence, uint64_t value, CommandQueueType queue = CommandQueueType::graphics);
+
+    /**
      * \brief Check if a command buffer is complete.
      *
      * \param id Submission ID.

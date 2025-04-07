@@ -876,6 +876,25 @@ uint64_t Device::submit_command_buffer(CommandBuffer* command_buffer, CommandQue
     return fence_value;
 }
 
+void Device::signal_fence_device(Fence* fence, uint64_t value, CommandQueueType queue)
+{
+    SGL_CHECK_NOT_NULL(fence);
+    SGL_CHECK(queue == CommandQueueType::graphics, "Only graphics queue is supported.");
+
+    gfx::IFence* gfxFence = fence->gfx_fence();
+    m_gfx_graphics_queue->executeCommandBuffers(0, nullptr, gfxFence, value);
+
+}
+void Device::wait_fence_device(Fence* fence, uint64_t value, CommandQueueType queue)
+{
+    SGL_CHECK_NOT_NULL(fence);
+    SGL_CHECK(queue == CommandQueueType::graphics, "Only graphics queue is supported.");
+
+    gfx::IFence* gfxFence = fence->gfx_fence();
+    m_gfx_graphics_queue->waitForFenceValuesOnDevice(1, &gfxFence, &value);
+}
+
+
 bool Device::is_command_buffer_complete(uint64_t id)
 {
     return id <= m_global_fence->current_value();

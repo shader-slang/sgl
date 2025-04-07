@@ -3,6 +3,7 @@
 #pragma once
 
 #include "sgl/device/fwd.h"
+#include "sgl/device/types.h"
 #include "sgl/device/device_resource.h"
 #include "sgl/device/shared_handle.h"
 #include "sgl/device/native_handle.h"
@@ -50,6 +51,21 @@ public:
      * \param timeout_ns The timeout in nanoseconds. If \c TIMEOUT_INFINITE, the function will block indefinitely.
      */
     void wait(uint64_t value = AUTO, uint64_t timeout_ns = TIMEOUT_INFINITE);
+
+    /**
+     * Signal the fence.
+     * This signals the fence on the device.
+     * \param value The value to signal. If \c AUTO, the signaled value will be auto-incremented.
+     * \return The signaled value.
+     */
+    uint64_t signal_device(uint64_t value = AUTO, CommandQueueType queue = CommandQueueType::graphics);
+
+    /**
+     * Insert a wait for the fence to be signaled on the device.
+     * Blocks the specified command queue until the fence reaches or exceeds the specified value.
+     * \param value The value to wait for. If \c AUTO, wait for the last signaled value.
+     */
+    void wait_device(uint64_t value = AUTO, CommandQueueType queue = CommandQueueType::graphics);
 
     /// Returns the currently signaled value on the device.
     uint64_t current_value() const;
