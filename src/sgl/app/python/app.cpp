@@ -92,7 +92,7 @@ SGL_PY_EXPORT(app_app)
         .def_rw("title", &AppWindowDesc::title, D(AppWindowDesc, title))
         .def_rw("mode", &AppWindowDesc::mode, D(AppWindowDesc, mode))
         .def_rw("resizable", &AppWindowDesc::resizable, D(AppWindowDesc, resizable))
-        .def_rw("surface_format", &AppWindowDesc::surface_format, D_NA(AppWindowDesc, surface_format))
+        .def_rw("surface_format", &AppWindowDesc::surface_format, D(AppWindowDesc, surface_format))
         .def_rw("enable_vsync", &AppWindowDesc::enable_vsync, D(AppWindowDesc, enable_vsync));
     nb::implicitly_convertible<nb::dict, AppWindowDesc>();
 
@@ -102,12 +102,12 @@ SGL_PY_EXPORT(app_app)
         .def_ro(
             "surface_texture",
             &AppWindow::RenderContext::surface_texture,
-            D_NA(AppWindow, RenderContext, surface_texture)
+            D(AppWindow, RenderContext, surface_texture)
         )
         .def_ro(
             "command_encoder",
             &AppWindow::RenderContext::command_encoder,
-            D_NA(AppWindow, RenderContext, command_encoder)
+            D(AppWindow, RenderContext, command_encoder)
         );
 
     app_window //

@@ -60,7 +60,7 @@ SGL_PY_EXPORT(core_window)
     window.def("process_events", &Window::process_events, D(Window, process_events));
     window.def("set_clipboard", &Window::set_clipboard, "text"_a, D(Window, set_clipboard));
     window.def("get_clipboard", &Window::get_clipboard, D(Window, get_clipboard));
-    window.def_prop_rw("cursor_mode", &Window::cursor_mode, &Window::set_cursor_mode, D_NA(Window, cursor_mode));
+    window.def_prop_rw("cursor_mode", &Window::cursor_mode, &Window::set_cursor_mode, D(Window, cursor_mode));
 
     window.def_prop_rw("on_resize", &Window::on_resize, &Window::set_on_resize, nb::arg().none(), D(Window, on_resize));
     window.def_prop_rw(

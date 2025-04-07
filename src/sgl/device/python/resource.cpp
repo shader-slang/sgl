@@ -341,11 +341,11 @@ SGL_PY_EXPORT(device_resource)
 
     nb::sgl_enum<TextureAspect>(m, "TextureAspect");
 
-    nb::class_<BufferRange>(m, "BufferRange", D_NA(BufferRange))
+    nb::class_<BufferRange>(m, "BufferRange", D(BufferRange))
         .def(nb::init<>())
-        .def_ro("offset", &BufferRange::offset, D_NA(BufferRange, offset))
-        .def_ro("size", &BufferRange::size, D_NA(BufferRange, size))
-        .def("__repr__", &BufferRange::to_string, D_NA(BufferRange, to_string));
+        .def_ro("offset", &BufferRange::offset, D(BufferRange, offset))
+        .def_ro("size", &BufferRange::size, D(BufferRange, size))
+        .def("__repr__", &BufferRange::to_string, D(BufferRange, to_string));
 
     nb::class_<SubresourceRange>(m, "SubresourceRange", D(SubresourceRange))
         .def(nb::init<>())
@@ -353,11 +353,11 @@ SGL_PY_EXPORT(device_resource)
             "__init__",
             [](SubresourceRange* self, nb::dict dict) { new (self) SubresourceRange(dict_to_SubresourceRange(dict)); }
         )
-        .def_rw("mip_level", &SubresourceRange::mip_level, D_NA(SubresourceRange, mip_level))
-        .def_rw("mip_count", &SubresourceRange::mip_count, D_NA(SubresourceRange, mip_count))
-        .def_rw("base_array_layer", &SubresourceRange::base_array_layer, D_NA(SubresourceRange, base_array_layer))
-        .def_rw("layer_count", &SubresourceRange::layer_count, D_NA(SubresourceRange, layer_count))
-        .def("__repr__", &SubresourceRange::to_string, D_NA(SubresourceRange, to_string));
+        .def_rw("mip_level", &SubresourceRange::mip_level, D(SubresourceRange, mip_level))
+        .def_rw("mip_count", &SubresourceRange::mip_count, D(SubresourceRange, mip_count))
+        .def_rw("base_array_layer", &SubresourceRange::base_array_layer, D(SubresourceRange, base_array_layer))
+        .def_rw("layer_count", &SubresourceRange::layer_count, D(SubresourceRange, layer_count))
+        .def("__repr__", &SubresourceRange::to_string, D(SubresourceRange, to_string));
 
     nb::class_<BufferDesc>(m, "BufferDesc", D(BufferDesc))
         .def(nb::init<>())
@@ -367,8 +367,8 @@ SGL_PY_EXPORT(device_resource)
         .def_rw("format", &BufferDesc::format, D(BufferDesc, format))
         .def_rw("memory_type", &BufferDesc::memory_type, D(BufferDesc, memory_type))
         .def_rw("usage", &BufferDesc::usage, D(BufferDesc, usage))
-        .def_rw("default_state", &BufferDesc::default_state, D_NA(BufferDesc, default_state))
-        .def_rw("label", &BufferDesc::label, D_NA(BufferDesc, label));
+        .def_rw("default_state", &BufferDesc::default_state, D(BufferDesc, default_state))
+        .def_rw("label", &BufferDesc::label, D(BufferDesc, label));
     nb::implicitly_convertible<nb::dict, BufferDesc>();
 
     nb::class_<Buffer, Resource>(m, "Buffer", D(Buffer))
@@ -388,7 +388,7 @@ SGL_PY_EXPORT(device_resource)
             D(buffer_to_torch)
         );
 
-    nb::class_<BufferOffsetPair>(m, "BufferOffsetPair", D_NA(BufferOffsetPair))
+    nb::class_<BufferOffsetPair>(m, "BufferOffsetPair", D(BufferOffsetPair))
         .def(nb::init<>())
         .def(nb::init<Buffer*>(), "buffer"_a)
         .def(nb::init<Buffer*, DeviceOffset>(), "buffer"_a, "offset"_a = 0)
@@ -396,8 +396,8 @@ SGL_PY_EXPORT(device_resource)
             "__init__",
             [](BufferOffsetPair* self, nb::dict dict) { new (self) BufferOffsetPair(dict_to_BufferOffsetPair(dict)); }
         )
-        .def_rw("buffer", &BufferOffsetPair::buffer, D_NA(BufferOffsetPair, buffer))
-        .def_rw("offset", &BufferOffsetPair::offset, D_NA(BufferOffsetPair, offset));
+        .def_rw("buffer", &BufferOffsetPair::buffer, D(BufferOffsetPair, buffer))
+        .def_rw("offset", &BufferOffsetPair::offset, D(BufferOffsetPair, offset));
     nb::implicitly_convertible<nb::dict, BufferOffsetPair>();
     nb::implicitly_convertible<Buffer, BufferOffsetPair>();
 
@@ -409,54 +409,54 @@ SGL_PY_EXPORT(device_resource)
         .def_rw("width", &TextureDesc::width, D(TextureDesc, width))
         .def_rw("height", &TextureDesc::height, D(TextureDesc, height))
         .def_rw("depth", &TextureDesc::depth, D(TextureDesc, depth))
-        .def_rw("array_length", &TextureDesc::array_length, D_NA(TextureDesc, array_length))
+        .def_rw("array_length", &TextureDesc::array_length, D(TextureDesc, array_length))
         .def_rw("mip_count", &TextureDesc::mip_count, D(TextureDesc, mip_count))
         .def_rw("sample_count", &TextureDesc::sample_count, D(TextureDesc, sample_count))
-        .def_rw("sample_quality", &TextureDesc::sample_quality, D_NA(TextureDesc, quality))
+        .def_rw("sample_quality", &TextureDesc::sample_quality, D(TextureDesc, sample_quality))
         .def_rw("memory_type", &TextureDesc::memory_type, D(TextureDesc, memory_type))
         .def_rw("usage", &TextureDesc::usage, D(TextureDesc, usage))
-        .def_rw("default_state", &TextureDesc::default_state, D_NA(TextureDesc, default_state))
-        .def_rw("label", &TextureDesc::label, D_NA(TextureDesc, label));
+        .def_rw("default_state", &TextureDesc::default_state, D(TextureDesc, default_state))
+        .def_rw("label", &TextureDesc::label, D(TextureDesc, label));
     nb::implicitly_convertible<nb::dict, TextureDesc>();
 
-    nb::class_<TextureViewDesc>(m, "TextureViewDesc", D_NA(TextureViewDesc))
+    nb::class_<TextureViewDesc>(m, "TextureViewDesc", D(TextureViewDesc))
         .def(nb::init<>())
         .def(
             "__init__",
             [](TextureViewDesc* self, nb::dict dict) { new (self) TextureViewDesc(dict_to_TextureViewDesc(dict)); }
         )
-        .def_rw("format", &TextureViewDesc::format, D_NA(TextureViewDesc, format))
-        .def_rw("aspect", &TextureViewDesc::aspect, D_NA(TextureViewDesc, aspect))
-        .def_rw("subresource_range", &TextureViewDesc::subresource_range, D_NA(TextureViewDesc, subresource_range))
-        .def_rw("label", &TextureViewDesc::label, D_NA(TextureViewDesc, label));
+        .def_rw("format", &TextureViewDesc::format, D(TextureViewDesc, format))
+        .def_rw("aspect", &TextureViewDesc::aspect, D(TextureViewDesc, aspect))
+        .def_rw("subresource_range", &TextureViewDesc::subresource_range, D(TextureViewDesc, subresource_range))
+        .def_rw("label", &TextureViewDesc::label, D(TextureViewDesc, label));
     nb::implicitly_convertible<nb::dict, TextureViewDesc>();
 
-    nb::class_<SubresourceLayout>(m, "SubresourceLayout", D_NA(SubresourceLayout))
+    nb::class_<SubresourceLayout>(m, "SubresourceLayout", D(SubresourceLayout))
         .def(nb::init<>())
-        .def_rw("size", &SubresourceLayout::size, D_NA(SubresourceLayout, size))
-        .def_rw("col_pitch", &SubresourceLayout::col_pitch, D_NA(SubresourceLayout, col_pitch))
-        .def_rw("row_pitch", &SubresourceLayout::row_pitch, D_NA(SubresourceLayout, row_pitch))
-        .def_rw("slice_pitch", &SubresourceLayout::slice_pitch, D_NA(SubresourceLayout, slice_pitch))
-        .def_rw("size_in_bytes", &SubresourceLayout::size_in_bytes, D_NA(SubresourceLayout, size_in_bytes))
-        .def_rw("block_width", &SubresourceLayout::block_width, D_NA(SubresourceLayout, block_width))
-        .def_rw("block_height", &SubresourceLayout::block_height, D_NA(SubresourceLayout, block_height))
-        .def_rw("row_count", &SubresourceLayout::row_count, D_NA(SubresourceLayout, row_count));
+        .def_rw("size", &SubresourceLayout::size, D(SubresourceLayout, size))
+        .def_rw("col_pitch", &SubresourceLayout::col_pitch, D(SubresourceLayout, col_pitch))
+        .def_rw("row_pitch", &SubresourceLayout::row_pitch, D(SubresourceLayout, row_pitch))
+        .def_rw("slice_pitch", &SubresourceLayout::slice_pitch, D(SubresourceLayout, slice_pitch))
+        .def_rw("size_in_bytes", &SubresourceLayout::size_in_bytes, D(SubresourceLayout, size_in_bytes))
+        .def_rw("block_width", &SubresourceLayout::block_width, D(SubresourceLayout, block_width))
+        .def_rw("block_height", &SubresourceLayout::block_height, D(SubresourceLayout, block_height))
+        .def_rw("row_count", &SubresourceLayout::row_count, D(SubresourceLayout, row_count));
 
     nb::class_<Texture, Resource>(m, "Texture", D(Texture))
         .def_prop_ro("desc", &Texture::desc, D(Texture, desc))
-        .def_prop_ro("type", &Texture::type, D_NA(Texture, type))
+        .def_prop_ro("type", &Texture::type, D(Texture, type))
         .def_prop_ro("format", &Texture::format, D(Texture, format))
         .def_prop_ro("width", &Texture::width, D(Texture, width))
         .def_prop_ro("height", &Texture::height, D(Texture, height))
         .def_prop_ro("depth", &Texture::depth, D(Texture, depth))
-        .def_prop_ro("array_length", &Texture::array_length, D_NA(Texture, array_length))
+        .def_prop_ro("array_length", &Texture::array_length, D(Texture, array_length))
         .def_prop_ro("mip_count", &Texture::mip_count, D(Texture, mip_count))
-        .def_prop_ro("layer_count", &Texture::layer_count, D_NA(Texture, layer_count))
+        .def_prop_ro("layer_count", &Texture::layer_count, D(Texture, layer_count))
         .def_prop_ro("subresource_count", &Texture::subresource_count, D(Texture, subresource_count))
         .def("get_mip_width", &Texture::get_mip_width, "mip_level"_a = 0, D(Texture, get_mip_width))
         .def("get_mip_height", &Texture::get_mip_height, "mip_level"_a = 0, D(Texture, get_mip_height))
         .def("get_mip_depth", &Texture::get_mip_depth, "mip_level"_a = 0, D(Texture, get_mip_depth))
-        .def("get_mip_size", &Texture::get_mip_size, "mip_level"_a = 0, D_NA(Texture, get_mip_size))
+        .def("get_mip_size", &Texture::get_mip_size, "mip_level"_a = 0, D(Texture, get_mip_size))
         .def(
             "get_subresource_layout",
             &Texture::get_subresource_layout,
@@ -464,12 +464,12 @@ SGL_PY_EXPORT(device_resource)
             "row_alignment"_a = DEFAULT_ALIGNMENT,
             D(Texture, get_subresource_layout)
         )
-        .def("create_view", &Texture::create_view, "desc"_a, D_NA(Texture, create_view))
+        .def("create_view", &Texture::create_view, "desc"_a, D(Texture, create_view))
         .def(
             "create_view",
             [](Texture* self, nb::dict dict) { return self->create_view(dict_to_TextureViewDesc(dict)); },
             "dict"_a,
-            D_NA(Texture, create_view)
+            D(Texture, create_view)
         )
         .def(
             "create_view",
@@ -495,18 +495,18 @@ SGL_PY_EXPORT(device_resource)
             "base_array_layer"_a = 0,
             "layer_count"_a = SubresourceRange::ALL,
             "format"_a = Format::undefined,
-            D_NA(Texture, create_view)
+            D(Texture, create_view)
         )
         .def("to_bitmap", &Texture::to_bitmap, "layer"_a = 0, "mip_level"_a = 0, D(Texture, to_bitmap))
         .def("to_numpy", &texture_to_numpy, "layer"_a = 0, "mip_level"_a = 0, D(texture_to_numpy))
         .def("copy_from_numpy", &texture_from_numpy, "data"_a, "layer"_a = 0, "mip_level"_a = 0, D(texture_from_numpy));
 
-    nb::class_<TextureView, DeviceResource>(m, "TextureView", D_NA(TextureView))
-        .def_prop_ro("texture", &TextureView::texture, D_NA(TextureView, texture))
-        .def_prop_ro("desc", &TextureView::desc, D_NA(TextureView, desc))
-        .def_prop_ro("format", &TextureView::format, D_NA(TextureView, format))
-        .def_prop_ro("aspect", &TextureView::aspect, D_NA(TextureView, aspect))
-        .def_prop_ro("subresource_range", &TextureView::subresource_range, D_NA(TextureView, subresource_range))
-        .def_prop_ro("label", &TextureView::label, D_NA(TextureView, label))
-        .def("__repr__", &TextureView::to_string, D_NA(TextureView, to_string));
+    nb::class_<TextureView, DeviceResource>(m, "TextureView", D(TextureView))
+        .def_prop_ro("texture", &TextureView::texture, D(TextureView, texture))
+        .def_prop_ro("desc", &TextureView::desc, D(TextureView, desc))
+        .def_prop_ro("format", &TextureView::format, D(TextureView, format))
+        .def_prop_ro("aspect", &TextureView::aspect, D(TextureView, aspect))
+        .def_prop_ro("subresource_range", &TextureView::subresource_range, D(TextureView, subresource_range))
+        .def_prop_ro("label", &TextureView::label, D(TextureView, label))
+        .def("__repr__", &TextureView::to_string, D(TextureView, to_string));
 }
