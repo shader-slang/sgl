@@ -6,6 +6,7 @@
 #include "sgl/device/device.h"
 #include "sgl/device/formats.h"
 #include "sgl/device/command.h"
+#include "sgl/device/helpers.h"
 
 #include "sgl/core/bitmap.h"
 
@@ -317,6 +318,16 @@ SGL_PY_EXPORT(device_resource)
             "offset"_a = 0,
             "size"_a = BufferRange::ALL,
             D(Buffer, get_uav)
+        )
+        .def(
+            "get_shared_handle",
+            [](Buffer* self)
+            {
+                gfx::InteropHandle handle;
+                SLANG_CALL(self->gfx_buffer_resource()->getSharedHandle(&handle));
+                return handle.handleValue;
+            },
+            D_NA(buffer_get_shared_handle)
         )
         .def("to_numpy", &buffer_to_numpy, D(buffer_to_numpy))
         .def("copy_from_numpy", &buffer_copy_from_numpy, "data"_a, D(buffer_from_numpy))

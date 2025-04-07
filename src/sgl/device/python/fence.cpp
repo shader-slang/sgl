@@ -27,7 +27,16 @@ SGL_PY_EXPORT(device_fence)
         .def("signal", &Fence::signal, "value"_a = Fence::AUTO, D(Fence, signal))
         .def("wait", &Fence::wait, "value"_a = Fence::AUTO, "timeout_ns"_a = Fence::TIMEOUT_INFINITE, D(Fence, wait))
         .def_prop_ro("current_value", &Fence::current_value, D(Fence, current_value))
-        .def_prop_ro("signaled_value", &Fence::signaled_value, D(Fence, signaled_value));
+        .def_prop_ro("signaled_value", &Fence::signaled_value, D(Fence, signaled_value))
+        .def(
+            "get_shared_handle",
+            [](Fence* self)
+            {
+                return static_cast<uint64_t>(self->get_shared_handle());
+            },
+            D_NA(buffer_get_shared_handle)
+        );
+
 
     m.attr("Fence").attr("AUTO") = Fence::AUTO;
     m.attr("Fence").attr("TIMEOUT_INFINITE") = Fence::TIMEOUT_INFINITE;
