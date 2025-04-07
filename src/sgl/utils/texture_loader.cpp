@@ -149,8 +149,7 @@ inline std::pair<Format, bool> determine_texture_format(const Bitmap* bitmap, co
     return {it->second, convert_to_rgba};
 }
 
-inline std::pair<TextureType, uint32_t>
-get_texture_type_and_array_length(DDSFile::TextureType type, uint32_t array_size)
+inline std::pair<TextureType, uint32_t> get_texture_type_and_layer_count(DDSFile::TextureType type, uint32_t array_size)
 {
     switch (type) {
     case DDSFile::TextureType::texture_1d:
@@ -164,10 +163,9 @@ get_texture_type_and_array_length(DDSFile::TextureType type, uint32_t array_size
     case DDSFile::TextureType::texture_3d:
         return {TextureType::texture_3d, 1};
     case DDSFile::TextureType::texture_cube:
-        SGL_CHECK(array_size % 6 == 0, "Invalid cube map array size");
-        if (array_size > 6)
-            return {TextureType::texture_cube_array, array_size / 6};
-        return {TextureType::texture_cube, 1};
+        if (array_size > 1)
+            return {TextureType::texture_cube_array, array_size * 6};
+        return {TextureType::texture_cube, 6};
     default:
         SGL_THROW("Invalid DDS texture type {}", type);
     }
@@ -245,10 +243,10 @@ inline ref<Texture> create_texture(
         return texture;
     } else if (source_image.dds_file) {
         const DDSFile* dds_file = source_image.dds_file;
-        const auto& [texture_type, array_length]
-            = get_texture_type_and_array_length(dds_file->type(), dds_file->array_size());
+        const auto& [texture_type, layer_count]
+            = get_texture_type_and_layer_count(dds_file->type(), dds_file->array_size());
         short_vector<SubresourceData, 16> subresource_data;
-        for (uint32_t layer_index = 0; layer_index < dds_file->array_size(); ++layer_index) {
+        for (uint32_t layer_index = 0; layer_index < layer_count; ++layer_index) {
             for (uint32_t mip_index = 0; mip_index < dds_file->mip_count(); ++mip_index) {
                 uint32_t row_pitch;
                 uint32_t slice_pitch;
@@ -268,8 +266,7 @@ inline ref<Texture> create_texture(
             .width = dds_file->width(),
             .height = dds_file->height(),
             .depth = dds_file->depth(),
-            // TODO(slang-rhi) is DDS array size the same as array length? (cube maps)
-            .array_length = array_length,
+            .array_length = dds_file->array_size(),
             .mip_count = dds_file->mip_count(),
             .usage = options.usage,
             .data = subresource_data,
