@@ -226,7 +226,7 @@ SGL_PY_EXPORT(device_device)
         .def_ro("hit_count", &ShaderCacheStats::hit_count, D(ShaderCacheStats, hit_count))
         .def_ro("miss_count", &ShaderCacheStats::miss_count, D(ShaderCacheStats, miss_count));
 
-    nb::class_<ShaderHotReloadEvent>(m, "ShaderHotReloadEvent", D_NA(ShaderHotReloadEvent));
+    nb::class_<ShaderHotReloadEvent>(m, "ShaderHotReloadEvent", D(ShaderHotReloadEvent));
 
     nb::class_<Device, Object> device(m, "Device", nb::is_weak_referenceable(), D(Device));
     device.def(
@@ -269,7 +269,7 @@ SGL_PY_EXPORT(device_device)
     device.def_prop_ro("supported_shader_model", &Device::supported_shader_model, D(Device, supported_shader_model));
     device.def_prop_ro("features", &Device::features, D(Device, features));
     device.def_prop_ro("supports_cuda_interop", &Device::supports_cuda_interop, D(Device, supports_cuda_interop));
-    device.def("get_format_support", &Device::get_format_support, "format"_a, D_NA(Device, get_format_support));
+    device.def("get_format_support", &Device::get_format_support, "format"_a, D(Device, get_format_support));
 
     device.def_prop_ro("slang_session", &Device::slang_session, D(Device, slang_session));
     device.def("close", &Device::close, D(Device, close));
@@ -277,13 +277,13 @@ SGL_PY_EXPORT(device_device)
         "create_surface",
         [](Device* self, ref<Window> window) { return self->create_surface(window); },
         "window"_a,
-        D_NA(Device, create_surface)
+        D(Device, create_surface)
     );
     device.def(
         "create_surface",
         [](Device* self, WindowHandle window_handle) { return self->create_surface(window_handle); },
         "window_handle"_a,
-        D_NA(Device, create_swapchain, 2)
+        D(Device, create_surface, 2)
     );
     device.def(
         "create_buffer",
@@ -506,7 +506,7 @@ SGL_PY_EXPORT(device_device)
         "create_command_encoder",
         &Device::create_command_encoder,
         "queue"_a = CommandQueueType::graphics,
-        D_NA(Device, create_command_encoder)
+        D(Device, create_command_encoder)
     );
     device.def(
         "submit_command_buffer",
@@ -540,7 +540,7 @@ SGL_PY_EXPORT(device_device)
         "get_acceleration_structure_sizes",
         &Device::get_acceleration_structure_sizes,
         "desc"_a,
-        D_NA(Device, get_acceleration_structure_sizes)
+        D(Device, get_acceleration_structure_sizes)
     );
     device.def(
         "create_acceleration_structure",
@@ -560,7 +560,7 @@ SGL_PY_EXPORT(device_device)
         "create_acceleration_structure_instance_list",
         &Device::create_acceleration_structure_instance_list,
         "size"_a,
-        D_NA(Device, create_acceleration_structure_instance_list)
+        D(Device, create_acceleration_structure_instance_list)
     );
     device.def(
         "create_shader_table",
@@ -637,19 +637,19 @@ SGL_PY_EXPORT(device_device)
         "create_root_shader_object",
         nb::overload_cast<const ShaderProgram*>(&Device::create_root_shader_object),
         "shader_program"_a,
-        D_NA(Device, create_root_shader_object)
+        D(Device, create_root_shader_object)
     );
     device.def(
         "create_shader_object",
         [](Device* self, ref<TypeLayoutReflection> type_layout) { return self->create_shader_object(type_layout); },
         "type_layout"_a,
-        D_NA(Device, create_shader_object)
+        D(Device, create_shader_object)
     );
     device.def(
         "create_shader_object",
         nb::overload_cast<ReflectionCursor>(&Device::create_shader_object),
         "cursor"_a,
-        D_NA(Device, create_shader_object, 2)
+        D(Device, create_shader_object, 2)
     );
 
     device.def(
@@ -690,10 +690,9 @@ SGL_PY_EXPORT(device_device)
         "depth_stencil"_a.none() = nb::none(),
         "rasterizer"_a.none() = nb::none(),
         "multisample"_a.none() = nb::none(),
-        D_NA(Device, create_render_pipeline)
+        D(Device, create_render_pipeline)
     );
-    device
-        .def("create_render_pipeline", &Device::create_render_pipeline, "desc"_a, D_NA(Device, create_render_pipeline));
+    device.def("create_render_pipeline", &Device::create_render_pipeline, "desc"_a, D(Device, create_render_pipeline));
 
     device.def(
         "create_ray_tracing_pipeline",
@@ -746,13 +745,13 @@ SGL_PY_EXPORT(device_device)
         "register_shader_hot_reload_callback",
         &Device::register_shader_hot_reload_callback,
         "callback"_a,
-        D_NA(Device, register_shader_hot_reload_callback)
+        D(Device, register_shader_hot_reload_callback)
     );
     device.def(
         "register_device_close_callback",
         &Device::register_device_close_callback,
         "callback"_a,
-        D_NA(Device, register_device_close_callback)
+        D(Device, register_device_close_callback)
     );
     device.def(
         "coopvec_query_matrix_size",

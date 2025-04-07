@@ -510,16 +510,35 @@ if(SGL_BUILD_PYTHON)
         foreach(value ${list})
             list(APPEND MKDOC_ARGS -I${value})
         endforeach()
-
         get_target_property(list sgl INTERFACE_INCLUDE_DIRECTORIES)
         foreach(value ${list})
             list(APPEND MKDOC_ARGS -I${value})
         endforeach()
 
-        get_target_property(list slang INTERFACE_INCLUDE_DIRECTORIES)
-        foreach(value ${list})
-            list(APPEND MKDOC_ARGS -I${value})
-        endforeach()
+        # Add target include directories from dependencies.
+        get_target_property(targets sgl INTERFACE_LINK_LIBRARIES)
+        if(targets)
+            foreach(value ${targets})
+                # Skip generator expressions
+                if(value MATCHES "^\\$<.*>$")
+                    # message(STATUS "Skipping target: ${value}")
+                    continue()
+                endif()
+                get_target_property(list ${value} INTERFACE_INCLUDE_DIRECTORIES)
+                if(list)
+                    foreach(value ${list})
+                        # Unwrap BUILD_INTERFACE generator expression
+                        string(REGEX REPLACE "\\$<BUILD_INTERFACE:([^>]+)>" "\\1" value "${value}")
+                        # Skip generator expressions
+                        if(value MATCHES "^\\$<.*>$")
+                            # message(STATUS "Skipping path: ${value}")
+                            continue()
+                        endif()
+                        list(APPEND MKDOC_ARGS -I${value})
+                    endforeach()
+                endif()
+            endforeach()
+        endif()
 
         # Note: The current version of pybind11_mkdoc does not support C++20.
         # Running this will result in the following error:
@@ -531,7 +550,6 @@ if(SGL_BUILD_PYTHON)
         add_custom_target(pydoc USES_TERMINAL COMMAND
             COMMAND ${Python_EXECUTABLE} -m pybind11_mkdoc -std=c++20 -stdlib=libc++
             ${MKDOC_ARGS}
-            -I${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include
             -I${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include
             ${CMAKE_CURRENT_SOURCE_DIR}/sgl/app/*.h
             ${CMAKE_CURRENT_SOURCE_DIR}/sgl/core/*.h

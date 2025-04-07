@@ -89,7 +89,7 @@ SGL_PY_EXPORT(device_raytracing)
     nb::class_<AccelerationStructureInstanceDesc>(
         m,
         "AccelerationStructureInstanceDesc",
-        D_NA(AccelerationStructureInstanceDesc)
+        D(AccelerationStructureInstanceDesc)
     )
         .def(nb::init<>())
         .def(
@@ -100,38 +100,38 @@ SGL_PY_EXPORT(device_raytracing)
         .def_rw(
             "transform",
             &AccelerationStructureInstanceDesc::transform,
-            D_NA(AccelerationStructureInstanceDesc, transform)
+            D(AccelerationStructureInstanceDesc, transform)
         )
         .def_prop_rw(
             "instance_id",
             [](AccelerationStructureInstanceDesc& self) { return self.instance_id; },
             [](AccelerationStructureInstanceDesc& self, uint32_t value) { self.instance_id = value; },
-            D_NA(AccelerationStructureInstanceDesc, instance_id)
+            D(AccelerationStructureInstanceDesc, instance_id)
         )
         .def_prop_rw(
             "instance_mask",
             [](AccelerationStructureInstanceDesc& self) { return self.instance_mask; },
             [](AccelerationStructureInstanceDesc& self, uint32_t value) { self.instance_mask = value; },
-            D_NA(AccelerationStructureInstanceDesc, instance_mask)
+            D(AccelerationStructureInstanceDesc, instance_mask)
         )
         .def_prop_rw(
             "instance_contribution_to_hit_group_index",
             [](AccelerationStructureInstanceDesc& self) { return self.instance_contribution_to_hit_group_index; },
             [](AccelerationStructureInstanceDesc& self, uint32_t value)
             { self.instance_contribution_to_hit_group_index = value; },
-            D_NA(AccelerationStructureInstanceDesc, instance_contribution_to_hit_group_index)
+            D(AccelerationStructureInstanceDesc, instance_contribution_to_hit_group_index)
         )
         .def_prop_rw(
             "flags",
             [](AccelerationStructureInstanceDesc& self) { return self.flags; },
             [](AccelerationStructureInstanceDesc& self, AccelerationStructureInstanceFlags value)
             { self.flags = value; },
-            D_NA(AccelerationStructureInstanceDesc, flags)
+            D(AccelerationStructureInstanceDesc, flags)
         )
         .def_rw(
             "acceleration_structure",
             &AccelerationStructureInstanceDesc::acceleration_structure,
-            D_NA(AccelerationStructureInstanceDesc, acceleration_structure)
+            D(AccelerationStructureInstanceDesc, acceleration_structure)
         )
         .def(
             "to_numpy",
@@ -146,7 +146,7 @@ SGL_PY_EXPORT(device_raytracing)
     nb::class_<AccelerationStructureBuildInputInstances>(
         m,
         "AccelerationStructureBuildInputInstances",
-        D_NA(AccelerationStructureBuildInputInstances)
+        D(AccelerationStructureBuildInputInstances)
     )
         .def(nb::init<>())
         .def(
@@ -164,7 +164,7 @@ SGL_PY_EXPORT(device_raytracing)
     nb::class_<AccelerationStructureBuildInputTriangles>(
         m,
         "AccelerationStructureBuildInputTriangles",
-        D_NA(AccelerationStructureBuildInputTriangles)
+        D(AccelerationStructureBuildInputTriangles)
     )
         .def(nb::init<>())
         .def(
@@ -188,7 +188,7 @@ SGL_PY_EXPORT(device_raytracing)
     nb::class_<AccelerationStructureBuildInputProceduralPrimitives>(
         m,
         "AccelerationStructureBuildInputProceduralPrimitives",
-        D_NA(AccelerationStructureBuildInputProceduralPrimitives)
+        D(AccelerationStructureBuildInputProceduralPrimitives)
     )
         .def(nb::init<>())
         .def(
@@ -209,13 +209,13 @@ SGL_PY_EXPORT(device_raytracing)
     // nb::class_<AccelerationStructureBuildInput>(
     //     m,
     //     "AccelerationStructureBuildInput",
-    //     D_NA(AccelerationStructureBuildInput)
+    //     D(AccelerationStructureBuildInput)
     // );
 
     nb::class_<AccelerationStructureBuildInputMotionOptions>(
         m,
         "AccelerationStructureBuildInputMotionOptions",
-        D_NA(AccelerationStructureBuildInputMotionOptions)
+        D(AccelerationStructureBuildInputMotionOptions)
     )
         .def(nb::init<>())
         .def(
@@ -234,51 +234,39 @@ SGL_PY_EXPORT(device_raytracing)
     nb::sgl_enum<AccelerationStructureBuildMode>(m, "AccelerationStructureBuildMode");
     nb::sgl_enum_flags<AccelerationStructureBuildFlags>(m, "AccelerationStructureBuildFlags");
 
-    nb::class_<AccelerationStructureBuildDesc>(
-        m,
-        "AccelerationStructureBuildDesc",
-        D_NA(AccelerationStructureBuildDesc)
-    )
+    nb::class_<AccelerationStructureBuildDesc>(m, "AccelerationStructureBuildDesc", D(AccelerationStructureBuildDesc))
         .def(nb::init<>())
         .def(
             "__init__",
             [](AccelerationStructureBuildDesc* self, nb::dict dict)
             { new (self) AccelerationStructureBuildDesc(dict_to_AccelerationStructureBuildDesc(dict)); }
         )
-        .def_rw("inputs", &AccelerationStructureBuildDesc::inputs, D_NA(AccelerationStructureBuildDesc, inputs))
+        .def_rw("inputs", &AccelerationStructureBuildDesc::inputs, D(AccelerationStructureBuildDesc, inputs))
         .def_rw(
             "motion_options",
             &AccelerationStructureBuildDesc::motion_options,
-            D_NA(AccelerationStructureBuildDesc, motion_options)
+            D(AccelerationStructureBuildDesc, motion_options)
         )
-        .def_rw("mode", &AccelerationStructureBuildDesc::mode, D_NA(AccelerationStructureBuildDesc, mode))
-        .def_rw("flags", &AccelerationStructureBuildDesc::flags, D_NA(AccelerationStructureBuildDesc, flags));
+        .def_rw("mode", &AccelerationStructureBuildDesc::mode, D(AccelerationStructureBuildDesc, mode))
+        .def_rw("flags", &AccelerationStructureBuildDesc::flags, D(AccelerationStructureBuildDesc, flags));
     nb::implicitly_convertible<nb::dict, AccelerationStructureBuildDesc>();
 
     nb::sgl_enum<AccelerationStructureCopyMode>(m, "AccelerationStructureCopyMode");
 
-    nb::class_<AccelerationStructureSizes>(m, "AccelerationStructureSizes", D_NA(AccelerationStructureSizes))
+    nb::class_<AccelerationStructureSizes>(m, "AccelerationStructureSizes", D(AccelerationStructureSizes))
         .def_rw(
             "acceleration_structure_size",
             &AccelerationStructureSizes::acceleration_structure_size,
-            D_NA(AccelerationStructureSizes, acceleration_structure_size)
+            D(AccelerationStructureSizes, acceleration_structure_size)
         )
-        .def_rw(
-            "scratch_size",
-            &AccelerationStructureSizes::scratch_size,
-            D_NA(AccelerationStructureSizes, scratch_size)
-        )
+        .def_rw("scratch_size", &AccelerationStructureSizes::scratch_size, D(AccelerationStructureSizes, scratch_size))
         .def_rw(
             "update_scratch_size",
             &AccelerationStructureSizes::update_scratch_size,
-            D_NA(AccelerationStructureSizes, update_scratch_size)
+            D(AccelerationStructureSizes, update_scratch_size)
         );
 
-    nb::class_<AccelerationStructureQueryDesc>(
-        m,
-        "AccelerationStructureQueryDesc",
-        D_NA(AccelerationStructureQueryDesc)
-    )
+    nb::class_<AccelerationStructureQueryDesc>(m, "AccelerationStructureQueryDesc", D(AccelerationStructureQueryDesc))
         .def(nb::init<>())
         .def(
             "__init__",
@@ -288,51 +276,51 @@ SGL_PY_EXPORT(device_raytracing)
         .def_rw(
             "query_type",
             &AccelerationStructureQueryDesc::query_type,
-            D_NA(AccelerationStructureQueryDesc, query_type)
+            D(AccelerationStructureQueryDesc, query_type)
         )
         .def_rw(
             "query_pool",
             &AccelerationStructureQueryDesc::query_pool,
-            D_NA(AccelerationStructureQueryDesc, query_pool)
+            D(AccelerationStructureQueryDesc, query_pool)
         )
         .def_rw(
             "first_query_index",
             &AccelerationStructureQueryDesc::first_query_index,
-            D_NA(AccelerationStructureQueryDesc, first_query_index)
+            D(AccelerationStructureQueryDesc, first_query_index)
         );
     nb::implicitly_convertible<nb::dict, AccelerationStructureQueryDesc>();
 
-    nb::class_<AccelerationStructureDesc>(m, "AccelerationStructureDesc", D_NA(AccelerationStructureDesc))
+    nb::class_<AccelerationStructureDesc>(m, "AccelerationStructureDesc", D(AccelerationStructureDesc))
         .def(nb::init<>())
         .def(
             "__init__",
             [](AccelerationStructureDesc* self, nb::dict dict)
             { new (self) AccelerationStructureDesc(dict_to_AccelerationStructureDesc(dict)); }
         )
-        .def_rw("size", &AccelerationStructureDesc::size, D_NA(AccelerationStructureDesc, size))
-        .def_rw("label", &AccelerationStructureDesc::label, D_NA(AccelerationStructureDesc, label));
+        .def_rw("size", &AccelerationStructureDesc::size, D(AccelerationStructureDesc, size))
+        .def_rw("label", &AccelerationStructureDesc::label, D(AccelerationStructureDesc, label));
     nb::implicitly_convertible<nb::dict, AccelerationStructureDesc>();
 
     nb::class_<AccelerationStructure, DeviceResource>(m, "AccelerationStructure", D(AccelerationStructure))
-        .def_prop_ro("desc", &AccelerationStructure::desc, D_NA(AccelerationStructure, desc))
-        .def_prop_ro("handle", &AccelerationStructure::handle, D_NA(AccelerationStructure, handle));
+        .def_prop_ro("desc", &AccelerationStructure::desc, D(AccelerationStructure, desc))
+        .def_prop_ro("handle", &AccelerationStructure::handle, D(AccelerationStructure, handle));
 
     nb::class_<AccelerationStructureInstanceList, DeviceResource>(
         m,
         "AccelerationStructureInstanceList",
-        D_NA(AccelerationStructureInstanceList)
+        D(AccelerationStructureInstanceList)
     )
-        .def_prop_ro("size", &AccelerationStructureInstanceList::size, D_NA(AccelerationStructureInstanceList, size))
+        .def_prop_ro("size", &AccelerationStructureInstanceList::size, D(AccelerationStructureInstanceList, size))
         .def_prop_ro(
             "instance_stride",
             &AccelerationStructureInstanceList::instance_stride,
-            D_NA(AccelerationStructureInstanceList, instance_stride)
+            D(AccelerationStructureInstanceList, instance_stride)
         )
         .def(
             "resize",
             &AccelerationStructureInstanceList::resize,
             "size"_a,
-            D_NA(AccelerationStructureInstanceList, resize)
+            D(AccelerationStructureInstanceList, resize)
         )
         .def(
             "write",
@@ -341,7 +329,7 @@ SGL_PY_EXPORT(device_raytracing)
             ),
             "index"_a,
             "instance"_a,
-            D_NA(AccelerationStructureInstanceList, write)
+            D(AccelerationStructureInstanceList, write)
         )
         .def(
             "write",
@@ -350,13 +338,13 @@ SGL_PY_EXPORT(device_raytracing)
             ),
             "index"_a,
             "instances"_a,
-            D_NA(AccelerationStructureInstanceList, write, 2)
+            D(AccelerationStructureInstanceList, write, 2)
         )
-        .def("buffer", &AccelerationStructureInstanceList::buffer, D_NA(AccelerationStructureInstanceList, buffer))
+        .def("buffer", &AccelerationStructureInstanceList::buffer, D(AccelerationStructureInstanceList, buffer))
         .def(
             "build_input_instances",
             &AccelerationStructureInstanceList::build_input_instances,
-            D_NA(AccelerationStructureInstanceList, build_input_instances)
+            D(AccelerationStructureInstanceList, build_input_instances)
         );
 
     nb::class_<ShaderTableDesc>(m, "ShaderTableDesc", D(ShaderTableDesc))

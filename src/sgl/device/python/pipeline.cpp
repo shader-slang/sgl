@@ -57,26 +57,26 @@ SGL_PY_EXPORT(device_pipeline)
     nb::class_<ComputePipeline, Pipeline>(m, "ComputePipeline", D(ComputePipeline))
         .def_prop_ro("thread_group_size", &ComputePipeline::thread_group_size, D(ComputePipeline, thread_group_size));
 
-    nb::class_<RenderPipelineDesc>(m, "RenderPipelineDesc", D_NA(RenderPipelineDesc))
+    nb::class_<RenderPipelineDesc>(m, "RenderPipelineDesc", D(RenderPipelineDesc))
         .def(nb::init<>())
         .def(
             "__init__",
             [](RenderPipelineDesc* self, nb::dict dict)
             { new (self) RenderPipelineDesc(dict_to_RenderPipelineDesc(dict)); }
         )
-        .def_rw("program", &RenderPipelineDesc::program, D_NA(RenderPipelineDesc, program))
-        .def_rw("input_layout", &RenderPipelineDesc::input_layout, D_NA(RenderPipelineDesc, input_layout))
+        .def_rw("program", &RenderPipelineDesc::program, D(RenderPipelineDesc, program))
+        .def_rw("input_layout", &RenderPipelineDesc::input_layout, D(RenderPipelineDesc, input_layout))
         .def_rw(
             "primitive_topology",
             &RenderPipelineDesc::primitive_topology,
-            D_NA(RenderPipelineDesc, primitive_topology)
+            D(RenderPipelineDesc, primitive_topology)
         )
-        .def_rw("targets", &RenderPipelineDesc::targets, D_NA(RenderPipelineDesc, targets))
-        .def_rw("depth_stencil", &RenderPipelineDesc::depth_stencil, D_NA(RenderPipelineDesc, depth_stencil))
-        .def_rw("rasterizer", &RenderPipelineDesc::rasterizer, D_NA(RenderPipelineDesc, rasterizer))
-        .def_rw("multisample", &RenderPipelineDesc::multisample, D_NA(RenderPipelineDesc, multisample));
+        .def_rw("targets", &RenderPipelineDesc::targets, D(RenderPipelineDesc, targets))
+        .def_rw("depth_stencil", &RenderPipelineDesc::depth_stencil, D(RenderPipelineDesc, depth_stencil))
+        .def_rw("rasterizer", &RenderPipelineDesc::rasterizer, D(RenderPipelineDesc, rasterizer))
+        .def_rw("multisample", &RenderPipelineDesc::multisample, D(RenderPipelineDesc, multisample));
 
-    nb::class_<RenderPipeline, Pipeline>(m, "RenderPipeline", D_NA(RenderPipeline));
+    nb::class_<RenderPipeline, Pipeline>(m, "RenderPipeline", D(RenderPipeline));
 
     nb::class_<HitGroupDesc>(m, "HitGroupDesc", D(HitGroupDesc))
         .def(nb::init<>())

@@ -35,7 +35,7 @@ SGL_PY_EXPORT(device_reflection)
 
     nb::class_<BaseReflectionObject, Object> base_reflection(m, "BaseReflectionObject", D(BaseReflectionObject));
     base_reflection //
-        .def_prop_ro("is_valid", &DeclReflection::is_valid, D_NA(BaseReflectionObject, is_valid));
+        .def_prop_ro("is_valid", &DeclReflection::is_valid, D(BaseReflectionObject, is_valid));
 
     nb::class_<DeclReflection, BaseReflectionObject> decl_reflection(m, "DeclReflection", D(DeclReflection));
 
@@ -98,7 +98,7 @@ SGL_PY_EXPORT(device_reflection)
     type_reflection //
         .def_prop_ro("kind", &TypeReflection::kind, D(TypeReflection, kind))
         .def_prop_ro("name", &TypeReflection::name, D(TypeReflection, name))
-        .def_prop_ro("full_name", &TypeReflection::full_name, D_NA(TypeReflection, full_name))
+        .def_prop_ro("full_name", &TypeReflection::full_name, D(TypeReflection, full_name))
         .def_prop_ro("fields", &TypeReflection::fields, D(TypeReflection, fields))
         .def_prop_ro("element_count", &TypeReflection::element_count, D(TypeReflection, element_count))
         .def_prop_ro("element_type", &TypeReflection::element_type, D(TypeReflection, element_type))
@@ -144,10 +144,10 @@ SGL_PY_EXPORT(device_reflection)
             "specialize_with_arg_types",
             &FunctionReflection::specialize_with_arg_types,
             "types"_a,
-            D_NA(FunctionReflection, specialize_with_arg_types)
+            D(FunctionReflection, specialize_with_arg_types)
         )
-        .def_prop_ro("is_overloaded", &FunctionReflection::is_overloaded, D_NA(FunctionReflection, is_overloaded))
-        .def_prop_ro("overloads", &FunctionReflection::overloads, D_NA(FunctionReflection, overloads));
+        .def_prop_ro("is_overloaded", &FunctionReflection::is_overloaded, D(FunctionReflection, is_overloaded))
+        .def_prop_ro("overloads", &FunctionReflection::overloads, D(FunctionReflection, overloads));
 
     nb::sgl_enum<ModifierID>(m, "ModifierID");
 
@@ -159,7 +159,7 @@ SGL_PY_EXPORT(device_reflection)
     bind_list_type<FunctionReflectionOverloadList>(
         m,
         "FunctionReflectionOverloadList",
-        D_NA(FunctionReflectionOverloadList)
+        D(FunctionReflectionOverloadList)
     );
 
     nb::class_<VariableReflection, BaseReflectionObject>(m, "VariableReflection")
@@ -207,22 +207,22 @@ SGL_PY_EXPORT(device_reflection)
         )
         .def_prop_ro("parameters", &ProgramLayout::parameters, D(ProgramLayout, parameters))
         .def_prop_ro("entry_points", &ProgramLayout::entry_points, D(ProgramLayout, entry_points))
-        .def("find_type_by_name", &ProgramLayout::find_type_by_name, "name"_a, D_NA(ProgramLayout, find_type_by_name))
+        .def("find_type_by_name", &ProgramLayout::find_type_by_name, "name"_a, D(ProgramLayout, find_type_by_name))
         .def(
             "find_function_by_name",
             &ProgramLayout::find_function_by_name,
             "name"_a,
-            D_NA(ProgramLayout, find_function_by_name)
+            D(ProgramLayout, find_function_by_name)
         )
         .def(
             "find_function_by_name_in_type",
             &ProgramLayout::find_function_by_name_in_type,
             "type"_a,
             "name"_a,
-            D_NA(ProgramLayout, find_function_by_name_in_type)
+            D(ProgramLayout, find_function_by_name_in_type)
         )
-        .def("get_type_layout", &ProgramLayout::get_type_layout, "type"_a, D_NA(ProgramLayout, get_type_layout))
-        .def("is_sub_type", &ProgramLayout::is_sub_type, "sub_type"_a, "super_type"_a, D_NA(ProgramLayout, is_sub_type))
+        .def("get_type_layout", &ProgramLayout::get_type_layout, "type"_a, D(ProgramLayout, get_type_layout))
+        .def("is_sub_type", &ProgramLayout::is_sub_type, "sub_type"_a, "super_type"_a, D(ProgramLayout, is_sub_type))
         .def_prop_ro("hashed_strings", &ProgramLayout::hashed_strings, D(ProgramLayout, hashed_strings))
         .def("__repr__", &ProgramLayout::to_string);
 

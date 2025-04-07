@@ -44,7 +44,7 @@ SGL_PY_EXPORT(ui)
             nb::overload_cast<Texture*, CommandEncoder*>(&ui::Context::render),
             "texture"_a,
             "command_encoder"_a,
-            D_NA(Context, render, 2)
+            D(Context, render, 2)
         )
         .def("handle_keyboard_event", &ui::Context::handle_keyboard_event, "event"_a, D(Context, handle_keyboard_event))
         .def("handle_mouse_event", &ui::Context::handle_mouse_event, "event"_a, D(Context, handle_mouse_event))
