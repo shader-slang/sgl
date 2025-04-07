@@ -651,11 +651,7 @@ void Device::read_buffer_data(const Buffer* buffer, void* data, size_t size, siz
     SGL_CHECK(offset + size <= buffer->size(), "Buffer read is out of bounds");
     SGL_CHECK_NOT_NULL(data);
 
-    // TODO(slang-rhi) use readBuffer function that takes data pointer instead of doing extra copy
-    Slang::ComPtr<ISlangBlob> blob;
-    SLANG_CALL(m_rhi_device->readBuffer(buffer->rhi_buffer(), offset, size, blob.writeRef()));
-    SGL_ASSERT(blob->getBufferSize() == size);
-    std::memcpy(data, blob->getBufferPointer(), size);
+    SLANG_CALL(m_rhi_device->readBuffer(buffer->rhi_buffer(), offset, size, data));
 }
 
 void Device::upload_texture_data(
