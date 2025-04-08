@@ -17,7 +17,7 @@ using namespace sgl;
 struct WriteShaderDesc {
     std::filesystem::path path;
     std::string set_to;
-    std::string kernel_name{"computeMain"};
+    std::string kernel_name{"compute_main"};
     std::string param_name{"outbuffer"};
     std::vector<std::string> imports;
 };
@@ -122,7 +122,7 @@ TEST_CASE_GPU("verify test case works")
 {
     auto path = testing::get_case_temp_directory() / "verify.slang";
     write_shader({.path = path, .set_to = "1"});
-    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"computeMain"});
+    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"compute_main"});
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
     run_and_verify(ctx, kernel, 1);
     run_and_verify(ctx, kernel, 2, false);
@@ -138,7 +138,7 @@ TEST_CASE_GPU("change program and recreate")
     write_shader({.path = path, .set_to = "1"});
 
     // Load program + kernel, and verify returns 1.
-    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"computeMain"});
+    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"compute_main"});
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
     run_and_verify(ctx, kernel, 1);
 
@@ -164,7 +164,7 @@ TEST_CASE_GPU("change program with error and recreate")
     write_shader({.path = path, .set_to = "1"});
 
     // Load program + kernel, and verify returns 1.
-    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"computeMain"});
+    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"compute_main"});
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
     run_and_verify(ctx, kernel, 1);
 
@@ -192,7 +192,7 @@ TEST_CASE_GPU("change kernel name and recreate")
     write_shader({.path = path, .set_to = "1"});
 
     // Load program + kernel, and verify returns 1.
-    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"computeMain"});
+    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"compute_main"});
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
     run_and_verify(ctx, kernel, 1);
 
@@ -219,7 +219,7 @@ TEST_CASE_GPU("change buffer name and fail to use recreated program")
     write_shader({.path = path, .set_to = "1"});
 
     // Load program + kernel, and verify returns 1.
-    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"computeMain"});
+    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"compute_main"});
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
     run_and_verify(ctx, kernel, 1);
 
@@ -244,7 +244,7 @@ TEST_CASE_GPU("change program with invalid imports and recreate")
     write_shader({.path = path, .set_to = "1"});
 
     // Load program + kernel, and verify returns 1.
-    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"computeMain"});
+    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"compute_main"});
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
     run_and_verify(ctx, kernel, 1);
 
@@ -267,7 +267,7 @@ TEST_CASE_GPU("change program with correct module import and recreate")
     write_shader({.path = path, .set_to = "1"});
 
     // Load program + kernel, and verify returns 1.
-    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"computeMain"});
+    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"compute_main"});
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
     run_and_verify(ctx, kernel, 1);
 
@@ -296,7 +296,7 @@ TEST_CASE_GPU("leave program but change the module it imports")
     write_module({.path = abs_module_path, .set_to = "1"});
 
     // Load program + kernel, and verify returns 1.
-    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"computeMain"});
+    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"compute_main"});
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
     run_and_verify(ctx, kernel, 1);
 
@@ -321,7 +321,7 @@ TEST_CASE_GPU("leave program then break the module it imports")
     write_module({.path = abs_module_path, .set_to = "1"});
 
     // Load program + kernel, and verify returns 1.
-    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"computeMain"});
+    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"compute_main"});
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
     run_and_verify(ctx, kernel, 1);
 
@@ -364,7 +364,7 @@ TEST_CASE_GPU("change program with basic additional source")
     });
 
     // Load program + kernel with the extra source, and verify returns 1.
-    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"computeMain"}, addsource);
+    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"compute_main"}, addsource);
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
     run_and_verify(ctx, kernel, 1);
 
@@ -412,7 +412,7 @@ TEST_CASE_GPU("load module separately from program")
 
     // Load module then program independently and verify result.
     ref<SlangModule> module = session->load_module(mod_path.string());
-    ref<ShaderProgram> program = session->load_program(path.string(), {"computeMain"});
+    ref<ShaderProgram> program = session->load_program(path.string(), {"compute_main"});
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
     run_and_verify(ctx, kernel, 1);
 
@@ -439,7 +439,7 @@ TEST_CASE_GPU("change program and auto detect changes")
     write_shader({.path = path, .set_to = "1"});
 
     // Load program + kernel, and verify returns 1.
-    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"computeMain"});
+    ref<ShaderProgram> program = ctx.device->load_program(path.string(), {"compute_main"});
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
     run_and_verify(ctx, kernel, 1);
 
@@ -505,7 +505,7 @@ TEST_CASE_GPU("create multi directory session and monitor for changes" * doctest
     });
 
     // Load program + kernel, and verify returns 1.
-    ref<ShaderProgram> program = session->load_program(path.string(), {"computeMain"});
+    ref<ShaderProgram> program = session->load_program(path.string(), {"compute_main"});
     ref<ComputeKernel> kernel = ctx.device->create_compute_kernel({.program = program});
     run_and_verify(ctx, kernel, 1);
 
