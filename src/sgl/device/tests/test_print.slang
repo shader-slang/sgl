@@ -79,6 +79,8 @@ void compute_main(uint3 tid: SV_DispatchThreadID)
         float32_t(-123.45),
         float32_t(123.45)
     );
+    // no float64 support in Metal
+#if !defined(__TARGET_METAL__)
     print(
         "float64: min={}, max={}, -123.45={:.5}, 123.45={:.5}",
         float64_t.minValue,
@@ -86,6 +88,7 @@ void compute_main(uint3 tid: SV_DispatchThreadID)
         float64_t(-123.45),
         float64_t(123.45)
     );
+#endif
 
     // print supports vectors
     // no int8 support in HLSL/D3D12
@@ -134,17 +137,23 @@ void compute_main(uint3 tid: SV_DispatchThreadID)
         float32_t3(-2.f, -1.f, 0.f) * 1e6f,
         float32_t4(1.f, 2.f, 3.f, 4.f) * 1e6f
     );
+    // no float64 support in Metal
+#if !defined(__TARGET_METAL__)
     print(
         "float64_tX: {} {} {}",
         float64_t2(1.0, 2.0) * 1e12,
         float64_t3(3.0, 4.0, 5.0) * 1e12,
         float64_t4(6.0, 7.0, 8.0, 9.0) * 1e12
     );
+#endif
 
     // print supports matrices
+    // no integer matrix in Metal
+#if !defined(__TARGET_METAL__)
     print("uint3x4: {}", uint3x4(uint4(1, 2, 3, 4), uint4(5, 6, 7, 8), uint4(9, 10, 11, 12)));
     print("uint4x4: {}", uint4x4(uint4(1, 2, 3, 4), uint4(5, 6, 7, 8), uint4(9, 10, 11, 12), uint4(13, 14, 15, 16)));
     print("uint4x3: {}", uint4x3(uint3(1, 2, 3), uint3(4, 5, 6), uint3(7, 8, 9), uint3(10, 11, 12)));
+#endif
 
     // print supports format specifiers from fmtlib
     print("float3x3: {:+5.2f}", float3x3(float3(-4.0, -3.0, -1.0), float3(0.0, 1.0, 2.0), float3(3.0, 4.0, 5.0)));
