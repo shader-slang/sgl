@@ -46,7 +46,7 @@ class DebugLogger : public rhi::IDebugCallback {
 public:
     DebugLogger()
     {
-        m_logger = Logger::create(LogLevel::debug, "gfx", false);
+        m_logger = Logger::create(LogLevel::debug, "rhi", false);
         m_logger->use_same_outputs(Logger::get());
     }
 
@@ -123,7 +123,6 @@ Device::Device(const DeviceDesc& desc)
             m_shader_cache_path = platform::app_data_directory() / m_shader_cache_path;
         std::filesystem::create_directories(m_shader_cache_path);
     }
-    std::string rhi_shader_cache_path = (m_shader_cache_path / "gfx").string();
 
     // Setup extensions.
     rhi::D3D12DeviceExtendedDesc d3d12_extended_desc{
