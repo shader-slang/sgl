@@ -56,6 +56,7 @@ SGL_PY_DECLARE(ui_widgets);
 
 SGL_PY_DECLARE(utils_renderdoc);
 SGL_PY_DECLARE(utils_slangpy);
+SGL_PY_DECLARE(utils_slangpy_strided_buffer_view);
 SGL_PY_DECLARE(utils_slangpy_buffer);
 SGL_PY_DECLARE(utils_slangpy_function);
 SGL_PY_DECLARE(utils_slangpy_resources);
@@ -139,6 +140,7 @@ NB_MODULE(sgl_ext, m_)
 
     m.def_submodule("slangpy", "SlangPy module");
     SGL_PY_IMPORT(utils_slangpy);
+    SGL_PY_IMPORT(utils_slangpy_strided_buffer_view);
     SGL_PY_IMPORT(utils_slangpy_buffer);
     SGL_PY_IMPORT(utils_slangpy_function);
     SGL_PY_IMPORT(utils_slangpy_resources);

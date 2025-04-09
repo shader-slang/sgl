@@ -11,46 +11,35 @@
 namespace sgl {
 
 extern void write_shader_cursor(ShaderCursor& cursor, nb::object value);
-extern nb::ndarray<nb::numpy> buffer_to_numpy(Buffer* self);
 extern void buffer_copy_from_numpy(Buffer* self, nb::ndarray<nb::numpy> data);
-extern nb::ndarray<nb::pytorch, nb::device::cuda>
-buffer_to_torch(Buffer* self, DataType type, std::vector<size_t> shape, std::vector<int64_t> strides, size_t offset);
 
 } // namespace sgl
 
 namespace sgl::slangpy {
 
-NativeNDBuffer::NativeNDBuffer(Device* device, NativeNDBufferDesc desc)
-    : m_desc(desc)
+NativeNDBuffer::NativeNDBuffer(Device* device, NativeNDBufferDesc desc, ref<Buffer> storage)
+: StridedBufferView(device, desc, std::move(storage))
+, m_desc(desc)
 {
-
-    BufferDesc buffer_desc;
-    buffer_desc.element_count = desc.shape.element_count();
-    buffer_desc.struct_size = desc.element_layout->stride();
-    buffer_desc.usage = desc.usage;
-    buffer_desc.memory_type = desc.memory_type;
-    m_storage = device->create_buffer(buffer_desc);
-
-    set_slangpy_signature(
-        fmt::format("[{},{},{}]", desc.dtype->get_type_reflection()->name(), desc.shape.size(), desc.usage)
-    );
 }
 
-ref<BufferCursor> NativeNDBuffer::cursor(std::optional<int> start, std::optional<int> count) const
+ref<NativeNDBuffer> NativeNDBuffer::view(Shape shape, Shape strides, int offset) const
 {
-    size_t el_stride = m_desc.element_layout->stride();
-    size_t size = (count.value_or(element_count())) * el_stride;
-    size_t offset = (start.value_or(0)) * el_stride;
-    return make_ref<BufferCursor>(m_desc.element_layout, m_storage, size, offset);
+    auto result = make_ref<NativeNDBuffer>(device(), desc(), storage());
+    result->view_inplace(shape, strides, offset);
+    return result;
 }
-
-nb::dict NativeNDBuffer::uniforms() const
+ref<NativeNDBuffer> NativeNDBuffer::broadcast_to(const Shape& shape) const
 {
-    nb::dict res;
-    res["buffer"] = m_storage;
-    res["strides"] = m_desc.strides.as_vector();
-    res["shape"] = m_desc.shape.as_vector();
-    return res;
+    auto result = make_ref<NativeNDBuffer>(device(), desc(), storage());
+    result->broadcast_to_inplace(shape);
+    return result;
+}
+ref<NativeNDBuffer> NativeNDBuffer::index(nb::args args) const
+{
+    auto result = make_ref<NativeNDBuffer>(device(), desc(), storage());
+    result->index_inplace(args);
+    return result;
 }
 
 Shape NativeNDBufferMarshall::get_shape(nb::object data) const
@@ -78,6 +67,9 @@ void NativeNDBufferMarshall::write_shader_cursor_pre_dispatch(
 
     // Write the buffer storage.
     field["buffer"] = buffer->storage();
+
+    // Write the offset into the buffer
+    field["offset"] = buffer->offset();
 
     // Write shape vector as an array of ints.
     const std::vector<int>& shape_vec = buffer->shape().as_vector();
@@ -124,6 +116,7 @@ ref<NativeNDBuffer> NativeNDBufferMarshall::create_buffer(Device* device, const 
     NativeNDBufferDesc desc;
     desc.dtype = m_slang_element_type;
     desc.element_layout = m_element_layout;
+    desc.offset = 0;
     desc.shape = shape;
     desc.strides = desc.shape.calc_contiguous_strides();
     desc.usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access;
@@ -137,6 +130,7 @@ nb::object NativeNDBufferMarshall::create_dispatchdata(nb::object data) const
     auto buffer = nb::cast<NativeNDBuffer*>(data);
     nb::dict res;
     res["buffer"] = buffer->storage();
+    res["offset"] = buffer->offset();
     res["shape"] = buffer->shape().as_vector();
     res["strides"] = buffer->strides().as_vector();
     return res;
@@ -262,39 +256,14 @@ SGL_PY_EXPORT(utils_slangpy_buffer)
 
     nb::module_ slangpy = m.attr("slangpy");
 
-    nb::class_<NativeNDBufferDesc>(slangpy, "NativeNDBufferDesc")
-        .def(nb::init<>())
-        .def_rw("dtype", &NativeNDBufferDesc::dtype)
-        .def_rw("element_layout", &NativeNDBufferDesc::element_layout)
-        .def_rw("shape", &NativeNDBufferDesc::shape)
-        .def_rw("strides", &NativeNDBufferDesc::strides)
-        .def_rw("usage", &NativeNDBufferDesc::usage)
-        .def_rw("memory_type", &NativeNDBufferDesc::memory_type);
+    nb::class_<NativeNDBufferDesc, StridedBufferViewDesc>(slangpy, "NativeNDBufferDesc")
+        .def(nb::init<>());
 
-    nb::class_<NativeNDBuffer, NativeObject>(slangpy, "NativeNDBuffer")
-        .def(nb::init<ref<Device>, NativeNDBufferDesc>())
-        .def_prop_ro("device", &NativeNDBuffer::device)
-        .def_prop_ro("dtype", &NativeNDBuffer::dtype)
-        .def_prop_ro("shape", &NativeNDBuffer::shape)
-        .def_prop_ro("strides", &NativeNDBuffer::strides)
-        .def_prop_ro("element_count", &NativeNDBuffer::element_count)
-        .def_prop_ro("usage", &NativeNDBuffer::usage)
-        .def_prop_ro("memory_type", &NativeNDBuffer::memory_type)
-        .def_prop_ro("storage", &NativeNDBuffer::storage)
-        .def("cursor", &NativeNDBuffer::cursor, "start"_a.none() = std::nullopt, "count"_a.none() = std::nullopt)
-        .def("uniforms", &NativeNDBuffer::uniforms)
-        .def(
-            "to_numpy",
-            [](NativeNDBuffer& self) { return buffer_to_numpy(self.storage().get()); },
-            D_NA(NativeNDBuffer, buffer_to_numpy)
-        )
-        .def(
-            "copy_from_numpy",
-            [](NativeNDBuffer& self, nb::ndarray<nb::numpy> data)
-            { buffer_copy_from_numpy(self.storage().get(), data); },
-            "data"_a,
-            D_NA(NativeNDBuffer, buffer_copy_from_numpy)
-        );
+    nb::class_<NativeNDBuffer, StridedBufferView>(slangpy, "NativeNDBuffer")
+        .def(nb::init<ref<Device>, NativeNDBufferDesc, ref<Buffer>>())
+        .def("broadcast_to", &NativeNDBuffer::broadcast_to, "shape"_a)
+        .def("view", &NativeNDBuffer::view, "shape"_a, "strides"_a = Shape(), "offset"_a = 0)
+        .def("__get_item__", &NativeNDBuffer::index);
 
 
     nb::class_<NativeNDBufferMarshall, NativeMarshall>(slangpy, "NativeNDBufferMarshall") //
