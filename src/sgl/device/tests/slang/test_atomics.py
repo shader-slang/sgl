@@ -47,7 +47,11 @@ def test_buffer_add_f16(device_type: sgl.DeviceType):
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_buffer_add_f16x2(device_type: sgl.DeviceType):
-    if device_type in [sgl.DeviceType.vulkan, sgl.DeviceType.metal, sgl.DeviceType.cuda]:
+    if device_type in [
+        sgl.DeviceType.vulkan,
+        sgl.DeviceType.metal,
+        sgl.DeviceType.cuda,
+    ]:
         pytest.skip("_NvInterlockedAddFp16x2 not supported")
 
     device = helpers.get_device(device_type)
