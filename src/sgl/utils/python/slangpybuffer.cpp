@@ -260,10 +260,10 @@ SGL_PY_EXPORT(utils_slangpy_buffer)
         .def(nb::init<>());
 
     nb::class_<NativeNDBuffer, StridedBufferView>(slangpy, "NativeNDBuffer")
-        .def(nb::init<ref<Device>, NativeNDBufferDesc, ref<Buffer>>())
+        .def(nb::init<ref<Device>, NativeNDBufferDesc, ref<Buffer>>(), "device"_a, "desc"_a, "buffer"_a = nullptr)
         .def("broadcast_to", &NativeNDBuffer::broadcast_to, "shape"_a)
         .def("view", &NativeNDBuffer::view, "shape"_a, "strides"_a = Shape(), "offset"_a = 0)
-        .def("__get_item__", &NativeNDBuffer::index);
+        .def("__getitem__", &NativeNDBuffer::index);
 
 
     nb::class_<NativeNDBufferMarshall, NativeMarshall>(slangpy, "NativeNDBufferMarshall") //

@@ -219,6 +219,12 @@ void StridedBufferView::index_inplace(nb::args args)
         }
     }
 
+    int remaining = dims() - dim;
+    for (int j = 0; j < remaining; ++j) {
+        shape.push_back(cur_shape[dim + j]);
+        strides.push_back(cur_strides[dim + j]);
+    }
+
     view_inplace(Shape(shape), Shape(strides), offset);
 }
 

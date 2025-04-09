@@ -277,7 +277,7 @@ SGL_PY_EXPORT(utils_slangpy_tensor)
         .def_prop_ro("grad", &NativeTensor::grad)
         .def("broadcast_to", &NativeTensor::broadcast_to, "shape"_a)
         .def("view", &NativeTensor::view, "shape"_a, "strides"_a = Shape(), "offset"_a = 0)
-        .def("__get_item__", &NativeTensor::index)
+        .def("__getitem__", &NativeTensor::index)
         .def(
             "with_grads",
             &NativeTensor::with_grads,
