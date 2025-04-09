@@ -24,6 +24,8 @@ public:
     ShaderObject(ref<Device> device, rhi::IShaderObject* shader_object, bool retain = true);
     virtual ~ShaderObject();
 
+    Device* device() const { return m_device.get(); }
+
     virtual ref<const TypeLayoutReflection> element_type_layout() const;
 
     virtual slang::TypeLayoutReflection* slang_element_type_layout() const;

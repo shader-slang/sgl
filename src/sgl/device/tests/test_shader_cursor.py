@@ -234,12 +234,14 @@ def convert_matrix(type: str, rows: int, cols: int, values: Any):
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 @pytest.mark.parametrize("use_numpy", [False, True])
 def test_shader_cursor(device_type: sgl.DeviceType, use_numpy: bool):
-    if sys.platform == "darwin":
+    if device_type == sgl.DeviceType.vulkan and sys.platform == "darwin":
         pytest.skip("Test shader doesn't currently compile on MoltenVK")
+    if device_type == sgl.DeviceType.metal and use_numpy:
+        pytest.skip("Need to fix numpy bool handling")
 
     device = helpers.get_device(type=device_type)
 
-    program = device.load_program("test_shader_cursor.slang", ["main"])
+    program = device.load_program("test_shader_cursor.slang", ["compute_main"])
     kernel = device.create_compute_kernel(program)
 
     result_buffer = device.create_buffer(
@@ -347,10 +349,10 @@ def test_shader_cursor(device_type: sgl.DeviceType, use_numpy: bool):
     named_results = list(zip(names, results))
 
     for named_result, named_reference in zip(named_results, named_references):
-        # Vulkan's packing rule for certain matrix types are not the same as D3D12's
-        if device_type == sgl.DeviceType.vulkan and (
-            named_result[0] == "u_float2x2" or named_result[0] == "u_float3x3"
-        ):
+        # Vulkan's and Metal's packing rule for certain matrix types are not the same as D3D12's
+        if (
+            device_type == sgl.DeviceType.vulkan or device_type == sgl.DeviceType.metal
+        ) and (named_result[0] == "u_float2x2" or named_result[0] == "u_float3x3"):
             continue
         assert named_result == named_reference
 

@@ -91,6 +91,13 @@ def dispatch_compute(
     compiler_options: "sgl.SlangCompilerOptionsDict" = {},
     shader_model: sgl.ShaderModel = sgl.ShaderModel.sm_6_6,
 ) -> Context:
+    # TODO(slang-rhi): Metal and CUDA don't support shader models.
+    # we should move away from this concept and check features instead.
+    if (
+        device.info.type == sgl.DeviceType.metal
+        or device.info.type == sgl.DeviceType.cuda
+    ):
+        shader_model = sgl.ShaderModel.sm_6_0
     if shader_model > device.supported_shader_model:
         pytest.skip(f"Shader model {str(shader_model)} not supported")
 

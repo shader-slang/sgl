@@ -11,9 +11,8 @@ import sglhelpers as helpers
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_print(device_type: sgl.DeviceType):
-    if sys.platform == "darwin":
-        pytest.skip("Printing double/float64 not supported on macOS")
-
+    if device_type == sgl.DeviceType.metal:
+        pytest.skip("Slang bug https://github.com/shader-slang/slang/issues/6764")
     device = sgl.Device(type=device_type, enable_print=True)
     helpers.dispatch_compute(
         device=device,
@@ -23,7 +22,8 @@ def test_print(device_type: sgl.DeviceType):
     )
     result = device.flush_print_to_string()
     # print("result:", result)
-    expected_d3d12 = """Hello World!
+    expected = {
+        sgl.DeviceType.d3d12: """Hello World!
 0
 01
 012
@@ -57,8 +57,8 @@ uint3x4: {{1, 2, 3, 4}, {5, 6, 7, 8}, {9, 10, 11, 12}}
 uint4x4: {{1, 2, 3, 4}, {5, 6, 7, 8}, {9, 10, 11, 12}, {13, 14, 15, 16}}
 uint4x3: {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}, {10, 11, 12}}
 float3x3: {{-4.00, -3.00, -1.00}, {+0.00, +1.00, +2.00}, {+3.00, +4.00, +5.00}}
-"""
-    expected_vulkan = """Hello World!
+""",
+        sgl.DeviceType.vulkan: """Hello World!
 0
 01
 012
@@ -94,13 +94,13 @@ uint3x4: {{1, 2, 3, 4}, {5, 6, 7, 8}, {9, 10, 11, 12}}
 uint4x4: {{1, 2, 3, 4}, {5, 6, 7, 8}, {9, 10, 11, 12}, {13, 14, 15, 16}}
 uint4x3: {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}, {10, 11, 12}}
 float3x3: {{-4.00, -3.00, -1.00}, {+0.00, +1.00, +2.00}, {+3.00, +4.00, +5.00}}
-"""
+""",
+        sgl.DeviceType.metal: """TODO
+""",
+    }
 
-    expected = (
-        expected_d3d12 if device_type == sgl.DeviceType.d3d12 else expected_vulkan
-    )
-    assert result == expected
+    assert result == expected[device_type]
 
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+    pytest.main([__file__, "-vvvs"])

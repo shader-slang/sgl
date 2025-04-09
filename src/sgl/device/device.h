@@ -555,7 +555,7 @@ public:
     /// Enumerates all available adapters of a given device type.
     static std::vector<AdapterInfo> enumerate_adapters(DeviceType type = DeviceType::automatic);
 
-    /// Report live objects in the slang/gfx layer.
+    /// Report live objects in the rhi layer.
     /// This is useful for checking clean shutdown with all resources released properly.
     static void report_live_objects();
 
