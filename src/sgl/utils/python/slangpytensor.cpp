@@ -88,7 +88,7 @@ ref<NativeTensor> NativeTensor::with_grads(ref<NativeTensor> grad_in, ref<Native
 
     // Create a new tensor object that refers to the same data as this one, but with
     // associated grads.
-    ref<NativeTensor> result = make_ref<NativeTensor>(m_desc, m_storage, new_grad_in, new_grad_out);
+    ref<NativeTensor> result = make_ref<NativeTensor>(m_desc, storage(), new_grad_in, new_grad_out);
 
     // Optionally clear both.
     if (zero) {

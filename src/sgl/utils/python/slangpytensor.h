@@ -63,7 +63,6 @@ public:
 
 private:
     NativeTensorDesc m_desc;
-    ref<Buffer> m_storage;
     ref<NativeTensor> m_grad_in;
     ref<NativeTensor> m_grad_out;
 };
