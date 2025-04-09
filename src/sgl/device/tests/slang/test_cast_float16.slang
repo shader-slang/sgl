@@ -9,9 +9,9 @@ uint32_t pack(float16_t x, float16_t y)
 
 [shader("compute")]
 [numthreads(16, 1, 1)]
-void main(uint tid: SV_DispatchThreadID, StructuredBuffer<float16_t> data, RWStructuredBuffer<uint32_t> result)
+void compute_main(uint3 tid: SV_DispatchThreadID, StructuredBuffer<float16_t> data, RWStructuredBuffer<uint32_t> result)
 {
-    uint i = tid;
+    uint i = tid.x;
     float16_t x = data[2 * i];
     float16_t y = data[2 * i + 1];
     result[i] = pack(x, y);

@@ -349,9 +349,10 @@ def test_shader_cursor(device_type: sgl.DeviceType, use_numpy: bool):
     named_results = list(zip(names, results))
 
     for named_result, named_reference in zip(named_results, named_references):
-        # Vulkan's and Metal's packing rule for certain matrix types are not the same as D3D12's
+        # Vulkan/Metal/CUDA packing rule for certain matrix types are not the same as D3D12's
         if (
-            device_type == sgl.DeviceType.vulkan or device_type == sgl.DeviceType.metal
+            device_type
+            in [sgl.DeviceType.vulkan, sgl.DeviceType.metal, sgl.DeviceType.cuda]
         ) and (named_result[0] == "u_float2x2" or named_result[0] == "u_float3x3"):
             continue
         assert named_result == named_reference

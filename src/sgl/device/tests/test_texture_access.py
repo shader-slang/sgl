@@ -268,6 +268,9 @@ def test_texture_layout(
 def test_shader_read_write_texture(
     device_type: sgl.DeviceType, array_length: int, mips: int, type: sgl.TextureType
 ):
+    if device_type == sgl.DeviceType.cuda:
+        pytest.skip("CUDA needs texture format attributes")
+
     device = helpers.get_device(device_type)
     assert device is not None
 
