@@ -91,7 +91,7 @@ void compute_main(uint3 tid: SV_DispatchThreadID)
 #endif
 
     // print supports vectors
-    // no int8 support in HLSL/D3D12
+    // no int8 support in D3D12 and Metal
 #if !defined(__TARGET_D3D12__) && !defined(__TARGET_METAL__)
     print("int8_tX: {} {} {}", int8_t2(-4, -3), int8_t3(-2, -1, 0), int8_t4(1, 2, 3, 4));
 #endif
@@ -108,7 +108,7 @@ void compute_main(uint3 tid: SV_DispatchThreadID)
         int64_t3(-2, -1, 0) * 10000000000000ll,
         int64_t4(1, 2, 3, 4) * 10000000000000ll
     );
-    // no uint8 support in HLSL/D3D12
+    // no uint8 support in D3D12 and Metal
 #if !defined(__TARGET_D3D12__) && !defined(__TARGET_METAL__)
     print("uint8_tX: {} {} {}", uint8_t2(1, 2), uint8_t3(3, 4, 5), uint8_t4(6, 7, 8, 9));
 #endif
@@ -148,8 +148,8 @@ void compute_main(uint3 tid: SV_DispatchThreadID)
 #endif
 
     // print supports matrices
-    // no integer matrix in Metal
-#if !defined(__TARGET_METAL__)
+    // no integer matrix in Vulkan and Metal
+#if !defined(__TARGET_D3D12__) && !defined(__TARGET_METAL__)
     print("uint3x4: {}", uint3x4(uint4(1, 2, 3, 4), uint4(5, 6, 7, 8), uint4(9, 10, 11, 12)));
     print("uint4x4: {}", uint4x4(uint4(1, 2, 3, 4), uint4(5, 6, 7, 8), uint4(9, 10, 11, 12), uint4(13, 14, 15, 16)));
     print("uint4x3: {}", uint4x3(uint3(1, 2, 3), uint3(4, 5, 6), uint3(7, 8, 9), uint3(10, 11, 12)));
