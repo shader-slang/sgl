@@ -619,6 +619,9 @@ TextureView::TextureView(ref<Device> device, ref<Texture> texture, TextureViewDe
     , m_texture(std::move(texture))
     , m_desc(std::move(desc))
 {
+    if (m_desc.format == Format::undefined)
+        m_desc.format = m_texture->format();
+
     uint32_t mip_count = m_texture->mip_count();
     SGL_CHECK(m_desc.subresource_range.mip_level < mip_count, "'mip_level' out of range");
     SGL_CHECK(
