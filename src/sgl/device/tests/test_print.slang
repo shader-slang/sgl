@@ -92,7 +92,7 @@ void compute_main(uint3 tid: SV_DispatchThreadID)
 
     // print supports vectors
     // no int8 support in HLSL/D3D12
-#if !defined(__TARGET_D3D12__)
+#if !defined(__TARGET_D3D12__) && !defined(__TARGET_METAL__)
     print("int8_tX: {} {} {}", int8_t2(-4, -3), int8_t3(-2, -1, 0), int8_t4(1, 2, 3, 4));
 #endif
     print("int16_tX: {} {} {}", int16_t2(-4, -3) * 1000, int16_t3(-2, -1, 0) * 1000, int16_t4(1, 2, 3, 4) * 1000);
@@ -109,7 +109,7 @@ void compute_main(uint3 tid: SV_DispatchThreadID)
         int64_t4(1, 2, 3, 4) * 10000000000000ll
     );
     // no uint8 support in HLSL/D3D12
-#if !defined(__TARGET_D3D12__)
+#if !defined(__TARGET_D3D12__) && !defined(__TARGET_METAL__)
     print("uint8_tX: {} {} {}", uint8_t2(1, 2), uint8_t3(3, 4, 5), uint8_t4(6, 7, 8, 9));
 #endif
     print("uint16_tX: {} {} {}", uint16_t2(1, 2) * 1000, uint16_t3(3, 4, 5) * 1000, uint16_t4(6, 7, 8, 9) * 1000);
