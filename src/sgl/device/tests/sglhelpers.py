@@ -11,9 +11,13 @@ from pathlib import Path
 SHADER_DIR = Path(__file__).parent
 
 if sys.platform == "win32":
-    DEFAULT_DEVICE_TYPES = [sgl.DeviceType.d3d12, sgl.DeviceType.vulkan]
+    DEFAULT_DEVICE_TYPES = [
+        sgl.DeviceType.d3d12,
+        sgl.DeviceType.vulkan,
+        sgl.DeviceType.cuda,
+    ]
 elif sys.platform == "linux" or sys.platform == "linux2":
-    DEFAULT_DEVICE_TYPES = [sgl.DeviceType.vulkan]
+    DEFAULT_DEVICE_TYPES = [sgl.DeviceType.vulkan, sgl.DeviceType.cuda]
 elif sys.platform == "darwin":
     DEFAULT_DEVICE_TYPES = [sgl.DeviceType.metal]
 else:
