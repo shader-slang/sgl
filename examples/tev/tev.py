@@ -19,7 +19,7 @@ tex = device.create_texture(
     usage=sgl.TextureUsage.unordered_access,
 )
 
-program = device.load_program("checkerboard.slang", ["main"])
+program = device.load_program("checkerboard.slang", ["compute_main"])
 kernel = device.create_compute_kernel(program)
 
 for i in range(COUNT):
