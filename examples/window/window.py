@@ -23,7 +23,7 @@ class App:
 
         self.output_texture = None
 
-        program = self.device.load_program("draw", ["main"])
+        program = self.device.load_program("draw", ["compute_main"])
         self.kernel = self.device.create_compute_kernel(program)
 
         self.mouse_pos = sgl.float2()
