@@ -35,7 +35,9 @@ class DemoWindow(sgl.AppWindow):
         print(f"elapsed={timer.elapsed_ms()} ms")
         print(self.texture)
 
-        program = self.device.load_program(str(EXAMPLE_DIR / "draw.slang"), ["main"])
+        program = self.device.load_program(
+            str(EXAMPLE_DIR / "draw.slang"), ["compute_main"]
+        )
         self.kernel = self.device.create_compute_kernel(program)
 
         self.render_texture: sgl.Texture = None  # type: ignore (will be immediately initialized)
