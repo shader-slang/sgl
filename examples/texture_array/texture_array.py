@@ -59,7 +59,7 @@ class DemoWindow(sgl.AppWindow):
 
     def render(self, render_context: sgl.AppWindow.RenderContext):
         image = render_context.surface_texture
-        command_buffer = render_context.command_encoder
+        command_encoder = render_context.command_encoder
 
         if (
             self.render_texture == None
@@ -87,10 +87,10 @@ class DemoWindow(sgl.AppWindow):
                 "g_layer": self.layer.value,
                 "g_mip_level": self.mip_level.value,
             },
-            command_buffer=command_buffer,
+            command_encoder=command_encoder,
         )
 
-        command_buffer.blit(image, self.render_texture)
+        command_encoder.blit(image, self.render_texture)
 
 
 if __name__ == "__main__":
