@@ -102,7 +102,7 @@ float sdf_circle(float2 p, float r)
 
 [shader("compute")]
 [numthreads(16, 16, 1)]
-void main(uint3 tid: SV_DispatchThreadID)
+void compute_main(uint3 tid: SV_DispatchThreadID)
 {
     uint2 dims;
     uint2 pixel = tid.xy;
