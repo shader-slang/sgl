@@ -12,6 +12,8 @@ import sglhelpers as helpers
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_buffer_to_torch(device_type):
+    if device_type == sgl.DeviceType.cuda:
+        pytest.skip("Not tested with CUDA device")
     try:
         import torch
     except ImportError:
@@ -49,6 +51,8 @@ def test_buffer_to_torch(device_type):
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_torch_interop(device_type):
+    if device_type == sgl.DeviceType.cuda:
+        pytest.skip("Not tested with CUDA device")
     try:
         import torch
     except ImportError:
