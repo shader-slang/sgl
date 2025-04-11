@@ -412,7 +412,15 @@ void Context::render(TextureView* texture_view, CommandEncoder* command_encoder)
         index_buffer->unmap();
 
         // Render command lists.
-        auto pass_encoder = command_encoder->begin_render_pass({.color_attachments = {{.view = texture_view}}});
+        auto pass_encoder = command_encoder->begin_render_pass({
+            .color_attachments = {
+                {
+                    .view = texture_view,
+                    .load_op = LoadOp::load,
+                    .store_op = StoreOp::store,
+                },
+            },
+        });
         ShaderObject* shader_object = pass_encoder->bind_pipeline(get_pipeline(texture_view->desc().format));
         ShaderCursor shader_cursor = ShaderCursor(shader_object);
         shader_cursor["sampler"] = m_sampler;
