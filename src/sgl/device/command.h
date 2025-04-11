@@ -29,19 +29,19 @@ struct RenderState {
 struct RenderPassColorAttachment {
     TextureView* view{nullptr};
     TextureView* resolve_target{nullptr};
-    LoadOp load_op{LoadOp::dont_care};
+    LoadOp load_op{LoadOp::clear};
     StoreOp store_op{StoreOp::store};
     float4 clear_value{0.f};
 };
 
 struct RenderPassDepthStencilAttachment {
     TextureView* view{nullptr};
-    LoadOp depth_load_op{LoadOp::dont_care};
+    LoadOp depth_load_op{LoadOp::clear};
     StoreOp depth_store_op{StoreOp::store};
     float depth_clear_value{1.f};
     bool depth_read_only{false};
-    LoadOp stencil_load_op{LoadOp::dont_care};
-    StoreOp stencil_store_op{StoreOp::dont_care};
+    LoadOp stencil_load_op{LoadOp::clear};
+    StoreOp stencil_store_op{StoreOp::store};
     uint8_t stencil_clear_value{0};
     bool stencil_read_only{false};
 };
