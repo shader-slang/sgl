@@ -29,6 +29,7 @@ def test_create_device(device_type: sgl.DeviceType):
         sgl.DeviceType.d3d12: "D3D12",
         sgl.DeviceType.vulkan: "Vulkan",
         sgl.DeviceType.metal: "Metal",
+        sgl.DeviceType.cuda: "CUDA",
     }
     assert device.info.api_name == API_NAMES[device_type]
 

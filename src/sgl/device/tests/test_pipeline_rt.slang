@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
+#if !defined(__TARGET_CUDA__)
 [shader("compute")]
 [numthreads(16, 16, 1)]
 void raygrid(
@@ -31,6 +32,7 @@ void raygrid(
         render_texture[tid.xy] = float4(0, 0, 0, 1);
     }
 }
+#endif
 
 struct Payload {
     float4 color;

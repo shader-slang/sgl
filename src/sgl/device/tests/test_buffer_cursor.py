@@ -139,7 +139,7 @@ def variable_decls(tests: list[Any]):
 
 
 def variable_sets(tests: list[Any]):
-    return "".join([f"    buffer[tid].{t[0]} = {t[2]};\n" for t in tests])
+    return "".join([f"    buffer[i].{t[0]} = {t[2]};\n" for t in tests])
 
 
 def gen_fill_in_module(tests: list[Any]):
@@ -156,10 +156,11 @@ def gen_fill_in_module(tests: list[Any]):
 
     [shader("compute")]
     [numthreads(1, 1, 1)]
-    void compute_main(uint tid: SV_DispatchThreadID, RWStructuredBuffer<TestType> buffer) {{
-        buffer[tid].value = tid+1;
-        buffer[tid].child.floatval = tid+2.0;
-        buffer[tid].child.uintval = tid+3;
+    void compute_main(uint3 tid: SV_DispatchThreadID, RWStructuredBuffer<TestType> buffer) {{
+        uint i = tid.x;
+        buffer[i].value = i+1;
+        buffer[i].child.floatval = i+2.0;
+        buffer[i].child.uintval = i+3;
     {variable_sets(tests)}
     }}
     """
@@ -179,8 +180,9 @@ def gen_copy_module(tests: list[Any]):
 
     [shader("compute")]
     [numthreads(1, 1, 1)]
-    void compute_main(uint tid: SV_DispatchThreadID, StructuredBuffer<TestType> src, RWStructuredBuffer<TestType> dest) {{
-        dest[tid] = src[tid];
+    void compute_main(uint3 tid: SV_DispatchThreadID, StructuredBuffer<TestType> src, RWStructuredBuffer<TestType> dest) {{
+        uint i = tid.x;
+        dest[i] = src[i];
     }}
     """
 

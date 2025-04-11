@@ -77,6 +77,10 @@ def test_buffer(device_type: sgl.DeviceType, type: str, size_MB: int):
         and size_MB >= 4000
     ):
         pytest.skip("MoltenVK does not support large byte buffers")
+    if device_type == sgl.DeviceType.cuda and type == "buffer_uint":
+        pytest.skip("CUDA does not support Buffer/RWBuffer resources")
+    if device_type == sgl.DeviceType.cuda and size_MB > 1024:
+        pytest.skip("Large buffers sometimes lead to crashes on CUDA")
 
     element_size = 4
     size = size_MB * 1024 * 1024

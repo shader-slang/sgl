@@ -25,7 +25,7 @@ def test_cast_float16(device_type: sgl.DeviceType):
     ctx = helpers.dispatch_compute(
         device=device,
         path=Path(__file__).parent / "test_cast_float16.slang",
-        entry_point="main",
+        entry_point="compute_main",
         thread_count=[ELEMENT_COUNT, 1, 1],
         buffers={
             "data": {"data": data},

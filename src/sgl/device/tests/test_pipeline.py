@@ -14,6 +14,10 @@ import sglhelpers as helpers
 class PipelineTestContext:
     def __init__(self, device_type: sgl.DeviceType, size: int = 128) -> None:
         super().__init__()
+
+        if device_type == sgl.DeviceType.cuda:
+            pytest.skip("InterlockedAdd slang compiler bug on CUDA")
+
         self.device = helpers.get_device(type=device_type)
         self.output_texture = self.device.create_texture(
             format=sgl.Format.rgba32_float,
@@ -167,6 +171,9 @@ def test_gfx_clear(device_type: sgl.DeviceType):
 class GfxContext:
     def __init__(self, ctx: PipelineTestContext) -> None:
         super().__init__()
+        if not "rasterization" in ctx.device.features:
+            pytest.skip("Rasterization not supported on this device")
+
         self.ctx = ctx
         self.program = ctx.device.load_program(
             "test_pipeline_raster.slang", ["vertex_main", "fragment_main"]
@@ -572,6 +579,8 @@ def test_rhi_alpha_coverage(device_type: sgl.DeviceType):
 class RayContext:
     def __init__(self, ctx: PipelineTestContext) -> None:
         super().__init__()
+        if not "acceleration-structure" in ctx.device.features:
+            pytest.skip("Acceleration structures not supported on this device")
         if not "ray-tracing" in ctx.device.features:
             pytest.skip("Ray tracing not supported on this device")
 
@@ -681,6 +690,8 @@ class RayContext:
 
     def dispatch_ray_grid(self, tlas: sgl.AccelerationStructure, mode: str):
         if mode == "compute":
+            if not "ray-query" in self.ctx.device.features:
+                pytest.skip("Ray queries not supported on this device")
             self.dispatch_ray_grid_compute(tlas)
         elif mode == "ray":
             self.dispatch_ray_grid_rtp(tlas)
