@@ -111,9 +111,9 @@ Device::Device(const DeviceDesc& desc)
 #if SGL_WINDOWS
         m_desc.type = DeviceType::d3d12;
 #elif SGL_LINUX
-    m_desc.type = DeviceType::vulkan;
+        m_desc.type = DeviceType::vulkan;
 #elif SGL_MACOS
-    m_desc.type = DeviceType::metal;
+        m_desc.type = DeviceType::metal;
 #endif
     }
 
