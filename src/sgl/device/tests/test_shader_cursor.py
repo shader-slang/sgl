@@ -238,6 +238,10 @@ def test_shader_cursor(device_type: sgl.DeviceType, use_numpy: bool):
         pytest.skip("Test shader doesn't currently compile on MoltenVK")
     if device_type == sgl.DeviceType.metal and use_numpy:
         pytest.skip("Need to fix numpy bool handling")
+    if device_type == sgl.DeviceType.cuda and (
+        sys.platform == "linux" or sys.platform == "linux2"
+    ):
+        pytest.skip("Slang fails to find cuda_fp16.h header")
 
     device = helpers.get_device(type=device_type)
 
@@ -359,4 +363,4 @@ def test_shader_cursor(device_type: sgl.DeviceType, use_numpy: bool):
 
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+    pytest.main([__file__, "-vvvs"])
