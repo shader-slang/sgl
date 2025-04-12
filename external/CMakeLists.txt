@@ -108,6 +108,9 @@ elseif(SGL_MACOS)
         IMPORTED_LOCATION ${SLANG_DIR}/lib/libslang.dylib
     )
     sgl_copy_binary(${SLANG_DIR}/lib/libslang.dylib .)
+    sgl_copy_binary(${SLANG_DIR}/lib/libslang-glslang.dylib .)
+    # sgl_copy_binary(${SLANG_DIR}/lib/libslang-llvm.dylib .)
+    sgl_copy_binary(${SLANG_DIR}/lib/libslang-rt.dylib .)
 endif()
 
 # slang-gfx
