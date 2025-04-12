@@ -100,6 +100,7 @@ elseif(SGL_LINUX)
     sgl_copy_binary(${SLANG_DIR}/lib/libslang.so .)
     sgl_copy_binary(${SLANG_DIR}/lib/libslang-glslang.so .)
     # sgl_copy_binary(${SLANG_DIR}/lib/libslang-llvm.so .)
+    sgl_copy_binary(${SLANG_DIR}/lib/libslang-rt.so .)
 elseif(SGL_MACOS)
     add_library(slang::slang SHARED IMPORTED GLOBAL)
     set_target_properties(slang::slang PROPERTIES
