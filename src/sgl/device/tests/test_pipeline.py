@@ -14,7 +14,7 @@ import sglhelpers as helpers
 class PipelineTestContext:
     def __init__(self, device_type: sgl.DeviceType, size: int = 128) -> None:
         super().__init__()
-        if self.device.info.type == sgl.DeviceType.cuda:
+        if device_type == sgl.DeviceType.cuda:
             pytest.skip("Texture access bug on CUDA")
 
         self.device = helpers.get_device(type=device_type)
