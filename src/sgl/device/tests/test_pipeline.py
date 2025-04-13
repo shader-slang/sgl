@@ -14,10 +14,6 @@ import sglhelpers as helpers
 class PipelineTestContext:
     def __init__(self, device_type: sgl.DeviceType, size: int = 128) -> None:
         super().__init__()
-
-        if device_type == sgl.DeviceType.cuda:
-            pytest.skip("InterlockedAdd slang compiler bug on CUDA")
-
         self.device = helpers.get_device(type=device_type)
         self.output_texture = self.device.create_texture(
             format=sgl.Format.rgba32_float,
@@ -45,12 +41,18 @@ class PipelineTestContext:
         self.clear()
 
     def clear(self):
+        if self.device.info.type == sgl.DeviceType.cuda:
+            pytest.skip("Texture access bug on CUDA")
+
         self.clear_kernel.dispatch(
             thread_count=[self.output_texture.width, self.output_texture.height, 1],
             render_texture=self.output_texture,
         )
 
     def count(self):
+        if self.device.info.type == sgl.DeviceType.cuda:
+            pytest.skip("Texture access bug on CUDA")
+
         self.count_buffer.copy_from_numpy(np.array([0, 0, 0, 0], dtype=np.uint32))
         self.count_kernel.dispatch(
             thread_count=[self.output_texture.width, self.output_texture.height, 1],
