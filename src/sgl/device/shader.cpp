@@ -303,6 +303,12 @@ void SlangSession::create_session(SlangSessionBuild& build)
             session_options.add(slang::CompilerOptionName::DownstreamArgs, "dxc", arg);
     }
 
+    // Set downstream argument for optix include path.
+    if (device_type == DeviceType::cuda) {
+        auto optix_path = platform::runtime_directory() / "optix";
+        session_options.add(slang::CompilerOptionName::DownstreamArgs, "nvrtc", "-I" + optix_path.string());
+    }
+
     // Set intermediate dump options.
     session_options.add(slang::CompilerOptionName::DumpIntermediates, options.dump_intermediates);
     session_options.add(slang::CompilerOptionName::DumpIntermediatePrefix, options.dump_intermediates_prefix);
