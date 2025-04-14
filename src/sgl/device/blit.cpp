@@ -110,18 +110,18 @@ void Blitter::generate_mips(CommandEncoder* command_encoder, Texture* texture, u
     for (uint32_t i = 0; i < texture->mip_count() - 1; ++i) {
         ref<TextureView> src = texture->create_view({
             .subresource_range{
-                .mip_level = i,
-                .mip_count = 1,
-                .base_array_layer = array_layer,
+                .layer = array_layer,
                 .layer_count = 1,
+                .mip_level = i,
+                .mip_level_count = 1,
             },
         });
         ref<TextureView> dst = texture->create_view({
             .subresource_range{
-                .mip_level = i + 1,
-                .mip_count = 1,
-                .base_array_layer = array_layer,
+                .layer = array_layer,
                 .layer_count = 1,
+                .mip_level = i + 1,
+                .mip_level_count = 1,
             },
         });
         blit(command_encoder, dst, src);

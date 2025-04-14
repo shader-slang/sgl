@@ -212,25 +212,25 @@ SGL_ENUM_REGISTER(TextureAspect);
 
 struct SubresourceRange {
     static constexpr uint32_t ALL = std::numeric_limits<uint32_t>::max();
+    /// First array layer.
+    uint32_t layer{0};
+    /// Number of array layers.
+    uint32_t layer_count{ALL};
     /// Most detailed mip level.
     uint32_t mip_level{0};
     /// Number of mip levels.
-    uint32_t mip_count{ALL};
-    /// First array layer.
-    uint32_t base_array_layer{0}; // For Texture3D, this is WSlice.
-    /// Number of array layers.
-    uint32_t layer_count{ALL}; // For cube maps, this is a multiple of 6.
+    uint32_t mip_level_count{ALL};
 
     auto operator<=>(const SubresourceRange&) const = default;
 
     std::string to_string() const
     {
         return fmt::format(
-            "SubresourceRange(mip_level={}, mip_count={}, base_array_layer={}, layer_count={}",
+            "SubresourceRange(layer={}, layer_count={}, mip_level={}, mip_level_count={}",
+            layer,
+            layer_count,
             mip_level,
-            mip_count,
-            base_array_layer,
-            layer_count
+            mip_level_count
         );
     }
 };

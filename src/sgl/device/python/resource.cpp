@@ -43,10 +43,10 @@ SGL_DICT_TO_DESC_FIELD(label, std::string)
 SGL_DICT_TO_DESC_END()
 
 SGL_DICT_TO_DESC_BEGIN(SubresourceRange)
-SGL_DICT_TO_DESC_FIELD(mip_level, uint32_t)
-SGL_DICT_TO_DESC_FIELD(mip_count, uint32_t)
-SGL_DICT_TO_DESC_FIELD(base_array_layer, uint32_t)
+SGL_DICT_TO_DESC_FIELD(layer, uint32_t)
 SGL_DICT_TO_DESC_FIELD(layer_count, uint32_t)
+SGL_DICT_TO_DESC_FIELD(mip_level, uint32_t)
+SGL_DICT_TO_DESC_FIELD(mip_level_count, uint32_t)
 SGL_DICT_TO_DESC_END()
 
 SGL_DICT_TO_DESC_BEGIN(TextureViewDesc)
@@ -368,10 +368,10 @@ SGL_PY_EXPORT(device_resource)
             "__init__",
             [](SubresourceRange* self, nb::dict dict) { new (self) SubresourceRange(dict_to_SubresourceRange(dict)); }
         )
-        .def_rw("mip_level", &SubresourceRange::mip_level, D(SubresourceRange, mip_level))
-        .def_rw("mip_count", &SubresourceRange::mip_count, D(SubresourceRange, mip_count))
-        .def_rw("base_array_layer", &SubresourceRange::base_array_layer, D(SubresourceRange, base_array_layer))
+        .def_rw("layer", &SubresourceRange::layer, D(SubresourceRange, layer))
         .def_rw("layer_count", &SubresourceRange::layer_count, D(SubresourceRange, layer_count))
+        .def_rw("mip_level", &SubresourceRange::mip_level, D(SubresourceRange, mip_level))
+        .def_rw("mip_level_count", &SubresourceRange::mip_level_count, D(SubresourceRange, mip_level_count))
         .def("__repr__", &SubresourceRange::to_string, D(SubresourceRange, to_string));
 
     nb::class_<BufferDesc>(m, "BufferDesc", D(BufferDesc))
@@ -489,26 +489,26 @@ SGL_PY_EXPORT(device_resource)
         .def(
             "create_view",
             [](Texture* self,
-               uint32_t mip_level,
-               uint32_t mip_count,
-               uint32_t base_array_layer,
+               uint32_t layer,
                uint32_t layer_count,
+               uint32_t mip_level,
+               uint32_t mip_level_count,
                Format format)
             {
                 TextureViewDesc desc;
                 desc.format = format == Format::undefined ? self->format() : format;
                 desc.subresource_range = {
-                    .mip_level = mip_level,
-                    .mip_count = mip_count,
-                    .base_array_layer = base_array_layer,
+                    .layer = layer,
                     .layer_count = layer_count,
+                    .mip_level = mip_level,
+                    .mip_level_count = mip_level_count,
                 };
                 return self->create_view(desc);
             },
-            "mip_level"_a = 0,
-            "mip_count"_a = SubresourceRange::ALL,
-            "base_array_layer"_a = 0,
+            "layer"_a = 0,
             "layer_count"_a = SubresourceRange::ALL,
+            "mip_level"_a = 0,
+            "mip_level_count"_a = SubresourceRange::ALL,
             "format"_a = Format::undefined,
             D(Texture, create_view)
         )

@@ -355,7 +355,7 @@ def test_shader_read_write_texture(
     assert device is not None
 
     # Create texture and build random data
-    (src_tex, dest_tex) = create_test_textures(device, 2, type, array_length, mips)
+    (src_tex, dst_tex) = create_test_textures(device, 2, type, array_length, mips)
     rand_data = make_rand_data(src_tex.type, src_tex.array_length, src_tex.mip_count)
 
     # Write random data to texture
@@ -390,18 +390,18 @@ def test_shader_read_write_texture(
             src_view = src_tex.create_view(
                 {"subresource_range": sgl.SubresourceRange({"mip_level": mip})}
             )
-            assert src_view.subresource_range.base_array_layer == 0
+            assert src_view.subresource_range.layer == 0
             assert src_view.subresource_range.layer_count == 1
             assert src_view.subresource_range.mip_level == mip
-            assert src_view.subresource_range.mip_count == src_tex.mip_count - mip
+            assert src_view.subresource_range.mip_level_count == src_tex.mip_count - mip
 
-            dst_view = dest_tex.create_view(
+            dst_view = dst_tex.create_view(
                 {"subresource_range": sgl.SubresourceRange({"mip_level": mip})}
             )
-            assert dst_view.subresource_range.base_array_layer == 0
+            assert dst_view.subresource_range.layer == 0
             assert dst_view.subresource_range.layer_count == 1
             assert dst_view.subresource_range.mip_level == mip
-            assert dst_view.subresource_range.mip_count == dest_tex.mip_count - mip
+            assert dst_view.subresource_range.mip_level_count == dst_tex.mip_count - mip
 
             copy_kernel.dispatch(
                 [src_tex.width, src_tex.height, src_tex.depth],
@@ -434,22 +434,22 @@ def test_shader_read_write_texture(
                 desc = sgl.TextureViewDesc(
                     {
                         "subresource_range": sgl.SubresourceRange(
-                            {"mip_level": mip, "base_array_layer": i, "layer_count": 1}
+                            {"layer": i, "layer_count": 1, "mip_level": mip}
                         )
                     }
                 )
 
                 srv = src_tex.create_view(desc)
-                assert srv.subresource_range.base_array_layer == i
+                assert srv.subresource_range.layer == i
                 assert srv.subresource_range.layer_count == 1
                 assert srv.subresource_range.mip_level == mip
-                assert srv.subresource_range.mip_count == src_tex.mip_count - mip
+                assert srv.subresource_range.mip_level_count == src_tex.mip_count - mip
 
-                uav = dest_tex.create_view(desc)
-                assert uav.subresource_range.base_array_layer == i
+                uav = dst_tex.create_view(desc)
+                assert uav.subresource_range.layer == i
                 assert uav.subresource_range.layer_count == 1
                 assert uav.subresource_range.mip_level == mip
-                assert uav.subresource_range.mip_count == dest_tex.mip_count - mip
+                assert uav.subresource_range.mip_level_count == dst_tex.mip_count - mip
 
                 copy_kernel.dispatch(
                     [src_tex.width, src_tex.height, src_tex.depth], src=srv, dest=uav
@@ -458,7 +458,7 @@ def test_shader_read_write_texture(
     # Read back data and compare
     for layer_idx, slice_data in enumerate(rand_data):
         for mip_idx, mip_data in enumerate(slice_data):
-            data = dest_tex.to_numpy(layer=layer_idx, mip_level=mip_idx)
+            data = dst_tex.to_numpy(layer=layer_idx, mip_level=mip_idx)
             assert np.allclose(data, mip_data)
 
 

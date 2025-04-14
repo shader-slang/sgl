@@ -628,35 +628,36 @@ TextureView::TextureView(ref<Device> device, ref<Texture> texture, TextureViewDe
     if (m_desc.format == Format::undefined)
         m_desc.format = m_texture->format();
 
-    uint32_t mip_count = m_texture->mip_count();
-    SGL_CHECK(m_desc.subresource_range.mip_level < mip_count, "'mip_level' out of range");
-    SGL_CHECK(
-        m_desc.subresource_range.mip_count == SubresourceRange::ALL
-            || m_desc.subresource_range.mip_level + m_desc.subresource_range.mip_count <= mip_count,
-        "'mip_count' out of range"
-    );
-    if (m_desc.subresource_range.mip_count == SubresourceRange::ALL) {
-        m_desc.subresource_range.mip_count = mip_count - m_desc.subresource_range.mip_level;
-    }
     uint32_t layer_count = m_texture->layer_count();
-    SGL_CHECK(m_desc.subresource_range.base_array_layer < layer_count, "'base_array_layer' out of range");
+    SGL_CHECK(m_desc.subresource_range.layer < layer_count, "'layer' out of range");
     SGL_CHECK(
         (m_desc.subresource_range.layer_count == SubresourceRange::ALL)
-            || (m_desc.subresource_range.base_array_layer + m_desc.subresource_range.layer_count <= layer_count),
+            || (m_desc.subresource_range.layer + m_desc.subresource_range.layer_count <= layer_count),
         "'layer_count' out of range"
     );
     if (m_desc.subresource_range.layer_count == SubresourceRange::ALL) {
-        m_desc.subresource_range.layer_count = layer_count - m_desc.subresource_range.base_array_layer;
+        m_desc.subresource_range.layer_count = layer_count - m_desc.subresource_range.layer;
+    }
+
+    uint32_t mip_count = m_texture->mip_count();
+    SGL_CHECK(m_desc.subresource_range.mip_level < mip_count, "'mip_level' out of range");
+    SGL_CHECK(
+        m_desc.subresource_range.mip_level_count == SubresourceRange::ALL
+            || m_desc.subresource_range.mip_level + m_desc.subresource_range.mip_level_count <= mip_count,
+        "'mip_level_count' out of range"
+    );
+    if (m_desc.subresource_range.mip_level_count == SubresourceRange::ALL) {
+        m_desc.subresource_range.mip_level_count = mip_count - m_desc.subresource_range.mip_level;
     }
 
     rhi::TextureViewDesc rhi_desc{
         .format = static_cast<rhi::Format>(m_desc.format),
         .aspect = static_cast<rhi::TextureAspect>(m_desc.aspect),
         .subresourceRange{
-            .layer = m_desc.subresource_range.base_array_layer,
+            .layer = m_desc.subresource_range.layer,
             .layerCount = m_desc.subresource_range.layer_count,
             .mipLevel = m_desc.subresource_range.mip_level,
-            .mipLevelCount = m_desc.subresource_range.mip_count,
+            .mipLevelCount = m_desc.subresource_range.mip_level_count,
         },
         .label = m_desc.label.empty() ? nullptr : m_desc.label.c_str(),
     };

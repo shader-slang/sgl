@@ -6722,11 +6722,11 @@ static const char *__doc_sgl_SubresourceLayout_slice_pitch = R"doc(Stride in byt
 
 static const char *__doc_sgl_SubresourceRange = R"doc()doc";
 
-static const char *__doc_sgl_SubresourceRange_base_array_layer = R"doc(First array layer.)doc";
+static const char *__doc_sgl_SubresourceRange_layer = R"doc(First array layer.)doc";
 
 static const char *__doc_sgl_SubresourceRange_layer_count = R"doc(Number of array layers.)doc";
 
-static const char *__doc_sgl_SubresourceRange_mip_count = R"doc(Number of mip levels.)doc";
+static const char *__doc_sgl_SubresourceRange_mip_level_count = R"doc(Number of mip levels.)doc";
 
 static const char *__doc_sgl_SubresourceRange_mip_level = R"doc(Most detailed mip level.)doc";
 

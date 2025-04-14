@@ -39,10 +39,10 @@ namespace detail {
     rhi::SubresourceRange to_rhi(const SubresourceRange& range)
     {
         return rhi::SubresourceRange{
-            .layer = range.base_array_layer,
+            .layer = range.layer,
             .layerCount = range.layer_count,
             .mipLevel = range.mip_level,
-            .mipLevelCount = range.mip_count,
+            .mipLevelCount = range.mip_level_count,
         };
     }
 
@@ -779,10 +779,10 @@ void CommandEncoder::set_texture_state(Texture* texture, SubresourceRange range,
     m_rhi_command_encoder->setTextureState(
         texture->rhi_texture(),
         {
-            .layer = range.base_array_layer,
+            .layer = range.layer,
             .layerCount = range.layer_count,
             .mipLevel = range.mip_level,
-            .mipLevelCount = range.mip_count,
+            .mipLevelCount = range.mip_level_count,
         },
         static_cast<rhi::ResourceState>(state)
     );
