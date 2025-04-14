@@ -120,7 +120,6 @@ int main()
             .format = Format::rgba32_float,
             .width = 1024,
             .height = 1024,
-            .mip_count = 1,
             .usage = TextureUsage::unordered_access,
             .label = "render_texture",
         });

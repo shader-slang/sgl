@@ -107,7 +107,7 @@ void Blitter::generate_mips(CommandEncoder* command_encoder, Texture* texture, u
     SGL_CHECK_NOT_NULL(texture);
     SGL_CHECK_LT(array_layer, texture->array_length());
 
-    for (uint32_t i = 0; i < texture->mip_count() - 1; ++i) {
+    for (uint32_t i = 0; i < texture->mip_level_count() - 1; ++i) {
         ref<TextureView> src = texture->create_view({
             .subresource_range{
                 .layer = array_layer,

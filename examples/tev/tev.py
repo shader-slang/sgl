@@ -15,7 +15,6 @@ tex = device.create_texture(
     format=sgl.Format.rgba32_float,
     width=IMAGE_WIDTH,
     height=IMAGE_HEIGHT,
-    mip_count=1,
     usage=sgl.TextureUsage.unordered_access,
 )
 

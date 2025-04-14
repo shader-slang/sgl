@@ -54,7 +54,6 @@ input_tex = device.create_texture(
     format=sgl.Format.rgba32_float,
     width=w,
     height=h,
-    mip_count=1,
     usage=sgl.TextureUsage.shader_resource,
     data=input,
 )
@@ -68,7 +67,6 @@ decoded_tex = device.create_texture(
     format=sgl.Format.rgba32_float,
     width=w,
     height=h,
-    mip_count=1,
     usage=sgl.TextureUsage.unordered_access,
 )
 

@@ -2589,7 +2589,7 @@ Parameter ``depth``:
 Parameter ``array_length``:
     Array length.
 
-Parameter ``mip_count``:
+Parameter ``mip_level_count``:
     Mip level count. Number of mip levels (ALL_MIP_LEVELS for all mip
     levels).
 
@@ -6836,7 +6836,7 @@ static const char *__doc_sgl_TextureDesc_label = R"doc(Debug label.)doc";
 
 static const char *__doc_sgl_TextureDesc_memory_type = R"doc()doc";
 
-static const char *__doc_sgl_TextureDesc_mip_count = R"doc(Number of mip levels (ALL_MIP_LEVELS for all mip levels).)doc";
+static const char *__doc_sgl_TextureDesc_mip_level_count = R"doc(Number of mip levels (ALL_MIP_LEVELS for all mip levels).)doc";
 
 static const char *__doc_sgl_TextureDesc_sample_count = R"doc(Number of samples per pixel.)doc";
 
@@ -7134,7 +7134,7 @@ static const char *__doc_sgl_Texture_m_rhi_texture = R"doc()doc";
 
 static const char *__doc_sgl_Texture_memory_usage = R"doc()doc";
 
-static const char *__doc_sgl_Texture_mip_count = R"doc()doc";
+static const char *__doc_sgl_Texture_mip_level_count = R"doc()doc";
 
 static const char *__doc_sgl_Texture_rhi_resource = R"doc()doc";
 

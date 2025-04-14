@@ -33,7 +33,7 @@ SGL_DICT_TO_DESC_FIELD(width, uint32_t)
 SGL_DICT_TO_DESC_FIELD(height, uint32_t)
 SGL_DICT_TO_DESC_FIELD(depth, uint32_t)
 SGL_DICT_TO_DESC_FIELD(array_length, uint32_t)
-SGL_DICT_TO_DESC_FIELD(mip_count, uint32_t)
+SGL_DICT_TO_DESC_FIELD(mip_level_count, uint32_t)
 SGL_DICT_TO_DESC_FIELD(sample_count, uint32_t)
 SGL_DICT_TO_DESC_FIELD(sample_quality, uint32_t)
 SGL_DICT_TO_DESC_FIELD(memory_type, MemoryType)
@@ -172,7 +172,7 @@ static const char* __doc_sgl_texture_to_numpy = R"doc()doc";
 nb::ndarray<nb::numpy> texture_to_numpy(Texture* self, uint32_t layer, uint32_t mip_level)
 {
     SGL_CHECK_LT(layer, self->layer_count());
-    SGL_CHECK_LT(mip_level, self->mip_count());
+    SGL_CHECK_LT(mip_level, self->mip_level_count());
 
     // Get the subresource data and corresponding layout. Depending on platform, these
     // may not be tightly packed.
@@ -276,7 +276,7 @@ SubresourceData texture_build_subresource_data_for_upload(
 {
     SGL_CHECK(is_ndarray_contiguous(data), "numpy array is not contiguous");
     SGL_CHECK_LT(layer, self->layer_count());
-    SGL_CHECK_LT(mip_level, self->mip_count());
+    SGL_CHECK_LT(mip_level, self->mip_level_count());
 
     // Get the sub resource layout with 1B alignment so rows/slices are tightly packed.
     SubresourceLayout subresource_layout = self->get_subresource_layout(mip_level, 1);
@@ -425,7 +425,7 @@ SGL_PY_EXPORT(device_resource)
         .def_rw("height", &TextureDesc::height, D(TextureDesc, height))
         .def_rw("depth", &TextureDesc::depth, D(TextureDesc, depth))
         .def_rw("array_length", &TextureDesc::array_length, D(TextureDesc, array_length))
-        .def_rw("mip_count", &TextureDesc::mip_count, D(TextureDesc, mip_count))
+        .def_rw("mip_level_count", &TextureDesc::mip_level_count, D(TextureDesc, mip_level_count))
         .def_rw("sample_count", &TextureDesc::sample_count, D(TextureDesc, sample_count))
         .def_rw("sample_quality", &TextureDesc::sample_quality, D(TextureDesc, sample_quality))
         .def_rw("memory_type", &TextureDesc::memory_type, D(TextureDesc, memory_type))
@@ -465,7 +465,7 @@ SGL_PY_EXPORT(device_resource)
         .def_prop_ro("height", &Texture::height, D(Texture, height))
         .def_prop_ro("depth", &Texture::depth, D(Texture, depth))
         .def_prop_ro("array_length", &Texture::array_length, D(Texture, array_length))
-        .def_prop_ro("mip_count", &Texture::mip_count, D(Texture, mip_count))
+        .def_prop_ro("mip_level_count", &Texture::mip_level_count, D(Texture, mip_level_count))
         .def_prop_ro("layer_count", &Texture::layer_count, D(Texture, layer_count))
         .def_prop_ro("subresource_count", &Texture::subresource_count, D(Texture, subresource_count))
         .def("get_mip_width", &Texture::get_mip_width, "mip_level"_a = 0, D(Texture, get_mip_width))

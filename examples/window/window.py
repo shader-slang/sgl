@@ -131,7 +131,6 @@ class App:
                     format=sgl.Format.rgba16_float,
                     width=surface_texture.width,
                     height=surface_texture.height,
-                    mip_count=1,
                     usage=sgl.TextureUsage.shader_resource
                     | sgl.TextureUsage.unordered_access,
                     label="output_texture",

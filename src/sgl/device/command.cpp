@@ -29,9 +29,9 @@ namespace detail {
     rhi::SubresourceRange rhi_subresource_range(const Texture* texture, uint32_t subresource_index)
     {
         return rhi::SubresourceRange{
-            .layer = subresource_index / texture->mip_count(),
+            .layer = subresource_index / texture->mip_level_count(),
             .layerCount = 1,
-            .mipLevel = subresource_index % texture->mip_count(),
+            .mipLevel = subresource_index % texture->mip_level_count(),
             .mipLevelCount = 1,
         };
     }
@@ -414,10 +414,10 @@ void CommandEncoder::copy_texture(
     SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(dst);
     SGL_CHECK_LT(dst_layer, dst->layer_count());
-    SGL_CHECK_LT(dst_mip_level, dst->mip_count());
+    SGL_CHECK_LT(dst_mip_level, dst->mip_level_count());
     SGL_CHECK_NOT_NULL(src);
     SGL_CHECK_LT(src_layer, src->layer_count());
-    SGL_CHECK_LT(src_mip_level, src->mip_count());
+    SGL_CHECK_LT(src_mip_level, src->mip_level_count());
 
     rhi::SubresourceRange dst_sr = {dst_layer, 1, dst_mip_level, 1};
     rhi::SubresourceRange src_sr = {src_layer, 1, src_mip_level, 1};
@@ -453,7 +453,7 @@ void CommandEncoder::copy_texture_to_buffer(
     SGL_CHECK(dst_offset + dst_size <= dst->size(), "Destination buffer is too small");
     SGL_CHECK_NOT_NULL(src);
     SGL_CHECK_LT(src_layer, src->layer_count());
-    SGL_CHECK_LT(src_mip_level, src->mip_count());
+    SGL_CHECK_LT(src_mip_level, src->mip_level_count());
 
     m_rhi_command_encoder->copyTextureToBuffer(
         dst->rhi_buffer(),
@@ -485,7 +485,7 @@ void CommandEncoder::copy_buffer_to_texture(
     SGL_CHECK_NOT_NULL(src);
     SGL_CHECK(src_offset + src_size <= src->size(), "Source buffer is too small");
     SGL_CHECK_LT(dst_layer, dst->layer_count());
-    SGL_CHECK_LT(dst_mip_level, dst->mip_count());
+    SGL_CHECK_LT(dst_mip_level, dst->mip_level_count());
 
     m_rhi_command_encoder->copyBufferToTexture(
         dst->rhi_texture(),
@@ -552,7 +552,7 @@ void CommandEncoder::upload_texture_data(
     SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(texture);
     SGL_CHECK_LT(layer, texture->layer_count());
-    SGL_CHECK_LT(mip_level, texture->mip_count());
+    SGL_CHECK_LT(mip_level, texture->mip_level_count());
 
     rhi::SubresourceRange rhi_subresource_range = {
         .layer = layer,

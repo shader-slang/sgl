@@ -316,7 +316,6 @@ Context::Context(ref<Device> device)
             .format = Format::rgba8_unorm,
             .width = narrow_cast<uint32_t>(width),
             .height = narrow_cast<uint32_t>(height),
-            .mip_count = 1,
             .usage = TextureUsage::shader_resource,
             .data = data,
         });

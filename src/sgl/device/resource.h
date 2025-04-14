@@ -466,7 +466,7 @@ struct TextureDesc {
     /// Array length.
     uint32_t array_length{1};
     /// Number of mip levels (ALL_MIP_LEVELS for all mip levels).
-    uint32_t mip_count{1};
+    uint32_t mip_level_count{1};
     /// Number of samples per pixel.
     uint32_t sample_count{1};
     /// Quality level for multisampled textures.
@@ -535,28 +535,28 @@ public:
     uint32_t depth() const { return m_desc.depth; }
 
     uint32_t array_length() const { return m_desc.array_length; }
-    uint32_t mip_count() const { return m_desc.mip_count; }
+    uint32_t mip_level_count() const { return m_desc.mip_level_count; }
     uint32_t layer_count() const
     {
         return m_desc.array_length
             * ((m_desc.type == TextureType::texture_cube || m_desc.type == TextureType::texture_cube_array) ? 6 : 1);
     }
 
-    uint32_t subresource_count() const { return layer_count() * mip_count(); }
+    uint32_t subresource_count() const { return layer_count() * mip_level_count(); }
 
     uint32_t get_mip_width(uint32_t mip_level = 0) const
     {
-        return mip_level < mip_count() ? std::max(1U, width() >> mip_level) : 0;
+        return mip_level < mip_level_count() ? std::max(1U, width() >> mip_level) : 0;
     }
 
     uint32_t get_mip_height(uint32_t mip_level = 0) const
     {
-        return mip_level < mip_count() ? std::max(1U, height() >> mip_level) : 0;
+        return mip_level < mip_level_count() ? std::max(1U, height() >> mip_level) : 0;
     }
 
     uint32_t get_mip_depth(uint32_t mip_level = 0) const
     {
-        return mip_level < mip_count() ? std::max(1U, depth() >> mip_level) : 0;
+        return mip_level < mip_level_count() ? std::max(1U, depth() >> mip_level) : 0;
     }
 
     uint3 get_mip_size(uint32_t mip_level = 0) const

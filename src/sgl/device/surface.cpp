@@ -69,7 +69,7 @@ ref<Texture> Surface::acquire_next_image()
             .format = static_cast<Format>(texture_desc.format),
             .width = narrow_cast<uint32_t>(texture_desc.size.width),
             .height = narrow_cast<uint32_t>(texture_desc.size.height),
-            .mip_count = texture_desc.mipLevelCount,
+            .mip_level_count = texture_desc.mipLevelCount,
             .usage = static_cast<TextureUsage>(m_config.usage),
         },
         texture

@@ -679,7 +679,7 @@ OwnedSubresourceData Device::read_texture_data(const Texture* texture, uint32_t 
 {
     SGL_CHECK_NOT_NULL(texture);
     SGL_CHECK_LT(layer, texture->layer_count());
-    SGL_CHECK_LT(mip_level, texture->mip_count());
+    SGL_CHECK_LT(mip_level, texture->mip_level_count());
 
     // TODO(slang-rhi) use readTexture function that takes data pointer instead of doing extra copy
     Slang::ComPtr<ISlangBlob> blob;

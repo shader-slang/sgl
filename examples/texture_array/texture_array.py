@@ -51,7 +51,7 @@ class DemoWindow(sgl.AppWindow):
             window, "Layer", value=0, min=0, max=self.texture.array_length - 1
         )
         self.mip_level = sgl.ui.SliderFloat(
-            window, "MIP Level", value=0, min=0, max=self.texture.mip_count - 1
+            window, "MIP Level", value=0, min=0, max=self.texture.mip_level_count - 1
         )
         self.filter = sgl.ui.ComboBox(
             window, "Filter", value=0, items=["Point", "Linear"]
@@ -70,7 +70,6 @@ class DemoWindow(sgl.AppWindow):
                 format=sgl.Format.rgba16_float,
                 width=image.width,
                 height=image.height,
-                mip_count=1,
                 usage=sgl.TextureUsage.shader_resource
                 | sgl.TextureUsage.unordered_access,
                 label="render_texture",

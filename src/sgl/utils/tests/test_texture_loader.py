@@ -219,7 +219,7 @@ def test_load_texture_from_bitmap(device_type: sgl.DeviceType, format: FormatEnt
     assert texture.format == format.format
     assert texture.width == bitmap.width
     assert texture.height == bitmap.height
-    assert texture.mip_count == 1
+    assert texture.mip_level_count == 1
 
     data = texture.to_numpy()
     assert data.shape == image.shape
@@ -260,8 +260,8 @@ def test_load_texture_from_dds_file(device_type: sgl.DeviceType, filename: str):
 
     data = {}
     for subresource in range(texture.subresource_count):
-        layer = subresource // texture.mip_count
-        mip_level = subresource % texture.mip_count
+        layer = subresource // texture.mip_level_count
+        mip_level = subresource % texture.mip_level_count
         subresource_data = texture.to_numpy(layer, mip_level)
         data[f"subresource_{subresource}"] = subresource_data
 

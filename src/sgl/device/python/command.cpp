@@ -104,14 +104,14 @@ void upload_texture_data(
         range.layer_count = layer_count - range.layer;
     }
 
-    uint32_t mip_count = texture->mip_count();
-    SGL_CHECK(range.mip_level < mip_count, "'mip_level' out of range");
+    uint32_t mip_level_count = texture->mip_level_count();
+    SGL_CHECK(range.mip_level < mip_level_count, "'mip_level' out of range");
     SGL_CHECK(
-        range.mip_level_count == SubresourceRange::ALL || range.mip_level + range.mip_level_count <= mip_count,
+        range.mip_level_count == SubresourceRange::ALL || range.mip_level + range.mip_level_count <= mip_level_count,
         "'mip_level_count' out of range"
     );
     if (range.mip_level_count == SubresourceRange::ALL) {
-        range.mip_level_count = mip_count - range.mip_level;
+        range.mip_level_count = mip_level_count - range.mip_level;
     }
 
     SGL_CHECK(

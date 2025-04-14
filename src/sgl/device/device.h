@@ -288,7 +288,7 @@ public:
      * \param height Height in pixels.
      * \param depth Depth in pixels.
      * \param array_length Array length.
-     * \param mip_count Mip level count. Number of mip levels (ALL_MIP_LEVELS for all mip levels).
+     * \param mip_level_count Mip level count. Number of mip levels (ALL_MIP_LEVELS for all mip levels).
      * \param sample_count Number of samples for multisampled textures.
      * \param quality Quality level for multisampled textures.
      * \param usage Resource usage.
