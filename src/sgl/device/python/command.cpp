@@ -44,6 +44,14 @@ SGL_DICT_TO_DESC_FIELD_LIST(color_attachments, RenderPassColorAttachment)
 SGL_DICT_TO_DESC_FIELD(depth_stencil_attachment, RenderPassDepthStencilAttachment)
 SGL_DICT_TO_DESC_END()
 
+// From resource.cpp
+extern SubresourceData texture_build_subresource_data_for_upload(
+    Texture* self,
+    nb::ndarray<nb::numpy> data,
+    uint32_t layer,
+    uint32_t mip_level
+);
+
 } // namespace sgl
 
 SGL_PY_EXPORT(device_command)
@@ -225,9 +233,103 @@ SGL_PY_EXPORT(device_command)
             "extents"_a = uint3(-1),
             D(CommandEncoder, copy_buffer_to_texture)
         )
-        // TODO(slang-rhi)
-        // upload_buffer_data
-        // upload_texture_data
+        .def(
+            "upload_buffer_data",
+            [](CommandEncoder* self, Buffer* buffer, size_t offset, nb::ndarray<nb::numpy> data)
+            {
+                SGL_CHECK(is_ndarray_contiguous(data), "numpy array is not contiguous");
+
+                size_t buffer_size = buffer->size();
+                size_t data_size = data.nbytes();
+                size_t data_end = offset + data_size;
+                SGL_CHECK(
+                    data_end <= buffer_size,
+                    "upload would exceed the size of the destination buffer ({} > {})",
+                    data_end,
+                    buffer_size
+                );
+
+                self->upload_buffer_data(buffer, offset, data_size, data.data());
+            },
+            "buffer"_a,
+            "offset"_a,
+            "data"_a
+        )
+        .def(
+            "upload_texture_data",
+            [](CommandEncoder* self, Texture* texture, uint32_t layer, uint32_t mip_level, nb::ndarray<nb::numpy> data)
+            {
+                // Validate and set up SubresourceData argument to point to the numpy array data.
+                SubresourceData subresource_data
+                    = texture_build_subresource_data_for_upload(texture, data, layer, mip_level);
+
+                // Write numpy data to the texture.
+                self->upload_texture_data(texture, layer, mip_level, subresource_data);
+            },
+            "texture"_a,
+            "layer"_a,
+            "mip_level"_a,
+            "data"_a,
+            D(CommandEncoder, upload_texture_data)
+        )
+        .def(
+            "upload_texture_data",
+            [](CommandEncoder* self,
+               Texture* texture,
+               uint3 offset,
+               uint3 extent,
+               SubresourceRange range,
+               std::span<nb::ndarray<nb::numpy>> data)
+            {
+                // Validate and set up the range, accounting for use of 'ALL' constant.
+                uint32_t mip_count = texture->mip_count();
+                SGL_CHECK(range.mip_level < mip_count, "'mip_level' out of range");
+                SGL_CHECK(
+                    range.mip_count == SubresourceRange::ALL || range.mip_level + range.mip_count <= mip_count,
+                    "'mip_count' out of range"
+                );
+                if (range.mip_count == SubresourceRange::ALL) {
+                    range.mip_count = mip_count - range.mip_level;
+                }
+                uint32_t layer_count = texture->layer_count();
+                SGL_CHECK(range.base_array_layer < layer_count, "'base_array_layer' out of range");
+                SGL_CHECK(
+                    (range.layer_count == SubresourceRange::ALL)
+                        || (range.base_array_layer + range.layer_count <= layer_count),
+                    "'layer_count' out of range"
+                );
+                if (range.layer_count == SubresourceRange::ALL) {
+                    range.layer_count = layer_count - range.base_array_layer;
+                }
+                SGL_CHECK(
+                    range.layer_count * range.mip_count == data.size(),
+                    "Subresource count ({}) does not match required count for layer count ({}) and mip count ({})",
+                    data.size(),
+                    range.layer_count,
+                    range.mip_count
+                );
+
+                // Generate SubresourceData structure for each layer and mip level.
+                std::vector<SubresourceData> subresource_datas(data.size());
+                for (uint32_t layer_offset = 0; layer_offset < range.layer_count; layer_offset++) {
+                    uint32_t layer = range.base_array_layer + layer_offset;
+                    for (uint32_t mip_level_offset = 0; mip_level_offset < range.mip_count; mip_level_offset++) {
+                        uint32_t mip_level = range.mip_level + mip_level_offset;
+                        subresource_datas[layer_offset * range.mip_count + mip_level_offset]
+                            = texture_build_subresource_data_for_upload(texture, data[layer], layer, mip_level);
+                    }
+                }
+
+                // Write numpy data to the texture.
+                self->upload_texture_data(texture, range, offset, extent, subresource_datas);
+            },
+            "texture"_a,
+            "offset"_a,
+            "extent"_a,
+            "range"_a,
+            "subresource_data"_a,
+            D(CommandEncoder, upload_texture_data)
+        )
         .def(
             "clear_buffer",
             &CommandEncoder::clear_buffer,
