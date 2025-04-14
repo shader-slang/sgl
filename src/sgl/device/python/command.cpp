@@ -179,7 +179,7 @@ SGL_PY_EXPORT(device_command)
             "src_subresource_range"_a,
             "src_offset"_a,
             "extent"_a = uint3(-1),
-            D_NA(CommandEncoder, copy_texture)
+            D(CommandEncoder, copy_texture)
         )
         .def(
             "copy_texture",
@@ -195,7 +195,7 @@ SGL_PY_EXPORT(device_command)
             "src_mip_level"_a,
             "src_offset"_a,
             "extent"_a = uint3(-1),
-            D_NA(CommandEncoder, copy_texture, 2)
+            D(CommandEncoder, copy_texture, 2)
         )
         .def(
             "copy_texture_to_buffer",
@@ -209,7 +209,7 @@ SGL_PY_EXPORT(device_command)
             "src_mip_level"_a,
             "src_offset"_a = uint3(0),
             "extent"_a = uint3(-1),
-            D_NA(CommandEncoder, copy_texture_to_buffer)
+            D(CommandEncoder, copy_texture_to_buffer)
         )
         .def(
             "copy_buffer_to_texture",
@@ -223,7 +223,7 @@ SGL_PY_EXPORT(device_command)
             "src_size"_a,
             "src_row_pitch"_a,
             "extents"_a = uint3(-1),
-            D_NA(CommandEncoder, copy_buffer_to_texture)
+            D(CommandEncoder, copy_buffer_to_texture)
         )
         // TODO(slang-rhi)
         // upload_buffer_data
