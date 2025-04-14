@@ -368,13 +368,12 @@ void CommandEncoder::copy_buffer(
     m_rhi_command_encoder->copyBuffer(dst->rhi_buffer(), dst_offset, src->rhi_buffer(), src_offset, size);
 }
 
-// TODO(slang-rhi): This should really use layer/mip instead of sr idx to be consistent
 void CommandEncoder::copy_texture(
     Texture* dst,
-    uint32_t dst_subresource,
+    SubresourceRange dst_subresource_range,
     uint3 dst_offset,
     const Texture* src,
-    uint32_t src_subresource,
+    SubresourceRange src_subresource_range,
     uint3 src_offset,
     uint3 extent
 )
@@ -382,11 +381,49 @@ void CommandEncoder::copy_texture(
     SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(dst);
     SGL_CHECK_NOT_NULL(src);
-    SGL_CHECK_LT(dst_subresource, dst->subresource_count());
-    SGL_CHECK_LT(src_subresource, src->subresource_count());
 
-    rhi::SubresourceRange dst_sr = detail::rhi_subresource_range(dst, dst_subresource);
-    rhi::SubresourceRange src_sr = detail::rhi_subresource_range(src, src_subresource);
+    rhi::SubresourceRange dst_sr = detail::to_rhi(dst_subresource_range);
+    rhi::SubresourceRange src_sr = detail::to_rhi(src_subresource_range);
+
+    if (all(extent == uint3(-1)))
+        extent = src->get_mip_size(src_sr.mipLevel) - src_offset;
+
+    rhi::Extents rhi_extent
+        = {static_cast<int32_t>(extent.x), static_cast<int32_t>(extent.y), static_cast<int32_t>(extent.z)};
+
+    m_rhi_command_encoder->copyTexture(
+        dst->rhi_texture(),
+        dst_sr,
+        rhi::Offset3D(dst_offset.x, dst_offset.y, dst_offset.z),
+        src->rhi_texture(),
+        src_sr,
+        rhi::Offset3D(src_offset.x, src_offset.y, src_offset.z),
+        rhi_extent
+    );
+}
+
+void CommandEncoder::copy_texture(
+    Texture* dst,
+    uint32_t dst_layer,
+    uint32_t dst_mip_level,
+    uint3 dst_offset,
+    const Texture* src,
+    uint32_t src_layer,
+    uint32_t src_mip_level,
+    uint3 src_offset,
+    uint3 extent
+)
+{
+    SGL_CHECK(m_open, "Command encoder is finished");
+    SGL_CHECK_NOT_NULL(dst);
+    SGL_CHECK_LT(dst_layer, dst->layer_count());
+    SGL_CHECK_LT(dst_mip_level, dst->mip_count());
+    SGL_CHECK_NOT_NULL(src);
+    SGL_CHECK_LT(src_layer, src->layer_count());
+    SGL_CHECK_LT(src_mip_level, src->mip_count());
+
+    rhi::SubresourceRange dst_sr = {dst_mip_level, 1, dst_layer, 1};
+    rhi::SubresourceRange src_sr = {src_mip_level, 1, src_layer, 1};
 
     if (all(extent == uint3(-1)))
         extent = src->get_mip_size(src_sr.mipLevel) - src_offset;

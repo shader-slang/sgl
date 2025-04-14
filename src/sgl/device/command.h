@@ -164,19 +164,44 @@ public:
      * \brief Copy a texture region.
      *
      * \param dst Destination texture.
-     * \param dst_subresource Destination subresource index.
+     * \param dst_subresource_range Destination subresource range.
      * \param dst_offset Destination offset in texels.
      * \param src Source texture.
-     * \param src_subresource Source subresource index.
+     * \param src_subresource_range Source subresource range.
      * \param src_offset Source offset in texels.
      * \param extent Size in texels (-1 for maximum possible size).
      */
     void copy_texture(
         Texture* dst,
-        uint32_t dst_subresource,
+        SubresourceRange dst_subresource_range,
         uint3 dst_offset,
         const Texture* src,
-        uint32_t src_subresource,
+        SubresourceRange src_subresource_range,
+        uint3 src_offset,
+        uint3 extent = uint3(-1)
+    );
+
+    /**
+     * \brief Copy a texture region.
+     *
+     * \param dst Destination texture.
+     * \param dst_layer Destination layer.
+     * \param dst_mip_level Destination mip level.
+     * \param dst_offset Destination offset in texels.
+     * \param src Source texture.
+     * \param src_layer Source layer.
+     * \param src_mip_level Source mip level.
+     * \param src_offset Source offset in texels.
+     * \param extent Size in texels (-1 for maximum possible size).
+     */
+    void copy_texture(
+        Texture* dst,
+        uint32_t dst_layer,
+        uint32_t dst_mip_level,
+        uint3 dst_offset,
+        const Texture* src,
+        uint32_t src_layer,
+        uint32_t src_mip_level,
         uint3 src_offset,
         uint3 extent = uint3(-1)
     );
