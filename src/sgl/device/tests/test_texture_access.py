@@ -237,11 +237,8 @@ def test_upload_whole_texture(
         for mip_idx, mip_data in enumerate(layer_data):
             datas.append(mip_data)
 
-    range = sgl.SubresourceRange()
-    range.mip_count = 0xFFFFFFFF
-    range.layer_count = 0xFFFFFFFF
     encoder = device.create_command_encoder()
-    encoder.upload_texture_data(tex, sgl.uint3(0), sgl.uint3(0xFFFFFFFF), range, datas)
+    encoder.upload_texture_data(tex, datas)
     device.submit_command_buffer(encoder.finish())
     device.wait_for_idle()
 
