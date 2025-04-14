@@ -54,7 +54,6 @@ void Blitter::blit(CommandEncoder* command_encoder, TextureView* dst, TextureVie
     SGL_CHECK(is_set(src_texture->desc().usage, TextureUsage::shader_resource), "src must be a shader resource");
 
     uint32_t dst_mip_level = dst->subresource_range().mip_level;
-    uint32_t dst_base_array_layer = dst->subresource_range().base_array_layer;
     uint32_t src_mip_level = src->subresource_range().mip_level;
 
     uint2 dst_size = src_texture->get_mip_size(dst_mip_level).xy();
