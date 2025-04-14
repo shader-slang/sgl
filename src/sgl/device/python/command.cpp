@@ -169,15 +169,33 @@ SGL_PY_EXPORT(device_command)
         )
         .def(
             "copy_texture",
-            &CommandEncoder::copy_texture,
+            nb::overload_cast<Texture*, SubresourceRange, uint3, const Texture*, SubresourceRange, uint3, uint3>(
+                &CommandEncoder::copy_texture
+            ),
             "dst"_a,
-            "dst_subresource"_a,
+            "dst_subresource_range"_a,
             "dst_offset"_a,
             "src"_a,
-            "src_subresource"_a,
+            "src_subresource_range"_a,
             "src_offset"_a,
             "extent"_a = uint3(-1),
-            D(CommandEncoder, copy_texture)
+            D_NA(CommandEncoder, copy_texture)
+        )
+        .def(
+            "copy_texture",
+            nb::overload_cast<Texture*, uint32_t, uint32_t, uint3, const Texture*, uint32_t, uint32_t, uint3, uint3>(
+                &CommandEncoder::copy_texture
+            ),
+            "dst"_a,
+            "dst_layer"_a,
+            "dst_mip_level"_a,
+            "dst_offset"_a,
+            "src"_a,
+            "src_layer"_a,
+            "src_mip_level"_a,
+            "src_offset"_a,
+            "extent"_a = uint3(-1),
+            D_NA(CommandEncoder, copy_texture, 2)
         )
         .def(
             "copy_texture_to_buffer",

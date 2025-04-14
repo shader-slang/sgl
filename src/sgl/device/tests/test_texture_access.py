@@ -411,7 +411,16 @@ def test_copy_texture(
     idx = 0
     for layer_idx in range(array_length):
         for mip_idx in range(mips):
-            encoder.copy_texture(dst, idx, sgl.uint3(0), src, idx, sgl.uint3(0))
+            encoder.copy_texture(
+                dst,
+                layer_idx,
+                mip_idx,
+                sgl.uint3(0),
+                src,
+                layer_idx,
+                mip_idx,
+                sgl.uint3(0),
+            )
             idx += 1
     device.submit_command_buffer(encoder.finish())
 
