@@ -728,6 +728,7 @@ struct App {
         surface->configure({
             .width = window->width(),
             .height = window->height(),
+            .vsync = false,
         });
 
         window->set_on_keyboard_event([this](const KeyboardEvent& event) { on_keyboard_event(event); });
@@ -771,6 +772,7 @@ struct App {
         surface->configure({
             .width = width,
             .height = height,
+            .vsync = false,
         });
     }
 
