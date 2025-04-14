@@ -150,5 +150,69 @@ def test_buffer(device_type: sgl.DeviceType, type: str, size_MB: int):
         assert np.all(data == readback)
 
 
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_upload_buffer(device_type: sgl.DeviceType):
+    device = helpers.get_device(device_type)
+
+    buffer = device.create_buffer(
+        size=4 * 1024,
+        usage=sgl.BufferUsage.unordered_access,
+    )
+
+    data = np.random.randint(0, 0xFFFFFFFF, size=1024, dtype=np.uint32)
+
+    buffer.copy_from_numpy(np.zeros_like(data))
+
+    encoder = device.create_command_encoder()
+    encoder.upload_buffer_data(buffer, 0, data)
+    device.submit_command_buffer(encoder.finish())
+
+    readback = buffer.to_numpy().view(np.uint32)
+    assert np.all(data == readback)
+
+
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_upload_buffer_with_offset(device_type: sgl.DeviceType):
+    device = helpers.get_device(device_type)
+
+    buffer = device.create_buffer(
+        size=4 * 1024,
+        usage=sgl.BufferUsage.unordered_access,
+    )
+
+    data = np.random.randint(0, 0xFFFFFFFF, size=512, dtype=np.uint32)
+
+    buffer.copy_from_numpy(np.zeros_like(data))
+
+    encoder = device.create_command_encoder()
+    encoder.upload_buffer_data(buffer, 2048, data)
+    device.submit_command_buffer(encoder.finish())
+
+    readback = buffer.to_numpy().view(np.uint32)
+
+    # readback should be all zeros, except for the last 512 bytes
+    expected = np.zeros(1024, dtype=np.uint32)
+    expected[512:] = data
+    assert np.all(expected == readback)
+
+
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_upload_buffer_overflow_fail(device_type: sgl.DeviceType):
+    device = helpers.get_device(device_type)
+
+    buffer = device.create_buffer(
+        size=4 * 1024,
+        usage=sgl.BufferUsage.unordered_access,
+    )
+    data = np.random.randint(0, 0xFFFFFFFF, size=1024, dtype=np.uint32)
+
+    with pytest.raises(
+        RuntimeError, match=".*upload would exceed the size of the destination buffer.*"
+    ):
+        encoder = device.create_command_encoder()
+        encoder.upload_buffer_data(buffer, 2048, data)
+        device.submit_command_buffer(encoder.finish())
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "-s"])

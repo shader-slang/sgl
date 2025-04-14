@@ -224,9 +224,6 @@ def test_upload_texture_single_mip(
 def test_upload_whole_texture(
     device_type: sgl.DeviceType, array_length: int, mips: int, type: sgl.TextureType
 ):
-    if device_type == sgl.DeviceType.cuda:
-        pytest.skip("CUDA not working yet")
-
     device = helpers.get_device(device_type)
     assert device is not None
 
