@@ -306,7 +306,7 @@ inline void process_texture_desc(TextureDesc& desc)
     case TextureType::texture_1d:
     case TextureType::texture_1d_array:
         SGL_CHECK(
-            desc.width > 0 && desc.height <= 1 && desc.depth <= 1,
+            desc.width > 0 && desc.height == 1 && desc.depth == 1,
             "Invalid dimensions (width={}, height={}, depth={}) for 1D texture.",
             desc.width,
             desc.height,
@@ -318,7 +318,7 @@ inline void process_texture_desc(TextureDesc& desc)
     case TextureType::texture_2d_ms:
     case TextureType::texture_2d_ms_array:
         SGL_CHECK(
-            desc.width > 0 && desc.height > 0 && desc.depth <= 1,
+            desc.width > 0 && desc.height > 0 && desc.depth == 1,
             "Invalid dimensions (width={}, height={}, depth={}) for 2D texture.",
             desc.width,
             desc.height,
@@ -337,7 +337,7 @@ inline void process_texture_desc(TextureDesc& desc)
     case TextureType::texture_cube:
     case TextureType::texture_cube_array:
         SGL_CHECK(
-            desc.width > 0 && desc.height > 0 && desc.depth <= 1,
+            desc.width > 0 && desc.height > 0 && desc.depth == 1,
             "Invalid dimensions (width={}, height={}, depth={}) for cube texture.",
             desc.width,
             desc.height,
@@ -346,24 +346,30 @@ inline void process_texture_desc(TextureDesc& desc)
         break;
     }
 
-    desc.width = std::max(desc.width, 1u);
-    desc.height = std::max(desc.height, 1u);
-    desc.depth = std::max(desc.depth, 1u);
-
-    if (desc.mip_count == 0) {
-        // TODO(slang-rhi)
-#if SGL_MACOS
-        // On macOS, mipmap is not supported for 1D textures.
-        if (desc.type == TextureType::texture_1d) {
-            desc.mip_count = 1;
-        } else
-#endif
-        {
-            desc.mip_count = stdx::bit_width(std::max({desc.width, desc.height, desc.depth}));
-        }
+    switch (desc.type) {
+    case TextureType::texture_1d:
+    case TextureType::texture_2d:
+    case TextureType::texture_2d_ms:
+    case TextureType::texture_3d:
+    case TextureType::texture_cube:
+        SGL_CHECK(desc.array_length == 1, "Invalid array length ({}) for non-array texture.", desc.array_length);
+        break;
+    case TextureType::texture_1d_array:
+    case TextureType::texture_2d_array:
+    case TextureType::texture_2d_ms_array:
+    case TextureType::texture_cube_array:
+        SGL_CHECK(desc.array_length >= 1, "Invalid array length ({}) for array texture.", desc.array_length);
+        break;
     }
-    SGL_CHECK(desc.array_length >= 1, "Invalid array length.");
-    SGL_CHECK(desc.sample_count >= 1, "Invalid sample count.");
+
+    if (desc.type == TextureType::texture_2d_ms || desc.type == TextureType::texture_2d_ms_array) {
+        SGL_CHECK(desc.sample_count >= 1, "Invalid sample count ({}) for multisampled texture.", desc.sample_count);
+    } else {
+        SGL_CHECK(desc.sample_count == 1, "Invalid sample count ({}) for non-multisampled texture.", desc.sample_count);
+    }
+
+    if (desc.mip_count == ALL_MIP_LEVELS)
+        desc.mip_count = stdx::bit_width(std::max({desc.width, desc.height, desc.depth}));
 }
 
 Texture::Texture(ref<Device> device, TextureDesc desc)
