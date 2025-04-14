@@ -242,7 +242,7 @@ public:
      * \param src_offset Source offset in bytes.
      * \param src_size Size in bytes.
      * \param src_row_pitch Source row stride in bytes.
-     * \param extents Extent in texels (-1 for maximum possible extent).
+     * \param extent Extent in texels (-1 for maximum possible extent).
      */
     void copy_buffer_to_texture(
         Texture* dst,
@@ -253,7 +253,7 @@ public:
         DeviceOffset src_offset,
         DeviceSize src_size,
         DeviceSize src_row_pitch,
-        uint3 extents = uint3(-1)
+        uint3 extent = uint3(-1)
     );
 
     /**

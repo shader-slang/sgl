@@ -1545,7 +1545,7 @@ Parameter ``src_size``:
 Parameter ``src_row_pitch``:
     Source row stride in bytes.
 
-Parameter ``extents``:
+Parameter ``extent``:
     Extent in texels (-1 for maximum possible extent).)doc";
 
 static const char *__doc_sgl_CommandEncoder_copy_texture =

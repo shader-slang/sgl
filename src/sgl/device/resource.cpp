@@ -653,10 +653,10 @@ TextureView::TextureView(ref<Device> device, ref<Texture> texture, TextureViewDe
         .format = static_cast<rhi::Format>(m_desc.format),
         .aspect = static_cast<rhi::TextureAspect>(m_desc.aspect),
         .subresourceRange{
+            .layer = m_desc.subresource_range.base_array_layer,
+            .layerCount = m_desc.subresource_range.layer_count,
             .mipLevel = m_desc.subresource_range.mip_level,
             .mipLevelCount = m_desc.subresource_range.mip_count,
-            .baseArrayLayer = m_desc.subresource_range.base_array_layer,
-            .layerCount = m_desc.subresource_range.layer_count,
         },
         .label = m_desc.label.empty() ? nullptr : m_desc.label.c_str(),
     };

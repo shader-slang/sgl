@@ -337,7 +337,7 @@ SGL_PY_EXPORT(device_command)
             "src_offset"_a,
             "src_size"_a,
             "src_row_pitch"_a,
-            "extents"_a = uint3(-1),
+            "extent"_a = uint3(-1),
             D(CommandEncoder, copy_buffer_to_texture)
         )
         .def("upload_buffer_data", &upload_buffer_data, "buffer"_a, "offset"_a, "data"_a)
