@@ -316,7 +316,12 @@ SGL_PY_EXPORT(device_command)
                     for (uint32_t mip_level_offset = 0; mip_level_offset < range.mip_count; mip_level_offset++) {
                         uint32_t mip_level = range.mip_level + mip_level_offset;
                         subresource_datas[layer_offset * range.mip_count + mip_level_offset]
-                            = texture_build_subresource_data_for_upload(texture, data[layer], layer, mip_level);
+                            = texture_build_subresource_data_for_upload(
+                                texture,
+                                data[layer * range.mip_count + mip_level],
+                                layer,
+                                mip_level
+                            );
                     }
                 }
 
