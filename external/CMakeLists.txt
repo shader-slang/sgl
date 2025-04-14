@@ -113,6 +113,14 @@ elseif(SGL_MACOS)
     sgl_copy_binary(${SLANG_DIR}/lib/libslang-rt.dylib .)
 endif()
 
+# Copy slang headers to the output directory
+file(GLOB_RECURSE SLANG_HEADERS "${SLANG_INCLUDE_DIR}/*.h")
+foreach(HEADER ${SLANG_HEADERS})
+    file(RELATIVE_PATH REL_HEADER ${SLANG_INCLUDE_DIR} ${HEADER})
+    get_filename_component(HEADER_DIR ${REL_HEADER} DIRECTORY)
+    file(COPY ${HEADER} DESTINATION ${CMAKE_BINARY_DIR}/include/${HEADER_DIR})
+endforeach()
+
 # slang-gfx
 
 if(SGL_WINDOWS)
