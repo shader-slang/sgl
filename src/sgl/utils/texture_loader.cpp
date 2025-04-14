@@ -334,7 +334,7 @@ inline ref<Texture> create_texture_array(
                 .width = bitmap->width(),
                 .height = bitmap->height(),
                 .array_length = narrow_cast<uint32_t>(source_images.size()),
-                .mip_count = allocate_mips ? 0u : 1u,
+                .mip_count = allocate_mips ? ALL_MIP_LEVELS : 1u,
                 .usage = usage,
             });
             first_width = bitmap->width();

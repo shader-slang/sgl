@@ -331,6 +331,8 @@ SGL_PY_EXPORT(device_resource)
 {
     using namespace sgl;
 
+    m.attr("ALL_MIP_LEVELS") = ALL_MIP_LEVELS;
+
     nb::sgl_enum<ResourceState>(m, "ResourceState");
     nb::sgl_enum_flags<BufferUsage>(m, "BufferUsage");
     nb::sgl_enum_flags<TextureUsage>(m, "TextureUsage");
