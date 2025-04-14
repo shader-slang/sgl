@@ -267,7 +267,12 @@ nb::ndarray<nb::numpy> texture_to_numpy(Texture* self, uint32_t layer, uint32_t 
 
 static const char* __doc_sgl_texture_from_numpy = R"doc()doc";
 
-inline void texture_from_numpy(Texture* self, nb::ndarray<nb::numpy> data, uint32_t layer, uint32_t mip_level)
+SubresourceData texture_build_subresource_data_for_upload(
+    Texture* self,
+    nb::ndarray<nb::numpy> data,
+    uint32_t layer,
+    uint32_t mip_level
+)
 {
     SGL_CHECK(is_ndarray_contiguous(data), "numpy array is not contiguous");
     SGL_CHECK_LT(layer, self->layer_count());
@@ -320,6 +325,14 @@ inline void texture_from_numpy(Texture* self, nb::ndarray<nb::numpy> data, uint3
 
     // Check numpy array size in bytes matches the sub resource layotu size in bytes.
     SGL_CHECK(data.nbytes() == subresource_layout.size_in_bytes, "numpy array doesn't match the subresource size");
+
+    return subresource_data;
+}
+
+inline void texture_from_numpy(Texture* self, nb::ndarray<nb::numpy> data, uint32_t layer, uint32_t mip_level)
+{
+    // Validate and set up SubresourceData argument to point to the numpy array data.
+    SubresourceData subresource_data = texture_build_subresource_data_for_upload(self, data, layer, mip_level);
 
     // Write numpy data to the texture.
     self->set_subresource_data(layer, mip_level, subresource_data);

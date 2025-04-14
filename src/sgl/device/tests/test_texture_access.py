@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import numpy.typing as npt
 
 sys.path.append(str(Path(__file__).parent))
 import sglhelpers as helpers
@@ -161,6 +162,85 @@ def test_read_write_texture(
     for layer_idx, layer_data in enumerate(rand_data):
         for mip_idx, mip_data in enumerate(layer_data):
             tex.copy_from_numpy(mip_data, layer=layer_idx, mip_level=mip_idx)
+
+    # Read back data and compare
+    for layer_idx, layer_data in enumerate(rand_data):
+        for mip_idx, mip_data in enumerate(layer_data):
+            data = tex.to_numpy(layer=layer_idx, mip_level=mip_idx)
+            assert np.allclose(data, mip_data)
+
+
+@pytest.mark.parametrize(
+    "type",
+    [
+        sgl.TextureType.texture_1d,
+        sgl.TextureType.texture_2d,
+        sgl.TextureType.texture_3d,
+        sgl.TextureType.texture_cube,
+    ],
+)
+@pytest.mark.parametrize("array_length", [1, 4, 16])
+@pytest.mark.parametrize("mips", [sgl.ALL_MIP_LEVELS, 1, 4])
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_upload_texture_single_mip(
+    device_type: sgl.DeviceType, array_length: int, mips: int, type: sgl.TextureType
+):
+    device = helpers.get_device(device_type)
+    assert device is not None
+
+    # Create texture and build random data
+    tex = create_test_texture(device, type, array_length, mips)
+    rand_data = make_rand_data(tex.type, tex.array_length, tex.mip_count)
+
+    # Write random data to texture
+    encoder = device.create_command_encoder()
+    for layer_idx, layer_data in enumerate(rand_data):
+        for mip_idx, mip_data in enumerate(layer_data):
+            encoder.upload_texture_data(
+                tex, layer=layer_idx, mip_level=mip_idx, data=mip_data
+            )
+    device.submit_command_buffer(encoder.finish())
+    device.wait_for_idle()
+
+    # Read back data and compare
+    for layer_idx, layer_data in enumerate(rand_data):
+        for mip_idx, mip_data in enumerate(layer_data):
+            data = tex.to_numpy(layer=layer_idx, mip_level=mip_idx)
+            assert np.allclose(data, mip_data)
+
+
+@pytest.mark.parametrize(
+    "type",
+    [
+        sgl.TextureType.texture_1d,
+        sgl.TextureType.texture_2d,
+        sgl.TextureType.texture_3d,
+        sgl.TextureType.texture_cube,
+    ],
+)
+@pytest.mark.parametrize("array_length", [1, 4, 16])
+@pytest.mark.parametrize("mips", [sgl.ALL_MIP_LEVELS, 1, 4])
+@pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
+def test_upload_whole_texture(
+    device_type: sgl.DeviceType, array_length: int, mips: int, type: sgl.TextureType
+):
+    device = helpers.get_device(device_type)
+    assert device is not None
+
+    # Create texture and build random data
+    tex = create_test_texture(device, type, array_length, mips)
+    rand_data = make_rand_data(tex.type, tex.array_length, tex.mip_count)
+
+    # Write random data to texture
+    datas: list[npt.ArrayLike] = []
+    for layer_idx, layer_data in enumerate(rand_data):
+        for mip_idx, mip_data in enumerate(layer_data):
+            datas.append(mip_data)
+
+    encoder = device.create_command_encoder()
+    encoder.upload_texture_data(tex, datas)
+    device.submit_command_buffer(encoder.finish())
+    device.wait_for_idle()
 
     # Read back data and compare
     for layer_idx, layer_data in enumerate(rand_data):

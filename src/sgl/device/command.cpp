@@ -542,7 +542,7 @@ void CommandEncoder::upload_texture_data(
         texture->rhi_texture(),
         detail::to_rhi(subresource_range),
         rhi::Offset3D(offset.x, offset.y, offset.z),
-        rhi::Extents{narrow_cast<int32_t>(extent.x), narrow_cast<int32_t>(extent.y), narrow_cast<int32_t>(extent.z)},
+        rhi::Extents{static_cast<int32_t>(extent.x), static_cast<int32_t>(extent.y), static_cast<int32_t>(extent.z)},
         rhi_subresource_data.data(),
         narrow_cast<uint32_t>(rhi_subresource_data.size())
     ));
