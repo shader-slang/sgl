@@ -447,10 +447,10 @@ void Context::render(TextureView* texture_view, CommandEncoder* command_encoder)
                 SGL_ASSERT(pcmd->UserCallback == nullptr);
                 // Project scissor/clipping rectangles into framebuffer space.
                 ScissorRect clip_rect{
-                    .min_x = int32_t(pcmd->ClipRect.x - clip_off.x),
-                    .min_y = int32_t(pcmd->ClipRect.y - clip_off.y),
-                    .max_x = int32_t(pcmd->ClipRect.z - clip_off.x),
-                    .max_y = int32_t(pcmd->ClipRect.w - clip_off.y),
+                    .min_x = uint32_t(pcmd->ClipRect.x - clip_off.x),
+                    .min_y = uint32_t(pcmd->ClipRect.y - clip_off.y),
+                    .max_x = uint32_t(pcmd->ClipRect.z - clip_off.x),
+                    .max_y = uint32_t(pcmd->ClipRect.w - clip_off.y),
                 };
                 if (clip_rect.max_x <= clip_rect.min_x || clip_rect.max_y <= clip_rect.min_y)
                     continue;
