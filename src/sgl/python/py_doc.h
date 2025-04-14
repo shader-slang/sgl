@@ -1518,14 +1518,44 @@ Parameter ``src_offset``:
 Parameter ``size``:
     Size in bytes.)doc";
 
+static const char *__doc_sgl_CommandEncoder_copy_buffer_to_texture =
+R"doc(Copy a buffer to a texture.
+
+Parameter ``dst``:
+    Destination texture.
+
+Parameter ``dst_layer``:
+    Destination layer.
+
+Parameter ``dst_mip_level``:
+    Destination mip level.
+
+Parameter ``dst_offset``:
+    Destination offset in texels.
+
+Parameter ``src``:
+    Source buffer.
+
+Parameter ``src_offset``:
+    Source offset in bytes.
+
+Parameter ``src_size``:
+    Size in bytes.
+
+Parameter ``src_row_pitch``:
+    Source row stride in bytes.
+
+Parameter ``extents``:
+    Extent in texels (-1 for maximum possible extent).)doc";
+
 static const char *__doc_sgl_CommandEncoder_copy_texture =
 R"doc(Copy a texture region.
 
 Parameter ``dst``:
     Destination texture.
 
-Parameter ``dst_subresource``:
-    Destination subresource index.
+Parameter ``dst_subresource_range``:
+    Destination subresource range.
 
 Parameter ``dst_offset``:
     Destination offset in texels.
@@ -1533,14 +1563,74 @@ Parameter ``dst_offset``:
 Parameter ``src``:
     Source texture.
 
-Parameter ``src_subresource``:
-    Source subresource index.
+Parameter ``src_subresource_range``:
+    Source subresource range.
 
 Parameter ``src_offset``:
     Source offset in texels.
 
 Parameter ``extent``:
     Size in texels (-1 for maximum possible size).)doc";
+
+static const char *__doc_sgl_CommandEncoder_copy_texture_2 =
+R"doc(Copy a texture region.
+
+Parameter ``dst``:
+    Destination texture.
+
+Parameter ``dst_layer``:
+    Destination layer.
+
+Parameter ``dst_mip_level``:
+    Destination mip level.
+
+Parameter ``dst_offset``:
+    Destination offset in texels.
+
+Parameter ``src``:
+    Source texture.
+
+Parameter ``src_layer``:
+    Source layer.
+
+Parameter ``src_mip_level``:
+    Source mip level.
+
+Parameter ``src_offset``:
+    Source offset in texels.
+
+Parameter ``extent``:
+    Size in texels (-1 for maximum possible size).)doc";
+
+static const char *__doc_sgl_CommandEncoder_copy_texture_to_buffer =
+R"doc(Copy a texture to a buffer.
+
+Parameter ``dst``:
+    Destination buffer.
+
+Parameter ``dst_offset``:
+    Destination offset in bytes.
+
+Parameter ``dst_size``:
+    Destination size in bytes.
+
+Parameter ``dst_row_pitch``:
+    Destination row stride in bytes.
+
+Parameter ``src``:
+    Source texture.
+
+Parameter ``src_layer``:
+    Source layer.
+
+Parameter ``src_mip_level``:
+    Source mip level.
+
+Parameter ``src_offset``:
+    Source offset in texels.
+
+Parameter ``extent``:
+    Extent in texels (-1 for maximum possible extent).)doc";
 
 static const char *__doc_sgl_CommandEncoder_deserialize_acceleration_structure = R"doc()doc";
 
@@ -2500,7 +2590,8 @@ Parameter ``array_length``:
     Array length.
 
 Parameter ``mip_count``:
-    Mip level count. Number of mip levels (0 for auto-generated mips).
+    Mip level count. Number of mip levels (ALL_MIP_LEVELS for all mip
+    levels).
 
 Parameter ``sample_count``:
     Number of samples for multisampled textures.
@@ -2692,8 +2783,8 @@ reloaded.)doc";
 static const char *__doc_sgl_Device_reload_all_programs = R"doc()doc";
 
 static const char *__doc_sgl_Device_report_live_objects =
-R"doc(Report live objects in the slang/gfx layer. This is useful for
-checking clean shutdown with all resources released properly.)doc";
+R"doc(Report live objects in the rhi layer. This is useful for checking
+clean shutdown with all resources released properly.)doc";
 
 static const char *__doc_sgl_Device_rhi_device = R"doc()doc";
 
@@ -5731,6 +5822,8 @@ static const char *__doc_sgl_ShaderObject_ShaderObject = R"doc()doc";
 
 static const char *__doc_sgl_ShaderObject_class_name = R"doc()doc";
 
+static const char *__doc_sgl_ShaderObject_device = R"doc()doc";
+
 static const char *__doc_sgl_ShaderObject_element_type_layout = R"doc()doc";
 
 static const char *__doc_sgl_ShaderObject_get_cuda_interop_buffers = R"doc()doc";
@@ -6743,7 +6836,7 @@ static const char *__doc_sgl_TextureDesc_label = R"doc(Debug label.)doc";
 
 static const char *__doc_sgl_TextureDesc_memory_type = R"doc()doc";
 
-static const char *__doc_sgl_TextureDesc_mip_count = R"doc(Number of mip levels (0 for auto-generated mips).)doc";
+static const char *__doc_sgl_TextureDesc_mip_count = R"doc(Number of mip levels (ALL_MIP_LEVELS for all mip levels).)doc";
 
 static const char *__doc_sgl_TextureDesc_sample_count = R"doc(Number of samples per pixel.)doc";
 
