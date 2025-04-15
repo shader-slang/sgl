@@ -313,8 +313,10 @@ target_compile_definitions(sgl
         SGL_PROJECT_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../"
 )
 
-file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/include/sgl/core/config.h CONTENT
+file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${SGL_BUILD_TYPE}/include/sgl/core/config.h CONTENT
 "#pragma once
+
+#define SGL_BUILD_TYPE \"${SGL_BUILD_TYPE}\"
 
 #define SGL_USE_DYNAMIC_CUDA $<BOOL:${SGL_USE_DYNAMIC_CUDA}>
 
@@ -330,7 +332,7 @@ file(GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/include/sgl/core/config.h CONTE
 #define SGL_HAS_ASMJIT $<BOOL:${SGL_HAS_ASMJIT}>
 "
 )
-target_include_directories(sgl PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include)
+target_include_directories(sgl PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/${SGL_BUILD_TYPE}/include)
 
 target_link_libraries(sgl
     PUBLIC
