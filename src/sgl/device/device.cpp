@@ -535,10 +535,24 @@ ref<CommandEncoder> Device::create_command_encoder(CommandQueueType queue)
     return make_ref<CommandEncoder>(ref(this), rhi_command_encoder);
 }
 
-uint64_t Device::submit_command_buffer(CommandBuffer* command_buffer, CommandQueueType queue)
+uint64_t Device::submit_command_buffers(
+    std::span<CommandBuffer*> command_buffers,
+    std::span<Fence*> wait_fences,
+    std::span<uint64_t> wait_fence_values,
+    std::span<Fence*> signal_fences,
+    std::span<uint64_t> signal_fence_values,
+    CommandQueueType queue
+)
 {
-    SGL_CHECK_NOT_NULL(command_buffer);
     SGL_CHECK(queue == CommandQueueType::graphics, "Only graphics queue is supported.");
+
+    bool has_wait_fence_values = wait_fence_values.size() > 0;
+    bool has_signal_fence_values = signal_fence_values.size() > 0;
+
+    if (has_wait_fence_values && wait_fence_values.size() != wait_fences.size())
+        SGL_THROW("\"wait_fence_values\" size does not match \"wait_fences\" size.");
+    if (has_signal_fence_values && signal_fence_values.size() != signal_fences.size())
+        SGL_THROW("\"signal_fence_values\" size does not match \"signal_fences\" size.");
 
     // Update hot reload system if created.
     // TODO(slang-rhi) need to make sure this is not too expensive.
@@ -548,48 +562,107 @@ uint64_t Device::submit_command_buffer(CommandBuffer* command_buffer, CommandQue
     // TODO make parameter
     void* cuda_stream = 0;
 
-    if (m_supports_cuda_interop && command_buffer->m_cuda_interop_buffers.size() > 0) {
-        for (const auto& buffer : command_buffer->m_cuda_interop_buffers)
-            buffer->copy_from_cuda(cuda_stream);
+    short_vector<rhi::ICommandBuffer*, 8> rhi_command_buffers;
+    short_vector<rhi::IFence*, 8> rhi_wait_fences;
+    short_vector<uint64_t, 8> rhi_wait_fence_values;
+    short_vector<rhi::IFence*, 8> rhi_signal_fences;
+    short_vector<uint64_t, 8> rhi_signal_fence_values;
 
-        sync_to_cuda(cuda_stream);
+    bool needs_cuda_sync = false;
+
+    for (CommandBuffer* command_buffer : command_buffers) {
+        SGL_CHECK_NOT_NULL(command_buffer);
+        rhi_command_buffers.push_back(command_buffer->rhi_command_buffer());
     }
 
-    rhi::ICommandBuffer* rhi_command_buffers[] = {command_buffer->rhi_command_buffer()};
-    rhi::IFence* rhi_wait_fences[] = {m_global_fence->rhi_fence()};
-    uint64_t rhi_wait_fence_values[] = {m_global_fence->signaled_value()};
-    rhi::IFence* rhi_signal_fences[] = {m_global_fence->rhi_fence()};
-    uint64_t rhi_signal_fence_values[] = {m_global_fence->update_signaled_value()};
+    // Handle CUDA interop.
+    if (m_supports_cuda_interop) {
+        for (CommandBuffer* command_buffer : command_buffers) {
+            for (const auto& buffer : command_buffer->m_cuda_interop_buffers) {
+                buffer->copy_from_cuda(cuda_stream);
+                needs_cuda_sync = true;
+            }
+        }
+
+        if (needs_cuda_sync)
+            sync_to_cuda(cuda_stream);
+    }
+
+    // Handle passed in wait fences.
+    for (size_t i = 0; i < wait_fences.size(); ++i) {
+        Fence* fence = wait_fences[i];
+        SGL_CHECK_NOT_NULL(fence);
+        rhi_wait_fences.push_back(fence->rhi_fence());
+        uint64_t fence_value = has_wait_fence_values ? wait_fence_values[i] : Fence::AUTO;
+        if (fence_value == Fence::AUTO)
+            fence_value = fence->signaled_value();
+        rhi_wait_fence_values.push_back(fence_value);
+    }
+
+    // Handle wait for global fence if needed.
+    if (m_wait_global_fence) {
+        rhi_wait_fences.push_back(m_global_fence->rhi_fence());
+        rhi_wait_fence_values.push_back(m_global_fence->signaled_value());
+    }
+
+    // Handle passed in signal fences.
+    for (size_t i = 0; i < signal_fences.size(); ++i) {
+        Fence* fence = signal_fences[i];
+        SGL_CHECK_NOT_NULL(fence);
+        rhi_signal_fences.push_back(fence->rhi_fence());
+        uint64_t fence_value = has_signal_fence_values ? signal_fence_values[i] : Fence::AUTO;
+        if (fence_value == Fence::AUTO)
+            fence_value = fence->update_signaled_value();
+        rhi_signal_fence_values.push_back(fence_value);
+    }
+
+    // Handle signal for global fence.
+    rhi_signal_fences.push_back(m_global_fence->rhi_fence());
+    rhi_signal_fence_values.push_back(m_global_fence->update_signaled_value());
+
+    // Handle actual submit.
+    SGL_ASSERT(rhi_wait_fences.size() == rhi_wait_fence_values.size());
+    SGL_ASSERT(rhi_signal_fences.size() == rhi_signal_fence_values.size());
     rhi::SubmitDesc rhi_submit_desc{
-        .commandBuffers = rhi_command_buffers,
-        .commandBufferCount = 1,
-        .waitFences = m_wait_global_fence ? rhi_wait_fences : nullptr,
-        .waitFenceValues = m_wait_global_fence ? rhi_wait_fence_values : nullptr,
-        .waitFenceCount = m_wait_global_fence ? 1u : 0u,
-        .signalFences = rhi_signal_fences,
-        .signalFenceValues = rhi_signal_fence_values,
-        .signalFenceCount = 1,
+        .commandBuffers = rhi_command_buffers.data(),
+        .commandBufferCount = narrow_cast<uint32_t>(rhi_command_buffers.size()),
+        .waitFences = rhi_wait_fences.data(),
+        .waitFenceValues = rhi_wait_fence_values.data(),
+        .waitFenceCount = narrow_cast<uint32_t>(rhi_wait_fences.size()),
+        .signalFences = rhi_signal_fences.data(),
+        .signalFenceValues = rhi_signal_fence_values.data(),
+        .signalFenceCount = narrow_cast<uint32_t>(rhi_signal_fences.size()),
     };
-    m_rhi_graphics_queue->submit(rhi_submit_desc);
+    SLANG_CALL(m_rhi_graphics_queue->submit(rhi_submit_desc));
     m_wait_global_fence = false;
 
-    if (m_supports_cuda_interop && command_buffer->m_cuda_interop_buffers.size() > 0) {
+    // Handle CUDA interop.
+    if (m_supports_cuda_interop && needs_cuda_sync) {
         sync_to_device(cuda_stream);
 
-        for (const auto& buffer : command_buffer->m_cuda_interop_buffers)
-            if (buffer->is_uav())
-                buffer->copy_to_cuda(cuda_stream);
+        for (CommandBuffer* command_buffer : command_buffers) {
+            for (const auto& buffer : command_buffer->m_cuda_interop_buffers) {
+                if (buffer->is_uav())
+                    buffer->copy_to_cuda(cuda_stream);
+            }
+        }
     }
 
     return m_global_fence->signaled_value();
 }
 
-bool Device::is_command_buffer_complete(uint64_t id)
+uint64_t Device::submit_command_buffer(CommandBuffer* command_buffer, CommandQueueType queue)
+{
+    CommandBuffer* command_buffers[] = {command_buffer};
+    return submit_command_buffers(command_buffers, {}, {}, {}, {}, queue);
+}
+
+bool Device::is_submit_finished(uint64_t id)
 {
     return id <= m_global_fence->current_value();
 }
 
-void Device::wait_command_buffer(uint64_t id)
+void Device::wait_for_submit(uint64_t id)
 {
     m_global_fence->wait(id);
 }

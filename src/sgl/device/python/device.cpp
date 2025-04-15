@@ -510,19 +510,25 @@ SGL_PY_EXPORT(device_device)
         D(Device, create_command_encoder)
     );
     device.def(
+        "submit_command_buffers",
+        &Device::submit_command_buffers,
+        "command_buffers"_a,
+        "wait_fences"_a = std::span<Fence*>(),
+        "wait_fence_values"_a = std::span<uint64_t>(),
+        "signal_fences"_a = std::span<Fence*>(),
+        "signal_fence_values"_a = std::span<uint64_t>(),
+        "queue"_a = CommandQueueType::graphics,
+        D(Device, submit_command_buffers)
+    );
+    device.def(
         "submit_command_buffer",
         &Device::submit_command_buffer,
         "command_buffer"_a,
         "queue"_a = CommandQueueType::graphics,
         D(Device, submit_command_buffer)
     );
-    device.def(
-        "is_command_buffer_complete",
-        &Device::is_command_buffer_complete,
-        "id"_a,
-        D(Device, is_command_buffer_complete)
-    );
-    device.def("wait_command_buffer", &Device::wait_command_buffer, "id"_a, D(Device, wait_command_buffer));
+    device.def("is_submit_finished", &Device::is_submit_finished, "id"_a, D(Device, is_submit_finished));
+    device.def("wait_for_submit", &Device::wait_for_submit, "id"_a, D(Device, wait_for_submit));
     device
         .def("wait_for_idle", &Device::wait_for_idle, "queue"_a = CommandQueueType::graphics, D(Device, wait_for_idle));
     device.def(

@@ -419,9 +419,37 @@ public:
     ref<CommandEncoder> create_command_encoder(CommandQueueType queue = CommandQueueType::graphics);
 
     /**
+     * \brief Submit a list of command buffers to the device.
+     *
+     * The returned submission ID can be used to wait for the submission to complete.
+     *
+     * The wait fence values are optional. If not provided, the fence values will be set to AUTO, which means waiting
+     * for the last signaled value.
+     *
+     * The signal fence values are optional. If not provided, the fence values will be set to AUTO, which means
+     * incrementing the last signaled value by 1.     *
+     *
+     * \param command_buffers List of command buffers to submit.
+     * \param wait_fences List of fences to wait for before executing the command buffers.
+     * \param wait_fence_values List of fence values to wait for before executing the command buffers.
+     * \param signal_fences List of fences to signal after executing the command buffers.
+     * \param signal_fence_values List of fence values to signal after executing the command buffers.
+     * \param queue Command queue to submit to.
+     * \return Submission ID.
+     */
+    uint64_t submit_command_buffers(
+        std::span<CommandBuffer*> command_buffers,
+        std::span<Fence*> wait_fences = {},
+        std::span<uint64_t> wait_fence_values = {},
+        std::span<Fence*> signal_fences = {},
+        std::span<uint64_t> signal_fence_values = {},
+        CommandQueueType queue = CommandQueueType::graphics
+    );
+
+    /**
      * \brief Submit a command buffer to the device.
      *
-     * The returned submission ID can be used to wait for the command buffer to complete.
+     * The returned submission ID can be used to wait for the submission to complete.
      *
      * \param command_buffer Command buffer to submit.
      * \param queue Command queue to submit to.
@@ -430,19 +458,19 @@ public:
     uint64_t submit_command_buffer(CommandBuffer* command_buffer, CommandQueueType queue = CommandQueueType::graphics);
 
     /**
-     * \brief Check if a command buffer is complete.
+     * \brief Check if a submission is finished executing.
      *
      * \param id Submission ID.
-     * \return True if the command buffer is complete.
+     * \return True if the submission is finished executing.
      */
-    bool is_command_buffer_complete(uint64_t id);
+    bool is_submit_finished(uint64_t id);
 
     /**
-     * \brief Wait for a command buffer to complete.
+     * \brief Wait for a submission to finish execution.
      *
      * \param id Submission ID.
      */
-    void wait_command_buffer(uint64_t id);
+    void wait_for_submit(uint64_t id);
 
     /**
      * \brief Wait for the command queue to be idle.

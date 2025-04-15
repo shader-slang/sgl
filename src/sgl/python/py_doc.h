@@ -2679,7 +2679,7 @@ static const char *__doc_sgl_Device_hot_reload = R"doc()doc";
 
 static const char *__doc_sgl_Device_info = R"doc(Device information.)doc";
 
-static const char *__doc_sgl_Device_is_command_buffer_complete =
+static const char *__doc_sgl_Device_is_submit_finished =
 R"doc(Check if a command buffer is complete.
 
 Parameter ``id``:
@@ -2794,6 +2794,8 @@ static const char *__doc_sgl_Device_shader_cache_stats = R"doc(Shader cache stat
 
 static const char *__doc_sgl_Device_slang_session = R"doc(Default slang session.)doc";
 
+static const char *__doc_sgl_Device_submit_command_buffers = R"doc()doc";
+
 static const char *__doc_sgl_Device_submit_command_buffer =
 R"doc(Submit a command buffer to the device.
 
@@ -2866,7 +2868,7 @@ static const char *__doc_sgl_Device_upload_texture_data_2 = R"doc()doc";
 
 static const char *__doc_sgl_Device_wait = R"doc(Wait for all device work to complete.)doc";
 
-static const char *__doc_sgl_Device_wait_command_buffer =
+static const char *__doc_sgl_Device_wait_for_submit =
 R"doc(Wait for a command buffer to complete.
 
 Parameter ``id``:
