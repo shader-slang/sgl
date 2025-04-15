@@ -108,14 +108,14 @@ ref<NativeTensor> NativeTensor::broadcast_to(const Shape& new_shape) const
     return make_ref<NativeTensor>(new_desc, m_storage, m_grad_in, m_grad_out);
 }
 
-void NativeTensor::clear(CommandBuffer* cmd)
+void NativeTensor::clear(CommandEncoder* cmd)
 {
     if (cmd) {
-        cmd->clear_resource_view(m_storage->get_uav(), uint4(0, 0, 0, 0));
+        cmd->clear_buffer(m_storage);
     } else {
-        ref<CommandBuffer> temp_cmd = device()->create_command_buffer();
-        temp_cmd->clear_resource_view(m_storage->get_uav(), uint4(0, 0, 0, 0));
-        temp_cmd->submit();
+        ref<CommandEncoder> temp_cmd = device()->create_command_encoder();
+        temp_cmd->clear_buffer(m_storage);
+        device()->submit_command_buffer(temp_cmd->finish());
     }
 }
 
@@ -148,7 +148,7 @@ ref<NativeTensor> NativeTensor::with_grads(ref<NativeTensor> grad_in, ref<Native
 
         // Create a new structured buffer for storage.
         BufferDesc buffer_desc;
-        buffer_desc.usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access | ResourceUsage::shared;
+        buffer_desc.usage = BufferUsage::shader_resource | BufferUsage::unordered_access | BufferUsage::shared;
         buffer_desc.struct_size = layout->stride();
         buffer_desc.element_count = element_count();
         ref<Buffer> buffer = device()->create_buffer(buffer_desc);
@@ -346,7 +346,7 @@ nb::object NativeTensorMarshall::create_output(CallContext* context, NativeBound
 
     // Create a new structured buffer for storage.
     BufferDesc buffer_desc;
-    buffer_desc.usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access | ResourceUsage::shared;
+    buffer_desc.usage = BufferUsage::shader_resource | BufferUsage::unordered_access | BufferUsage::shared;
     buffer_desc.struct_size = layout->stride();
     buffer_desc.element_count = shape.element_count();
     ref<Buffer> buffer = context->device()->create_buffer(buffer_desc);

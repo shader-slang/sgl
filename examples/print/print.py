@@ -10,7 +10,7 @@ device = sgl.Device(
     },
 )
 
-program = device.load_program("print.slang", ["main"])
+program = device.load_program("print.slang", ["compute_main"])
 kernel = device.create_compute_kernel(program)
 kernel.dispatch(thread_count=[2, 2, 1])
 

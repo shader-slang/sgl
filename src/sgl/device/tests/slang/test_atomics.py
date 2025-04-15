@@ -20,7 +20,9 @@ INT64_MAX = np.iinfo(np.int64).max
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_buffer_add_f16(device_type: sgl.DeviceType):
     if device_type == sgl.DeviceType.vulkan:
-        pytest.skip("FP16 atomic extension not yet supported by NVidia")
+        pytest.skip("InterlockedAddF16 atomic extension not yet supported by NVidia")
+    if device_type in [sgl.DeviceType.metal, sgl.DeviceType.cuda]:
+        pytest.skip("InterlockedAddF16 not supported")
 
     device = helpers.get_device(device_type)
 
@@ -45,8 +47,12 @@ def test_buffer_add_f16(device_type: sgl.DeviceType):
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_buffer_add_f16x2(device_type: sgl.DeviceType):
-    if device_type == sgl.DeviceType.vulkan:
-        pytest.skip("Vulkan does not support float16_t2 atomics")
+    if device_type in [
+        sgl.DeviceType.vulkan,
+        sgl.DeviceType.metal,
+        sgl.DeviceType.cuda,
+    ]:
+        pytest.skip("_NvInterlockedAddFp16x2 not supported")
 
     device = helpers.get_device(device_type)
 
@@ -71,6 +77,9 @@ def test_buffer_add_f16x2(device_type: sgl.DeviceType):
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_buffer_add_f32(device_type: sgl.DeviceType):
+    if device_type in [sgl.DeviceType.metal, sgl.DeviceType.cuda]:
+        pytest.skip("InterlockedAddF32 not supported")
+
     device = helpers.get_device(device_type)
 
     np.random.seed(123)
@@ -94,6 +103,9 @@ def test_buffer_add_f32(device_type: sgl.DeviceType):
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_buffer_add_u64(device_type: sgl.DeviceType):
+    if device_type in [sgl.DeviceType.metal, sgl.DeviceType.cuda]:
+        pytest.skip("InterlockedAdd64 not supported")
+
     device = helpers.get_device(device_type)
 
     np.random.seed(123)
@@ -119,6 +131,9 @@ def test_buffer_add_u64(device_type: sgl.DeviceType):
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_buffer_add_i64(device_type: sgl.DeviceType):
+    if device_type in [sgl.DeviceType.metal, sgl.DeviceType.cuda]:
+        pytest.skip("InterlockedAddI64 not supported")
+
     device = helpers.get_device(device_type)
 
     np.random.seed(123)
@@ -145,17 +160,27 @@ def test_buffer_add_i64(device_type: sgl.DeviceType):
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 @pytest.mark.parametrize("dimension", [1, 2, 3])
 def test_texture_add_f32(device_type: sgl.DeviceType, dimension: int):
+    if device_type in [sgl.DeviceType.metal, sgl.DeviceType.cuda]:
+        pytest.skip("InterlockedAddF32 not supported")
+
     device = helpers.get_device(device_type)
 
     np.random.seed(123)
     data = np.random.rand(ELEMENT_COUNT).astype(np.float32)
 
+    types = [
+        sgl.TextureType.texture_1d,
+        sgl.TextureType.texture_2d,
+        sgl.TextureType.texture_3d,
+    ]
+
     texture = device.create_texture(
         format=sgl.Format.r32_float,
+        type=types[dimension - 1],
         width=2,
-        height=2 if dimension > 1 else 0,
-        depth=2 if dimension > 2 else 0,
-        usage=sgl.ResourceUsage.unordered_access,
+        height=2 if dimension > 1 else 1,
+        depth=2 if dimension > 2 else 1,
+        usage=sgl.TextureUsage.unordered_access,
     )
 
     ctx = helpers.dispatch_compute(

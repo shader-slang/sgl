@@ -23,7 +23,10 @@ class DemoWindow(sgl.AppWindow):
         )
 
         loader = sgl.TextureLoader(self.device)
-        files = glob("C:/projects/train/images/*.jpg")
+        files = glob(
+            str(Path(__file__).parent.parent.parent) + "/data/test_images/*.jpg",
+            recursive=True,
+        )
         files = sorted(files)
         timer = sgl.Timer()
         self.texture = loader.load_texture_array(
@@ -32,7 +35,9 @@ class DemoWindow(sgl.AppWindow):
         print(f"elapsed={timer.elapsed_ms()} ms")
         print(self.texture)
 
-        program = self.device.load_program(str(EXAMPLE_DIR / "draw.slang"), ["main"])
+        program = self.device.load_program(
+            str(EXAMPLE_DIR / "draw.slang"), ["compute_main"]
+        )
         self.kernel = self.device.create_compute_kernel(program)
 
         self.render_texture: sgl.Texture = None  # type: ignore (will be immediately initialized)
@@ -43,7 +48,7 @@ class DemoWindow(sgl.AppWindow):
         window = sgl.ui.Window(self.screen, "Settings", size=sgl.float2(500, 300))
 
         self.layer = sgl.ui.SliderInt(
-            window, "Layer", value=0, min=0, max=self.texture.array_size - 1
+            window, "Layer", value=0, min=0, max=self.texture.array_length - 1
         )
         self.mip_level = sgl.ui.SliderFloat(
             window, "MIP Level", value=0, min=0, max=self.texture.mip_count - 1
@@ -53,8 +58,8 @@ class DemoWindow(sgl.AppWindow):
         )
 
     def render(self, render_context: sgl.AppWindow.RenderContext):
-        image = render_context.swapchain_image
-        command_buffer = render_context.command_buffer
+        image = render_context.surface_texture
+        command_encoder = render_context.command_encoder
 
         if (
             self.render_texture == None
@@ -65,10 +70,9 @@ class DemoWindow(sgl.AppWindow):
                 format=sgl.Format.rgba16_float,
                 width=image.width,
                 height=image.height,
-                mip_count=1,
-                usage=sgl.ResourceUsage.shader_resource
-                | sgl.ResourceUsage.unordered_access,
-                debug_name="render_texture",
+                usage=sgl.TextureUsage.shader_resource
+                | sgl.TextureUsage.unordered_access,
+                label="render_texture",
             )
 
         self.kernel.dispatch(
@@ -82,10 +86,10 @@ class DemoWindow(sgl.AppWindow):
                 "g_layer": self.layer.value,
                 "g_mip_level": self.mip_level.value,
             },
-            command_buffer=command_buffer,
+            command_encoder=command_encoder,
         )
 
-        command_buffer.blit(image, self.render_texture)
+        command_encoder.blit(image, self.render_texture)
 
 
 if __name__ == "__main__":

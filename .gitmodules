@@ -13,12 +13,12 @@
 [submodule "external/fmt"]
 	path = external/fmt
 	url = https://github.com/fmtlib/fmt.git
-[submodule "external/vulkan-headers"]
-	path = external/vulkan-headers
-	url = https://github.com/KhronosGroup/Vulkan-Headers.git
 [submodule "external/glfw"]
 	path = external/glfw
 	url = https://github.com/glfw/glfw.git
 [submodule "external/tevclient"]
 	path = external/tevclient
 	url = https://github.com/westlicht/tevclient.git
+[submodule "external/slang-rhi"]
+	path = external/slang-rhi
+	url = https://github.com/shader-slang/slang-rhi.git

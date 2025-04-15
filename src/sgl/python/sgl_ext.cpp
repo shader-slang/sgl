@@ -33,7 +33,6 @@ SGL_PY_DECLARE(device_formats);
 SGL_PY_DECLARE(device_framebuffer);
 SGL_PY_DECLARE(device_input_layout);
 SGL_PY_DECLARE(device_kernel);
-SGL_PY_DECLARE(device_memory_heap);
 SGL_PY_DECLARE(device_pipeline);
 SGL_PY_DECLARE(device_query);
 SGL_PY_DECLARE(device_raytracing);
@@ -43,7 +42,7 @@ SGL_PY_DECLARE(device_sampler);
 SGL_PY_DECLARE(device_shader_cursor);
 SGL_PY_DECLARE(device_shader_object);
 SGL_PY_DECLARE(device_shader);
-SGL_PY_DECLARE(device_swapchain);
+SGL_PY_DECLARE(device_surface);
 SGL_PY_DECLARE(device_types);
 
 SGL_PY_DECLARE(math_scalar);
@@ -122,12 +121,10 @@ NB_MODULE(sgl_ext, m_)
     SGL_PY_IMPORT(device_buffer_cursor);
     SGL_PY_IMPORT(device_shader_object);
     SGL_PY_IMPORT(device_shader_cursor);
-    SGL_PY_IMPORT(device_framebuffer);
-    SGL_PY_IMPORT(device_swapchain);
+    SGL_PY_IMPORT(device_surface);
     SGL_PY_IMPORT(device_command);
     SGL_PY_IMPORT(device_coopvec);
     SGL_PY_IMPORT(device_kernel);
-    SGL_PY_IMPORT(device_memory_heap);
     SGL_PY_IMPORT(device_device);
 
     m.def_submodule("ui", "UI module");

@@ -3,6 +3,7 @@
 #include "shader_cursor.h"
 
 #include "sgl/device/shader_object.h"
+#include "sgl/device/device.h"
 #include "sgl/device/resource.h"
 #include "sgl/device/cuda_interop.h"
 #include "sgl/device/cursor_utils.h"
@@ -352,50 +353,22 @@ inline bool is_acceleration_structure_resource_type(slang::TypeReflection* type)
         == TypeReflection::ResourceShape::acceleration_structure;
 }
 
-void ShaderCursor::set_resource(const ref<ResourceView>& resource_view) const
-{
-    slang::TypeReflection* type = cursor_utils::unwrap_array(m_type_layout)->getType();
-
-    SGL_CHECK(is_resource_type(type), "\"{}\" cannot bind a resource", m_type_layout->getName());
-
-    if (resource_view) {
-        if (is_shader_resource_type(type)) {
-            SGL_CHECK(
-                resource_view->type() == ResourceViewType::shader_resource,
-                "\"{}\" expects a shader resource view",
-                m_type_layout->getName()
-            );
-        } else if (is_unordered_access_type(type)) {
-            SGL_CHECK(
-                resource_view->type() == ResourceViewType::unordered_access,
-                "\"{}\" expects an unordered access view",
-                m_type_layout->getName()
-            );
-        } else {
-            SGL_THROW("\"{}\" expects a valid resource view", m_type_layout->getName());
-        }
-    }
-
-    m_shader_object->set_resource(m_offset, resource_view);
-}
-
 void ShaderCursor::set_buffer(const ref<Buffer>& buffer) const
 {
     slang::TypeReflection* type = cursor_utils::unwrap_array(m_type_layout)->getType();
 
     SGL_CHECK(is_buffer_resource_type(type), "\"{}\" cannot bind a buffer", m_type_layout->getName());
 
-    if (buffer) {
-        if (is_shader_resource_type(type)) {
-            set_resource(buffer->get_srv());
-        } else if (is_unordered_access_type(type)) {
-            set_resource(buffer->get_uav());
-        } else {
-            SGL_THROW("\"{}\" expects a valid buffer", m_type_layout->getName());
-        }
-    } else {
-        set_resource(nullptr);
-    }
+    m_shader_object->set_buffer(m_offset, buffer);
+}
+
+void ShaderCursor::set_buffer_view(const ref<BufferView>& buffer_view) const
+{
+    slang::TypeReflection* type = cursor_utils::unwrap_array(m_type_layout)->getType();
+
+    SGL_CHECK(is_buffer_resource_type(type), "\"{}\" cannot bind a buffer view", m_type_layout->getName());
+
+    m_shader_object->set_buffer_view(m_offset, buffer_view);
 }
 
 void ShaderCursor::set_texture(const ref<Texture>& texture) const
@@ -404,17 +377,16 @@ void ShaderCursor::set_texture(const ref<Texture>& texture) const
 
     SGL_CHECK(is_texture_resource_type(type), "\"{}\" cannot bind a texture", m_type_layout->getName());
 
-    if (texture) {
-        if (is_shader_resource_type(type)) {
-            set_resource(texture->get_srv());
-        } else if (is_unordered_access_type(type)) {
-            set_resource(texture->get_uav());
-        } else {
-            SGL_THROW("\"{}\" expects a valid texture", m_type_layout->getName());
-        }
-    } else {
-        set_resource(nullptr);
-    }
+    m_shader_object->set_texture(m_offset, texture);
+}
+
+void ShaderCursor::set_texture_view(const ref<TextureView>& texture_view) const
+{
+    slang::TypeReflection* type = cursor_utils::unwrap_array(m_type_layout)->getType();
+
+    SGL_CHECK(is_texture_resource_type(type), "\"{}\" cannot bind a texture view", m_type_layout->getName());
+
+    m_shader_object->set_texture_view(m_offset, texture_view);
 }
 
 void ShaderCursor::set_sampler(const ref<Sampler>& sampler) const
@@ -447,7 +419,7 @@ void ShaderCursor::set_data(const void* data, size_t size) const
     m_shader_object->set_data(m_offset, data, size);
 }
 
-void ShaderCursor::set_object(const ref<MutableShaderObject>& object) const
+void ShaderCursor::set_object(const ref<ShaderObject>& object) const
 {
     slang::TypeReflection* type = m_type_layout->getType();
 
@@ -572,7 +544,7 @@ void ShaderCursor::_set_matrix(
 //
 
 template<>
-SGL_API void ShaderCursor::set(const ref<MutableShaderObject>& value) const
+SGL_API void ShaderCursor::set(const ref<ShaderObject>& value) const
 {
     set_object(value);
 }
@@ -584,15 +556,21 @@ SGL_API void ShaderCursor::set(const ref<Buffer>& value) const
 }
 
 template<>
+SGL_API void ShaderCursor::set(const ref<BufferView>& value) const
+{
+    set_buffer_view(value);
+}
+
+template<>
 SGL_API void ShaderCursor::set(const ref<Texture>& value) const
 {
     set_texture(value);
 }
 
 template<>
-SGL_API void ShaderCursor::set(const ref<ResourceView>& value) const
+SGL_API void ShaderCursor::set(const ref<TextureView>& value) const
 {
-    set_resource(value);
+    set_texture_view(value);
 }
 
 template<>
@@ -687,10 +665,12 @@ template<>
 SGL_API void ShaderCursor::set(const bool& value) const
 {
 #if SGL_MACOS
-    bool v = value;
-#else
-    uint v = value ? 1 : 0;
+    if (m_shader_object->device()->type() == DeviceType::metal) {
+        _set_scalar(&value, sizeof(value), TypeReflection::ScalarType::bool_);
+        return;
+    }
 #endif
+    uint v = value ? 1 : 0;
     _set_scalar(&v, sizeof(v), TypeReflection::ScalarType::bool_);
 }
 
@@ -698,10 +678,12 @@ template<>
 SGL_API void ShaderCursor::set(const bool1& value) const
 {
 #if SGL_MACOS
-    bool1 v = value;
-#else
-    uint1 v(value.x ? 1 : 0);
+    if (m_shader_object->device()->type() == DeviceType::metal) {
+        _set_vector(&value, sizeof(value), TypeReflection::ScalarType::bool_, 1);
+        return;
+    }
 #endif
+    uint1 v(value.x ? 1 : 0);
     _set_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 1);
 }
 
@@ -709,10 +691,12 @@ template<>
 SGL_API void ShaderCursor::set(const bool2& value) const
 {
 #if SGL_MACOS
-    bool2 v = value;
-#else
-    uint2 v = {value.x ? 1 : 0, value.y ? 1 : 0};
+    if (m_shader_object->device()->type() == DeviceType::metal) {
+        _set_vector(&value, sizeof(value), TypeReflection::ScalarType::bool_, 2);
+        return;
+    }
 #endif
+    uint2 v = {value.x ? 1 : 0, value.y ? 1 : 0};
     _set_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 2);
 }
 
@@ -720,10 +704,12 @@ template<>
 SGL_API void ShaderCursor::set(const bool3& value) const
 {
 #if SGL_MACOS
-    bool3 v = value;
-#else
-    uint3 v = {value.x ? 1 : 0, value.y ? 1 : 0, value.z ? 1 : 0};
+    if (m_shader_object->device()->type() == DeviceType::metal) {
+        _set_vector(&value, sizeof(value), TypeReflection::ScalarType::bool_, 3);
+        return;
+    }
 #endif
+    uint3 v = {value.x ? 1 : 0, value.y ? 1 : 0, value.z ? 1 : 0};
     _set_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 3);
 }
 
@@ -731,10 +717,12 @@ template<>
 SGL_API void ShaderCursor::set(const bool4& value) const
 {
 #if SGL_MACOS
-    bool4 v = value;
-#else
-    uint4 v = {value.x ? 1 : 0, value.y ? 1 : 0, value.z ? 1 : 0, value.w ? 1 : 0};
+    if (m_shader_object->device()->type() == DeviceType::metal) {
+        _set_vector(&value, sizeof(value), TypeReflection::ScalarType::bool_, 4);
+        return;
+    }
 #endif
+    uint4 v = {value.x ? 1 : 0, value.y ? 1 : 0, value.z ? 1 : 0, value.w ? 1 : 0};
     _set_vector(&v, sizeof(v), TypeReflection::ScalarType::bool_, 4);
 }
 

@@ -9,38 +9,55 @@ import libcst.matchers as m
 # will be generated. If 'False', it will be ignored. If a type
 # is discovered but not in this list it will be treated as an error.
 DESCRIPTOR_CONVERT_TYPES = {
+    "AccelerationStructureBuildDesc": True,
+    "AccelerationStructureBuildInputInstances": True,
+    "AccelerationStructureBuildInputMotionOptions": True,
+    "AccelerationStructureBuildInputProceduralPrimitives": True,
+    "AccelerationStructureBuildInputTriangles": True,
+    "AccelerationStructureDesc": True,
+    "AccelerationStructureInstanceDesc": True,
+    "AccelerationStructureQueryDesc": True,
     "AppDesc": True,
     "AppWindowDesc": True,
-    "DeviceDesc": True,
-    "FenceDesc": True,
-    "FramebufferLayoutTargetDesc": True,
-    "FramebufferLayoutDesc": True,
-    "FramebufferDesc": True,
-    "InputElementDesc": True,
-    "VertexStreamDesc": True,
-    "InputLayoutDesc": True,
-    "ComputePipelineDesc": True,
-    "GraphicsPipelineDesc": True,
-    "HitGroupDesc": True,
-    "RayTracingPipelineDesc": True,
-    "QueryPoolDesc": True,
-    "ShaderTableDesc": True,
+    "AspectBlendDesc": True,
     "BufferDesc": True,
-    "TextureDesc": True,
+    "BufferOffsetPair": True,
+    "ColorTargetDesc": True,
+    "ComputePipelineDesc": True,
+    "DepthStencilDesc": True,
+    "DepthStencilOpDesc": True,
+    "DeviceDesc": True,
+    "DrawArguments": True,
+    "FenceDesc": True,
+    "HitGroupDesc": True,
+    "InputElementDesc": True,
+    "InputLayoutDesc": True,
+    "MultisampleDesc": True,
+    "QueryPoolDesc": True,
+    "RasterizerDesc": True,
+    "RayTracingPipelineDesc": True,
+    "RenderPassColorAttachment": True,
+    "RenderPassDepthStencilAttachment": True,
+    "RenderPassDesc": True,
+    "RenderPipelineDesc": True,
+    "RenderState": True,
     "SamplerDesc": True,
+    "ScissorRect": True,
+    "ShaderTableDesc": True,
     "SlangCompilerOptions": True,
     "SlangLinkOptions": True,
     "SlangSessionDesc": True,
-    "SwapchainDesc": True,
-    "Viewport": True,
-    "ScissorRect": True,
-    "DepthStencilDesc": True,
-    "RasterizerDesc": True,
-    "AspectBlendDesc": True,
-    "TargetBlendDesc": True,
-    "BlendDesc": True,
+    "SubresourceRange": True,
+    "SurfaceConfig": True,
+    "SurfaceConfig": True,
+    "TextureDesc": True,
     "TextureLoader.Options": True,
+    "TextureViewDesc": True,
+    "VertexStreamDesc": True,
+    "Viewport": True,
 }
+
+ADDITIONAL_DESCRIPTOR_CONVERTIONS = {"BufferOffsetPair": ("Buffer",)}
 
 QUIET = False
 
@@ -286,6 +303,17 @@ class InsertTypesTransformer(cst.CSTTransformer):
             ]
         )
 
+        # Check for additional types to union with the descriptor
+        # dictionary. This is used for types like BufferOffsetPair which
+        # are a union of Buffer and BufferOffsetPair.
+        if result.class_type.name.value in ADDITIONAL_DESCRIPTOR_CONVERTIONS:
+            additional = [
+                cst.SubscriptElement(slice=cst.Index(value=cst.Name(x)))
+                for x in ADDITIONAL_DESCRIPTOR_CONVERTIONS[result.class_type.name.value]
+            ]
+        else:
+            additional = []
+
         # Also generate a corresponding union that combines the source type with the new TypedDict.
         union_type_alias = cst.SimpleStatementLine(
             body=[
@@ -310,7 +338,8 @@ class InsertTypesTransformer(cst.CSTTransformer):
                                     )
                                 )
                             ),
-                        ],
+                        ]
+                        + additional,
                     ),
                 )
             ]
@@ -608,7 +637,7 @@ def find_convertable_descriptors(tree: cst.Module) -> list[FCDStackInfo]:
     for result in find_convertable_types_visitor.results:
         if not result.full_name in DESCRIPTOR_CONVERT_TYPES:
             raise Exception(
-                f"Discovered descriptor class {result.full_name}, but not in list of types to convert. Add it to the list in extend_pyi.py."
+                f"Discovered descriptor class {result.full_name}, but not in list of types to convert. Add it to the list in postprocess_stub.py."
             )
     for conv_type in DESCRIPTOR_CONVERT_TYPES:
         if not any(
@@ -616,7 +645,7 @@ def find_convertable_descriptors(tree: cst.Module) -> list[FCDStackInfo]:
             for result in find_convertable_types_visitor.results
         ):
             raise Exception(
-                f"Type {conv_type} is in list of types to convert but no corresponding descriptor class was discovered. Remove it from the list in extend_pyi.py."
+                f"Type {conv_type} is in list of types to convert but no corresponding descriptor class was discovered. Remove it from the list in postprocess_stub.py."
             )
 
     # Filter only results for which DESCRIPTOR_CONVERT_TYPES is true.
@@ -737,9 +766,15 @@ if __name__ == "__main__":
     parser.add_argument(
         "--quiet", action="store_true", help="Suppress output to console"
     )
+    parser.add_argument(
+        "--submodule",
+        action="store_true",
+        help="Mark as a submodule with reduced post processing.",
+    )
     args = vars(parser.parse_args())
     input_filename = args["file"]
     output_filename = args.get("out")
+    submodule = args.get("submodule", False)
     if output_filename is None:
         output_filename = input_filename
     QUIET = args.get("quiet", False)
@@ -758,15 +793,17 @@ if __name__ == "__main__":
 
     tree = load_file(input_filename)
 
-    convertable_types = find_convertable_descriptors(tree)
+    if not submodule:
+        convertable_types = find_convertable_descriptors(tree)
 
-    tree = insert_converted_descriptors(tree, convertable_types)
+        tree = insert_converted_descriptors(tree, convertable_types)
 
     tree = insert_typing_imports(tree)
 
-    tree = replace_types(tree, convertable_types)
+    if not submodule:
+        tree = replace_types(tree, convertable_types)
 
-    tree = extend_vector_types(tree)
+        tree = extend_vector_types(tree)
 
     tree = fix_numpy_types(tree)
 

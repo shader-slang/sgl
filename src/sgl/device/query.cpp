@@ -14,23 +14,23 @@ QueryPool::QueryPool(ref<Device> device, QueryPoolDesc desc)
     : DeviceResource(std::move(device))
     , m_desc(std::move(desc))
 {
-    gfx::IQueryPool::Desc gfx_desc{
-        .type = static_cast<gfx::QueryType>(m_desc.type),
-        .count = narrow_cast<gfx::GfxCount>(m_desc.count),
+    rhi::QueryPoolDesc rhi_desc{
+        .type = static_cast<rhi::QueryType>(m_desc.type),
+        .count = m_desc.count,
     };
-    SLANG_CALL(m_device->gfx_device()->createQueryPool(gfx_desc, m_gfx_query_pool.writeRef()));
+    SLANG_CALL(m_device->rhi_device()->createQueryPool(rhi_desc, m_rhi_query_pool.writeRef()));
 }
 
 void QueryPool::reset()
 {
-    SLANG_CALL(m_gfx_query_pool->reset());
+    SLANG_CALL(m_rhi_query_pool->reset());
 }
 
 void QueryPool::get_results(uint32_t index, uint32_t count, std::span<uint64_t> result)
 {
     SGL_CHECK(index + count <= m_desc.count, "'index' / 'count' out of range");
     SGL_CHECK(result.size() >= count, "'result' buffer too small");
-    SLANG_CALL(m_gfx_query_pool->getResult(index, count, result.data()));
+    SLANG_CALL(m_rhi_query_pool->getResult(index, count, result.data()));
 }
 
 std::vector<uint64_t> QueryPool::get_results(uint32_t index, uint32_t count)
@@ -44,7 +44,7 @@ uint64_t QueryPool::get_result(uint32_t index)
 {
     SGL_CHECK(index < m_desc.count, "'index' out of range");
     uint64_t result;
-    SLANG_CALL(m_gfx_query_pool->getResult(index, 1, &result));
+    SLANG_CALL(m_rhi_query_pool->getResult(index, 1, &result));
     return result;
 }
 

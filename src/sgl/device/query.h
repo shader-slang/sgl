@@ -10,7 +10,7 @@
 #include "sgl/core/object.h"
 #include "sgl/core/enum.h"
 
-#include <slang-gfx.h>
+#include <slang-rhi.h>
 
 #include <span>
 
@@ -40,13 +40,13 @@ public:
     std::vector<double> get_timestamp_results(uint32_t index, uint32_t count);
     double get_timestamp_result(uint32_t index);
 
-    gfx::IQueryPool* gfx_query_pool() const { return m_gfx_query_pool; }
+    rhi::IQueryPool* rhi_query_pool() const { return m_rhi_query_pool; }
 
     std::string to_string() const override;
 
 private:
     QueryPoolDesc m_desc;
-    Slang::ComPtr<gfx::IQueryPool> m_gfx_query_pool;
+    Slang::ComPtr<rhi::IQueryPool> m_rhi_query_pool;
 };
 
 } // namespace sgl

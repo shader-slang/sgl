@@ -16,7 +16,6 @@
 #include "sgl/device/command.h"
 #include "sgl/device/shader_cursor.h"
 #include "sgl/device/pipeline.h"
-#include "sgl/device/framebuffer.h"
 
 #include <imgui.h>
 #include <cmrc/cmrc.hpp>
@@ -307,14 +306,18 @@ Context::Context(ref<Device> device)
         int width;
         int height;
         io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
+        SubresourceData data[1] = {{
+            .data = pixels,
+            .size = size_t(width * height * 4),
+            .row_pitch = size_t(width * 4),
+            .slice_pitch = size_t(width * height * 4),
+        }};
         m_font_texture = m_device->create_texture({
             .format = Format::rgba8_unorm,
             .width = narrow_cast<uint32_t>(width),
             .height = narrow_cast<uint32_t>(height),
-            .mip_count = 1,
-            .usage = ResourceUsage::shader_resource,
-            .data = pixels,
-            .data_size = size_t(width * height * 4),
+            .usage = TextureUsage::shader_resource,
+            .data = data,
         });
 
         io.Fonts->SetTexID(static_cast<ImTextureID>(m_font_texture.get()));
@@ -356,12 +359,12 @@ void Context::new_frame(uint32_t width, uint32_t height)
     ImGui::NewFrame();
 }
 
-void Context::render(Framebuffer* framebuffer, CommandBuffer* command_buffer)
+void Context::render(TextureView* texture_view, CommandEncoder* command_encoder)
 {
     ImGui::SetCurrentContext(m_imgui_context);
     ImGuiIO& io = ImGui::GetIO();
 
-    bool is_srgb_format = get_format_info(framebuffer->desc().render_targets[0]->resource()->format()).is_srgb_format();
+    bool is_srgb_format = get_format_info(texture_view->format()).is_srgb_format();
 
     m_screen->render();
 
@@ -378,9 +381,9 @@ void Context::render(Framebuffer* framebuffer, CommandBuffer* command_buffer)
         if (!vertex_buffer || vertex_buffer->size() < draw_data->TotalVtxCount * sizeof(ImDrawVert)) {
             vertex_buffer = m_device->create_buffer({
                 .size = draw_data->TotalVtxCount * sizeof(ImDrawVert) + 128 * 1024,
-                .usage = ResourceUsage::vertex,
                 .memory_type = MemoryType::upload,
-                .debug_name = "imgui vertex buffer",
+                .usage = BufferUsage::vertex_buffer,
+                .label = "imgui vertex buffer",
             });
         }
 
@@ -388,9 +391,9 @@ void Context::render(Framebuffer* framebuffer, CommandBuffer* command_buffer)
         if (!index_buffer || index_buffer->size() < draw_data->TotalIdxCount * sizeof(ImDrawIdx)) {
             index_buffer = m_device->create_buffer({
                 .size = draw_data->TotalIdxCount * sizeof(ImDrawIdx) + 1024,
-                .usage = ResourceUsage::index,
                 .memory_type = MemoryType::upload,
-                .debug_name = "imgui index buffer",
+                .usage = BufferUsage::index_buffer,
+                .label = "imgui index buffer",
             });
         }
 
@@ -408,8 +411,16 @@ void Context::render(Framebuffer* framebuffer, CommandBuffer* command_buffer)
         index_buffer->unmap();
 
         // Render command lists.
-        RenderCommandEncoder encoder = command_buffer->encode_render_commands(framebuffer);
-        ref<ShaderObject> shader_object = encoder.bind_pipeline(get_pipeline(framebuffer));
+        auto pass_encoder = command_encoder->begin_render_pass({
+            .color_attachments = {
+                {
+                    .view = texture_view,
+                    .load_op = LoadOp::load,
+                    .store_op = StoreOp::store,
+                },
+            },
+        });
+        ShaderObject* shader_object = pass_encoder->bind_pipeline(get_pipeline(texture_view->desc().format));
         ShaderCursor shader_cursor = ShaderCursor(shader_object);
         shader_cursor["sampler"] = m_sampler;
         shader_cursor["scale"] = 2.f / float2(io.DisplaySize.x, -io.DisplaySize.y);
@@ -417,17 +428,13 @@ void Context::render(Framebuffer* framebuffer, CommandBuffer* command_buffer)
         shader_cursor["is_srgb_format"] = is_srgb_format;
         ShaderOffset texture_offset = shader_cursor["texture"].offset();
 
-        encoder.set_vertex_buffer(0, vertex_buffer);
-        encoder.set_index_buffer(index_buffer, sizeof(ImDrawIdx) == 2 ? Format::r16_uint : Format::r32_uint);
-        encoder.set_primitive_topology(PrimitiveTopology::triangle_list);
-        encoder.set_viewport_and_scissor_rect({
-            .x = 0.f,
-            .y = 0.f,
-            .width = io.DisplaySize.x,
-            .height = io.DisplaySize.y,
-            .min_depth = 0.f,
-            .max_depth = 1.f,
-        });
+        RenderState render_state = {
+            .viewports = {Viewport::from_size(io.DisplaySize.x, io.DisplaySize.y)},
+            .scissor_rects = {ScissorRect{}},
+            .vertex_buffers = {vertex_buffer},
+            .index_buffer = index_buffer,
+            .index_format = sizeof(ImDrawIdx) == 2 ? IndexFormat::uint16 : IndexFormat::uint32,
+        };
 
         int vertex_offset = 0;
         int index_offset = 0;
@@ -439,24 +446,36 @@ void Context::render(Framebuffer* framebuffer, CommandBuffer* command_buffer)
                 SGL_ASSERT(pcmd->UserCallback == nullptr);
                 // Project scissor/clipping rectangles into framebuffer space.
                 ScissorRect clip_rect{
-                    .min_x = int32_t(pcmd->ClipRect.x - clip_off.x),
-                    .min_y = int32_t(pcmd->ClipRect.y - clip_off.y),
-                    .max_x = int32_t(pcmd->ClipRect.z - clip_off.x),
-                    .max_y = int32_t(pcmd->ClipRect.w - clip_off.y),
+                    .min_x = uint32_t(pcmd->ClipRect.x - clip_off.x),
+                    .min_y = uint32_t(pcmd->ClipRect.y - clip_off.y),
+                    .max_x = uint32_t(pcmd->ClipRect.z - clip_off.x),
+                    .max_y = uint32_t(pcmd->ClipRect.w - clip_off.y),
                 };
                 if (clip_rect.max_x <= clip_rect.min_x || clip_rect.max_y <= clip_rect.min_y)
                     continue;
 
                 // Apply scissor/clipping rectangle, bind texture, draw.
-                encoder.set_scissor_rects(std::span<ScissorRect>{&clip_rect, 1});
-                Texture* texture = static_cast<Texture*>(pcmd->GetTexID());
-                shader_object->set_resource(texture_offset, texture ? texture->get_srv() : nullptr);
-                encoder.draw_indexed(pcmd->ElemCount, pcmd->IdxOffset + index_offset, pcmd->VtxOffset + vertex_offset);
+                render_state.scissor_rects[0] = clip_rect;
+                ref<Texture> texture = ref<Texture>(static_cast<Texture*>(pcmd->GetTexID()));
+                shader_object->set_texture(texture_offset, texture);
+                pass_encoder->set_render_state(render_state);
+                pass_encoder->draw_indexed({
+                    .vertex_count = pcmd->ElemCount,
+                    .start_vertex_location = pcmd->VtxOffset + vertex_offset,
+                    .start_index_location = pcmd->IdxOffset + index_offset,
+                });
             }
             index_offset += cmd_list->IdxBuffer.Size;
             vertex_offset += cmd_list->VtxBuffer.Size;
         }
+        pass_encoder->end();
     }
+}
+
+void Context::render(Texture* texture, CommandEncoder* command_encoder)
+{
+    // TODO(slang-rhi) use default_view once it is available
+    render(texture->create_view({}), command_encoder);
 }
 
 bool Context::handle_keyboard_event(const KeyboardEvent& event)
@@ -513,21 +532,20 @@ void Context::process_events()
     m_screen->dispatch_events();
 }
 
-GraphicsPipeline* Context::get_pipeline(Framebuffer* framebuffer)
+RenderPipeline* Context::get_pipeline(Format format)
 {
-    auto it = m_pipelines.find(framebuffer->layout()->desc());
+    auto it = m_pipelines.find(format);
     if (it != m_pipelines.end())
         return it->second;
 
     // Create pipeline.
-    ref<GraphicsPipeline> pipeline = m_device->create_graphics_pipeline({
+    ref<RenderPipeline> pipeline = m_device->create_render_pipeline({
         .program = m_program,
         .input_layout = m_input_layout,
-        .framebuffer_layout = framebuffer->layout(),
-        .primitive_type = PrimitiveType::triangle,
-        .blend = {.targets = {
+        .primitive_topology = PrimitiveTopology::triangle_list,
+        .targets = {
             {
-                .enable_blend = true,
+                .format = format,
                 .color = {
                     .src_factor = BlendFactor::src_alpha,
                     .dst_factor = BlendFactor::inv_src_alpha,
@@ -538,11 +556,12 @@ GraphicsPipeline* Context::get_pipeline(Framebuffer* framebuffer)
                     .dst_factor = BlendFactor::inv_src_alpha,
                     .op = BlendOp::add,
                 },
+                .enable_blend = true,
             },
-        }},
+        },
     });
 
-    m_pipelines.emplace(framebuffer->layout()->desc(), pipeline);
+    m_pipelines.emplace(format, pipeline);
     return pipeline;
 }
 

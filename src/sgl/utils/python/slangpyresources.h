@@ -20,13 +20,13 @@ namespace sgl::slangpy {
 
 class NativeBufferMarshall : public NativeMarshall {
 public:
-    NativeBufferMarshall(ref<NativeSlangType> slang_type, ResourceUsage usage)
+    NativeBufferMarshall(ref<NativeSlangType> slang_type, BufferUsage usage)
         : NativeMarshall(slang_type)
         , m_usage(usage)
     {
     }
 
-    ResourceUsage usage() { return m_usage; }
+    BufferUsage usage() { return m_usage; }
 
     void write_shader_cursor_pre_dispatch(
         CallContext* context,
@@ -41,7 +41,7 @@ public:
     nb::object create_dispatchdata(nb::object data) const override { return data; }
 
 private:
-    ResourceUsage m_usage;
+    BufferUsage m_usage;
 };
 
 class NativeTextureMarshall : public NativeMarshall {
@@ -51,7 +51,7 @@ public:
         ref<NativeSlangType> element_type,
         TypeReflection::ResourceShape resource_shape,
         Format format,
-        ResourceUsage usage,
+        TextureUsage usage,
         int dims
     )
         : NativeMarshall(std::move(slang_type))
@@ -64,7 +64,7 @@ public:
     }
 
     TypeReflection::ResourceShape resource_shape() const { return m_resource_shape; }
-    ResourceUsage usage() const { return m_usage; }
+    TextureUsage usage() const { return m_usage; }
     int texture_dims() const { return m_texture_dims; }
     ref<NativeSlangType> slang_element_type() const { return m_slang_element_type; }
 
@@ -89,7 +89,7 @@ public:
 private:
     TypeReflection::ResourceShape m_resource_shape;
     Format m_format;
-    ResourceUsage m_usage;
+    TextureUsage m_usage;
     int m_texture_dims;
     ref<NativeSlangType> m_slang_element_type;
 };

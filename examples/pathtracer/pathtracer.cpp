@@ -18,7 +18,7 @@
 #include "sgl/device/pipeline.h"
 #include "sgl/device/kernel.h"
 #include "sgl/device/shader_cursor.h"
-#include "sgl/device/swapchain.h"
+#include "sgl/device/surface.h"
 #include "sgl/device/agility_sdk.h"
 
 #include "sgl/utils/tev.h"
@@ -407,8 +407,8 @@ struct Scene {
             material_descs[i].base_color = stage.materials[i].base_color;
 
         material_descs_buffer = device->create_buffer({
-            .usage = ResourceUsage::shader_resource,
-            .debug_name = "material_descs_buffer",
+            .usage = BufferUsage::shader_resource,
+            .label = "material_descs_buffer",
             .data = material_descs.data(),
             .data_size = material_descs.size() * sizeof(MaterialDesc),
         });
@@ -448,28 +448,28 @@ struct Scene {
             indices.insert(indices.end(), mesh.indices.begin(), mesh.indices.end());
         }
         vertex_buffer = device->create_buffer({
-            .usage = ResourceUsage::shader_resource,
-            .debug_name = "vertex_buffer",
+            .usage = BufferUsage::shader_resource,
+            .label = "vertex_buffer",
             .data = vertices.data(),
             .data_size = vertices.size() * sizeof(Mesh::Vertex),
         });
         index_buffer = device->create_buffer({
-            .usage = ResourceUsage::shader_resource,
-            .debug_name = "index_buffer",
+            .usage = BufferUsage::shader_resource,
+            .label = "index_buffer",
             .data = indices.data(),
             .data_size = indices.size() * sizeof(uint32_t),
         });
 
         mesh_descs_buffer = device->create_buffer({
-            .usage = ResourceUsage::shader_resource,
-            .debug_name = "mesh_descs_buffer",
+            .usage = BufferUsage::shader_resource,
+            .label = "mesh_descs_buffer",
             .data = mesh_descs.data(),
             .data_size = mesh_descs.size() * sizeof(MeshDesc),
         });
 
         instance_descs_buffer = device->create_buffer({
-            .usage = ResourceUsage::shader_resource,
-            .debug_name = "instance_descs_buffer",
+            .usage = BufferUsage::shader_resource,
+            .label = "instance_descs_buffer",
             .data = instance_descs.data(),
             .data_size = instance_descs.size() * sizeof(InstanceDesc),
         });
@@ -483,23 +483,23 @@ struct Scene {
             inverse_transpose_transforms[i] = transpose(inverse(transforms[i]));
 
         transforms_buffer = device->create_buffer({
-            .usage = ResourceUsage::shader_resource,
-            .debug_name = "transforms_buffer",
+            .usage = BufferUsage::shader_resource,
+            .label = "transforms_buffer",
             .data = transforms.data(),
             .data_size = transforms.size() * sizeof(float4x4),
         });
 
         inverse_transpose_transforms_buffer = device->create_buffer({
-            .usage = ResourceUsage::shader_resource,
-            .debug_name = "inverse_transpose_transforms_buffer",
+            .usage = BufferUsage::shader_resource,
+            .label = "inverse_transpose_transforms_buffer",
             .data = inverse_transpose_transforms.data(),
             .data_size = inverse_transpose_transforms.size() * sizeof(float4x4),
         });
 
         float3x4 identity = float3x4::identity();
         identity_buffer = device->create_buffer({
-            .usage = ResourceUsage::shader_resource,
-            .debug_name = "identity_buffer",
+            .usage = BufferUsage::shader_resource,
+            .label = "identity_buffer",
             .data = &identity,
             .data_size = sizeof(identity),
         });
@@ -514,119 +514,81 @@ struct Scene {
 
     ref<AccelerationStructure> build_blas(const MeshDesc& mesh_desc)
     {
-        RayTracingGeometryDesc blas_geometry_desc;
-        blas_geometry_desc.type = RayTracingGeometryType::triangles;
-        blas_geometry_desc.flags = RayTracingGeometryFlags::opaque;
-        blas_geometry_desc.triangles.transform3x4 = identity_buffer->device_address();
-        blas_geometry_desc.triangles.index_format = Format::r32_uint;
-        blas_geometry_desc.triangles.vertex_format = Format::rgb32_float;
-        blas_geometry_desc.triangles.index_count = mesh_desc.index_count;
-        blas_geometry_desc.triangles.vertex_count = mesh_desc.vertex_count;
-        blas_geometry_desc.triangles.index_data = index_buffer->device_address() + mesh_desc.index_offset * 4;
-        blas_geometry_desc.triangles.vertex_data = vertex_buffer->device_address() + mesh_desc.vertex_offset * 32;
-        blas_geometry_desc.triangles.vertex_stride = 32;
+        AccelerationStructureBuildInputTriangles build_input{
+            .vertex_buffers = {BufferOffsetPair(vertex_buffer, mesh_desc.vertex_offset * sizeof(Mesh::Vertex))},
+            .vertex_format = Format::rgb32_float,
+            .vertex_count = mesh_desc.vertex_count,
+            .vertex_stride = sizeof(Mesh::Vertex),
+            .index_buffer = BufferOffsetPair(index_buffer, mesh_desc.index_offset * sizeof(uint32_t)),
+            .index_format = IndexFormat::uint32,
+            .index_count = mesh_desc.index_count,
+            .flags = AccelerationStructureGeometryFlags::opaque,
+        };
 
-        AccelerationStructureBuildInputs blas_build_inputs;
-        blas_build_inputs.kind = AccelerationStructureKind::bottom_level;
-        blas_build_inputs.flags = AccelerationStructureBuildFlags::none;
-        blas_build_inputs.desc_count = 1;
-        blas_build_inputs.geometry_descs = &blas_geometry_desc;
+        AccelerationStructureBuildDesc build_desc{
+            .inputs = {build_input},
+        };
 
-        AccelerationStructurePrebuildInfo blas_prebuild_info
-            = device->get_acceleration_structure_prebuild_info(blas_build_inputs);
-
-        ref<Buffer> blas_scratch_buffer = device->create_buffer({
-            .size = blas_prebuild_info.scratch_data_size,
-            .usage = ResourceUsage::unordered_access,
-            .debug_name = "blas_scratch_buffer",
-        });
-
-        ref<Buffer> blas_buffer = device->create_buffer({
-            .size = blas_prebuild_info.result_data_max_size,
-            .usage = ResourceUsage::acceleration_structure,
-            .debug_name = "blas_buffer",
-        });
+        AccelerationStructureSizes sizes = device->get_acceleration_structure_sizes(build_desc);
 
         ref<AccelerationStructure> blas = device->create_acceleration_structure({
-            .kind = AccelerationStructureKind::bottom_level,
-            .buffer = blas_buffer,
-            .size = blas_buffer->size(),
+            .size = sizes.acceleration_structure_size,
+            .label = "blas",
         });
 
-        ref<CommandBuffer> command_buffer = device->create_command_buffer();
-        {
-            RayTracingCommandEncoder encoder = command_buffer->encode_ray_tracing_commands();
-            encoder.build_acceleration_structure({
-                .inputs = blas_build_inputs,
-                .dst = blas,
-                .scratch_data = blas_scratch_buffer->device_address(),
-            });
-        }
-        command_buffer->submit();
+        ref<Buffer> blas_scratch_buffer = device->create_buffer({
+            .size = sizes.scratch_size,
+            .usage = BufferUsage::unordered_access,
+            .label = "blas_scratch_buffer",
+        });
+
+        ref<CommandEncoder> command_encoder = device->create_command_encoder();
+        command_encoder->build_acceleration_structure(build_desc, blas, nullptr, blas_scratch_buffer);
+        device->submit_command_buffer(command_encoder->finish());
 
         return blas;
     }
 
     ref<AccelerationStructure> build_tlas()
     {
-        std::vector<RayTracingInstanceDesc> rt_instance_descs;
-        rt_instance_descs.reserve(stage.instances.size());
+        ref<AccelerationStructureInstanceList> instance_list
+            = device->create_acceleration_structure_instance_list(instance_descs.size());
+
         for (size_t instance_id = 0; instance_id < instance_descs.size(); ++instance_id) {
             const InstanceDesc& instance_desc = instance_descs[instance_id];
-            RayTracingInstanceDesc rt_instance_desc;
-            rt_instance_desc.transform = float3x4(transforms[instance_desc.transform_id]);
-            rt_instance_desc.instance_id = narrow_cast<uint32_t>(instance_id);
-            rt_instance_desc.instance_mask = 0xFF;
-            rt_instance_desc.instance_contribution_to_hit_group_index = 0;
-            rt_instance_desc.set_flags(RayTracingInstanceFlags::none);
-            rt_instance_desc.acceleration_structure = blases[instance_desc.mesh_id]->device_address();
-            rt_instance_descs.push_back(rt_instance_desc);
+            instance_list->write(
+                instance_id,
+                AccelerationStructureInstanceDesc{
+                    .transform = float3x4(transforms[instance_desc.transform_id]),
+                    .instance_id = narrow_cast<uint32_t>(instance_id),
+                    .instance_mask = 0xFF,
+                    .instance_contribution_to_hit_group_index = 0,
+                    .flags = AccelerationStructureInstanceFlags::none,
+                    .acceleration_structure = blases[instance_desc.mesh_id]->handle(),
+                }
+            );
         }
 
-        ref<Buffer> rt_instance_buffer = device->create_buffer({
-            .usage = ResourceUsage::shader_resource,
-            .debug_name = "rt_instance_buffer",
-            .data = rt_instance_descs.data(),
-            .data_size = rt_instance_descs.size() * sizeof(RayTracingInstanceDesc),
-        });
+        AccelerationStructureBuildDesc build_desc{
+            .inputs = {instance_list->build_input_instances()},
+        };
 
-        AccelerationStructureBuildInputs tlas_build_inputs;
-        tlas_build_inputs.kind = AccelerationStructureKind::top_level;
-        tlas_build_inputs.flags = AccelerationStructureBuildFlags::none;
-        tlas_build_inputs.desc_count = uint32_t(rt_instance_descs.size());
-        tlas_build_inputs.instance_descs = rt_instance_buffer->device_address();
-
-        AccelerationStructurePrebuildInfo tlas_prebuild_info
-            = device->get_acceleration_structure_prebuild_info(tlas_build_inputs);
-
-        ref<Buffer> tlas_scratch_buffer = device->create_buffer({
-            .size = tlas_prebuild_info.scratch_data_size,
-            .usage = ResourceUsage::unordered_access,
-            .debug_name = "tlas_scratch_buffer",
-        });
-
-        ref<Buffer> tlas_buffer = device->create_buffer({
-            .size = tlas_prebuild_info.result_data_max_size,
-            .usage = ResourceUsage::acceleration_structure,
-            .debug_name = "tlas_buffer",
-        });
+        AccelerationStructureSizes sizes = device->get_acceleration_structure_sizes(build_desc);
 
         ref<AccelerationStructure> tlas_ = device->create_acceleration_structure({
-            .kind = AccelerationStructureKind::top_level,
-            .buffer = tlas_buffer,
-            .size = tlas_buffer->size(),
+            .size = sizes.acceleration_structure_size,
+            .label = "tlas",
         });
 
-        ref<CommandBuffer> command_buffer = device->create_command_buffer();
-        {
-            RayTracingCommandEncoder encoder = command_buffer->encode_ray_tracing_commands();
-            encoder.build_acceleration_structure({
-                .inputs = tlas_build_inputs,
-                .dst = tlas_,
-                .scratch_data = tlas_scratch_buffer->device_address(),
-            });
-        }
-        command_buffer->submit();
+        ref<Buffer> tlas_scratch_buffer = device->create_buffer({
+            .size = sizes.scratch_size,
+            .usage = BufferUsage::unordered_access,
+            .label = "tlas_scratch_buffer",
+        });
+
+        ref<CommandEncoder> command_encoder = device->create_command_encoder();
+        command_encoder->build_acceleration_structure(build_desc, tlas_, nullptr, tlas_scratch_buffer);
+        device->submit_command_buffer(command_encoder->finish());
 
         return tlas_;
     }
@@ -658,15 +620,16 @@ struct PathTracer {
         pipeline = device->create_compute_pipeline({.program = program});
     }
 
-    void execute(ref<CommandBuffer> command_buffer, ref<Texture> output, uint32_t frame)
+    void execute(ref<CommandEncoder> command_encoder, ref<Texture> output, uint32_t frame)
     {
-        ComputeCommandEncoder encoder = command_buffer->encode_compute_commands();
-        ref<ShaderObject> shader_object = encoder.bind_pipeline(pipeline);
+        ref<ComputePassEncoder> pass_encoder = command_encoder->begin_compute_pass();
+        ShaderObject* shader_object = pass_encoder->bind_pipeline(pipeline);
         ShaderCursor cursor = ShaderCursor(shader_object);
         cursor["g_output"] = output;
         cursor["g_frame"] = frame;
         scene.bind(cursor["g_scene"]);
-        encoder.dispatch({output->width(), output->height(), 1});
+        pass_encoder->dispatch({output->width(), output->height(), 1});
+        pass_encoder->end();
     }
 };
 
@@ -682,16 +645,15 @@ struct Accumulator {
         kernel = device->create_compute_kernel({.program = program});
     }
 
-    void execute(ref<CommandBuffer> command_buffer, ref<Texture> input, ref<Texture> output, bool reset = false)
+    void execute(ref<CommandEncoder> command_encoder, ref<Texture> input, ref<Texture> output, bool reset = false)
     {
         if (!accumulator || accumulator->width() != input->width() || accumulator->height() != input->height()) {
             accumulator = device->create_texture({
                 .format = Format::rgba32_float,
                 .width = input->width(),
                 .height = input->height(),
-                .mip_count = 1,
-                .usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access,
-                .debug_name = "accumulator",
+                .usage = TextureUsage::shader_resource | TextureUsage::unordered_access,
+                .label = "accumulator",
             });
         }
         kernel->dispatch(
@@ -704,7 +666,7 @@ struct Accumulator {
                 a["accumulator"] = accumulator;
                 a["reset"] = reset;
             },
-            command_buffer
+            command_encoder
         );
     }
 };
@@ -720,7 +682,7 @@ struct ToneMapper {
         kernel = device->create_compute_kernel({.program = program});
     }
 
-    void execute(ref<CommandBuffer> command_buffer, ref<Texture> input, ref<Texture> output)
+    void execute(ref<CommandEncoder> command_encoder, ref<Texture> input, ref<Texture> output)
     {
         kernel->dispatch(
             uint3(input->width(), input->height(), 1),
@@ -730,7 +692,7 @@ struct ToneMapper {
                 t["input"] = input;
                 t["output"] = output;
             },
-            command_buffer
+            command_encoder
         );
     }
 };
@@ -738,7 +700,7 @@ struct ToneMapper {
 struct App {
     ref<Window> window;
     ref<Device> device;
-    ref<Swapchain> swapchain;
+    ref<Surface> surface;
     ref<Texture> render_texture;
     ref<Texture> accum_texture;
     ref<Texture> output_texture;
@@ -761,14 +723,12 @@ struct App {
             .enable_debug_layers = true,
             .compiler_options = {.include_paths = {EXAMPLE_DIR}},
         });
-        swapchain = device->create_swapchain(
-            {
-                .width = window->width(),
-                .height = window->height(),
-                .enable_vsync = false,
-            },
-            window
-        );
+        surface = device->create_surface(window);
+        surface->configure({
+            .width = window->width(),
+            .height = window->height(),
+            .vsync = false,
+        });
 
         window->set_on_keyboard_event([this](const KeyboardEvent& event) { on_keyboard_event(event); });
         window->set_on_mouse_event([this](const MouseEvent& event) { on_mouse_event(event); });
@@ -808,7 +768,11 @@ struct App {
     void on_resize(uint32_t width, uint32_t height)
     {
         device->wait();
-        swapchain->resize(width, height);
+        surface->configure({
+            .width = width,
+            .height = height,
+            .vsync = false,
+        });
     }
 
     void main_loop()
@@ -824,55 +788,50 @@ struct App {
             if (camera_controller->update(dt))
                 frame = 0;
 
-            int index = swapchain->acquire_next_image();
-            if (index < 0)
+            ref<Texture> surface_texture = surface->acquire_next_image();
+            if (!surface_texture)
                 continue;
 
-            ref<Texture> image = swapchain->get_image(index);
-            if (!output_texture || output_texture->width() != image->width()
-                || output_texture->height() != image->height()) {
+            if (!output_texture || output_texture->width() != surface_texture->width()
+                || output_texture->height() != surface_texture->height()) {
                 output_texture = device->create_texture({
                     .format = Format::rgba32_float,
-                    .width = image->width(),
-                    .height = image->height(),
-                    .mip_count = 1,
-                    .usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access,
-                    .debug_name = "output_texture",
+                    .width = surface_texture->width(),
+                    .height = surface_texture->height(),
+                    .usage = TextureUsage::shader_resource | TextureUsage::unordered_access,
+                    .label = "output_texture",
                 });
                 render_texture = device->create_texture({
                     .format = Format::rgba32_float,
-                    .width = image->width(),
-                    .height = image->height(),
-                    .mip_count = 1,
-                    .usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access,
-                    .debug_name = "render_texture",
+                    .width = surface_texture->width(),
+                    .height = surface_texture->height(),
+                    .usage = TextureUsage::shader_resource | TextureUsage::unordered_access,
+                    .label = "render_texture",
                 });
                 accum_texture = device->create_texture({
                     .format = Format::rgba32_float,
-                    .width = image->width(),
-                    .height = image->height(),
-                    .mip_count = 1,
-                    .usage = ResourceUsage::shader_resource | ResourceUsage::unordered_access,
-                    .debug_name = "accum_texture",
+                    .width = surface_texture->width(),
+                    .height = surface_texture->height(),
+                    .usage = TextureUsage::shader_resource | TextureUsage::unordered_access,
+                    .label = "accum_texture",
                 });
             }
 
-            stage->camera.width = image->width();
-            stage->camera.height = image->height();
+            stage->camera.width = surface_texture->width();
+            stage->camera.height = surface_texture->height();
             stage->camera.recompute();
 
-            ref<CommandBuffer> command_buffer = device->create_command_buffer();
+            ref<CommandEncoder> command_encoder = device->create_command_encoder();
+            {
+                path_tracer->execute(command_encoder, render_texture, frame);
+                accumulator->execute(command_encoder, render_texture, accum_texture, frame == 0);
+                tone_mapper->execute(command_encoder, accum_texture, output_texture);
 
-            path_tracer->execute(command_buffer, render_texture, frame);
-            accumulator->execute(command_buffer, render_texture, accum_texture, frame == 0);
-            tone_mapper->execute(command_buffer, accum_texture, output_texture);
+                command_encoder->blit(surface_texture, output_texture);
+            }
+            device->submit_command_buffer(command_encoder->finish());
 
-            command_buffer->blit(image, output_texture);
-            command_buffer->set_texture_state(image, ResourceState::present);
-            command_buffer->submit();
-            image.reset();
-
-            swapchain->present();
+            surface->present();
 
             device->run_garbage_collection();
 

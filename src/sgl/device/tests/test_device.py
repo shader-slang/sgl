@@ -26,9 +26,10 @@ def test_create_device(device_type: sgl.DeviceType):
     assert device.info.type == device_type
     assert device.info.adapter_name != ""
     API_NAMES = {
-        sgl.DeviceType.d3d12: "Direct3D 12",
+        sgl.DeviceType.d3d12: "D3D12",
         sgl.DeviceType.vulkan: "Vulkan",
         sgl.DeviceType.metal: "Metal",
+        sgl.DeviceType.cuda: "CUDA",
     }
     assert device.info.api_name == API_NAMES[device_type]
 
@@ -78,9 +79,9 @@ def test_global_buffer_alignment(device_type: sgl.DeviceType):
 
     # Create a small 16B buffer.
     small_buffer = device.create_buffer(
-        usage=sgl.ResourceUsage.unordered_access | sgl.ResourceUsage.shader_resource,
+        usage=sgl.BufferUsage.unordered_access | sgl.BufferUsage.shader_resource,
         size=16,
-        debug_name="count_buffer",
+        label="count_buffer",
         data=np.array([0, 0, 0, 0], dtype=np.uint32),
     )
 
@@ -95,8 +96,8 @@ def test_global_buffer_alignment(device_type: sgl.DeviceType):
         format=sgl.Format.rgba32_float,
         width=256,
         height=256,
-        usage=sgl.ResourceUsage.shader_resource,
-        debug_name="render_texture",
+        usage=sgl.TextureUsage.shader_resource,
+        label="render_texture",
         data=texture_data,
     )
 

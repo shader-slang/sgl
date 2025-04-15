@@ -11,12 +11,14 @@ namespace sgl {
 struct DeviceDesc;
 class Device;
 
-// swapchain.h
+// surface.h
 
-struct SwapchainDesc;
-class Swapchain;
+struct SurfaceInfo;
+struct SurfaceConfig;
+class Surface;
 
 // buffer_cursor.h
+
 class BufferCursor;
 class BufferElementCursor;
 
@@ -27,11 +29,14 @@ class Resource;
 struct BufferDesc;
 class Buffer;
 
+struct BufferViewDesc;
+class BufferView;
+
 struct TextureDesc;
 class Texture;
 
-struct ResourceViewDesc;
-class ResourceView;
+struct TextureViewDesc;
+class TextureView;
 
 // sampler.h
 
@@ -42,14 +47,6 @@ class Sampler;
 
 struct FenceDesc;
 class Fence;
-
-// framebuffer.h
-
-struct FramebufferLayoutTargetDesc;
-struct FramebufferLayoutDesc;
-class FramebufferLayout;
-struct FramebufferDesc;
-class Framebuffer;
 
 // shader.h
 
@@ -94,8 +91,8 @@ class ComputeKernel;
 class Pipeline;
 struct ComputePipelineDesc;
 class ComputePipeline;
-struct GraphicsPipelineDesc;
-class GraphicsPipeline;
+struct RenderPipelineDesc;
+class RenderPipeline;
 struct RayTracingPipelineDesc;
 class RayTracingPipeline;
 
@@ -108,32 +105,28 @@ class QueryPool;
 
 struct AccelerationStructureDesc;
 class AccelerationStructure;
+class AccelerationStructureInstanceList;
 struct ShaderTableDesc;
 class ShaderTable;
 
 // command.h
 
+class CommandQueue;
+class CommandEncoder;
+class RenderPassEncoder;
+class ComputePassEncoder;
+class RayTracingPassEncoder;
 class CommandBuffer;
-class ComputeCommandEncoder;
-class RenderCommandEncoder;
-class RayTracingCommandEncoder;
 
 // shader_cursor.h
 
 class ShaderCursor;
 class ShaderObject;
-class TransientShaderObject;
-class MutableShaderObject;
 
 // input_layout.h
 
 struct InputLayoutDesc;
 class InputLayout;
-
-// memory_heap.h
-
-struct MemoryHeapDesc;
-class MemoryHeap;
 
 // blit.h
 

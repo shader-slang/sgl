@@ -30,15 +30,22 @@ public:
      *
      * Blits the full extent of the source texture to the destination texture.
      *
-     * \param command_buffer Command buffer.
-     * \param dst RTV of the destination texture.
-     * \param src SRV of the source texture.
+     * \param command_encoder Command encoder.
+     * \param dst View of the destination texture.
+     * \param src View of the source texture.
      * \param filter Filtering mode to use.
      */
     void blit(
-        CommandBuffer* command_buffer,
-        ResourceView* dst,
-        ResourceView* src,
+        CommandEncoder* command_encoder,
+        TextureView* dst,
+        TextureView* src,
+        TextureFilteringMode filter = TextureFilteringMode::linear
+    );
+
+    void blit(
+        CommandEncoder* command_encoder,
+        Texture* dst,
+        Texture* src,
         TextureFilteringMode filter = TextureFilteringMode::linear
     );
 
@@ -49,14 +56,14 @@ public:
      * The texture needs to have mip levels pre-allocated and have usage flags for SRV and RTV.
      * Supports both 2D and 2D array textures.
      *
-     * \param command_buffer Command buffer.
+     * \param command_encoder Command encoder.
      * \param texture Texture to generate mipmaps for.
      * \param array_layer Array layer to generate mipmaps for.
      */
-    void generate_mips(CommandBuffer* command_buffer, Texture* texture, uint32_t array_layer = 0);
+    void generate_mips(CommandEncoder* command_encoder, Texture* texture, uint32_t array_layer = 0);
 
 private:
-    enum class TextureType {
+    enum class TextureDataType {
         float_,
         int_,
     };
@@ -68,21 +75,21 @@ private:
 
     struct ProgramKey {
         TextureLayout src_layout;
-        TextureType src_type;
-        TextureType dst_type;
+        TextureDataType src_type;
+        TextureDataType dst_type;
 
         auto operator<=>(const ProgramKey&) const = default;
     };
 
     ref<ShaderProgram> get_program(ProgramKey key);
-    ref<GraphicsPipeline> get_pipeline(ProgramKey key, const Framebuffer* framebuffer);
+    ref<RenderPipeline> get_pipeline(ProgramKey key, Format dst_format);
 
     Device* m_device;
     ref<Sampler> m_linear_sampler;
     ref<Sampler> m_point_sampler;
 
     std::map<ProgramKey, ref<ShaderProgram>> m_program_cache;
-    std::map<std::pair<ProgramKey, FramebufferLayoutDesc>, ref<GraphicsPipeline>> m_pipeline_cache;
+    std::map<std::pair<ProgramKey, Format>, ref<RenderPipeline>> m_pipeline_cache;
 };
 
 } // namespace sgl

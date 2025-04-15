@@ -11,6 +11,7 @@ SGL_PY_EXPORT(device_formats)
     nb::sgl_enum<Format>(m, "Format");
     nb::sgl_enum<FormatType>(m, "FormatType");
     nb::sgl_enum_flags<FormatChannels>(m, "FormatChannels");
+    nb::sgl_enum_flags<FormatSupport>(m, "FormatSupport");
 
     nb::class_<FormatInfo>(m, "FormatInfo", D(FormatInfo))
         .def_ro("format", &FormatInfo::format, D(FormatInfo, format))
@@ -27,7 +28,6 @@ SGL_PY_EXPORT(device_formats)
         .def_ro("dxgi_format", &FormatInfo::dxgi_format, D(FormatInfo, dxgi_format))
         .def_ro("vk_format", &FormatInfo::vk_format, D(FormatInfo, vk_format))
         .def("is_depth_stencil", &FormatInfo::is_depth_stencil, D(FormatInfo, is_depth_stencil))
-        .def("is_typeless_format", &FormatInfo::is_typeless_format, D(FormatInfo, is_typeless_format))
         .def("is_float_format", &FormatInfo::is_float_format, D(FormatInfo, is_float_format))
         .def("is_integer_format", &FormatInfo::is_integer_format, D(FormatInfo, is_integer_format))
         .def("is_normalized_format", &FormatInfo::is_normalized_format, D(FormatInfo, is_normalized_format))

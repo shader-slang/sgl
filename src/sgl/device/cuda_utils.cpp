@@ -52,11 +52,8 @@ CUexternalMemory import_external_memory(const Buffer* buffer)
     SGL_CU_SCOPE(buffer->device());
 
     SGL_CHECK_NOT_NULL(buffer);
-    SGL_CHECK(
-        is_set(buffer->desc().usage, ResourceUsage::shared),
-        "Buffer was not created with ResourceUsage::shared."
-    );
-    SharedResourceHandle shared_handle = buffer->get_shared_handle();
+    SGL_CHECK(is_set(buffer->desc().usage, BufferUsage::shared), "Buffer was not created with shared usage.");
+    NativeHandle shared_handle = buffer->get_shared_handle();
     SGL_CHECK(shared_handle, "Buffer shared handle creation failed.");
 
     CUDA_EXTERNAL_MEMORY_HANDLE_DESC desc = {};
@@ -64,16 +61,16 @@ CUexternalMemory import_external_memory(const Buffer* buffer)
 #if SGL_WINDOWS
     case DeviceType::d3d12:
         desc.type = CU_EXTERNAL_MEMORY_HANDLE_TYPE_D3D12_RESOURCE;
-        desc.handle.win32.handle = (void*)shared_handle;
+        desc.handle.win32.handle = (void*)shared_handle.value();
         break;
     case DeviceType::vulkan:
         desc.type = CU_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32;
-        desc.handle.win32.handle = (void*)shared_handle;
+        desc.handle.win32.handle = (void*)shared_handle.value();
         break;
 #elif SGL_LINUX
     case DeviceType::vulkan:
         desc.type = CU_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD;
-        desc.handle.fd = (int)(shared_handle);
+        desc.handle.fd = (int)(shared_handle.value());
         break;
 #endif
     default:
@@ -108,7 +105,7 @@ CUexternalSemaphore import_external_semaphore(const Fence* fence)
 {
     SGL_CHECK_NOT_NULL(fence);
     SGL_CHECK(fence->desc().shared, "Fence was not created with shared flag.");
-    SharedFenceHandle shared_handle = fence->get_shared_handle();
+    NativeHandle shared_handle = fence->get_shared_handle();
     SGL_CHECK(shared_handle, "Fence shared handle creation failed.");
 
     CUDA_EXTERNAL_SEMAPHORE_HANDLE_DESC desc = {};
@@ -116,16 +113,16 @@ CUexternalSemaphore import_external_semaphore(const Fence* fence)
 #if SGL_WINDOWS
     case DeviceType::d3d12:
         desc.type = CU_EXTERNAL_SEMAPHORE_HANDLE_TYPE_D3D12_FENCE;
-        desc.handle.win32.handle = (void*)shared_handle;
+        desc.handle.win32.handle = (void*)shared_handle.value();
         break;
     case DeviceType::vulkan:
         desc.type = CU_EXTERNAL_SEMAPHORE_HANDLE_TYPE_TIMELINE_SEMAPHORE_WIN32;
-        desc.handle.win32.handle = (void*)shared_handle;
+        desc.handle.win32.handle = (void*)shared_handle.value();
         break;
 #elif SGL_LINUX
     case DeviceType::vulkan:
         desc.type = CU_EXTERNAL_SEMAPHORE_HANDLE_TYPE_TIMELINE_SEMAPHORE_FD;
-        desc.handle.fd = (int)shared_handle;
+        desc.handle.fd = (int)shared_handle.value();
         break;
 #endif
     default:
@@ -204,7 +201,7 @@ inline int get_device_attribute(CUdevice device, CUdevice_attribute attribute)
 Device::Device(const sgl::Device* device)
 {
     SGL_CHECK_NOT_NULL(device);
-    SGL_CHECK(sgl_cuda_api_init(), "Failed to load CUDA driver API.");
+    SGL_CHECK(rhiCudaDriverApiInit(), "Failed to load CUDA driver API.");
     SGL_CU_CHECK(cuInit(0));
 
     // Get number of available CUDA devices.

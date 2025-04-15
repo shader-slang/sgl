@@ -12,7 +12,7 @@
 
 #include "sgl/math/vector.h"
 
-#include <slang-gfx.h>
+#include <slang-rhi.h>
 
 namespace sgl {
 
@@ -30,6 +30,7 @@ struct SamplerDesc {
     float4 border_color{1.f, 1.f, 1.f, 1.f};
     float min_lod{-1000.f};
     float max_lod{1000.f};
+    std::string label;
 };
 
 class SGL_API Sampler : public DeviceResource {
@@ -40,7 +41,7 @@ public:
 
     const SamplerDesc& desc() const { return m_desc; }
 
-    gfx::ISamplerState* gfx_sampler_state() const { return m_gfx_sampler_state; }
+    rhi::ISampler* rhi_sampler() const { return m_rhi_sampler; }
 
     /// Returns the native API handle:
     /// - D3D12: D3D12_CPU_DESCRIPTOR_HANDLE
@@ -51,7 +52,7 @@ public:
 
 private:
     SamplerDesc m_desc;
-    Slang::ComPtr<gfx::ISamplerState> m_gfx_sampler_state;
+    Slang::ComPtr<rhi::ISampler> m_rhi_sampler;
 };
 
 } // namespace sgl

@@ -8,5 +8,5 @@ SGL_PY_EXPORT(core_data_type)
 {
     using namespace sgl;
 
-    nb::sgl_enum<DataType>(m, "DataType", D_NA(DataType));
+    nb::sgl_enum<DataType>(m, "DataType", D(DataType));
 }

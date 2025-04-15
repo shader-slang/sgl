@@ -6,3 +6,5 @@ tools/host
 
 .DS_Store
 *.pyc
+
+.vs/

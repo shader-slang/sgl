@@ -8,7 +8,7 @@ RWStructuredBuffer<float> result;
 
 [shader("compute")]
 [numthreads(1, 1, 1)]
-void computeMain(uint3 tid: SV_DispatchThreadID)
+void compute_main(uint3 tid: SV_DispatchThreadID)
 {
     result[0] = BINARY_OP::apply(1.0, 2.0);
 }

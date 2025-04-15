@@ -21,7 +21,7 @@ from sglhelpers import test_id  # type: ignore (pytest fixture)
 # variables works.
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_link_time_modules_compile(test_id: str, device_type: sgl.DeviceType):
-    if sys.platform == "linux" or sys.platform == "linux2" or sys.platform == "darwin":
+    if sys.platform == "linux" or sys.platform == "linux2":
         pytest.skip("This test currently crashes on linux")
 
     device = helpers.get_device(type=device_type)
@@ -41,7 +41,7 @@ def test_link_time_modules_compile(test_id: str, device_type: sgl.DeviceType):
 
         [shader("compute")]
         [numthreads(NUM_THREADS, 1, 1)]
-        void computeMain(uint3 tid: SV_DispatchThreadID)
+        void compute_main(uint3 tid: SV_DispatchThreadID)
         {
         }
     """,
@@ -49,7 +49,7 @@ def test_link_time_modules_compile(test_id: str, device_type: sgl.DeviceType):
     assert main_module is not None
 
     program = device.link_program(
-        [main_module, extra_module], [main_module.entry_point("computeMain")]
+        [main_module, extra_module], [main_module.entry_point("compute_main")]
     )
     assert program is not None
 
@@ -78,14 +78,14 @@ def test_link_time_constant_value(
 
         [shader("compute")]
         [numthreads(16, 1, 1)]
-        void computeMain(uint3 tid: SV_DispatchThreadID)
+        void compute_main(uint3 tid: SV_DispatchThreadID)
         {
             result[tid.x] = tid.x * VALUE;
         }
     """,
     )
     program = device.link_program(
-        [main_module, extra_module], [main_module.entry_point("computeMain")]
+        [main_module, extra_module], [main_module.entry_point("compute_main")]
     )
     assert program is not None
     assert program.layout.entry_points[0].compute_thread_group_size == [16, 1, 1]
@@ -95,7 +95,7 @@ def test_link_time_constant_value(
     result = device.create_buffer(
         element_count=16,
         struct_type=program.reflection.result,
-        usage=sgl.ResourceUsage.unordered_access,
+        usage=sgl.BufferUsage.unordered_access,
     )
 
     kernel.dispatch(thread_count=[16, 1, 1], vars={"result": result})
@@ -110,7 +110,7 @@ def test_link_time_constant_value(
 @pytest.mark.parametrize("value", [2, 5])
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_link_time_constants(device_type: sgl.DeviceType, value: int):
-    if sys.platform == "linux" or sys.platform == "linux2" or sys.platform == "darwin":
+    if sys.platform == "linux" or sys.platform == "linux2":
         pytest.skip("This test currently crashes on linux")
 
     device = helpers.get_device(type=device_type)
@@ -124,7 +124,7 @@ def test_link_time_constants(device_type: sgl.DeviceType, value: int):
 
     program = device.load_program(
         module_name="test_link_time_constants.slang",
-        entry_point_names=["computeMain"],
+        entry_point_names=["compute_main"],
         additional_source=constants,
     )
 
@@ -135,7 +135,7 @@ def test_link_time_constants(device_type: sgl.DeviceType, value: int):
     result = device.create_buffer(
         element_count=16,
         struct_type=program.reflection.result,
-        usage=sgl.ResourceUsage.unordered_access,
+        usage=sgl.BufferUsage.unordered_access,
     )
 
     kernel.dispatch(thread_count=[16, 1, 1], vars={"result": result})
@@ -160,7 +160,7 @@ def test_link_time_type(device_type: sgl.DeviceType, op: str):
 
     program = device.load_program(
         module_name="test_link_time_type.slang",
-        entry_point_names=["computeMain"],
+        entry_point_names=["compute_main"],
         additional_source=constants,
     )
 
@@ -169,7 +169,7 @@ def test_link_time_type(device_type: sgl.DeviceType, op: str):
     result = device.create_buffer(
         element_count=1,
         struct_type=program.reflection.result,
-        usage=sgl.ResourceUsage.unordered_access,
+        usage=sgl.BufferUsage.unordered_access,
     )
 
     kernel.dispatch(thread_count=[1, 1, 1], vars={"result": result})

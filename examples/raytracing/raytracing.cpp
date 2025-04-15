@@ -31,147 +31,97 @@ int main()
         std::vector<uint32_t> indices{0, 1, 2};
 
         ref<Buffer> vertex_buffer = device->create_buffer({
-            .usage = ResourceUsage::shader_resource,
-            .debug_name = "vertex_buffer",
+            .usage = BufferUsage::acceleration_structure_build_input,
+            .label = "vertex_buffer",
             .data = vertices.data(),
             .data_size = vertices.size() * sizeof(float3),
         });
 
         ref<Buffer> index_buffer = device->create_buffer({
-            .usage = ResourceUsage::shader_resource,
-            .debug_name = "index_buffer",
+            .usage = BufferUsage::acceleration_structure_build_input,
+            .label = "index_buffer",
             .data = indices.data(),
             .data_size = indices.size() * sizeof(uint32_t),
         });
 
-        float3x4 identity_transform = float3x4::identity();
-        ref<Buffer> transform_buffer = device->create_buffer({
-            .usage = ResourceUsage::shader_resource,
-            .debug_name = "transform_buffer",
-            .data = &identity_transform,
-            .data_size = sizeof(identity_transform),
-        });
-
-        RayTracingGeometryDesc blas_geometry_desc{
-            .type = RayTracingGeometryType::triangles,
-            .flags = RayTracingGeometryFlags::opaque,
-            .triangles{
-                .transform3x4 = transform_buffer->device_address(),
-                .index_format = Format::r32_uint,
-                .vertex_format = Format::rgb32_float,
-                .index_count = narrow_cast<uint32_t>(indices.size()),
-                .vertex_count = narrow_cast<uint32_t>(vertices.size()),
-                .index_data = index_buffer->device_address(),
-                .vertex_data = vertex_buffer->device_address(),
-                .vertex_stride = sizeof(float3),
-            }};
-
-        AccelerationStructureBuildInputs blas_build_inputs{
-            .kind = AccelerationStructureKind::bottom_level,
-            .flags = AccelerationStructureBuildFlags::none,
-            .desc_count = 1,
-            .geometry_descs = &blas_geometry_desc,
+        AccelerationStructureBuildInputTriangles blas_input_triangles{
+            .vertex_buffers = {vertex_buffer},
+            .vertex_format = Format::rgb32_float,
+            .vertex_count = narrow_cast<uint32_t>(vertices.size()),
+            .vertex_stride = sizeof(float3),
+            .index_buffer = index_buffer,
+            .index_format = IndexFormat::uint32,
+            .index_count = narrow_cast<uint32_t>(indices.size()),
+            .flags = AccelerationStructureGeometryFlags::opaque,
         };
 
-        AccelerationStructurePrebuildInfo blas_prebuild_info
-            = device->get_acceleration_structure_prebuild_info(blas_build_inputs);
+        AccelerationStructureBuildDesc blas_build_desc{
+            .inputs = {blas_input_triangles},
+        };
+
+        AccelerationStructureSizes blas_sizes = device->get_acceleration_structure_sizes(blas_build_desc);
 
         ref<Buffer> blas_scratch_buffer = device->create_buffer({
-            .size = blas_prebuild_info.scratch_data_size,
-            .usage = ResourceUsage::unordered_access,
-            .debug_name = "blas_scratch_buffer",
-        });
-
-        ref<Buffer> blas_buffer = device->create_buffer({
-            .size = blas_prebuild_info.result_data_max_size,
-            .initial_state = ResourceState::acceleration_structure,
-            .usage = ResourceUsage::acceleration_structure,
-            .debug_name = "blas_buffer",
+            .size = blas_sizes.scratch_size,
+            .usage = BufferUsage::unordered_access,
+            .label = "blas_scratch_buffer",
         });
 
         ref<AccelerationStructure> blas = device->create_acceleration_structure({
-            .kind = AccelerationStructureKind::bottom_level,
-            .buffer = blas_buffer,
-            .size = blas_buffer->size(),
+            .size = blas_sizes.acceleration_structure_size,
+            .label = "blas",
         });
 
+        // Build bottom level acceleration structure.
         {
-            ref<CommandBuffer> command_buffer = device->create_command_buffer();
-            {
-                auto encoder = command_buffer->encode_ray_tracing_commands();
-                encoder.build_acceleration_structure({
-                    .inputs = blas_build_inputs,
-                    .dst = blas,
-                    .scratch_data = blas_scratch_buffer->device_address(),
-                });
-            }
-            command_buffer->submit();
+            ref<CommandEncoder> command_encoder = device->create_command_encoder();
+            command_encoder->build_acceleration_structure(blas_build_desc, blas, nullptr, blas_scratch_buffer);
+            device->submit_command_buffer(command_encoder->finish());
         }
 
-        RayTracingInstanceDesc instance_desc{
-            .transform = identity_transform,
-            .instance_id = 0,
-            .instance_mask = 0xff,
-            .instance_contribution_to_hit_group_index = 0,
-            .flags_ = 0,
-            .acceleration_structure = blas->device_address(),
+        ref<AccelerationStructureInstanceList> instance_list = device->create_acceleration_structure_instance_list(1);
+        instance_list->write(
+            0,
+            AccelerationStructureInstanceDesc{
+                .transform = float3x4::identity(),
+                .instance_id = 0,
+                .instance_mask = 0xff,
+                .instance_contribution_to_hit_group_index = 0,
+                .flags = AccelerationStructureInstanceFlags::none,
+                .acceleration_structure = blas->handle(),
+            }
+        );
+
+        AccelerationStructureBuildDesc tlas_build_desc{
+            .inputs = {instance_list->build_input_instances()},
         };
 
-        ref<Buffer> instance_buffer = device->create_buffer({
-            .usage = ResourceUsage::shader_resource,
-            .debug_name = "instance_buffer",
-            .data = &instance_desc,
-            .data_size = sizeof(instance_desc),
-        });
-
-        AccelerationStructureBuildInputs tlas_build_inputs{
-            .kind = AccelerationStructureKind::top_level,
-            .flags = AccelerationStructureBuildFlags::none,
-            .desc_count = 1,
-            .instance_descs = instance_buffer->device_address(),
-        };
-
-        AccelerationStructurePrebuildInfo tlas_prebuild_info
-            = device->get_acceleration_structure_prebuild_info(tlas_build_inputs);
+        AccelerationStructureSizes tlas_sizes = device->get_acceleration_structure_sizes(tlas_build_desc);
 
         ref<Buffer> tlas_scratch_buffer = device->create_buffer({
-            .size = tlas_prebuild_info.scratch_data_size,
-            .usage = ResourceUsage::unordered_access,
-            .debug_name = "tlas_scratch_buffer",
-        });
-
-        ref<Buffer> tlas_buffer = device->create_buffer({
-            .size = tlas_prebuild_info.result_data_max_size,
-            .initial_state = ResourceState::acceleration_structure,
-            .usage = ResourceUsage::acceleration_structure,
-            .debug_name = "tlas_buffer",
+            .size = tlas_sizes.scratch_size,
+            .usage = BufferUsage::unordered_access,
+            .label = "tlas_scratch_buffer",
         });
 
         ref<AccelerationStructure> tlas = device->create_acceleration_structure({
-            .kind = AccelerationStructureKind::top_level,
-            .buffer = tlas_buffer,
-            .size = tlas_buffer->size(),
+            .size = tlas_sizes.acceleration_structure_size,
+            .label = "tlas",
         });
 
+        // Build top level acceleration structure.
         {
-            ref<CommandBuffer> command_buffer = device->create_command_buffer();
-            {
-                auto encoder = command_buffer->encode_ray_tracing_commands();
-                encoder.build_acceleration_structure({
-                    .inputs = tlas_build_inputs,
-                    .dst = tlas,
-                    .scratch_data = tlas_scratch_buffer->device_address(),
-                });
-            }
-            command_buffer->submit();
+            ref<CommandEncoder> command_encoder = device->create_command_encoder();
+            command_encoder->build_acceleration_structure(tlas_build_desc, tlas, nullptr, tlas_scratch_buffer);
+            device->submit_command_buffer(command_encoder->finish());
         }
 
         ref<Texture> render_texture = device->create_texture({
             .format = Format::rgba32_float,
             .width = 1024,
             .height = 1024,
-            .usage = ResourceUsage::unordered_access,
-            .debug_name = "render_texture",
+            .usage = TextureUsage::unordered_access,
+            .label = "render_texture",
         });
 
         ref<ShaderProgram> program = device->load_program("raytracing.slang", {"main"});

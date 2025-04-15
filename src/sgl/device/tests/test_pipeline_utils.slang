@@ -2,7 +2,7 @@
 
 [shader("compute")]
 [numthreads(16, 16, 1)]
-void clear(uint2 tid: SV_DispatchThreadID, RWTexture2D<float4> render_texture)
+void clear(uint3 tid: SV_DispatchThreadID, RWTexture2D<float4> render_texture)
 {
     uint2 dim;
     render_texture.GetDimensions(dim.x, dim.y);
@@ -13,7 +13,7 @@ void clear(uint2 tid: SV_DispatchThreadID, RWTexture2D<float4> render_texture)
 
 [shader("compute")]
 [numthreads(16, 16, 1)]
-void count(uint2 tid: SV_DispatchThreadID, Texture2D<float4> render_texture, RWByteAddressBuffer count_buffer)
+void count(uint3 tid: SV_DispatchThreadID, Texture2D<float4> render_texture, RWByteAddressBuffer count_buffer)
 {
     uint2 dim;
     render_texture.GetDimensions(dim.x, dim.y);
@@ -29,7 +29,7 @@ void count(uint2 tid: SV_DispatchThreadID, Texture2D<float4> render_texture, RWB
 [shader("compute")]
 [numthreads(16, 16, 1)]
 void setcolor(
-    uint2 tid: SV_DispatchThreadID,
+    uint3 tid: SV_DispatchThreadID,
     RWTexture2D<float4> render_texture,
     uniform int2 pos,
     uniform int2 size,

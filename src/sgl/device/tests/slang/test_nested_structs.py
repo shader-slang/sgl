@@ -11,16 +11,16 @@ import sglhelpers as helpers
 
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
-def test_cast_float16(device_type: sgl.DeviceType):
+def test_nested_structs(device_type: sgl.DeviceType):
     device = helpers.get_device(device_type)
 
-    program = device.load_program("slang/test_nested_structs.slang", ["computeMain"])
+    program = device.load_program("slang/test_nested_structs.slang", ["compute_main"])
     kernel = device.create_compute_kernel(program)
 
     result_buffer = device.create_buffer(
         struct_type=kernel.reflection.result,
         element_count=32,
-        usage=sgl.ResourceUsage.unordered_access,
+        usage=sgl.BufferUsage.unordered_access,
     )
 
     kernel.dispatch(

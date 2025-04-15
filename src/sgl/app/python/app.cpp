@@ -5,7 +5,6 @@
 #include "sgl/app/app.h"
 #include "sgl/device/command.h"
 #include "sgl/device/resource.h"
-#include "sgl/device/framebuffer.h"
 #include "sgl/ui/widgets.h"
 
 namespace sgl {
@@ -20,7 +19,7 @@ SGL_DICT_TO_DESC_FIELD(height, uint32_t)
 SGL_DICT_TO_DESC_FIELD(title, std::string)
 SGL_DICT_TO_DESC_FIELD(mode, WindowMode)
 SGL_DICT_TO_DESC_FIELD(resizable, bool)
-SGL_DICT_TO_DESC_FIELD(swapchain_format, Format)
+SGL_DICT_TO_DESC_FIELD(surface_format, Format)
 SGL_DICT_TO_DESC_FIELD(enable_vsync, bool)
 SGL_DICT_TO_DESC_END()
 
@@ -93,7 +92,7 @@ SGL_PY_EXPORT(app_app)
         .def_rw("title", &AppWindowDesc::title, D(AppWindowDesc, title))
         .def_rw("mode", &AppWindowDesc::mode, D(AppWindowDesc, mode))
         .def_rw("resizable", &AppWindowDesc::resizable, D(AppWindowDesc, resizable))
-        .def_rw("swapchain_format", &AppWindowDesc::swapchain_format, D(AppWindowDesc, swapchain_format))
+        .def_rw("surface_format", &AppWindowDesc::surface_format, D(AppWindowDesc, surface_format))
         .def_rw("enable_vsync", &AppWindowDesc::enable_vsync, D(AppWindowDesc, enable_vsync));
     nb::implicitly_convertible<nb::dict, AppWindowDesc>();
 
@@ -101,15 +100,14 @@ SGL_PY_EXPORT(app_app)
 
     nb::class_<AppWindow::RenderContext>(app_window, "RenderContext", D(AppWindow, RenderContext))
         .def_ro(
-            "swapchain_image",
-            &AppWindow::RenderContext::swapchain_image,
-            D(AppWindow, RenderContext, swapchain_image)
+            "surface_texture",
+            &AppWindow::RenderContext::surface_texture,
+            D(AppWindow, RenderContext, surface_texture)
         )
-        .def_ro("framebuffer", &AppWindow::RenderContext::framebuffer, D(AppWindow, RenderContext, framebuffer))
         .def_ro(
-            "command_buffer",
-            &AppWindow::RenderContext::command_buffer,
-            D(AppWindow, RenderContext, command_buffer)
+            "command_encoder",
+            &AppWindow::RenderContext::command_encoder,
+            D(AppWindow, RenderContext, command_encoder)
         );
 
     app_window //
@@ -122,7 +120,7 @@ SGL_PY_EXPORT(app_app)
                std::string title,
                WindowMode mode,
                bool resizable,
-               Format swapchain_format,
+               Format surface_format,
                bool enable_vsync)
             {
                 new (self) PyAppWindow({
@@ -132,7 +130,7 @@ SGL_PY_EXPORT(app_app)
                     .title = title,
                     .mode = mode,
                     .resizable = resizable,
-                    .swapchain_format = swapchain_format,
+                    .surface_format = surface_format,
                     .enable_vsync = enable_vsync,
                 });
             },
@@ -142,7 +140,7 @@ SGL_PY_EXPORT(app_app)
             "title"_a = AppWindowDesc().title,
             "mode"_a = AppWindowDesc().mode,
             "resizable"_a = AppWindowDesc().resizable,
-            "swapchain_format"_a = AppWindowDesc().swapchain_format,
+            "surface_format"_a = AppWindowDesc().surface_format,
             "enable_vsync"_a = AppWindowDesc().enable_vsync,
             D(App, App)
         )

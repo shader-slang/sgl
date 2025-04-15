@@ -15,124 +15,99 @@ vertices = np.array([-1, -1, 0, 1, -1, 0, 0, 1, 0], dtype=np.float32)
 indices = np.array([0, 1, 2], dtype=np.uint32)
 
 vertex_buffer = device.create_buffer(
-    usage=sgl.ResourceUsage.shader_resource,
-    debug_name="vertex_buffer",
+    usage=sgl.BufferUsage.shader_resource,
+    label="vertex_buffer",
     data=vertices,
 )
 
 index_buffer = device.create_buffer(
-    usage=sgl.ResourceUsage.shader_resource,
-    debug_name="index_buffer",
+    usage=sgl.BufferUsage.shader_resource,
+    label="index_buffer",
     data=indices,
 )
 
-transform_buffer = device.create_buffer(
-    usage=sgl.ResourceUsage.shader_resource,
-    debug_name="transform_buffer",
-    data=sgl.float3x4.identity().to_numpy(),
+blas_input_triangles = sgl.AccelerationStructureBuildInputTriangles(
+    {
+        "vertex_buffers": [vertex_buffer],
+        "vertex_format": sgl.Format.rgb32_float,
+        "vertex_count": vertices.size // 3,
+        "vertex_stride": vertices.itemsize * 3,
+        "index_buffer": index_buffer,
+        "index_format": sgl.IndexFormat.uint32,
+        "index_count": indices.size,
+        "flags": sgl.AccelerationStructureGeometryFlags.opaque,
+    }
 )
 
-blas_geometry_desc = sgl.RayTracingGeometryDesc()
-blas_geometry_desc.type = sgl.RayTracingGeometryType.triangles
-blas_geometry_desc.flags = sgl.RayTracingGeometryFlags.opaque
-blas_geometry_desc.triangles.transform3x4 = transform_buffer.device_address
-blas_geometry_desc.triangles.index_format = sgl.Format.r32_uint
-blas_geometry_desc.triangles.vertex_format = sgl.Format.rgb32_float
-blas_geometry_desc.triangles.index_count = indices.size
-blas_geometry_desc.triangles.vertex_count = vertices.size // 3
-blas_geometry_desc.triangles.index_data = index_buffer.device_address
-blas_geometry_desc.triangles.vertex_data = vertex_buffer.device_address
-blas_geometry_desc.triangles.vertex_stride = vertices.itemsize * 3
+blas_build_desc = sgl.AccelerationStructureBuildDesc(
+    {
+        "inputs": [blas_input_triangles],
+    }
+)
 
-blas_build_inputs = sgl.AccelerationStructureBuildInputs()
-blas_build_inputs.kind = sgl.AccelerationStructureKind.bottom_level
-blas_build_inputs.flags = sgl.AccelerationStructureBuildFlags.none
-blas_build_inputs.geometry_descs = [blas_geometry_desc]
-
-blas_prebuild_info = device.get_acceleration_structure_prebuild_info(blas_build_inputs)
+blas_sizes = device.get_acceleration_structure_sizes(blas_build_desc)
 
 blas_scratch_buffer = device.create_buffer(
-    size=blas_prebuild_info.scratch_data_size,
-    usage=sgl.ResourceUsage.unordered_access,
-    debug_name="blas_scratch_buffer",
-)
-
-blas_buffer = device.create_buffer(
-    size=blas_prebuild_info.result_data_max_size,
-    usage=sgl.ResourceUsage.acceleration_structure,
-    debug_name="blas_buffer",
+    size=blas_sizes.scratch_size,
+    usage=sgl.BufferUsage.unordered_access,
+    label="blas_scratch_buffer",
 )
 
 blas = device.create_acceleration_structure(
-    kind=sgl.AccelerationStructureKind.bottom_level,
-    buffer=blas_buffer,
-    size=blas_buffer.size,
+    size=blas_sizes.acceleration_structure_size,
+    label="blas",
 )
 
-command_buffer = device.create_command_buffer()
-with command_buffer.encode_ray_tracing_commands() as encoder:
-    encoder.build_acceleration_structure(
-        inputs=blas_build_inputs,
-        dst=blas,
-        scratch_data=blas_scratch_buffer.device_address,
-    )
-command_buffer.submit()
+command_encoder = device.create_command_encoder()
+command_encoder.build_acceleration_structure(
+    desc=blas_build_desc, dst=blas, src=None, scratch_buffer=blas_scratch_buffer
+)
+device.submit_command_buffer(command_encoder.finish())
 
-instance_desc = sgl.RayTracingInstanceDesc()
-instance_desc.transform = sgl.float3x4.identity()
-instance_desc.instance_id = 0
-instance_desc.instance_mask = 0xFF
-instance_desc.instance_contribution_to_hit_group_index = 0
-instance_desc.flags = sgl.RayTracingInstanceFlags.none
-instance_desc.acceleration_structure = blas.device_address
-
-instance_buffer = device.create_buffer(
-    usage=sgl.ResourceUsage.shader_resource,
-    debug_name="instance_buffer",
-    data=instance_desc.to_numpy(),
+instance_list = device.create_acceleration_structure_instance_list(1)
+instance_list.write(
+    0,
+    {
+        "transform": sgl.float3x4.identity(),
+        "instance_id": 0,
+        "instance_mask": 0xFF,
+        "instance_contribution_to_hit_group_index": 0,
+        "flags": sgl.AccelerationStructureInstanceFlags.none,
+        "acceleration_structure": blas.handle,
+    },
 )
 
-tlas_build_inputs = sgl.AccelerationStructureBuildInputs()
-tlas_build_inputs.kind = sgl.AccelerationStructureKind.top_level
-tlas_build_inputs.flags = sgl.AccelerationStructureBuildFlags.none
-tlas_build_inputs.desc_count = 1
-tlas_build_inputs.instance_descs = instance_buffer.device_address
+tlas_build_desc = sgl.AccelerationStructureBuildDesc(
+    {
+        "inputs": [instance_list.build_input_instances()],
+    }
+)
 
-tlas_prebuild_info = device.get_acceleration_structure_prebuild_info(tlas_build_inputs)
+tlas_sizes = device.get_acceleration_structure_sizes(tlas_build_desc)
 
 tlas_scratch_buffer = device.create_buffer(
-    size=tlas_prebuild_info.scratch_data_size,
-    usage=sgl.ResourceUsage.unordered_access,
-    debug_name="tlas_scratch_buffer",
-)
-
-tlas_buffer = device.create_buffer(
-    size=tlas_prebuild_info.result_data_max_size,
-    usage=sgl.ResourceUsage.acceleration_structure,
-    debug_name="tlas_buffer",
+    size=tlas_sizes.scratch_size,
+    usage=sgl.BufferUsage.unordered_access,
+    label="tlas_scratch_buffer",
 )
 
 tlas = device.create_acceleration_structure(
-    kind=sgl.AccelerationStructureKind.top_level,
-    buffer=tlas_buffer,
-    size=tlas_buffer.size,
+    size=tlas_sizes.acceleration_structure_size,
+    label="tlas",
 )
 
-command_buffer = device.create_command_buffer()
-with command_buffer.encode_ray_tracing_commands() as encoder:
-    encoder.build_acceleration_structure(
-        inputs=tlas_build_inputs,
-        dst=tlas,
-        scratch_data=tlas_scratch_buffer.device_address,
-    )
-command_buffer.submit()
+command_encoder = device.create_command_encoder()
+command_encoder.build_acceleration_structure(
+    desc=tlas_build_desc, dst=tlas, src=None, scratch_buffer=tlas_scratch_buffer
+)
+device.submit_command_buffer(command_encoder.finish())
 
 render_texture = device.create_texture(
     format=sgl.Format.rgba32_float,
     width=1024,
     height=1024,
-    usage=sgl.ResourceUsage.unordered_access,
-    debug_name="render_texture",
+    usage=sgl.TextureUsage.unordered_access,
+    label="render_texture",
 )
 
 program = device.load_program("raytracing.slang", ["main"])

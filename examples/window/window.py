@@ -16,22 +16,14 @@ class App:
             enable_debug_layers=True,
             compiler_options={"include_paths": [EXAMPLE_DIR]},
         )
-        self.swapchain = self.device.create_swapchain(
-            image_count=3,
-            width=self.window.width,
-            height=self.window.height,
-            window=self.window,
-            enable_vsync=False,
-        )
-
-        self.framebuffers = []
-        self.create_framebuffers()
+        self.surface = self.device.create_surface(self.window)
+        self.surface.configure(width=self.window.width, height=self.window.height)
 
         self.ui = sgl.ui.Context(self.device)
 
         self.output_texture = None
 
-        program = self.device.load_program("draw", ["main"])
+        program = self.device.load_program("draw", ["compute_main"])
         self.kernel = self.device.create_compute_kernel(program)
 
         self.mouse_pos = sgl.float2()
@@ -105,16 +97,8 @@ class App:
                 self.mouse_down = False
 
     def on_resize(self, width: int, height: int):
-        self.framebuffers.clear()
         self.device.wait()
-        self.swapchain.resize(width, height)
-        self.create_framebuffers()
-
-    def create_framebuffers(self):
-        self.framebuffers = [
-            self.device.create_framebuffer(render_targets=[image.get_rtv()])
-            for image in self.swapchain.images
-        ]
+        self.surface.configure(width=width, height=height)
 
     def run(self):
         frame = 0
@@ -134,27 +118,25 @@ class App:
             self.fps_avg = 0.95 * self.fps_avg + 0.05 * (1.0 / elapsed)
             self.fps_text.text = f"FPS: {self.fps_avg:.2f}"
 
-            image_index = self.swapchain.acquire_next_image()
-            if image_index < 0:
+            surface_texture = self.surface.acquire_next_image()
+            if not surface_texture:
                 continue
 
-            image = self.swapchain.get_image(image_index)
             if (
                 self.output_texture == None
-                or self.output_texture.width != image.width
-                or self.output_texture.height != image.height
+                or self.output_texture.width != surface_texture.width
+                or self.output_texture.height != surface_texture.height
             ):
                 self.output_texture = self.device.create_texture(
                     format=sgl.Format.rgba16_float,
-                    width=image.width,
-                    height=image.height,
-                    mip_count=1,
-                    usage=sgl.ResourceUsage.shader_resource
-                    | sgl.ResourceUsage.unordered_access,
-                    debug_name="output_texture",
+                    width=surface_texture.width,
+                    height=surface_texture.height,
+                    usage=sgl.TextureUsage.shader_resource
+                    | sgl.TextureUsage.unordered_access,
+                    label="output_texture",
                 )
 
-            command_buffer = self.device.create_command_buffer()
+            command_encoder = self.device.create_command_encoder()
             self.kernel.dispatch(
                 thread_count=[self.output_texture.width, self.output_texture.height, 1],
                 vars={
@@ -167,18 +149,17 @@ class App:
                     "g_noise_scale": self.noise_scale.value,
                     "g_noise_amount": self.noise_amount.value,
                 },
-                command_buffer=command_buffer,
+                command_encoder=command_encoder,
             )
-            command_buffer.blit(image, self.output_texture)
+            command_encoder.blit(surface_texture, self.output_texture)
 
-            self.ui.new_frame(image.width, image.height)
-            self.ui.render(self.framebuffers[image_index], command_buffer)
+            self.ui.new_frame(surface_texture.width, surface_texture.height)
+            self.ui.render(surface_texture, command_encoder)
 
-            command_buffer.set_texture_state(image, sgl.ResourceState.present)
-            command_buffer.submit()
-            del image
+            self.device.submit_command_buffer(command_encoder.finish())
+            del surface_texture
 
-            self.swapchain.present()
+            self.surface.present()
             self.device.run_garbage_collection()
             frame += 1
 

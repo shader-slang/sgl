@@ -19,7 +19,6 @@ def test_format_info_rgb32_float():
     assert info.dxgi_format == 6
     assert info.vk_format == 106
     assert info.is_depth_stencil() == False
-    assert info.is_typeless_format() == False
     assert info.is_float_format() == True
     assert info.is_integer_format() == False
     assert info.is_normalized_format() == False
@@ -48,7 +47,6 @@ def test_format_info_d32_float_s8_uint():
     assert info.dxgi_format == 20
     assert info.vk_format == 130
     assert info.is_depth_stencil() == True
-    assert info.is_typeless_format() == False
     assert info.is_float_format() == True
     assert info.is_integer_format() == False
     assert info.is_normalized_format() == False
@@ -70,7 +68,6 @@ def test_format_info_bc7_unorm_srgb():
     assert info.dxgi_format == 99
     assert info.vk_format == 146
     assert info.is_depth_stencil() == False
-    assert info.is_typeless_format() == False
     assert info.is_float_format() == False
     assert info.is_integer_format() == False
     assert info.is_normalized_format() == True

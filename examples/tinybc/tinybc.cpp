@@ -41,9 +41,9 @@ int main(int argc, const char* argv[])
         SGL_UNUSED(argc, argv);
         args.parse_args(
             {"tinybc",
-             "C:/projects/sgl/data/test_images/monalisa.jpg",
+             "C:/src/sgl/data/test_images/monalisa.jpg",
              "-o",
-             "C:/projects/sgl/monalisa_bc7.jpg",
+             "C:/src/sgl/monalisa_bc7.jpg",
              "-t",
              "-b",
              "-v"}
@@ -81,15 +81,19 @@ int main(int argc, const char* argv[])
             .compiler_options = {.include_paths = {EXAMPLE_DIR}},
         });
 
+        SubresourceData initial_data[1] = {{
+            .data = input->data(),
+            .size = input->buffer_size(),
+            .row_pitch = input->width() * 4 * sizeof(float),
+        }};
+
         // Create input texture
         ref<Texture> input_tex = device->create_texture({
             .format = Format::rgba32_float,
             .width = w,
             .height = h,
-            .mip_count = 1,
-            .usage = ResourceUsage::shader_resource,
-            .data = input->data(),
-            .data_size = input->buffer_size(),
+            .usage = TextureUsage::shader_resource,
+            .data = initial_data,
         });
 
         // Show input texture in tev
@@ -101,8 +105,7 @@ int main(int argc, const char* argv[])
             .format = Format::rgba32_float,
             .width = w,
             .height = h,
-            .mip_count = 1,
-            .usage = ResourceUsage::unordered_access,
+            .usage = TextureUsage::unordered_access,
         });
 
         std::string constants = fmt::format(
@@ -111,7 +114,7 @@ int main(int argc, const char* argv[])
             opt_steps
         );
         ref<ShaderProgram> program = device->load_program("tinybc.slang", {"main"}, constants);
-        ref<ComputeKernel> encoder = device->create_compute_kernel({.program = program});
+        ref<ComputeKernel> kernel = device->create_compute_kernel({.program = program});
 
         uint32_t num_iters = benchmark ? 1000 : 1;
 
@@ -121,10 +124,10 @@ int main(int argc, const char* argv[])
         ref<QueryPool> queries = device->create_query_pool({.type = QueryType::timestamp, .count = num_iters * 2});
 
         // Compress!
-        ref<CommandBuffer> command_buffer = device->create_command_buffer();
+        ref<CommandEncoder> command_encoder = device->create_command_encoder();
         for (uint32_t i = 0; i < num_iters; ++i) {
-            command_buffer->write_timestamp(queries, i * 2);
-            encoder->dispatch(
+            command_encoder->write_timestamp(queries, i * 2);
+            kernel->dispatch(
                 uint3(w, h, 1),
                 [&](ShaderCursor cursor)
                 {
@@ -134,11 +137,11 @@ int main(int argc, const char* argv[])
                     cursor["adam_beta_1"] = 0.9f;
                     cursor["adam_beta_2"] = 0.999f;
                 },
-                command_buffer
+                command_encoder
             );
-            command_buffer->write_timestamp(queries, i * 2 + 1);
+            command_encoder->write_timestamp(queries, i * 2 + 1);
         }
-        command_buffer->submit();
+        device->submit_command_buffer(command_encoder->finish());
 
         device->wait();
 

@@ -21,10 +21,10 @@ SGL_PY_EXPORT(device_buffer_cursor)
 {
     using namespace sgl;
 
-    nb::class_<BufferElementCursor> buffer_element_cursor(m, "BufferElementCursor", D_NA(BufferElementCursor));
+    nb::class_<BufferElementCursor> buffer_element_cursor(m, "BufferElementCursor", D(BufferElementCursor));
 
     buffer_element_cursor //
-        .def_prop_ro("_offset", &BufferElementCursor::offset, D_NA(BufferElementCursor, offset))
+        .def_prop_ro("_offset", &BufferElementCursor::offset, D(BufferElementCursor, offset))
         .def(
             "set_data",
             [](BufferElementCursor& self, nb::ndarray<nb::device::cpu> data)
@@ -33,7 +33,7 @@ SGL_PY_EXPORT(device_buffer_cursor)
                 self.set_data(data.data(), data.nbytes());
             },
             "data"_a,
-            D_NA(BufferElementCursor, set_data)
+            D(BufferElementCursor, set_data)
         )
         .def(
             "__dir__",
@@ -76,19 +76,14 @@ SGL_PY_EXPORT(device_buffer_cursor)
     bind_writable_cursor(detail::_writeconv, buffer_element_cursor);
 
     // Interface to simpler root cursor object that maps to the larger buffer.
-    nb::class_<BufferCursor, Object>(m, "BufferCursor", D_NA(BufferCursor)) //
-        .def(
-            nb::init<ref<TypeLayoutReflection>, size_t>(),
-            "element_layout"_a,
-            "size"_a,
-            D_NA(BufferCursor, BufferCursor)
-        )
+    nb::class_<BufferCursor, Object>(m, "BufferCursor", D(BufferCursor)) //
+        .def(nb::init<ref<TypeLayoutReflection>, size_t>(), "element_layout"_a, "size"_a, D(BufferCursor, BufferCursor))
         .def(
             nb::init<ref<TypeLayoutReflection>, ref<Buffer>, bool>(),
             "element_layout"_a,
             "buffer_resource"_a,
             "load_before_write"_a = true,
-            D_NA(BufferCursor, BufferCursor)
+            D(BufferCursor, BufferCursor)
         )
         .def(
             nb::init<ref<TypeLayoutReflection>, ref<Buffer>, size_t, size_t, bool>(),
@@ -97,19 +92,19 @@ SGL_PY_EXPORT(device_buffer_cursor)
             "size"_a,
             "offset"_a,
             "load_before_write"_a = true,
-            D_NA(BufferCursor, BufferCursor)
+            D(BufferCursor, BufferCursor)
         )
-        .def_prop_ro("element_type_layout", &BufferCursor::element_type_layout, D_NA(BufferCursor, type_layout))
-        .def_prop_ro("element_type", &BufferCursor::element_type, D_NA(BufferCursor, type))
-        .def("find_element", &BufferCursor::find_element, "index"_a, D_NA(BufferCursor, find_element))
-        .def_prop_ro("element_count", &BufferCursor::element_count, D_NA(BufferCursor, element_count))
-        .def_prop_ro("element_size", &BufferCursor::element_size, D_NA(BufferCursor, element_size))
-        .def_prop_ro("element_stride", &BufferCursor::element_stride, D_NA(BufferCursor, element_stride))
-        .def_prop_ro("size", &BufferCursor::size, D_NA(BufferCursor, size))
-        .def_prop_ro("is_loaded", &BufferCursor::is_loaded, D_NA(BufferCursor, is_loaded))
-        .def("load", &BufferCursor::load, D_NA(BufferCursor, load))
-        .def("apply", &BufferCursor::apply, D_NA(BufferCursor, apply))
-        .def_prop_ro("resource", &BufferCursor::resource, D_NA(BufferCursor, resource))
+        .def_prop_ro("element_type_layout", &BufferCursor::element_type_layout, D(BufferCursor, element_type_layout))
+        .def_prop_ro("element_type", &BufferCursor::element_type, D(BufferCursor, element_type))
+        .def("find_element", &BufferCursor::find_element, "index"_a, D(BufferCursor, find_element))
+        .def_prop_ro("element_count", &BufferCursor::element_count, D(BufferCursor, element_count))
+        .def_prop_ro("element_size", &BufferCursor::element_size, D(BufferCursor, element_size))
+        .def_prop_ro("element_stride", &BufferCursor::element_stride, D(BufferCursor, element_stride))
+        .def_prop_ro("size", &BufferCursor::size, D(BufferCursor, size))
+        .def_prop_ro("is_loaded", &BufferCursor::is_loaded, D(BufferCursor, is_loaded))
+        .def("load", &BufferCursor::load, D(BufferCursor, load))
+        .def("apply", &BufferCursor::apply, D(BufferCursor, apply))
+        .def_prop_ro("resource", &BufferCursor::resource, D(BufferCursor, resource))
         .def("__getitem__", [](BufferCursor& self, int index) { return self[index]; })
         .def("__len__", [](BufferCursor& self) { return self.element_count(); })
         .def(

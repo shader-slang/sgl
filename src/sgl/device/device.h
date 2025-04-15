@@ -7,6 +7,7 @@
 #include "sgl/device/native_handle.h"
 #include "sgl/device/resource.h"
 #include "sgl/device/shader.h"
+#include "sgl/device/raytracing.h"
 #include "sgl/device/coopvec.h"
 
 #include "sgl/core/fwd.h"
@@ -17,14 +18,13 @@
 #include "sgl/core/platform.h"
 #include "sgl/math/vector_types.h"
 
-#include <slang-gfx.h>
+#include <slang-rhi.h>
 
 #include <array>
 #include <filesystem>
 #include <optional>
 #include <string>
 #include <vector>
-#include <queue>
 
 namespace sgl {
 
@@ -63,13 +63,14 @@ struct AdapterInfo {
     }
 };
 
-enum class DeviceType {
-    automatic,
-    d3d12,
-    vulkan,
-    metal,
-    cpu,
-    cuda,
+enum class DeviceType : uint32_t {
+    automatic = static_cast<uint32_t>(rhi::DeviceType::Default),
+    d3d12 = static_cast<uint32_t>(rhi::DeviceType::D3D12),
+    vulkan = static_cast<uint32_t>(rhi::DeviceType::Vulkan),
+    metal = static_cast<uint32_t>(rhi::DeviceType::Metal),
+    wgpu = static_cast<uint32_t>(rhi::DeviceType::WGPU),
+    cpu = static_cast<uint32_t>(rhi::DeviceType::CPU),
+    cuda = static_cast<uint32_t>(rhi::DeviceType::CUDA),
 };
 
 SGL_ENUM_INFO(
@@ -79,6 +80,7 @@ SGL_ENUM_INFO(
         {DeviceType::d3d12, "d3d12"},
         {DeviceType::vulkan, "vulkan"},
         {DeviceType::metal, "metal"},
+        {DeviceType::wgpu, "wgpu"},
         {DeviceType::cpu, "cpu"},
         {DeviceType::cuda, "cuda"},
     }
@@ -209,11 +211,14 @@ public:
     /// List of features supported by the device.
     const std::vector<std::string>& features() const { return m_features; }
 
+    /// Check if the device supports a given feature.
+    bool has_feature(std::string_view feature) const;
+
     /// True if the device supports CUDA interoperability.
     bool supports_cuda_interop() const { return m_supports_cuda_interop; }
 
     /// Returns the supported resource states for a given format.
-    ResourceStateSet get_format_supported_resource_states(Format format) const;
+    FormatSupport get_format_support(Format format) const;
 
     /// Default slang session.
     SlangSession* slang_session() const { return m_slang_session; }
@@ -239,30 +244,20 @@ public:
     // Resource creation
 
     /**
-     * \brief Create a new swapchain.
+     * \brief Create a new surface.
      *
-     * \param format Format of the swapchain images.
-     * \param width Width of the swapchain images in pixels.
-     * \param height Height of the swapchain images in pixels.
-     * \param image_count Number of swapchain images.
-     * \param enable_vsync Enable/disable vertical synchronization.
-     * \param window Window to create the swapchain for.
-     * \return New swapchain object.
+     * \param window Window to create the surface for.
+     * \return New surface object.
      */
-    ref<Swapchain> create_swapchain(SwapchainDesc desc, Window* window);
+    ref<Surface> create_surface(Window* window);
 
     /**
-     * \brief Create a new swapchain.
+     * \brief Create a new surface.
      *
-     * \param format Format of the swapchain images.
-     * \param width Width of the swapchain images in pixels.
-     * \param height Height of the swapchain images in pixels.
-     * \param image_count Number of swapchain images.
-     * \param enable_vsync Enable/disable vertical synchronization.
-     * \param window_handle Native window handle to create the swapchain for.
-     * \return New swapchain object.
+     * \param window_handle Native window handle to create the surface for.
+     * \return New surface object.
      */
-    ref<Swapchain> create_swapchain(SwapchainDesc desc, WindowHandle window_handle);
+    ref<Surface> create_surface(WindowHandle window_handle);
 
     /**
      * \brief Create a new buffer.
@@ -275,34 +270,38 @@ public:
      * \param initial_state Initial resource state.
      * \param usage Resource usage flags.
      * \param memory_type Memory type.
-     * \param debug_name Resource debug name.
+     * \param label Debug label.
      * \param data Initial data to upload to the buffer.
      * \param data_size Size of the initial data in bytes.
      * \return New buffer object.
      */
     ref<Buffer> create_buffer(BufferDesc desc);
 
+    ref<BufferView> create_buffer_view(Buffer* buffer, BufferViewDesc desc);
+
     /**
      * \brief Create a new texture.
      *
-     * \param type Resource type (optional). Type is inferred from width, height, depth if not specified.
+     * \param type Texture type.
      * \param format Texture format.
      * \param width Width in pixels.
      * \param height Height in pixels.
      * \param depth Depth in pixels.
-     * \param array_size Number of array slices (1 for non-array textures).
-     * \param mip_count Number of mip levels (0 for auto-generated mips).
-     * \param sample_count Number of samples per pixel (1 for non-multisampled textures).
+     * \param array_length Array length.
+     * \param mip_count Mip level count. Number of mip levels (ALL_MIPS for all mip levels).
+     * \param sample_count Number of samples for multisampled textures.
      * \param quality Quality level for multisampled textures.
      * \param usage Resource usage.
      * \param memory_type Memory type.
-     * \param debug_name Debug name.
+     * \param label Debug label.
      * \param data Initial data.
      * \return New texture object.
      */
     ref<Texture> create_texture(TextureDesc desc);
 
-    ref<Texture> create_texture_from_resource(TextureDesc desc, gfx::ITextureResource* resource, bool deferred_release);
+    ref<Texture> create_texture_from_resource(TextureDesc desc, rhi::ITexture* resource);
+
+    ref<TextureView> create_texture_view(Texture* texture, TextureViewDesc desc);
 
     /**
      * \brief Create a new sampler.
@@ -320,6 +319,7 @@ public:
      * \param border_color Border color.
      * \param min_lod Minimum LOD level.
      * \param max_lod Maximum LOD level.
+     * \param label Debug label.
      * \return New sampler object.
      */
     ref<Sampler> create_sampler(SamplerDesc desc);
@@ -352,26 +352,24 @@ public:
     ref<InputLayout> create_input_layout(InputLayoutDesc desc);
 
     /**
-     * \brief Create a new framebuffer.
+     * \brief Query the device for buffer sizes required for acceleration structure builds.
      *
-     * \param render_target List of render targets (see \ref FramebufferAttachmentDesc for details).
-     * \param depth_stencil Optional depth-stencil attachment (see \ref FramebufferAttachmentDesc for details).
-     * \return New framebuffer object.
+     * \param desc Acceleration structure build description.
+     * \return Acceleration structure sizes.
      */
-    ref<Framebuffer> create_framebuffer(FramebufferDesc desc);
-
-    AccelerationStructurePrebuildInfo
-    get_acceleration_structure_prebuild_info(const AccelerationStructureBuildInputs& build_inputs);
+    AccelerationStructureSizes get_acceleration_structure_sizes(const AccelerationStructureBuildDesc& desc);
 
     ref<AccelerationStructure> create_acceleration_structure(AccelerationStructureDesc desc);
+
+    ref<AccelerationStructureInstanceList> create_acceleration_structure_instance_list(size_t size);
+
+    ref<ShaderTable> create_shader_table(ShaderTableDesc desc);
 
     /**
      * Get coop vec instance
      */
     ref<CoopVec> get_or_create_coop_vec();
 
-
-    ref<ShaderTable> create_shader_table(ShaderTableDesc desc);
 
     /**
      * \brief Create a new slang session.
@@ -404,27 +402,21 @@ public:
 
     void reload_all_programs();
 
-    ref<MutableShaderObject> create_mutable_shader_object(const ShaderProgram* shader_program);
+    ref<ShaderObject> create_root_shader_object(const ShaderProgram* shader_program);
 
-    ref<MutableShaderObject> create_mutable_shader_object(const TypeLayoutReflection* type_layout);
+    ref<ShaderObject> create_shader_object(const TypeLayoutReflection* type_layout);
 
-    ref<MutableShaderObject> create_mutable_shader_object(ReflectionCursor cursor);
+    ref<ShaderObject> create_shader_object(ReflectionCursor cursor);
 
     ref<ComputePipeline> create_compute_pipeline(ComputePipelineDesc desc);
 
-    ref<GraphicsPipeline> create_graphics_pipeline(GraphicsPipelineDesc desc);
+    ref<RenderPipeline> create_render_pipeline(RenderPipelineDesc desc);
 
     ref<RayTracingPipeline> create_ray_tracing_pipeline(RayTracingPipelineDesc desc);
 
     ref<ComputeKernel> create_compute_kernel(ComputeKernelDesc desc);
 
-    ref<CommandBuffer> create_command_buffer();
-
-    void _set_open_command_buffer(CommandBuffer* command_buffer);
-    Slang::ComPtr<gfx::ITransientResourceHeap> _get_or_create_transient_resource_heap();
-
-    CommandBuffer* _begin_shared_command_buffer();
-    void _end_shared_command_buffer(bool wait);
+    ref<CommandEncoder> create_command_encoder(CommandQueueType queue = CommandQueueType::graphics);
 
     /**
      * \brief Submit a command buffer to the device.
@@ -484,11 +476,6 @@ public:
      */
     void run_garbage_collection();
 
-    ref<MemoryHeap> create_memory_heap(MemoryHeapDesc desc);
-
-    MemoryHeap* upload_heap() const { return m_upload_heap; }
-    MemoryHeap* read_back_heap() const { return m_read_back_heap; }
-
     DebugPrinter* debug_printer() const { return m_debug_printer.get(); }
 
     /// Block and flush all shader side debug print output.
@@ -504,11 +491,11 @@ public:
      * Upload host memory to buffer.
      *
      * \param buffer Buffer to write to.
-     * \param data Data to write.
-     * \param size Size of the data in bytes.
      * \param offset Offset in the buffer to write to.
+     * \param size Size of the data in bytes.
+     * \param data Data to write.
      */
-    void upload_buffer_data(Buffer* buffer, const void* data, size_t size, size_t offset = 0);
+    void upload_buffer_data(Buffer* buffer, size_t offset, size_t size, const void* data);
 
     /**
      * Read buffer data to host memory.
@@ -528,22 +515,29 @@ public:
      * \param subresource Subresource index.
      * \param subresource_data Subresource data.
      */
-    void upload_texture_data(Texture* texture, uint32_t subresource, SubresourceData subresource_data);
+    void upload_texture_data(
+        Texture* texture,
+        SubresourceRange subresource_range,
+        uint3 offset,
+        uint3 extent,
+        std::span<SubresourceData> subresource_data
+    );
+
+    void upload_texture_data(Texture* texture, uint32_t layer, uint32_t mip, SubresourceData subresource_data);
 
     /**
      * Read texture data to host memory.
      * \note This will wait until the data is copied back to host memory.
      *
      * \param texture Texture to read from.
-     * \param subresource Subresource index.
+     * \param layer Layer index.
+     * \param mip Mip level.
      * \return Subresource data in host memory.
      */
-    OwnedSubresourceData read_texture_data(const Texture* texture, uint32_t subresource);
+    OwnedSubresourceData read_texture_data(const Texture* texture, uint32_t layer, uint32_t mip);
 
-    void deferred_release(ISlangUnknown* object);
-
-    gfx::IDevice* gfx_device() const { return m_gfx_device; }
-    gfx::ICommandQueue* gfx_graphics_queue() const { return m_gfx_graphics_queue; }
+    rhi::IDevice* rhi_device() const { return m_rhi_device; }
+    rhi::ICommandQueue* rhi_graphics_queue() const { return m_rhi_graphics_queue; }
 
     slang::IGlobalSession* global_session() const { return m_global_session; }
 
@@ -561,7 +555,7 @@ public:
     /// Enumerates all available adapters of a given device type.
     static std::vector<AdapterInfo> enumerate_adapters(DeviceType type = DeviceType::automatic);
 
-    /// Report live objects in the slang/gfx layer.
+    /// Report live objects in the rhi layer.
     /// This is useful for checking clean shutdown with all resources released properly.
     static void report_live_objects();
 
@@ -618,8 +612,8 @@ private:
     bool m_shader_cache_enabled{false};
     std::filesystem::path m_shader_cache_path;
 
-    Slang::ComPtr<gfx::IDevice> m_gfx_device;
-    Slang::ComPtr<gfx::ICommandQueue> m_gfx_graphics_queue;
+    Slang::ComPtr<rhi::IDevice> m_rhi_device;
+    Slang::ComPtr<rhi::ICommandQueue> m_rhi_graphics_queue;
     Slang::ComPtr<slang::IGlobalSession> m_global_session;
 
     ref<SlangSession> m_slang_session;
@@ -628,43 +622,13 @@ private:
 
     ref<Fence> m_global_fence;
 
-    ref<MemoryHeap> m_upload_heap;
-    ref<MemoryHeap> m_read_back_heap;
-
     std::unique_ptr<DebugPrinter> m_debug_printer;
-
-    /// Currently open command buffer.
-    /// Due to limitations in gfx, only one command buffer can be open at a time.
-    CommandBuffer* m_open_command_buffer{nullptr};
-    ref<CommandBuffer> m_shared_command_buffer;
-
-    /// Currently active transient resource heap.
-    /// All command buffers are created on this heap.
-    Slang::ComPtr<gfx::ITransientResourceHeap> m_current_transient_resource_heap;
-
-    /// Transient resource heaps available for reuse.
-    std::queue<Slang::ComPtr<gfx::ITransientResourceHeap>> m_transient_resource_heap_pool;
-
-    /// Transient resource heaps that are currently in flight.
-    std::queue<std::pair<Slang::ComPtr<gfx::ITransientResourceHeap>, uint64_t>> m_in_flight_transient_resource_heaps;
 
     /// List of callbacks for hot reload event
     std::vector<ShaderHotReloadCallback> m_shader_hot_reload_callbacks;
 
     /// List of callbacks for shutdown event
     std::vector<DeviceCloseCallback> m_device_close_callbacks;
-
-    struct DeferredRelease {
-        uint64_t fence_value;
-        Slang::ComPtr<ISlangUnknown> object;
-    };
-
-    std::queue<DeferredRelease> m_deferred_release_queue;
-
-#if SGL_HAS_NVAPI
-    class PipelineCreationAPIDispatcher;
-    std::unique_ptr<PipelineCreationAPIDispatcher> m_api_dispatcher;
-#endif
 
     ref<Blitter> m_blitter;
     ref<HotReload> m_hot_reload;
@@ -673,6 +637,7 @@ private:
     bool m_supports_cuda_interop{false};
     ref<cuda::Device> m_cuda_device;
     ref<cuda::ExternalSemaphore> m_cuda_semaphore;
+    bool m_wait_global_fence{false};
 };
 
 } // namespace sgl

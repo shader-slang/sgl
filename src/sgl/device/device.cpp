@@ -2,19 +2,17 @@
 
 #include "device.h"
 
-#include "sgl/device/swapchain.h"
+#include "sgl/device/surface.h"
 #include "sgl/device/resource.h"
 #include "sgl/device/sampler.h"
 #include "sgl/device/fence.h"
 #include "sgl/device/query.h"
 #include "sgl/device/input_layout.h"
-#include "sgl/device/framebuffer.h"
 #include "sgl/device/shader.h"
 #include "sgl/device/shader_object.h"
 #include "sgl/device/pipeline.h"
 #include "sgl/device/kernel.h"
 #include "sgl/device/raytracing.h"
-#include "sgl/device/memory_heap.h"
 #include "sgl/device/command.h"
 #include "sgl/device/helpers.h"
 #include "sgl/device/native_handle_traits.h"
@@ -37,50 +35,44 @@
 #include <comdef.h>
 #endif
 
-#if SGL_HAS_NVAPI
-#include <nvapi.h>
-#endif
-
 #include <mutex>
 
 namespace sgl {
 
-static constexpr size_t TEXTURE_UPLOAD_ALIGNMENT = 512;
-
 static std::vector<Device*> s_devices;
 static std::mutex s_devices_mutex;
 
-class DebugLogger : public gfx::IDebugCallback {
+class DebugLogger : public rhi::IDebugCallback {
 public:
     DebugLogger()
     {
-        m_logger = Logger::create(LogLevel::debug, "gfx", false);
+        m_logger = Logger::create(LogLevel::debug, "rhi", false);
         m_logger->use_same_outputs(Logger::get());
     }
 
     virtual SLANG_NO_THROW void SLANG_MCALL
-    handleMessage(gfx::DebugMessageType type, gfx::DebugMessageSource source, const char* message)
+    handleMessage(rhi::DebugMessageType type, rhi::DebugMessageSource source, const char* message)
     {
         const char* source_str = "";
         switch (source) {
-        case gfx::DebugMessageSource::Layer:
+        case rhi::DebugMessageSource::Layer:
             source_str = "layer";
             break;
-        case gfx::DebugMessageSource::Driver:
+        case rhi::DebugMessageSource::Driver:
             source_str = "driver";
             break;
-        case gfx::DebugMessageSource::Slang:
+        case rhi::DebugMessageSource::Slang:
             source_str = "slang";
             break;
         }
         switch (type) {
-        case gfx::DebugMessageType::Info:
+        case rhi::DebugMessageType::Info:
             m_logger->info("{}: {}", source_str, message);
             break;
-        case gfx::DebugMessageType::Warning:
+        case rhi::DebugMessageType::Warning:
             m_logger->warn("{}: {}", source_str, message);
             break;
-        case gfx::DebugMessageType::Error:
+        case rhi::DebugMessageType::Error:
             m_logger->error("{}: {}", source_str, message);
             break;
         }
@@ -96,211 +88,13 @@ private:
     ref<Logger> m_logger;
 };
 
-#if SGL_HAS_NVAPI
-// In order to use NVAPI, we intercept the pipeline state creation calls in the gfx layer
-// and dispatch into the `NVAPI_Create*PipelineState()` functions.
-// This is done by implementing the `gfx::IPipelineCreationAPIDispatcher` interface,
-// and passing an instance to `gfxCreateDevice`.
-class Device::PipelineCreationAPIDispatcher : public gfx::IPipelineCreationAPIDispatcher {
-public:
-    PipelineCreationAPIDispatcher()
-    {
-        if (NvAPI_Initialize() != NVAPI_OK)
-            SGL_THROW("Failed to initialize NVAPI.");
-    }
-
-    ~PipelineCreationAPIDispatcher()
-    {
-        if (NvAPI_Unload() != NVAPI_OK)
-            SGL_THROW("Failed to unload NVAPI.");
-    }
-
-    virtual SLANG_NO_THROW SlangResult SLANG_MCALL queryInterface(const SlangUUID& uuid, void** outObject) override
-    {
-        if (uuid == SlangUUID SLANG_UUID_IPipelineCreationAPIDispatcher) {
-            *outObject = static_cast<gfx::IPipelineCreationAPIDispatcher*>(this);
-            return SLANG_OK;
-        }
-        return SLANG_E_NO_INTERFACE;
-    }
-
-    virtual SLANG_NO_THROW uint32_t SLANG_MCALL addRef() override
-    {
-        // The lifetime of this object is tied to the device.
-        // Do not perform any reference counting.
-        return 2;
-    }
-
-    virtual SLANG_NO_THROW uint32_t SLANG_MCALL release() override
-    {
-        // Returning 2 is important here, because when releasing a COM pointer, it checks
-        // if the ref count **was 1 before releasing** in order to free the object.
-        return 2;
-    }
-
-    // This method will be called by the gfx layer to create an API object for a compute pipeline state.
-    virtual gfx::Result createComputePipelineState(
-        gfx::IDevice* device,
-        slang::IComponentType* program,
-        void* pipelineDesc,
-        void** outPipelineState
-    )
-    {
-        gfx::IDevice::InteropHandles nativeHandle;
-        SLANG_CALL(device->getNativeDeviceHandles(&nativeHandle));
-        ID3D12Device* pD3D12Device = reinterpret_cast<ID3D12Device*>(nativeHandle.handles[0].handleValue);
-
-        uint32_t uavSpace, uavSlot;
-        if (findNvApiShaderParameter(program, uavSpace, uavSlot)) {
-            auto desc = createShaderExtensionSlotDesc(uavSpace, uavSlot);
-            const NVAPI_D3D12_PSO_EXTENSION_DESC* ppPSOExtensionsDesc[1] = {&desc};
-            auto result = NvAPI_D3D12_CreateComputePipelineState(
-                pD3D12Device,
-                reinterpret_cast<D3D12_COMPUTE_PIPELINE_STATE_DESC*>(pipelineDesc),
-                1,
-                ppPSOExtensionsDesc,
-                (ID3D12PipelineState**)outPipelineState
-            );
-            return (result == NVAPI_OK) ? SLANG_OK : SLANG_FAIL;
-        } else {
-            ID3D12PipelineState* pState = nullptr;
-            SLANG_RETURN_ON_FAIL(pD3D12Device->CreateComputePipelineState(
-                reinterpret_cast<D3D12_COMPUTE_PIPELINE_STATE_DESC*>(pipelineDesc),
-                IID_PPV_ARGS(&pState)
-            ));
-            *outPipelineState = pState;
-        }
-        return SLANG_OK;
-    }
-
-    // This method will be called by the gfx layer to create an API object for a graphics pipeline state.
-    virtual gfx::Result createGraphicsPipelineState(
-        gfx::IDevice* device,
-        slang::IComponentType* program,
-        void* pipelineDesc,
-        void** outPipelineState
-    )
-    {
-        gfx::IDevice::InteropHandles nativeHandle;
-        SLANG_CALL(device->getNativeDeviceHandles(&nativeHandle));
-        ID3D12Device* pD3D12Device = reinterpret_cast<ID3D12Device*>(nativeHandle.handles[0].handleValue);
-
-        uint32_t uavSpace, uavSlot;
-        if (findNvApiShaderParameter(program, uavSpace, uavSlot)) {
-            auto desc = createShaderExtensionSlotDesc(uavSpace, uavSlot);
-            const NVAPI_D3D12_PSO_EXTENSION_DESC* ppPSOExtensionsDesc[1] = {&desc};
-            auto result = NvAPI_D3D12_CreateGraphicsPipelineState(
-                pD3D12Device,
-                reinterpret_cast<D3D12_GRAPHICS_PIPELINE_STATE_DESC*>(pipelineDesc),
-                1,
-                ppPSOExtensionsDesc,
-                (ID3D12PipelineState**)outPipelineState
-            );
-            return (result == NVAPI_OK) ? SLANG_OK : SLANG_FAIL;
-        } else {
-            ID3D12PipelineState* pState = nullptr;
-            SLANG_RETURN_ON_FAIL(pD3D12Device->CreateGraphicsPipelineState(
-                reinterpret_cast<D3D12_GRAPHICS_PIPELINE_STATE_DESC*>(pipelineDesc),
-                IID_PPV_ARGS(&pState)
-            ));
-            *outPipelineState = pState;
-        }
-        return SLANG_OK;
-    }
-
-    virtual gfx::Result createMeshPipelineState(
-        gfx::IDevice* device,
-        slang::IComponentType* program,
-        void* pipelineDesc,
-        void** outPipelineState
-    )
-    {
-        SGL_UNUSED(device, program, pipelineDesc, outPipelineState);
-        SGL_THROW("Mesh pipelines are not supported.");
-    }
-
-    // This method will be called by the gfx layer right before creating a ray tracing state object.
-    virtual gfx::Result beforeCreateRayTracingState(gfx::IDevice* device, slang::IComponentType* program)
-    {
-        gfx::IDevice::InteropHandles nativeHandle;
-        SLANG_CALL(device->getNativeDeviceHandles(&nativeHandle));
-        ID3D12Device* pD3D12Device = reinterpret_cast<ID3D12Device*>(nativeHandle.handles[0].handleValue);
-
-        uint32_t uavSpace, uavSlot;
-        if (findNvApiShaderParameter(program, uavSpace, uavSlot)) {
-            if (NvAPI_D3D12_SetNvShaderExtnSlotSpace(pD3D12Device, uavSlot, uavSpace) != NVAPI_OK) {
-                SGL_THROW("Failed to set NVAPI extension.");
-            }
-        }
-        return SLANG_OK;
-    }
-
-    // This method will be called by the gfx layer right after creating a ray tracing state object.
-    virtual gfx::Result afterCreateRayTracingState(gfx::IDevice* device, slang::IComponentType* program)
-    {
-        gfx::IDevice::InteropHandles nativeHandle;
-        SLANG_CALL(device->getNativeDeviceHandles(&nativeHandle));
-        ID3D12Device* pD3D12Device = reinterpret_cast<ID3D12Device*>(nativeHandle.handles[0].handleValue);
-
-        uint32_t uavSpace, uavSlot;
-        if (findNvApiShaderParameter(program, uavSpace, uavSlot)) {
-            if (NvAPI_D3D12_SetNvShaderExtnSlotSpace(pD3D12Device, 0xFFFFFFFF, 0) != NVAPI_OK) {
-                SGL_THROW("Failed to set NVAPI extension.");
-            }
-        }
-        return SLANG_OK;
-    }
-
-private:
-    bool findNvApiShaderParameter(slang::IComponentType* program, uint32_t& uavSpace, uint32_t& uavSlot)
-    {
-        auto globalTypeLayout = program->getLayout()->getGlobalParamsVarLayout()->getTypeLayout();
-        auto index = globalTypeLayout->findFieldIndexByName("g_NvidiaExt");
-        if (index != -1) {
-            auto field = globalTypeLayout->getFieldByIndex((unsigned int)index);
-            uavSpace = field->getBindingSpace();
-            uavSlot = field->getBindingIndex();
-            return true;
-        }
-        return false;
-    }
-
-    NVAPI_D3D12_PSO_SET_SHADER_EXTENSION_SLOT_DESC createShaderExtensionSlotDesc(uint32_t uavSpace, uint32_t uavSlot)
-    {
-        NVAPI_D3D12_PSO_SET_SHADER_EXTENSION_SLOT_DESC desc = {};
-        desc.psoExtension = NV_PSO_SET_SHADER_EXTNENSION_SLOT_AND_SPACE;
-        desc.version = NV_SET_SHADER_EXTENSION_SLOT_DESC_VER;
-        desc.baseVersion = NV_PSO_EXTENSION_DESC_VER;
-        desc.uavSlot = uavSlot;
-        desc.registerSpace = uavSpace;
-        return desc;
-    }
-};
-#endif // SGL_HAS_NVAPI
-
-inline gfx::DeviceType gfx_device_type(DeviceType device_type)
-{
-    switch (device_type) {
-    case DeviceType::automatic:
-        return gfx::DeviceType::Default;
-    case DeviceType::d3d12:
-        return gfx::DeviceType::DirectX12;
-    case DeviceType::vulkan:
-        return gfx::DeviceType::Vulkan;
-    case DeviceType::metal:
-        return gfx::DeviceType::Metal;
-    case DeviceType::cpu:
-        return gfx::DeviceType::CPU;
-    case DeviceType::cuda:
-        return gfx::DeviceType::CUDA;
-    }
-    SGL_UNREACHABLE();
-}
-
 Device::Device(const DeviceDesc& desc)
     : m_desc(desc)
 {
     ConstructorRefGuard ref_guard(this);
+
+    if (desc.enable_debug_layers)
+        rhi::getRHI()->enableDebugLayers();
 
     // Create hot reload system before creating any sessions.
     if (m_desc.enable_hot_reload)
@@ -313,23 +107,15 @@ Device::Device(const DeviceDesc& desc)
         m_global_session->setDownstreamCompilerPath(pass_through, platform::runtime_directory().string().c_str());
     }
 
-    gfx::gfxSetDebugCallback(&DebugLogger::get());
-    if (m_desc.enable_debug_layers) {
-        log_debug("Enabling GFX debug layers.");
-        gfx::gfxEnableDebugLayer();
-    }
-
     if (m_desc.type == DeviceType::automatic) {
 #if SGL_WINDOWS
         m_desc.type = DeviceType::d3d12;
-#elif SGL_LINUX || SGL_MACOS
+#elif SGL_LINUX
         m_desc.type = DeviceType::vulkan;
+#elif SGL_MACOS
+        m_desc.type = DeviceType::metal;
 #endif
     }
-
-#if SGL_HAS_NVAPI
-    m_api_dispatcher.reset(new PipelineCreationAPIDispatcher());
-#endif
 
     // Setup shader cache.
     if (m_desc.shader_cache_path) {
@@ -339,35 +125,28 @@ Device::Device(const DeviceDesc& desc)
             m_shader_cache_path = platform::app_data_directory() / m_shader_cache_path;
         std::filesystem::create_directories(m_shader_cache_path);
     }
-    std::string gfx_shader_cache_path = (m_shader_cache_path / "gfx").string();
 
     // Setup extensions.
-    std::vector<void*> extended_descs;
-    gfx::D3D12DeviceExtendedDesc d3d12_extended_desc{
-        .structType = gfx::StructType::D3D12DeviceExtendedDesc,
+    rhi::D3D12DeviceExtendedDesc d3d12_extended_desc{
+        .structType = rhi::StructType::D3D12DeviceExtendedDesc,
         .rootParameterShaderAttributeName = "root",
         .debugBreakOnD3D12Error = false,
         .highestShaderModel = 0,
     };
-    if (m_desc.type == DeviceType::d3d12)
-        extended_descs.push_back(&d3d12_extended_desc);
 
-    gfx::IDevice::Desc gfx_desc
-    {
-        .deviceType = gfx_device_type(m_desc.type),
+    rhi::DeviceDesc rhi_desc{
+        .next = &d3d12_extended_desc,
+        .deviceType = static_cast<rhi::DeviceType>(m_desc.type),
         .adapterLUID
-            = m_desc.adapter_luid ? reinterpret_cast<const gfx::AdapterLUID*>(m_desc.adapter_luid->data()) : nullptr,
-#if SGL_HAS_NVAPI
-        .apiCommandDispatcher = m_api_dispatcher.get(),
-#endif
-        .shaderCache{
-            .shaderCachePath = m_shader_cache_enabled ? gfx_shader_cache_path.c_str() : nullptr,
-            .maxEntryCount = 4096,
-        },
+        = m_desc.adapter_luid ? reinterpret_cast<const rhi::AdapterLUID*>(m_desc.adapter_luid->data()) : nullptr,
         .slang{
             .slangGlobalSession = m_global_session,
         },
-        .extendedDescCount = narrow_cast<gfx::GfxCount>(extended_descs.size()), .extendedDescs = extended_descs.data(),
+        // This needs to match NV_SHADER_EXTN_SLOT set in shader.cpp
+        .nvapiExtUavSlot = 999,
+        // TODO(slang-rhi) make configurable but default to true
+        .enableValidation = true,
+        .debugCallback = &DebugLogger::get(),
     };
     log_debug(
         "Creating graphics device (type: {}, luid: {}, shader_cache_path: {}).",
@@ -375,45 +154,45 @@ Device::Device(const DeviceDesc& desc)
         m_desc.adapter_luid,
         m_shader_cache_path
     );
-    if (SLANG_FAILED(gfx::gfxCreateDevice(&gfx_desc, m_gfx_device.writeRef())))
+    if (SLANG_FAILED(rhi::getRHI()->createDevice(rhi_desc, m_rhi_device.writeRef())))
         SGL_THROW("Failed to create device!");
 
     // Get device info.
-    const gfx::DeviceInfo& gfx_device_info = m_gfx_device->getDeviceInfo();
+    const rhi::DeviceInfo& rhi_device_info = m_rhi_device->getDeviceInfo();
     m_info.type = m_desc.type;
-    m_info.api_name = gfx_device_info.apiName;
-    m_info.adapter_name = gfx_device_info.adapterName;
+    m_info.api_name = rhi_device_info.apiName;
+    m_info.adapter_name = rhi_device_info.adapterName;
     m_info.adapter_luid = m_desc.adapter_luid ? *m_desc.adapter_luid : AdapterLUID();
-    m_info.timestamp_frequency = gfx_device_info.timestampFrequency;
-    m_info.limits.max_texture_dimension_1d = gfx_device_info.limits.maxTextureDimension1D;
-    m_info.limits.max_texture_dimension_2d = gfx_device_info.limits.maxTextureDimension2D;
-    m_info.limits.max_texture_dimension_3d = gfx_device_info.limits.maxTextureDimension3D;
-    m_info.limits.max_texture_dimension_cube = gfx_device_info.limits.maxTextureDimensionCube;
-    m_info.limits.max_texture_array_layers = gfx_device_info.limits.maxTextureArrayLayers;
-    m_info.limits.max_vertex_input_elements = gfx_device_info.limits.maxVertexInputElements;
-    m_info.limits.max_vertex_input_element_offset = gfx_device_info.limits.maxVertexInputElementOffset;
-    m_info.limits.max_vertex_streams = gfx_device_info.limits.maxVertexStreams;
-    m_info.limits.max_vertex_stream_stride = gfx_device_info.limits.maxVertexStreamStride;
-    m_info.limits.max_compute_threads_per_group = gfx_device_info.limits.maxComputeThreadsPerGroup;
+    m_info.timestamp_frequency = rhi_device_info.timestampFrequency;
+    m_info.limits.max_texture_dimension_1d = rhi_device_info.limits.maxTextureDimension1D;
+    m_info.limits.max_texture_dimension_2d = rhi_device_info.limits.maxTextureDimension2D;
+    m_info.limits.max_texture_dimension_3d = rhi_device_info.limits.maxTextureDimension3D;
+    m_info.limits.max_texture_dimension_cube = rhi_device_info.limits.maxTextureDimensionCube;
+    m_info.limits.max_texture_array_layers = rhi_device_info.limits.maxTextureArrayLayers;
+    m_info.limits.max_vertex_input_elements = rhi_device_info.limits.maxVertexInputElements;
+    m_info.limits.max_vertex_input_element_offset = rhi_device_info.limits.maxVertexInputElementOffset;
+    m_info.limits.max_vertex_streams = rhi_device_info.limits.maxVertexStreams;
+    m_info.limits.max_vertex_stream_stride = rhi_device_info.limits.maxVertexStreamStride;
+    m_info.limits.max_compute_threads_per_group = rhi_device_info.limits.maxComputeThreadsPerGroup;
     m_info.limits.max_compute_thread_group_size = uint3(
-        gfx_device_info.limits.maxComputeThreadGroupSize[0],
-        gfx_device_info.limits.maxComputeThreadGroupSize[1],
-        gfx_device_info.limits.maxComputeThreadGroupSize[2]
+        rhi_device_info.limits.maxComputeThreadGroupSize[0],
+        rhi_device_info.limits.maxComputeThreadGroupSize[1],
+        rhi_device_info.limits.maxComputeThreadGroupSize[2]
     );
     m_info.limits.max_compute_dispatch_thread_groups = uint3(
-        gfx_device_info.limits.maxComputeDispatchThreadGroups[0],
-        gfx_device_info.limits.maxComputeDispatchThreadGroups[1],
-        gfx_device_info.limits.maxComputeDispatchThreadGroups[2]
+        rhi_device_info.limits.maxComputeDispatchThreadGroups[0],
+        rhi_device_info.limits.maxComputeDispatchThreadGroups[1],
+        rhi_device_info.limits.maxComputeDispatchThreadGroups[2]
     );
-    m_info.limits.max_viewports = gfx_device_info.limits.maxViewports;
+    m_info.limits.max_viewports = rhi_device_info.limits.maxViewports;
     m_info.limits.max_viewport_dimensions
-        = uint2(gfx_device_info.limits.maxViewportDimensions[0], gfx_device_info.limits.maxViewportDimensions[1]);
+        = uint2(rhi_device_info.limits.maxViewportDimensions[0], rhi_device_info.limits.maxViewportDimensions[1]);
     m_info.limits.max_framebuffer_dimensions = uint3(
-        gfx_device_info.limits.maxFramebufferDimensions[0],
-        gfx_device_info.limits.maxFramebufferDimensions[1],
-        gfx_device_info.limits.maxFramebufferDimensions[2]
+        rhi_device_info.limits.maxFramebufferDimensions[0],
+        rhi_device_info.limits.maxFramebufferDimensions[1],
+        rhi_device_info.limits.maxFramebufferDimensions[2]
     );
-    m_info.limits.max_shader_visible_samplers = gfx_device_info.limits.maxShaderVisibleSamplers;
+    m_info.limits.max_shader_visible_samplers = rhi_device_info.limits.maxShaderVisibleSamplers;
 
     // Get supported shader model.
     const std::vector<std::pair<ShaderModel, const char*>> available_shader_models = {
@@ -427,7 +206,7 @@ Device::Device(const DeviceDesc& desc)
         {ShaderModel::sm_6_0, "sm_6_0"},
     };
     for (const auto& [sm, sm_str] : available_shader_models) {
-        if (m_gfx_device->hasFeature(sm_str)) {
+        if (m_rhi_device->hasFeature(sm_str)) {
             m_supported_shader_model = sm;
             break;
         }
@@ -440,17 +219,14 @@ Device::Device(const DeviceDesc& desc)
 
     // Get features.
     const char* features[256];
-    gfx::GfxCount feature_count = 0;
-    SLANG_CALL(m_gfx_device->getFeatures(features, std::size(features), &feature_count));
-    for (gfx::GfxCount i = 0; i < feature_count; ++i)
+    uint32_t feature_count = 0;
+    SLANG_CALL(m_rhi_device->getFeatures(features, std::size(features), &feature_count));
+    for (uint32_t i = 0; i < feature_count; ++i)
         m_features.push_back(features[i]);
     log_debug("Supported features: {}", string::join(m_features, ", "));
 
     // Create graphics queue.
-    SLANG_CALL(m_gfx_device->createCommandQueue(
-        {.type = gfx::ICommandQueue::QueueType::Graphics},
-        m_gfx_graphics_queue.writeRef()
-    ));
+    SLANG_CALL(m_rhi_device->getQueue(rhi::QueueType::Graphics, m_rhi_graphics_queue.writeRef()));
 
     // Create default slang session.
     m_slang_session = create_slang_session({
@@ -464,25 +240,11 @@ Device::Device(const DeviceDesc& desc)
 
     // Setup CUDA interop.
     if (m_desc.enable_cuda_interop) {
-        SGL_CHECK(sgl_cuda_api_init(), "Failed to initialize CUDA driver API.");
+        SGL_CHECK(rhiCudaDriverApiInit(), "Failed to initialize CUDA driver API.");
         m_cuda_device = make_ref<cuda::Device>(this);
         m_cuda_semaphore = make_ref<cuda::ExternalSemaphore>(m_global_fence);
         m_supports_cuda_interop = true;
     }
-
-    m_upload_heap = create_memory_heap(
-        {.memory_type = MemoryType::upload,
-         .usage = ResourceUsage::none,
-         .page_size = 1024 * 1024 * 4,
-         .debug_name = "default_upload_heap"}
-    );
-
-    m_read_back_heap = create_memory_heap(
-        {.memory_type = MemoryType::read_back,
-         .usage = ResourceUsage::none,
-         .page_size = 1024 * 1024 * 4,
-         .debug_name = "default_read_back_heap"}
-    );
 
     if (m_desc.enable_print)
         m_debug_printer = std::make_unique<DebugPrinter>(this);
@@ -504,43 +266,31 @@ Device::~Device()
 
     SGL_CHECK(m_closed, "Device is not close. Call close() before destroying the device.");
 
-    m_gfx_graphics_queue.setNull();
-    m_gfx_device.setNull();
-
-#if SGL_HAS_NVAPI
-    m_api_dispatcher.reset();
-#endif
+    m_rhi_graphics_queue.setNull();
+    m_rhi_device.setNull();
 }
 
 ShaderCacheStats Device::shader_cache_stats() const
 {
-    Slang::ComPtr<gfx::IShaderCache> gfx_shader_cache;
-    SLANG_CALL(m_gfx_device->queryInterface(SLANG_UUID_IShaderCache, (void**)gfx_shader_cache.writeRef()));
-    if (!gfx_shader_cache)
-        return {
-            .entry_count = 0,
-            .hit_count = 0,
-            .miss_count = 0,
-        };
-
-    gfx::ShaderCacheStats gfx_stats;
-    SLANG_CALL(gfx_shader_cache->getShaderCacheStats(&gfx_stats));
+    size_t hit_count, miss_count, cache_size;
+    m_rhi_device->getShaderCacheStats(&hit_count, &miss_count, &cache_size);
     return {
-        .entry_count = static_cast<size_t>(gfx_stats.entryCount),
-        .hit_count = static_cast<size_t>(gfx_stats.hitCount),
-        .miss_count = static_cast<size_t>(gfx_stats.missCount),
+        .entry_count = cache_size,
+        .hit_count = hit_count,
+        .miss_count = miss_count,
     };
 }
 
-ResourceStateSet Device::get_format_supported_resource_states(Format format) const
+bool Device::has_feature(std::string_view feature) const
 {
-    gfx::ResourceStateSet gfx_state_set;
-    SLANG_CALL(m_gfx_device->getFormatSupportedResourceStates(static_cast<gfx::Format>(format), &gfx_state_set));
-    ResourceStateSet state_set;
-    for (uint32_t i = 0; i < uint32_t(gfx::ResourceState::_Count); ++i)
-        if (gfx_state_set.contains(static_cast<gfx::ResourceState>(i)))
-            state_set.insert(static_cast<ResourceState>(i));
-    return state_set;
+    return std::find(m_features.begin(), m_features.end(), feature) != m_features.end();
+}
+
+FormatSupport Device::get_format_support(Format format) const
+{
+    rhi::FormatSupport rhi_format_support;
+    SLANG_CALL(m_rhi_device->getFormatSupport(static_cast<rhi::Format>(format), &rhi_format_support));
+    return static_cast<FormatSupport>(rhi_format_support);
 }
 
 void Device::close()
@@ -567,15 +317,7 @@ void Device::close()
     m_blitter.reset();
     m_debug_printer.reset();
 
-    m_read_back_heap.reset();
-    m_upload_heap.reset();
-
     m_global_fence.reset();
-
-    m_current_transient_resource_heap.setNull();
-    m_in_flight_transient_resource_heaps = {};
-    m_transient_resource_heap_pool = {};
-    m_deferred_release_queue = {};
 
     m_slang_session.reset();
     m_hot_reload.reset();
@@ -595,14 +337,14 @@ void Device::close_all_devices()
         device->close();
 }
 
-ref<Swapchain> Device::create_swapchain(SwapchainDesc desc, Window* window)
+ref<Surface> Device::create_surface(Window* window)
 {
-    return make_ref<Swapchain>(std::move(desc), window, ref<Device>(this));
+    return make_ref<Surface>(window, ref<Device>(this));
 }
 
-ref<Swapchain> Device::create_swapchain(SwapchainDesc desc, WindowHandle window_handle)
+ref<Surface> Device::create_surface(WindowHandle window_handle)
 {
-    return make_ref<Swapchain>(std::move(desc), window_handle, ref<Device>(this));
+    return make_ref<Surface>(window_handle, ref<Device>(this));
 }
 
 ref<Buffer> Device::create_buffer(BufferDesc desc)
@@ -610,15 +352,24 @@ ref<Buffer> Device::create_buffer(BufferDesc desc)
     return make_ref<Buffer>(ref<Device>(this), std::move(desc));
 }
 
+ref<BufferView> Device::create_buffer_view(Buffer* buffer, BufferViewDesc desc)
+{
+    return make_ref<BufferView>(ref<Device>(this), ref<Buffer>(buffer), std::move(desc));
+}
+
 ref<Texture> Device::create_texture(TextureDesc desc)
 {
     return make_ref<Texture>(ref<Device>(this), std::move(desc));
 }
 
-ref<Texture>
-Device::create_texture_from_resource(TextureDesc desc, gfx::ITextureResource* resource, bool deferred_release)
+ref<Texture> Device::create_texture_from_resource(TextureDesc desc, rhi::ITexture* resource)
 {
-    return make_ref<Texture>(ref<Device>(this), std::move(desc), resource, deferred_release);
+    return make_ref<Texture>(ref<Device>(this), std::move(desc), resource);
+}
+
+ref<TextureView> Device::create_texture_view(Texture* texture, TextureViewDesc desc)
+{
+    return make_ref<TextureView>(ref<Device>(this), ref<Texture>(texture), std::move(desc));
 }
 
 ref<Sampler> Device::create_sampler(SamplerDesc desc)
@@ -641,28 +392,31 @@ ref<InputLayout> Device::create_input_layout(InputLayoutDesc desc)
     return make_ref<InputLayout>(ref<Device>(this), std::move(desc));
 }
 
-ref<Framebuffer> Device::create_framebuffer(FramebufferDesc desc)
+AccelerationStructureSizes Device::get_acceleration_structure_sizes(const AccelerationStructureBuildDesc& desc)
 {
-    return make_ref<Framebuffer>(ref<Device>(this), std::move(desc));
-}
-
-AccelerationStructurePrebuildInfo
-Device::get_acceleration_structure_prebuild_info(const AccelerationStructureBuildInputs& build_inputs)
-{
-    const gfx::IAccelerationStructure::BuildInputs& gfx_build_inputs
-        = reinterpret_cast<const gfx::IAccelerationStructure::BuildInputs&>(build_inputs);
-    gfx::IAccelerationStructure::PrebuildInfo gfx_prebuild_info;
-    SLANG_CALL(m_gfx_device->getAccelerationStructurePrebuildInfo(gfx_build_inputs, &gfx_prebuild_info));
-    return AccelerationStructurePrebuildInfo{
-        .result_data_max_size = gfx_prebuild_info.resultDataMaxSize,
-        .scratch_data_size = gfx_prebuild_info.scratchDataSize,
-        .update_scratch_data_size = gfx_prebuild_info.updateScratchDataSize,
+    AccelerationStructureBuildDescConverter converter(desc);
+    rhi::AccelerationStructureSizes rhi_sizes;
+    SLANG_CALL(m_rhi_device->getAccelerationStructureSizes(converter.rhi_desc, &rhi_sizes));
+    return {
+        .acceleration_structure_size = rhi_sizes.accelerationStructureSize,
+        .scratch_size = rhi_sizes.scratchSize,
+        .update_scratch_size = rhi_sizes.updateScratchSize,
     };
 }
 
 ref<AccelerationStructure> Device::create_acceleration_structure(AccelerationStructureDesc desc)
 {
     return make_ref<AccelerationStructure>(ref<Device>(this), std::move(desc));
+}
+
+ref<AccelerationStructureInstanceList> Device::create_acceleration_structure_instance_list(size_t size)
+{
+    return make_ref<AccelerationStructureInstanceList>(ref<Device>(this), size);
+}
+
+ref<ShaderTable> Device::create_shader_table(ShaderTableDesc desc)
+{
+    return make_ref<ShaderTable>(ref<Device>(this), std::move(desc));
 }
 
 /*size_t Device::query_coopvec_matrix_size(uint32_t rows, uint32_t columns, CoopVecMatrixLayout layout)
@@ -675,11 +429,6 @@ ref<CoopVec> Device::get_or_create_coop_vec()
     if (!m_coop_vec)
         m_coop_vec.reset(new CoopVec(ref<Device>(this)));
     return m_coop_vec;
-}
-
-ref<ShaderTable> Device::create_shader_table(ShaderTableDesc desc)
-{
-    return make_ref<ShaderTable>(ref<Device>(this), std::move(desc));
 }
 
 ref<SlangSession> Device::create_slang_session(SlangSessionDesc desc)
@@ -726,9 +475,13 @@ ref<ShaderProgram> Device::load_program(
     return m_slang_session->load_program(module_name, entry_point_names, additional_source, link_options);
 }
 
-ref<MutableShaderObject> Device::create_mutable_shader_object(const ShaderProgram* shader_program)
+ref<ShaderObject> Device::create_root_shader_object(const ShaderProgram* shader_program)
 {
-    ref<MutableShaderObject> shader_object = make_ref<MutableShaderObject>(ref<Device>(this), shader_program);
+    Slang::ComPtr<rhi::IShaderObject> rhi_shader_object;
+    SLANG_CALL(m_rhi_device->createRootShaderObject(shader_program->rhi_shader_program(), rhi_shader_object.writeRef())
+    );
+
+    ref<ShaderObject> shader_object = make_ref<ShaderObject>(ref<Device>(this), rhi_shader_object);
 
     // Bind the debug printer to the new shader object, if enabled.
     if (m_debug_printer)
@@ -737,15 +490,21 @@ ref<MutableShaderObject> Device::create_mutable_shader_object(const ShaderProgra
     return shader_object;
 }
 
-ref<MutableShaderObject> Device::create_mutable_shader_object(const TypeLayoutReflection* type_layout)
+ref<ShaderObject> Device::create_shader_object(const TypeLayoutReflection* type_layout)
 {
-    return make_ref<MutableShaderObject>(ref<Device>(this), type_layout);
+    Slang::ComPtr<rhi::IShaderObject> rhi_shader_object;
+    SLANG_CALL(m_rhi_device->createShaderObjectFromTypeLayout(
+        type_layout->get_slang_type_layout(),
+        rhi_shader_object.writeRef()
+    ));
+
+    return make_ref<ShaderObject>(ref<Device>(this), rhi_shader_object);
 }
 
-ref<MutableShaderObject> Device::create_mutable_shader_object(ReflectionCursor cursor)
+ref<ShaderObject> Device::create_shader_object(ReflectionCursor cursor)
 {
     SGL_CHECK(cursor.is_valid(), "Invalid reflection cursor");
-    return create_mutable_shader_object(cursor.type_layout().get());
+    return create_shader_object(cursor.type_layout().get());
 }
 
 ref<ComputePipeline> Device::create_compute_pipeline(ComputePipelineDesc desc)
@@ -753,9 +512,9 @@ ref<ComputePipeline> Device::create_compute_pipeline(ComputePipelineDesc desc)
     return make_ref<ComputePipeline>(ref<Device>(this), std::move(desc));
 }
 
-ref<GraphicsPipeline> Device::create_graphics_pipeline(GraphicsPipelineDesc desc)
+ref<RenderPipeline> Device::create_render_pipeline(RenderPipelineDesc desc)
 {
-    return make_ref<GraphicsPipeline>(ref<Device>(this), std::move(desc));
+    return make_ref<RenderPipeline>(ref<Device>(this), std::move(desc));
 }
 
 ref<RayTracingPipeline> Device::create_ray_tracing_pipeline(RayTracingPipelineDesc desc)
@@ -768,88 +527,19 @@ ref<ComputeKernel> Device::create_compute_kernel(ComputeKernelDesc desc)
     return make_ref<ComputeKernel>(ref(this), std::move(desc));
 }
 
-ref<CommandBuffer> Device::create_command_buffer()
+ref<CommandEncoder> Device::create_command_encoder(CommandQueueType queue)
 {
-    SGL_ASSERT(m_shared_command_buffer == nullptr);
+    SGL_CHECK(queue == CommandQueueType::graphics, "Only graphics queue is supported.");
 
-    return make_ref<CommandBuffer>(ref<Device>(this));
-}
-
-void Device::_set_open_command_buffer(CommandBuffer* command_buffer)
-{
-    SGL_CHECK(
-        m_open_command_buffer == nullptr || command_buffer == nullptr,
-        "Only one command buffer can be open at any time."
-    );
-
-    m_open_command_buffer = command_buffer;
-}
-
-Slang::ComPtr<gfx::ITransientResourceHeap> Device::_get_or_create_transient_resource_heap()
-{
-    if (m_current_transient_resource_heap)
-        return m_current_transient_resource_heap;
-
-    if (!m_transient_resource_heap_pool.empty()) {
-        m_current_transient_resource_heap = m_transient_resource_heap_pool.front();
-        m_transient_resource_heap_pool.pop();
-        return m_current_transient_resource_heap;
-    }
-
-    SLANG_CALL(m_gfx_device->createTransientResourceHeap(
-        gfx::ITransientResourceHeap::Desc{
-            .flags = gfx::ITransientResourceHeap::Flags::AllowResizing,
-            .constantBufferSize = 1024 * 1024 * 4,
-            .samplerDescriptorCount = 1024,
-            .uavDescriptorCount = 1024,
-            .srvDescriptorCount = 1024,
-            .constantBufferDescriptorCount = 1024,
-            .accelerationStructureDescriptorCount = 1024,
-        },
-        m_current_transient_resource_heap.writeRef()
-    ));
-    return m_current_transient_resource_heap;
-}
-
-CommandBuffer* Device::_begin_shared_command_buffer()
-{
-    CommandBuffer* command_buffer = m_open_command_buffer;
-    if (!command_buffer) {
-        m_shared_command_buffer = create_command_buffer();
-        command_buffer = m_shared_command_buffer;
-    }
-
-    return command_buffer;
-}
-
-void Device::_end_shared_command_buffer(bool wait)
-{
-    SGL_ASSERT(m_open_command_buffer);
-
-    uint64_t id = 0;
-    if (m_shared_command_buffer) {
-        m_shared_command_buffer->close();
-        id = submit_command_buffer(m_shared_command_buffer);
-        m_shared_command_buffer.reset();
-    } else {
-        if (wait) {
-            CommandBuffer* command_buffer = m_open_command_buffer;
-            command_buffer->close();
-            id = submit_command_buffer(command_buffer);
-            command_buffer->open();
-        }
-    }
-    if (wait)
-        wait_command_buffer(id);
+    Slang::ComPtr<rhi::ICommandEncoder> rhi_command_encoder;
+    SLANG_CALL(m_rhi_graphics_queue->createCommandEncoder(rhi_command_encoder.writeRef()));
+    return make_ref<CommandEncoder>(ref(this), rhi_command_encoder);
 }
 
 uint64_t Device::submit_command_buffer(CommandBuffer* command_buffer, CommandQueueType queue)
 {
     SGL_CHECK_NOT_NULL(command_buffer);
     SGL_CHECK(queue == CommandQueueType::graphics, "Only graphics queue is supported.");
-
-    if (command_buffer->is_open())
-        SGL_THROW("Cannot submit open command buffer.");
 
     // TODO make parameter
     void* cuda_stream = 0;
@@ -861,9 +551,23 @@ uint64_t Device::submit_command_buffer(CommandBuffer* command_buffer, CommandQue
         sync_to_cuda(cuda_stream);
     }
 
-    uint64_t fence_value = m_global_fence->update_signaled_value();
-    m_gfx_graphics_queue
-        ->executeCommandBuffer(command_buffer->gfx_command_buffer(), m_global_fence->gfx_fence(), fence_value);
+    rhi::ICommandBuffer* rhi_command_buffers[] = {command_buffer->rhi_command_buffer()};
+    rhi::IFence* rhi_wait_fences[] = {m_global_fence->rhi_fence()};
+    uint64_t rhi_wait_fence_values[] = {m_global_fence->signaled_value()};
+    rhi::IFence* rhi_signal_fences[] = {m_global_fence->rhi_fence()};
+    uint64_t rhi_signal_fence_values[] = {m_global_fence->update_signaled_value()};
+    rhi::SubmitDesc rhi_submit_desc{
+        .commandBuffers = rhi_command_buffers,
+        .commandBufferCount = 1,
+        .waitFences = m_wait_global_fence ? rhi_wait_fences : nullptr,
+        .waitFenceValues = m_wait_global_fence ? rhi_wait_fence_values : nullptr,
+        .waitFenceCount = m_wait_global_fence ? 1u : 0u,
+        .signalFences = rhi_signal_fences,
+        .signalFenceValues = rhi_signal_fence_values,
+        .signalFenceCount = 1,
+    };
+    m_rhi_graphics_queue->submit(rhi_submit_desc);
+    m_wait_global_fence = false;
 
     if (m_supports_cuda_interop && command_buffer->m_cuda_interop_buffers.size() > 0) {
         sync_to_device(cuda_stream);
@@ -873,7 +577,7 @@ uint64_t Device::submit_command_buffer(CommandBuffer* command_buffer, CommandQue
                 buffer->copy_to_cuda(cuda_stream);
     }
 
-    return fence_value;
+    return m_global_fence->signaled_value();
 }
 
 bool Device::is_command_buffer_complete(uint64_t id)
@@ -889,7 +593,7 @@ void Device::wait_command_buffer(uint64_t id)
 void Device::wait_for_idle(CommandQueueType queue)
 {
     SGL_CHECK(queue == CommandQueueType::graphics, "Only graphics queue is supported.");
-    m_gfx_graphics_queue->waitOnHost();
+    m_rhi_graphics_queue->waitOnHost();
 }
 
 void Device::sync_to_cuda(void* cuda_stream)
@@ -898,8 +602,7 @@ void Device::sync_to_cuda(void* cuda_stream)
     SGL_CU_SCOPE(this);
     uint64_t signal_value = m_global_fence->update_signaled_value();
     m_cuda_semaphore->signal(signal_value, CUstream(cuda_stream));
-    gfx::IFence* fence = m_global_fence->gfx_fence();
-    m_gfx_graphics_queue->waitForFenceValuesOnDevice(1, &fence, &signal_value);
+    m_wait_global_fence = true;
 }
 
 void Device::sync_to_device(void* cuda_stream)
@@ -912,41 +615,11 @@ void Device::run_garbage_collection()
 {
     uint64_t signaled_value = m_global_fence->signaled_value();
 
-    // Finish current transient resource heap and push it to the in-flight queue.
-    if (m_current_transient_resource_heap) {
-        m_current_transient_resource_heap->finish();
-        m_in_flight_transient_resource_heaps.push({m_current_transient_resource_heap, signaled_value});
-        m_current_transient_resource_heap.setNull();
-    }
-
-    // Execute deferred releases on the upload and read-back heaps.
-    m_upload_heap->execute_deferred_releases();
-    m_read_back_heap->execute_deferred_releases();
-
     uint64_t current_value = m_global_fence->current_value();
-
-    // Reset transient resource heaps that are no longer in use.
-    while (m_in_flight_transient_resource_heaps.size()
-           && m_in_flight_transient_resource_heaps.front().second <= current_value) {
-        Slang::ComPtr<gfx::ITransientResourceHeap> transient_resource_heap
-            = m_in_flight_transient_resource_heaps.front().first;
-        m_in_flight_transient_resource_heaps.pop();
-        transient_resource_heap->synchronizeAndReset();
-        m_transient_resource_heap_pool.push(transient_resource_heap);
-    }
-
-    // Release deferred objects that are no longer in use.
-    while (m_deferred_release_queue.size() && m_deferred_release_queue.front().fence_value <= current_value)
-        m_deferred_release_queue.pop();
 
     // Update hot reload system if created.
     if (m_hot_reload)
         m_hot_reload->update();
-}
-
-ref<MemoryHeap> Device::create_memory_heap(MemoryHeapDesc desc)
-{
-    return make_ref<MemoryHeap>(ref<Device>(this), m_global_fence, std::move(desc));
 }
 
 void Device::flush_print()
@@ -966,25 +639,11 @@ void Device::wait()
     run_garbage_collection();
 }
 
-void Device::upload_buffer_data(Buffer* buffer, const void* data, size_t size, size_t offset)
+void Device::upload_buffer_data(Buffer* buffer, size_t offset, size_t size, const void* data)
 {
-    SGL_CHECK_NOT_NULL(buffer);
-    SGL_CHECK(offset + size <= buffer->size(), "Buffer write is out of bounds");
-    SGL_CHECK_NOT_NULL(data);
-
-    auto alloc = m_upload_heap->allocate(size, TEXTURE_UPLOAD_ALIGNMENT);
-
-    std::memcpy(alloc->data, data, size);
-
-    // If command buffer is already open, only add the copy command, don't attempt
-    // to immediately submit.
-    if (m_shared_command_buffer) {
-        m_shared_command_buffer->copy_buffer_region(buffer, offset, alloc->buffer, alloc->offset, size);
-    } else {
-        CommandBuffer* command_buffer = _begin_shared_command_buffer();
-        command_buffer->copy_buffer_region(buffer, offset, alloc->buffer, alloc->offset, size);
-        _end_shared_command_buffer(false);
-    }
+    auto command_encoder = create_command_encoder();
+    command_encoder->upload_buffer_data(buffer, offset, size, data);
+    submit_command_buffer(command_encoder->finish());
 }
 
 void Device::read_buffer_data(const Buffer* buffer, void* data, size_t size, size_t offset)
@@ -993,99 +652,77 @@ void Device::read_buffer_data(const Buffer* buffer, void* data, size_t size, siz
     SGL_CHECK(offset + size <= buffer->size(), "Buffer read is out of bounds");
     SGL_CHECK_NOT_NULL(data);
 
-    auto alloc = m_read_back_heap->allocate(size, TEXTURE_UPLOAD_ALIGNMENT);
-
-    CommandBuffer* command_buffer = _begin_shared_command_buffer();
-    command_buffer->copy_buffer_region(alloc->buffer, alloc->offset, buffer, offset, size);
-    _end_shared_command_buffer(true);
-
-    std::memcpy(data, alloc->data, size);
+    SLANG_CALL(m_rhi_device->readBuffer(buffer->rhi_buffer(), offset, size, data));
 }
 
-void Device::upload_texture_data(Texture* texture, uint32_t subresource, SubresourceData subresource_data)
+void Device::upload_texture_data(
+    Texture* texture,
+    SubresourceRange subresource_range,
+    uint3 offset,
+    uint3 extent,
+    std::span<SubresourceData> subresource_data
+)
 {
-    SGL_CHECK_NOT_NULL(texture);
-    SGL_CHECK_LT(subresource, texture->subresource_count());
-
-    CommandBuffer* command_buffer = _begin_shared_command_buffer();
-    command_buffer->upload_texture_data(texture, subresource, subresource_data);
-    _end_shared_command_buffer(false);
+    ref<CommandEncoder> command_encoder = create_command_encoder();
+    command_encoder->upload_texture_data(texture, subresource_range, offset, extent, subresource_data);
+    submit_command_buffer(command_encoder->finish());
 }
 
-OwnedSubresourceData Device::read_texture_data(const Texture* texture, uint32_t subresource)
+void Device::upload_texture_data(Texture* texture, uint32_t layer, uint32_t mip, SubresourceData subresource_data)
+{
+    ref<CommandEncoder> command_encoder = create_command_encoder();
+    command_encoder->upload_texture_data(texture, layer, mip, subresource_data);
+    submit_command_buffer(command_encoder->finish());
+}
+
+OwnedSubresourceData Device::read_texture_data(const Texture* texture, uint32_t layer, uint32_t mip)
 {
     SGL_CHECK_NOT_NULL(texture);
-    SGL_CHECK_LT(subresource, texture->subresource_count());
+    SGL_CHECK_LT(layer, texture->layer_count());
+    SGL_CHECK_LT(mip, texture->mip_count());
 
-    SubresourceLayout layout = texture->get_subresource_layout(subresource);
+    // TODO(slang-rhi) use readTexture function that takes data pointer instead of doing extra copy
+    Slang::ComPtr<ISlangBlob> blob;
+    rhi::SubresourceLayout rhi_layout;
+    SLANG_CALL(m_rhi_device->readTexture(texture->rhi_texture(), layer, mip, blob.writeRef(), &rhi_layout));
 
-    size_t size = layout.total_size_aligned();
-    auto alloc = m_read_back_heap->allocate(size, TEXTURE_UPLOAD_ALIGNMENT);
-
-    CommandBuffer* command_buffer = _begin_shared_command_buffer();
-    command_buffer->copy_texture_to_buffer(
-        alloc->buffer,
-        alloc->offset,
-        alloc->size,
-        layout.row_pitch_aligned,
-        texture,
-        subresource
-    );
-    _end_shared_command_buffer(true);
-
+    // Setup owned sub resource data that can contain the results.
     OwnedSubresourceData subresource_data;
-    subresource_data.size = layout.total_size();
-    subresource_data.owned_data = std::make_unique<uint8_t[]>(subresource_data.size);
+    subresource_data.owned_data = std::make_unique<uint8_t[]>(blob->getBufferSize());
     subresource_data.data = subresource_data.owned_data.get();
-    subresource_data.row_pitch = layout.row_pitch;
-    subresource_data.slice_pitch = layout.row_count * layout.row_pitch;
 
-    const uint8_t* src = alloc->data;
-    uint8_t* dst = subresource_data.owned_data.get();
-    for (uint32_t depth = 0; depth < layout.depth; ++depth) {
-        for (uint32_t row = 0; row < layout.row_count; ++row) {
-            std::memcpy(dst, src, layout.row_pitch);
-            src += layout.row_pitch_aligned;
-            dst += layout.row_pitch;
-        }
-    }
+    // Store additional layout information.
+    SubresourceLayout layout = layout_from_rhilayout(rhi_layout);
+    subresource_data.row_pitch = layout.row_pitch;
+    subresource_data.slice_pitch = layout.slice_pitch;
+    subresource_data.size = layout.size_in_bytes;
+
+    std::memcpy(subresource_data.owned_data.get(), blob->getBufferPointer(), subresource_data.size);
 
     return subresource_data;
 }
 
-void Device::deferred_release(ISlangUnknown* object)
-{
-    // Skip deferred release when device is already closed (or in the process of being closed).
-    if (m_closed)
-        return;
-
-    m_deferred_release_queue.push({
-        .fence_value = m_global_fence ? m_global_fence->signaled_value() : 0,
-        .object = Slang::ComPtr<ISlangUnknown>(object),
-    });
-}
-
 NativeHandle Device::get_native_handle(uint32_t index) const
 {
-    gfx::IDevice::InteropHandles handles = {};
-    SLANG_CALL(m_gfx_device->getNativeDeviceHandles(&handles));
+    rhi::DeviceNativeHandles handles = {};
+    SLANG_CALL(m_rhi_device->getNativeDeviceHandles(&handles));
 
 #if SGL_HAS_D3D12
     if (type() == DeviceType::d3d12) {
         SGL_ASSERT(index == 0);
         if (index == 0)
-            return NativeHandle(reinterpret_cast<ID3D12Device*>(handles.handles[0].handleValue));
+            return NativeHandle(reinterpret_cast<ID3D12Device*>(handles.handles[0].value));
     }
 #endif
 #if SGL_HAS_VULKAN
     if (type() == DeviceType::vulkan) {
         SGL_ASSERT(index < 3);
         if (index == 0)
-            return NativeHandle(reinterpret_cast<VkInstance>(handles.handles[0].handleValue));
+            return NativeHandle(reinterpret_cast<VkInstance>(handles.handles[0].value));
         else if (index == 1)
-            return NativeHandle(reinterpret_cast<VkPhysicalDevice>(handles.handles[1].handleValue));
+            return NativeHandle(reinterpret_cast<VkPhysicalDevice>(handles.handles[1].value));
         else if (index == 2)
-            return NativeHandle(reinterpret_cast<VkDevice>(handles.handles[2].handleValue));
+            return NativeHandle(reinterpret_cast<VkDevice>(handles.handles[2].value));
     }
 #endif
     return {};
@@ -1094,18 +731,9 @@ NativeHandle Device::get_native_handle(uint32_t index) const
 NativeHandle Device::get_native_command_queue_handle(CommandQueueType queue) const
 {
     SGL_CHECK(queue == CommandQueueType::graphics, "Only graphics queue is supported.");
-
-    gfx::InteropHandle handle = {};
-    SLANG_CALL(m_gfx_graphics_queue->getNativeHandle(&handle));
-#if SGL_HAS_D3D12
-    if (type() == DeviceType::d3d12)
-        return NativeHandle(reinterpret_cast<ID3D12CommandQueue*>(handle.handleValue));
-#endif
-#if SGL_HAS_VULKAN
-    if (type() == DeviceType::vulkan)
-        return NativeHandle(reinterpret_cast<VkQueue>(handle.handleValue));
-#endif
-    return {};
+    rhi::NativeHandle rhi_handle = {};
+    SLANG_CALL(m_rhi_graphics_queue->getNativeHandle(&rhi_handle));
+    return NativeHandle(rhi_handle);
 }
 
 std::vector<AdapterInfo> Device::enumerate_adapters(DeviceType type)
@@ -1120,24 +748,24 @@ std::vector<AdapterInfo> Device::enumerate_adapters(DeviceType type)
 #endif
     }
 
-    auto convert_luid = [](const gfx::AdapterLUID& gfx_luid) -> AdapterLUID
+    auto convert_luid = [](const rhi::AdapterLUID& rhi_luid) -> AdapterLUID
     {
         AdapterLUID luid;
         for (size_t i = 0; i < 16; ++i)
-            luid[i] = gfx_luid.luid[i];
+            luid[i] = rhi_luid.luid[i];
         return luid;
     };
 
-    gfx::AdapterList gfx_adapters = gfx::gfxGetAdapters(gfx_device_type(type));
+    rhi::AdapterList rhi_adapters = rhi::getRHI()->getAdapters(static_cast<rhi::DeviceType>(type));
 
-    std::vector<AdapterInfo> adapters(gfx_adapters.getCount());
+    std::vector<AdapterInfo> adapters(rhi_adapters.getCount());
     for (size_t i = 0; i < adapters.size(); ++i) {
-        const auto& gfx_adapter = gfx_adapters.getAdapters()[i];
+        const auto& rhi_adapter = rhi_adapters.getAdapters()[i];
         adapters[i] = AdapterInfo{
-            .name = gfx_adapter.name,
-            .vendor_id = gfx_adapter.vendorID,
-            .device_id = gfx_adapter.deviceID,
-            .luid = convert_luid(gfx_adapter.luid),
+            .name = rhi_adapter.name,
+            .vendor_id = rhi_adapter.vendorID,
+            .device_id = rhi_adapter.deviceID,
+            .luid = convert_luid(rhi_adapter.luid),
         };
     }
 
@@ -1146,14 +774,14 @@ std::vector<AdapterInfo> Device::enumerate_adapters(DeviceType type)
 
 void Device::report_live_objects()
 {
-    gfx::gfxReportLiveObjects();
+    rhi::getRHI()->reportLiveObjects();
 }
 
 bool Device::enable_agility_sdk()
 {
 #if SGL_HAS_D3D12 && SGL_HAS_AGILITY_SDK
     std::filesystem::path exe_dir = platform::executable_directory();
-    std::filesystem::path sdk_dir = platform::runtime_directory() / SGL_AGILITY_SDK_PATH;
+    std::filesystem::path sdk_dir = platform::runtime_directory() / SLANG_RHI_AGILITY_SDK_PATH;
 
     // Agility SDK can only be loaded from a relative path to the executable.
     // Make sure both paths use the same drive letter.
@@ -1197,7 +825,7 @@ bool Device::enable_agility_sdk()
     }
 
     // Set the SDK version and path.
-    if (!SUCCEEDED(pD3D12SDKConfiguration->SetSDKVersion(SGL_AGILITY_SDK_VERSION, rel_path.string().c_str()))) {
+    if (!SUCCEEDED(pD3D12SDKConfiguration->SetSDKVersion(SLANG_RHI_AGILITY_SDK_VERSION, rel_path.string().c_str()))) {
         log_warn("Cannot enable D3D12 Agility SDK: "
                  "Calling SetSDKVersion failed.");
         return false;
