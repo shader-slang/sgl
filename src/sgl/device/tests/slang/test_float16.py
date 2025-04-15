@@ -18,11 +18,6 @@ ELEMENT_COUNT = 1024
 )
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_float16(device_type: sgl.DeviceType, shader_model: sgl.ShaderModel, view: str):
-    if device_type == sgl.DeviceType.cuda and (
-        sys.platform == "linux" or sys.platform == "linux2"
-    ):
-        pytest.skip("Slang fails to find cuda_fp16.h header")
-
     device = helpers.get_device(device_type)
 
     np.random.seed(123)
