@@ -23,7 +23,7 @@ struct NativeNDBufferDesc {
     ref<TypeLayoutReflection> element_layout;
     Shape shape;
     Shape strides;
-    ResourceUsage usage{ResourceUsage::shader_resource | ResourceUsage::unordered_access};
+    BufferUsage usage{BufferUsage::shader_resource | BufferUsage::unordered_access};
     MemoryType memory_type{MemoryType::device_local};
 };
 
@@ -36,7 +36,7 @@ public:
     const Shape& shape() const { return m_desc.shape; }
     const Shape& strides() const { return m_desc.strides; }
     size_t element_count() const { return m_desc.shape.element_count(); }
-    ResourceUsage usage() const { return m_desc.usage; }
+    BufferUsage usage() const { return m_desc.usage; }
     MemoryType memory_type() const { return m_desc.memory_type; }
     ref<Buffer> storage() const { return m_storage; }
     size_t element_stride() const { return m_desc.element_layout->stride(); }

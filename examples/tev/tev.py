@@ -15,11 +15,10 @@ tex = device.create_texture(
     format=sgl.Format.rgba32_float,
     width=IMAGE_WIDTH,
     height=IMAGE_HEIGHT,
-    mip_count=1,
-    usage=sgl.ResourceUsage.unordered_access,
+    usage=sgl.TextureUsage.unordered_access,
 )
 
-program = device.load_program("checkerboard.slang", ["main"])
+program = device.load_program("checkerboard.slang", ["compute_main"])
 kernel = device.create_compute_kernel(program)
 
 for i in range(COUNT):

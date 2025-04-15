@@ -1,6 +1,68 @@
 Core
 ----
 
+.. py:class:: sgl.DataType
+
+    Base class: :py:class:`enum.Enum`
+    
+    
+    
+    .. py:attribute:: sgl.DataType.void
+        :type: DataType
+        :value: DataType.void
+    
+    .. py:attribute:: sgl.DataType.bool
+        :type: DataType
+        :value: DataType.bool
+    
+    .. py:attribute:: sgl.DataType.int8
+        :type: DataType
+        :value: DataType.int8
+    
+    .. py:attribute:: sgl.DataType.int16
+        :type: DataType
+        :value: DataType.int16
+    
+    .. py:attribute:: sgl.DataType.int32
+        :type: DataType
+        :value: DataType.int32
+    
+    .. py:attribute:: sgl.DataType.int64
+        :type: DataType
+        :value: DataType.int64
+    
+    .. py:attribute:: sgl.DataType.uint8
+        :type: DataType
+        :value: DataType.uint8
+    
+    .. py:attribute:: sgl.DataType.uint16
+        :type: DataType
+        :value: DataType.uint16
+    
+    .. py:attribute:: sgl.DataType.uint32
+        :type: DataType
+        :value: DataType.uint32
+    
+    .. py:attribute:: sgl.DataType.uint64
+        :type: DataType
+        :value: DataType.uint64
+    
+    .. py:attribute:: sgl.DataType.float16
+        :type: DataType
+        :value: DataType.float16
+    
+    .. py:attribute:: sgl.DataType.float32
+        :type: DataType
+        :value: DataType.float32
+    
+    .. py:attribute:: sgl.DataType.float64
+        :type: DataType
+        :value: DataType.float64
+    
+
+
+----
+
 .. py:class:: sgl.Object
 
     Base class for all reference counted objects.
@@ -600,7 +662,7 @@ Constants
 
 .. py:data:: sgl.SGL_VERSION_PATCH
     :type: int
-    :value: 0
+    :value: 1
 
 
 
@@ -608,7 +670,7 @@ Constants
 
 .. py:data:: sgl.SGL_GIT_VERSION
     :type: str
-    :value: "commit: c993bb7 / branch: main (local changes)"
+    :value: "commit: 19981de / branch: fix-doc (local changes)"
 
 
 
@@ -933,6 +995,28 @@ Logging
 Windowing
 ---------
 
+.. py:class:: sgl.CursorMode
+
+    Base class: :py:class:`enum.Enum`
+    
+    Mouse cursor modes.
+    
+    .. py:attribute:: sgl.CursorMode.normal
+        :type: CursorMode
+        :value: CursorMode.normal
+    
+    .. py:attribute:: sgl.CursorMode.hidden
+        :type: CursorMode
+        :value: CursorMode.hidden
+    
+    .. py:attribute:: sgl.CursorMode.disabled
+        :type: CursorMode
+        :value: CursorMode.disabled
+    
+
+
+----
+
 .. py:class:: sgl.WindowMode
 
     Base class: :py:class:`enum.Enum`
@@ -1027,6 +1111,11 @@ Windowing
     .. py:method:: get_clipboard(self) -> str | None
     
         Get the clipboard content.
+        
+    .. py:property:: cursor_mode
+        :type: sgl.CursorMode
+    
+        The mouse cursor mode.
         
     .. py:property:: on_resize
         :type: collections.abc.Callable[[int, int], None]
@@ -2036,7 +2125,7 @@ Platform
 
 .. py:data:: sgl.platform.page_size
     :type: int
-    :value: 65536
+    :value: 4096
 
 
 
@@ -2088,10 +2177,11 @@ Device
     
     
     
-    .. py:method:: kind(self) -> sgl.AccelerationStructureKind
+    .. py:property:: desc
+        :type: sgl.AccelerationStructureDesc
     
-    .. py:property:: device_address
-        :type: int
+    .. py:property:: handle
+        :type: sgl.AccelerationStructureHandle
     
 
 
@@ -2100,6 +2190,25 @@ Device
 .. py:class:: sgl.AccelerationStructureBuildDesc
 
     
+    
+    .. py:method:: __init__(self) -> None
+    
+    .. py:method:: __init__(self, arg: dict, /) -> None
+        :no-index:
+    
+    .. py:property:: inputs
+        :type: list[sgl.AccelerationStructureBuildInputInstances | sgl.AccelerationStructureBuildInputTriangles | sgl.AccelerationStructureBuildInputProceduralPrimitives]
+    
+        List of build inputs. All inputs must be of the same type.
+        
+    .. py:property:: motion_options
+        :type: sgl.AccelerationStructureBuildInputMotionOptions
+    
+    .. py:property:: mode
+        :type: sgl.AccelerationStructureBuildMode
+    
+    .. py:property:: flags
+        :type: sgl.AccelerationStructureBuildFlags
     
 
 
@@ -2133,49 +2242,131 @@ Device
         :type: AccelerationStructureBuildFlags
         :value: AccelerationStructureBuildFlags.minimize_memory
     
-    .. py:attribute:: sgl.AccelerationStructureBuildFlags.perform_update
-        :type: AccelerationStructureBuildFlags
-        :value: AccelerationStructureBuildFlags.perform_update
-    
 
 
 ----
 
-.. py:class:: sgl.AccelerationStructureBuildInputs
+.. py:class:: sgl.AccelerationStructureBuildInputInstances
 
-    Base class: :py:class:`sgl.AccelerationStructureBuildInputsBase`
-    
     
     
     .. py:method:: __init__(self) -> None
     
-    .. py:property:: kind
-        :type: sgl.AccelerationStructureKind
+    .. py:method:: __init__(self, arg: dict, /) -> None
+        :no-index:
     
-    .. py:property:: flags
-        :type: sgl.AccelerationStructureBuildFlags
+    .. py:property:: instance_buffer
+        :type: sgl.BufferOffsetPair
     
-    .. py:property:: desc_count
+    .. py:property:: instance_stride
         :type: int
     
-    .. py:property:: instance_descs
+    .. py:property:: instance_count
         :type: int
     
-        Array of `RayTracingInstanceDesc` values in device memory. Used when
-        `kind` is `top_level`.
-        
-    .. py:property:: geometry_descs
-        :type: list[sgl.RayTracingGeometryDesc]
-    
-        Array of `RayTracingGeometryDesc` values. Used when `kind` is
-        `bottom_level`.
-        
 
 
 ----
 
-.. py:class:: sgl.AccelerationStructureBuildInputsBase
+.. py:class:: sgl.AccelerationStructureBuildInputMotionOptions
 
+    
+    
+    .. py:method:: __init__(self) -> None
+    
+    .. py:method:: __init__(self, arg: dict, /) -> None
+        :no-index:
+    
+    .. py:property:: key_count
+        :type: int
+    
+    .. py:property:: time_start
+        :type: float
+    
+    .. py:property:: time_end
+        :type: float
+    
+
+
+----
+
+.. py:class:: sgl.AccelerationStructureBuildInputProceduralPrimitives
+
+    
+    
+    .. py:method:: __init__(self) -> None
+    
+    .. py:method:: __init__(self, arg: dict, /) -> None
+        :no-index:
+    
+    .. py:property:: aabb_buffers
+        :type: list[sgl.BufferOffsetPair]
+    
+    .. py:property:: aabb_stride
+        :type: int
+    
+    .. py:property:: primitive_count
+        :type: int
+    
+    .. py:property:: flags
+        :type: sgl.AccelerationStructureGeometryFlags
+    
+
+
+----
+
+.. py:class:: sgl.AccelerationStructureBuildInputTriangles
+
+    
+    
+    .. py:method:: __init__(self) -> None
+    
+    .. py:method:: __init__(self, arg: dict, /) -> None
+        :no-index:
+    
+    .. py:property:: vertex_buffers
+        :type: list[sgl.BufferOffsetPair]
+    
+    .. py:property:: vertex_format
+        :type: sgl.Format
+    
+    .. py:property:: vertex_count
+        :type: int
+    
+    .. py:property:: vertex_stride
+        :type: int
+    
+    .. py:property:: index_buffer
+        :type: sgl.BufferOffsetPair
+    
+    .. py:property:: index_format
+        :type: sgl.IndexFormat
+    
+    .. py:property:: index_count
+        :type: int
+    
+    .. py:property:: pre_transform_buffer
+        :type: sgl.BufferOffsetPair
+    
+    .. py:property:: flags
+        :type: sgl.AccelerationStructureGeometryFlags
+    
+
+
+----
+
+.. py:class:: sgl.AccelerationStructureBuildMode
+
+    Base class: :py:class:`enum.Enum`
+    
+    .. py:attribute:: sgl.AccelerationStructureBuildMode.build
+        :type: AccelerationStructureBuildMode
+        :value: AccelerationStructureBuildMode.build
+    
+    .. py:attribute:: sgl.AccelerationStructureBuildMode.update
+        :type: AccelerationStructureBuildMode
+        :value: AccelerationStructureBuildMode.update
+    
 
 
 ----
@@ -2196,32 +2387,138 @@ Device
 
 ----
 
-.. py:class:: sgl.AccelerationStructureKind
+.. py:class:: sgl.AccelerationStructureDesc
 
-    Base class: :py:class:`enum.Enum`
     
-    .. py:attribute:: sgl.AccelerationStructureKind.top_level
-        :type: AccelerationStructureKind
-        :value: AccelerationStructureKind.top_level
     
-    .. py:attribute:: sgl.AccelerationStructureKind.bottom_level
-        :type: AccelerationStructureKind
-        :value: AccelerationStructureKind.bottom_level
+    .. py:method:: __init__(self) -> None
+    
+    .. py:method:: __init__(self, arg: dict, /) -> None
+        :no-index:
+    
+    .. py:property:: size
+        :type: int
+    
+    .. py:property:: label
+        :type: str
     
 
 
 ----
 
-.. py:class:: sgl.AccelerationStructurePrebuildInfo
+.. py:class:: sgl.AccelerationStructureGeometryFlags
 
-    .. py:property:: result_data_max_size
+    Base class: :py:class:`enum.IntFlag`
+    
+    .. py:attribute:: sgl.AccelerationStructureGeometryFlags.none
+        :type: AccelerationStructureGeometryFlags
+        :value: AccelerationStructureGeometryFlags.none
+    
+    .. py:attribute:: sgl.AccelerationStructureGeometryFlags.opaque
+        :type: AccelerationStructureGeometryFlags
+        :value: AccelerationStructureGeometryFlags.opaque
+    
+    .. py:attribute:: sgl.AccelerationStructureGeometryFlags.no_duplicate_any_hit_invocation
+        :type: AccelerationStructureGeometryFlags
+        :value: AccelerationStructureGeometryFlags.no_duplicate_any_hit_invocation
+    
+
+
+----
+
+.. py:class:: sgl.AccelerationStructureHandle
+
+    N/A
+    
+    .. py:method:: __init__(self) -> None
+    
+
+
+----
+
+.. py:class:: sgl.AccelerationStructureInstanceDesc
+
+    
+    
+    .. py:method:: __init__(self) -> None
+    
+    .. py:method:: __init__(self, arg: dict, /) -> None
+        :no-index:
+    
+    .. py:property:: transform
+        :type: sgl.math.float3x4
+    
+    .. py:property:: instance_id
         :type: int
     
-    .. py:property:: scratch_data_size
+    .. py:property:: instance_mask
         :type: int
     
-    .. py:property:: update_scratch_data_size
+    .. py:property:: instance_contribution_to_hit_group_index
         :type: int
+    
+    .. py:property:: flags
+        :type: sgl.AccelerationStructureInstanceFlags
+    
+    .. py:property:: acceleration_structure
+        :type: sgl.AccelerationStructureHandle
+    
+    .. py:method:: to_numpy(self) -> numpy.ndarray[dtype=uint8, shape=(64), writable=False]
+    
+
+
+----
+
+.. py:class:: sgl.AccelerationStructureInstanceFlags
+
+    Base class: :py:class:`enum.IntFlag`
+    
+    .. py:attribute:: sgl.AccelerationStructureInstanceFlags.none
+        :type: AccelerationStructureInstanceFlags
+        :value: AccelerationStructureInstanceFlags.none
+    
+    .. py:attribute:: sgl.AccelerationStructureInstanceFlags.triangle_facing_cull_disable
+        :type: AccelerationStructureInstanceFlags
+        :value: AccelerationStructureInstanceFlags.triangle_facing_cull_disable
+    
+    .. py:attribute:: sgl.AccelerationStructureInstanceFlags.triangle_front_counter_clockwise
+        :type: AccelerationStructureInstanceFlags
+        :value: AccelerationStructureInstanceFlags.triangle_front_counter_clockwise
+    
+    .. py:attribute:: sgl.AccelerationStructureInstanceFlags.force_opaque
+        :type: AccelerationStructureInstanceFlags
+        :value: AccelerationStructureInstanceFlags.force_opaque
+    
+    .. py:attribute:: sgl.AccelerationStructureInstanceFlags.no_opaque
+        :type: AccelerationStructureInstanceFlags
+        :value: AccelerationStructureInstanceFlags.no_opaque
+    
+
+
+----
+
+.. py:class:: sgl.AccelerationStructureInstanceList
+
+    Base class: :py:class:`sgl.DeviceResource`
+    
+    
+    
+    .. py:property:: size
+        :type: int
+    
+    .. py:property:: instance_stride
+        :type: int
+    
+    .. py:method:: resize(self, size: int) -> None
+    
+    .. py:method:: write(self, index: int, instance: sgl.AccelerationStructureInstanceDesc) -> None
+    
+    .. py:method:: write(self, index: int, instances: Sequence[sgl.AccelerationStructureInstanceDesc]) -> None
+        :no-index:
+    
+    .. py:method:: buffer(self) -> sgl.Buffer
+    
+    .. py:method:: build_input_instances(self) -> sgl.AccelerationStructureBuildInputInstances
     
 
 
@@ -2230,6 +2527,37 @@ Device
 .. py:class:: sgl.AccelerationStructureQueryDesc
 
     
+    
+    .. py:method:: __init__(self) -> None
+    
+    .. py:method:: __init__(self, arg: dict, /) -> None
+        :no-index:
+    
+    .. py:property:: query_type
+        :type: sgl.QueryType
+    
+    .. py:property:: query_pool
+        :type: sgl.QueryPool
+    
+    .. py:property:: first_query_index
+        :type: int
+    
+
+
+----
+
+.. py:class:: sgl.AccelerationStructureSizes
+
+    
+    
+    .. py:property:: acceleration_structure_size
+        :type: int
+    
+    .. py:property:: scratch_size
+        :type: int
+    
+    .. py:property:: update_scratch_size
+        :type: int
     
 
 
@@ -2293,23 +2621,7 @@ Device
     
     
     
-
-
-----
-
-.. py:class:: sgl.BlendDesc
-
-    
-    
-    .. py:method:: __init__(self) -> None
-    
-    .. py:method:: __init__(self, arg: dict, /) -> None
-        :no-index:
-    
-    .. py:property:: targets
-        :type: list[sgl.TargetBlendDesc]
-    
-    .. py:property:: alpha_to_coverage_enable
+    .. py:property:: is_valid
         :type: bool
     
 
@@ -2438,17 +2750,88 @@ Device
     .. py:property:: device_address
         :type: int
     
-    .. py:method:: get_srv(self, offset: int = 0, size: int = 18446744073709551615) -> sgl.ResourceView
+    .. py:method:: to_numpy(self) -> numpy.ndarray[]
     
-        Get a shader resource view for a range of the buffer.
+    .. py:method:: copy_from_numpy(self, data: numpy.ndarray[]) -> None
+    
+    .. py:method:: to_torch(self, type: sgl.DataType = DataType.void, shape: collections.abc.Sequence[int] = [], strides: collections.abc.Sequence[int] = [], offset: int = 0) -> torch.Tensor[device='cuda']
+    
+
+
+----
+
+.. py:class:: sgl.BufferCursor
+
+    Base class: :py:class:`sgl.Object`
+    
+    Represents a list of elements in a block of memory, and provides
+    simple interface to get a BufferElementCursor for each one. As this
+    can be the owner of its data, it is a ref counted object that elements
+    refer to.
+    
+    .. py:method:: __init__(self, element_layout: sgl.TypeLayoutReflection, size: int) -> None
+    
+    .. py:method:: __init__(self, element_layout: sgl.TypeLayoutReflection, buffer_resource: sgl.Buffer, load_before_write: bool = True) -> None
+        :no-index:
+    
+    .. py:method:: __init__(self, element_layout: sgl.TypeLayoutReflection, buffer_resource: sgl.Buffer, size: int, offset: int, load_before_write: bool = True) -> None
+        :no-index:
+    
+    .. py:property:: element_type_layout
+        :type: sgl.TypeLayoutReflection
+    
+        Get type layout of an element of the cursor.
         
-    .. py:method:: get_uav(self, offset: int = 0, size: int = 18446744073709551615) -> sgl.ResourceView
+    .. py:property:: element_type
+        :type: sgl.TypeReflection
     
-        Get a unordered access view for a range of the buffer.
+        Get type of an element of the cursor.
+        
+    .. py:method:: find_element(self, index: int) -> sgl.BufferElementCursor
+    
+        Get element at a given index.
+        
+    .. py:property:: element_count
+        :type: int
+    
+        Number of elements in the buffer.
+        
+    .. py:property:: element_size
+        :type: int
+    
+        Size of element.
+        
+    .. py:property:: element_stride
+        :type: int
+    
+        Stride of elements.
+        
+    .. py:property:: size
+        :type: int
+    
+        Size of whole buffer.
+        
+    .. py:property:: is_loaded
+        :type: bool
+    
+        Check if internal buffer exists.
+        
+    .. py:method:: load(self) -> None
+    
+        In case of GPU only buffers, loads all data from GPU.
+        
+    .. py:method:: apply(self) -> None
+    
+        In case of GPU only buffers, pushes all data to the GPU.
+        
+    .. py:property:: resource
+        :type: sgl.Buffer
+    
+        Get the resource this cursor represents (if any).
         
     .. py:method:: to_numpy(self) -> numpy.ndarray[]
     
-    .. py:method:: from_numpy(self, data: numpy.ndarray[]) -> None
+    .. py:method:: copy_from_numpy(self, data: numpy.ndarray[]) -> None
     
 
 
@@ -2478,26 +2861,200 @@ Device
     
         Buffer format. Used when creating typed buffer views.
         
-    .. py:property:: initial_state
-        :type: sgl.ResourceState
-    
-        Initial resource state.
-        
-    .. py:property:: usage
-        :type: sgl.ResourceUsage
-    
-        Resource usage flags.
-        
     .. py:property:: memory_type
         :type: sgl.MemoryType
     
         Memory type.
         
-    .. py:property:: debug_name
+    .. py:property:: usage
+        :type: sgl.BufferUsage
+    
+        Resource usage flags.
+        
+    .. py:property:: default_state
+        :type: sgl.ResourceState
+    
+        Initial resource state.
+        
+    .. py:property:: label
         :type: str
     
-        Resource debug name.
+        Debug label.
         
+
+
+----
+
+.. py:class:: sgl.BufferElementCursor
+
+    Represents a single element of a given type in a block of memory, and
+    provides read/write tools to access its members via reflection.
+    
+    .. py:method:: set_data(self, data: ndarray[device='cpu']) -> None
+    
+    .. py:method:: set_data(self, data: ndarray[device='cpu']) -> None
+        :no-index:
+    
+    .. py:method:: is_valid(self) -> bool
+    
+        N/A
+        
+    .. py:method:: find_field(self, name: str) -> sgl.BufferElementCursor
+    
+        N/A
+        
+    .. py:method:: find_element(self, index: int) -> sgl.BufferElementCursor
+    
+        N/A
+        
+    .. py:method:: has_field(self, name: str) -> bool
+    
+        N/A
+        
+    .. py:method:: has_element(self, index: int) -> bool
+    
+        N/A
+        
+    .. py:method:: read(self) -> object
+    
+        N/A
+        
+    .. py:method:: write(self, val: object) -> None
+    
+        N/A
+        
+
+
+----
+
+.. py:class:: sgl.BufferOffsetPair
+
+    
+    
+    .. py:method:: __init__(self) -> None
+    
+    .. py:method:: __init__(self, buffer: sgl.Buffer) -> None
+        :no-index:
+    
+    .. py:method:: __init__(self, buffer: sgl.Buffer, offset: int = 0) -> None
+        :no-index:
+    
+    .. py:method:: __init__(self, arg: dict, /) -> None
+        :no-index:
+    
+    .. py:property:: buffer
+        :type: sgl.Buffer
+    
+    .. py:property:: offset
+        :type: int
+    
+
+
+----
+
+.. py:class:: sgl.BufferRange
+
+    
+    
+    .. py:method:: __init__(self) -> None
+    
+    .. py:property:: offset
+        :type: int
+    
+    .. py:property:: size
+        :type: int
+    
+
+
+----
+
+.. py:class:: sgl.BufferUsage
+
+    Base class: :py:class:`enum.IntFlag`
+    
+    .. py:attribute:: sgl.BufferUsage.none
+        :type: BufferUsage
+        :value: BufferUsage.none
+    
+    .. py:attribute:: sgl.BufferUsage.vertex_buffer
+        :type: BufferUsage
+        :value: BufferUsage.vertex_buffer
+    
+    .. py:attribute:: sgl.BufferUsage.index_buffer
+        :type: BufferUsage
+        :value: BufferUsage.index_buffer
+    
+    .. py:attribute:: sgl.BufferUsage.constant_buffer
+        :type: BufferUsage
+        :value: BufferUsage.constant_buffer
+    
+    .. py:attribute:: sgl.BufferUsage.shader_resource
+        :type: BufferUsage
+        :value: BufferUsage.shader_resource
+    
+    .. py:attribute:: sgl.BufferUsage.unordered_access
+        :type: BufferUsage
+        :value: BufferUsage.unordered_access
+    
+    .. py:attribute:: sgl.BufferUsage.indirect_argument
+        :type: BufferUsage
+        :value: BufferUsage.indirect_argument
+    
+    .. py:attribute:: sgl.BufferUsage.copy_source
+        :type: BufferUsage
+        :value: BufferUsage.copy_source
+    
+    .. py:attribute:: sgl.BufferUsage.copy_destination
+        :type: BufferUsage
+        :value: BufferUsage.copy_destination
+    
+    .. py:attribute:: sgl.BufferUsage.acceleration_structure
+        :type: BufferUsage
+        :value: BufferUsage.acceleration_structure
+    
+    .. py:attribute:: sgl.BufferUsage.acceleration_structure_build_input
+        :type: BufferUsage
+        :value: BufferUsage.acceleration_structure_build_input
+    
+    .. py:attribute:: sgl.BufferUsage.shader_table
+        :type: BufferUsage
+        :value: BufferUsage.shader_table
+    
+    .. py:attribute:: sgl.BufferUsage.shared
+        :type: BufferUsage
+        :value: BufferUsage.shared
+    
+
+
+----
+
+.. py:class:: sgl.ColorTargetDesc
+
+    
+    
+    .. py:method:: __init__(self) -> None
+    
+    .. py:method:: __init__(self, arg: dict, /) -> None
+        :no-index:
+    
+    .. py:property:: format
+        :type: sgl.Format
+    
+    .. py:property:: color
+        :type: sgl.AspectBlendDesc
+    
+    .. py:property:: alpha
+        :type: sgl.AspectBlendDesc
+    
+    .. py:property:: write_mask
+        :type: sgl.RenderTargetWriteMask
+    
+    .. py:property:: enable_blend
+        :type: bool
+    
+    .. py:property:: logic_op
+        :type: sgl.LogicOp
+    
 
 
 ----
@@ -2508,150 +3065,23 @@ Device
     
     
     
-    .. py:method:: open(self) -> None
+
+
+----
+
+.. py:class:: sgl.CommandEncoder
+
+    Base class: :py:class:`sgl.DeviceResource`
     
-        Open the command buffer for recording.
-        
-        No-op if command buffer is already open.
-        
-        \note Due to current limitations, only a single command buffer can be
-        open at any given time.
-        
-    .. py:method:: close(self) -> None
     
-        Close the command buffer.
-        
-        No-op if command buffer is already closed.
-        
-    .. py:method:: submit(self, queue: sgl.CommandQueueType = CommandQueueType.graphics) -> int
     
-        Submit the command buffer to the device.
-        
-        The returned submission ID can be used to wait for the command buffer
-        to complete.
-        
-        Parameter ``queue``:
-            Command queue to submit to.
-        
-        Returns:
-            Submission ID.
-        
-    .. py:method:: write_timestamp(self, query_pool: sgl.QueryPool, index: int) -> None
+    .. py:method:: begin_render_pass(self, desc: sgl.RenderPassDesc) -> sgl.RenderPassEncoder
     
-        Write a timestamp.
-        
-        Parameter ``query_pool``:
-            Query pool.
-        
-        Parameter ``index``:
-            Index of the query.
-        
-    .. py:method:: resolve_query(self, query_pool: sgl.QueryPool, index: int, count: int, buffer: sgl.Buffer, offset: int) -> None
+    .. py:method:: begin_compute_pass(self) -> sgl.ComputePassEncoder
     
-        Resolve a list of queries and write the results to a buffer.
-        
-        Parameter ``query_pool``:
-            Query pool.
-        
-        Parameter ``index``:
-            Index of the first query.
-        
-        Parameter ``count``:
-            Number of queries to resolve.
-        
-        Parameter ``buffer``:
-            Destination buffer.
-        
-        Parameter ``offset``:
-            Offset into the destination buffer.
-        
-    .. py:method:: set_resource_state(self, resource: sgl.Resource, new_state: sgl.ResourceState) -> bool
+    .. py:method:: begin_ray_tracing_pass(self) -> sgl.RayTracingPassEncoder
     
-        Transition resource state of a resource and add a barrier if state has
-        changed.
-        
-        Parameter ``resource``:
-            Resource
-        
-        Parameter ``new_state``:
-            New state
-        
-        Returns:
-            True if barrier was recorded (i.e. state has changed).
-        
-    .. py:method:: set_resource_state(self, resource_view: sgl.ResourceView, new_state: sgl.ResourceState) -> bool
-        :no-index:
-    
-        Transition resource state of a resource and add a barrier if state has
-        changed. For buffer views, this will set the resource state of the
-        entire buffer. For texture views, this will set the resource state of
-        all its sub-resources.
-        
-        Parameter ``resource_view``:
-            Resource view
-        
-        Parameter ``new_state``:
-            New state
-        
-        Returns:
-            True if barrier was recorded (i.e. state has changed).
-        
-    .. py:method:: set_buffer_state(self, buffer: sgl.Buffer, new_state: sgl.ResourceState) -> bool
-    
-        Transition resource state of a buffer and add a barrier if state has
-        changed.
-        
-        Parameter ``buffer``:
-            Buffer
-        
-        Parameter ``new_state``:
-            New state
-        
-        Returns:
-            True if barrier was recorded (i.e. state has changed).
-        
-    .. py:method:: set_texture_state(self, texture: sgl.Texture, new_state: sgl.ResourceState) -> bool
-    
-        Transition resource state of a texture and add a barrier if state has
-        changed.
-        
-        Parameter ``texture``:
-            Texture
-        
-        Parameter ``new_state``:
-            New state
-        
-        Returns:
-            True if barrier was recorded (i.e. state has changed).
-        
-    .. py:method:: uav_barrier(self, resource: sgl.Resource) -> None
-    
-        Insert a UAV barrier
-        
-    .. py:method:: clear_resource_view(self, resource_view: sgl.ResourceView, clear_value: sgl.math.float4) -> None
-    
-    .. py:method:: clear_resource_view(self, resource_view: sgl.ResourceView, clear_value: sgl.math.uint4) -> None
-        :no-index:
-    
-    .. py:method:: clear_resource_view(self, resource_view: sgl.ResourceView, depth_value: float, stencil_value: int, clear_depth: bool, clear_stencil: bool) -> None
-        :no-index:
-    
-    .. py:method:: clear_texture(self, texture: sgl.Texture, clear_value: sgl.math.float4) -> None
-    
-    .. py:method:: clear_texture(self, texture: sgl.Texture, clear_value: sgl.math.uint4) -> None
-        :no-index:
-    
-    .. py:method:: copy_resource(self, dst: sgl.Resource, src: sgl.Resource) -> None
-    
-        Copy an entire resource.
-        
-        Parameter ``dst``:
-            Destination resource.
-        
-        Parameter ``src``:
-            Source resource.
-        
-    .. py:method:: copy_buffer_region(self, dst: sgl.Buffer, dst_offset: int, src: sgl.Buffer, src_offset: int, size: int) -> None
+    .. py:method:: copy_buffer(self, dst: sgl.Buffer, dst_offset: int, src: sgl.Buffer, src_offset: int, size: int) -> None
     
         Copy a buffer region.
         
@@ -2670,7 +3100,7 @@ Device
         Parameter ``size``:
             Size in bytes.
         
-    .. py:method:: copy_texture_region(self, dst: sgl.Texture, dst_subresource: int, dst_offset: sgl.math.uint3, src: sgl.Texture, src_subresource: int, src_offset: sgl.math.uint3, extent: sgl.math.uint3 = {4294967295, 4294967295, 4294967295}) -> None
+    .. py:method:: copy_texture(self, dst: sgl.Texture, dst_subresource: int, dst_offset: sgl.math.uint3, src: sgl.Texture, src_subresource: int, src_offset: sgl.math.uint3, extent: sgl.math.uint3 = {4294967295, 4294967295, 4294967295}) -> None
     
         Copy a texture region.
         
@@ -2695,18 +3125,28 @@ Device
         Parameter ``extent``:
             Size in texels (-1 for maximum possible size).
         
-    .. py:method:: blit(self, dst: sgl.ResourceView, src: sgl.ResourceView, filter: sgl.TextureFilteringMode = TextureFilteringMode.linear) -> None
+    .. py:method:: clear_buffer(self, buffer: sgl.Buffer, range: sgl.BufferRange = BufferRange(offset=0, size=18446744073709551615) -> None
     
-        Blit a SRV to an RTV.
+    .. py:method:: clear_texture_float(self, texture: sgl.Texture, range: sgl.SubresourceRange = SubresourceRange(mip_level=0, mip_count=4294967295, base_array_layer=0, layer_count=4294967295, clear_value: sgl.math.float4 = {0, 0, 0, 0}) -> None
+    
+    .. py:method:: clear_texture_uint(self, texture: sgl.Texture, range: sgl.SubresourceRange = SubresourceRange(mip_level=0, mip_count=4294967295, base_array_layer=0, layer_count=4294967295, clear_value: sgl.math.uint4 = {0, 0, 0, 0}) -> None
+    
+    .. py:method:: clear_texture_sint(self, texture: sgl.Texture, range: sgl.SubresourceRange = SubresourceRange(mip_level=0, mip_count=4294967295, base_array_layer=0, layer_count=4294967295, clear_value: sgl.math.int4 = {0, 0, 0, 0}) -> None
+    
+    .. py:method:: clear_texture_depth_stencil(self, texture: sgl.Texture, range: sgl.SubresourceRange = SubresourceRange(mip_level=0, mip_count=4294967295, base_array_layer=0, layer_count=4294967295, clear_depth: bool = True, depth_value: float = 0.0, clear_stencil: bool = True, stencil_value: int = 0) -> None
+    
+    .. py:method:: blit(self, dst: sgl.TextureView, src: sgl.TextureView, filter: sgl.TextureFilteringMode = TextureFilteringMode.linear) -> None
+    
+        Blit a texture view.
         
         Blits the full extent of the source texture to the destination
         texture.
         
         Parameter ``dst``:
-            RTV of the destination texture.
+            View of the destination texture.
         
         Parameter ``src``:
-            SRV of the source texture.
+            View of the source texture.
         
         Parameter ``filter``:
             Filtering mode to use.
@@ -2714,7 +3154,7 @@ Device
     .. py:method:: blit(self, dst: sgl.Texture, src: sgl.Texture, filter: sgl.TextureFilteringMode = TextureFilteringMode.linear) -> None
         :no-index:
     
-        Blit a texture to another texture.
+        Blit a texture.
         
         Blits the full extent of the source texture to the destination
         texture.
@@ -2728,31 +3168,73 @@ Device
         Parameter ``filter``:
             Filtering mode to use.
         
-    .. py:method:: encode_compute_commands(self) -> sgl.ComputeCommandEncoder
+    .. py:method:: resolve_query(self, query_pool: sgl.QueryPool, index: int, count: int, buffer: sgl.Buffer, offset: int) -> None
     
-        Start encoding compute commands.
-        
-        The returned ``ComputeCommandEncoder`` is used to bind compute
-        pipelines and issue dispatches. The encoding is ended when the
-        ``ComputeCommandEncoder`` is destroyed.
-        
-    .. py:method:: encode_render_commands(self, arg: sgl.Framebuffer, /) -> sgl.RenderCommandEncoder
+    .. py:method:: build_acceleration_structure(self, desc: sgl.AccelerationStructureBuildDesc, dst: sgl.AccelerationStructure, src: sgl.AccelerationStructure | None, scratch_buffer: sgl.BufferOffsetPair, queries: Sequence[sgl.AccelerationStructureQueryDesc] = []) -> None
     
-        Start encoding render commands.
-        
-        The returned ``RenderCommandEncoder`` is used to bind graphics
-        pipelines and issue dispatches. The encoding is ended when the
-        ``RenderCommandEncoder`` is destroyed.
-        
-    .. py:method:: encode_ray_tracing_commands(self) -> sgl.RayTracingCommandEncoder
+    .. py:method:: copy_acceleration_structure(self, src: sgl.AccelerationStructure, dst: sgl.AccelerationStructure, mode: sgl.AccelerationStructureCopyMode) -> None
     
-        Start encoding ray tracing commands.
+    .. py:method:: query_acceleration_structure_properties(self, acceleration_structures: Sequence[sgl.AccelerationStructure], queries: Sequence[sgl.AccelerationStructureQueryDesc]) -> None
+    
+    .. py:method:: serialize_acceleration_structure(self, dst: sgl.BufferOffsetPair, src: sgl.AccelerationStructure) -> None
+    
+    .. py:method:: deserialize_acceleration_structure(self, dst: sgl.AccelerationStructure, src: sgl.BufferOffsetPair) -> None
+    
+    .. py:method:: set_buffer_state(self, buffer: sgl.Buffer, state: sgl.ResourceState) -> None
+    
+        Transition resource state of a buffer and add a barrier if state has
+        changed.
         
-        The returned ``RayTracingCommandEncoder`` is used to bind ray tracing
-        pipelines and issue dispatches. It also serves for building and
-        managing acceleration structures. The encoding is ended when the
-        ``RayTracingCommandEncoder`` is destroyed.
+        Parameter ``buffer``:
+            Buffer
         
+        Parameter ``state``:
+            New state
+        
+    .. py:method:: set_texture_state(self, texture: sgl.Texture, state: sgl.ResourceState) -> None
+    
+        Transition resource state of a texture and add a barrier if state has
+        changed.
+        
+        Parameter ``texture``:
+            Texture
+        
+        Parameter ``state``:
+            New state
+        
+    .. py:method:: set_texture_state(self, texture: sgl.Texture, range: sgl.SubresourceRange, state: sgl.ResourceState) -> None
+        :no-index:
+    
+    .. py:method:: push_debug_group(self, name: str, color: sgl.math.float3) -> None
+    
+        Push a debug group.
+        
+    .. py:method:: pop_debug_group(self) -> None
+    
+        Pop a debug group.
+        
+    .. py:method:: insert_debug_marker(self, name: str, color: sgl.math.float3) -> None
+    
+        Insert a debug marker.
+        
+        Parameter ``name``:
+            Name of the marker.
+        
+        Parameter ``color``:
+            Color of the marker.
+        
+    .. py:method:: write_timestamp(self, query_pool: sgl.QueryPool, index: int) -> None
+    
+        Write a timestamp.
+        
+        Parameter ``query_pool``:
+            Query pool.
+        
+        Parameter ``index``:
+            Index of the query.
+        
+    .. py:method:: finish(self) -> sgl.CommandBuffer
+    
 
 
 ----
@@ -2809,23 +3291,6 @@ Device
 
 ----
 
-.. py:class:: sgl.ComputeCommandEncoder
-
-    
-    
-    .. py:method:: bind_pipeline(self, pipeline: sgl.ComputePipeline) -> sgl.TransientShaderObject
-    
-    .. py:method:: bind_pipeline(self, pipeline: sgl.ComputePipeline, shader_object: sgl.ShaderObject) -> None
-        :no-index:
-    
-    .. py:method:: dispatch(self, thread_count: sgl.math.uint3) -> None
-    
-    .. py:method:: dispatch_thread_groups(self, thread_group_count: sgl.math.uint3) -> None
-    
-
-
-----
-
 .. py:class:: sgl.ComputeKernel
 
     Base class: :py:class:`sgl.Kernel`
@@ -2835,7 +3300,7 @@ Device
     .. py:property:: pipeline
         :type: sgl.ComputePipeline
     
-    .. py:method:: dispatch(self, thread_count: sgl.math.uint3, vars: dict = {}, command_buffer: sgl.CommandBuffer | None = None, **kwargs) -> None
+    .. py:method:: dispatch(self, thread_count: sgl.math.uint3, vars: dict = {}, command_encoder: sgl.CommandEncoder | None = None, **kwargs) -> None
     
 
 
@@ -2849,6 +3314,27 @@ Device
     
     .. py:property:: program
         :type: sgl.ShaderProgram
+    
+
+
+----
+
+.. py:class:: sgl.ComputePassEncoder
+
+    Base class: :py:class:`sgl.PassEncoder`
+    
+    
+    
+    .. py:method:: bind_pipeline(self, pipeline: sgl.ComputePipeline) -> sgl.ShaderObject
+    
+    .. py:method:: bind_pipeline(self, pipeline: sgl.ComputePipeline, root_object: sgl.ShaderObject) -> None
+        :no-index:
+    
+    .. py:method:: dispatch(self, thread_count: sgl.math.uint3) -> None
+    
+    .. py:method:: dispatch_compute(self, thread_group_count: sgl.math.uint3) -> None
+    
+    .. py:method:: dispatch_compute_indirect(self, arg_buffer: sgl.BufferOffsetPair) -> None
     
 
 
@@ -2881,6 +3367,63 @@ Device
     
     .. py:property:: program
         :type: sgl.ShaderProgram
+    
+
+
+----
+
+.. py:class:: sgl.CoopVecMatrixDesc
+
+    
+    
+    .. py:method:: __init__(self) -> None
+    
+    .. py:method:: __init__(self, rows: int, cols: int, element_type: sgl.DataType, layout: sgl.CoopVecMatrixLayout, size: int, offset: int) -> None
+        :no-index:
+    
+    .. py:property:: rows
+        :type: int
+    
+    .. py:property:: cols
+        :type: int
+    
+    .. py:property:: element_type
+        :type: sgl.DataType
+    
+    .. py:property:: layout
+        :type: sgl.CoopVecMatrixLayout
+    
+    .. py:property:: size
+        :type: int
+    
+    .. py:property:: offset
+        :type: int
+    
+
+
+----
+
+.. py:class:: sgl.CoopVecMatrixLayout
+
+    Base class: :py:class:`enum.Enum`
+    
+    
+    
+    .. py:attribute:: sgl.CoopVecMatrixLayout.row_major
+        :type: CoopVecMatrixLayout
+        :value: CoopVecMatrixLayout.row_major
+    
+    .. py:attribute:: sgl.CoopVecMatrixLayout.column_major
+        :type: CoopVecMatrixLayout
+        :value: CoopVecMatrixLayout.column_major
+    
+    .. py:attribute:: sgl.CoopVecMatrixLayout.inferencing_optimal
+        :type: CoopVecMatrixLayout
+        :value: CoopVecMatrixLayout.inferencing_optimal
+    
+    .. py:attribute:: sgl.CoopVecMatrixLayout.training_optimal
+        :type: CoopVecMatrixLayout
+        :value: CoopVecMatrixLayout.training_optimal
     
 
 
@@ -3015,6 +3558,9 @@ Device
     .. py:method:: __init__(self, arg: dict, /) -> None
         :no-index:
     
+    .. py:property:: format
+        :type: sgl.Format
+    
     .. py:property:: depth_test_enable
         :type: bool
     
@@ -3039,9 +3585,6 @@ Device
     .. py:property:: back_face
         :type: sgl.DepthStencilOpDesc
     
-    .. py:property:: stencil_ref
-        :type: int
-    
 
 
 ----
@@ -3051,6 +3594,9 @@ Device
     
     
     .. py:method:: __init__(self) -> None
+    
+    .. py:method:: __init__(self, arg: dict, /) -> None
+        :no-index:
     
     .. py:property:: stencil_fail_op
         :type: sgl.StencilOp
@@ -3107,7 +3653,7 @@ Device
     
         True if the device supports CUDA interoperability.
         
-    .. py:method:: get_format_supported_resource_states(self, format: sgl.Format) -> set[sgl.ResourceState]
+    .. py:method:: get_format_support(self, format: sgl.Format) -> sgl.FormatSupport
     
         Returns the supported resource states for a given format.
         
@@ -3130,84 +3676,28 @@ Device
         when the interpreter is terminated through an `atexit` handler. If a
         device is to be destroyed at runtime, it must be closed explicitly.
         
-    .. py:method:: create_swapchain(self, window: sgl.Window, format: sgl.Format = Format.bgra8_unorm_srgb, width: int = 0, height: int = 0, image_count: int = 3, enable_vsync: bool = False) -> sgl.Swapchain
+    .. py:method:: create_surface(self, window: sgl.Window) -> sgl.Surface
     
-        Create a new swapchain.
-        
-        Parameter ``format``:
-            Format of the swapchain images.
-        
-        Parameter ``width``:
-            Width of the swapchain images in pixels.
-        
-        Parameter ``height``:
-            Height of the swapchain images in pixels.
-        
-        Parameter ``image_count``:
-            Number of swapchain images.
-        
-        Parameter ``enable_vsync``:
-            Enable/disable vertical synchronization.
+        Create a new surface.
         
         Parameter ``window``:
-            Window to create the swapchain for.
+            Window to create the surface for.
         
         Returns:
-            New swapchain object.
+            New surface object.
         
-    .. py:method:: create_swapchain(self, window_handle: sgl.WindowHandle, format: sgl.Format = Format.bgra8_unorm_srgb, width: int = 0, height: int = 0, image_count: int = 3, enable_vsync: bool = False) -> sgl.Swapchain
+    .. py:method:: create_surface(self, window_handle: sgl.WindowHandle) -> sgl.Surface
         :no-index:
     
-        Create a new swapchain.
-        
-        Parameter ``format``:
-            Format of the swapchain images.
-        
-        Parameter ``width``:
-            Width of the swapchain images in pixels.
-        
-        Parameter ``height``:
-            Height of the swapchain images in pixels.
-        
-        Parameter ``image_count``:
-            Number of swapchain images.
-        
-        Parameter ``enable_vsync``:
-            Enable/disable vertical synchronization.
+        Create a new surface.
         
         Parameter ``window_handle``:
-            Native window handle to create the swapchain for.
+            Native window handle to create the surface for.
         
         Returns:
-            New swapchain object.
+            New surface object.
         
-    .. py:method:: create_swapchain(self, desc: sgl.SwapchainDesc, window: sgl.Window) -> sgl.Swapchain
-        :no-index:
-    
-        Create a new swapchain.
-        
-        Parameter ``format``:
-            Format of the swapchain images.
-        
-        Parameter ``width``:
-            Width of the swapchain images in pixels.
-        
-        Parameter ``height``:
-            Height of the swapchain images in pixels.
-        
-        Parameter ``image_count``:
-            Number of swapchain images.
-        
-        Parameter ``enable_vsync``:
-            Enable/disable vertical synchronization.
-        
-        Parameter ``window``:
-            Window to create the swapchain for.
-        
-        Returns:
-            New swapchain object.
-        
-    .. py:method:: create_buffer(self, size: int = 0, element_count: int = 0, struct_size: int = 0, struct_type: object | None = None, format: sgl.Format = Format.unknown, usage: sgl.ResourceUsage = ResourceUsage.none, memory_type: sgl.MemoryType = MemoryType.device_local, debug_name: str = '', data: numpy.ndarray[] | None = None) -> sgl.Buffer
+    .. py:method:: create_buffer(self, size: int = 0, element_count: int = 0, struct_size: int = 0, struct_type: object | None = None, format: sgl.Format = Format.undefined, memory_type: sgl.MemoryType = MemoryType.device_local, usage: sgl.BufferUsage = BufferUsage.none, label: str = '', data: numpy.ndarray[] | None = None) -> sgl.Buffer
     
         Create a new buffer.
         
@@ -3237,8 +3727,8 @@ Device
         Parameter ``memory_type``:
             Memory type.
         
-        Parameter ``debug_name``:
-            Resource debug name.
+        Parameter ``label``:
+            Debug label.
         
         Parameter ``data``:
             Initial data to upload to the buffer.
@@ -3252,53 +3742,12 @@ Device
     .. py:method:: create_buffer(self, desc: sgl.BufferDesc) -> sgl.Buffer
         :no-index:
     
-        Create a new buffer.
-        
-        Parameter ``size``:
-            Buffer size in bytes.
-        
-        Parameter ``element_count``:
-            Buffer size in number of struct elements. Can be used instead of
-            ``size``.
-        
-        Parameter ``struct_size``:
-            Struct size in bytes.
-        
-        Parameter ``struct_type``:
-            Struct type. Can be used instead of ``struct_size`` to specify the
-            size of the struct.
-        
-        Parameter ``format``:
-            Buffer format. Used when creating typed buffer views.
-        
-        Parameter ``initial_state``:
-            Initial resource state.
-        
-        Parameter ``usage``:
-            Resource usage flags.
-        
-        Parameter ``memory_type``:
-            Memory type.
-        
-        Parameter ``debug_name``:
-            Resource debug name.
-        
-        Parameter ``data``:
-            Initial data to upload to the buffer.
-        
-        Parameter ``data_size``:
-            Size of the initial data in bytes.
-        
-        Returns:
-            New buffer object.
-        
-    .. py:method:: create_texture(self, type: sgl.ResourceType = ResourceType.unknown, format: sgl.Format = Format.unknown, width: int = 0, height: int = 0, depth: int = 0, array_size: int = 1, mip_count: int = 0, sample_count: int = 1, quality: int = 0, usage: sgl.ResourceUsage = ResourceUsage.none, memory_type: sgl.MemoryType = MemoryType.device_local, debug_name: str = '', data: numpy.ndarray[] | None = None) -> sgl.Texture
+    .. py:method:: create_texture(self, type: sgl.TextureType = TextureType.texture_2d, format: sgl.Format = Format.undefined, width: int = 1, height: int = 1, depth: int = 1, array_length: int = 1, mip_count: int = 0, sample_count: int = 1, sample_quality: int = 0, memory_type: sgl.MemoryType = MemoryType.device_local, usage: sgl.TextureUsage = TextureUsage.none, label: str = '', data: numpy.ndarray[] | None = None) -> sgl.Texture
     
         Create a new texture.
         
         Parameter ``type``:
-            Resource type (optional). Type is inferred from width, height,
-            depth if not specified.
+            Texture type.
         
         Parameter ``format``:
             Texture format.
@@ -3312,14 +3761,14 @@ Device
         Parameter ``depth``:
             Depth in pixels.
         
-        Parameter ``array_size``:
-            Number of array slices (1 for non-array textures).
+        Parameter ``array_length``:
+            Array length.
         
         Parameter ``mip_count``:
-            Number of mip levels (0 for auto-generated mips).
+            Mip level count. Number of mip levels (0 for auto-generated mips).
         
         Parameter ``sample_count``:
-            Number of samples per pixel (1 for non-multisampled textures).
+            Number of samples for multisampled textures.
         
         Parameter ``quality``:
             Quality level for multisampled textures.
@@ -3330,8 +3779,8 @@ Device
         Parameter ``memory_type``:
             Memory type.
         
-        Parameter ``debug_name``:
-            Debug name.
+        Parameter ``label``:
+            Debug label.
         
         Parameter ``data``:
             Initial data.
@@ -3342,51 +3791,6 @@ Device
     .. py:method:: create_texture(self, desc: sgl.TextureDesc) -> sgl.Texture
         :no-index:
     
-        Create a new texture.
-        
-        Parameter ``type``:
-            Resource type (optional). Type is inferred from width, height,
-            depth if not specified.
-        
-        Parameter ``format``:
-            Texture format.
-        
-        Parameter ``width``:
-            Width in pixels.
-        
-        Parameter ``height``:
-            Height in pixels.
-        
-        Parameter ``depth``:
-            Depth in pixels.
-        
-        Parameter ``array_size``:
-            Number of array slices (1 for non-array textures).
-        
-        Parameter ``mip_count``:
-            Number of mip levels (0 for auto-generated mips).
-        
-        Parameter ``sample_count``:
-            Number of samples per pixel (1 for non-multisampled textures).
-        
-        Parameter ``quality``:
-            Quality level for multisampled textures.
-        
-        Parameter ``usage``:
-            Resource usage.
-        
-        Parameter ``memory_type``:
-            Memory type.
-        
-        Parameter ``debug_name``:
-            Debug name.
-        
-        Parameter ``data``:
-            Initial data.
-        
-        Returns:
-            New texture object.
-        
     .. py:method:: create_sampler(self, min_filter: sgl.TextureFilteringMode = TextureFilteringMode.linear, mag_filter: sgl.TextureFilteringMode = TextureFilteringMode.linear, mip_filter: sgl.TextureFilteringMode = TextureFilteringMode.linear, reduction_op: sgl.TextureReductionOp = TextureReductionOp.average, address_u: sgl.TextureAddressingMode = TextureAddressingMode.wrap, address_v: sgl.TextureAddressingMode = TextureAddressingMode.wrap, address_w: sgl.TextureAddressingMode = TextureAddressingMode.wrap, mip_lod_bias: float = 0.0, max_anisotropy: int = 1, comparison_func: sgl.ComparisonFunc = ComparisonFunc.never, border_color: sgl.math.float4 = {1, 1, 1, 1}, min_lod: float = -1000.0, max_lod: float = 1000.0) -> sgl.Sampler
     
         Create a new sampler.
@@ -3430,56 +3834,15 @@ Device
         Parameter ``max_lod``:
             Maximum LOD level.
         
+        Parameter ``label``:
+            Debug label.
+        
         Returns:
             New sampler object.
         
     .. py:method:: create_sampler(self, desc: sgl.SamplerDesc) -> sgl.Sampler
         :no-index:
     
-        Create a new sampler.
-        
-        Parameter ``min_filter``:
-            Minification filter.
-        
-        Parameter ``mag_filter``:
-            Magnification filter.
-        
-        Parameter ``mip_filter``:
-            Mip-map filter.
-        
-        Parameter ``reduction_op``:
-            Reduction operation.
-        
-        Parameter ``address_u``:
-            Texture addressing mode for the U coordinate.
-        
-        Parameter ``address_v``:
-            Texture addressing mode for the V coordinate.
-        
-        Parameter ``address_w``:
-            Texture addressing mode for the W coordinate.
-        
-        Parameter ``mip_lod_bias``:
-            Mip-map LOD bias.
-        
-        Parameter ``max_anisotropy``:
-            Maximum anisotropy.
-        
-        Parameter ``comparison_func``:
-            Comparison function.
-        
-        Parameter ``border_color``:
-            Border color.
-        
-        Parameter ``min_lod``:
-            Minimum LOD level.
-        
-        Parameter ``max_lod``:
-            Maximum LOD level.
-        
-        Returns:
-            New sampler object.
-        
     .. py:method:: create_fence(self, initial_value: int = 0, shared: bool = False) -> sgl.Fence
     
         Create a new fence.
@@ -3496,17 +3859,6 @@ Device
     .. py:method:: create_fence(self, desc: sgl.FenceDesc) -> sgl.Fence
         :no-index:
     
-        Create a new fence.
-        
-        Parameter ``initial_value``:
-            Initial fence value.
-        
-        Parameter ``shared``:
-            Create a shared fence.
-        
-        Returns:
-            New fence object.
-        
     .. py:method:: create_query_pool(self, type: sgl.QueryType, count: int) -> sgl.QueryPool
     
         Create a new query pool.
@@ -3536,49 +3888,7 @@ Device
     .. py:method:: create_input_layout(self, desc: sgl.InputLayoutDesc) -> sgl.InputLayout
         :no-index:
     
-        Create a new input layout.
-        
-        Parameter ``input_elements``:
-            List of input elements (see InputElementDesc for details).
-        
-        Parameter ``vertex_streams``:
-            List of vertex streams (see VertexStreamDesc for details).
-        
-        Returns:
-            New input layout object.
-        
-    .. py:method:: create_framebuffer(self, render_targets: collections.abc.Sequence[sgl.ResourceView], depth_stencil: sgl.ResourceView | None = None, layout: sgl.FramebufferLayout | None = None) -> sgl.Framebuffer
-    
-        Create a new framebuffer.
-        
-        Parameter ``render_target``:
-            List of render targets (see FramebufferAttachmentDesc for
-            details).
-        
-        Parameter ``depth_stencil``:
-            Optional depth-stencil attachment (see FramebufferAttachmentDesc
-            for details).
-        
-        Returns:
-            New framebuffer object.
-        
-    .. py:method:: create_framebuffer(self, desc: sgl.FramebufferDesc) -> sgl.Framebuffer
-        :no-index:
-    
-        Create a new framebuffer.
-        
-        Parameter ``render_target``:
-            List of render targets (see FramebufferAttachmentDesc for
-            details).
-        
-        Parameter ``depth_stencil``:
-            Optional depth-stencil attachment (see FramebufferAttachmentDesc
-            for details).
-        
-        Returns:
-            New framebuffer object.
-        
-    .. py:method:: create_command_buffer(self) -> sgl.CommandBuffer
+    .. py:method:: create_command_encoder(self, queue: sgl.CommandQueueType = CommandQueueType.graphics) -> sgl.CommandEncoder
     
     .. py:method:: submit_command_buffer(self, command_buffer: sgl.CommandBuffer, queue: sgl.CommandQueueType = CommandQueueType.graphics) -> int
     
@@ -3640,9 +3950,23 @@ Device
         Parameter ``cuda_stream``:
             CUDA stream
         
-    .. py:method:: get_acceleration_structure_prebuild_info(self, build_inputs: sgl.AccelerationStructureBuildInputsBase) -> sgl.AccelerationStructurePrebuildInfo
+    .. py:method:: get_acceleration_structure_sizes(self, desc: sgl.AccelerationStructureBuildDesc) -> sgl.AccelerationStructureSizes
     
-    .. py:method:: create_acceleration_structure(self, kind: sgl.AccelerationStructureKind, buffer: sgl.Buffer, offset: int = 0, size: int = 0) -> sgl.AccelerationStructure
+        Query the device for buffer sizes required for acceleration structure
+        builds.
+        
+        Parameter ``desc``:
+            Acceleration structure build description.
+        
+        Returns:
+            Acceleration structure sizes.
+        
+    .. py:method:: create_acceleration_structure(self, size: int = 0, label: str = '') -> sgl.AccelerationStructure
+    
+    .. py:method:: create_acceleration_structure(self, desc: sgl.AccelerationStructureDesc) -> sgl.AccelerationStructure
+        :no-index:
+    
+    .. py:method:: create_acceleration_structure_instance_list(self, size: int) -> sgl.AccelerationStructureInstanceList
     
     .. py:method:: create_shader_table(self, program: sgl.ShaderProgram, ray_gen_entry_points: collections.abc.Sequence[str] = [], miss_entry_points: collections.abc.Sequence[str] = [], hit_group_names: collections.abc.Sequence[str] = [], callable_entry_points: collections.abc.Sequence[str] = []) -> sgl.ShaderTable
     
@@ -3669,12 +3993,11 @@ Device
     
     .. py:method:: load_program(self, module_name: str, entry_point_names: collections.abc.Sequence[str], additional_source: str | None = None, link_options: sgl.SlangLinkOptions | None = None) -> sgl.ShaderProgram
     
-    .. py:method:: create_mutable_shader_object(self, shader_program: sgl.ShaderProgram) -> sgl.MutableShaderObject
+    .. py:method:: create_root_shader_object(self, shader_program: sgl.ShaderProgram) -> sgl.ShaderObject
     
-    .. py:method:: create_mutable_shader_object(self, type_layout: sgl.TypeLayoutReflection) -> sgl.MutableShaderObject
-        :no-index:
+    .. py:method:: create_shader_object(self, type_layout: sgl.TypeLayoutReflection) -> sgl.ShaderObject
     
-    .. py:method:: create_mutable_shader_object(self, cursor: sgl.ReflectionCursor) -> sgl.MutableShaderObject
+    .. py:method:: create_shader_object(self, cursor: sgl.ReflectionCursor) -> sgl.ShaderObject
         :no-index:
     
     .. py:method:: create_compute_pipeline(self, program: sgl.ShaderProgram) -> sgl.ComputePipeline
@@ -3682,9 +4005,9 @@ Device
     .. py:method:: create_compute_pipeline(self, desc: sgl.ComputePipelineDesc) -> sgl.ComputePipeline
         :no-index:
     
-    .. py:method:: create_graphics_pipeline(self, program: sgl.ShaderProgram, input_layout: sgl.InputLayout | None, framebuffer_layout: sgl.FramebufferLayout, primitive_type: sgl.PrimitiveType = PrimitiveType.triangle, depth_stencil: sgl.DepthStencilDesc | None = None, rasterizer: sgl.RasterizerDesc | None = None, blend: sgl.BlendDesc | None = None) -> sgl.GraphicsPipeline
+    .. py:method:: create_render_pipeline(self, program: sgl.ShaderProgram, input_layout: sgl.InputLayout | None, primitive_topology: sgl.PrimitiveTopology = PrimitiveTopology.triangle_list, targets: collections.abc.Sequence[sgl.ColorTargetDesc] = [], depth_stencil: sgl.DepthStencilDesc | None = None, rasterizer: sgl.RasterizerDesc | None = None, multisample: sgl.MultisampleDesc | None = None) -> sgl.RenderPipeline
     
-    .. py:method:: create_graphics_pipeline(self, desc: sgl.GraphicsPipelineDesc) -> sgl.GraphicsPipeline
+    .. py:method:: create_render_pipeline(self, desc: sgl.RenderPipelineDesc) -> sgl.RenderPipeline
         :no-index:
     
     .. py:method:: create_ray_tracing_pipeline(self, program: sgl.ShaderProgram, hit_groups: collections.abc.Sequence[sgl.HitGroupDesc], max_recursion: int = 0, max_ray_payload_size: int = 0, max_attribute_size: int = 8, flags: sgl.RayTracingPipelineFlags = RayTracingPipelineFlags.none) -> sgl.RayTracingPipeline
@@ -3696,17 +4019,6 @@ Device
     
     .. py:method:: create_compute_kernel(self, desc: sgl.ComputeKernelDesc) -> sgl.ComputeKernel
         :no-index:
-    
-    .. py:method:: create_memory_heap(self, memory_type: sgl.MemoryType, usage: sgl.ResourceUsage, page_size: int = 4194304, retain_large_pages: bool = False, debug_name: str = '') -> sgl.MemoryHeap
-    
-    .. py:method:: create_memory_heap(self, desc: sgl.MemoryHeapDesc) -> sgl.MemoryHeap
-        :no-index:
-    
-    .. py:property:: upload_heap
-        :type: sgl.MemoryHeap
-    
-    .. py:property:: read_back_heap
-        :type: sgl.MemoryHeap
     
     .. py:method:: flush_print(self) -> None
     
@@ -3726,6 +4038,42 @@ Device
     .. py:method:: wait(self) -> None
     
         Wait for all device work to complete.
+        
+    .. py:method:: register_shader_hot_reload_callback(self, callback: collections.abc.Callable[[sgl.ShaderHotReloadEvent], None]) -> None
+    
+        Register a hot reload hook, called immediately after any module is
+        reloaded.
+        
+    .. py:method:: register_device_close_callback(self, callback: collections.abc.Callable[[sgl.Device], None]) -> None
+    
+        Register a device close callback, called at start of device close.
+        
+    .. py:method:: coopvec_query_matrix_size(self, rows: int, cols: int, layout: sgl.CoopVecMatrixLayout, element_type: sgl.DataType) -> int
+    
+        N/A
+        
+    .. py:method:: coopvec_create_matrix_desc(self, rows: int, cols: int, layout: sgl.CoopVecMatrixLayout, element_type: sgl.DataType, offset: int = 0) -> sgl.CoopVecMatrixDesc
+    
+        N/A
+        
+    .. py:method:: coopvec_convert_matrix_host(self, src: ndarray[device='cpu'], dst: ndarray[device='cpu'], src_layout: sgl.CoopVecMatrixLayout | None = None, dst_layout: sgl.CoopVecMatrixLayout | None = None) -> int
+    
+        N/A
+        
+    .. py:method:: coopvec_convert_matrix_device(self, src: sgl.Buffer, src_desc: sgl.CoopVecMatrixDesc, dst: sgl.Buffer, dst_desc: sgl.CoopVecMatrixDesc, encoder: sgl.CommandEncoder | None = None) -> None
+    
+        N/A
+        
+    .. py:method:: coopvec_convert_matrix_device(self, src: sgl.Buffer, src_desc: collections.abc.Sequence[sgl.CoopVecMatrixDesc], dst: sgl.Buffer, dst_desc: collections.abc.Sequence[sgl.CoopVecMatrixDesc], encoder: sgl.CommandEncoder | None = None) -> None
+        :no-index:
+    
+    .. py:method:: coopvec_align_matrix_offset(self, offset: int) -> int
+    
+        N/A
+        
+    .. py:method:: coopvec_align_vector_offset(self, offset: int) -> int
+    
+        N/A
         
     .. py:staticmethod:: enumerate_adapters(type: sgl.DeviceType = DeviceType.automatic) -> list[sgl.AdapterInfo]
     
@@ -3964,6 +4312,14 @@ Device
         :type: DeviceType
         :value: DeviceType.vulkan
     
+    .. py:attribute:: sgl.DeviceType.metal
+        :type: DeviceType
+        :value: DeviceType.metal
+    
+    .. py:attribute:: sgl.DeviceType.wgpu
+        :type: DeviceType
+        :value: DeviceType.wgpu
+    
     .. py:attribute:: sgl.DeviceType.cpu
         :type: DeviceType
         :value: DeviceType.cpu
@@ -3971,6 +4327,34 @@ Device
     .. py:attribute:: sgl.DeviceType.cuda
         :type: DeviceType
         :value: DeviceType.cuda
+    
+
+
+----
+
+.. py:class:: sgl.DrawArguments
+
+    
+    
+    .. py:method:: __init__(self) -> None
+    
+    .. py:method:: __init__(self, arg: dict, /) -> None
+        :no-index:
+    
+    .. py:property:: vertex_count
+        :type: int
+    
+    .. py:property:: instance_count
+        :type: int
+    
+    .. py:property:: start_vertex_location
+        :type: int
+    
+    .. py:property:: start_instance_location
+        :type: int
+    
+    .. py:property:: start_index_location
+        :type: int
     
 
 
@@ -4107,173 +4491,49 @@ Device
 
     Base class: :py:class:`enum.Enum`
     
-    .. py:attribute:: sgl.Format.unknown
+    .. py:attribute:: sgl.Format.undefined
         :type: Format
-        :value: Format.unknown
-    
-    .. py:attribute:: sgl.Format.rgba32_typeless
-        :type: Format
-        :value: Format.rgba32_typeless
-    
-    .. py:attribute:: sgl.Format.rgb32_typeless
-        :type: Format
-        :value: Format.rgb32_typeless
-    
-    .. py:attribute:: sgl.Format.rg32_typeless
-        :type: Format
-        :value: Format.rg32_typeless
-    
-    .. py:attribute:: sgl.Format.r32_typeless
-        :type: Format
-        :value: Format.r32_typeless
-    
-    .. py:attribute:: sgl.Format.rgba16_typeless
-        :type: Format
-        :value: Format.rgba16_typeless
-    
-    .. py:attribute:: sgl.Format.rg16_typeless
-        :type: Format
-        :value: Format.rg16_typeless
-    
-    .. py:attribute:: sgl.Format.r16_typeless
-        :type: Format
-        :value: Format.r16_typeless
-    
-    .. py:attribute:: sgl.Format.rgba8_typeless
-        :type: Format
-        :value: Format.rgba8_typeless
-    
-    .. py:attribute:: sgl.Format.rg8_typeless
-        :type: Format
-        :value: Format.rg8_typeless
-    
-    .. py:attribute:: sgl.Format.r8_typeless
-        :type: Format
-        :value: Format.r8_typeless
-    
-    .. py:attribute:: sgl.Format.bgra8_typeless
-        :type: Format
-        :value: Format.bgra8_typeless
-    
-    .. py:attribute:: sgl.Format.rgba32_float
-        :type: Format
-        :value: Format.rgba32_float
-    
-    .. py:attribute:: sgl.Format.rgb32_float
-        :type: Format
-        :value: Format.rgb32_float
-    
-    .. py:attribute:: sgl.Format.rg32_float
-        :type: Format
-        :value: Format.rg32_float
-    
-    .. py:attribute:: sgl.Format.r32_float
-        :type: Format
-        :value: Format.r32_float
-    
-    .. py:attribute:: sgl.Format.rgba16_float
-        :type: Format
-        :value: Format.rgba16_float
-    
-    .. py:attribute:: sgl.Format.rg16_float
-        :type: Format
-        :value: Format.rg16_float
-    
-    .. py:attribute:: sgl.Format.r16_float
-        :type: Format
-        :value: Format.r16_float
-    
-    .. py:attribute:: sgl.Format.rgba32_uint
-        :type: Format
-        :value: Format.rgba32_uint
-    
-    .. py:attribute:: sgl.Format.rgb32_uint
-        :type: Format
-        :value: Format.rgb32_uint
-    
-    .. py:attribute:: sgl.Format.rg32_uint
-        :type: Format
-        :value: Format.rg32_uint
-    
-    .. py:attribute:: sgl.Format.r32_uint
-        :type: Format
-        :value: Format.r32_uint
-    
-    .. py:attribute:: sgl.Format.rgba16_uint
-        :type: Format
-        :value: Format.rgba16_uint
-    
-    .. py:attribute:: sgl.Format.rg16_uint
-        :type: Format
-        :value: Format.rg16_uint
-    
-    .. py:attribute:: sgl.Format.r16_uint
-        :type: Format
-        :value: Format.r16_uint
-    
-    .. py:attribute:: sgl.Format.rgba8_uint
-        :type: Format
-        :value: Format.rgba8_uint
-    
-    .. py:attribute:: sgl.Format.rg8_uint
-        :type: Format
-        :value: Format.rg8_uint
+        :value: Format.undefined
     
     .. py:attribute:: sgl.Format.r8_uint
         :type: Format
         :value: Format.r8_uint
     
-    .. py:attribute:: sgl.Format.rgba32_sint
+    .. py:attribute:: sgl.Format.r8_sint
         :type: Format
-        :value: Format.rgba32_sint
+        :value: Format.r8_sint
     
-    .. py:attribute:: sgl.Format.rgb32_sint
+    .. py:attribute:: sgl.Format.r8_unorm
         :type: Format
-        :value: Format.rgb32_sint
+        :value: Format.r8_unorm
     
-    .. py:attribute:: sgl.Format.rg32_sint
+    .. py:attribute:: sgl.Format.r8_snorm
         :type: Format
-        :value: Format.rg32_sint
+        :value: Format.r8_snorm
     
-    .. py:attribute:: sgl.Format.r32_sint
+    .. py:attribute:: sgl.Format.rg8_uint
         :type: Format
-        :value: Format.r32_sint
-    
-    .. py:attribute:: sgl.Format.rgba16_sint
-        :type: Format
-        :value: Format.rgba16_sint
-    
-    .. py:attribute:: sgl.Format.rg16_sint
-        :type: Format
-        :value: Format.rg16_sint
-    
-    .. py:attribute:: sgl.Format.r16_sint
-        :type: Format
-        :value: Format.r16_sint
-    
-    .. py:attribute:: sgl.Format.rgba8_sint
-        :type: Format
-        :value: Format.rgba8_sint
+        :value: Format.rg8_uint
     
     .. py:attribute:: sgl.Format.rg8_sint
         :type: Format
         :value: Format.rg8_sint
     
-    .. py:attribute:: sgl.Format.r8_sint
+    .. py:attribute:: sgl.Format.rg8_unorm
         :type: Format
-        :value: Format.r8_sint
+        :value: Format.rg8_unorm
     
-    .. py:attribute:: sgl.Format.rgba16_unorm
+    .. py:attribute:: sgl.Format.rg8_snorm
         :type: Format
-        :value: Format.rgba16_unorm
+        :value: Format.rg8_snorm
     
-    .. py:attribute:: sgl.Format.rg16_unorm
+    .. py:attribute:: sgl.Format.rgba8_uint
         :type: Format
-        :value: Format.rg16_unorm
+        :value: Format.rgba8_uint
     
-    .. py:attribute:: sgl.Format.r16_unorm
+    .. py:attribute:: sgl.Format.rgba8_sint
         :type: Format
-        :value: Format.r16_unorm
+        :value: Format.rgba8_sint
     
     .. py:attribute:: sgl.Format.rgba8_unorm
         :type: Format
@@ -4283,13 +4543,9 @@ Device
         :type: Format
         :value: Format.rgba8_unorm_srgb
     
-    .. py:attribute:: sgl.Format.rg8_unorm
+    .. py:attribute:: sgl.Format.rgba8_snorm
         :type: Format
-        :value: Format.rg8_unorm
-    
-    .. py:attribute:: sgl.Format.r8_unorm
-        :type: Format
-        :value: Format.r8_unorm
+        :value: Format.rgba8_snorm
     
     .. py:attribute:: sgl.Format.bgra8_unorm
         :type: Format
@@ -4307,29 +4563,149 @@ Device
         :type: Format
         :value: Format.bgrx8_unorm_srgb
     
-    .. py:attribute:: sgl.Format.rgba16_snorm
+    .. py:attribute:: sgl.Format.r16_uint
         :type: Format
-        :value: Format.rgba16_snorm
+        :value: Format.r16_uint
     
-    .. py:attribute:: sgl.Format.rg16_snorm
+    .. py:attribute:: sgl.Format.r16_sint
         :type: Format
-        :value: Format.rg16_snorm
+        :value: Format.r16_sint
+    
+    .. py:attribute:: sgl.Format.r16_unorm
+        :type: Format
+        :value: Format.r16_unorm
     
     .. py:attribute:: sgl.Format.r16_snorm
         :type: Format
         :value: Format.r16_snorm
     
-    .. py:attribute:: sgl.Format.rgba8_snorm
+    .. py:attribute:: sgl.Format.r16_float
         :type: Format
-        :value: Format.rgba8_snorm
+        :value: Format.r16_float
     
-    .. py:attribute:: sgl.Format.rg8_snorm
+    .. py:attribute:: sgl.Format.rg16_uint
         :type: Format
-        :value: Format.rg8_snorm
+        :value: Format.rg16_uint
     
-    .. py:attribute:: sgl.Format.r8_snorm
+    .. py:attribute:: sgl.Format.rg16_sint
         :type: Format
-        :value: Format.r8_snorm
+        :value: Format.rg16_sint
+    
+    .. py:attribute:: sgl.Format.rg16_unorm
+        :type: Format
+        :value: Format.rg16_unorm
+    
+    .. py:attribute:: sgl.Format.rg16_snorm
+        :type: Format
+        :value: Format.rg16_snorm
+    
+    .. py:attribute:: sgl.Format.rg16_float
+        :type: Format
+        :value: Format.rg16_float
+    
+    .. py:attribute:: sgl.Format.rgba16_uint
+        :type: Format
+        :value: Format.rgba16_uint
+    
+    .. py:attribute:: sgl.Format.rgba16_sint
+        :type: Format
+        :value: Format.rgba16_sint
+    
+    .. py:attribute:: sgl.Format.rgba16_unorm
+        :type: Format
+        :value: Format.rgba16_unorm
+    
+    .. py:attribute:: sgl.Format.rgba16_snorm
+        :type: Format
+        :value: Format.rgba16_snorm
+    
+    .. py:attribute:: sgl.Format.rgba16_float
+        :type: Format
+        :value: Format.rgba16_float
+    
+    .. py:attribute:: sgl.Format.r32_uint
+        :type: Format
+        :value: Format.r32_uint
+    
+    .. py:attribute:: sgl.Format.r32_sint
+        :type: Format
+        :value: Format.r32_sint
+    
+    .. py:attribute:: sgl.Format.r32_float
+        :type: Format
+        :value: Format.r32_float
+    
+    .. py:attribute:: sgl.Format.rg32_uint
+        :type: Format
+        :value: Format.rg32_uint
+    
+    .. py:attribute:: sgl.Format.rg32_sint
+        :type: Format
+        :value: Format.rg32_sint
+    
+    .. py:attribute:: sgl.Format.rg32_float
+        :type: Format
+        :value: Format.rg32_float
+    
+    .. py:attribute:: sgl.Format.rgb32_uint
+        :type: Format
+        :value: Format.rgb32_uint
+    
+    .. py:attribute:: sgl.Format.rgb32_sint
+        :type: Format
+        :value: Format.rgb32_sint
+    
+    .. py:attribute:: sgl.Format.rgb32_float
+        :type: Format
+        :value: Format.rgb32_float
+    
+    .. py:attribute:: sgl.Format.rgba32_uint
+        :type: Format
+        :value: Format.rgba32_uint
+    
+    .. py:attribute:: sgl.Format.rgba32_sint
+        :type: Format
+        :value: Format.rgba32_sint
+    
+    .. py:attribute:: sgl.Format.rgba32_float
+        :type: Format
+        :value: Format.rgba32_float
+    
+    .. py:attribute:: sgl.Format.r64_uint
+        :type: Format
+        :value: Format.r64_uint
+    
+    .. py:attribute:: sgl.Format.r64_sint
+        :type: Format
+        :value: Format.r64_sint
+    
+    .. py:attribute:: sgl.Format.bgra4_unorm
+        :type: Format
+        :value: Format.bgra4_unorm
+    
+    .. py:attribute:: sgl.Format.b5g6r5_unorm
+        :type: Format
+        :value: Format.b5g6r5_unorm
+    
+    .. py:attribute:: sgl.Format.bgr5a1_unorm
+        :type: Format
+        :value: Format.bgr5a1_unorm
+    
+    .. py:attribute:: sgl.Format.rgb9e5_ufloat
+        :type: Format
+        :value: Format.rgb9e5_ufloat
+    
+    .. py:attribute:: sgl.Format.rgb10a2_uint
+        :type: Format
+        :value: Format.rgb10a2_uint
+    
+    .. py:attribute:: sgl.Format.rgb10a2_unorm
+        :type: Format
+        :value: Format.rgb10a2_unorm
+    
+    .. py:attribute:: sgl.Format.r11g11b10_float
+        :type: Format
+        :value: Format.r11g11b10_float
     
     .. py:attribute:: sgl.Format.d32_float
         :type: Format
@@ -4342,42 +4718,6 @@ Device
     .. py:attribute:: sgl.Format.d32_float_s8_uint
         :type: Format
         :value: Format.d32_float_s8_uint
-    
-    .. py:attribute:: sgl.Format.r32_float_x32_typeless
-        :type: Format
-        :value: Format.r32_float_x32_typeless
-    
-    .. py:attribute:: sgl.Format.bgra4_unorm
-        :type: Format
-        :value: Format.bgra4_unorm
-    
-    .. py:attribute:: sgl.Format.b5g6r5_unorm
-        :type: Format
-        :value: Format.b5g6r5_unorm
-    
-    .. py:attribute:: sgl.Format.b5g5r5a1_unorm
-        :type: Format
-        :value: Format.b5g5r5a1_unorm
-    
-    .. py:attribute:: sgl.Format.r9g9b9e5_sharedexp
-        :type: Format
-        :value: Format.r9g9b9e5_sharedexp
-    
-    .. py:attribute:: sgl.Format.r10g10b10a2_typeless
-        :type: Format
-        :value: Format.r10g10b10a2_typeless
-    
-    .. py:attribute:: sgl.Format.r10g10b10a2_unorm
-        :type: Format
-        :value: Format.r10g10b10a2_unorm
-    
-    .. py:attribute:: sgl.Format.r10g10b10a2_uint
-        :type: Format
-        :value: Format.r10g10b10a2_uint
-    
-    .. py:attribute:: sgl.Format.r11g11b10_float
-        :type: Format
-        :value: Format.r11g11b10_float
     
     .. py:attribute:: sgl.Format.bc1_unorm
         :type: Format
@@ -4419,13 +4759,13 @@ Device
         :type: Format
         :value: Format.bc5_snorm
     
-    .. py:attribute:: sgl.Format.bc6h_uf16
+    .. py:attribute:: sgl.Format.bc6h_ufloat
         :type: Format
-        :value: Format.bc6h_uf16
+        :value: Format.bc6h_ufloat
     
-    .. py:attribute:: sgl.Format.bc6h_sf16
+    .. py:attribute:: sgl.Format.bc6h_sfloat
         :type: Format
-        :value: Format.bc6h_sf16
+        :value: Format.bc6h_sfloat
     
     .. py:attribute:: sgl.Format.bc7_unorm
         :type: Format
@@ -4552,10 +4892,6 @@ Device
     
         True if format has a depth or stencil component.
         
-    .. py:method:: is_typeless_format(self) -> bool
-    
-        True if format is typeless.
-        
     .. py:method:: is_float_format(self) -> bool
     
         True if format is floating point.
@@ -4588,6 +4924,66 @@ Device
 
 ----
 
+.. py:class:: sgl.FormatSupport
+
+    Base class: :py:class:`enum.IntFlag`
+    
+    .. py:attribute:: sgl.FormatSupport.none
+        :type: FormatSupport
+        :value: FormatSupport.none
+    
+    .. py:attribute:: sgl.FormatSupport.buffer
+        :type: FormatSupport
+        :value: FormatSupport.buffer
+    
+    .. py:attribute:: sgl.FormatSupport.index_buffer
+        :type: FormatSupport
+        :value: FormatSupport.index_buffer
+    
+    .. py:attribute:: sgl.FormatSupport.vertex_buffer
+        :type: FormatSupport
+        :value: FormatSupport.vertex_buffer
+    
+    .. py:attribute:: sgl.FormatSupport.texture
+        :type: FormatSupport
+        :value: FormatSupport.texture
+    
+    .. py:attribute:: sgl.FormatSupport.depth_stencil
+        :type: FormatSupport
+        :value: FormatSupport.depth_stencil
+    
+    .. py:attribute:: sgl.FormatSupport.render_target
+        :type: FormatSupport
+        :value: FormatSupport.render_target
+    
+    .. py:attribute:: sgl.FormatSupport.blendable
+        :type: FormatSupport
+        :value: FormatSupport.blendable
+    
+    .. py:attribute:: sgl.FormatSupport.shader_load
+        :type: FormatSupport
+        :value: FormatSupport.shader_load
+    
+    .. py:attribute:: sgl.FormatSupport.shader_sample
+        :type: FormatSupport
+        :value: FormatSupport.shader_sample
+    
+    .. py:attribute:: sgl.FormatSupport.shader_uav_load
+        :type: FormatSupport
+        :value: FormatSupport.shader_uav_load
+    
+    .. py:attribute:: sgl.FormatSupport.shader_uav_store
+        :type: FormatSupport
+        :value: FormatSupport.shader_uav_store
+    
+    .. py:attribute:: sgl.FormatSupport.shader_atomic
+        :type: FormatSupport
+        :value: FormatSupport.shader_atomic
+    
+
+
+----
+
 .. py:class:: sgl.FormatType
 
     Base class: :py:class:`enum.Enum`
@@ -4595,10 +4991,6 @@ Device
     .. py:attribute:: sgl.FormatType.unknown
         :type: FormatType
         :value: FormatType.unknown
-    
-    .. py:attribute:: sgl.FormatType.typeless
-        :type: FormatType
-        :value: FormatType.typeless
     
     .. py:attribute:: sgl.FormatType.float
         :type: FormatType
@@ -4623,102 +5015,6 @@ Device
     .. py:attribute:: sgl.FormatType.sint
         :type: FormatType
         :value: FormatType.sint
-    
-
-
-----
-
-.. py:class:: sgl.Framebuffer
-
-    Base class: :py:class:`sgl.DeviceResource`
-    
-    
-    
-    .. py:property:: desc
-        :type: sgl.FramebufferDesc
-    
-    .. py:property:: layout
-        :type: sgl.FramebufferLayout
-    
-
-
-----
-
-.. py:class:: sgl.FramebufferDesc
-
-    
-    
-    .. py:method:: __init__(self) -> None
-    
-    .. py:method:: __init__(self, arg: dict, /) -> None
-        :no-index:
-    
-    .. py:property:: render_targets
-        :type: list[sgl.ResourceView]
-    
-        List of render targets.
-        
-    .. py:property:: depth_stencil
-        :type: sgl.ResourceView
-    
-        Depth-stencil target (optional).
-        
-    .. py:property:: layout
-        :type: sgl.FramebufferLayout
-    
-        Framebuffer layout (optional). If not provided, framebuffer layout is
-        determined from the render targets.
-        
-
-
-----
-
-.. py:class:: sgl.FramebufferLayout
-
-    Base class: :py:class:`sgl.DeviceResource`
-    
-    
-    
-    .. py:property:: desc
-        :type: sgl.FramebufferLayoutDesc
-    
-
-
-----
-
-.. py:class:: sgl.FramebufferLayoutDesc
-
-    
-    
-    .. py:method:: __init__(self) -> None
-    
-    .. py:method:: __init__(self, arg: dict, /) -> None
-        :no-index:
-    
-    .. py:property:: render_targets
-        :type: list[sgl.FramebufferLayoutTargetDesc]
-    
-    .. py:property:: depth_stencil
-        :type: sgl.FramebufferLayoutTargetDesc | None
-    
-
-
-----
-
-.. py:class:: sgl.FramebufferLayoutTargetDesc
-
-    
-    
-    .. py:method:: __init__(self) -> None
-    
-    .. py:method:: __init__(self, arg: dict, /) -> None
-        :no-index:
-    
-    .. py:property:: format
-        :type: sgl.Format
-    
-    .. py:property:: sample_count
-        :type: int
     
 
 
@@ -4749,16 +5045,50 @@ Device
     .. py:property:: name
         :type: str
     
+        Function name.
+        
     .. py:property:: return_type
         :type: sgl.TypeReflection
     
+        Function return type.
+        
     .. py:property:: parameters
         :type: sgl.FunctionReflectionParameterList
     
+        List of all function parameters.
+        
     .. py:method:: has_modifier(self, modifier: sgl.ModifierID) -> bool
     
-        Check if variable has a given modifier (e.g. 'inout').
+        Check if the function has a given modifier (e.g. 'differentiable').
         
+    .. py:method:: specialize_with_arg_types(self, types: collections.abc.Sequence[sgl.TypeReflection]) -> sgl.FunctionReflection
+    
+        Specialize a generic or interface based function with a set of
+        concrete argument types. Calling on a none-generic/interface function
+        will simply validate all argument types can be implicitly converted to
+        their respective parameter types. Where a function contains multiple
+        overloads, specialize will identify the correct overload based on the
+        arguments.
+        
+    .. py:property:: is_overloaded
+        :type: bool
+    
+        Check whether this function object represents a group of overloaded
+        functions, accessible via the overloads list.
+        
+    .. py:property:: overloads
+        :type: sgl.FunctionReflectionOverloadList
+    
+        List of all overloads of this function.
+        
+
+
+----
+
+.. py:class:: sgl.FunctionReflectionOverloadList
+
+    FunctionReflection lazy overload list evaluation.
+    
 
 
 ----
@@ -4773,50 +5103,6 @@ Device
 
 .. py:function:: sgl.get_format_info(arg: sgl.Format, /) -> sgl.FormatInfo
 
-
-
-----
-
-.. py:class:: sgl.GraphicsPipeline
-
-    Base class: :py:class:`sgl.Pipeline`
-    
-    Graphics pipeline.
-    
-
-
-----
-
-.. py:class:: sgl.GraphicsPipelineDesc
-
-    
-    
-    .. py:method:: __init__(self) -> None
-    
-    .. py:method:: __init__(self, arg: dict, /) -> None
-        :no-index:
-    
-    .. py:property:: program
-        :type: sgl.ShaderProgram
-    
-    .. py:property:: input_layout
-        :type: sgl.InputLayout
-    
-    .. py:property:: framebuffer_layout
-        :type: sgl.FramebufferLayout
-    
-    .. py:property:: primitive_type
-        :type: sgl.PrimitiveType
-    
-    .. py:property:: depth_stencil
-        :type: sgl.DepthStencilDesc
-    
-    .. py:property:: rasterizer
-        :type: sgl.RasterizerDesc
-    
-    .. py:property:: blend
-        :type: sgl.BlendDesc
-    
 
 
 ----
@@ -4844,6 +5130,22 @@ Device
     
     .. py:property:: intersection_entry_point
         :type: str
+    
+
+
+----
+
+.. py:class:: sgl.IndexFormat
+
+    Base class: :py:class:`enum.Enum`
+    
+    .. py:attribute:: sgl.IndexFormat.uint16
+        :type: IndexFormat
+        :value: IndexFormat.uint16
+    
+    .. py:attribute:: sgl.IndexFormat.uint32
+        :type: IndexFormat
+        :value: IndexFormat.uint32
     
 
 
@@ -4953,6 +5255,26 @@ Device
 
 ----
 
+.. py:class:: sgl.LoadOp
+
+    Base class: :py:class:`enum.Enum`
+    
+    .. py:attribute:: sgl.LoadOp.load
+        :type: LoadOp
+        :value: LoadOp.load
+    
+    .. py:attribute:: sgl.LoadOp.clear
+        :type: LoadOp
+        :value: LoadOp.clear
+    
+    .. py:attribute:: sgl.LoadOp.dont_care
+        :type: LoadOp
+        :value: LoadOp.dont_care
+    
+
+
+----
+
 .. py:class:: sgl.LogicOp
 
     Base class: :py:class:`enum.Enum`
@@ -4961,134 +5283,6 @@ Device
         :type: LogicOp
         :value: LogicOp.no_op
     
-
-
-----
-
-.. py:class:: sgl.MemoryHeap
-
-    Base class: :py:class:`sgl.DeviceResource`
-    
-    A memory heap is used to allocate temporary host-visible memory.
-    
-    A memory heap is a collection of memory pages. Each page has a buffer
-    of size ``page_size``. When allocating memory, the heap tries to add
-    the allocation to the current page. If the allocation does not fit, a
-    new page is allocated. For allocations larger than the configured page
-    size, a new large page is allocated.
-    
-    The memory heap is tied to a fence. Each allocation records the
-    currently signaled fence value when it is created. On release, the
-    allocation is put on a deferred release queue. Only if the fence value
-    of the memory heap is greater than the fence value of the allocation,
-    the allocation is actually freed. This ensures that memory is not
-    freed while still in use by the device.
-    
-    Allocations are returned as unique pointers. When the pointer is
-    destroyed, the allocation is released. This ensures that the memory is
-    freed when it is no longer used.
-    
-    .. py:class:: sgl.MemoryHeap.Allocation
-    
-        
-        
-        .. py:property:: buffer
-            :type: sgl.Buffer
-        
-            The buffer this allocation belongs to.
-            
-        .. py:property:: size
-            :type: int
-        
-            The size of the allocation.
-            
-        .. py:property:: offset
-            :type: int
-        
-            The offset of the allocation within the buffer.
-            
-        .. py:property:: device_address
-            :type: int
-        
-            The device address of the allocation.
-            
-    .. py:class:: sgl.MemoryHeap.Stats
-    
-        
-        
-        .. py:property:: total_size
-            :type: int
-        
-            The total size of the heap.
-            
-        .. py:property:: used_size
-            :type: int
-        
-            The used size of the heap.
-            
-        .. py:property:: page_count
-            :type: int
-        
-            The number of pages in the heap.
-            
-        .. py:property:: large_page_count
-            :type: int
-        
-            The number of large pages in the heap.
-            
-    .. py:method:: allocate(self, size: int, alignment: int = 1) -> sgl.MemoryHeap.Allocation
-    
-        Allocate memory from this heap.
-        
-        Parameter ``size``:
-            The number of bytes to allocate.
-        
-        Parameter ``alignment``:
-            The alignment of the allocation.
-        
-        Returns:
-            Returns a unique pointer to the allocation.
-        
-    .. py:property:: stats
-        :type: sgl.MemoryHeap.Stats
-    
-        Statistics of the heap.
-        
-
-
-----
-
-.. py:class:: sgl.MemoryHeapDesc
-
-    
-    
-    .. py:method:: __init__(self) -> None
-    
-    .. py:property:: memory_type
-        :type: sgl.MemoryType
-    
-        The memory type of the heap.
-        
-    .. py:property:: usage
-        :type: sgl.ResourceUsage
-    
-        The resource usage of the heap.
-        
-    .. py:property:: page_size
-        :type: int
-    
-        The size of a page in bytes.
-        
-    .. py:property:: retain_large_pages
-        :type: bool
-    
-        True to retain large pages, false to release them after use.
-        
-    .. py:property:: debug_name
-        :type: str
-    
-        The debug name of the heap.
-        
 
 
 ----
@@ -5165,12 +5359,57 @@ Device
 
 ----
 
-.. py:class:: sgl.MutableShaderObject
+.. py:class:: sgl.MultisampleDesc
 
-    Base class: :py:class:`sgl.ShaderObject`
+    
+    
+    .. py:method:: __init__(self) -> None
+    
+    .. py:method:: __init__(self, arg: dict, /) -> None
+        :no-index:
+    
+    .. py:property:: sample_count
+        :type: int
+    
+    .. py:property:: sample_mask
+        :type: int
+    
+    .. py:property:: alpha_to_coverage_enable
+        :type: bool
+    
+    .. py:property:: alpha_to_one_enable
+        :type: bool
+    
+
+
+----
+
+.. py:class:: sgl.PassEncoder
+
+    Base class: :py:class:`sgl.Object`
     
     
     
+    .. py:method:: end(self) -> None
+    
+    .. py:method:: push_debug_group(self, name: str, color: sgl.math.float3) -> None
+    
+        Push a debug group.
+        
+    .. py:method:: pop_debug_group(self) -> None
+    
+        Pop a debug group.
+        
+    .. py:method:: insert_debug_marker(self, name: str, color: sgl.math.float3) -> None
+    
+        Insert a debug marker.
+        
+        Parameter ``name``:
+            Name of the marker.
+        
+        Parameter ``color``:
+            Color of the marker.
+        
 
 
 ----
@@ -5189,14 +5428,6 @@ Device
 
     Base class: :py:class:`enum.Enum`
     
-    .. py:attribute:: sgl.PrimitiveTopology.triangle_list
-        :type: PrimitiveTopology
-        :value: PrimitiveTopology.triangle_list
-    
-    .. py:attribute:: sgl.PrimitiveTopology.triangle_strip
-        :type: PrimitiveTopology
-        :value: PrimitiveTopology.triangle_strip
-    
     .. py:attribute:: sgl.PrimitiveTopology.point_list
         :type: PrimitiveTopology
         :value: PrimitiveTopology.point_list
@@ -5209,29 +5440,17 @@ Device
         :type: PrimitiveTopology
         :value: PrimitiveTopology.line_strip
     
-
-
-----
-
-.. py:class:: sgl.PrimitiveType
-
-    Base class: :py:class:`enum.Enum`
+    .. py:attribute:: sgl.PrimitiveTopology.triangle_list
+        :type: PrimitiveTopology
+        :value: PrimitiveTopology.triangle_list
     
-    .. py:attribute:: sgl.PrimitiveType.point
-        :type: PrimitiveType
-        :value: PrimitiveType.point
+    .. py:attribute:: sgl.PrimitiveTopology.triangle_strip
+        :type: PrimitiveTopology
+        :value: PrimitiveTopology.triangle_strip
     
-    .. py:attribute:: sgl.PrimitiveType.line
-        :type: PrimitiveType
-        :value: PrimitiveType.line
-    
-    .. py:attribute:: sgl.PrimitiveType.triangle
-        :type: PrimitiveType
-        :value: PrimitiveType.triangle
-    
-    .. py:attribute:: sgl.PrimitiveType.patch
-        :type: PrimitiveType
-        :value: PrimitiveType.patch
+    .. py:attribute:: sgl.PrimitiveTopology.patch_list
+        :type: PrimitiveTopology
+        :value: PrimitiveTopology.patch_list
     
 
 
@@ -5265,6 +5484,30 @@ Device
     .. py:property:: entry_points
         :type: sgl.ProgramLayoutEntryPointList
     
+    .. py:method:: find_type_by_name(self, name: str) -> sgl.TypeReflection
+    
+        Find a given type by name. Handles generic specilization if generic
+        variable values are provided.
+        
+    .. py:method:: find_function_by_name(self, name: str) -> sgl.FunctionReflection
+    
+        Find a given function by name. Handles generic specilization if
+        generic variable values are provided.
+        
+    .. py:method:: find_function_by_name_in_type(self, type: sgl.TypeReflection, name: str) -> sgl.FunctionReflection
+    
+        Find a given function in a type by name. Handles generic specilization
+        if generic variable values are provided.
+        
+    .. py:method:: get_type_layout(self, type: sgl.TypeReflection) -> sgl.TypeLayoutReflection
+    
+        Get corresponding type layout from a given type.
+        
+    .. py:method:: is_sub_type(self, sub_type: sgl.TypeReflection, super_type: sgl.TypeReflection) -> bool
+    
+        Test whether a type is a sub type of another type. Handles both struct
+        inheritance and interface implementation.
+        
     .. py:property:: hashed_strings
         :type: list[sgl.ProgramLayout.HashedString]
     
@@ -5407,177 +5650,18 @@ Device
 
 ----
 
-.. py:class:: sgl.RayTracingAABB
+.. py:class:: sgl.RayTracingPassEncoder
 
+    Base class: :py:class:`sgl.PassEncoder`
     
     
-    .. py:method:: __init__(self) -> None
     
-    .. py:property:: min
-        :type: sgl.math.float3
+    .. py:method:: bind_pipeline(self, pipeline: sgl.RayTracingPipeline, shader_table: sgl.ShaderTable) -> sgl.ShaderObject
     
-    .. py:property:: max
-        :type: sgl.math.float3
-    
-
-
-----
-
-.. py:class:: sgl.RayTracingAABBsDesc
-
-    
-    
-    .. py:method:: __init__(self) -> None
-    
-    .. py:property:: count
-        :type: int
-    
-        Number of AABBs.
-        
-    .. py:property:: data
-        :type: int
-    
-        Pointer to an array of `RayTracingAABB` values in device memory.
-        
-    .. py:property:: stride
-        :type: int
-    
-        Stride in bytes of the AABB values array.
-        
-
-
-----
-
-.. py:class:: sgl.RayTracingCommandEncoder
-
-    
-    
-    .. py:method:: bind_pipeline(self, pipeline: sgl.RayTracingPipeline) -> sgl.TransientShaderObject
-    
-    .. py:method:: bind_pipeline(self, pipeline: sgl.RayTracingPipeline, shader_object: sgl.ShaderObject) -> None
+    .. py:method:: bind_pipeline(self, pipeline: sgl.RayTracingPipeline, shader_table: sgl.ShaderTable, root_object: sgl.ShaderObject) -> None
         :no-index:
     
-    .. py:method:: dispatch_rays(self, ray_gen_shader_index: int, shader_table: sgl.ShaderTable, dimensions: sgl.math.uint3) -> None
-    
-    .. py:method:: build_acceleration_structure(self, inputs: sgl.AccelerationStructureBuildInputsBase, dst: sgl.AccelerationStructure, scratch_data: int, src: sgl.AccelerationStructure | None = None) -> None
-    
-    .. py:method:: copy_acceleration_structure(self, src: sgl.AccelerationStructure, dst: sgl.AccelerationStructure, mode: sgl.AccelerationStructureCopyMode) -> None
-    
-
-
-----
-
-.. py:class:: sgl.RayTracingGeometryDesc
-
-    
-    
-    .. py:method:: __init__(self) -> None
-    
-    .. py:property:: type
-        :type: sgl.RayTracingGeometryType
-    
-    .. py:property:: flags
-        :type: sgl.RayTracingGeometryFlags
-    
-    .. py:property:: triangles
-        :type: sgl.RayTracingTrianglesDesc
-    
-    .. py:property:: aabbs
-        :type: sgl.RayTracingAABBsDesc
-    
-
-
-----
-
-.. py:class:: sgl.RayTracingGeometryFlags
-
-    Base class: :py:class:`enum.IntFlag`
-    
-    .. py:attribute:: sgl.RayTracingGeometryFlags.none
-        :type: RayTracingGeometryFlags
-        :value: RayTracingGeometryFlags.none
-    
-    .. py:attribute:: sgl.RayTracingGeometryFlags.opaque
-        :type: RayTracingGeometryFlags
-        :value: RayTracingGeometryFlags.opaque
-    
-    .. py:attribute:: sgl.RayTracingGeometryFlags.no_duplicate_any_hit_invocation
-        :type: RayTracingGeometryFlags
-        :value: RayTracingGeometryFlags.no_duplicate_any_hit_invocation
-    
-
-
-----
-
-.. py:class:: sgl.RayTracingGeometryType
-
-    Base class: :py:class:`enum.Enum`
-    
-    .. py:attribute:: sgl.RayTracingGeometryType.triangles
-        :type: RayTracingGeometryType
-        :value: RayTracingGeometryType.triangles
-    
-    .. py:attribute:: sgl.RayTracingGeometryType.procedural_primitives
-        :type: RayTracingGeometryType
-        :value: RayTracingGeometryType.procedural_primitives
-    
-
-
-----
-
-.. py:class:: sgl.RayTracingInstanceDesc
-
-    
-    
-    .. py:method:: __init__(self) -> None
-    
-    .. py:property:: transform
-        :type: sgl.math.float3x4
-    
-    .. py:property:: instance_id
-        :type: int
-    
-    .. py:property:: instance_mask
-        :type: int
-    
-    .. py:property:: instance_contribution_to_hit_group_index
-        :type: int
-    
-    .. py:property:: flags
-        :type: sgl.RayTracingInstanceFlags
-    
-    .. py:property:: acceleration_structure
-        :type: int
-    
-    .. py:method:: to_numpy(self) -> numpy.ndarray[dtype=uint8, writable=False, shape=(64)]
-    
-
-
-----
-
-.. py:class:: sgl.RayTracingInstanceFlags
-
-    Base class: :py:class:`enum.IntFlag`
-    
-    .. py:attribute:: sgl.RayTracingInstanceFlags.none
-        :type: RayTracingInstanceFlags
-        :value: RayTracingInstanceFlags.none
-    
-    .. py:attribute:: sgl.RayTracingInstanceFlags.triangle_facing_cull_disable
-        :type: RayTracingInstanceFlags
-        :value: RayTracingInstanceFlags.triangle_facing_cull_disable
-    
-    .. py:attribute:: sgl.RayTracingInstanceFlags.triangle_front_counter_clockwise
-        :type: RayTracingInstanceFlags
-        :value: RayTracingInstanceFlags.triangle_front_counter_clockwise
-    
-    .. py:attribute:: sgl.RayTracingInstanceFlags.force_opaque
-        :type: RayTracingInstanceFlags
-        :value: RayTracingInstanceFlags.force_opaque
-    
-    .. py:attribute:: sgl.RayTracingInstanceFlags.no_opaque
-        :type: RayTracingInstanceFlags
-        :value: RayTracingInstanceFlags.no_opaque
+    .. py:method:: dispatch_rays(self, ray_gen_shader_index: int, dimensions: sgl.math.uint3) -> None
     
 
 
@@ -5644,40 +5728,6 @@ Device
 
 ----
 
-.. py:class:: sgl.RayTracingTrianglesDesc
-
-    
-    
-    .. py:method:: __init__(self) -> None
-    
-    .. py:property:: transform3x4
-        :type: int
-    
-    .. py:property:: index_format
-        :type: sgl.Format
-    
-    .. py:property:: vertex_format
-        :type: sgl.Format
-    
-    .. py:property:: index_count
-        :type: int
-    
-    .. py:property:: vertex_count
-        :type: int
-    
-    .. py:property:: index_data
-        :type: int
-    
-    .. py:property:: vertex_data
-        :type: int
-    
-    .. py:property:: vertex_stride
-        :type: int
-    
-
-
-----
-
 .. py:class:: sgl.ReflectionCursor
 
     
@@ -5704,40 +5754,190 @@ Device
 
 ----
 
-.. py:class:: sgl.RenderCommandEncoder
+.. py:class:: sgl.RenderPassColorAttachment
 
     
     
-    .. py:method:: bind_pipeline(self, pipeline: sgl.GraphicsPipeline) -> sgl.TransientShaderObject
+    .. py:method:: __init__(self) -> None
     
-    .. py:method:: bind_pipeline(self, pipeline: sgl.GraphicsPipeline, shader_object: sgl.ShaderObject) -> None
+    .. py:method:: __init__(self, arg: dict, /) -> None
         :no-index:
     
-    .. py:method:: set_viewports(self, viewports: Sequence[sgl.Viewport]) -> None
+    .. py:property:: view
+        :type: sgl.TextureView
     
-    .. py:method:: set_scissor_rects(self, scissor_rects: Sequence[sgl.ScissorRect]) -> None
+    .. py:property:: resolve_target
+        :type: sgl.TextureView
     
-    .. py:method:: set_viewport_and_scissor_rect(self, viewport: sgl.Viewport) -> None
+    .. py:property:: load_op
+        :type: sgl.LoadOp
     
-    .. py:method:: set_primitive_topology(self, topology: sgl.PrimitiveTopology) -> None
+    .. py:property:: store_op
+        :type: sgl.StoreOp
     
-    .. py:method:: set_stencil_reference(self, reference_value: int) -> None
+    .. py:property:: clear_value
+        :type: sgl.math.float4
     
-    .. py:method:: set_vertex_buffer(self, slot: int, buffer: sgl.Buffer, offset: int = 0) -> None
+
+
+----
+
+.. py:class:: sgl.RenderPassDepthStencilAttachment
+
     
-    .. py:method:: set_index_buffer(self, buffer: sgl.Buffer, index_format: sgl.Format, offset: int = 0) -> None
     
-    .. py:method:: draw(self, vertex_count: int, start_vertex: int = 0) -> None
+    .. py:method:: __init__(self) -> None
     
-    .. py:method:: draw_indexed(self, index_count: int, start_index: int = 0, base_vertex: int = 0) -> None
+    .. py:method:: __init__(self, arg: dict, /) -> None
+        :no-index:
     
-    .. py:method:: draw_instanced(self, vertex_count: int, instance_count: int, start_vertex: int = 0, start_instance: int = 0) -> None
+    .. py:property:: view
+        :type: sgl.TextureView
     
-    .. py:method:: draw_indexed_instanced(self, index_count: int, instance_count: int, start_index: int = 0, base_vertex: int = 0, start_instance: int = 0) -> None
+    .. py:property:: depth_load_op
+        :type: sgl.LoadOp
     
-    .. py:method:: draw_indirect(self, max_draw_count: int, arg_buffer: sgl.Buffer, arg_offset: int, count_buffer: sgl.Buffer | None = None, count_offset: int = 0) -> None
+    .. py:property:: depth_store_op
+        :type: sgl.StoreOp
     
-    .. py:method:: draw_indexed_indirect(self, max_draw_count: int, arg_buffer: sgl.Buffer, arg_offset: int, count_buffer: sgl.Buffer | None = None, count_offset: int = 0) -> None
+    .. py:property:: depth_clear_value
+        :type: float
+    
+    .. py:property:: depth_read_only
+        :type: bool
+    
+    .. py:property:: stencil_load_op
+        :type: sgl.LoadOp
+    
+    .. py:property:: stencil_store_op
+        :type: sgl.StoreOp
+    
+    .. py:property:: stencil_clear_value
+        :type: int
+    
+    .. py:property:: stencil_read_only
+        :type: bool
+    
+
+
+----
+
+.. py:class:: sgl.RenderPassDesc
+
+    
+    
+    .. py:method:: __init__(self) -> None
+    
+    .. py:method:: __init__(self, arg: dict, /) -> None
+        :no-index:
+    
+    .. py:property:: color_attachments
+        :type: list[sgl.RenderPassColorAttachment]
+    
+    .. py:property:: depth_stencil_attachment
+        :type: sgl.RenderPassDepthStencilAttachment | None
+    
+
+
+----
+
+.. py:class:: sgl.RenderPassEncoder
+
+    Base class: :py:class:`sgl.PassEncoder`
+    
+    
+    
+    .. py:method:: bind_pipeline(self, pipeline: sgl.RenderPipeline) -> sgl.ShaderObject
+    
+    .. py:method:: bind_pipeline(self, pipeline: sgl.RenderPipeline, root_object: sgl.ShaderObject) -> None
+        :no-index:
+    
+    .. py:method:: set_render_state(self, state: sgl.RenderState) -> None
+    
+    .. py:method:: draw(self, args: sgl.DrawArguments) -> None
+    
+    .. py:method:: draw_indexed(self, args: sgl.DrawArguments) -> None
+    
+    .. py:method:: draw_indirect(self, max_draw_count: int, arg_buffer: sgl.BufferOffsetPair, count_buffer: sgl.BufferOffsetPair = <sgl.BufferOffsetPair object at 0x7f5998eefd50>) -> None
+    
+    .. py:method:: draw_indexed_indirect(self, max_draw_count: int, arg_buffer: sgl.BufferOffsetPair, count_buffer: sgl.BufferOffsetPair = <sgl.BufferOffsetPair object at 0x7f5998eefd80>) -> None
+    
+    .. py:method:: draw_mesh_tasks(self, dimensions: sgl.math.uint3) -> None
+    
+
+
+----
+
+.. py:class:: sgl.RenderPipeline
+
+    Base class: :py:class:`sgl.Pipeline`
+    
+    Render pipeline.
+    
+
+
+----
+
+.. py:class:: sgl.RenderPipelineDesc
+
+    
+    
+    .. py:method:: __init__(self) -> None
+    
+    .. py:method:: __init__(self, arg: dict, /) -> None
+        :no-index:
+    
+    .. py:property:: program
+        :type: sgl.ShaderProgram
+    
+    .. py:property:: input_layout
+        :type: sgl.InputLayout
+    
+    .. py:property:: primitive_topology
+        :type: sgl.PrimitiveTopology
+    
+    .. py:property:: targets
+        :type: list[sgl.ColorTargetDesc]
+    
+    .. py:property:: depth_stencil
+        :type: sgl.DepthStencilDesc
+    
+    .. py:property:: rasterizer
+        :type: sgl.RasterizerDesc
+    
+    .. py:property:: multisample
+        :type: sgl.MultisampleDesc
+    
+
+
+----
+
+.. py:class:: sgl.RenderState
+
+    
+    
+    .. py:method:: __init__(self) -> None
+    
+    .. py:method:: __init__(self, arg: dict, /) -> None
+        :no-index:
+    
+    .. py:property:: stencil_ref
+        :type: int
+    
+    .. py:property:: viewports
+        :type: list[sgl.Viewport]
+    
+    .. py:property:: scissor_rects
+        :type: list[sgl.ScissorRect]
+    
+    .. py:property:: vertex_buffers
+        :type: list[sgl.BufferOffsetPair]
+    
+    .. py:property:: index_buffer
+        :type: sgl.BufferOffsetPair
+    
+    .. py:property:: index_format
+        :type: sgl.IndexFormat
     
 
 
@@ -5781,12 +5981,6 @@ Device
     
     
     
-    .. py:property:: type
-        :type: sgl.ResourceType
-    
-    .. py:property:: format
-        :type: sgl.Format
-    
 
 
 ----
@@ -5802,10 +5996,6 @@ Device
     .. py:attribute:: sgl.ResourceState.general
         :type: ResourceState
         :value: ResourceState.general
-    
-    .. py:attribute:: sgl.ResourceState.pre_initialized
-        :type: ResourceState
-        :value: ResourceState.pre_initialized
     
     .. py:attribute:: sgl.ResourceState.vertex_buffer
         :type: ResourceState
@@ -5874,146 +6064,6 @@ Device
     .. py:attribute:: sgl.ResourceState.acceleration_structure_build_output
         :type: ResourceState
         :value: ResourceState.acceleration_structure_build_output
-    
-    .. py:attribute:: sgl.ResourceState.pixel_shader_resource
-        :type: ResourceState
-        :value: ResourceState.pixel_shader_resource
-    
-    .. py:attribute:: sgl.ResourceState.non_pixel_shader_resource
-        :type: ResourceState
-        :value: ResourceState.non_pixel_shader_resource
-    
-
-
-----
-
-.. py:class:: sgl.ResourceType
-
-    Base class: :py:class:`enum.Enum`
-    
-    .. py:attribute:: sgl.ResourceType.unknown
-        :type: ResourceType
-        :value: ResourceType.unknown
-    
-    .. py:attribute:: sgl.ResourceType.buffer
-        :type: ResourceType
-        :value: ResourceType.buffer
-    
-    .. py:attribute:: sgl.ResourceType.texture_1d
-        :type: ResourceType
-        :value: ResourceType.texture_1d
-    
-    .. py:attribute:: sgl.ResourceType.texture_2d
-        :type: ResourceType
-        :value: ResourceType.texture_2d
-    
-    .. py:attribute:: sgl.ResourceType.texture_3d
-        :type: ResourceType
-        :value: ResourceType.texture_3d
-    
-    .. py:attribute:: sgl.ResourceType.texture_cube
-        :type: ResourceType
-        :value: ResourceType.texture_cube
-    
-
-
-----
-
-.. py:class:: sgl.ResourceUsage
-
-    Base class: :py:class:`enum.IntFlag`
-    
-    .. py:attribute:: sgl.ResourceUsage.none
-        :type: ResourceUsage
-        :value: ResourceUsage.none
-    
-    .. py:attribute:: sgl.ResourceUsage.vertex
-        :type: ResourceUsage
-        :value: ResourceUsage.vertex
-    
-    .. py:attribute:: sgl.ResourceUsage.index
-        :type: ResourceUsage
-        :value: ResourceUsage.index
-    
-    .. py:attribute:: sgl.ResourceUsage.constant
-        :type: ResourceUsage
-        :value: ResourceUsage.constant
-    
-    .. py:attribute:: sgl.ResourceUsage.stream_output
-        :type: ResourceUsage
-        :value: ResourceUsage.stream_output
-    
-    .. py:attribute:: sgl.ResourceUsage.shader_resource
-        :type: ResourceUsage
-        :value: ResourceUsage.shader_resource
-    
-    .. py:attribute:: sgl.ResourceUsage.unordered_access
-        :type: ResourceUsage
-        :value: ResourceUsage.unordered_access
-    
-    .. py:attribute:: sgl.ResourceUsage.render_target
-        :type: ResourceUsage
-        :value: ResourceUsage.render_target
-    
-    .. py:attribute:: sgl.ResourceUsage.depth_stencil
-        :type: ResourceUsage
-        :value: ResourceUsage.depth_stencil
-    
-    .. py:attribute:: sgl.ResourceUsage.indirect_arg
-        :type: ResourceUsage
-        :value: ResourceUsage.indirect_arg
-    
-    .. py:attribute:: sgl.ResourceUsage.shared
-        :type: ResourceUsage
-        :value: ResourceUsage.shared
-    
-    .. py:attribute:: sgl.ResourceUsage.acceleration_structure
-        :type: ResourceUsage
-        :value: ResourceUsage.acceleration_structure
-    
-
-
-----
-
-.. py:class:: sgl.ResourceView
-
-    Base class: :py:class:`sgl.Object`
-    
-    
-    
-    .. py:property:: type
-        :type: sgl.ResourceViewType
-    
-    .. py:property:: resource
-        :type: sgl.Resource
-    
-
-
-----
-
-.. py:class:: sgl.ResourceViewType
-
-    Base class: :py:class:`enum.Enum`
-    
-    .. py:attribute:: sgl.ResourceViewType.unknown
-        :type: ResourceViewType
-        :value: ResourceViewType.unknown
-    
-    .. py:attribute:: sgl.ResourceViewType.render_target
-        :type: ResourceViewType
-        :value: ResourceViewType.render_target
-    
-    .. py:attribute:: sgl.ResourceViewType.depth_stencil
-        :type: ResourceViewType
-        :value: ResourceViewType.depth_stencil
-    
-    .. py:attribute:: sgl.ResourceViewType.shader_resource
-        :type: ResourceViewType
-        :value: ResourceViewType.shader_resource
-    
-    .. py:attribute:: sgl.ResourceViewType.unordered_access
-        :type: ResourceViewType
-        :value: ResourceViewType.unordered_access
     
 
 
@@ -6093,6 +6143,8 @@ Device
     .. py:method:: __init__(self, arg: dict, /) -> None
         :no-index:
     
+    .. py:staticmethod:: from_size(width: int, height: int) -> sgl.ScissorRect
+    
     .. py:property:: min_x
         :type: int
     
@@ -6134,46 +6186,52 @@ Device
 
 .. py:class:: sgl.ShaderCursor
 
-    
+    Cursor used for parsing and setting shader object fields. This class
+    does *NOT* use the SGL reflection wrappers for accessing due to the
+    performance implications of allocating/freeing them repeatedly. This
+    is far faster, however does introduce a risk of mem access problems if
+    the shader cursor is kept alive longer than the shader object it was
+    created from.
     
     .. py:method:: __init__(self, shader_object: sgl.ShaderObject) -> None
     
-    .. py:property:: type_layout
-        :type: sgl.TypeLayoutReflection
-    
-    .. py:property:: type
-        :type: sgl.TypeReflection
-    
-    .. py:property:: offset
-        :type: sgl.ShaderOffset
-    
-    .. py:method:: is_valid(self) -> bool
-    
     .. py:method:: dereference(self) -> sgl.ShaderCursor
-    
-    .. py:method:: find_field(self, name: str) -> sgl.ShaderCursor
-    
-    .. py:method:: find_element(self, index: int) -> sgl.ShaderCursor
     
     .. py:method:: find_entry_point(self, index: int) -> sgl.ShaderCursor
     
+    .. py:method:: is_valid(self) -> bool
+    
+        N/A
+        
+    .. py:method:: find_field(self, name: str) -> sgl.ShaderCursor
+    
+        N/A
+        
+    .. py:method:: find_element(self, index: int) -> sgl.ShaderCursor
+    
+        N/A
+        
     .. py:method:: has_field(self, name: str) -> bool
     
+        N/A
+        
     .. py:method:: has_element(self, index: int) -> bool
     
-    .. py:method:: set_object(self, object: sgl.MutableShaderObject) -> None
-    
-    .. py:method:: set_resource(self, resource_view: sgl.ResourceView) -> None
-    
-    .. py:method:: set_buffer(self, buffer: sgl.Buffer) -> None
-    
-    .. py:method:: set_texture(self, texture: sgl.Texture) -> None
-    
-    .. py:method:: set_sampler(self, sampler: sgl.Sampler) -> None
-    
-    .. py:method:: set_acceleration_structure(self, acceleration_structure: sgl.AccelerationStructure) -> None
-    
+        N/A
+        
     .. py:method:: set_data(self, data: ndarray[device='cpu']) -> None
+    
+    .. py:method:: write(self, val: object) -> None
+    
+        N/A
+        
+
+
+----
+
+.. py:class:: sgl.ShaderHotReloadEvent
+
+    Event data for hot reload hook.
     
 
 
@@ -6790,93 +6848,145 @@ Device
 
 ----
 
+.. py:class:: sgl.StoreOp
+
+    Base class: :py:class:`enum.Enum`
+    
+    .. py:attribute:: sgl.StoreOp.store
+        :type: StoreOp
+        :value: StoreOp.store
+    
+    .. py:attribute:: sgl.StoreOp.dont_care
+        :type: StoreOp
+        :value: StoreOp.dont_care
+    
+
+
+----
+
 .. py:class:: sgl.SubresourceLayout
 
     
     
+    .. py:method:: __init__(self) -> None
+    
+    .. py:property:: size
+        :type: sgl.math.uint3
+    
+        Dimensions of the subresource (in texels).
+        
+    .. py:property:: col_pitch
+        :type: int
+    
+        Stride in bytes between columns (i.e. blocks) of the subresource
+        tensor.
+        
     .. py:property:: row_pitch
         :type: int
     
-        Size of a single row in bytes (unaligned).
+        Stride in bytes between rows of the subresource tensor.
         
-    .. py:property:: row_pitch_aligned
+    .. py:property:: slice_pitch
         :type: int
     
-        Size of a single row in bytes (aligned to device texture alignment).
+        Stride in bytes between slices of the subresource tensor.
+        
+    .. py:property:: size_in_bytes
+        :type: int
+    
+        Overall size required to fit the subresource data (typically size.z *
+        slice_pitch).
+        
+    .. py:property:: block_width
+        :type: int
+    
+        Block width in texels (1 for uncompressed formats).
+        
+    .. py:property:: block_height
+        :type: int
+    
+        Block height in texels (1 for uncompressed formats).
         
     .. py:property:: row_count
         :type: int
     
-        Number of rows.
-        
-    .. py:property:: depth
-        :type: int
-    
-        Number of depth slices.
-        
-    .. py:property:: total_size
-        :type: int
-    
-        Get the total size of the subresource in bytes (unaligned).
-        
-    .. py:property:: total_size_aligned
-        :type: int
-    
-        Get the total size of the subresource in bytes (aligned to device
-        texture alignment).
+        Number of rows. For uncompressed formats this matches size.y. For
+        compressed formats this matches align_up(size.y, block_height) /
+        block_height.
         
 
 
 ----
 
-.. py:class:: sgl.Swapchain
+.. py:class:: sgl.SubresourceRange
+
+    
+    
+    .. py:method:: __init__(self) -> None
+    
+    .. py:method:: __init__(self, arg: dict, /) -> None
+        :no-index:
+    
+    .. py:property:: mip_level
+        :type: int
+    
+        Most detailed mip level.
+        
+    .. py:property:: mip_count
+        :type: int
+    
+        Number of mip levels.
+        
+    .. py:property:: base_array_layer
+        :type: int
+    
+        First array layer.
+        
+    .. py:property:: layer_count
+        :type: int
+    
+        Number of array layers.
+        
+
+
+----
+
+.. py:class:: sgl.Surface
 
     Base class: :py:class:`sgl.Object`
     
     
     
-    .. py:property:: desc
-        :type: sgl.SwapchainDesc
+    .. py:property:: info
+        :type: sgl.SurfaceInfo
     
-        Returns the swapchain description.
+        Returns the surface info.
         
-    .. py:property:: images
-        :type: list[sgl.Texture]
+    .. py:property:: config
+        :type: sgl.SurfaceConfig
     
-        Returns the back buffer images.
+        Returns the surface config.
         
-    .. py:method:: get_image(self, index: int) -> sgl.Texture
+    .. py:method:: configure(self, width: int, height: int, format: sgl.Format = Format.undefined, usage: sgl.TextureUsage = TextureUsage.render_target, desired_image_count: int = 3, vsync: bool = True) -> None
     
-        Returns the back buffer image at position `index`.
+        Configure the surface.
+        
+    .. py:method:: configure(self, config: sgl.SurfaceConfig) -> None
+        :no-index:
+    
+    .. py:method:: acquire_next_image(self) -> sgl.Texture
+    
+        Acquries the next surface image.
         
     .. py:method:: present(self) -> None
     
-        Present the next image in the swapchain.
+        Present the previously acquire image.
         
-    .. py:method:: acquire_next_image(self) -> int
-    
-        Returns the index of next back buffer image that will be presented in
-        the next `present` call. Returns -1 if no image is available and the
-        caller should skip the frame.
-        
-    .. py:method:: resize(self, width: int, height: int) -> None
-    
-        Resizes the back buffers of this swapchain. All render target views
-        and framebuffers referencing the back buffer images must be freed
-        before calling this method.
-        
-    .. py:method:: is_occluded(self) -> bool
-    
-        Returns true if the window is occluded.
-        
-    .. py:property:: fullscreen_mode
-        :type: bool
-    
 
 
 ----
 
-.. py:class:: sgl.SwapchainDesc
+.. py:class:: sgl.SurfaceConfig
 
     
     
@@ -6888,24 +6998,29 @@ Device
     .. py:property:: format
         :type: sgl.Format
     
-        Format of the swapchain images.
+        Surface texture format.
+        
+    .. py:property:: usage
+        :type: sgl.TextureUsage
+    
+        Surface texture usage.
         
     .. py:property:: width
         :type: int
     
-        Width of the swapchain images in pixels.
+        Surface texture width.
         
     .. py:property:: height
         :type: int
     
-        Height of the swapchain images in pixels.
+        Surface texture height.
         
-    .. py:property:: image_count
+    .. py:property:: desired_image_count
         :type: int
     
-        Number of swapchain images.
+        Desired number of images.
         
-    .. py:property:: enable_vsync
+    .. py:property:: vsync
         :type: bool
     
         Enable/disable vertical synchronization.
@@ -6914,30 +7029,25 @@ Device
 
 ----
 
-.. py:class:: sgl.TargetBlendDesc
+.. py:class:: sgl.SurfaceInfo
 
     
     
-    .. py:method:: __init__(self) -> None
+    .. py:property:: preferred_format
+        :type: sgl.Format
     
-    .. py:method:: __init__(self, arg: dict, /) -> None
-        :no-index:
+        Preferred format for the surface.
+        
+    .. py:property:: supported_usage
+        :type: sgl.TextureUsage
     
-    .. py:property:: color
-        :type: sgl.AspectBlendDesc
+        Supported texture usages.
+        
+    .. py:property:: formats
+        :type: list[sgl.Format]
     
-    .. py:property:: alpha
-        :type: sgl.AspectBlendDesc
-    
-    .. py:property:: enable_blend
-        :type: bool
-    
-    .. py:property:: logic_op
-        :type: sgl.LogicOp
-    
-    .. py:property:: write_mask
-        :type: sgl.RenderTargetWriteMask
-    
+        Supported texture formats.
+        
 
 
 ----
@@ -6951,6 +7061,12 @@ Device
     .. py:property:: desc
         :type: sgl.TextureDesc
     
+    .. py:property:: type
+        :type: sgl.TextureType
+    
+    .. py:property:: format
+        :type: sgl.Format
+    
     .. py:property:: width
         :type: int
     
@@ -6960,20 +7076,17 @@ Device
     .. py:property:: depth
         :type: int
     
-    .. py:property:: array_size
+    .. py:property:: array_length
         :type: int
     
     .. py:property:: mip_count
         :type: int
     
-    .. py:property:: subresource_count
+    .. py:property:: layer_count
         :type: int
     
-    .. py:method:: get_subresource_index(self, mip_level: int, array_slice: int = 0) -> int
-    
-    .. py:method:: get_subresource_array_slice(self, subresource: int) -> int
-    
-    .. py:method:: get_subresource_mip_level(self, subresource: int) -> int
+    .. py:property:: subresource_count
+        :type: int
     
     .. py:method:: get_mip_width(self, mip_level: int = 0) -> int
     
@@ -6981,34 +7094,27 @@ Device
     
     .. py:method:: get_mip_depth(self, mip_level: int = 0) -> int
     
-    .. py:method:: get_mip_dimensions(self, mip_level: int = 0) -> sgl.math.uint3
+    .. py:method:: get_mip_size(self, mip_level: int = 0) -> sgl.math.uint3
     
-    .. py:method:: get_subresource_layout(self, subresource: int) -> sgl.SubresourceLayout
+    .. py:method:: get_subresource_layout(self, mip_level: int, row_alignment: int = 4294967295) -> sgl.SubresourceLayout
     
-    .. py:method:: get_srv(self, mip_level: int = 0, mip_count: int = 4294967295, base_array_layer: int = 0, layer_count: int = 4294967295) -> sgl.ResourceView
-    
-        Get a shader resource view for a subresource range of the texture.
+        Get layout of a texture subresource. By default, the row alignment
+        used is that required by the target for direct buffer upload/download.
+        Pass in 1 for a completely packed layout.
         
-    .. py:method:: get_uav(self, mip_level: int = 0, base_array_layer: int = 0, layer_count: int = 4294967295) -> sgl.ResourceView
+    .. py:method:: create_view(self, desc: sgl.TextureViewDesc) -> sgl.TextureView
     
-        Get a unordered access view for a subresource range of the texture.
-        \note Only a single mip level can be bound.
-        
-    .. py:method:: get_dsv(self, mip_level: int = 0, base_array_layer: int = 0, layer_count: int = 4294967295) -> sgl.ResourceView
+    .. py:method:: create_view(self, dict: dict) -> sgl.TextureView
+        :no-index:
     
-        Get a depth stencil view for a subresource range of the texture. \note
-        Only a single mip level can be bound.
-        
-    .. py:method:: get_rtv(self, mip_level: int = 0, base_array_layer: int = 0, layer_count: int = 4294967295) -> sgl.ResourceView
+    .. py:method:: create_view(self, mip_level: int = 0, mip_count: int = 4294967295, base_array_layer: int = 0, layer_count: int = 4294967295, format: sgl.Format = Format.undefined) -> sgl.TextureView
+        :no-index:
     
-        Get a render target view for a subresource range of the texture. \note
-        Only a single mip level can be bound.
-        
-    .. py:method:: to_bitmap(self, mip_level: int = 0, array_slice: int = 0) -> sgl.Bitmap
+    .. py:method:: to_bitmap(self, layer: int = 0, mip_level: int = 0) -> sgl.Bitmap
     
-    .. py:method:: to_numpy(self, mip_level: int = 0, array_slice: int = 0) -> numpy.ndarray[]
+    .. py:method:: to_numpy(self, layer: int = 0, mip_level: int = 0) -> numpy.ndarray[]
     
-    .. py:method:: from_numpy(self, data: numpy.ndarray[], mip_level: int = 0, array_slice: int = 0) -> None
+    .. py:method:: copy_from_numpy(self, data: numpy.ndarray[], layer: int = 0, mip_level: int = 0) -> None
     
 
 
@@ -7042,6 +7148,26 @@ Device
 
 ----
 
+.. py:class:: sgl.TextureAspect
+
+    Base class: :py:class:`enum.Enum`
+    
+    .. py:attribute:: sgl.TextureAspect.all
+        :type: TextureAspect
+        :value: TextureAspect.all
+    
+    .. py:attribute:: sgl.TextureAspect.depth_only
+        :type: TextureAspect
+        :value: TextureAspect.depth_only
+    
+    .. py:attribute:: sgl.TextureAspect.stencil_only
+        :type: TextureAspect
+        :value: TextureAspect.stencil_only
+    
+
+
+----
+
 .. py:class:: sgl.TextureDesc
 
     
@@ -7052,10 +7178,9 @@ Device
         :no-index:
     
     .. py:property:: type
-        :type: sgl.ResourceType
+        :type: sgl.TextureType
     
-        Resource type (optional). Type is inferred from width, height, depth
-        if not specified.
+        Texture type.
         
     .. py:property:: format
         :type: sgl.Format
@@ -7077,10 +7202,10 @@ Device
     
         Depth in pixels.
         
-    .. py:property:: array_size
+    .. py:property:: array_length
         :type: int
     
-        Number of array slices (1 for non-array textures).
+        Array length.
         
     .. py:property:: mip_count
         :type: int
@@ -7090,25 +7215,27 @@ Device
     .. py:property:: sample_count
         :type: int
     
-        Number of samples per pixel (1 for non-multisampled textures).
+        Number of samples per pixel.
         
-    .. py:property:: quality
+    .. py:property:: sample_quality
         :type: int
     
         Quality level for multisampled textures.
         
-    .. py:property:: initial_state
-        :type: sgl.ResourceState
-    
-    .. py:property:: usage
-        :type: sgl.ResourceUsage
-    
     .. py:property:: memory_type
         :type: sgl.MemoryType
     
-    .. py:property:: debug_name
+    .. py:property:: usage
+        :type: sgl.TextureUsage
+    
+    .. py:property:: default_state
+        :type: sgl.ResourceState
+    
+    .. py:property:: label
         :type: str
     
+        Debug label.
+        
 
 
 ----
@@ -7153,11 +7280,154 @@ Device
 
 ----
 
-.. py:class:: sgl.TransientShaderObject
+.. py:class:: sgl.TextureType
 
-    Base class: :py:class:`sgl.ShaderObject`
+    Base class: :py:class:`enum.Enum`
+    
+    .. py:attribute:: sgl.TextureType.texture_1d
+        :type: TextureType
+        :value: TextureType.texture_1d
+    
+    .. py:attribute:: sgl.TextureType.texture_1d_array
+        :type: TextureType
+        :value: TextureType.texture_1d_array
+    
+    .. py:attribute:: sgl.TextureType.texture_2d
+        :type: TextureType
+        :value: TextureType.texture_2d
+    
+    .. py:attribute:: sgl.TextureType.texture_2d_array
+        :type: TextureType
+        :value: TextureType.texture_2d_array
+    
+    .. py:attribute:: sgl.TextureType.texture_2d_ms
+        :type: TextureType
+        :value: TextureType.texture_2d_ms
+    
+    .. py:attribute:: sgl.TextureType.texture_2d_ms_array
+        :type: TextureType
+        :value: TextureType.texture_2d_ms_array
+    
+    .. py:attribute:: sgl.TextureType.texture_3d
+        :type: TextureType
+        :value: TextureType.texture_3d
+    
+    .. py:attribute:: sgl.TextureType.texture_cube
+        :type: TextureType
+        :value: TextureType.texture_cube
+    
+    .. py:attribute:: sgl.TextureType.texture_cube_array
+        :type: TextureType
+        :value: TextureType.texture_cube_array
+    
+
+
+----
+
+.. py:class:: sgl.TextureUsage
+
+    Base class: :py:class:`enum.IntFlag`
+    
+    .. py:attribute:: sgl.TextureUsage.none
+        :type: TextureUsage
+        :value: TextureUsage.none
+    
+    .. py:attribute:: sgl.TextureUsage.shader_resource
+        :type: TextureUsage
+        :value: TextureUsage.shader_resource
+    
+    .. py:attribute:: sgl.TextureUsage.unordered_access
+        :type: TextureUsage
+        :value: TextureUsage.unordered_access
+    
+    .. py:attribute:: sgl.TextureUsage.render_target
+        :type: TextureUsage
+        :value: TextureUsage.render_target
+    
+    .. py:attribute:: sgl.TextureUsage.depth_stencil
+        :type: TextureUsage
+        :value: TextureUsage.depth_stencil
+    
+    .. py:attribute:: sgl.TextureUsage.present
+        :type: TextureUsage
+        :value: TextureUsage.present
+    
+    .. py:attribute:: sgl.TextureUsage.copy_source
+        :type: TextureUsage
+        :value: TextureUsage.copy_source
+    
+    .. py:attribute:: sgl.TextureUsage.copy_destination
+        :type: TextureUsage
+        :value: TextureUsage.copy_destination
+    
+    .. py:attribute:: sgl.TextureUsage.resolve_source
+        :type: TextureUsage
+        :value: TextureUsage.resolve_source
+    
+    .. py:attribute:: sgl.TextureUsage.resolve_destination
+        :type: TextureUsage
+        :value: TextureUsage.resolve_destination
+    
+    .. py:attribute:: sgl.TextureUsage.typeless
+        :type: TextureUsage
+        :value: TextureUsage.typeless
+    
+    .. py:attribute:: sgl.TextureUsage.shared
+        :type: TextureUsage
+        :value: TextureUsage.shared
+    
+
+
+----
+
+.. py:class:: sgl.TextureView
+
+    Base class: :py:class:`sgl.DeviceResource`
     
     
+    
+    .. py:property:: texture
+        :type: sgl.Texture
+    
+    .. py:property:: desc
+        :type: sgl.TextureViewDesc
+    
+    .. py:property:: format
+        :type: sgl.Format
+    
+    .. py:property:: aspect
+        :type: sgl.TextureAspect
+    
+    .. py:property:: subresource_range
+        :type: sgl.SubresourceRange
+    
+    .. py:property:: label
+        :type: str
+    
+
+
+----
+
+.. py:class:: sgl.TextureViewDesc
+
+    
+    
+    .. py:method:: __init__(self) -> None
+    
+    .. py:method:: __init__(self, arg: dict, /) -> None
+        :no-index:
+    
+    .. py:property:: format
+        :type: sgl.Format
+    
+    .. py:property:: aspect
+        :type: sgl.TextureAspect
+    
+    .. py:property:: subresource_range
+        :type: sgl.SubresourceRange
+    
+    .. py:property:: label
+        :type: str
     
 
 
@@ -7171,7 +7441,7 @@ Device
     
     .. py:method:: __init__(self) -> None
     
-    .. py:method:: __init__(self, type_name: str, interface_name: str, id: int = -1) -> None
+    .. py:method:: __init__(self, interface_name: str, type_name: str, id: int = -1) -> None
         :no-index:
     
     .. py:method:: __init__(self, arg: tuple, /) -> None
@@ -7590,6 +7860,9 @@ Device
     .. py:property:: name
         :type: str
     
+    .. py:property:: full_name
+        :type: str
+    
     .. py:property:: fields
         :type: sgl.TypeReflectionFieldList
     
@@ -7712,6 +7985,8 @@ Device
     .. py:method:: __init__(self, arg: dict, /) -> None
         :no-index:
     
+    .. py:staticmethod:: from_size(width: float, height: float) -> sgl.Viewport
+    
     .. py:property:: x
         :type: float
     
@@ -7738,7 +8013,7 @@ Device
 
     Native window handle.
     
-    .. py:method:: __init__(self, hwnd: int) -> None
+    .. py:method:: __init__(self, xdisplay: int, xwindow: int) -> None
     
 
 
@@ -7824,7 +8099,7 @@ Application
     
         Whether the window is resizable.
         
-    .. py:property:: swapchain_format
+    .. py:property:: surface_format
         :type: sgl.Format
     
         Format of the swapchain images.
@@ -7844,20 +8119,17 @@ Application
     
     
     
-    .. py:method:: __init__(self, app: sgl.App, width: int = 1920, height: int = 1280, title: str = 'sgl', mode: sgl.WindowMode = WindowMode.normal, resizable: bool = True, swapchain_format: sgl.Format = Format.bgra8_unorm_srgb, enable_vsync: bool = False) -> None
+    .. py:method:: __init__(self, app: sgl.App, width: int = 1920, height: int = 1280, title: str = 'sgl', mode: sgl.WindowMode = WindowMode.normal, resizable: bool = True, surface_format: sgl.Format = Format.undefined, enable_vsync: bool = False) -> None
     
     .. py:class:: sgl.AppWindow.RenderContext
     
         
         
-        .. py:property:: swapchain_image
+        .. py:property:: surface_texture
             :type: sgl.Texture
         
-        .. py:property:: framebuffer
-            :type: sgl.Framebuffer
-        
-        .. py:property:: command_buffer
-            :type: sgl.CommandBuffer
+        .. py:property:: command_encoder
+            :type: sgl.CommandEncoder
         
     .. py:property:: device
         :type: sgl.Device
@@ -7897,6 +8169,12 @@ Math
     .. py:property:: x
         :type: float
     
+    .. py:property:: shape
+        :type: tuple
+    
+    .. py:property:: element_type
+        :type: object
+    
 
 
 ----
@@ -7919,6 +8197,12 @@ Math
     
     .. py:property:: y
         :type: float
+    
+    .. py:property:: shape
+        :type: tuple
+    
+    .. py:property:: element_type
+        :type: object
     
 
 
@@ -7951,6 +8235,12 @@ Math
     
     .. py:property:: z
         :type: float
+    
+    .. py:property:: shape
+        :type: tuple
+    
+    .. py:property:: element_type
+        :type: object
     
 
 
@@ -7989,6 +8279,12 @@ Math
     
     .. py:property:: w
         :type: float
+    
+    .. py:property:: shape
+        :type: tuple
+    
+    .. py:property:: element_type
+        :type: object
     
 
 
@@ -8043,6 +8339,12 @@ Math
     .. py:property:: x
         :type: int
     
+    .. py:property:: shape
+        :type: tuple
+    
+    .. py:property:: element_type
+        :type: object
+    
 
 
 ----
@@ -8065,6 +8367,12 @@ Math
     
     .. py:property:: y
         :type: int
+    
+    .. py:property:: shape
+        :type: tuple
+    
+    .. py:property:: element_type
+        :type: object
     
 
 
@@ -8097,6 +8405,12 @@ Math
     
     .. py:property:: z
         :type: int
+    
+    .. py:property:: shape
+        :type: tuple
+    
+    .. py:property:: element_type
+        :type: object
     
 
 
@@ -8135,6 +8449,12 @@ Math
     
     .. py:property:: w
         :type: int
+    
+    .. py:property:: shape
+        :type: tuple
+    
+    .. py:property:: element_type
+        :type: object
     
 
 
@@ -8189,6 +8509,12 @@ Math
     .. py:property:: x
         :type: int
     
+    .. py:property:: shape
+        :type: tuple
+    
+    .. py:property:: element_type
+        :type: object
+    
 
 
 ----
@@ -8211,6 +8537,12 @@ Math
     
     .. py:property:: y
         :type: int
+    
+    .. py:property:: shape
+        :type: tuple
+    
+    .. py:property:: element_type
+        :type: object
     
 
 
@@ -8243,6 +8575,12 @@ Math
     
     .. py:property:: z
         :type: int
+    
+    .. py:property:: shape
+        :type: tuple
+    
+    .. py:property:: element_type
+        :type: object
     
 
 
@@ -8281,6 +8619,12 @@ Math
     
     .. py:property:: w
         :type: int
+    
+    .. py:property:: shape
+        :type: tuple
+    
+    .. py:property:: element_type
+        :type: object
     
 
 
@@ -8335,6 +8679,12 @@ Math
     .. py:property:: x
         :type: bool
     
+    .. py:property:: shape
+        :type: tuple
+    
+    .. py:property:: element_type
+        :type: object
+    
 
 
 ----
@@ -8357,6 +8707,12 @@ Math
     
     .. py:property:: y
         :type: bool
+    
+    .. py:property:: shape
+        :type: tuple
+    
+    .. py:property:: element_type
+        :type: object
     
 
 
@@ -8389,6 +8745,12 @@ Math
     
     .. py:property:: z
         :type: bool
+    
+    .. py:property:: shape
+        :type: tuple
+    
+    .. py:property:: element_type
+        :type: object
     
 
 
@@ -8427,6 +8789,12 @@ Math
     
     .. py:property:: w
         :type: bool
+    
+    .. py:property:: shape
+        :type: tuple
+    
+    .. py:property:: element_type
+        :type: object
     
 
 
@@ -8501,6 +8869,12 @@ Math
     .. py:property:: x
         :type: sgl.math.float16_t
     
+    .. py:property:: shape
+        :type: tuple
+    
+    .. py:property:: element_type
+        :type: object
+    
 
 
 ----
@@ -8523,6 +8897,12 @@ Math
     
     .. py:property:: y
         :type: sgl.math.float16_t
+    
+    .. py:property:: shape
+        :type: tuple
+    
+    .. py:property:: element_type
+        :type: object
     
 
 
@@ -8555,6 +8935,12 @@ Math
     
     .. py:property:: z
         :type: sgl.math.float16_t
+    
+    .. py:property:: shape
+        :type: tuple
+    
+    .. py:property:: element_type
+        :type: object
     
 
 
@@ -8593,6 +8979,12 @@ Math
     
     .. py:property:: w
         :type: sgl.math.float16_t
+    
+    .. py:property:: shape
+        :type: tuple
+    
+    .. py:property:: element_type
+        :type: object
     
 
 
@@ -8656,7 +9048,13 @@ Math
     
     .. py:method:: set_col(self, col: int, value: sgl.math.float2) -> None
     
-    .. py:method:: to_numpy(self) -> numpy.ndarray[dtype=float32, writable=False, shape=(2, 2)]
+    .. py:property:: shape
+        :type: tuple
+    
+    .. py:property:: element_type
+        :type: object
+    
+    .. py:method:: to_numpy(self) -> numpy.ndarray[dtype=float32, shape=(2, 2), writable=False]
     
 
 
@@ -8690,7 +9088,13 @@ Math
     
     .. py:method:: set_col(self, col: int, value: sgl.math.float3) -> None
     
-    .. py:method:: to_numpy(self) -> numpy.ndarray[dtype=float32, writable=False, shape=(3, 3)]
+    .. py:property:: shape
+        :type: tuple
+    
+    .. py:property:: element_type
+        :type: object
+    
+    .. py:method:: to_numpy(self) -> numpy.ndarray[dtype=float32, shape=(3, 3), writable=False]
     
 
 
@@ -8718,7 +9122,13 @@ Math
     
     .. py:method:: set_col(self, col: int, value: sgl.math.float2) -> None
     
-    .. py:method:: to_numpy(self) -> numpy.ndarray[dtype=float32, writable=False, shape=(2, 4)]
+    .. py:property:: shape
+        :type: tuple
+    
+    .. py:property:: element_type
+        :type: object
+    
+    .. py:method:: to_numpy(self) -> numpy.ndarray[dtype=float32, shape=(2, 4), writable=False]
     
 
 
@@ -8752,7 +9162,13 @@ Math
     
     .. py:method:: set_col(self, col: int, value: sgl.math.float3) -> None
     
-    .. py:method:: to_numpy(self) -> numpy.ndarray[dtype=float32, writable=False, shape=(3, 4)]
+    .. py:property:: shape
+        :type: tuple
+    
+    .. py:property:: element_type
+        :type: object
+    
+    .. py:method:: to_numpy(self) -> numpy.ndarray[dtype=float32, shape=(3, 4), writable=False]
     
 
 
@@ -8786,7 +9202,13 @@ Math
     
     .. py:method:: set_col(self, col: int, value: sgl.math.float4) -> None
     
-    .. py:method:: to_numpy(self) -> numpy.ndarray[dtype=float32, writable=False, shape=(4, 4)]
+    .. py:property:: shape
+        :type: tuple
+    
+    .. py:property:: element_type
+        :type: object
+    
+    .. py:method:: to_numpy(self) -> numpy.ndarray[dtype=float32, shape=(4, 4), writable=False]
     
 
 
@@ -8863,6 +9285,12 @@ Math
     
     .. py:property:: w
         :type: float
+    
+    .. py:property:: shape
+        :type: tuple
+    
+    .. py:property:: element_type
+        :type: object
     
 
 
@@ -10086,10 +10514,10 @@ Math
 .. py:function:: sgl.math.transpose(x: sgl.math.float3x3) -> sgl.math.float3x3
     :no-index:
 
-.. py:function:: sgl.math.transpose(x: sgl.math.float2x4) -> sgl::math::matrix<float,4,2>
+.. py:function:: sgl.math.transpose(x: sgl.math.float2x4) -> sgl::math::matrix<float, 4, 2>
     :no-index:
 
-.. py:function:: sgl.math.transpose(x: sgl.math.float3x4) -> sgl::math::matrix<float,4,3>
+.. py:function:: sgl.math.transpose(x: sgl.math.float3x4) -> sgl::math::matrix<float, 4, 3>
     :no-index:
 
 .. py:function:: sgl.math.transpose(x: sgl.math.float4x4) -> sgl.math.float4x4
@@ -10143,7 +10571,7 @@ Math
 .. py:function:: sgl.math.mul(x: sgl.math.float3, y: sgl.math.float3x3) -> sgl.math.float3
     :no-index:
 
-.. py:function:: sgl.math.mul(x: sgl.math.float2x4, y: sgl::math::matrix<float,4,2>) -> sgl.math.float2x2
+.. py:function:: sgl.math.mul(x: sgl.math.float2x4, y: sgl::math::matrix<float, 4, 2>) -> sgl.math.float2x2
     :no-index:
 
 .. py:function:: sgl.math.mul(x: sgl.math.float2x4, y: sgl.math.float4) -> sgl.math.float2
@@ -10152,7 +10580,7 @@ Math
 .. py:function:: sgl.math.mul(x: sgl.math.float2, y: sgl.math.float2x4) -> sgl.math.float4
     :no-index:
 
-.. py:function:: sgl.math.mul(x: sgl.math.float3x4, y: sgl::math::matrix<float,4,3>) -> sgl.math.float3x3
+.. py:function:: sgl.math.mul(x: sgl.math.float3x4, y: sgl::math::matrix<float, 4, 3>) -> sgl.math.float3x3
     :no-index:
 
 .. py:function:: sgl.math.mul(x: sgl.math.float3x4, y: sgl.math.float4) -> sgl.math.float3
@@ -10364,7 +10792,10 @@ UI
     
     .. py:method:: new_frame(self, width: int, height: int) -> None
     
-    .. py:method:: render(self, framebuffer: sgl.Framebuffer, command_buffer: sgl.CommandBuffer) -> None
+    .. py:method:: render(self, texture_view: sgl.TextureView, command_encoder: sgl.CommandEncoder) -> None
+    
+    .. py:method:: render(self, texture: sgl.Texture, command_encoder: sgl.CommandEncoder) -> None
+        :no-index:
     
     .. py:method:: handle_keyboard_event(self, event: sgl.KeyboardEvent) -> bool
     
@@ -11454,7 +11885,7 @@ Utilities
             Generate mip levels for the texture.
             
         .. py:property:: usage
-            :type: sgl.ResourceUsage
+            :type: sgl.TextureUsage
         
     .. py:method:: load_texture(self, bitmap: sgl.Bitmap, options: sgl.TextureLoader.Options | None = None) -> sgl.Texture
     
@@ -11708,6 +12139,848 @@ Utilities
     Returns:
         True if a frame is currently being captured.
     
+
+
+----
+
+SlangPy
+-------
+
+.. py:class:: sgl.slangpy.AccessType
+
+    Base class: :py:class:`enum.Enum`
+    
+    .. py:attribute:: sgl.slangpy.AccessType.none
+        :type: AccessType
+        :value: AccessType.none
+    
+    .. py:attribute:: sgl.slangpy.AccessType.read
+        :type: AccessType
+        :value: AccessType.read
+    
+    .. py:attribute:: sgl.slangpy.AccessType.write
+        :type: AccessType
+        :value: AccessType.write
+    
+    .. py:attribute:: sgl.slangpy.AccessType.readwrite
+        :type: AccessType
+        :value: AccessType.readwrite
+    
+
+
+----
+
+.. py:class:: sgl.slangpy.CallMode
+
+    Base class: :py:class:`enum.Enum`
+    
+    .. py:attribute:: sgl.slangpy.CallMode.prim
+        :type: CallMode
+        :value: CallMode.prim
+    
+    .. py:attribute:: sgl.slangpy.CallMode.bwds
+        :type: CallMode
+        :value: CallMode.bwds
+    
+    .. py:attribute:: sgl.slangpy.CallMode.fwds
+        :type: CallMode
+        :value: CallMode.fwds
+    
+
+
+----
+
+.. py:function:: sgl.slangpy.unpack_args(*args) -> list
+
+    N/A
+    
+
+
+----
+
+.. py:function:: sgl.slangpy.unpack_kwargs(**kwargs) -> dict
+
+    N/A
+    
+
+
+----
+
+.. py:function:: sgl.slangpy.unpack_arg(arg: object) -> object
+
+    N/A
+    
+
+
+----
+
+.. py:function:: sgl.slangpy.pack_arg(arg: object, unpacked_arg: object) -> None
+
+    N/A
+    
+
+
+----
+
+.. py:function:: sgl.slangpy.get_value_signature(o: object) -> str
+
+    N/A
+    
+
+
+----
+
+.. py:class:: sgl.slangpy.SignatureBuilder
+
+    Base class: :py:class:`sgl.Object`
+    
+    .. py:method:: __init__(self) -> None
+    
+        N/A
+        
+    .. py:method:: add(self, value: str) -> None
+    
+        N/A
+        
+    .. py:property:: str
+        :type: str
+    
+        N/A
+        
+    .. py:property:: bytes
+        :type: bytes
+    
+        N/A
+        
+
+
+----
+
+.. py:class:: sgl.slangpy.NativeObject
+
+    Base class: :py:class:`sgl.Object`
+    
+    .. py:method:: __init__(self) -> None
+    
+        N/A
+        
+    .. py:property:: slangpy_signature
+        :type: str
+    
+    .. py:method:: read_signature(self, builder: sgl.slangpy.SignatureBuilder) -> None
+    
+        N/A
+        
+
+
+----
+
+.. py:class:: sgl.slangpy.NativeSlangType
+
+    Base class: :py:class:`sgl.Object`
+    
+    .. py:method:: __init__(self) -> None
+    
+        N/A
+        
+    .. py:property:: type_reflection
+        :type: sgl.TypeReflection
+    
+        N/A
+        
+    .. py:property:: shape
+        :type: sgl.slangpy.Shape
+    
+        N/A
+        
+
+
+----
+
+.. py:class:: sgl.slangpy.NativeMarshall
+
+    Base class: :py:class:`sgl.Object`
+    
+    .. py:method:: __init__(self) -> None
+    
+        N/A
+        
+    .. py:property:: concrete_shape
+        :type: sgl.slangpy.Shape
+    
+        N/A
+        
+    .. py:property:: match_call_shape
+        :type: bool
+    
+        N/A
+        
+    .. py:method:: get_shape(self, value: object) -> sgl.slangpy.Shape
+    
+        N/A
+        
+    .. py:property:: slang_type
+        :type: sgl.slangpy.NativeSlangType
+    
+        N/A
+        
+    .. py:method:: write_shader_cursor_pre_dispatch(self, context: sgl.slangpy.CallContext, binding: sgl.slangpy.NativeBoundVariableRuntime, cursor: sgl.ShaderCursor, value: object, read_back: list) -> None
+    
+        N/A
+        
+    .. py:method:: create_calldata(self, arg0: sgl.slangpy.CallContext, arg1: sgl.slangpy.NativeBoundVariableRuntime, arg2: object, /) -> object
+    
+        N/A
+        
+    .. py:method:: read_calldata(self, arg0: sgl.slangpy.CallContext, arg1: sgl.slangpy.NativeBoundVariableRuntime, arg2: object, arg3: object, /) -> None
+    
+        N/A
+        
+    .. py:method:: create_output(self, arg0: sgl.slangpy.CallContext, arg1: sgl.slangpy.NativeBoundVariableRuntime, /) -> object
+    
+        N/A
+        
+    .. py:method:: read_output(self, arg0: sgl.slangpy.CallContext, arg1: sgl.slangpy.NativeBoundVariableRuntime, arg2: object, /) -> object
+    
+        N/A
+        
+    .. py:property:: has_derivative
+        :type: bool
+    
+        N/A
+        
+    .. py:property:: is_writable
+        :type: bool
+    
+        N/A
+        
+    .. py:method:: gen_calldata(self, cgb: object, context: object, binding: object) -> None
+    
+        N/A
+        
+    .. py:method:: reduce_type(self, context: object, dimensions: int) -> sgl.slangpy.NativeSlangType
+    
+        N/A
+        
+    .. py:method:: resolve_type(self, context: object, bound_type: sgl.slangpy.NativeSlangType) -> sgl.slangpy.NativeSlangType
+    
+        N/A
+        
+    .. py:method:: resolve_dimensionality(self, context: object, binding: object, vector_target_type: sgl.slangpy.NativeSlangType) -> int
+    
+        N/A
+        
+
+
+----
+
+.. py:class:: sgl.slangpy.NativeBoundVariableRuntime
+
+    Base class: :py:class:`sgl.Object`
+    
+    .. py:method:: __init__(self) -> None
+    
+        N/A
+        
+    .. py:property:: access
+        :type: tuple[sgl.slangpy.AccessType, sgl.slangpy.AccessType]
+    
+        N/A
+        
+    .. py:property:: transform
+        :type: sgl.slangpy.Shape
+    
+        N/A
+        
+    .. py:property:: python_type
+        :type: sgl.slangpy.NativeMarshall
+    
+        N/A
+        
+    .. py:property:: vector_type
+        :type: sgl.slangpy.NativeSlangType
+    
+        N/A
+        
+    .. py:property:: shape
+        :type: sgl.slangpy.Shape
+    
+        N/A
+        
+    .. py:property:: variable_name
+        :type: str
+    
+        N/A
+        
+    .. py:property:: children
+        :type: dict[str, sgl.slangpy.NativeBoundVariableRuntime] | None
+    
+        N/A
+        
+    .. py:method:: populate_call_shape(self, arg0: collections.abc.Sequence[int], arg1: object, arg2: sgl.slangpy.NativeCallData, /) -> None
+    
+        N/A
+        
+    .. py:method:: read_call_data_post_dispatch(self, arg0: sgl.slangpy.CallContext, arg1: dict, arg2: object, /) -> None
+    
+        N/A
+        
+    .. py:method:: write_raw_dispatch_data(self, arg0: dict, arg1: object, /) -> None
+    
+        N/A
+        
+    .. py:method:: read_output(self, arg0: sgl.slangpy.CallContext, arg1: object, /) -> object
+    
+        N/A
+        
+
+
+----
+
+.. py:class:: sgl.slangpy.NativeBoundCallRuntime
+
+    Base class: :py:class:`sgl.Object`
+    
+    .. py:method:: __init__(self) -> None
+    
+        N/A
+        
+    .. py:property:: args
+        :type: list[sgl.slangpy.NativeBoundVariableRuntime]
+    
+        N/A
+        
+    .. py:property:: kwargs
+        :type: dict[str, sgl.slangpy.NativeBoundVariableRuntime]
+    
+        N/A
+        
+    .. py:method:: find_kwarg(self, arg: str, /) -> sgl.slangpy.NativeBoundVariableRuntime
+    
+        N/A
+        
+    .. py:method:: calculate_call_shape(self, arg0: int, arg1: list, arg2: dict, arg3: sgl.slangpy.NativeCallData, /) -> sgl.slangpy.Shape
+    
+        N/A
+        
+    .. py:method:: read_call_data_post_dispatch(self, arg0: sgl.slangpy.CallContext, arg1: dict, arg2: list, arg3: dict, /) -> None
+    
+        N/A
+        
+    .. py:method:: write_raw_dispatch_data(self, arg0: dict, arg1: dict, /) -> None
+    
+        N/A
+        
+
+
+----
+
+.. py:class:: sgl.slangpy.NativeCallRuntimeOptions
+
+    Base class: :py:class:`sgl.Object`
+    
+    .. py:method:: __init__(self) -> None
+    
+        N/A
+        
+    .. py:property:: uniforms
+        :type: list
+    
+        N/A
+        
+
+
+----
+
+.. py:class:: sgl.slangpy.NativeCallData
+
+    Base class: :py:class:`sgl.Object`
+    
+    .. py:method:: __init__(self) -> None
+    
+        N/A
+        
+    .. py:property:: device
+        :type: sgl.Device
+    
+        N/A
+        
+    .. py:property:: kernel
+        :type: sgl.ComputeKernel
+    
+        N/A
+        
+    .. py:property:: call_dimensionality
+        :type: int
+    
+        N/A
+        
+    .. py:property:: runtime
+        :type: sgl.slangpy.NativeBoundCallRuntime
+    
+        N/A
+        
+    .. py:property:: call_mode
+        :type: sgl.slangpy.CallMode
+    
+        N/A
+        
+    .. py:property:: last_call_shape
+        :type: sgl.slangpy.Shape
+    
+        N/A
+        
+    .. py:method:: call(self, opts: sgl.slangpy.NativeCallRuntimeOptions, *args, **kwargs) -> object
+    
+        N/A
+        
+    .. py:method:: append_to(self, opts: sgl.slangpy.NativeCallRuntimeOptions, command_buffer: sgl.CommandEncoder, *args, **kwargs) -> object
+    
+        N/A
+        
+
+
+----
+
+.. py:class:: sgl.slangpy.NativeCallDataCache
+
+    Base class: :py:class:`sgl.Object`
+    
+    .. py:method:: __init__(self) -> None
+    
+        N/A
+        
+    .. py:method:: get_value_signature(self, builder: sgl.slangpy.SignatureBuilder, o: object) -> None
+    
+        N/A
+        
+    .. py:method:: get_args_signature(self, builder: sgl.slangpy.SignatureBuilder, *args, **kwargs) -> None
+    
+        N/A
+        
+    .. py:method:: find_call_data(self, signature: str) -> sgl.slangpy.NativeCallData
+    
+        N/A
+        
+    .. py:method:: add_call_data(self, signature: str, call_data: sgl.slangpy.NativeCallData) -> None
+    
+        N/A
+        
+    .. py:method:: lookup_value_signature(self, o: object) -> str | None
+    
+        N/A
+        
+
+
+----
+
+.. py:class:: sgl.slangpy.Shape
+
+    .. py:method:: __init__(self, *args) -> None
+    
+        N/A
+        
+    .. py:property:: valid
+        :type: bool
+    
+        N/A
+        
+    .. py:property:: concrete
+        :type: bool
+    
+        N/A
+        
+    .. py:method:: as_tuple(self) -> tuple
+    
+        N/A
+        
+    .. py:method:: as_list(self) -> list[int]
+    
+        N/A
+        
+
+
+----
+
+.. py:class:: sgl.slangpy.CallContext
+
+    Base class: :py:class:`sgl.Object`
+    
+    .. py:method:: __init__(self, device: sgl.Device, call_shape: sgl.slangpy.Shape, call_mode: sgl.slangpy.CallMode) -> None
+    
+        N/A
+        
+    .. py:property:: device
+        :type: sgl.Device
+    
+        N/A
+        
+    .. py:property:: call_shape
+        :type: sgl.slangpy.Shape
+    
+        N/A
+        
+    .. py:property:: call_mode
+        :type: sgl.slangpy.CallMode
+    
+        N/A
+        
+
+
+----
+
+.. py:class:: sgl.slangpy.NativeNDBufferDesc
+
+    .. py:method:: __init__(self) -> None
+    
+    .. py:property:: dtype
+        :type: sgl.slangpy.NativeSlangType
+    
+    .. py:property:: element_layout
+        :type: sgl.TypeLayoutReflection
+    
+    .. py:property:: shape
+        :type: sgl.slangpy.Shape
+    
+    .. py:property:: strides
+        :type: sgl.slangpy.Shape
+    
+    .. py:property:: usage
+        :type: sgl.BufferUsage
+    
+    .. py:property:: memory_type
+        :type: sgl.MemoryType
+    
+
+
+----
+
+.. py:class:: sgl.slangpy.NativeNDBuffer
+
+    Base class: :py:class:`sgl.slangpy.NativeObject`
+    
+    .. py:method:: __init__(self, arg0: sgl.Device, arg1: sgl.slangpy.NativeNDBufferDesc, /) -> None
+    
+    .. py:property:: device
+        :type: sgl.Device
+    
+    .. py:property:: dtype
+        :type: sgl.slangpy.NativeSlangType
+    
+    .. py:property:: shape
+        :type: sgl.slangpy.Shape
+    
+    .. py:property:: strides
+        :type: sgl.slangpy.Shape
+    
+    .. py:property:: element_count
+        :type: int
+    
+    .. py:property:: usage
+        :type: sgl.BufferUsage
+    
+    .. py:property:: memory_type
+        :type: sgl.MemoryType
+    
+    .. py:property:: storage
+        :type: sgl.Buffer
+    
+    .. py:method:: cursor(self, start: int | None = None, count: int | None = None) -> sgl.BufferCursor
+    
+    .. py:method:: uniforms(self) -> dict
+    
+    .. py:method:: to_numpy(self) -> numpy.ndarray[]
+    
+        N/A
+        
+    .. py:method:: copy_from_numpy(self, data: numpy.ndarray[]) -> None
+    
+        N/A
+        
+
+
+----
+
+.. py:class:: sgl.slangpy.NativeNDBufferMarshall
+
+    Base class: :py:class:`sgl.slangpy.NativeMarshall`
+    
+    .. py:method:: __init__(self, dims: int, writable: bool, slang_type: sgl.slangpy.NativeSlangType, slang_element_type: sgl.slangpy.NativeSlangType, element_layout: sgl.TypeLayoutReflection) -> None
+    
+        N/A
+        
+    .. py:property:: dims
+        :type: int
+    
+    .. py:property:: writable
+        :type: bool
+    
+    .. py:property:: slang_element_type
+        :type: sgl.slangpy.NativeSlangType
+    
+
+
+----
+
+.. py:class:: sgl.slangpy.NativeNumpyMarshall
+
+    Base class: :py:class:`sgl.slangpy.NativeNDBufferMarshall`
+    
+    .. py:method:: __init__(self, dims: int, slang_type: sgl.slangpy.NativeSlangType, slang_element_type: sgl.slangpy.NativeSlangType, element_layout: sgl.TypeLayoutReflection, numpydtype: object) -> None
+    
+        N/A
+        
+    .. py:property:: dtype
+        :type: dlpack::dtype
+    
+
+
+----
+
+.. py:class:: sgl.slangpy.FunctionNodeType
+
+    Base class: :py:class:`enum.Enum`
+    
+    .. py:attribute:: sgl.slangpy.FunctionNodeType.unknown
+        :type: FunctionNodeType
+        :value: FunctionNodeType.unknown
+    
+    .. py:attribute:: sgl.slangpy.FunctionNodeType.uniforms
+        :type: FunctionNodeType
+        :value: FunctionNodeType.uniforms
+    
+    .. py:attribute:: sgl.slangpy.FunctionNodeType.kernelgen
+        :type: FunctionNodeType
+        :value: FunctionNodeType.kernelgen
+    
+    .. py:attribute:: sgl.slangpy.FunctionNodeType.this
+        :type: FunctionNodeType
+        :value: FunctionNodeType.this
+    
+
+
+----
+
+.. py:class:: sgl.slangpy.NativeFunctionNode
+
+    Base class: :py:class:`sgl.slangpy.NativeObject`
+    
+    .. py:method:: __init__(self, parent: sgl.slangpy.NativeFunctionNode | None, type: sgl.slangpy.FunctionNodeType, data: object | None) -> None
+    
+        N/A
+        
+    .. py:method:: generate_call_data(self, *args, **kwargs) -> sgl.slangpy.NativeCallData
+    
+        N/A
+        
+    .. py:method:: read_signature(self, builder: sgl.slangpy.SignatureBuilder) -> None
+    
+        N/A
+        
+    .. py:method:: gather_runtime_options(self, options: sgl.slangpy.NativeCallRuntimeOptions) -> None
+    
+        N/A
+        
+
+
+----
+
+.. py:function:: sgl.slangpy.get_texture_shape(texture: sgl.Texture, mip: int = 0) -> sgl.slangpy.Shape
+
+    N/A
+    
+
+
+----
+
+.. py:class:: sgl.slangpy.NativeBufferMarshall
+
+    Base class: :py:class:`sgl.slangpy.NativeMarshall`
+    
+    .. py:method:: __init__(self, slang_type: sgl.slangpy.NativeSlangType, usage: sgl.BufferUsage) -> None
+    
+        N/A
+        
+    .. py:method:: write_shader_cursor_pre_dispatch(self, context: sgl.slangpy.CallContext, binding: sgl.slangpy.NativeBoundVariableRuntime, cursor: sgl.ShaderCursor, value: object, read_back: list) -> None
+    
+        N/A
+        
+    .. py:method:: get_shape(self, value: object) -> sgl.slangpy.Shape
+    
+        N/A
+        
+    .. py:property:: usage
+        :type: sgl.BufferUsage
+    
+    .. py:property:: slang_type
+        :type: sgl.slangpy.NativeSlangType
+    
+
+
+----
+
+.. py:class:: sgl.slangpy.NativeTextureMarshall
+
+    Base class: :py:class:`sgl.slangpy.NativeMarshall`
+    
+    .. py:method:: __init__(self, slang_type: sgl.slangpy.NativeSlangType, element_type: sgl.slangpy.NativeSlangType, resource_shape: sgl.TypeReflection.ResourceShape, format: sgl.Format, usage: sgl.TextureUsage, dims: int) -> None
+    
+        N/A
+        
+    .. py:method:: write_shader_cursor_pre_dispatch(self, context: sgl.slangpy.CallContext, binding: sgl.slangpy.NativeBoundVariableRuntime, cursor: sgl.ShaderCursor, value: object, read_back: list) -> None
+    
+        N/A
+        
+    .. py:method:: get_shape(self, value: object) -> sgl.slangpy.Shape
+    
+        N/A
+        
+    .. py:method:: get_texture_shape(self, texture: sgl.Texture, mip: int) -> sgl.slangpy.Shape
+    
+        N/A
+        
+    .. py:property:: resource_shape
+        :type: sgl.TypeReflection.ResourceShape
+    
+        N/A
+        
+    .. py:property:: usage
+        :type: sgl.TextureUsage
+    
+        N/A
+        
+    .. py:property:: texture_dims
+        :type: int
+    
+        N/A
+        
+    .. py:property:: slang_element_type
+        :type: sgl.slangpy.NativeSlangType
+    
+        N/A
+        
+
+
+----
+
+.. py:class:: sgl.slangpy.NativeTensorDesc
+
+    .. py:method:: __init__(self) -> None
+    
+    .. py:property:: dtype
+        :type: sgl.slangpy.NativeSlangType
+    
+    .. py:property:: element_layout
+        :type: sgl.TypeLayoutReflection
+    
+    .. py:property:: shape
+        :type: sgl.slangpy.Shape
+    
+    .. py:property:: strides
+        :type: sgl.slangpy.Shape
+    
+    .. py:property:: offset
+        :type: int
+    
+
+
+----
+
+.. py:class:: sgl.slangpy.NativeTensor
+
+    Base class: :py:class:`sgl.slangpy.NativeObject`
+    
+    .. py:method:: __init__(self, desc: sgl.slangpy.NativeTensorDesc, storage: sgl.Buffer, grad_in: sgl.slangpy.NativeTensor | None, grad_out: sgl.slangpy.NativeTensor | None) -> None
+    
+    .. py:property:: device
+        :type: sgl.Device
+    
+    .. py:property:: dtype
+        :type: sgl.slangpy.NativeSlangType
+    
+    .. py:property:: shape
+        :type: sgl.slangpy.Shape
+    
+    .. py:property:: strides
+        :type: sgl.slangpy.Shape
+    
+    .. py:property:: offset
+        :type: int
+    
+    .. py:property:: element_count
+        :type: int
+    
+    .. py:property:: usage
+        :type: sgl.BufferUsage
+    
+    .. py:property:: memory_type
+        :type: sgl.MemoryType
+    
+    .. py:property:: storage
+        :type: sgl.Buffer
+    
+    .. py:property:: grad_in
+        :type: sgl.slangpy.NativeTensor
+    
+    .. py:property:: grad_out
+        :type: sgl.slangpy.NativeTensor
+    
+    .. py:property:: grad
+        :type: sgl.slangpy.NativeTensor
+    
+    .. py:method:: broadcast_to(self, shape: sgl.slangpy.Shape) -> sgl.slangpy.NativeTensor
+    
+    .. py:method:: clear(self, cmd: sgl.CommandEncoder | None = None) -> None
+    
+    .. py:method:: with_grads(self, grad_in: sgl.slangpy.NativeTensor | None = None, grad_out: sgl.slangpy.NativeTensor | None = None, zero: bool = False) -> sgl.slangpy.NativeTensor
+    
+    .. py:method:: cursor(self, start: int | None = None, count: int | None = None) -> sgl.BufferCursor
+    
+    .. py:method:: uniforms(self) -> dict
+    
+    .. py:method:: to_numpy(self) -> numpy.ndarray[]
+    
+        N/A
+        
+
+
+----
+
+.. py:class:: sgl.slangpy.NativeTensorMarshall
+
+    Base class: :py:class:`sgl.slangpy.NativeMarshall`
+    
+    .. py:method:: __init__(self, dims: int, writable: bool, slang_type: sgl.slangpy.NativeSlangType, slang_element_type: sgl.slangpy.NativeSlangType, element_layout: sgl.TypeLayoutReflection, d_in: sgl.slangpy.NativeTensorMarshall | None, d_out: sgl.slangpy.NativeTensorMarshall | None) -> None
+    
+        N/A
+        
+    .. py:property:: dims
+        :type: int
+    
+    .. py:property:: writable
+        :type: bool
+    
+    .. py:property:: slang_element_type
+        :type: sgl.slangpy.NativeSlangType
+    
+    .. py:property:: d_in
+        :type: sgl.slangpy.NativeTensorMarshall
+    
+    .. py:property:: d_out
+        :type: sgl.slangpy.NativeTensorMarshall
+    
+
+
+----
+
+.. py:class:: sgl.slangpy.NativeValueMarshall
+
+    Base class: :py:class:`sgl.slangpy.NativeMarshall`
+    
+    .. py:method:: __init__(self) -> None
+    
+        N/A
+        
 
 
 ----

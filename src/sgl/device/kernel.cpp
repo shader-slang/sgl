@@ -39,34 +39,26 @@ ComputePipeline* ComputeKernel::pipeline() const
     return m_pipeline;
 }
 
-void ComputeKernel::dispatch(uint3 thread_count, BindVarsCallback bind_vars, ComputeCommandEncoder& encoder)
+void ComputeKernel::dispatch(uint3 thread_count, BindVarsCallback bind_vars, CommandEncoder* command_encoder)
 {
-    ref<ShaderObject> shader_object = encoder.bind_pipeline(pipeline());
-    if (bind_vars)
-        bind_vars(ShaderCursor(shader_object));
-
-    uint3 thread_group_count{
-        div_round_up(thread_count.x, m_thread_group_size.x),
-        div_round_up(thread_count.y, m_thread_group_size.y),
-        div_round_up(thread_count.z, m_thread_group_size.z)};
-    encoder.dispatch_thread_groups(thread_group_count);
-}
-
-void ComputeKernel::dispatch(uint3 thread_count, BindVarsCallback bind_vars, CommandBuffer* command_buffer)
-{
-    CommandBuffer* temp_command_buffer{nullptr};
-    if (command_buffer == nullptr) {
-        temp_command_buffer = m_device->_begin_shared_command_buffer();
-        command_buffer = temp_command_buffer;
+    ref<CommandEncoder> temp_command_encoder;
+    if (command_encoder == nullptr) {
+        temp_command_encoder = m_device->create_command_encoder();
+        command_encoder = temp_command_encoder;
     }
 
     {
-        auto encoder = command_buffer->encode_compute_commands();
-        dispatch(thread_count, bind_vars, encoder);
+        auto pass_encoder = command_encoder->begin_compute_pass();
+        ShaderObject* shader_object = pass_encoder->bind_pipeline(pipeline());
+        if (bind_vars)
+            bind_vars(ShaderCursor(shader_object));
+        pass_encoder->dispatch(thread_count);
+        pass_encoder->end();
     }
 
-    if (temp_command_buffer)
-        m_device->_end_shared_command_buffer(false);
+    if (temp_command_encoder) {
+        m_device->submit_command_buffer(temp_command_encoder->finish());
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -85,14 +77,6 @@ RayTracingPipeline* RayTracingKernel::pipeline() const
     return m_pipeline;
 }
 
-// void RayTracingKernel::dispatch(uint3 thread_count, BindVarsCallback bind_vars, RayTracingCommandEncoder* encoder)
-// {
-//     SGL_CHECK_NOT_NULL(encoder);
-
-//     ref<ShaderObject> shader_object = encoder->bind_pipeline(pipeline_state());
-//     encoder->dispatch_rays()
-// }
-
-// void RayTracingKernel::dispatch(uint3 thread_count, BindVarsCallback bind_vars, CommandBuffer* command_buffer) { }
+// void RayTracingKernel::dispatch(uint3 thread_count, BindVarsCallback bind_vars, CommandEncoder* command_encoder) { }
 
 } // namespace sgl

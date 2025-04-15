@@ -116,7 +116,7 @@ MODULE_SOURCE = """
         uniform int hello;
         [shader("compute")]
         [numthreads(1, 1, 1)]
-        void computeMain() {
+        void compute_main() {
         }
     """
 
@@ -178,7 +178,7 @@ def test_cursor_child_lifetime(test_id: str, device_type: sgl.DeviceType):
         module_name=f"module_from_source_{test_id}",
         source=MODULE_SOURCE,
     )
-    program = session.link_program([module], [module.entry_point("computeMain")])
+    program = session.link_program([module], [module.entry_point("compute_main")])
 
     # Get cursor for the program and go straight to its child field.
     cursor = sgl.ReflectionCursor(program).find_field("hello")
@@ -1174,9 +1174,9 @@ def test_hot_reload_invalid(test_id: str, device_type: sgl.DeviceType):
         module_name=f"module_from_source_{test_id}",
         source=MODULE_SOURCE,
     )
-    func = module.layout.find_function_by_name("computeMain")
+    func = module.layout.find_function_by_name("compute_main")
     assert func is not None
-    assert func.name == "computeMain"
+    assert func.name == "compute_main"
 
     device.reload_all_programs()
 

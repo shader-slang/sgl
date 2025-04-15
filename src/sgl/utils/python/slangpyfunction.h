@@ -94,7 +94,7 @@ public:
 
     nb::object call(NativeCallDataCache* cache, nb::args args, nb::kwargs kwargs);
 
-    void append_to(NativeCallDataCache* cache, CommandBuffer* command_buffer, nb::args args, nb::kwargs kwargs);
+    void append_to(NativeCallDataCache* cache, CommandEncoder* command_encoder, nb::args args, nb::kwargs kwargs);
 
     virtual ref<NativeCallData> generate_call_data(nb::args args, nb::kwargs kwargs)
     {

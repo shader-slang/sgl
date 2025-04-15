@@ -340,17 +340,17 @@ nb::object NativeCallData::call(ref<NativeCallRuntimeOptions> opts, nb::args arg
 
 nb::object NativeCallData::append_to(
     ref<NativeCallRuntimeOptions> opts,
-    CommandBuffer* command_buffer,
+    CommandEncoder* command_encoder,
     nb::args args,
     nb::kwargs kwargs
 )
 {
-    return exec(opts, command_buffer, args, kwargs);
+    return exec(opts, command_encoder, args, kwargs);
 }
 
 nb::object NativeCallData::exec(
     ref<NativeCallRuntimeOptions> opts,
-    CommandBuffer* command_buffer,
+    CommandEncoder* command_encoder,
     nb::args args,
     nb::kwargs kwargs
 )
@@ -367,7 +367,7 @@ nb::object NativeCallData::exec(
     auto context = make_ref<CallContext>(m_device, call_shape, m_call_mode);
 
     // Allocate return value if needed.
-    if (!command_buffer && m_call_mode == CallMode::prim) {
+    if (!command_encoder && m_call_mode == CallMode::prim) {
         ref<NativeBoundVariableRuntime> rv_node = m_runtime->find_kwarg("_result");
         if (rv_node && (!kwargs.contains("_result") || kwargs["_result"].is_none())) {
             nb::object output = rv_node->get_python_type()->create_output(context, rv_node.get());
@@ -421,10 +421,10 @@ nb::object NativeCallData::exec(
             }
         }
     };
-    m_kernel->dispatch(uint3(total_threads, 1, 1), bind_vars, command_buffer);
+    m_kernel->dispatch(uint3(total_threads, 1, 1), bind_vars, command_encoder);
 
     // If command_buffer is not null, return early.
-    if (command_buffer != nullptr) {
+    if (command_encoder != nullptr) {
         return nanobind::none();
     }
 
@@ -474,7 +474,7 @@ NativeCallDataCache::NativeCallDataCache()
             (int)tex->desc().type,
             (int)tex->desc().usage,
             (int)tex->desc().format,
-            (int)tex->array_size()
+            (int)tex->desc().array_length
         );
         builder->add(temp);
 

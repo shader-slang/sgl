@@ -14,6 +14,13 @@ ELEMENT_COUNT = 1024
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_cast_float16(device_type: sgl.DeviceType):
+    if device_type == sgl.DeviceType.metal:
+        pytest.skip("float16 cast not supported on Metal")
+    if device_type == sgl.DeviceType.cuda and (
+        sys.platform == "linux" or sys.platform == "linux2"
+    ):
+        pytest.skip("Slang fails to find cuda_fp16.h header")
+
     device = helpers.get_device(device_type)
 
     np.random.seed(123)
@@ -22,7 +29,7 @@ def test_cast_float16(device_type: sgl.DeviceType):
     ctx = helpers.dispatch_compute(
         device=device,
         path=Path(__file__).parent / "test_cast_float16.slang",
-        entry_point="main",
+        entry_point="compute_main",
         thread_count=[ELEMENT_COUNT, 1, 1],
         buffers={
             "data": {"data": data},
@@ -36,4 +43,4 @@ def test_cast_float16(device_type: sgl.DeviceType):
 
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+    pytest.main([__file__, "-vvvs"])

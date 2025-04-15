@@ -41,9 +41,7 @@ public:
 
     ComputePipeline* pipeline() const;
 
-    void dispatch(uint3 thread_count, BindVarsCallback bind_vars, ComputeCommandEncoder& encoder);
-
-    void dispatch(uint3 thread_count, BindVarsCallback bind_vars, CommandBuffer* command_buffer = nullptr);
+    void dispatch(uint3 thread_count, BindVarsCallback bind_vars, CommandEncoder* command_encoder = nullptr);
 
 private:
     uint3 m_thread_group_size;
@@ -58,9 +56,7 @@ public:
 
     RayTracingPipeline* pipeline() const;
 
-    void dispatch(uint3 thread_count, BindVarsCallback bind_vars, RayTracingCommandEncoder& encoder);
-
-    void dispatch(uint3 thread_count, BindVarsCallback bind_vars, CommandBuffer* command_buffer = nullptr);
+    void dispatch(uint3 thread_count, BindVarsCallback bind_vars, CommandEncoder* command_encoder = nullptr);
 
 private:
     mutable ref<RayTracingPipeline> m_pipeline;

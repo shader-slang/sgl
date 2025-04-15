@@ -7,7 +7,7 @@
 
 #include "sgl/device/fwd.h"
 #include "sgl/device/device.h"
-#include "sgl/device/swapchain.h"
+#include "sgl/device/surface.h"
 #include "sgl/ui/fwd.h"
 
 #include <vector>
@@ -59,7 +59,7 @@ struct AppWindowDesc {
     /// Whether the window is resizable.
     bool resizable{true};
     /// Format of the swapchain images.
-    Format swapchain_format{Format::bgra8_unorm_srgb};
+    Format surface_format{Format::undefined};
     /// Enable/disable vertical synchronization.
     bool enable_vsync{false};
 };
@@ -76,9 +76,8 @@ public:
     ui::Screen* screen() const;
 
     struct RenderContext {
-        Texture* swapchain_image;
-        Framebuffer* framebuffer;
-        CommandBuffer* command_buffer;
+        Texture* surface_texture;
+        CommandEncoder* command_encoder;
     };
 
     virtual void render(RenderContext render_context) { SGL_UNUSED(render_context); }
@@ -94,8 +93,6 @@ public:
     bool _should_close();
 
 private:
-    void create_framebuffers();
-
     void handle_resize(uint32_t width, uint32_t height);
     void handle_keyboard_event(const KeyboardEvent& event);
     void handle_mouse_event(const MouseEvent& event);
@@ -105,8 +102,7 @@ private:
     App* m_app;
     Device* m_device;
     ref<Window> m_window;
-    ref<Swapchain> m_swapchain;
-    std::vector<ref<Framebuffer>> m_framebuffers;
+    ref<Surface> m_surface;
     ref<ui::Context> m_ui_context;
 };
 

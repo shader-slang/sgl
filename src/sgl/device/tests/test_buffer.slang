@@ -8,7 +8,7 @@ struct rootAttribute { };
 [shader("compute")]
 [numthreads(32, 1, 1)]
 void copy_byte_address_buffer(
-    uint tid: SV_DispatchThreadID,
+    uint3 tid: SV_DispatchThreadID,
     ByteAddressBuffer src,
     RWByteAddressBuffer dst,
     uniform uint src_offset,
@@ -16,9 +16,10 @@ void copy_byte_address_buffer(
     uniform uint count
 )
 {
-    if (tid < count) {
-        uint value = src.Load((src_offset + tid) * 4);
-        dst.Store((dst_offset + tid) * 4, value);
+    uint i = tid.x;
+    if (i < count) {
+        uint value = src.Load((src_offset + i) * 4);
+        dst.Store((dst_offset + i) * 4, value);
     }
 }
 
@@ -27,7 +28,7 @@ void copy_byte_address_buffer(
 [shader("compute")]
 [numthreads(32, 1, 1)]
 void copy_buffer_uint(
-    uint tid: SV_DispatchThreadID,
+    uint3 tid: SV_DispatchThreadID,
     Buffer<uint> src,
     RWBuffer<uint> dst,
     uniform uint src_offset,
@@ -35,8 +36,9 @@ void copy_buffer_uint(
     uniform uint count
 )
 {
-    if (tid < count)
-        dst[dst_offset + tid] = src[src_offset + tid];
+    uint i = tid.x;
+    if (i < count)
+        dst[dst_offset + i] = src[src_offset + i];
 }
 
 // StructuredBuffer<uint>
@@ -44,7 +46,7 @@ void copy_buffer_uint(
 [shader("compute")]
 [numthreads(32, 1, 1)]
 void copy_structured_buffer_uint(
-    uint tid: SV_DispatchThreadID,
+    uint3 tid: SV_DispatchThreadID,
     StructuredBuffer<uint> src,
     RWStructuredBuffer<uint> dst,
     uniform uint src_offset,
@@ -52,6 +54,7 @@ void copy_structured_buffer_uint(
     uniform uint count
 )
 {
-    if (tid < count)
-        dst[dst_offset + tid] = src[src_offset + tid];
+    uint i = tid.x;
+    if (i < count)
+        dst[dst_offset + i] = src[src_offset + i];
 }

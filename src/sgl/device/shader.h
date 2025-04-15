@@ -476,7 +476,7 @@ struct ShaderProgramDesc {
 };
 struct ShaderProgramData : Object {
     Slang::ComPtr<slang::IComponentType> linked_program;
-    Slang::ComPtr<gfx::IShaderProgram> gfx_shader_program;
+    Slang::ComPtr<rhi::IShaderProgram> rhi_shader_program;
 };
 class SGL_API ShaderProgram : public DeviceResource {
     SGL_OBJECT(ShaderProgram)
@@ -499,7 +499,7 @@ public:
 
     ReflectionCursor reflection() const { return ReflectionCursor(this); }
 
-    gfx::IShaderProgram* gfx_shader_program() const { return m_data->gfx_shader_program; }
+    rhi::IShaderProgram* rhi_shader_program() const { return m_data->rhi_shader_program; }
 
     virtual std::string to_string() const override;
 

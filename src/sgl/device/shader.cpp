@@ -47,6 +47,17 @@ std::string TypeConformance::to_string() const
 /// Helper class for creating slang::CompilerOptionEntry entries.
 class CompilerOptionEntries {
 public:
+    void add(slang::CompilerOptionName name, int value)
+    {
+        m_entries.push_back({
+            .name = name,
+            .value = {
+                .kind = slang::CompilerOptionValueKind::Int,
+                .int0 = value,
+            },
+        });
+    }
+
     void add(slang::CompilerOptionName name, bool value)
     {
         m_entries.push_back({
@@ -292,9 +303,21 @@ void SlangSession::create_session(SlangSessionBuild& build)
             session_options.add(slang::CompilerOptionName::DownstreamArgs, "dxc", arg);
     }
 
+    // Set downstream argument for optix include path.
+    if (device_type == DeviceType::cuda) {
+        auto optix_path = platform::runtime_directory() / "optix";
+        session_options.add(slang::CompilerOptionName::DownstreamArgs, "nvrtc", "-I" + optix_path.string());
+    }
+
     // Set intermediate dump options.
     session_options.add(slang::CompilerOptionName::DumpIntermediates, options.dump_intermediates);
     session_options.add(slang::CompilerOptionName::DumpIntermediatePrefix, options.dump_intermediates_prefix);
+
+    // Add hlsl_nvapi capability.
+    session_options.add(
+        slang::CompilerOptionName::Capability,
+        int(m_device->global_session()->findCapability("hlsl_nvapi"))
+    );
 
     // TODO: We enable loop inversion as it was the default in older versions of Slang,
     //       and leads to artifacts in one project using sgl.
@@ -355,12 +378,16 @@ void SlangSession::create_session(SlangSessionBuild& build)
         target_desc.format = SLANG_METAL_LIB;
         target_define = "__TARGET_METAL__";
         break;
+    case DeviceType::wgpu:
+        target_desc.format = SLANG_WGSL;
+        target_define = "__TARGET_WGPU__";
+        break;
     case DeviceType::cpu:
         target_desc.format = SLANG_SHADER_HOST_CALLABLE;
         target_define = "__TARGET_CPU__";
         break;
     case DeviceType::cuda:
-        target_desc.format = SLANG_OBJECT_CODE;
+        target_desc.format = SLANG_PTX;
         target_define = "__TARGET_CUDA__";
         break;
     default:
@@ -1144,14 +1171,14 @@ void ShaderProgram::link(SlangSessionBuild& build_data) const
     }
 
     // Create shader program.
-    Slang::ComPtr<gfx::IShaderProgram> gfx_shader_program;
+    Slang::ComPtr<rhi::IShaderProgram> rhi_shader_program;
     {
-        gfx::IShaderProgram::Desc gfx_desc{
+        rhi::ShaderProgramDesc rhi_desc{
             .slangGlobalScope = linked_program,
         };
 
         Slang::ComPtr<ISlangBlob> diagnostics;
-        if (device->gfx_device()->createProgram(gfx_desc, gfx_shader_program.writeRef(), diagnostics.writeRef())
+        if (device->rhi_device()->createShaderProgram(rhi_desc, rhi_shader_program.writeRef(), diagnostics.writeRef())
             != SLANG_OK) {
             std::string msg = append_diagnostics("Failed to create shader program", diagnostics);
             SGL_THROW(msg);
@@ -1172,7 +1199,7 @@ void ShaderProgram::link(SlangSessionBuild& build_data) const
 
     // Store program info.
     data->linked_program = linked_program;
-    data->gfx_shader_program = gfx_shader_program;
+    data->rhi_shader_program = rhi_shader_program;
 
     // Store resulting program.
     build_data.programs[this] = std::move(data);

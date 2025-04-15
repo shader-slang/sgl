@@ -11,9 +11,13 @@ from pathlib import Path
 SHADER_DIR = Path(__file__).parent
 
 if sys.platform == "win32":
-    DEFAULT_DEVICE_TYPES = [sgl.DeviceType.d3d12, sgl.DeviceType.vulkan]
+    DEFAULT_DEVICE_TYPES = [
+        sgl.DeviceType.d3d12,
+        sgl.DeviceType.vulkan,
+        sgl.DeviceType.cuda,
+    ]
 elif sys.platform == "linux" or sys.platform == "linux2":
-    DEFAULT_DEVICE_TYPES = [sgl.DeviceType.vulkan]
+    DEFAULT_DEVICE_TYPES = [sgl.DeviceType.vulkan, sgl.DeviceType.cuda]
 elif sys.platform == "darwin":
     DEFAULT_DEVICE_TYPES = [sgl.DeviceType.metal]
 else:
@@ -91,6 +95,13 @@ def dispatch_compute(
     compiler_options: "sgl.SlangCompilerOptionsDict" = {},
     shader_model: sgl.ShaderModel = sgl.ShaderModel.sm_6_6,
 ) -> Context:
+    # TODO(slang-rhi): Metal and CUDA don't support shader models.
+    # we should move away from this concept and check features instead.
+    if (
+        device.info.type == sgl.DeviceType.metal
+        or device.info.type == sgl.DeviceType.cuda
+    ):
+        shader_model = sgl.ShaderModel.sm_6_0
     if shader_model > device.supported_shader_model:
         pytest.skip(f"Shader model {str(shader_model)} not supported")
 
@@ -115,8 +126,8 @@ def dispatch_compute(
             buffer = desc
         else:
             args: Any = {
-                "usage": sgl.ResourceUsage.shader_resource
-                | sgl.ResourceUsage.unordered_access,
+                "usage": sgl.BufferUsage.shader_resource
+                | sgl.BufferUsage.unordered_access,
             }
             if "size" in desc:
                 args["size"] = desc["size"]

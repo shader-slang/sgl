@@ -19,256 +19,40 @@
 
 namespace sgl {
 
-inline gfx::ResourceStateSet gfx_resource_usage_set_from_usage(ResourceUsage usage)
+// ----------------------------------------------------------------------------
+// Helpers
+// ----------------------------------------------------------------------------
+
+SubresourceLayout layout_from_rhilayout(const rhi::SubresourceLayout& rhi_layout)
 {
-    gfx::ResourceStateSet states(gfx::ResourceState::CopyDestination, gfx::ResourceState::CopySource);
-
-    if (is_set(usage, ResourceUsage::vertex)) {
-        states.add(gfx::ResourceState::VertexBuffer);
-        states.add(gfx::ResourceState::AccelerationStructureBuildInput);
-    }
-    if (is_set(usage, ResourceUsage::index)) {
-        states.add(gfx::ResourceState::IndexBuffer);
-        states.add(gfx::ResourceState::AccelerationStructureBuildInput);
-    }
-    if (is_set(usage, ResourceUsage::constant)) {
-        states.add(gfx::ResourceState::ConstantBuffer);
-    }
-    if (is_set(usage, ResourceUsage::stream_output)) {
-        states.add(gfx::ResourceState::StreamOutput);
-    }
-    if (is_set(usage, ResourceUsage::shader_resource)) {
-        states.add(gfx::ResourceState::ShaderResource);
-    }
-    if (is_set(usage, ResourceUsage::unordered_access)) {
-        states.add(gfx::ResourceState::UnorderedAccess);
-    }
-    if (is_set(usage, ResourceUsage::render_target)) {
-        states.add(gfx::ResourceState::RenderTarget);
-    }
-    if (is_set(usage, ResourceUsage::depth_stencil)) {
-        states.add(gfx::ResourceState::DepthWrite);
-    }
-    if (is_set(usage, ResourceUsage::indirect_arg)) {
-        states.add(gfx::ResourceState::IndirectArgument);
-    }
-    if (is_set(usage, ResourceUsage::acceleration_structure)) {
-        states.add(gfx::ResourceState::AccelerationStructure);
-        states.add(gfx::ResourceState::ShaderResource);
-        states.add(gfx::ResourceState::UnorderedAccess);
-    }
-
-    return states;
-}
-
-inline ResourceUsage get_required_resource_usage(ResourceViewType type)
-{
-    switch (type) {
-    case ResourceViewType::shader_resource:
-        return ResourceUsage::shader_resource;
-    case ResourceViewType::unordered_access:
-        return ResourceUsage::unordered_access;
-    case ResourceViewType::render_target:
-        return ResourceUsage::render_target;
-    case ResourceViewType::depth_stencil:
-        return ResourceUsage::depth_stencil;
-    default:
-        return ResourceUsage::none;
-    }
+    return {
+        .size = {rhi_layout.size.width, rhi_layout.size.height, rhi_layout.size.depth},
+        .col_pitch = rhi_layout.colPitch,
+        .row_pitch = rhi_layout.rowPitch,
+        .slice_pitch = rhi_layout.slicePitch,
+        .size_in_bytes = rhi_layout.sizeInBytes,
+        .block_width = rhi_layout.blockWidth,
+        .block_height = rhi_layout.blockHeight,
+        .row_count = rhi_layout.rowCount,
+    };
 }
 
 // ----------------------------------------------------------------------------
 // Resource
 // ----------------------------------------------------------------------------
 
-Resource::Resource(ref<Device> device, ResourceType type)
+Resource::Resource(ref<Device> device)
     : DeviceResource(std::move(device))
-    , m_type(type)
 {
 }
 
-Resource::~Resource()
-{
-    invalidate_views();
-}
-
-void Resource::invalidate_views()
-{
-    for (auto& [desc, view] : m_views)
-        view->invalidate(m_deferred_release);
-    m_views.clear();
-}
-
-const Buffer* Resource::as_buffer() const
-{
-    SGL_ASSERT(m_type == ResourceType::buffer);
-    return static_cast<const Buffer*>(this);
-}
-
-Buffer* Resource::as_buffer()
-{
-    SGL_ASSERT(m_type == ResourceType::buffer);
-    return static_cast<Buffer*>(this);
-}
-
-const Texture* Resource::as_texture() const
-{
-    SGL_ASSERT(m_type != ResourceType::buffer);
-    return static_cast<const Texture*>(this);
-}
-
-Texture* Resource::as_texture()
-{
-    SGL_ASSERT(m_type != ResourceType::buffer);
-    return static_cast<Texture*>(this);
-}
-
-SharedResourceHandle Resource::get_shared_handle() const
-{
-    gfx::InteropHandle handle = {};
-    SLANG_CALL(gfx_resource()->getSharedHandle(&handle));
-    return static_cast<SharedResourceHandle>(handle.handleValue);
-}
+Resource::~Resource() { }
 
 NativeHandle Resource::get_native_handle() const
 {
-    gfx::InteropHandle handle = {};
-    SLANG_CALL(gfx_resource()->getNativeResourceHandle(&handle));
-#if SGL_HAS_D3D12
-    if (m_device->type() == DeviceType::d3d12)
-        return NativeHandle(reinterpret_cast<ID3D12Resource*>(handle.handleValue));
-#endif
-#if SGL_HAS_VULKAN
-    if (m_device->type() == DeviceType::vulkan) {
-        if (m_type == ResourceType::buffer)
-            return NativeHandle(reinterpret_cast<VkBuffer>(handle.handleValue));
-        else
-            return NativeHandle(reinterpret_cast<VkImage>(handle.handleValue));
-    }
-#endif
-    return {};
-}
-
-// ----------------------------------------------------------------------------
-// ResourceView
-// ----------------------------------------------------------------------------
-
-ResourceView::ResourceView(const ResourceViewDesc& desc, Buffer* buffer)
-    : m_desc(desc)
-    , m_resource(buffer)
-{
-    SGL_ASSERT(buffer);
-
-    SGL_ASSERT(m_desc.type == ResourceViewType::shader_resource || m_desc.type == ResourceViewType::unordered_access);
-
-    gfx::IResourceView::Desc gfx_desc{
-        .type = static_cast<gfx::IResourceView::Type>(m_desc.type),
-        .format = static_cast<gfx::Format>(m_desc.format),
-        .bufferRange{
-            .offset = m_desc.buffer_range.offset,
-            .size = m_desc.buffer_range.size,
-        },
-    };
-    // TODO handle uav counter
-    SLANG_CALL(buffer->m_device->gfx_device()
-                   ->createBufferView(buffer->gfx_buffer_resource(), nullptr, gfx_desc, m_gfx_resource_view.writeRef())
-    );
-}
-
-ResourceView::ResourceView(const ResourceViewDesc& desc, Texture* texture)
-    : m_desc(desc)
-    , m_resource(texture)
-{
-    SGL_ASSERT(texture);
-
-    SGL_ASSERT(
-        m_desc.type == ResourceViewType::shader_resource || m_desc.type == ResourceViewType::unordered_access
-        || m_desc.type == ResourceViewType::render_target || m_desc.type == ResourceViewType::depth_stencil
-    );
-
-    // Check if view covers all subresources.
-    m_all_subresources = m_desc.subresource_range.mip_level == 0
-        && m_desc.subresource_range.mip_count == texture->mip_count() && m_desc.subresource_range.base_array_layer == 0
-        && m_desc.subresource_range.layer_count == texture->array_size();
-
-    gfx::IResourceView::Desc gfx_desc{
-        .type = static_cast<gfx::IResourceView::Type>(m_desc.type),
-        .format = static_cast<gfx::Format>(m_desc.format),
-        .renderTarget{
-            .shape = (m_desc.type == ResourceViewType::render_target || m_desc.type == ResourceViewType::depth_stencil)
-                ? static_cast<gfx::IResource::Type>(texture->type())
-                : gfx::IResource::Type::Unknown,
-        },
-        .subresourceRange{
-            .aspectMask = static_cast<gfx::TextureAspect>(m_desc.subresource_range.texture_aspect),
-            .mipLevel = static_cast<gfx::GfxIndex>(m_desc.subresource_range.mip_level),
-            .mipLevelCount = static_cast<gfx::GfxIndex>(m_desc.subresource_range.mip_count),
-            .baseArrayLayer = static_cast<gfx::GfxIndex>(m_desc.subresource_range.base_array_layer),
-            .layerCount = static_cast<gfx::GfxIndex>(m_desc.subresource_range.layer_count),
-        },
-    };
-    SLANG_CALL(texture->m_device->gfx_device()
-                   ->createTextureView(texture->gfx_texture_resource(), gfx_desc, m_gfx_resource_view.writeRef()));
-}
-
-ResourceView::~ResourceView()
-{
-    if (m_resource)
-        m_resource->device()->deferred_release(m_gfx_resource_view);
-}
-
-void ResourceView::invalidate(bool deferred_release)
-{
-    if (m_resource) {
-        if (deferred_release)
-            m_resource->device()->deferred_release(m_gfx_resource_view);
-        m_resource = nullptr;
-    }
-}
-
-NativeHandle ResourceView::get_native_handle() const
-{
-    if (!m_resource)
-        return {};
-    gfx::InteropHandle handle = {};
-    SLANG_CALL(m_gfx_resource_view->getNativeHandle(&handle));
-#if SGL_HAS_D3D12
-    if (m_resource->m_device->type() == DeviceType::d3d12)
-        return NativeHandle(D3D12_CPU_DESCRIPTOR_HANDLE{handle.handleValue});
-#endif
-#if SGL_HAS_VULKAN
-    if (m_resource->m_device->type() == DeviceType::vulkan) {
-        if (m_resource) {
-            if (m_resource->type() == ResourceType::buffer) {
-                if (m_desc.format == Format::unknown)
-                    return NativeHandle(reinterpret_cast<VkBuffer>(handle.handleValue));
-                else
-                    return NativeHandle(reinterpret_cast<VkBufferView>(handle.handleValue));
-            } else {
-                return NativeHandle(reinterpret_cast<VkImageView>(handle.handleValue));
-            }
-        }
-    }
-#endif
-    return {};
-}
-
-std::string ResourceView::to_string() const
-{
-    return fmt::format(
-        "ResourceView(\n"
-        "  type = {},\n"
-        "  format = {},\n"
-        "  buffer_range = {},\n"
-        "  subresource_range = {},\n"
-        "  resource = {}\n"
-        ")",
-        m_desc.type,
-        m_desc.format,
-        m_desc.buffer_range.to_string(),
-        m_desc.subresource_range.to_string(),
-        string::indent(m_resource ? m_resource->to_string() : "null")
-    );
+    rhi::NativeHandle rhi_handle = {};
+    SLANG_CALL(rhi_resource()->getNativeHandle(&rhi_handle));
+    return NativeHandle(rhi_handle);
 }
 
 // ----------------------------------------------------------------------------
@@ -276,7 +60,7 @@ std::string ResourceView::to_string() const
 // ----------------------------------------------------------------------------
 
 Buffer::Buffer(ref<Device> device, BufferDesc desc)
-    : Resource(std::move(device), ResourceType::buffer)
+    : Resource(std::move(device))
     , m_desc(std::move(desc))
 {
     SGL_CHECK(m_desc.size == 0 || m_desc.element_count == 0, "Only one of 'size' or 'element_count' must be set.");
@@ -319,32 +103,19 @@ Buffer::Buffer(ref<Device> device, BufferDesc desc)
         m_desc.size
     );
 
-    // Override initial state if not specified.
-    if (m_desc.initial_state == ResourceState::undefined) {
-        if (is_set(m_desc.usage, ResourceUsage::acceleration_structure)) {
-            m_desc.initial_state = ResourceState::acceleration_structure;
-            m_desc.usage |= ResourceUsage::unordered_access | ResourceUsage::shader_resource;
-        }
-    }
+    rhi::BufferDesc rhi_desc;
+    rhi_desc.size = static_cast<uint64_t>(m_desc.size);
+    rhi_desc.elementSize = static_cast<uint32_t>(m_desc.struct_size);
+    rhi_desc.format = static_cast<rhi::Format>(m_desc.format);
+    rhi_desc.memoryType = static_cast<rhi::MemoryType>(m_desc.memory_type);
+    rhi_desc.usage = static_cast<rhi::BufferUsage>(m_desc.usage);
+    rhi_desc.defaultState = static_cast<rhi::ResourceState>(m_desc.default_state);
+    rhi_desc.label = m_desc.label.empty() ? nullptr : m_desc.label.c_str();
 
-    m_state_tracker.set_global_state(m_desc.initial_state);
+    if (m_desc.memory_type == MemoryType::device_local)
+        rhi_desc.usage |= rhi::BufferUsage::CopySource | rhi::BufferUsage::CopyDestination;
 
-    gfx::IBufferResource::Desc gfx_desc{};
-    gfx_desc.type = gfx::IResource::Type::Buffer;
-    gfx_desc.defaultState = static_cast<gfx::ResourceState>(m_desc.initial_state);
-    gfx_desc.allowedStates = gfx_resource_usage_set_from_usage(m_desc.usage);
-    gfx_desc.memoryType = static_cast<gfx::MemoryType>(m_desc.memory_type);
-    // TODO(@skallweit): add support for existing handles
-    // gfx_desc.existingHandle =
-    gfx_desc.isShared = is_set(m_desc.usage, ResourceUsage::shared);
-    gfx_desc.sizeInBytes = static_cast<gfx::Size>(m_desc.size);
-    gfx_desc.elementSize = static_cast<gfx::Size>(m_desc.struct_size);
-    gfx_desc.format = static_cast<gfx::Format>(m_desc.format);
-
-    SLANG_CALL(m_device->gfx_device()->createBufferResource(gfx_desc, nullptr, m_gfx_buffer.writeRef()));
-
-    if (!m_desc.debug_name.empty())
-        m_gfx_buffer->setDebugName(m_desc.debug_name.c_str());
+    SLANG_CALL(m_device->rhi_device()->createBuffer(rhi_desc, nullptr, m_rhi_buffer.writeRef()));
 
     // Upload init data.
     if (m_desc.data)
@@ -358,26 +129,15 @@ Buffer::Buffer(ref<Device> device, BufferDesc desc)
 Buffer::~Buffer()
 {
     m_cuda_memory.reset();
-    m_device->deferred_release(m_gfx_buffer);
 }
 
 void* Buffer::map() const
 {
     SGL_ASSERT(m_desc.memory_type != MemoryType::device_local);
     SGL_ASSERT(m_mapped_ptr == nullptr);
-    SLANG_CALL(m_gfx_buffer->map(nullptr, &m_mapped_ptr));
-    return m_mapped_ptr;
-}
-
-void* Buffer::map(DeviceAddress offset, DeviceSize size) const
-{
-    SGL_ASSERT(m_desc.memory_type != MemoryType::device_local);
-    SGL_ASSERT(m_mapped_ptr == nullptr);
-    gfx::MemoryRange gfx_read_range{
-        .offset = offset,
-        .size = size,
-    };
-    SLANG_CALL(m_gfx_buffer->map(&gfx_read_range, &m_mapped_ptr));
+    rhi::CpuAccessMode mode
+        = m_desc.memory_type == MemoryType::upload ? rhi::CpuAccessMode::Write : rhi::CpuAccessMode::Read;
+    SLANG_CALL(m_device->rhi_device()->mapBuffer(m_rhi_buffer, mode, &m_mapped_ptr));
     return m_mapped_ptr;
 }
 
@@ -385,7 +145,7 @@ void Buffer::unmap() const
 {
     SGL_ASSERT(m_desc.memory_type != MemoryType::device_local);
     SGL_ASSERT(m_mapped_ptr != nullptr);
-    SLANG_CALL(m_gfx_buffer->unmap(nullptr));
+    SLANG_CALL(m_device->rhi_device()->unmapBuffer(m_rhi_buffer));
     m_mapped_ptr = nullptr;
 }
 
@@ -409,7 +169,7 @@ void Buffer::set_data(const void* data, size_t size, DeviceOffset offset)
 
     switch (m_desc.memory_type) {
     case MemoryType::device_local:
-        m_device->upload_buffer_data(this, data, size, offset);
+        m_device->upload_buffer_data(this, offset, size, data);
         break;
     case MemoryType::upload: {
         bool was_mapped = is_mapped();
@@ -452,50 +212,16 @@ void Buffer::get_data(void* data, size_t size, DeviceOffset offset)
     }
 }
 
-ref<ResourceView> Buffer::get_view(ResourceViewDesc desc)
+ref<BufferView> Buffer::create_view(BufferViewDesc desc)
 {
-    SGL_CHECK(
-        is_set(m_desc.usage, get_required_resource_usage(desc.type)),
-        "Buffer does not support view type {}",
-        desc.type
-    );
-    size_t size = this->size();
-    SGL_CHECK(desc.buffer_range.offset < size, "'offset' out of range");
-    SGL_CHECK(
-        (desc.buffer_range.size == BufferRange::ALL) || (desc.buffer_range.offset + desc.buffer_range.size <= size),
-        "'size' out of range"
-    );
-
-    if (desc.buffer_range.size == BufferRange::ALL) {
-        desc.buffer_range.size = size - desc.buffer_range.offset;
-    }
-
-    auto it = m_views.find(desc);
-    if (it != m_views.end())
-        return it->second;
-    auto view = make_ref<ResourceView>(desc, this);
-    m_views.emplace(desc, view);
-    return view;
+    return m_device->create_buffer_view(this, std::move(desc));
 }
 
-ref<ResourceView> Buffer::get_srv(BufferRange range)
+NativeHandle Buffer::get_shared_handle() const
 {
-    return get_view({
-        .type = ResourceViewType::shader_resource,
-        .format = m_desc.format,
-        .buffer_range = range,
-        .buffer_element_size = m_desc.struct_size,
-    });
-}
-
-ref<ResourceView> Buffer::get_uav(BufferRange range)
-{
-    return get_view({
-        .type = ResourceViewType::unordered_access,
-        .format = m_desc.format,
-        .buffer_range = range,
-        .buffer_element_size = m_desc.struct_size,
-    });
+    rhi::NativeHandle rhi_handle = {};
+    SLANG_CALL(m_rhi_buffer->getSharedHandle(&rhi_handle));
+    return NativeHandle(rhi_handle);
 }
 
 DeviceResource::MemoryUsage Buffer::memory_usage() const
@@ -514,7 +240,7 @@ std::string Buffer::to_string() const
         "  usage = {},\n"
         "  memory_type = {},\n"
         "  memory_usage = {},\n"
-        "  debug_name = {}\n"
+        "  label = {}\n"
         ")",
         m_device,
         m_desc.size,
@@ -523,7 +249,48 @@ std::string Buffer::to_string() const
         m_desc.usage,
         m_desc.memory_type,
         string::format_byte_size(memory_usage().device),
-        m_desc.debug_name
+        m_desc.label
+    );
+}
+
+// ----------------------------------------------------------------------------
+// BufferView
+// ----------------------------------------------------------------------------
+
+BufferView::BufferView(ref<Device> device, ref<Buffer> buffer, BufferViewDesc desc)
+    : DeviceResource(std::move(device))
+    , m_buffer(std::move(buffer))
+    , m_desc(std::move(desc))
+{
+    size_t size = m_buffer->size();
+    SGL_CHECK(m_desc.range.offset < size, "'offset' out of range");
+    SGL_CHECK(
+        m_desc.range.size == BufferRange::ALL || m_desc.range.offset + m_desc.range.size <= size,
+        "'size' out of range"
+    );
+}
+
+NativeHandle BufferView::get_native_handle() const
+{
+    // TODO
+    return {};
+}
+
+std::string BufferView::to_string() const
+{
+    return fmt::format(
+        "BufferView(\n"
+        "  device = {},\n"
+        "  buffer = {},\n"
+        "  format = {},\n"
+        "  range = {},\n"
+        "  label = {}\n"
+        ")",
+        m_device,
+        string::indent(m_buffer->to_string()),
+        m_desc.format,
+        m_desc.range.to_string(),
+        m_desc.label
     );
 }
 
@@ -533,318 +300,203 @@ std::string Buffer::to_string() const
 
 inline void process_texture_desc(TextureDesc& desc)
 {
-    SGL_CHECK(desc.type != ResourceType::buffer, "Invalid resource type.");
-    SGL_CHECK(desc.format != Format::unknown, "Invalid texture format.");
+    SGL_CHECK(desc.format != Format::undefined, "Invalid texture format.");
 
-    // Try to infer texture type from dimensions.
-    if (desc.type == ResourceType::unknown) {
-        if (desc.width > 0 && desc.height == 0 && desc.depth == 0) {
-            desc.type = ResourceType::texture_1d;
-        } else if (desc.width > 0 && desc.height > 0 && desc.depth == 0) {
-            desc.type = ResourceType::texture_2d;
-        } else if (desc.width > 0 && desc.height > 0 && desc.depth > 0) {
-            desc.type = ResourceType::texture_3d;
-        } else {
-            SGL_THROW("Failed to infer texture type from dimensions.");
-        }
+    switch (desc.type) {
+    case TextureType::texture_1d:
+    case TextureType::texture_1d_array:
+        SGL_CHECK(
+            desc.width > 0 && desc.height == 1 && desc.depth == 1,
+            "Invalid dimensions (width={}, height={}, depth={}) for 1D texture.",
+            desc.width,
+            desc.height,
+            desc.depth
+        );
+        break;
+    case TextureType::texture_2d:
+    case TextureType::texture_2d_array:
+    case TextureType::texture_2d_ms:
+    case TextureType::texture_2d_ms_array:
+        SGL_CHECK(
+            desc.width > 0 && desc.height > 0 && desc.depth == 1,
+            "Invalid dimensions (width={}, height={}, depth={}) for 2D texture.",
+            desc.width,
+            desc.height,
+            desc.depth
+        );
+        break;
+    case TextureType::texture_3d:
+        SGL_CHECK(
+            desc.width > 0 && desc.height > 0 && desc.depth > 0,
+            "Invalid dimensions (width={}, height={}, depth={}) for 3D texture.",
+            desc.width,
+            desc.height,
+            desc.depth
+        );
+        break;
+    case TextureType::texture_cube:
+    case TextureType::texture_cube_array:
+        SGL_CHECK(
+            desc.width > 0 && desc.height > 0 && desc.depth == 1,
+            "Invalid dimensions (width={}, height={}, depth={}) for cube texture.",
+            desc.width,
+            desc.height,
+            desc.depth
+        );
+        break;
+    }
+
+    switch (desc.type) {
+    case TextureType::texture_1d:
+    case TextureType::texture_2d:
+    case TextureType::texture_2d_ms:
+    case TextureType::texture_3d:
+    case TextureType::texture_cube:
+        SGL_CHECK(desc.array_length == 1, "Invalid array length ({}) for non-array texture.", desc.array_length);
+        break;
+    case TextureType::texture_1d_array:
+    case TextureType::texture_2d_array:
+    case TextureType::texture_2d_ms_array:
+    case TextureType::texture_cube_array:
+        SGL_CHECK(desc.array_length >= 1, "Invalid array length ({}) for array texture.", desc.array_length);
+        break;
+    }
+
+    if (desc.type == TextureType::texture_2d_ms || desc.type == TextureType::texture_2d_ms_array) {
+        SGL_CHECK(desc.sample_count >= 1, "Invalid sample count ({}) for multisampled texture.", desc.sample_count);
     } else {
-        switch (desc.type) {
-        case ResourceType::unknown:
-        case ResourceType::buffer:
-            SGL_THROW("Invalid texture type.");
-            break;
-        case ResourceType::texture_1d:
-            SGL_CHECK(
-                desc.width > 0 && desc.height <= 1 && desc.depth <= 1,
-                "Invalid dimensions (width={}, height={}, depth={}) for 1D texture.",
-                desc.width,
-                desc.height,
-                desc.depth
-            );
-            break;
-        case ResourceType::texture_2d:
-            SGL_CHECK(
-                desc.width > 0 && desc.height > 0 && desc.depth <= 1,
-                "Invalid dimensions (width={}, height={}, depth={}) for 2D texture.",
-                desc.width,
-                desc.height,
-                desc.depth
-            );
-            break;
-        case ResourceType::texture_3d:
-            SGL_CHECK(
-                desc.width > 0 && desc.height > 0 && desc.depth > 0,
-                "Invalid dimensions (width={}, height={}, depth={}) for 3D texture.",
-                desc.width,
-                desc.height,
-                desc.depth
-            );
-            break;
-        case ResourceType::texture_cube:
-            SGL_CHECK(
-                desc.width > 0 && desc.height > 0 && desc.depth <= 1,
-                "Invalid dimensions (width={}, height={}, depth={}) for cube texture.",
-                desc.width,
-                desc.height,
-                desc.depth
-            );
-            break;
-        }
+        SGL_CHECK(desc.sample_count == 1, "Invalid sample count ({}) for non-multisampled texture.", desc.sample_count);
     }
 
-    desc.width = std::max(desc.width, 1u);
-    desc.height = std::max(desc.height, 1u);
-    desc.depth = std::max(desc.depth, 1u);
-
-    if (desc.mip_count == 0) {
-#if SGL_MACOS
-        // On macOS, mipmap is not supported for 1D textures.
-        if (desc.type == ResourceType::texture_1d) {
-            desc.mip_count = 1;
-        } else
-#endif
-        {
-            desc.mip_count = stdx::bit_width(std::max({desc.width, desc.height, desc.depth}));
-        }
-    }
-    SGL_CHECK(desc.array_size >= 1, "Invalid array size.");
-    SGL_CHECK(desc.sample_count >= 1, "Invalid sample count.");
+    if (desc.mip_count == ALL_MIPS)
+        desc.mip_count = stdx::bit_width(std::max({desc.width, desc.height, desc.depth}));
 }
 
 Texture::Texture(ref<Device> device, TextureDesc desc)
-    : Resource(std::move(device), desc.type)
+    : Resource(std::move(device))
     , m_desc(std::move(desc))
 {
     process_texture_desc(m_desc);
-    m_type = m_desc.type;
 
-    m_state_tracker.set_global_state(m_desc.initial_state);
+    rhi::TextureDesc rhi_desc;
+    rhi_desc.type = static_cast<rhi::TextureType>(m_desc.type);
+    rhi_desc.memoryType = static_cast<rhi::MemoryType>(m_desc.memory_type);
+    rhi_desc.usage = static_cast<rhi::TextureUsage>(m_desc.usage);
+    rhi_desc.defaultState = static_cast<rhi::ResourceState>(m_desc.default_state);
+    rhi_desc.size.width = static_cast<rhi::Size>(m_desc.width);
+    rhi_desc.size.height = static_cast<rhi::Size>(m_desc.height);
+    rhi_desc.size.depth = static_cast<rhi::Size>(m_desc.depth);
+    rhi_desc.arrayLength = m_desc.array_length;
+    rhi_desc.mipLevelCount = m_desc.mip_count;
+    rhi_desc.format = static_cast<rhi::Format>(m_desc.format);
+    rhi_desc.sampleCount = m_desc.sample_count;
+    rhi_desc.sampleQuality = m_desc.sample_quality;
+    rhi_desc.optimalClearValue = nullptr; // TODO(slang-rhi)
+    rhi_desc.label = m_desc.label.empty() ? nullptr : m_desc.label.c_str();
 
-    // Check if format supports requested resource states.
-    gfx::ResourceStateSet gfx_allowed_states = gfx_resource_usage_set_from_usage(m_desc.usage);
-    gfx::ResourceStateSet gfx_supported_states;
-    SLANG_CALL(m_device->gfx_device()
-                   ->getFormatSupportedResourceStates(static_cast<gfx::Format>(m_desc.format), &gfx_supported_states));
-    // TODO remove this workaround when D3D12 reports CopySource and CopyDestination states for formats
-    gfx_supported_states.add(gfx::ResourceState::CopySource);
-    gfx_supported_states.add(gfx::ResourceState::CopyDestination);
-    static_vector<ResourceState, size_t(gfx::ResourceState::_Count)> unsupported_states;
-    for (uint32_t i = 0; i < uint32_t(gfx::ResourceState::_Count); ++i)
-        if (gfx_allowed_states.contains(gfx::ResourceState(i)) && !gfx_supported_states.contains(gfx::ResourceState(i)))
-            unsupported_states.push_back(ResourceState(i));
-    if (!unsupported_states.empty()) {
-        SGL_THROW(
-            "Format {} does not support requested resource states: {}",
-            m_desc.format,
-            fmt::join(unsupported_states, ", ")
-        );
-    }
-    gfx::ITextureResource::Desc gfx_desc{};
-    gfx_desc.type = static_cast<gfx::IResource::Type>(m_desc.type);
-    gfx_desc.defaultState = static_cast<gfx::ResourceState>(m_desc.initial_state);
-    gfx_desc.allowedStates = gfx_allowed_states;
-    gfx_desc.memoryType = static_cast<gfx::MemoryType>(m_desc.memory_type);
-    // TODO(@skallweit): add support for existing handles
-    // gfx_desc.existingHandle =
-    gfx_desc.isShared = is_set(m_desc.usage, ResourceUsage::shared);
-    gfx_desc.size.width = static_cast<gfx::Size>(m_desc.width);
-    gfx_desc.size.height = static_cast<gfx::Size>(m_desc.height);
-    gfx_desc.size.depth = static_cast<gfx::Size>(m_desc.depth);
-    gfx_desc.numMipLevels = static_cast<gfx::Size>(m_desc.mip_count);
-    // slang-gfx uses 0 for non-array texture
-    gfx_desc.arraySize = static_cast<gfx::Size>((m_desc.array_size == 1) ? 0 : m_desc.array_size);
-    gfx_desc.format = static_cast<gfx::Format>(m_desc.format);
-    gfx_desc.sampleDesc.numSamples = static_cast<gfx::GfxCount>(m_desc.sample_count);
-    gfx_desc.sampleDesc.quality = m_desc.quality;
+    if (m_desc.memory_type == MemoryType::device_local)
+        rhi_desc.usage |= rhi::TextureUsage::CopySource | rhi::TextureUsage::CopyDestination;
 
-    SLANG_CALL(m_device->gfx_device()->createTextureResource(gfx_desc, nullptr, m_gfx_texture.writeRef()));
-
-    if (!m_desc.debug_name.empty())
-        m_gfx_texture->setDebugName(m_desc.debug_name.c_str());
+    SLANG_CALL(m_device->rhi_device()->createTexture(rhi_desc, nullptr, m_rhi_texture.writeRef()));
 
     // Upload init data.
-    if (m_desc.data) {
-        uint32_t subresource = 0;
-        const uint8_t* data = reinterpret_cast<const uint8_t*>(m_desc.data);
-        size_t data_size = m_desc.data_size;
-        while (true) {
-            SubresourceLayout subresource_layout = get_subresource_layout(subresource);
-            size_t subresource_size = subresource_layout.total_size();
-            if (data_size < subresource_size)
-                break;
-            SubresourceData subresource_data{
-                .data = data,
-                .size = subresource_size,
-                .row_pitch = subresource_layout.row_pitch,
-                .slice_pitch = subresource_layout.row_count * subresource_layout.row_pitch,
-            };
-            set_subresource_data(subresource, subresource_data);
-            data += subresource_size;
-            data_size -= subresource_size;
+    if (!m_desc.data.empty()) {
+        for (uint32_t subresource = 0; subresource < m_desc.data.size(); ++subresource) {
+            uint32_t layer = subresource / m_desc.mip_count;
+            uint32_t mip = subresource % m_desc.mip_count;
+
+            SubresourceData subresource_data = m_desc.data[subresource];
+            if (subresource_data.row_pitch == 0 && subresource_data.slice_pitch == 0 && subresource_data.size == 0) {
+                SubresourceLayout subresource_layout = get_subresource_layout(0, 1);
+                subresource_data.row_pitch = subresource_layout.row_pitch;
+                subresource_data.slice_pitch = subresource_layout.slice_pitch;
+                subresource_data.size = subresource_layout.size_in_bytes;
+            }
+            SGL_CHECK(subresource_data.row_pitch > 0, "Invalid row pitch.");
+            SGL_CHECK(subresource_data.slice_pitch > 0, "Invalid slice pitch.");
+            SGL_CHECK(subresource_data.size > 0, "Invalid size.");
+
+            set_subresource_data(layer, mip, m_desc.data[subresource]);
         }
         if (m_desc.mip_count > 1) {
             // TODO generate mip maps
         }
     }
 
-    // Clear initial data fields in desc.
-    m_desc.data = nullptr;
-    m_desc.data_size = 0;
+    // Clear initial data field in desc.
+    m_desc.data = {};
 }
 
-Texture::Texture(ref<Device> device, TextureDesc desc, gfx::ITextureResource* resource, bool deferred_release)
-    : Resource(std::move(device), ResourceType(desc.type))
+Texture::Texture(ref<Device> device, TextureDesc desc, rhi::ITexture* resource)
+    : Resource(std::move(device))
     , m_desc(std::move(desc))
 {
     process_texture_desc(m_desc);
 
-    m_gfx_texture = resource;
-    m_deferred_release = deferred_release;
+    m_rhi_texture = resource;
 }
 
-Texture::~Texture()
+Texture::~Texture() { }
+
+SubresourceLayout Texture::get_subresource_layout(uint32_t mip, uint32_t row_alignment) const
 {
-    if (m_deferred_release)
-        m_device->deferred_release(m_gfx_texture);
+    SGL_CHECK_LT(mip, mip_count());
+
+    rhi::SubresourceLayout rhi_layout;
+    SLANG_CALL(m_rhi_texture->getSubresourceLayout(mip, row_alignment, &rhi_layout));
+
+    return layout_from_rhilayout(rhi_layout);
 }
 
-SubresourceLayout Texture::get_subresource_layout(uint32_t subresource) const
+void Texture::set_subresource_data(uint32_t layer, uint32_t mip, SubresourceData subresource_data)
 {
-    SGL_CHECK_LT(subresource, subresource_count());
+    SGL_CHECK_LT(layer, layer_count());
+    SGL_CHECK_LT(mip, mip_count());
 
-    gfx::FormatInfo gfx_format_info;
-    SLANG_CALL(gfx::gfxGetFormatInfo(gfx_texture_resource()->getDesc()->format, &gfx_format_info));
-    size_t alignment;
-
-#if SGL_MACOS
-    // On macOS, getTextureRowAlignment is not a right interface to get the alignment, because MacOS does not
-    // have a unify alignment for all formats, we have to provide the format to get the alignment. However,
-    // getTextureRowAlignment does not take format as an argument, so we have to use getTextureAllocationInfo
-    // to get the alignment.
-    size_t size;
-    SLANG_CALL(m_device->gfx_device()->getTextureAllocationInfo(*m_gfx_texture->getDesc(), &size, &alignment));
-#else
-    SLANG_CALL(m_device->gfx_device()->getTextureRowAlignment(&alignment));
-#endif
-
-    uint32_t mip_level = get_subresource_mip_level(subresource);
-    uint3 mip_dimensions = get_mip_dimensions(mip_level);
-
-    SubresourceLayout layout;
-    layout.row_pitch
-        = div_round_up(mip_dimensions.x, uint32_t(gfx_format_info.blockWidth)) * gfx_format_info.blockSizeInBytes;
-    layout.row_pitch_aligned = align_to(alignment, layout.row_pitch);
-    layout.row_count = div_round_up(mip_dimensions.y, uint32_t(gfx_format_info.blockHeight));
-    layout.depth = mip_dimensions.z;
-    return layout;
+    m_device->upload_texture_data(this, layer, mip, subresource_data);
 }
 
-void Texture::set_subresource_data(uint32_t subresource, SubresourceData subresource_data)
+OwnedSubresourceData Texture::get_subresource_data(uint32_t layer, uint32_t mip) const
 {
-    SGL_CHECK_LT(subresource, subresource_count());
+    SGL_CHECK_LT(layer, layer_count());
+    SGL_CHECK_LT(mip, mip_count());
 
-    m_device->upload_texture_data(this, subresource, subresource_data);
+    return m_device->read_texture_data(this, layer, mip);
 }
 
-OwnedSubresourceData Texture::get_subresource_data(uint32_t subresource) const
+ref<TextureView> Texture::create_view(TextureViewDesc desc)
 {
-    SGL_CHECK_LT(subresource, subresource_count());
-
-    return m_device->read_texture_data(this, subresource);
+    return m_device->create_texture_view(this, std::move(desc));
 }
 
-ref<ResourceView> Texture::get_view(ResourceViewDesc desc)
+NativeHandle Texture::get_shared_handle() const
 {
-    SGL_CHECK(
-        is_set(m_desc.usage, get_required_resource_usage(desc.type)),
-        "Texture does not support view type {}",
-        desc.type
-    );
-    uint32_t mip_count = this->mip_count();
-    SGL_CHECK(desc.subresource_range.mip_level < mip_count, "'mip_level' out of range");
-    SGL_CHECK(
-        desc.subresource_range.mip_count == SubresourceRange::ALL
-            || desc.subresource_range.mip_level + desc.subresource_range.mip_count <= mip_count,
-        "'mip_count' out of range"
-    );
-    if (desc.subresource_range.mip_count == SubresourceRange::ALL) {
-        desc.subresource_range.mip_count = mip_count - desc.subresource_range.mip_level;
-    }
-    uint32_t array_size = this->array_size();
-    SGL_CHECK(desc.subresource_range.base_array_layer < array_size, "'base_array_layer' out of range");
-    SGL_CHECK(
-        (desc.subresource_range.layer_count == SubresourceRange::ALL)
-            || (desc.subresource_range.base_array_layer + desc.subresource_range.layer_count <= array_size),
-        "'layer_count' out of range"
-    );
-    if (desc.subresource_range.layer_count == SubresourceRange::ALL) {
-        desc.subresource_range.layer_count = array_size - desc.subresource_range.base_array_layer;
-    }
-
-    auto it = m_views.find(desc);
-    if (it != m_views.end())
-        return it->second;
-    auto view = make_ref<ResourceView>(desc, this);
-    m_views.emplace(desc, view);
-    return view;
-}
-
-ref<ResourceView> Texture::get_srv(SubresourceRange range)
-{
-    return get_view({
-        .type = ResourceViewType::shader_resource,
-        .format = m_desc.format,
-        .subresource_range = range,
-    });
-}
-
-ref<ResourceView> Texture::get_uav(SubresourceRange range)
-{
-    return get_view({
-        .type = ResourceViewType::unordered_access,
-        .format = m_desc.format,
-        .subresource_range = range,
-    });
-}
-
-ref<ResourceView> Texture::get_dsv(SubresourceRange range)
-{
-    return get_view({
-        .type = ResourceViewType::depth_stencil,
-        .format = m_desc.format,
-        .subresource_range = range,
-    });
-}
-
-ref<ResourceView> Texture::get_rtv(SubresourceRange range)
-{
-    return get_view({
-        .type = ResourceViewType::render_target,
-        .format = m_desc.format,
-        .subresource_range = range,
-    });
+    rhi::NativeHandle rhi_handle = {};
+    SLANG_CALL(m_rhi_texture->getSharedHandle(&rhi_handle));
+    return NativeHandle(rhi_handle);
 }
 
 DeviceResource::MemoryUsage Texture::memory_usage() const
 {
-    gfx::Size size = 0, alignment = 0;
-    SLANG_CALL(m_device->gfx_device()->getTextureAllocationInfo(*m_gfx_texture->getDesc(), &size, &alignment));
+    rhi::Size size = 0, alignment = 0;
+    SLANG_CALL(m_device->rhi_device()->getTextureAllocationInfo(m_rhi_texture->getDesc(), &size, &alignment));
     return {.device = size};
 }
 
-ref<Bitmap> Texture::to_bitmap(uint32_t mip_level, uint32_t array_slice) const
+ref<Bitmap> Texture::to_bitmap(uint32_t layer, uint32_t mip) const
 {
-    SGL_CHECK_LT(mip_level, mip_count());
-    SGL_CHECK_LT(array_slice, array_size());
-    SGL_CHECK(m_desc.type == ResourceType::texture_2d, "Cannot convert non-2D texture to bitmap.");
+    SGL_CHECK_LT(layer, layer_count());
+    SGL_CHECK_LT(mip, mip_count());
+    SGL_CHECK(
+        m_desc.type == TextureType::texture_2d || m_desc.type == TextureType::texture_2d_array,
+        "Cannot convert non-2D texture to bitmap."
+    );
 
     const FormatInfo& info = get_format_info(m_desc.format);
     if (info.is_compressed)
         SGL_THROW("Cannot convert compressed texture to bitmap.");
     if (info.is_depth_stencil())
         SGL_THROW("Cannot convert depth/stencil texture to bitmap.");
-    if (info.is_typeless_format())
-        SGL_THROW("Cannot convert typeless texture to bitmap.");
     if (!info.has_equal_channel_bits())
         SGL_THROW("Cannot convert texture with unequal channel bits to bitmap.");
     uint32_t channel_bit_count = info.channel_bit_count[0];
@@ -915,11 +567,10 @@ ref<Bitmap> Texture::to_bitmap(uint32_t mip_level, uint32_t array_slice) const
         SGL_THROW("Unsupported channel bits.");
     Bitmap::ComponentType component_type = it2->second;
 
-    uint32_t subresource = get_subresource_index(mip_level, array_slice);
-    OwnedSubresourceData subresource_data = get_subresource_data(subresource);
+    OwnedSubresourceData subresource_data = get_subresource_data(layer, mip);
 
-    uint32_t width = get_mip_width(mip_level);
-    uint32_t height = get_mip_height(mip_level);
+    uint32_t width = get_mip_width(mip);
+    uint32_t height = get_mip_height(mip);
 
     ref<Bitmap> bitmap = ref<Bitmap>(new Bitmap(pixel_format, component_type, width, height));
     bitmap->set_srgb_gamma(info.is_srgb_format());
@@ -941,13 +592,13 @@ std::string Texture::to_string() const
         "  height = {},\n"
         "  depth = {},\n"
         "  mip_count = {},\n"
-        "  array_size = {},\n"
+        "  array_length = {},\n"
         "  sample_count = {},\n"
         "  format = {},\n"
         "  usage = {},\n"
         "  memory_type = {},\n"
         "  size = {},\n"
-        "  debug_name = {}\n"
+        "  label = {}\n"
         ")",
         m_device,
         m_desc.type,
@@ -955,13 +606,90 @@ std::string Texture::to_string() const
         m_desc.height,
         m_desc.depth,
         m_desc.mip_count,
-        m_desc.array_size,
+        m_desc.array_length,
         m_desc.sample_count,
         m_desc.format,
         m_desc.usage,
         m_desc.memory_type,
         string::format_byte_size(memory_usage().device),
-        m_desc.debug_name
+        m_desc.label
+    );
+}
+
+// ----------------------------------------------------------------------------
+// TextureView
+// ----------------------------------------------------------------------------
+
+TextureView::TextureView(ref<Device> device, ref<Texture> texture, TextureViewDesc desc)
+    : DeviceResource(std::move(device))
+    , m_texture(std::move(texture))
+    , m_desc(std::move(desc))
+{
+    if (m_desc.format == Format::undefined)
+        m_desc.format = m_texture->format();
+
+    uint32_t layer_count = m_texture->layer_count();
+    SGL_CHECK(m_desc.subresource_range.layer < layer_count, "'layer' out of range");
+    SGL_CHECK(
+        (m_desc.subresource_range.layer_count == ALL_LAYERS)
+            || (m_desc.subresource_range.layer + m_desc.subresource_range.layer_count <= layer_count),
+        "'layer_count' out of range"
+    );
+    if (m_desc.subresource_range.layer_count == ALL_LAYERS) {
+        m_desc.subresource_range.layer_count = layer_count - m_desc.subresource_range.layer;
+    }
+
+    uint32_t mip_count = m_texture->mip_count();
+    SGL_CHECK(m_desc.subresource_range.mip < mip_count, "'mip' out of range");
+    SGL_CHECK(
+        m_desc.subresource_range.mip_count == ALL_MIPS
+            || m_desc.subresource_range.mip + m_desc.subresource_range.mip_count <= mip_count,
+        "'mip_count' out of range"
+    );
+    if (m_desc.subresource_range.mip_count == ALL_MIPS) {
+        m_desc.subresource_range.mip_count = mip_count - m_desc.subresource_range.mip;
+    }
+
+    rhi::TextureViewDesc rhi_desc{
+        .format = static_cast<rhi::Format>(m_desc.format),
+        .aspect = static_cast<rhi::TextureAspect>(m_desc.aspect),
+        .subresourceRange{
+            .layer = m_desc.subresource_range.layer,
+            .layerCount = m_desc.subresource_range.layer_count,
+            .mipLevel = m_desc.subresource_range.mip,
+            .mipLevelCount = m_desc.subresource_range.mip_count,
+        },
+        .label = m_desc.label.empty() ? nullptr : m_desc.label.c_str(),
+    };
+    SLANG_CALL(
+        m_device->rhi_device()->createTextureView(m_texture->rhi_texture(), rhi_desc, m_rhi_texture_view.writeRef())
+    );
+}
+
+NativeHandle TextureView::get_native_handle() const
+{
+    rhi::NativeHandle rhi_handle = {};
+    SLANG_CALL(m_rhi_texture_view->getNativeHandle(&rhi_handle));
+    return NativeHandle(rhi_handle);
+}
+
+std::string TextureView::to_string() const
+{
+    return fmt::format(
+        "TextureView(\n"
+        "  device = {},\n"
+        "  texture = {},\n"
+        "  format = {},\n"
+        "  aspect = {},\n"
+        "  subresource_range = {},\n"
+        "  label = {}\n"
+        ")",
+        m_device,
+        string::indent(m_texture->to_string()),
+        m_desc.format,
+        m_desc.aspect,
+        m_desc.subresource_range.to_string(),
+        m_desc.label
     );
 }
 

@@ -3,7 +3,6 @@
 #include "app.h"
 
 #include "sgl/device/command.h"
-#include "sgl/device/framebuffer.h"
 #include "sgl/ui/ui.h"
 
 namespace sgl {
@@ -78,17 +77,14 @@ AppWindow::AppWindow(AppWindowDesc desc)
         .mode = desc.mode,
         .resizable = desc.resizable,
     });
-    m_swapchain = m_device->create_swapchain(
-        {
-            .format = desc.swapchain_format,
-            .width = desc.width,
-            .height = desc.height,
-            .enable_vsync = desc.enable_vsync,
-        },
-        m_window
-    );
-
-    create_framebuffers();
+    m_surface = m_device->create_surface(m_window);
+    m_surface->configure({
+        .format = desc.surface_format,
+        .usage = TextureUsage::render_target | TextureUsage::present,
+        .width = desc.width,
+        .height = desc.height,
+        .vsync = desc.enable_vsync,
+    });
 
     m_ui_context = make_ref<ui::Context>(ref(m_device));
 
@@ -124,34 +120,33 @@ void AppWindow::_run_frame()
     m_window->process_events();
     m_ui_context->process_events();
 
-    int image_index = m_swapchain->acquire_next_image();
-    if (image_index < 0)
+    ref<Texture> texture = m_surface->acquire_next_image();
+    if (!texture)
         return;
 
-    ref<Texture> image = m_swapchain->get_image(image_index);
-    ref<Framebuffer> framebuffer = m_framebuffers[image_index];
+    ref<CommandEncoder> command_encoder = m_device->create_command_encoder();
 
-    ref<CommandBuffer> command_buffer = m_device->create_command_buffer();
-
-    command_buffer->clear_texture(image, float4{0.f, 0.f, 0.f, 1.f});
+    if (get_format_info(texture->format()).is_float_format())
+        command_encoder->clear_texture_float(texture, {}, float4{0.f, 0.f, 0.f, 1.f});
+    else
+        command_encoder->clear_texture_uint(texture, {}, uint4{0, 0, 0, 255});
 
     struct RenderContext render_context {
-        .swapchain_image = image, .framebuffer = framebuffer, .command_buffer = command_buffer,
+        .surface_texture = texture, .command_encoder = command_encoder,
     };
 
     render(render_context);
 
-    m_ui_context->new_frame(image->width(), image->height());
+    m_ui_context->new_frame(texture->width(), texture->height());
 
     render_ui();
 
-    m_ui_context->render(framebuffer, command_buffer);
+    m_ui_context->render(texture, command_encoder);
 
-    command_buffer->set_texture_state(image, ResourceState::present);
-    command_buffer->submit();
+    m_device->submit_command_buffer(command_encoder->finish());
 
-    image.reset();
-    m_swapchain->present();
+    texture.reset();
+    m_surface->present();
 }
 
 bool AppWindow::_should_close()
@@ -159,20 +154,13 @@ bool AppWindow::_should_close()
     return m_window->should_close();
 }
 
-void AppWindow::create_framebuffers()
-{
-    for (uint32_t i = 0; i < m_swapchain->desc().image_count; ++i) {
-        ref<Texture> image = m_swapchain->get_image(i);
-        m_framebuffers.push_back(m_device->create_framebuffer({.render_targets{image->get_rtv()}}));
-    }
-}
-
 void AppWindow::handle_resize(uint32_t width, uint32_t height)
 {
-    m_framebuffers.clear();
     m_device->wait();
-    m_swapchain->resize(width, height);
-    create_framebuffers();
+    SurfaceConfig config = m_surface->config();
+    config.width = width;
+    config.height = height;
+    m_surface->configure(config);
     on_resize(width, height);
 }
 

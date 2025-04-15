@@ -13,9 +13,9 @@ SGL_PY_EXPORT(device_coopvec)
 {
     using namespace sgl;
 
-    nb::sgl_enum<CoopVecMatrixLayout>(m, "CoopVecMatrixLayout", D_NA(CoopVec, MatrixLayout));
+    nb::sgl_enum<CoopVecMatrixLayout>(m, "CoopVecMatrixLayout", D(CoopVecMatrixLayout));
 
-    nb::class_<CoopVecMatrixDesc>(m, "CoopVecMatrixDesc", D_NA(CoopVec, MatrixDesc))
+    nb::class_<CoopVecMatrixDesc>(m, "CoopVecMatrixDesc", D(CoopVecMatrixDesc))
         .def(nb::init<>())
         .def(
             "__init__",
@@ -41,10 +41,10 @@ SGL_PY_EXPORT(device_coopvec)
             "size"_a,
             "offset"_a
         )
-        .def_rw("rows", &CoopVecMatrixDesc::rows, D_NA(CoopVec, MatrixDesc, rows))
-        .def_rw("cols", &CoopVecMatrixDesc::cols, D_NA(CoopVec, MatrixDesc, cols))
-        .def_rw("element_type", &CoopVecMatrixDesc::element_type, D_NA(CoopVec, MatrixDesc, element_type))
-        .def_rw("layout", &CoopVecMatrixDesc::layout, D_NA(CoopVec, MatrixDesc, layout))
-        .def_rw("size", &CoopVecMatrixDesc::size, D_NA(CoopVec, MatrixDesc, size))
-        .def_rw("offset", &CoopVecMatrixDesc::offset, D_NA(CoopVec, MatrixDesc, offset));
+        .def_rw("rows", &CoopVecMatrixDesc::rows, D(CoopVecMatrixDesc, rows))
+        .def_rw("cols", &CoopVecMatrixDesc::cols, D(CoopVecMatrixDesc, cols))
+        .def_rw("element_type", &CoopVecMatrixDesc::element_type, D(CoopVecMatrixDesc, element_type))
+        .def_rw("layout", &CoopVecMatrixDesc::layout, D(CoopVecMatrixDesc, layout))
+        .def_rw("size", &CoopVecMatrixDesc::size, D(CoopVecMatrixDesc, size))
+        .def_rw("offset", &CoopVecMatrixDesc::offset, D(CoopVecMatrixDesc, offset));
 }

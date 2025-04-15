@@ -26,10 +26,6 @@ target_link_libraries(d3d12 INTERFACE dxgi.lib d3d12.lib dxguid.lib)
 set(FMT_INSTALL OFF)
 add_subdirectory(fmt)
 
-# vulkan-headers
-
-add_subdirectory(vulkan-headers)
-
 # glfw
 
 set(GLFW_BUILD_EXAMPLES OFF)
@@ -55,7 +51,7 @@ set(SGL_LOCAL_SLANG OFF CACHE BOOL "Use a local build of slang instead of downlo
 set(SGL_LOCAL_SLANG_DIR "${CMAKE_SOURCE_DIR}/../slang" CACHE PATH "Path to a local slang build")
 set(SGL_LOCAL_SLANG_BUILD_DIR "build/Debug" CACHE STRING "Build directory of the local slang build")
 
-set(SLANG_VERSION "2025.5.3")
+set(SLANG_VERSION "2025.6.3")
 set(SLANG_URL_BASE "https://github.com/shader-slang/slang/releases/download/v${SLANG_VERSION}")
 
 if(SGL_WINDOWS)
@@ -81,8 +77,8 @@ if(SGL_LOCAL_SLANG)
 endif()
 
 if(SGL_WINDOWS)
-    add_library(slang::slang SHARED IMPORTED GLOBAL)
-    set_target_properties(slang::slang PROPERTIES
+    add_library(slang SHARED IMPORTED GLOBAL)
+    set_target_properties(slang PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES ${SLANG_INCLUDE_DIR}
         IMPORTED_IMPLIB ${SLANG_DIR}/lib/slang.lib
         IMPORTED_LOCATION ${SLANG_DIR}/bin/slang.dll
@@ -92,8 +88,8 @@ if(SGL_WINDOWS)
     sgl_copy_binary(${SLANG_DIR}/bin/slang-llvm.dll .)
     sgl_copy_binary(${SLANG_DIR}/bin/slang-rt.dll .)
 elseif(SGL_LINUX)
-    add_library(slang::slang SHARED IMPORTED GLOBAL)
-    set_target_properties(slang::slang PROPERTIES
+    add_library(slang SHARED IMPORTED GLOBAL)
+    set_target_properties(slang PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES ${SLANG_INCLUDE_DIR}
         IMPORTED_LOCATION ${SLANG_DIR}/lib/libslang.so
     )
@@ -101,83 +97,52 @@ elseif(SGL_LINUX)
     sgl_copy_binary(${SLANG_DIR}/lib/libslang-glslang.so .)
     # sgl_copy_binary(${SLANG_DIR}/lib/libslang-llvm.so .)
 elseif(SGL_MACOS)
-    add_library(slang::slang SHARED IMPORTED GLOBAL)
-    set_target_properties(slang::slang PROPERTIES
+    add_library(slang SHARED IMPORTED GLOBAL)
+    set_target_properties(slang PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES ${SLANG_INCLUDE_DIR}
         IMPORTED_LOCATION ${SLANG_DIR}/lib/libslang.dylib
     )
     sgl_copy_binary(${SLANG_DIR}/lib/libslang.dylib .)
 endif()
 
-# slang-gfx
+# slang-rhi
 
-if(SGL_WINDOWS)
-    add_library(slang::gfx SHARED IMPORTED GLOBAL)
-    set_target_properties(slang::gfx PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES ${SLANG_INCLUDE_DIR}
-        IMPORTED_IMPLIB ${SLANG_DIR}/lib/gfx.lib
-        IMPORTED_LOCATION ${SLANG_DIR}/bin/gfx.dll
-    )
-    sgl_copy_binary(${SLANG_DIR}/bin/gfx.dll .)
-elseif(SGL_LINUX)
-    add_library(slang::gfx SHARED IMPORTED GLOBAL)
-    set_target_properties(slang::gfx PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES ${SLANG_INCLUDE_DIR}
-        IMPORTED_LOCATION ${SLANG_DIR}/lib/libgfx.so
-    )
-    sgl_copy_binary(${SLANG_DIR}/lib/libgfx.so .)
-elseif(SGL_MACOS)
-    add_library(slang::gfx SHARED IMPORTED GLOBAL)
-    set_target_properties(slang::gfx PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES ${SLANG_INCLUDE_DIR}
-        IMPORTED_LOCATION ${SLANG_DIR}/lib/libgfx.dylib
-    )
-    sgl_copy_binary(${SLANG_DIR}/lib/libgfx.dylib .)
-endif()
+set(SLANG_RHI_BUILD_TESTS OFF)
+set(SLANG_RHI_BUILD_EXAMPLES OFF)
+set(SLANG_RHI_FETCH_SLANG OFF)
+# TODO: We should rename SLANG_RHI_BUILD_FROM_SLANG_REPO to something more generic.
+# We want slang-rhi to support using a `slang` target that is provided from the outside.
+set(SLANG_RHI_BUILD_FROM_SLANG_REPO ON)
+set(SLANG_RHI_SLANG_INCLUDE_DIR ${SLANG_INCLUDE_DIR})
+set(SLANG_RHI_SLANG_BINARY_DIR ${SLANG_DIR})
+add_subdirectory(slang-rhi)
 
-# nvapi
-
-set(NVAPI_COMMIT "4ba3384657149d63aa193f5a34e20efe1e42bf31")
-
-if(SGL_WINDOWS)
-    sgl_download_package(nvapi "https://github.com/NVIDIA/nvapi/archive/${NVAPI_COMMIT}.zip")
-    add_library(nvapi STATIC IMPORTED GLOBAL)
-    set_target_properties(nvapi PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES ${nvapi_SOURCE_DIR}
-        IMPORTED_LOCATION ${nvapi_SOURCE_DIR}/amd64/nvapi64.lib
-    )
-    sgl_copy_shader_file(${nvapi_SOURCE_DIR}/nvHLSLExtns.h nvapi)
-    sgl_copy_shader_file(${nvapi_SOURCE_DIR}/nvHLSLExtnsInternal.h nvapi)
-    sgl_copy_shader_file(${nvapi_SOURCE_DIR}/nvShaderExtnEnums.h nvapi)
+if(TARGET slang-rhi-nvapi)
+    get_target_property(NVAPI_DIR slang-rhi-nvapi INTERFACE_INCLUDE_DIRECTORIES)
+    sgl_copy_shader_file(${NVAPI_DIR}/nvHLSLExtns.h nvapi)
+    sgl_copy_shader_file(${NVAPI_DIR}/nvHLSLExtnsInternal.h nvapi)
+    sgl_copy_shader_file(${NVAPI_DIR}/nvShaderExtnEnums.h nvapi)
     set(SGL_HAS_NVAPI ON PARENT_SCOPE)
 else()
     set(SGL_HAS_NVAPI OFF PARENT_SCOPE)
 endif()
 
-# dxc
-
-set(DXC_VERSION "1.7.2308")
-set(DXC_TAG "2023_08_14")
-
-if(SGL_WINDOWS)
-    sgl_download_package(dxc "https://github.com/microsoft/DirectXShaderCompiler/releases/download/v${DXC_VERSION}/dxc_${DXC_TAG}.zip")
-    sgl_copy_binary(${dxc_SOURCE_DIR}/bin/x64/dxcompiler.dll .)
-    sgl_copy_binary(${dxc_SOURCE_DIR}/bin/x64/dxil.dll .)
-endif()
-
-# agility-sdk
-
-set(AGILITY_SDK_VERSION "1.611.2")
-
-if(SGL_WINDOWS)
-    sgl_download_package(agility_sdk "https://www.nuget.org/api/v2/package/Microsoft.Direct3D.D3D12/${AGILITY_SDK_VERSION}")
-    add_library(agility_sdk INTERFACE)
-    target_include_directories(agility_sdk INTERFACE ${agility_sdk_SOURCE_DIR}/build/native/include)
-    sgl_copy_binary(${agility_sdk_SOURCE_DIR}/build/native/bin/x64/D3D12Core.dll d3d12)
-    sgl_copy_binary(${agility_sdk_SOURCE_DIR}/build/native/bin/x64/d3d12SDKLayers.dll d3d12)
+if(TARGET slang-rhi-agility-sdk)
     set(SGL_HAS_AGILITY_SDK ON PARENT_SCOPE)
 else()
     set(SGL_HAS_AGILITY_SDK OFF PARENT_SCOPE)
+endif()
+
+if(TARGET slang-rhi-optix)
+    get_target_property(OPTIX_DIR slang-rhi-optix INTERFACE_INCLUDE_DIRECTORIES)
+    sgl_copy_binary(${OPTIX_DIR}/optix.h optix)
+    sgl_copy_binary(${OPTIX_DIR}/optix_device.h optix)
+    sgl_copy_binary(${OPTIX_DIR}/optix_types.h optix)
+    sgl_copy_binary(${OPTIX_DIR}/internal/optix_device_impl.h optix/internal)
+    sgl_copy_binary(${OPTIX_DIR}/internal/optix_device_impl_transformations.h optix/internal)
+    set(SGL_HAS_OPTIX ON PARENT_SCOPE)
+else()
+    set(SGL_HAS_OPTIX OFF PARENT_SCOPE)
 endif()
 
 # imgui

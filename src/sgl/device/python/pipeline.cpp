@@ -5,21 +5,20 @@
 #include "sgl/device/pipeline.h"
 #include "sgl/device/shader.h"
 #include "sgl/device/input_layout.h"
-#include "sgl/device/framebuffer.h"
 
 namespace sgl {
 SGL_DICT_TO_DESC_BEGIN(ComputePipelineDesc)
 SGL_DICT_TO_DESC_FIELD(program, ref<ShaderProgram>)
 SGL_DICT_TO_DESC_END()
 
-SGL_DICT_TO_DESC_BEGIN(GraphicsPipelineDesc)
+SGL_DICT_TO_DESC_BEGIN(RenderPipelineDesc)
 SGL_DICT_TO_DESC_FIELD(program, ref<ShaderProgram>)
 SGL_DICT_TO_DESC_FIELD(input_layout, ref<InputLayout>)
-SGL_DICT_TO_DESC_FIELD(framebuffer_layout, ref<FramebufferLayout>)
-SGL_DICT_TO_DESC_FIELD(primitive_type, PrimitiveType)
-SGL_DICT_TO_DESC_FIELD_DICT(depth_stencil, DepthStencilDesc)
-SGL_DICT_TO_DESC_FIELD_DICT(rasterizer, RasterizerDesc)
-SGL_DICT_TO_DESC_FIELD_DICT(blend, BlendDesc)
+SGL_DICT_TO_DESC_FIELD(primitive_topology, PrimitiveTopology)
+SGL_DICT_TO_DESC_FIELD(targets, std::vector<ColorTargetDesc>)
+SGL_DICT_TO_DESC_FIELD(depth_stencil, DepthStencilDesc)
+SGL_DICT_TO_DESC_FIELD(rasterizer, RasterizerDesc)
+SGL_DICT_TO_DESC_FIELD(multisample, MultisampleDesc)
 SGL_DICT_TO_DESC_END()
 
 SGL_DICT_TO_DESC_BEGIN(HitGroupDesc)
@@ -58,26 +57,26 @@ SGL_PY_EXPORT(device_pipeline)
     nb::class_<ComputePipeline, Pipeline>(m, "ComputePipeline", D(ComputePipeline))
         .def_prop_ro("thread_group_size", &ComputePipeline::thread_group_size, D(ComputePipeline, thread_group_size));
 
-    nb::class_<GraphicsPipelineDesc>(m, "GraphicsPipelineDesc", D(GraphicsPipelineDesc))
+    nb::class_<RenderPipelineDesc>(m, "RenderPipelineDesc", D(RenderPipelineDesc))
         .def(nb::init<>())
         .def(
             "__init__",
-            [](GraphicsPipelineDesc* self, nb::dict dict)
-            { new (self) GraphicsPipelineDesc(dict_to_GraphicsPipelineDesc(dict)); }
+            [](RenderPipelineDesc* self, nb::dict dict)
+            { new (self) RenderPipelineDesc(dict_to_RenderPipelineDesc(dict)); }
         )
-        .def_rw("program", &GraphicsPipelineDesc::program, D(GraphicsPipelineDesc, program))
-        .def_rw("input_layout", &GraphicsPipelineDesc::input_layout, D(GraphicsPipelineDesc, input_layout))
+        .def_rw("program", &RenderPipelineDesc::program, D(RenderPipelineDesc, program))
+        .def_rw("input_layout", &RenderPipelineDesc::input_layout, D(RenderPipelineDesc, input_layout))
         .def_rw(
-            "framebuffer_layout",
-            &GraphicsPipelineDesc::framebuffer_layout,
-            D(GraphicsPipelineDesc, framebuffer_layout)
+            "primitive_topology",
+            &RenderPipelineDesc::primitive_topology,
+            D(RenderPipelineDesc, primitive_topology)
         )
-        .def_rw("primitive_type", &GraphicsPipelineDesc::primitive_type, D(GraphicsPipelineDesc, primitive_type))
-        .def_rw("depth_stencil", &GraphicsPipelineDesc::depth_stencil, D(GraphicsPipelineDesc, depth_stencil))
-        .def_rw("rasterizer", &GraphicsPipelineDesc::rasterizer, D(GraphicsPipelineDesc, rasterizer))
-        .def_rw("blend", &GraphicsPipelineDesc::blend, D(GraphicsPipelineDesc, blend));
+        .def_rw("targets", &RenderPipelineDesc::targets, D(RenderPipelineDesc, targets))
+        .def_rw("depth_stencil", &RenderPipelineDesc::depth_stencil, D(RenderPipelineDesc, depth_stencil))
+        .def_rw("rasterizer", &RenderPipelineDesc::rasterizer, D(RenderPipelineDesc, rasterizer))
+        .def_rw("multisample", &RenderPipelineDesc::multisample, D(RenderPipelineDesc, multisample));
 
-    nb::class_<GraphicsPipeline, Pipeline>(m, "GraphicsPipeline", D(GraphicsPipeline));
+    nb::class_<RenderPipeline, Pipeline>(m, "RenderPipeline", D(RenderPipeline));
 
     nb::class_<HitGroupDesc>(m, "HitGroupDesc", D(HitGroupDesc))
         .def(nb::init<>())

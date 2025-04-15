@@ -17,12 +17,14 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 #include <nanobind/stl/unique_ptr.h>
+#include <nanobind/stl/variant.h>
 
 #include "sgl/core/object.h"
 #include "sgl/core/enum.h"
 #include "sgl/core/type_utils.h"
 #include "sgl/core/struct.h"
 #include "sgl/core/data_type.h"
+#include "sgl/core/static_vector.h"
 
 #include "sgl/math/float16.h"
 
@@ -134,6 +136,10 @@ struct type_caster<std::span<T>> {
     }
 };
 
+template<typename T, std::size_t N>
+struct type_caster<sgl::static_vector<T, N>> : list_caster<sgl::static_vector<T, N>, T> { };
+
+
 NAMESPACE_END(detail)
 
 template<typename T>
@@ -168,6 +174,7 @@ public:
     {
     }
 };
+
 
 NAMESPACE_END(NB_NAMESPACE)
 
@@ -454,17 +461,11 @@ inline constexpr uint64_t const_hash(std::string_view str)
         desc.name = nb::cast<type>(v);                                                                                 \
         break;
 
-#define SGL_DICT_TO_DESC_FIELD_DICT(name, type)                                                                        \
-    case ::sgl::detail::const_hash(#name):                                                                             \
-        extern type dict_to_##type(nb::dict dict);                                                                     \
-        desc.name = dict_to_##type(nb::cast<nb::dict>(v));                                                             \
-        break;
-
 #define SGL_DICT_TO_DESC_FIELD_LIST(name, type)                                                                        \
     case ::sgl::detail::const_hash(#name):                                                                             \
         desc.name = {};                                                                                                \
         for (const auto& item : v)                                                                                     \
-            desc.name.push_back(dict_to_##type(nb::cast<nb::dict>(item)));                                             \
+            desc.name.push_back(nb::cast<type>(item));                                                                 \
         break;
 
 #define SGL_DICT_TO_DESC_FIELD_CUSTOM(name, code)                                                                      \

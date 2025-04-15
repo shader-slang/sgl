@@ -603,9 +603,9 @@ public:
     /// Call the compute kernel with the provided arguments and keyword arguments.
     nb::object call(ref<NativeCallRuntimeOptions> opts, nb::args args, nb::kwargs kwargs);
 
-    /// Append the compute kernel to a command buffer with the provided arguments and keyword arguments.
+    /// Append the compute kernel to a command encoder with the provided arguments and keyword arguments.
     nb::object
-    append_to(ref<NativeCallRuntimeOptions> opts, CommandBuffer* command_buffer, nb::args args, nb::kwargs kwargs);
+    append_to(ref<NativeCallRuntimeOptions> opts, CommandEncoder* command_encoder, nb::args args, nb::kwargs kwargs);
 
 private:
     ref<Device> m_device;
@@ -616,7 +616,7 @@ private:
     Shape m_last_call_shape;
 
     nb::object
-    exec(ref<NativeCallRuntimeOptions> opts, CommandBuffer* command_buffer, nb::args args, nb::kwargs kwargs);
+    exec(ref<NativeCallRuntimeOptions> opts, CommandEncoder* command_encoder, nb::args args, nb::kwargs kwargs);
 };
 
 typedef std::function<bool(const ref<SignatureBuilder>& builder, nb::handle)> BuildSignatureFunc;

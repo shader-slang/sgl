@@ -139,7 +139,7 @@ def variable_decls(tests: list[Any]):
 
 
 def variable_sets(tests: list[Any]):
-    return "".join([f"    buffer[tid].{t[0]} = {t[2]};\n" for t in tests])
+    return "".join([f"    buffer[i].{t[0]} = {t[2]};\n" for t in tests])
 
 
 def gen_fill_in_module(tests: list[Any]):
@@ -156,10 +156,11 @@ def gen_fill_in_module(tests: list[Any]):
 
     [shader("compute")]
     [numthreads(1, 1, 1)]
-    void computeMain(uint tid: SV_DispatchThreadID, RWStructuredBuffer<TestType> buffer) {{
-        buffer[tid].value = tid+1;
-        buffer[tid].child.floatval = tid+2.0;
-        buffer[tid].child.uintval = tid+3;
+    void compute_main(uint3 tid: SV_DispatchThreadID, RWStructuredBuffer<TestType> buffer) {{
+        uint i = tid.x;
+        buffer[i].value = i+1;
+        buffer[i].child.floatval = i+2.0;
+        buffer[i].child.uintval = i+3;
     {variable_sets(tests)}
     }}
     """
@@ -179,8 +180,9 @@ def gen_copy_module(tests: list[Any]):
 
     [shader("compute")]
     [numthreads(1, 1, 1)]
-    void computeMain(uint tid: SV_DispatchThreadID, StructuredBuffer<TestType> src, RWStructuredBuffer<TestType> dest) {{
-        dest[tid] = src[tid];
+    void compute_main(uint3 tid: SV_DispatchThreadID, StructuredBuffer<TestType> src, RWStructuredBuffer<TestType> dest) {{
+        uint i = tid.x;
+        dest[i] = src[i];
     }}
     """
 
@@ -206,7 +208,7 @@ def make_fill_in_module(device_type: sgl.DeviceType, tests: list[Any]):
     )
     device = helpers.get_device(type=device_type)
     module = device.load_module_from_source(mod_name, code)
-    prog = device.link_program([module], [module.entry_point("computeMain")])
+    prog = device.link_program([module], [module.entry_point("compute_main")])
     buffer_layout = module.layout.get_type_layout(
         module.layout.find_type_by_name("StructuredBuffer<TestType>")
     )
@@ -220,7 +222,7 @@ def make_copy_module(device_type: sgl.DeviceType, tests: list[Any]):
     )
     device = helpers.get_device(type=device_type)
     module = device.load_module_from_source(mod_name, code)
-    prog = device.link_program([module], [module.entry_point("computeMain")])
+    prog = device.link_program([module], [module.entry_point("compute_main")])
     buffer_layout = module.layout.get_type_layout(
         module.layout.find_type_by_name("StructuredBuffer<TestType>")
     )
@@ -276,7 +278,7 @@ def test_fill_from_kernel(device_type: sgl.DeviceType, seed: int):
     buffer = kernel.device.create_buffer(
         element_count=count,
         struct_type=buffer_layout,
-        usage=sgl.ResourceUsage.shader_resource | sgl.ResourceUsage.unordered_access,
+        usage=sgl.BufferUsage.shader_resource | sgl.BufferUsage.unordered_access,
     )
 
     # Dispatch the kernel
@@ -311,7 +313,7 @@ def test_wrap_buffer(device_type: sgl.DeviceType, seed: int):
     buffer = kernel.device.create_buffer(
         element_count=count,
         struct_type=buffer_layout,
-        usage=sgl.ResourceUsage.shader_resource | sgl.ResourceUsage.unordered_access,
+        usage=sgl.BufferUsage.shader_resource | sgl.BufferUsage.unordered_access,
     )
     cursor = sgl.BufferCursor(buffer_layout.element_type_layout, buffer)
 
@@ -376,13 +378,13 @@ def test_apply_changes(device_type: sgl.DeviceType, seed: int):
     src = kernel.device.create_buffer(
         element_count=count,
         struct_type=buffer_layout,
-        usage=sgl.ResourceUsage.shader_resource | sgl.ResourceUsage.unordered_access,
+        usage=sgl.BufferUsage.shader_resource | sgl.BufferUsage.unordered_access,
         data=np.zeros(buffer_layout.element_type_layout.stride * count, dtype=np.uint8),
     )
     dest = kernel.device.create_buffer(
         element_count=count,
         struct_type=buffer_layout,
-        usage=sgl.ResourceUsage.shader_resource | sgl.ResourceUsage.unordered_access,
+        usage=sgl.BufferUsage.shader_resource | sgl.BufferUsage.unordered_access,
         data=np.zeros(buffer_layout.element_type_layout.stride * count, dtype=np.uint8),
     )
     src_cursor = sgl.BufferCursor(buffer_layout.element_type_layout, src)

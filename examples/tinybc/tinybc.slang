@@ -27,7 +27,7 @@ void l2_loss(BCTile tile, no_diff float4 target[16], out float loss[16])
 
 [shader("compute")]
 [numthreads(4, 8, 1)]
-void main(int3 tid: SV_DispatchThreadID)
+void compute_main(int3 tid: SV_DispatchThreadID)
 {
     uint2 dim;
     input_tex.GetDimensions(dim.x, dim.y);

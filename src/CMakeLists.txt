@@ -78,8 +78,6 @@ target_sources(sgl PRIVATE
     sgl/device/command.h
     sgl/device/coopvec.h
     sgl/device/coopvec.cpp
-    sgl/device/cuda_api.cpp
-    sgl/device/cuda_api.h
     sgl/device/cuda_interop.cpp
     sgl/device/cuda_interop.h
     sgl/device/cuda_utils.cpp
@@ -94,8 +92,6 @@ target_sources(sgl PRIVATE
     sgl/device/fence.h
     sgl/device/formats.cpp
     sgl/device/formats.h
-    sgl/device/framebuffer.cpp
-    sgl/device/framebuffer.h
     sgl/device/fwd.h
     sgl/device/helpers.h
     sgl/device/helpers.cpp
@@ -105,8 +101,6 @@ target_sources(sgl PRIVATE
     sgl/device/input_layout.h
     sgl/device/kernel.cpp
     sgl/device/kernel.h
-    sgl/device/memory_heap.cpp
-    sgl/device/memory_heap.h
     sgl/device/native_formats.h
     sgl/device/nvapi.slang
     sgl/device/nvapi.slangh
@@ -132,10 +126,10 @@ target_sources(sgl PRIVATE
     sgl/device/shader_offset.h
     sgl/device/shader.cpp
     sgl/device/shader.h
-    sgl/device/shared_handle.h
     sgl/device/slang_utils.h
-    sgl/device/swapchain.cpp
-    sgl/device/swapchain.h
+    sgl/device/surface.cpp
+    sgl/device/surface.h
+    sgl/device/types.cpp
     sgl/device/types.h
 
     sgl/math/constants.h
@@ -341,8 +335,9 @@ target_include_directories(sgl PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include)
 target_link_libraries(sgl
     PUBLIC
         fmt::fmt
-        slang::slang slang::gfx
-        Vulkan::Headers
+        slang
+        slang-rhi
+        slang-rhi-vulkan-headers
         header_only
         $<$<NOT:$<BOOL:${SGL_USE_DYNAMIC_CUDA}>>:CUDA::cuda_driver>
         sgl_data
@@ -351,9 +346,6 @@ target_link_libraries(sgl
         glfw
         tevclient
         $<$<BOOL:${SGL_HAS_D3D12}>:d3d12>
-        $<$<BOOL:${SGL_HAS_AGILITY_SDK}>:agility_sdk>
-        # $<$<BOOL:${SGL_HAS_AFTERMATH}>:aftermath>
-        $<$<BOOL:${SGL_HAS_NVAPI}>:nvapi>
         $<$<BOOL:${SGL_HAS_LIBPNG}>:PNG::PNG>
         $<$<BOOL:${SGL_HAS_LIBJPEG}>:JPEG::JPEG>
         $<$<BOOL:${SGL_HAS_OPENEXR}>:OpenEXR::OpenEXR>
@@ -412,10 +404,8 @@ if(SGL_BUILD_PYTHON)
         sgl/device/python/device.cpp
         sgl/device/python/fence.cpp
         sgl/device/python/formats.cpp
-        sgl/device/python/framebuffer.cpp
         sgl/device/python/input_layout.cpp
         sgl/device/python/kernel.cpp
-        sgl/device/python/memory_heap.cpp
         sgl/device/python/pipeline.cpp
         sgl/device/python/query.cpp
         sgl/device/python/raytracing.cpp
@@ -425,7 +415,7 @@ if(SGL_BUILD_PYTHON)
         sgl/device/python/shader_cursor.cpp
         sgl/device/python/shader_object.cpp
         sgl/device/python/shader.cpp
-        sgl/device/python/swapchain.cpp
+        sgl/device/python/surface.cpp
         sgl/device/python/types.cpp
         sgl/math/python/matrix.cpp
         sgl/math/python/quaternion.cpp
@@ -468,11 +458,11 @@ if(SGL_BUILD_PYTHON)
     )
 
     # Post processes (and overwrites) a stub file.
-    function(postprocess_stub stub_file)
+    function(postprocess_stub stub_file args)
         add_custom_command(
             APPEND
             OUTPUT ${stub_file}
-            COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/../tools/postprocess_stub.py --file=${stub_file} --quiet
+            COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/../tools/postprocess_stub.py --file=${stub_file} ${args} --quiet
             COMMENT "Post-processing stub ${stub_file}"
         )
     endfunction()
@@ -488,7 +478,7 @@ if(SGL_BUILD_PYTHON)
     )
 
     # Post-process the main stub file.
-    postprocess_stub(${SGL_OUTPUT_DIRECTORY}/python/sgl/__init__.pyi)
+    postprocess_stub(${SGL_OUTPUT_DIRECTORY}/python/sgl/__init__.pyi "")
 
     # Generate submodule stub files.
     foreach(submodule IN ITEMS platform thread math ui tev renderdoc slangpy)
@@ -501,6 +491,10 @@ if(SGL_BUILD_PYTHON)
             DEPENDS sgl_ext
             INCLUDE_PRIVATE # allow us to have functions/variables that start with _
         )
+
+        # Post-process the submodule stub file.
+        postprocess_stub(${SGL_OUTPUT_DIRECTORY}/python/sgl/${submodule_path}/__init__.pyi "--submodule")
+
     endforeach()
 
     if(SGL_MASTER_PROJECT)
@@ -516,16 +510,35 @@ if(SGL_BUILD_PYTHON)
         foreach(value ${list})
             list(APPEND MKDOC_ARGS -I${value})
         endforeach()
-
         get_target_property(list sgl INTERFACE_INCLUDE_DIRECTORIES)
         foreach(value ${list})
             list(APPEND MKDOC_ARGS -I${value})
         endforeach()
 
-        get_target_property(list slang::slang INTERFACE_INCLUDE_DIRECTORIES)
-        foreach(value ${list})
-            list(APPEND MKDOC_ARGS -I${value})
-        endforeach()
+        # Add target include directories from dependencies.
+        get_target_property(targets sgl INTERFACE_LINK_LIBRARIES)
+        if(targets)
+            foreach(value ${targets})
+                # Skip generator expressions
+                if(value MATCHES "^\\$<.*>$")
+                    # message(STATUS "Skipping target: ${value}")
+                    continue()
+                endif()
+                get_target_property(list ${value} INTERFACE_INCLUDE_DIRECTORIES)
+                if(list)
+                    foreach(value ${list})
+                        # Unwrap BUILD_INTERFACE generator expression
+                        string(REGEX REPLACE "\\$<BUILD_INTERFACE:([^>]+)>" "\\1" value "${value}")
+                        # Skip generator expressions
+                        if(value MATCHES "^\\$<.*>$")
+                            # message(STATUS "Skipping path: ${value}")
+                            continue()
+                        endif()
+                        list(APPEND MKDOC_ARGS -I${value})
+                    endforeach()
+                endif()
+            endforeach()
+        endif()
 
         # Note: The current version of pybind11_mkdoc does not support C++20.
         # Running this will result in the following error:
@@ -537,7 +550,6 @@ if(SGL_BUILD_PYTHON)
         add_custom_target(pydoc USES_TERMINAL COMMAND
             COMMAND ${Python_EXECUTABLE} -m pybind11_mkdoc -std=c++20 -stdlib=libc++
             ${MKDOC_ARGS}
-            -I${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include
             -I${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include
             ${CMAKE_CURRENT_SOURCE_DIR}/sgl/app/*.h
             ${CMAKE_CURRENT_SOURCE_DIR}/sgl/core/*.h

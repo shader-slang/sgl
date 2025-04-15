@@ -643,7 +643,7 @@ DDSFile::~DDSFile()
         delete[] m_data;
 }
 
-const uint8_t* DDSFile::get_subresource_data(uint32_t mip, uint32_t slice)
+const uint8_t* DDSFile::get_subresource_data(uint32_t mip, uint32_t slice) const
 {
     size_t offset = 0;
     size_t mip0_size = m_slice_pitch * 8; // Work in bits
@@ -673,6 +673,18 @@ const uint8_t* DDSFile::get_subresource_data(uint32_t mip, uint32_t slice)
     offset /= 8; // Back to bytes
 
     return m_data + m_header_size + offset;
+}
+
+void DDSFile::get_subresource_pitch(uint32_t mip, uint32_t* row_pitch, uint32_t* slice_pitch) const
+{
+    uint32_t row_pitch_ = get_row_pitch(m_width, m_bits_per_pixel_or_block, m_block_width, mip);
+    uint32_t row_count = (std::max(1u, m_height >> mip) + m_block_height - 1) / m_block_height;
+    uint32_t slice_pitch_ = row_count * row_pitch_;
+
+    if (row_pitch)
+        *row_pitch = row_pitch_;
+    if (slice_pitch)
+        *slice_pitch = slice_pitch_;
 }
 
 std::string DDSFile::to_string() const
@@ -960,6 +972,8 @@ bool DDSFile::decode_header(const uint8_t* data, size_t size)
     m_srgb = is_srgb(DXGIFormat(m_dxgi_format));
     m_bits_per_pixel_or_block = get_bits_per_pixel_or_block(DXGIFormat(m_dxgi_format));
     get_block_size(DXGIFormat(m_dxgi_format), m_block_width, m_block_height);
+
+    get_subresource_pitch(0, &m_row_pitch, &m_slice_pitch);
 
     m_row_pitch = get_row_pitch(m_width, m_bits_per_pixel_or_block, m_block_width, 0);
     m_slice_pitch = m_row_pitch * m_height / m_block_height;

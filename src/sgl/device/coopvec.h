@@ -10,15 +10,15 @@
 #include "sgl/core/platform.h"
 
 #include <vector>
-#include <vulkan/vulkan.h>
+#include <slang-rhi.h>
 
 namespace sgl {
 
 enum class CoopVecMatrixLayout {
-    row_major,
-    column_major,
-    inferencing_optimal,
-    training_optimal,
+    row_major = static_cast<uint32_t>(rhi::CooperativeVectorMatrixLayout::RowMajor),
+    column_major = static_cast<uint32_t>(rhi::CooperativeVectorMatrixLayout::ColumnMajor),
+    inferencing_optimal = static_cast<uint32_t>(rhi::CooperativeVectorMatrixLayout::InferencingOptimal),
+    training_optimal = static_cast<uint32_t>(rhi::CooperativeVectorMatrixLayout::TrainingOptimal),
 };
 
 SGL_ENUM_INFO(
@@ -45,7 +45,6 @@ class SGL_API CoopVec : public Object {
     SGL_OBJECT(CoopVec)
 public:
     CoopVec(Device* device);
-    ~CoopVec();
 
     static constexpr size_t MATRIX_ALIGNMENT = 64; ///< Minimum byte alignment according to spec.
     static constexpr size_t VECTOR_ALIGHMENT = 16; ///< Minimum byte alignment according to spec.
@@ -69,7 +68,7 @@ public:
         CoopVecMatrixDesc src_desc,
         const Buffer* dst,
         CoopVecMatrixDesc dst_desc,
-        CommandBuffer* cmd = nullptr
+        CommandEncoder* encoder = nullptr
     );
     // Device-to-device conversion of multiple matrices
     void convert_matrix_device(
@@ -77,7 +76,7 @@ public:
         const std::vector<CoopVecMatrixDesc>& src_desc,
         const Buffer* dst,
         const std::vector<CoopVecMatrixDesc>& dst_desc,
-        CommandBuffer* cmd = nullptr
+        CommandEncoder* encoder = nullptr
     );
     void convert_matrix_device(
         const Buffer* src,
@@ -85,7 +84,7 @@ public:
         const Buffer* dst,
         const CoopVecMatrixDesc* dst_desc,
         uint32_t matrix_count,
-        CommandBuffer* cmd = nullptr
+        CommandEncoder* encoder = nullptr
     );
 
     size_t align_matrix_offset(size_t offset)
@@ -99,11 +98,6 @@ public:
 
 private:
     Device* m_device;
-
-    SharedLibraryHandle m_vk_module{nullptr};
-    VkDevice m_vk_device{nullptr};
-    PFN_vkConvertCooperativeVectorMatrixNV m_VkConvertCooperativeVectorMatrixNV{nullptr};
-    PFN_vkCmdConvertCooperativeVectorMatrixNV m_VkCmdConvertCooperativeVectorMatrixNV{nullptr};
 };
 
 } // namespace sgl

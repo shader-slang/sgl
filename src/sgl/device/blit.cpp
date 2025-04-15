@@ -4,7 +4,6 @@
 
 #include "sgl/device/device.h"
 #include "sgl/device/resource.h"
-#include "sgl/device/framebuffer.h"
 #include "sgl/device/pipeline.h"
 #include "sgl/device/sampler.h"
 #include "sgl/device/command.h"
@@ -32,95 +31,100 @@ Blitter::Blitter(Device* device)
 
 Blitter::~Blitter() { }
 
-void Blitter::blit(CommandBuffer* command_buffer, ResourceView* dst, ResourceView* src, TextureFilteringMode filter)
+void Blitter::blit(CommandEncoder* command_encoder, TextureView* dst, TextureView* src, TextureFilteringMode filter)
 {
     SGL_UNUSED(filter);
 
-    SGL_CHECK_NOT_NULL(command_buffer);
+    SGL_CHECK_NOT_NULL(command_encoder);
     SGL_CHECK_NOT_NULL(dst);
     SGL_CHECK_NOT_NULL(src);
-    SGL_CHECK(
-        dst->resource()->type() == ResourceType::texture_2d && dst->type() == ResourceViewType::render_target,
-        "dst must be a 2D texture RTV"
-    );
-    SGL_CHECK(
-        src->resource()->type() == ResourceType::texture_2d && src->type() == ResourceViewType::shader_resource,
-        "src must be a 2D texture SRV"
-    );
 
-    Texture* dst_texture = dst->resource()->as_texture();
-    Texture* src_texture = src->resource()->as_texture();
+    Texture* dst_texture = dst->texture();
+    Texture* src_texture = src->texture();
 
     SGL_CHECK(
-        dst_texture->desc().sample_count == 1 && src_texture->desc().sample_count == 1,
-        "src and dst must be not be multi-sampled textures"
+        dst_texture->type() == TextureType::texture_2d || dst_texture->type() == TextureType::texture_2d_array,
+        "dst must be a 2D texture"
     );
+    SGL_CHECK(is_set(dst_texture->desc().usage, TextureUsage::render_target), "dst must be a render target");
+    SGL_CHECK(
+        src_texture->type() == TextureType::texture_2d || src_texture->type() == TextureType::texture_2d_array,
+        "src must be a 2D texture"
+    );
+    SGL_CHECK(is_set(src_texture->desc().usage, TextureUsage::shader_resource), "src must be a shader resource");
 
-    uint32_t dst_mip_level = dst->desc().subresource_range.mip_level;
-    uint32_t dst_base_array_layer = dst->desc().subresource_range.base_array_layer;
-    uint32_t src_mip_level = src->desc().subresource_range.mip_level;
+    uint32_t dst_mip = dst->subresource_range().mip;
+    uint32_t src_mip = src->subresource_range().mip;
 
-    uint2 dst_size = src_texture->get_mip_dimensions(dst_mip_level).xy();
-    uint2 src_size = src_texture->get_mip_dimensions(src_mip_level).xy();
+    uint2 dst_size = src_texture->get_mip_size(dst_mip).xy();
+    uint2 src_size = src_texture->get_mip_size(src_mip).xy();
 
-    auto determine_texture_type = [](Format resource_format)
+    auto determine_texture_type = [](Format resource_format) -> TextureDataType
     {
         const auto& info = get_format_info(resource_format);
         if (info.is_float_format() || info.is_normalized_format())
-            return TextureType::float_;
-        return TextureType::int_;
+            return TextureDataType::float_;
+        return TextureDataType::int_;
     };
 
-    TextureType dst_type = determine_texture_type(dst_texture->format());
-    TextureType src_type = determine_texture_type(src_texture->format());
+    TextureDataType dst_type = determine_texture_type(dst_texture->format());
+    TextureDataType src_type = determine_texture_type(src_texture->format());
     TextureLayout src_layout
-        = src_texture->array_size() > 1 ? TextureLayout::texture_2d_array : TextureLayout::texture_2d;
+        = src_texture->type() == TextureType::texture_2d ? TextureLayout::texture_2d : TextureLayout::texture_2d_array;
 
-    ref<Framebuffer> framebuffer = m_device->create_framebuffer({.render_targets{ref(dst)}});
-
-    ref<GraphicsPipeline> pipeline = get_pipeline(
+    ref<RenderPipeline> pipeline = get_pipeline(
         {
             .src_layout = src_layout,
             .src_type = src_type,
             .dst_type = dst_type,
         },
-        framebuffer
+        dst_texture->format()
     );
 
     {
-        auto encoder = command_buffer->encode_render_commands(framebuffer);
-        ShaderCursor cursor = ShaderCursor(encoder.bind_pipeline(pipeline));
-        encoder.set_primitive_topology(PrimitiveTopology::triangle_list);
-        encoder.set_viewport_and_scissor_rect({
-            .width = float(dst_size.x),
-            .height = float(dst_size.y),
+        auto pass_encoder = command_encoder->begin_render_pass({.color_attachments = {{.view = dst}}});
+        ShaderCursor cursor = ShaderCursor(pass_encoder->bind_pipeline(pipeline));
+        pass_encoder->set_render_state({
+            .viewports = {Viewport::from_size(float(dst_size.x), float(dst_size.y))},
+            .scissor_rects = {ScissorRect::from_size(dst_size.x, dst_size.y)},
         });
         cursor["src"] = ref(src);
         cursor["sampler"] = filter == TextureFilteringMode::linear ? m_linear_sampler : m_point_sampler;
-        encoder.draw(3);
+        pass_encoder->draw({.vertex_count = 3});
+        pass_encoder->end();
     }
 }
 
-void Blitter::generate_mips(CommandBuffer* command_buffer, Texture* texture, uint32_t array_layer)
+void Blitter::blit(CommandEncoder* command_encoder, Texture* dst, Texture* src, TextureFilteringMode filter)
 {
-    SGL_CHECK_NOT_NULL(command_buffer);
+    // TODO(slang-rhi) use default views when available
+    blit(command_encoder, dst->create_view({}), src->create_view({}), filter);
+}
+
+void Blitter::generate_mips(CommandEncoder* command_encoder, Texture* texture, uint32_t array_layer)
+{
+    SGL_CHECK_NOT_NULL(command_encoder);
     SGL_CHECK_NOT_NULL(texture);
-    SGL_CHECK_LT(array_layer, texture->array_size());
+    SGL_CHECK_LT(array_layer, texture->array_length());
 
     for (uint32_t i = 0; i < texture->mip_count() - 1; ++i) {
-        ref<ResourceView> src = texture->get_srv({
-            .mip_level = i,
-            .mip_count = 1,
-            .base_array_layer = array_layer,
-            .layer_count = 1,
+        ref<TextureView> src = texture->create_view({
+            .subresource_range{
+                .layer = array_layer,
+                .layer_count = 1,
+                .mip = i,
+                .mip_count = 1,
+            },
         });
-        ref<ResourceView> dst = texture->get_rtv({
-            .mip_level = i + 1,
-            .mip_count = 1,
-            .base_array_layer = array_layer,
-            .layer_count = 1,
+        ref<TextureView> dst = texture->create_view({
+            .subresource_range{
+                .layer = array_layer,
+                .layer_count = 1,
+                .mip = i + 1,
+                .mip_count = 1,
+            },
         });
-        blit(command_buffer, dst, src);
+        blit(command_encoder, dst, src);
     }
 }
 
@@ -155,22 +159,25 @@ ref<ShaderProgram> Blitter::get_program(ProgramKey key)
     return program;
 }
 
-ref<GraphicsPipeline> Blitter::get_pipeline(ProgramKey key, const Framebuffer* framebuffer)
+ref<RenderPipeline> Blitter::get_pipeline(ProgramKey key, Format dst_format)
 {
-    auto it = m_pipeline_cache.find({key, framebuffer->layout()->desc()});
+    auto it = m_pipeline_cache.find({key, dst_format});
     if (it != m_pipeline_cache.end())
         return it->second;
 
     ref<ShaderProgram> program = get_program(key);
 
-    ref<GraphicsPipeline> pipeline = m_device->create_graphics_pipeline({
+    ref<RenderPipeline> pipeline = m_device->create_render_pipeline({
         .program = program,
-        .framebuffer_layout = framebuffer->layout(),
+        .targets = {
+            {
+                .format = dst_format,
+            },
+        },
     });
 
-    m_pipeline_cache[{key, framebuffer->layout()->desc()}] = pipeline;
+    m_pipeline_cache[{key, dst_format}] = pipeline;
     return pipeline;
 }
-
 
 } // namespace sgl

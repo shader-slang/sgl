@@ -26,10 +26,11 @@ struct Foo4 : IFoo {
 
 [shader("compute")]
 [numthreads(1, 1, 1)]
-void computeMain(uint tid: SV_DispatchThreadID, RWStructuredBuffer<uint> result)
+void compute_main(uint3 tid: SV_DispatchThreadID, RWStructuredBuffer<uint> result)
 {
-    uint type_id = tid;
+    uint i = tid.x;
+    uint type_id = tid.x;
     uint dummy = 0;
     IFoo foo = createDynamicObject<IFoo>(type_id, dummy);
-    result[tid] = foo.get();
+    result[i] = foo.get();
 }

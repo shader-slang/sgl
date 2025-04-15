@@ -302,6 +302,7 @@ def generate_api():
     out = ""
     entries = ctx.entries
     added_entries = set()
+    visited_api_order = set()
     for section_name, patterns in API_ORDER.items():
         out += f"{section_name}\n"
         out += "-" * len(section_name) + "\n\n"
@@ -314,6 +315,7 @@ def generate_api():
                     out += entries[entry] + "\n"
                     out += "\n----\n\n"
                     added_entries.add(entry)
+                    visited_api_order.add((section_name, pattern))
 
     out += "Miscellaneous\n"
     out += "-------------\n\n"
@@ -324,6 +326,11 @@ def generate_api():
         out += "\n----\n\n"
         print(f"Unassigned entry {entry} with content:")
         print(entries[entry])
+
+    for section_name, patterns in API_ORDER.items():
+        for pattern in patterns:
+            if (section_name, pattern) not in visited_api_order:
+                print(f"Unvisited api order pattern {section_name} / {pattern}")
 
     # Write file if it changed.
     api_path = Path(__file__).parent / "generated" / "api.rst"

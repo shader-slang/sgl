@@ -5,7 +5,7 @@ uniform uint g_checker_size;
 
 [shader("compute")]
 [numthreads(16, 16, 1)]
-void main(uint3 tid: SV_DispatchThreadID)
+void compute_main(uint3 tid: SV_DispatchThreadID)
 {
     uint2 dim;
     g_texture.GetDimensions(dim.x, dim.y);

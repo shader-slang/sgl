@@ -194,7 +194,7 @@ extension float16_t : IWritable
 
 [shader("compute")]
 [numthreads(1, 1, 1)]
-void main(uint3 tid: SV_DispatchThreadID)
+void compute_main(uint3 tid: SV_DispatchThreadID)
 {
     if (any(tid != uint3(0)))
         return;

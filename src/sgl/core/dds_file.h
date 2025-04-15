@@ -69,7 +69,9 @@ public:
      * \param slice Slice index (array index, face index  or volume slice index).
      * \return Pointer to the start of the data.
      */
-    const uint8_t* get_subresource_data(uint32_t mip, uint32_t slice);
+    const uint8_t* get_subresource_data(uint32_t mip, uint32_t slice) const;
+
+    void get_subresource_pitch(uint32_t mip, uint32_t* row_pitch, uint32_t* slice_pitch) const;
 
     virtual std::string to_string() const override;
 
