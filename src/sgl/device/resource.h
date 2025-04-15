@@ -244,10 +244,8 @@ public:
 
     virtual rhi::IResource* rhi_resource() const = 0;
 
-    /// Returns the native API handle:
-    /// - D3D12: ID3D12Resource*
-    /// - Vulkan: VkBuffer or VkImage
-    NativeHandle get_native_handle() const;
+    /// Get the native resource handle.
+    NativeHandle native_handle() const;
 
 protected:
     Resource() = delete;
@@ -376,7 +374,8 @@ public:
     ref<BufferView> create_view(BufferViewDesc desc);
 
     /// Get the shared resource handle.
-    NativeHandle get_shared_handle() const;
+    /// Throws if the buffer was not created with the \c BufferUsage::shared usage flag.
+    NativeHandle shared_handle() const;
 
     virtual rhi::IResource* rhi_resource() const override { return m_rhi_buffer; }
     rhi::IBuffer* rhi_buffer() const { return m_rhi_buffer; }
@@ -411,7 +410,8 @@ public:
     const BufferRange& range() const { return m_desc.range; }
     std::string_view label() const { return m_desc.label; }
 
-    NativeHandle get_native_handle() const;
+    /// Get the native buffer view handle.
+    NativeHandle native_handle() const;
 
     std::string to_string() const override;
 
@@ -582,7 +582,8 @@ public:
     ref<TextureView> create_view(TextureViewDesc desc);
 
     /// Get the shared resource handle.
-    NativeHandle get_shared_handle() const;
+    /// Throws if the texture was not created with the \c TextureUsage::shared usage flag.
+    NativeHandle shared_handle() const;
 
     virtual rhi::IResource* rhi_resource() const override { return m_rhi_texture; }
     rhi::ITexture* rhi_texture() const { return m_rhi_texture; }
@@ -619,7 +620,8 @@ public:
     const SubresourceRange& subresource_range() const { return m_desc.subresource_range; }
     std::string_view label() const { return m_desc.label; }
 
-    NativeHandle get_native_handle() const;
+    /// Get the native texture view handle.
+    NativeHandle native_handle() const;
 
     rhi::ITextureView* rhi_texture_view() const { return m_rhi_texture_view.get(); }
 

@@ -3,7 +3,6 @@
 #include "fence.h"
 
 #include "sgl/device/device.h"
-#include "sgl/device/native_handle_traits.h"
 #include "sgl/device/helpers.h"
 
 #include "sgl/core/config.h"
@@ -59,7 +58,7 @@ uint64_t Fence::update_signaled_value(uint64_t value)
     return m_signaled_value;
 }
 
-NativeHandle Fence::get_shared_handle() const
+NativeHandle Fence::shared_handle() const
 {
     SGL_CHECK(m_desc.shared, "Fence must be created with shared flag.");
     rhi::NativeHandle rhi_handle = {};
@@ -67,7 +66,7 @@ NativeHandle Fence::get_shared_handle() const
     return NativeHandle(rhi_handle);
 }
 
-NativeHandle Fence::get_native_handle() const
+NativeHandle Fence::native_handle() const
 {
     rhi::NativeHandle rhi_handle = {};
     SLANG_CALL(m_rhi_fence->getNativeHandle(&rhi_handle));

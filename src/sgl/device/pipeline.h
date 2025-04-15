@@ -56,10 +56,8 @@ public:
     /// Used to determine the number of thread groups to dispatch.
     uint3 thread_group_size() const { return m_thread_group_size; }
 
-    /// Returns the native API handle:
-    /// - D3D12: ID3D12PipelineState*
-    /// - Vulkan: VkPipeline
-    NativeHandle get_native_handle() const;
+    /// Get the native pipeline handle.
+    NativeHandle native_handle() const;
 
     rhi::IComputePipeline* rhi_pipeline() const { return m_rhi_pipeline; }
 
@@ -91,10 +89,8 @@ public:
 
     const RenderPipelineDesc& desc() const { return m_desc; }
 
-    /// Returns the native API handle:
-    /// - D3D12: ID3D12PipelineState*
-    /// - Vulkan: VkPipeline
-    NativeHandle get_native_handle() const;
+    /// Get the native pipeline handle.
+    NativeHandle native_handle() const;
 
     rhi::IRenderPipeline* rhi_pipeline() const { return m_rhi_pipeline; }
 
@@ -136,10 +132,8 @@ public:
 
     const RayTracingPipelineDesc& desc() const { return m_desc; }
 
-    /// Returns the native API handle:
-    /// - D3D12: ID3D12PipelineState*
-    /// - Vulkan: VkPipeline
-    NativeHandle get_native_handle() const;
+    /// Get the native pipeline handle.
+    NativeHandle native_handle() const;
 
     rhi::IRayTracingPipeline* rhi_pipeline() const { return m_rhi_pipeline; }
 

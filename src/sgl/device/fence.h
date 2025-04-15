@@ -72,12 +72,10 @@ public:
 
     /// Get the shared fence handle.
     /// Throws if the fence was not created with the \c FenceDesc::shared flag.
-    NativeHandle get_shared_handle() const;
+    NativeHandle shared_handle() const;
 
-    /// Returns the native API handle:
-    /// - D3D12: ID3D12Fence*
-    /// - Vulkan: currently not supported
-    NativeHandle get_native_handle() const;
+    /// Get the native fence handle.
+    NativeHandle native_handle() const;
 
     std::string to_string() const override;
 

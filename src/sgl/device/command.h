@@ -385,7 +385,8 @@ public:
 
     ref<CommandBuffer> finish();
 
-    NativeHandle get_native_handle() const;
+    /// Get the command encoder handle.
+    NativeHandle native_handle() const;
 
     rhi::ICommandEncoder* rhi_command_encoder() const { return m_rhi_command_encoder; }
 

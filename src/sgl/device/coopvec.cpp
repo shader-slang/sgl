@@ -1,7 +1,6 @@
 #include "coopvec.h"
 
 #include "sgl/device/device.h"
-#include "sgl/device/native_handle_traits.h"
 #include "sgl/device/command.h"
 #include "sgl/device/helpers.h"
 

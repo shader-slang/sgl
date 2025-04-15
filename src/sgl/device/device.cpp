@@ -15,7 +15,6 @@
 #include "sgl/device/raytracing.h"
 #include "sgl/device/command.h"
 #include "sgl/device/helpers.h"
-#include "sgl/device/native_handle_traits.h"
 #include "sgl/device/agility_sdk.h"
 #include "sgl/device/cuda_utils.h"
 #include "sgl/device/cuda_interop.h"
@@ -702,30 +701,11 @@ OwnedSubresourceData Device::read_texture_data(const Texture* texture, uint32_t 
     return subresource_data;
 }
 
-NativeHandle Device::get_native_handle(uint32_t index) const
+std::array<NativeHandle, 3> Device::native_handles() const
 {
     rhi::DeviceNativeHandles handles = {};
     SLANG_CALL(m_rhi_device->getNativeDeviceHandles(&handles));
-
-#if SGL_HAS_D3D12
-    if (type() == DeviceType::d3d12) {
-        SGL_ASSERT(index == 0);
-        if (index == 0)
-            return NativeHandle(reinterpret_cast<ID3D12Device*>(handles.handles[0].value));
-    }
-#endif
-#if SGL_HAS_VULKAN
-    if (type() == DeviceType::vulkan) {
-        SGL_ASSERT(index < 3);
-        if (index == 0)
-            return NativeHandle(reinterpret_cast<VkInstance>(handles.handles[0].value));
-        else if (index == 1)
-            return NativeHandle(reinterpret_cast<VkPhysicalDevice>(handles.handles[1].value));
-        else if (index == 2)
-            return NativeHandle(reinterpret_cast<VkDevice>(handles.handles[2].value));
-    }
-#endif
-    return {};
+    return {NativeHandle(handles.handles[0]), NativeHandle(handles.handles[1]), NativeHandle(handles.handles[2])};
 }
 
 NativeHandle Device::get_native_command_queue_handle(CommandQueueType queue) const

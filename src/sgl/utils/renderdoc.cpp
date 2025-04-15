@@ -70,12 +70,12 @@ public:
         switch (device->type()) {
 #if SGL_HAS_D3D12
         case DeviceType::d3d12:
-            device_handle = device->get_native_handle(0).as<ID3D12Device*>();
+            device_handle = device->native_handles()[0].as<ID3D12Device*>();
             break;
 #endif
 #if SGL_HAS_VULKAN
         case DeviceType::vulkan:
-            device_handle = device->get_native_handle(0).as<VkInstance>();
+            device_handle = device->native_handles()[0].as<VkInstance>();
             break;
 #endif
         default:
