@@ -10,6 +10,12 @@ sgl uses a `semantic versioning <http://semver.org>`__ policy for its API.
 Changelog
 =========
 
+TBA
+--------------------
+* Update Slang to 2025.6.4.
+* Replace `slang/gfx` backend with `slang-rhi` (https://github.com/shader-slang/slang-rhi).
+* Initial support for Metal and CUDA.
+
 v0.13.1
 --------------------
 * Update Slang to 2025.5.1.
