@@ -127,6 +127,8 @@ install(FILES ${SLANG_DIR}/include/slang-image-format-defs.h DESTINATION ${CMAKE
 set(SLANG_RHI_BUILD_TESTS OFF)
 set(SLANG_RHI_BUILD_EXAMPLES OFF)
 set(SLANG_RHI_FETCH_SLANG OFF)
+set(SLANG_RHI_ENABLE_D3D11 OFF)
+set(SLANG_RHI_ENABLE_WGPU OFF)
 # TODO: We should rename SLANG_RHI_BUILD_FROM_SLANG_REPO to something more generic.
 # We want slang-rhi to support using a `slang` target that is provided from the outside.
 set(SLANG_RHI_BUILD_FROM_SLANG_REPO ON)
