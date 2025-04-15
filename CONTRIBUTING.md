@@ -41,7 +41,7 @@ Make sure your "Actions" are enabled. Visit your forked repository, click on the
 1. Clone your fork locally, replacing "USER-NAME" in the command below with your actual username.
    ```
    $ git clone --recursive --tags https://github.com/USER-NAME/sgl.git
-   $ cd slangpy
+   $ cd sgl
    ```
 
 2. Fetch tags by adding the original repository as an upstream.
