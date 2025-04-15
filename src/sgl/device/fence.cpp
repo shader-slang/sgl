@@ -60,16 +60,15 @@ uint64_t Fence::update_signaled_value(uint64_t value)
 
 NativeHandle Fence::shared_handle() const
 {
-    SGL_CHECK(m_desc.shared, "Fence must be created with shared flag.");
     rhi::NativeHandle rhi_handle = {};
-    SLANG_CALL(m_rhi_fence->getSharedHandle(&rhi_handle));
+    m_rhi_fence->getSharedHandle(&rhi_handle);
     return NativeHandle(rhi_handle);
 }
 
 NativeHandle Fence::native_handle() const
 {
     rhi::NativeHandle rhi_handle = {};
-    SLANG_CALL(m_rhi_fence->getNativeHandle(&rhi_handle));
+    m_rhi_fence->getNativeHandle(&rhi_handle);
     return NativeHandle(rhi_handle);
 }
 

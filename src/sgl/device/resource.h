@@ -374,7 +374,7 @@ public:
     ref<BufferView> create_view(BufferViewDesc desc);
 
     /// Get the shared resource handle.
-    /// Throws if the buffer was not created with the \c BufferUsage::shared usage flag.
+    /// Note: Buffer must be created with the \c BufferUsage::shared usage flag.
     NativeHandle shared_handle() const;
 
     virtual rhi::IResource* rhi_resource() const override { return m_rhi_buffer; }
@@ -582,7 +582,7 @@ public:
     ref<TextureView> create_view(TextureViewDesc desc);
 
     /// Get the shared resource handle.
-    /// Throws if the texture was not created with the \c TextureUsage::shared usage flag.
+    /// Note: Texture must be created with the \c TextureUsage::shared usage flag.
     NativeHandle shared_handle() const;
 
     virtual rhi::IResource* rhi_resource() const override { return m_rhi_texture; }

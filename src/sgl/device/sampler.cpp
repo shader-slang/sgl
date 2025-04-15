@@ -39,7 +39,7 @@ Sampler::~Sampler() { }
 NativeHandle Sampler::native_handle() const
 {
     rhi::NativeHandle rhi_handle = {};
-    SLANG_CALL(m_rhi_sampler->getNativeHandle(&rhi_handle));
+    m_rhi_sampler->getNativeHandle(&rhi_handle);
     return NativeHandle(rhi_handle);
 }
 

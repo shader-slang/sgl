@@ -60,7 +60,7 @@ void ComputePipeline::recreate()
 NativeHandle ComputePipeline::native_handle() const
 {
     rhi::NativeHandle rhi_handle = {};
-    SLANG_CALL(m_rhi_pipeline->getNativeHandle(&rhi_handle));
+    m_rhi_pipeline->getNativeHandle(&rhi_handle);
     return NativeHandle(rhi_handle);
 }
 
@@ -171,7 +171,7 @@ void RenderPipeline::recreate()
 NativeHandle RenderPipeline::native_handle() const
 {
     rhi::NativeHandle rhi_handle = {};
-    SLANG_CALL(m_rhi_pipeline->getNativeHandle(&rhi_handle));
+    m_rhi_pipeline->getNativeHandle(&rhi_handle);
     return NativeHandle(rhi_handle);
 }
 
@@ -231,7 +231,7 @@ void RayTracingPipeline::recreate()
 NativeHandle RayTracingPipeline::native_handle() const
 {
     rhi::NativeHandle rhi_handle = {};
-    SLANG_CALL(m_rhi_pipeline->getNativeHandle(&rhi_handle));
+    m_rhi_pipeline->getNativeHandle(&rhi_handle);
     return NativeHandle(rhi_handle);
 }
 

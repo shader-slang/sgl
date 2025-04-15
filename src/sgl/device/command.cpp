@@ -829,8 +829,8 @@ ref<CommandBuffer> CommandEncoder::finish()
 
 NativeHandle CommandEncoder::native_handle() const
 {
-    rhi::NativeHandle rhi_handle;
-    SLANG_CALL(m_rhi_command_encoder->getNativeHandle(&rhi_handle));
+    rhi::NativeHandle rhi_handle = {};
+    m_rhi_command_encoder->getNativeHandle(&rhi_handle);
     return NativeHandle(rhi_handle);
 }
 

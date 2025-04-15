@@ -50,7 +50,7 @@ Resource::~Resource() { }
 NativeHandle Resource::native_handle() const
 {
     rhi::NativeHandle rhi_handle = {};
-    SLANG_CALL(rhi_resource()->getNativeHandle(&rhi_handle));
+    rhi_resource()->getNativeHandle(&rhi_handle);
     return NativeHandle(rhi_handle);
 }
 
@@ -218,9 +218,8 @@ ref<BufferView> Buffer::create_view(BufferViewDesc desc)
 
 NativeHandle Buffer::shared_handle() const
 {
-    SGL_CHECK(is_set(m_desc.usage, BufferUsage::shared), "Buffer must be created with BufferUsage::shared usage.");
     rhi::NativeHandle rhi_handle = {};
-    SLANG_CALL(m_rhi_buffer->getSharedHandle(&rhi_handle));
+    m_rhi_buffer->getSharedHandle(&rhi_handle);
     return NativeHandle(rhi_handle);
 }
 
@@ -471,9 +470,8 @@ ref<TextureView> Texture::create_view(TextureViewDesc desc)
 
 NativeHandle Texture::shared_handle() const
 {
-    SGL_CHECK(is_set(m_desc.usage, TextureUsage::shared), "Texture must be created with TextureUsage::shared usage.");
     rhi::NativeHandle rhi_handle = {};
-    SLANG_CALL(m_rhi_texture->getSharedHandle(&rhi_handle));
+    m_rhi_texture->getSharedHandle(&rhi_handle);
     return NativeHandle(rhi_handle);
 }
 
@@ -670,7 +668,7 @@ TextureView::TextureView(ref<Device> device, ref<Texture> texture, TextureViewDe
 NativeHandle TextureView::native_handle() const
 {
     rhi::NativeHandle rhi_handle = {};
-    SLANG_CALL(m_rhi_texture_view->getNativeHandle(&rhi_handle));
+    m_rhi_texture_view->getNativeHandle(&rhi_handle);
     return NativeHandle(rhi_handle);
 }
 

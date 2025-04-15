@@ -71,7 +71,7 @@ public:
     rhi::IFence* rhi_fence() const { return m_rhi_fence; }
 
     /// Get the shared fence handle.
-    /// Throws if the fence was not created with the \c FenceDesc::shared flag.
+    /// Note: Fence must be created with the \c FenceDesc::shared flag.
     NativeHandle shared_handle() const;
 
     /// Get the native fence handle.

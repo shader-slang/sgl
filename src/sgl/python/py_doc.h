@@ -2665,7 +2665,7 @@ static const char *__doc_sgl_Device_get_native_command_queue_handle =
 R"doc(Returns the native API handle for the command queue: - D3D12:
 ID3D12CommandQueue* - Vulkan: VkQueue (Vulkan))doc";
 
-static const char *__doc_sgl_Device_native_handle =
+static const char *__doc_sgl_Device_native_handles =
 R"doc(Returns the native API handle: - D3D12: ID3D12Device* (0) - Vulkan:
 VkInstance (0), VkPhysicalDevice (1), VkDevice (2))doc";
 
