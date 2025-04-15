@@ -469,13 +469,6 @@ public:
      */
     void sync_to_device(void* cuda_stream = 0);
 
-    /**
-     * \brief Execute garbage collection.
-     *
-     * This function should be called regularly to execute deferred releases (at least once a frame).
-     */
-    void run_garbage_collection();
-
     DebugPrinter* debug_printer() const { return m_debug_printer.get(); }
 
     /// Block and flush all shader side debug print output.

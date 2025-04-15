@@ -290,7 +290,6 @@ inline std::vector<ref<Texture>> create_textures(
         textures[i] = create_texture(device, blitter, command_encoder, source_images[i].get(), options);
         if (i && (i % BATCH_SIZE == 0)) {
             device->submit_command_buffer(command_encoder->finish());
-            device->run_garbage_collection();
             command_encoder = device->create_command_encoder();
         }
     }
@@ -348,7 +347,6 @@ inline ref<Texture> create_texture_array(
 
         if (i && (i % BATCH_SIZE == 0)) {
             device->submit_command_buffer(command_encoder->finish());
-            device->run_garbage_collection();
             command_encoder = device->create_command_encoder();
         }
 

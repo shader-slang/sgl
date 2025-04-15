@@ -778,8 +778,6 @@ class App:
 
             self.surface.present()
 
-            self.device.run_garbage_collection()
-
             frame += 1
 
         self.device.wait()
