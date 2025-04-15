@@ -312,47 +312,82 @@ void StridedBufferView::clear(CommandBuffer* cmd)
     }
 }
 
-nb::ndarray<nb::numpy> StridedBufferView::to_numpy() const
+template<typename Framework>
+static nb::ndarray<Framework> to_ndarray(void* data, nb::handle owner, const StridedBufferViewDesc &desc)
 {
     // Get dlpack type from scalar type.
-    size_t dtype_size = desc().element_layout->stride();
-    ref<NativeSlangType> innermost = innermost_type(dtype());
+    size_t dtype_size = desc.element_layout->stride();
+    ref<NativeSlangType> innermost = innermost_type(desc.dtype);
     ref<TypeLayoutReflection> innermost_layout = innermost->buffer_type_layout();
 
+    // If the buffer data type (after unwrapping all arrays/vectors) is a scalar,
+    // we can map directly to an array of that scalar type.
+    // Otherwise, we turn it into an array of bytes and add one more dimension
+    // to index the bytes of the element.
+    // Examples:
+    //      Buffer with shape (4, 5) of float3 -> ndarray of shape (4, 5, 3) and dtype float32
+    //      Buffer with shape (5, ) of struct Foo { ... } -> ndarray of shape (5, sizeof(Foo)) and dtype uint8
     bool is_scalar = innermost_layout->type()->kind() == TypeReflection::Kind::scalar;
+    auto dtype_shape = desc.dtype->get_shape();
+    auto dtype_strides = dtype_shape.calc_contiguous_strides();
+
     size_t innermost_size = is_scalar ? innermost_layout->stride() : 1;
     TypeReflection::ScalarType scalar_type = is_scalar ? innermost_layout->type()->scalar_type() : TypeReflection::ScalarType::uint8;
-    auto dtype_shape = dtype()->get_shape();
-    auto dtype_strides = dtype_shape.calc_contiguous_strides();
     auto dlpack_type = scalartype_to_dtype(scalar_type);
 
+    // Build sizes/strides arrays in form numpy wants them.
+    std::vector<size_t> sizes;
+    std::vector<int64_t> strides;
+
+    for (size_t i = 0; i < desc.shape.size(); ++i) {
+        sizes.push_back(desc.shape[i]);
+        strides.push_back(desc.strides[i] * dtype_size / innermost_size);
+    }
+    for (size_t i = 0; i < dtype_shape.size(); ++i) {
+        sizes.push_back(dtype_shape[i]);
+        strides.push_back(dtype_strides[i]);
+    }
+    // If the innermost dtype is not a scalar, add one innermost dimension over
+    // the bytes of the element
+    if (!is_scalar) {
+        sizes.push_back(innermost_layout->stride());
+        strides.push_back(1);
+    }
+
+    auto device = Framework::value == nb::pytorch::value ? nb::device::cuda::value : nb::device::cpu::value;
+
+    // Return numpy array.
+    return nb::ndarray<Framework>(data, sizes.size(), sizes.data(), owner, strides.data(), *dlpack_type, device);
+}
+
+nb::ndarray<nb::numpy> StridedBufferView::to_numpy() const
+{
     // Create data and nanobind capsule to contain the data.
+    size_t dtype_size = desc().element_layout->stride();
     size_t byte_offset = desc().offset * dtype_size;
     size_t data_size = m_storage->size() - byte_offset;
     void* data = new uint8_t[data_size];
     m_storage->get_data(data, data_size, byte_offset);
     nb::capsule owner(data, [](void* p) noexcept { delete[] reinterpret_cast<uint8_t*>(p); });
 
-    // Build sizes/strides arrays in form numpy wants them.
-    std::vector<size_t> sizes;
-    std::vector<int64_t> strides;
+    return to_ndarray<nb::numpy>(data, owner, desc());
+}
 
-    for (size_t i = 0; i < desc().shape.size(); ++i) {
-        sizes.push_back(desc().shape[i]);
-        strides.push_back(desc().strides[i] * dtype_size / innermost_size);
-    }
-    for (size_t i = 0; i < dtype_shape.size(); ++i) {
-        sizes.push_back(dtype_shape[i]);
-        strides.push_back(dtype_strides[i]);
-    }
-    if (!is_scalar) {
-        sizes.push_back(innermost_layout->stride());
-        strides.push_back(1);
-    }
+nb::ndarray<nb::pytorch> StridedBufferView::to_torch() const
+{
+    // Map cuda memory and pass to nanobind ndarray
+    size_t dtype_size = desc().element_layout->stride();
+    size_t byte_offset = desc().offset * dtype_size;
+    void* data = reinterpret_cast<uint8_t*>(m_storage->cuda_memory()) + byte_offset;
 
-    // Return numpy array.
-    return nb::ndarray<
-        nb::numpy>(data, sizes.size(), sizes.data(), owner, strides.data(), *dlpack_type, nb::device::cpu::value);
+    // TODO: We would ideally use m_storage itself as the owner of the ndarray data
+    // However, if the buffer was created in cpp rather than python (which is true for NDBuffer),
+    // nb::find won't work on it. For now, use the buffer view as the owner of the data,
+    // which will keep m_storage alive
+    //auto owner = nb::find(m_storage.get());
+    auto owner = nb::find(this);
+
+    return to_ndarray<nb::pytorch>(data, owner, desc());
 }
 
 void StridedBufferView::copy_from_numpy(nb::ndarray<nb::numpy> data)
@@ -403,6 +438,7 @@ SGL_PY_EXPORT(utils_slangpy_strided_buffer_view)
         .def("cursor", &StridedBufferView::cursor, "start"_a.none() = std::nullopt, "count"_a.none() = std::nullopt)
         .def("uniforms", &StridedBufferView::uniforms)
         .def("to_numpy", &StridedBufferView::to_numpy, D_NA(StridedBufferView, to_numpy))
+        .def("to_torch", &StridedBufferView::to_torch, D_NA(StridedBufferView, to_torch))
         .def("copy_from_numpy", &StridedBufferView::copy_from_numpy, "data"_a, D_NA(StridedBufferView, copy_from_numpy))
         .def("is_contiguous", &StridedBufferView::is_contiguous, D_NA(&StridedBufferView, is_contiguous));
 }

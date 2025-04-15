@@ -60,6 +60,8 @@ public:
 
     /// Copy to CPU memory as a numpy array of correct stride/shape
     nb::ndarray<nb::numpy> to_numpy() const;
+    /// Map GPU memory to torch tensor of correct stride/shape
+    nb::ndarray<nb::pytorch> to_torch() const;
     /// Copy from CPU memory (as a numpy array) into GPU buffer
     void copy_from_numpy(nb::ndarray<nb::numpy> data);
 
