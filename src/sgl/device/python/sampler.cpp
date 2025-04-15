@@ -45,5 +45,6 @@ SGL_PY_EXPORT(device_sampler)
     nb::implicitly_convertible<nb::dict, SamplerDesc>();
 
     nb::class_<Sampler, DeviceResource>(m, "Sampler", D(Sampler)) //
-        .def_prop_ro("desc", &Sampler::desc, D(Sampler, desc));
+        .def_prop_ro("desc", &Sampler::desc, D(Sampler, desc))
+        .def_prop_ro("native_handle", &Sampler::native_handle, D(Sampler, native_handle));
 }

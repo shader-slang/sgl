@@ -541,10 +541,8 @@ public:
 
     slang::IGlobalSession* global_session() const { return m_global_session; }
 
-    /// Returns the native API handle:
-    /// - D3D12: ID3D12Device* (0)
-    /// - Vulkan: VkInstance (0), VkPhysicalDevice (1), VkDevice (2)
-    NativeHandle get_native_handle(uint32_t index = 0) const;
+    /// Get the native device handles.
+    std::array<NativeHandle, 3> native_handles() const;
 
     /// Returns the native API handle for the command queue:
     /// - D3D12: ID3D12CommandQueue*

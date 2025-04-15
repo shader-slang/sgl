@@ -396,8 +396,8 @@ if(SGL_BUILD_PYTHON)
         sgl/core/python/thread.cpp
         sgl/core/python/timer.cpp
         sgl/core/python/window.cpp
-        sgl/device/python/command.cpp
         sgl/device/python/buffer_cursor.cpp
+        sgl/device/python/command.cpp
         sgl/device/python/coopvec.cpp
         sgl/device/python/cursor_utils.h
         sgl/device/python/device_resource.cpp
@@ -406,6 +406,7 @@ if(SGL_BUILD_PYTHON)
         sgl/device/python/formats.cpp
         sgl/device/python/input_layout.cpp
         sgl/device/python/kernel.cpp
+        sgl/device/python/native_handle.cpp
         sgl/device/python/pipeline.cpp
         sgl/device/python/query.cpp
         sgl/device/python/raytracing.cpp

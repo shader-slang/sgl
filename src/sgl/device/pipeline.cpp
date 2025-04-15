@@ -6,7 +6,6 @@
 #include "sgl/device/shader.h"
 #include "sgl/device/input_layout.h"
 #include "sgl/device/helpers.h"
-#include "sgl/device/native_handle_traits.h"
 
 #include "sgl/core/config.h"
 #include "sgl/core/short_vector.h"
@@ -58,10 +57,10 @@ void ComputePipeline::recreate()
     m_thread_group_size = m_desc.program->layout()->get_entry_point_by_index(0)->compute_thread_group_size();
 }
 
-NativeHandle ComputePipeline::get_native_handle() const
+NativeHandle ComputePipeline::native_handle() const
 {
     rhi::NativeHandle rhi_handle = {};
-    SLANG_CALL(m_rhi_pipeline->getNativeHandle(&rhi_handle));
+    m_rhi_pipeline->getNativeHandle(&rhi_handle);
     return NativeHandle(rhi_handle);
 }
 
@@ -169,10 +168,10 @@ void RenderPipeline::recreate()
     );
 }
 
-NativeHandle RenderPipeline::get_native_handle() const
+NativeHandle RenderPipeline::native_handle() const
 {
     rhi::NativeHandle rhi_handle = {};
-    SLANG_CALL(m_rhi_pipeline->getNativeHandle(&rhi_handle));
+    m_rhi_pipeline->getNativeHandle(&rhi_handle);
     return NativeHandle(rhi_handle);
 }
 
@@ -229,10 +228,10 @@ void RayTracingPipeline::recreate()
                    ->createRayTracingPipeline(rhi_desc, (rhi::IRayTracingPipeline**)m_rhi_pipeline.writeRef()));
 }
 
-NativeHandle RayTracingPipeline::get_native_handle() const
+NativeHandle RayTracingPipeline::native_handle() const
 {
     rhi::NativeHandle rhi_handle = {};
-    SLANG_CALL(m_rhi_pipeline->getNativeHandle(&rhi_handle));
+    m_rhi_pipeline->getNativeHandle(&rhi_handle);
     return NativeHandle(rhi_handle);
 }
 

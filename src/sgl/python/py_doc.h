@@ -1320,7 +1320,7 @@ static const char *__doc_sgl_BufferView_desc = R"doc()doc";
 
 static const char *__doc_sgl_BufferView_format = R"doc()doc";
 
-static const char *__doc_sgl_BufferView_get_native_handle = R"doc()doc";
+static const char *__doc_sgl_BufferView_native_handle = R"doc()doc";
 
 static const char *__doc_sgl_BufferView_label = R"doc()doc";
 
@@ -1366,7 +1366,7 @@ static const char *__doc_sgl_Buffer_get_element = R"doc()doc";
 
 static const char *__doc_sgl_Buffer_get_elements = R"doc()doc";
 
-static const char *__doc_sgl_Buffer_get_shared_handle = R"doc(Get the shared resource handle.)doc";
+static const char *__doc_sgl_Buffer_shared_handle = R"doc(Get the shared resource handle.)doc";
 
 static const char *__doc_sgl_Buffer_is_mapped = R"doc(Returns true if buffer is currently mapped.)doc";
 
@@ -1636,7 +1636,7 @@ static const char *__doc_sgl_CommandEncoder_deserialize_acceleration_structure =
 
 static const char *__doc_sgl_CommandEncoder_finish = R"doc()doc";
 
-static const char *__doc_sgl_CommandEncoder_get_native_handle = R"doc()doc";
+static const char *__doc_sgl_CommandEncoder_native_handle = R"doc()doc";
 
 static const char *__doc_sgl_CommandEncoder_get_root_object = R"doc()doc";
 
@@ -1820,7 +1820,7 @@ static const char *__doc_sgl_ComputePipeline_ComputePipeline = R"doc()doc";
 
 static const char *__doc_sgl_ComputePipeline_desc = R"doc()doc";
 
-static const char *__doc_sgl_ComputePipeline_get_native_handle =
+static const char *__doc_sgl_ComputePipeline_native_handle =
 R"doc(Returns the native API handle: - D3D12: ID3D12PipelineState* - Vulkan:
 VkPipeline)doc";
 
@@ -2665,7 +2665,7 @@ static const char *__doc_sgl_Device_get_native_command_queue_handle =
 R"doc(Returns the native API handle for the command queue: - D3D12:
 ID3D12CommandQueue* - Vulkan: VkQueue (Vulkan))doc";
 
-static const char *__doc_sgl_Device_get_native_handle =
+static const char *__doc_sgl_Device_native_handles =
 R"doc(Returns the native API handle: - D3D12: ID3D12Device* (0) - Vulkan:
 VkInstance (0), VkPhysicalDevice (1), VkDevice (2))doc";
 
@@ -2962,11 +2962,11 @@ static const char *__doc_sgl_Fence_current_value = R"doc(Returns the currently s
 
 static const char *__doc_sgl_Fence_desc = R"doc()doc";
 
-static const char *__doc_sgl_Fence_get_native_handle =
+static const char *__doc_sgl_Fence_native_handle =
 R"doc(Returns the native API handle: - D3D12: ID3D12Fence* - Vulkan:
 currently not supported)doc";
 
-static const char *__doc_sgl_Fence_get_shared_handle =
+static const char *__doc_sgl_Fence_shared_handle =
 R"doc(Get the shared fence handle. Throws if the fence was not created with
 the ``FenceDesc::shared`` flag.)doc";
 
@@ -5303,7 +5303,7 @@ static const char *__doc_sgl_RayTracingPipeline_RayTracingPipeline = R"doc()doc"
 
 static const char *__doc_sgl_RayTracingPipeline_desc = R"doc()doc";
 
-static const char *__doc_sgl_RayTracingPipeline_get_native_handle =
+static const char *__doc_sgl_RayTracingPipeline_native_handle =
 R"doc(Returns the native API handle: - D3D12: ID3D12PipelineState* - Vulkan:
 VkPipeline)doc";
 
@@ -5457,7 +5457,7 @@ static const char *__doc_sgl_RenderPipeline_RenderPipeline = R"doc()doc";
 
 static const char *__doc_sgl_RenderPipeline_desc = R"doc()doc";
 
-static const char *__doc_sgl_RenderPipeline_get_native_handle =
+static const char *__doc_sgl_RenderPipeline_native_handle =
 R"doc(Returns the native API handle: - D3D12: ID3D12PipelineState* - Vulkan:
 VkPipeline)doc";
 
@@ -5565,7 +5565,7 @@ static const char *__doc_sgl_Resource_Resource_2 = R"doc()doc";
 
 static const char *__doc_sgl_Resource_class_name = R"doc()doc";
 
-static const char *__doc_sgl_Resource_get_native_handle =
+static const char *__doc_sgl_Resource_native_handle =
 R"doc(Returns the native API handle: - D3D12: ID3D12Resource* - Vulkan:
 VkBuffer or VkImage)doc";
 
@@ -5670,7 +5670,7 @@ static const char *__doc_sgl_Sampler_class_name = R"doc()doc";
 
 static const char *__doc_sgl_Sampler_desc = R"doc()doc";
 
-static const char *__doc_sgl_Sampler_get_native_handle =
+static const char *__doc_sgl_Sampler_native_handle =
 R"doc(Returns the native API handle: - D3D12: D3D12_CPU_DESCRIPTOR_HANDLE -
 Vulkan: VkSampler)doc";
 
@@ -7062,7 +7062,7 @@ static const char *__doc_sgl_TextureView_desc = R"doc()doc";
 
 static const char *__doc_sgl_TextureView_format = R"doc()doc";
 
-static const char *__doc_sgl_TextureView_get_native_handle = R"doc()doc";
+static const char *__doc_sgl_TextureView_native_handle = R"doc()doc";
 
 static const char *__doc_sgl_TextureView_label = R"doc()doc";
 
@@ -7104,7 +7104,7 @@ static const char *__doc_sgl_Texture_get_mip_size = R"doc()doc";
 
 static const char *__doc_sgl_Texture_get_mip_width = R"doc()doc";
 
-static const char *__doc_sgl_Texture_get_shared_handle = R"doc(Get the shared resource handle.)doc";
+static const char *__doc_sgl_Texture_shared_handle = R"doc(Get the shared resource handle.)doc";
 
 static const char *__doc_sgl_Texture_get_subresource_data =
 R"doc(Get subresource data to host memory. \note This will wait until the

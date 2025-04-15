@@ -349,7 +349,8 @@ SGL_PY_EXPORT(device_resource)
     nb::sgl_enum<TextureType>(m, "TextureType");
     nb::sgl_enum<MemoryType>(m, "MemoryType");
 
-    nb::class_<Resource, DeviceResource>(m, "Resource", D(Resource));
+    nb::class_<Resource, DeviceResource>(m, "Resource", D(Resource)) //
+        .def_prop_ro("native_handle", &Resource::native_handle, D(Resource, native_handle));
 
     nb::sgl_enum<TextureAspect>(m, "TextureAspect");
 
@@ -388,6 +389,7 @@ SGL_PY_EXPORT(device_resource)
         .def_prop_ro("size", &Buffer::size, D(Buffer, size))
         .def_prop_ro("struct_size", &Buffer::struct_size, D(Buffer, struct_size))
         .def_prop_ro("device_address", &Buffer::device_address, D(Buffer, device_address))
+        .def_prop_ro("shared_handle", &Buffer::shared_handle, D(Buffer, shared_handle))
         .def("to_numpy", &buffer_to_numpy, D(buffer_to_numpy))
         .def("copy_from_numpy", &buffer_copy_from_numpy, "data"_a, D(buffer_from_numpy))
         .def(
@@ -465,6 +467,7 @@ SGL_PY_EXPORT(device_resource)
         .def_prop_ro("mip_count", &Texture::mip_count, D(Texture, mip_count))
         .def_prop_ro("layer_count", &Texture::layer_count, D(Texture, layer_count))
         .def_prop_ro("subresource_count", &Texture::subresource_count, D(Texture, subresource_count))
+        .def_prop_ro("shared_handle", &Texture::shared_handle, D(Texture, shared_handle))
         .def("get_mip_width", &Texture::get_mip_width, "mip"_a = 0, D(Texture, get_mip_width))
         .def("get_mip_height", &Texture::get_mip_height, "mip"_a = 0, D(Texture, get_mip_height))
         .def("get_mip_depth", &Texture::get_mip_depth, "mip"_a = 0, D(Texture, get_mip_depth))
@@ -515,5 +518,6 @@ SGL_PY_EXPORT(device_resource)
         .def_prop_ro("aspect", &TextureView::aspect, D(TextureView, aspect))
         .def_prop_ro("subresource_range", &TextureView::subresource_range, D(TextureView, subresource_range))
         .def_prop_ro("label", &TextureView::label, D(TextureView, label))
+        .def_prop_ro("native_handle", &TextureView::native_handle, D(TextureView, native_handle))
         .def("__repr__", &TextureView::to_string, D(TextureView, to_string));
 }

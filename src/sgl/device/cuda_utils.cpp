@@ -53,7 +53,7 @@ CUexternalMemory import_external_memory(const Buffer* buffer)
 
     SGL_CHECK_NOT_NULL(buffer);
     SGL_CHECK(is_set(buffer->desc().usage, BufferUsage::shared), "Buffer was not created with shared usage.");
-    NativeHandle shared_handle = buffer->get_shared_handle();
+    NativeHandle shared_handle = buffer->shared_handle();
     SGL_CHECK(shared_handle, "Buffer shared handle creation failed.");
 
     CUDA_EXTERNAL_MEMORY_HANDLE_DESC desc = {};
@@ -105,7 +105,7 @@ CUexternalSemaphore import_external_semaphore(const Fence* fence)
 {
     SGL_CHECK_NOT_NULL(fence);
     SGL_CHECK(fence->desc().shared, "Fence was not created with shared flag.");
-    NativeHandle shared_handle = fence->get_shared_handle();
+    NativeHandle shared_handle = fence->shared_handle();
     SGL_CHECK(shared_handle, "Fence shared handle creation failed.");
 
     CUDA_EXTERNAL_SEMAPHORE_HANDLE_DESC desc = {};

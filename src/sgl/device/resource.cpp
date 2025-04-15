@@ -5,7 +5,6 @@
 #include "sgl/device/device.h"
 #include "sgl/device/command.h"
 #include "sgl/device/helpers.h"
-#include "sgl/device/native_handle_traits.h"
 #include "sgl/device/cuda_utils.h"
 
 #include "sgl/core/config.h"
@@ -48,10 +47,10 @@ Resource::Resource(ref<Device> device)
 
 Resource::~Resource() { }
 
-NativeHandle Resource::get_native_handle() const
+NativeHandle Resource::native_handle() const
 {
     rhi::NativeHandle rhi_handle = {};
-    SLANG_CALL(rhi_resource()->getNativeHandle(&rhi_handle));
+    rhi_resource()->getNativeHandle(&rhi_handle);
     return NativeHandle(rhi_handle);
 }
 
@@ -217,10 +216,10 @@ ref<BufferView> Buffer::create_view(BufferViewDesc desc)
     return m_device->create_buffer_view(this, std::move(desc));
 }
 
-NativeHandle Buffer::get_shared_handle() const
+NativeHandle Buffer::shared_handle() const
 {
     rhi::NativeHandle rhi_handle = {};
-    SLANG_CALL(m_rhi_buffer->getSharedHandle(&rhi_handle));
+    m_rhi_buffer->getSharedHandle(&rhi_handle);
     return NativeHandle(rhi_handle);
 }
 
@@ -270,7 +269,7 @@ BufferView::BufferView(ref<Device> device, ref<Buffer> buffer, BufferViewDesc de
     );
 }
 
-NativeHandle BufferView::get_native_handle() const
+NativeHandle BufferView::native_handle() const
 {
     // TODO
     return {};
@@ -469,10 +468,10 @@ ref<TextureView> Texture::create_view(TextureViewDesc desc)
     return m_device->create_texture_view(this, std::move(desc));
 }
 
-NativeHandle Texture::get_shared_handle() const
+NativeHandle Texture::shared_handle() const
 {
     rhi::NativeHandle rhi_handle = {};
-    SLANG_CALL(m_rhi_texture->getSharedHandle(&rhi_handle));
+    m_rhi_texture->getSharedHandle(&rhi_handle);
     return NativeHandle(rhi_handle);
 }
 
@@ -666,10 +665,10 @@ TextureView::TextureView(ref<Device> device, ref<Texture> texture, TextureViewDe
     );
 }
 
-NativeHandle TextureView::get_native_handle() const
+NativeHandle TextureView::native_handle() const
 {
     rhi::NativeHandle rhi_handle = {};
-    SLANG_CALL(m_rhi_texture_view->getNativeHandle(&rhi_handle));
+    m_rhi_texture_view->getNativeHandle(&rhi_handle);
     return NativeHandle(rhi_handle);
 }
 

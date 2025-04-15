@@ -43,10 +43,8 @@ public:
 
     rhi::ISampler* rhi_sampler() const { return m_rhi_sampler; }
 
-    /// Returns the native API handle:
-    /// - D3D12: D3D12_CPU_DESCRIPTOR_HANDLE
-    /// - Vulkan: VkSampler
-    NativeHandle get_native_handle() const;
+    /// Get the native sampler handle.
+    NativeHandle native_handle() const;
 
     std::string to_string() const override;
 

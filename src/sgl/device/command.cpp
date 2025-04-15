@@ -10,7 +10,6 @@
 #include "sgl/device/pipeline.h"
 #include "sgl/device/raytracing.h"
 #include "sgl/device/shader_object.h"
-#include "sgl/device/native_handle_traits.h"
 #include "sgl/device/cuda_utils.h"
 #include "sgl/device/cuda_interop.h"
 #include "sgl/device/shader_cursor.h"
@@ -828,10 +827,10 @@ ref<CommandBuffer> CommandEncoder::finish()
     return command_buffer;
 }
 
-NativeHandle CommandEncoder::get_native_handle() const
+NativeHandle CommandEncoder::native_handle() const
 {
-    rhi::NativeHandle rhi_handle;
-    SLANG_CALL(m_rhi_command_encoder->getNativeHandle(&rhi_handle));
+    rhi::NativeHandle rhi_handle = {};
+    m_rhi_command_encoder->getNativeHandle(&rhi_handle);
     return NativeHandle(rhi_handle);
 }
 

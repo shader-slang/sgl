@@ -4,7 +4,6 @@
 
 #include "sgl/device/device.h"
 #include "sgl/device/helpers.h"
-#include "sgl/device/native_handle_traits.h"
 
 #include "sgl/core/config.h"
 #include "sgl/core/error.h"
@@ -37,10 +36,10 @@ Sampler::Sampler(ref<Device> device, SamplerDesc desc)
 
 Sampler::~Sampler() { }
 
-NativeHandle Sampler::get_native_handle() const
+NativeHandle Sampler::native_handle() const
 {
     rhi::NativeHandle rhi_handle = {};
-    SLANG_CALL(m_rhi_sampler->getNativeHandle(&rhi_handle));
+    m_rhi_sampler->getNativeHandle(&rhi_handle);
     return NativeHandle(rhi_handle);
 }
 
