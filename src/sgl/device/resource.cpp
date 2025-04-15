@@ -368,7 +368,7 @@ inline void process_texture_desc(TextureDesc& desc)
         SGL_CHECK(desc.sample_count == 1, "Invalid sample count ({}) for non-multisampled texture.", desc.sample_count);
     }
 
-    if (desc.mip_count == ALL_MIP_LEVELS)
+    if (desc.mip_count == ALL_MIPS)
         desc.mip_count = stdx::bit_width(std::max({desc.width, desc.height, desc.depth}));
 }
 
@@ -631,22 +631,22 @@ TextureView::TextureView(ref<Device> device, ref<Texture> texture, TextureViewDe
     uint32_t layer_count = m_texture->layer_count();
     SGL_CHECK(m_desc.subresource_range.layer < layer_count, "'layer' out of range");
     SGL_CHECK(
-        (m_desc.subresource_range.layer_count == SubresourceRange::ALL)
+        (m_desc.subresource_range.layer_count == ALL_LAYERS)
             || (m_desc.subresource_range.layer + m_desc.subresource_range.layer_count <= layer_count),
         "'layer_count' out of range"
     );
-    if (m_desc.subresource_range.layer_count == SubresourceRange::ALL) {
+    if (m_desc.subresource_range.layer_count == ALL_LAYERS) {
         m_desc.subresource_range.layer_count = layer_count - m_desc.subresource_range.layer;
     }
 
     uint32_t mip_count = m_texture->mip_count();
     SGL_CHECK(m_desc.subresource_range.mip < mip_count, "'mip' out of range");
     SGL_CHECK(
-        m_desc.subresource_range.mip_count == SubresourceRange::ALL
+        m_desc.subresource_range.mip_count == ALL_MIPS
             || m_desc.subresource_range.mip + m_desc.subresource_range.mip_count <= mip_count,
         "'mip_count' out of range"
     );
-    if (m_desc.subresource_range.mip_count == SubresourceRange::ALL) {
+    if (m_desc.subresource_range.mip_count == ALL_MIPS) {
         m_desc.subresource_range.mip_count = mip_count - m_desc.subresource_range.mip;
     }
 

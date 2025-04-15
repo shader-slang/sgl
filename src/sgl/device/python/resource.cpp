@@ -340,7 +340,8 @@ SGL_PY_EXPORT(device_resource)
 {
     using namespace sgl;
 
-    m.attr("ALL_MIP_LEVELS") = ALL_MIP_LEVELS;
+    m.attr("ALL_LAYERS") = ALL_LAYERS;
+    m.attr("ALL_MIPS") = ALL_MIPS;
 
     nb::sgl_enum<ResourceState>(m, "ResourceState");
     nb::sgl_enum_flags<BufferUsage>(m, "BufferUsage");
@@ -497,9 +498,9 @@ SGL_PY_EXPORT(device_resource)
                 return self->create_view(desc);
             },
             "layer"_a = 0,
-            "layer_count"_a = SubresourceRange::ALL,
+            "layer_count"_a = ALL_LAYERS,
             "mip"_a = 0,
-            "mip_count"_a = SubresourceRange::ALL,
+            "mip_count"_a = ALL_MIPS,
             "format"_a = Format::undefined,
             D(Texture, create_view)
         )

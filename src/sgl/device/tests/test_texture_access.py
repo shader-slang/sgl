@@ -146,7 +146,7 @@ def create_test_texture(
     ],
 )
 @pytest.mark.parametrize("array_length", [1, 4, 16])
-@pytest.mark.parametrize("mips", [sgl.ALL_MIP_LEVELS, 1, 4])
+@pytest.mark.parametrize("mips", [sgl.ALL_MIPS, 1, 4])
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_read_write_texture(
     device_type: sgl.DeviceType, array_length: int, mips: int, type: sgl.TextureType
@@ -180,7 +180,7 @@ def test_read_write_texture(
     ],
 )
 @pytest.mark.parametrize("array_length", [1, 4, 16])
-@pytest.mark.parametrize("mips", [sgl.ALL_MIP_LEVELS, 1, 4])
+@pytest.mark.parametrize("mips", [sgl.ALL_MIPS, 1, 4])
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_upload_texture_single_mip(
     device_type: sgl.DeviceType, array_length: int, mips: int, type: sgl.TextureType
@@ -219,7 +219,7 @@ def test_upload_texture_single_mip(
     ],
 )
 @pytest.mark.parametrize("array_length", [1, 4, 16])
-@pytest.mark.parametrize("mips", [sgl.ALL_MIP_LEVELS, 1, 4])
+@pytest.mark.parametrize("mips", [sgl.ALL_MIPS, 1, 4])
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_upload_whole_texture(
     device_type: sgl.DeviceType, array_length: int, mips: int, type: sgl.TextureType
@@ -343,7 +343,7 @@ def test_texture_layout(
     ],
 )
 @pytest.mark.parametrize("array_length", [1, 4])
-@pytest.mark.parametrize("mips", [sgl.ALL_MIP_LEVELS, 1, 4])
+@pytest.mark.parametrize("mips", [sgl.ALL_MIPS, 1, 4])
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_shader_read_write_texture(
     device_type: sgl.DeviceType, array_length: int, mips: int, type: sgl.TextureType

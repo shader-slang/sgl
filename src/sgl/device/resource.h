@@ -210,16 +210,18 @@ SGL_ENUM_INFO(
 );
 SGL_ENUM_REGISTER(TextureAspect);
 
+static constexpr uint32_t ALL_LAYERS = rhi::kAllLayers;
+static constexpr uint32_t ALL_MIPS = rhi::kAllMipLevels;
+
 struct SubresourceRange {
-    static constexpr uint32_t ALL = std::numeric_limits<uint32_t>::max();
     /// First array layer.
     uint32_t layer{0};
     /// Number of array layers.
-    uint32_t layer_count{ALL};
+    uint32_t layer_count{ALL_LAYERS};
     /// Most detailed mip level.
     uint32_t mip{0};
     /// Number of mip levels.
-    uint32_t mip_count{ALL};
+    uint32_t mip_count{ALL_MIPS};
 
     auto operator<=>(const SubresourceRange&) const = default;
 
@@ -447,8 +449,6 @@ struct OwnedSubresourceData : SubresourceData {
     std::unique_ptr<uint8_t[]> owned_data;
 };
 
-static constexpr uint32_t ALL_MIP_LEVELS = rhi::kAllMipLevels;
-
 static constexpr uint32_t DEFAULT_ALIGNMENT = rhi::kDefaultAlignment;
 
 
@@ -465,7 +465,7 @@ struct TextureDesc {
     uint32_t depth{1};
     /// Array length.
     uint32_t array_length{1};
-    /// Number of mip levels (ALL_MIP_LEVELS for all mip levels).
+    /// Number of mip levels (ALL_MIPS for all mip levels).
     uint32_t mip_count{1};
     /// Number of samples per pixel.
     uint32_t sample_count{1};

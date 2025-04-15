@@ -226,7 +226,7 @@ inline ref<Texture> create_texture(
             .format = source_image.format,
             .width = bitmap->width(),
             .height = bitmap->height(),
-            .mip_count = allocate_mips ? ALL_MIP_LEVELS : 1u,
+            .mip_count = allocate_mips ? ALL_MIPS : 1u,
             .usage = usage,
         });
 
@@ -334,7 +334,7 @@ inline ref<Texture> create_texture_array(
                 .width = bitmap->width(),
                 .height = bitmap->height(),
                 .array_length = narrow_cast<uint32_t>(source_images.size()),
-                .mip_count = allocate_mips ? ALL_MIP_LEVELS : 1u,
+                .mip_count = allocate_mips ? ALL_MIPS : 1u,
                 .usage = usage,
             });
             first_width = bitmap->width();
