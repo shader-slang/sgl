@@ -157,14 +157,12 @@ void StridedBufferView::broadcast_to_inplace(const Shape& new_shape)
     }
 
     for (size_t i = 0; i < curr_shape_vec.size(); ++i) {
-        // TODO: Should this be curr_shape_vec[i] != 1? Waiting for Benedikt response.
-        if (curr_shape_vec[i] != new_shape_vec[D + i] && curr_shape_vec[D + i] != 1) {
+        if (curr_shape_vec[i] != new_shape_vec[D + i] && curr_shape_vec[i] != 1) {
             SGL_THROW(
-                "Current dimension {}({}) must be equal to new dimension {}({}) or 1",
-                D + i,
-                curr_shape_vec[D + i],
+                "Current dimension {} at index {} must be equal to new dimension {} or 1",
+                curr_shape_vec[i],
                 i,
-                new_shape_vec[i]
+                new_shape_vec[D + i]
             );
         }
     }
