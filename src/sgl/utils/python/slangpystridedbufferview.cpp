@@ -350,14 +350,16 @@ nb::ndarray<nb::numpy> StridedBufferView::to_numpy() const
 
 void StridedBufferView::copy_from_numpy(nb::ndarray<nb::numpy> data)
 {
-    // TODO: Offset, strides, etc.
-    SGL_CHECK(is_ndarray_contiguous(data), "numpy array is not contiguous");
+    SGL_CHECK(is_ndarray_contiguous(data), "Source Numpy array must be contiguous");
+    SGL_CHECK(is_contiguous(), "Destination buffer view must be contiguous");
 
-    size_t buffer_size = storage()->size();
+    size_t dtype_size = desc().element_layout->stride();
+    size_t byte_offset = desc().offset * dtype_size;
     size_t data_size = data.nbytes();
-    SGL_CHECK(data_size <= buffer_size, "numpy array is larger than the buffer ({} > {})", data_size, buffer_size);
+    size_t buffer_size = m_storage->size() - byte_offset;
+    SGL_CHECK(data_size <= buffer_size, "Numpy array is larger than the buffer ({} > {})", data_size, buffer_size);
 
-    storage()->set_data(data.data(), data_size);
+    m_storage->set_data(data.data(), data_size, byte_offset);
 }
 
 } // namespace sgl::slangpy
