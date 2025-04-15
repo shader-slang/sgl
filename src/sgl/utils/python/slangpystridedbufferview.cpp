@@ -122,8 +122,12 @@ void StridedBufferView::view_inplace(Shape shape, Shape strides, int offset)
 {
     SGL_CHECK(shape.valid(), "New shape must be valid");
 
-    if (!strides.valid())
+    if (!strides.valid() || strides.size() == 0)
         strides = shape.calc_contiguous_strides();
+
+    for (size_t i = 0; i < strides.size(); ++i) {
+        SGL_CHECK(strides[i] >= 0, "Strides must be positive");
+    }
 
     SGL_CHECK(
         shape.size() == strides.size(),
@@ -135,6 +139,8 @@ void StridedBufferView::view_inplace(Shape shape, Shape strides, int offset)
     desc().shape = shape;
     desc().strides = strides;
     desc().offset += offset;
+
+    SGL_CHECK(desc().offset >= 0, "Buffer view offset is negative!");
 }
 
 void StridedBufferView::broadcast_to_inplace(const Shape& new_shape)
