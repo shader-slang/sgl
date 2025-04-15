@@ -33,6 +33,7 @@ SGL_PY_DECLARE(device_formats);
 SGL_PY_DECLARE(device_framebuffer);
 SGL_PY_DECLARE(device_input_layout);
 SGL_PY_DECLARE(device_kernel);
+SGL_PY_DECLARE(device_native_handle);
 SGL_PY_DECLARE(device_pipeline);
 SGL_PY_DECLARE(device_query);
 SGL_PY_DECLARE(device_raytracing);
@@ -106,6 +107,7 @@ NB_MODULE(sgl_ext, m_)
     SGL_PY_IMPORT(math_matrix);
     SGL_PY_IMPORT(math_quaternion);
 
+    SGL_PY_IMPORT(device_native_handle);
     SGL_PY_IMPORT(device_types);
     SGL_PY_IMPORT(device_formats);
     SGL_PY_IMPORT(device_device_resource);

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "sgl/core/error.h"
+#include "sgl/core/enum.h"
 
 #include <slang-rhi.h>
 
@@ -70,15 +71,79 @@ enum class NativeHandleType {
     WGPUCommandEncoder = static_cast<uint32_t>(rhi::NativeHandleType::WGPUCommandEncoder),
 };
 
+SGL_ENUM_INFO(
+    NativeHandleType,
+    {
+        {NativeHandleType::undefined, "undefined"},
+
+        {NativeHandleType::win32, "win32"},
+        {NativeHandleType::file_descriptor, "file_descriptor"},
+
+        {NativeHandleType::D3D12Device, "D3D12Device"},
+        {NativeHandleType::D3D12CommandQueue, "D3D12CommandQueue"},
+        {NativeHandleType::D3D12GraphicsCommandList, "D3D12GraphicsCommandList"},
+        {NativeHandleType::D3D12Resource, "D3D12Resource"},
+        {NativeHandleType::D3D12PipelineState, "D3D12PipelineState"},
+        {NativeHandleType::D3D12StateObject, "D3D12StateObject"},
+        {NativeHandleType::D3D12CpuDescriptorHandle, "D3D12CpuDescriptorHandle"},
+        {NativeHandleType::D3D12Fence, "D3D12Fence"},
+        {NativeHandleType::D3D12DeviceAddress, "D3D12DeviceAddress"},
+
+        {NativeHandleType::VkDevice, "VkDevice"},
+        {NativeHandleType::VkPhysicalDevice, "VkPhysicalDevice"},
+        {NativeHandleType::VkInstance, "VkInstance"},
+        {NativeHandleType::VkQueue, "VkQueue"},
+        {NativeHandleType::VkCommandBuffer, "VkCommandBuffer"},
+        {NativeHandleType::VkBuffer, "VkBuffer"},
+        {NativeHandleType::VkImage, "VkImage"},
+        {NativeHandleType::VkImageView, "VkImageView"},
+        {NativeHandleType::VkAccelerationStructureKHR, "VkAccelerationStructureKHR"},
+        {NativeHandleType::VkSampler, "VkSampler"},
+        {NativeHandleType::VkPipeline, "VkPipeline"},
+        {NativeHandleType::VkSemaphore, "VkSemaphore"},
+
+        {NativeHandleType::MTLDevice, "MTLDevice"},
+        {NativeHandleType::MTLCommandQueue, "MTLCommandQueue"},
+        {NativeHandleType::MTLCommandBuffer, "MTLCommandBuffer"},
+        {NativeHandleType::MTLTexture, "MTLTexture"},
+        {NativeHandleType::MTLBuffer, "MTLBuffer"},
+        {NativeHandleType::MTLComputePipelineState, "MTLComputePipelineState"},
+        {NativeHandleType::MTLRenderPipelineState, "MTLRenderPipelineState"},
+        {NativeHandleType::MTLSharedEvent, "MTLSharedEvent"},
+        {NativeHandleType::MTLSamplerState, "MTLSamplerState"},
+        {NativeHandleType::MTLAccelerationStructure, "MTLAccelerationStructure"},
+
+        {NativeHandleType::CUdevice, "CUdevice"},
+        {NativeHandleType::CUdeviceptr, "CUdeviceptr"},
+        {NativeHandleType::CUtexObject, "CUtexObject"},
+        {NativeHandleType::CUstream, "CUstream"},
+
+        {NativeHandleType::OptixDeviceContext, "OptixDeviceContext"},
+        {NativeHandleType::OptixTraversableHandle, "OptixTraversableHandle"},
+
+        {NativeHandleType::WGPUDevice, "WGPUDevice"},
+        {NativeHandleType::WGPUBuffer, "WGPUBuffer"},
+        {NativeHandleType::WGPUTexture, "WGPUTexture"},
+        {NativeHandleType::WGPUSampler, "WGPUSampler"},
+        {NativeHandleType::WGPURenderPipeline, "WGPURenderPipeline"},
+        {NativeHandleType::WGPUComputePipeline, "WGPUComputePipeline"},
+        {NativeHandleType::WGPUQueue, "WGPUQueue"},
+        {NativeHandleType::WGPUCommandBuffer, "WGPUCommandBuffer"},
+        {NativeHandleType::WGPUTextureView, "WGPUTextureView"},
+        {NativeHandleType::WGPUCommandEncoder, "WGPUCommandEncoder"},
+    }
+);
+SGL_ENUM_REGISTER(NativeHandleType);
+
 template<typename T>
 struct NativeHandleTrait;
 
-/// Represents a native graphics API handle (e.g. D3D12 or Vulkan).
+/// Represents a native graphics API handle (e.g. D3D12/Vulkan/Metal/CUDA etc).
 /// Native handles are expected to fit into 64 bits.
 /// Type information and conversion from/to native handles is done
 /// using type traits from native_handle_traits.h which needs to be
 /// included when creating and accessing NativeHandle.
-/// This separation is done so we don't expose the heavy D3D12/Vulkan
+/// This separation is done so we don't expose the heavy backend API
 /// headers everywhere.
 class NativeHandle {
 public:
