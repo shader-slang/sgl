@@ -277,6 +277,11 @@ class cmake(Package):
                 "sha512": "eea422bdf5ec01f3ef9e9c3becb12df59a26cda1089a2ff03c1faa2d7f8d478bd14a8a41bf014c5b8a4653b7bf2b26d3a55a45356550b30ac0cda351ad689497",
                 "strip": True,
             },
+            "windows-arm64": {
+                "url": f"https://github.com/Kitware/CMake/releases/download/v{self.version}/cmake-{self.version}-windows-arm64.zip",
+                "sha512": "91a9568b146e32a3880178b6f203414aa8edbc259735c104fe27d79c1eb9061a61b8d6b40cdf173891429b4b42b6d761740bb0bdf9dbe0163bf74e92f0dcee3c",
+                "strip": True,
+            },
             "linux-x64": {
                 "url": f"https://github.com/Kitware/CMake/releases/download/v{self.version}/cmake-{self.version}-linux-x86_64.tar.gz",
                 "sha512": "37d63a47d5d5b35a0da201d6486d558f06a23b95d06950729f8f353b1d583b764ddaeb327b5e97a296001ce772bdd3212f249d7ff5332a024cc1c16f35822da3",
@@ -300,23 +305,31 @@ class cmake(Package):
 class ninja(Package):
     def __init__(self):
         self.name = "ninja"
-        self.version = "1.11.1"
+        self.version = "1.12.1"
         self.infos = {
             "windows-x64": {
                 "url": f"https://github.com/ninja-build/ninja/releases/download/v{self.version}/ninja-win.zip",
-                "sha512": "a700e794c32eb67b9f87040db7f1ba3a8e891636696fc54d416b01661c2421ff46fa517c97fd904adacdf8e621df3e68ea380105b909ae8b6651a78ae7eb3199",
+                "sha512": "d6715c6458d798bcb809f410c0364dabd937b5b7a3ddb4cd5aba42f9fca45139b2a8a3e7fd9fbd88fd75d298ed99123220b33c7bdc8966a9d5f2a1c9c230955f",
+            },
+            "windows-arm64": {
+                "url": f"https://github.com/ninja-build/ninja/releases/download/v{self.version}/ninja-winarm64.zip",
+                "sha512": "b1826c422a677f47f9f7e001672ce831791b092e4f1cd84ddf2ea067781c31aa8246f26e91dd66300c23ffa77a8ea29910c48ccf7e4235ff20bccc2d2b6e247b",
             },
             "linux-x64": {
                 "url": f"https://github.com/ninja-build/ninja/releases/download/v{self.version}/ninja-linux.zip",
-                "sha512": "6403dac9196baffcff614fa73ea530752997c8db6bbfbaa0446b4b09d7327e2aa6e8615d1283c961d3bf0df497e85ba86604149f1505ee75f89d600245a45dde",
+                "sha512": "9c2ad534e7e72e67c608de7784cfbae601095bfca96713731a3f1eca268d66a6302f40c138a4ad97f7e8c902cd3fb05994a175e46fe922295dcc2d1334bf9014",
+            },
+            "linux-arm64": {
+                "url": f"https://github.com/ninja-build/ninja/releases/download/v{self.version}/ninja-linux-aarch64.zip",
+                "sha512": "22c46abb7e6d916e11713705f78d093e9b30029cb49cadc65755908ad9f44b3f2548105174cc615a5ef86c4672b366173f18bd04c2d71710a303d952c06db334",
             },
             "macos-x64": {
                 "url": f"https://github.com/ninja-build/ninja/releases/download/v{self.version}/ninja-mac.zip",
-                "sha512": "dad33b0918c60bbf5107951a936175b1610b4894a408f4ba4b47a2f5b328fc982a52a2aed6a0cb75028ee4765af5083bea66611c37516826eb0c851366bb4427",
+                "sha512": "4c11f477359c9d1dcda72529a503a59948ec20b368992132e545d6d4f6e3aabfd1d6b1d0f32cf932626037959b24a7bb375ef901e2d002eabadc83a265cbc351",
             },
             "macos-arm64": {
                 "url": f"https://github.com/ninja-build/ninja/releases/download/v{self.version}/ninja-mac.zip",
-                "sha512": "dad33b0918c60bbf5107951a936175b1610b4894a408f4ba4b47a2f5b328fc982a52a2aed6a0cb75028ee4765af5083bea66611c37516826eb0c851366bb4427",
+                "sha512": "4c11f477359c9d1dcda72529a503a59948ec20b368992132e545d6d4f6e3aabfd1d6b1d0f32cf932626037959b24a7bb375ef901e2d002eabadc83a265cbc351",
             },
         }
 
@@ -332,6 +345,11 @@ class clang_format(Package):
                 "use_sub_dir": "clang_format/data/bin",
             },
             "linux-x64": {
+                "url": f"https://files.pythonhosted.org/packages/83/47/10591237672762b61099011f04f154d5b46c21b4f88979c92331a04edacb/clang_format-{self.version}-py2.py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+                "sha512": "9dbb215810dbff4f75614928532f2ee88cf527b11b0834adbaa8d4f3a1940ce9aeb6e44475edbf3097f49bdad8a4b9f4d857c74798ff993b0f49a7dee0b033a3",
+                "use_sub_dir": "clang_format/data/bin",
+            },
+            "linux-arm64": {
                 "url": f"https://files.pythonhosted.org/packages/83/47/10591237672762b61099011f04f154d5b46c21b4f88979c92331a04edacb/clang_format-{self.version}-py2.py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
                 "sha512": "9dbb215810dbff4f75614928532f2ee88cf527b11b0834adbaa8d4f3a1940ce9aeb6e44475edbf3097f49bdad8a4b9f4d857c74798ff993b0f49a7dee0b033a3",
                 "use_sub_dir": "clang_format/data/bin",

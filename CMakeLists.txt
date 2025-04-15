@@ -11,6 +11,7 @@ project(sgl)
 set(CTEST_OUTPUT_ON_FAILURE TRUE)
 enable_testing()
 
+include(DetermineTargetArchitecture)
 include(GNUInstallDirs)
 include(CMakeRC)
 
@@ -93,6 +94,11 @@ else()
     message(FATAL_ERROR "Unsupported platform!")
 endif()
 message(STATUS "Platform: ${SGL_PLATFORM}")
+
+# Determine the target architecture we build for.
+# CMAKE_SYSTEM_PROCESSOR is not a reliable way to determine the target architecture.
+determine_target_architecture(SGL_ARCHITECTURE)
+message(STATUS "Architecture: ${SGL_ARCHITECTURE}")
 
 # -----------------------------------------------------------------------------
 # Python
