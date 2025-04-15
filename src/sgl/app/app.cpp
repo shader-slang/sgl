@@ -41,8 +41,6 @@ void App::run_frame()
     for (const auto& window : m_windows) {
         window->_run_frame();
     }
-
-    m_device->run_garbage_collection();
 }
 
 void App::terminate()

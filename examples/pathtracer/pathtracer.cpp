@@ -833,8 +833,6 @@ struct App {
 
             surface->present();
 
-            device->run_garbage_collection();
-
             frame++;
         }
 

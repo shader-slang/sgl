@@ -540,6 +540,11 @@ uint64_t Device::submit_command_buffer(CommandBuffer* command_buffer, CommandQue
     SGL_CHECK_NOT_NULL(command_buffer);
     SGL_CHECK(queue == CommandQueueType::graphics, "Only graphics queue is supported.");
 
+    // Update hot reload system if created.
+    // TODO(slang-rhi) need to make sure this is not too expensive.
+    if (m_hot_reload)
+        m_hot_reload->update();
+
     // TODO make parameter
     void* cuda_stream = 0;
 
@@ -610,17 +615,6 @@ void Device::sync_to_device(void* cuda_stream)
     m_cuda_semaphore->wait(m_global_fence->signaled_value(), CUstream(cuda_stream));
 }
 
-void Device::run_garbage_collection()
-{
-    uint64_t signaled_value = m_global_fence->signaled_value();
-
-    uint64_t current_value = m_global_fence->current_value();
-
-    // Update hot reload system if created.
-    if (m_hot_reload)
-        m_hot_reload->update();
-}
-
 void Device::flush_print()
 {
     if (m_debug_printer)
@@ -635,7 +629,6 @@ std::string Device::flush_print_to_string()
 void Device::wait()
 {
     wait_for_idle();
-    run_garbage_collection();
 }
 
 void Device::upload_buffer_data(Buffer* buffer, size_t offset, size_t size, const void* data)

@@ -160,7 +160,7 @@ class App:
             del surface_texture
 
             self.surface.present()
-            self.device.run_garbage_collection()
+
             frame += 1
 
 

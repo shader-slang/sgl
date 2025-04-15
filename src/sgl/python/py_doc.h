@@ -2790,12 +2790,6 @@ static const char *__doc_sgl_Device_rhi_device = R"doc()doc";
 
 static const char *__doc_sgl_Device_rhi_graphics_queue = R"doc()doc";
 
-static const char *__doc_sgl_Device_run_garbage_collection =
-R"doc(Execute garbage collection.
-
-This function should be called regularly to execute deferred releases
-(at least once a frame).)doc";
-
 static const char *__doc_sgl_Device_shader_cache_stats = R"doc(Shader cache statistics.)doc";
 
 static const char *__doc_sgl_Device_slang_session = R"doc(Default slang session.)doc";
