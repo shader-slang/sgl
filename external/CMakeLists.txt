@@ -96,6 +96,7 @@ elseif(SGL_LINUX)
     sgl_copy_binary(${SLANG_DIR}/lib/libslang.so .)
     sgl_copy_binary(${SLANG_DIR}/lib/libslang-glslang.so .)
     # sgl_copy_binary(${SLANG_DIR}/lib/libslang-llvm.so .)
+    sgl_copy_binary(${SLANG_DIR}/lib/libslang-rt.so .)
 elseif(SGL_MACOS)
     add_library(slang SHARED IMPORTED GLOBAL)
     set_target_properties(slang PROPERTIES
@@ -103,7 +104,15 @@ elseif(SGL_MACOS)
         IMPORTED_LOCATION ${SLANG_DIR}/lib/libslang.dylib
     )
     sgl_copy_binary(${SLANG_DIR}/lib/libslang.dylib .)
+    sgl_copy_binary(${SLANG_DIR}/lib/libslang-glslang.dylib .)
+    # sgl_copy_binary(${SLANG_DIR}/lib/libslang-llvm.dylib .)
+    sgl_copy_binary(${SLANG_DIR}/lib/libslang-rt.dylib .)
 endif()
+
+# Install slang header files
+install(FILES ${SLANG_DIR}/include/slang.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES ${SLANG_DIR}/include/slang-deprecated.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES ${SLANG_DIR}/include/slang-image-format-defs.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 # slang-rhi
 
