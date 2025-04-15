@@ -488,23 +488,34 @@ SGL_PY_EXPORT(device_resource)
         )
         .def(
             "create_view",
-            [](Texture* self, uint32_t layer, uint32_t layer_count, uint32_t mip, uint32_t mip_count, Format format)
+            [](Texture* self,
+               Format format,
+               TextureAspect aspect,
+               uint32_t layer,
+               uint32_t layer_count,
+               uint32_t mip,
+               uint32_t mip_count,
+               std::string label)
             {
                 TextureViewDesc desc;
                 desc.format = format == Format::undefined ? self->format() : format;
+                desc.aspect = aspect;
                 desc.subresource_range = {
                     .layer = layer,
                     .layer_count = layer_count,
                     .mip = mip,
                     .mip_count = mip_count,
                 };
+                desc.label = label;
                 return self->create_view(desc);
             },
-            "layer"_a = 0,
-            "layer_count"_a = ALL_LAYERS,
-            "mip"_a = 0,
-            "mip_count"_a = ALL_MIPS,
-            "format"_a = Format::undefined,
+            "format"_a = TextureViewDesc().format,
+            "aspect"_a = TextureViewDesc().aspect,
+            "layer"_a = TextureViewDesc().subresource_range.layer,
+            "layer_count"_a = TextureViewDesc().subresource_range.layer_count,
+            "mip"_a = TextureViewDesc().subresource_range.mip,
+            "mip_count"_a = TextureViewDesc().subresource_range.mip_count,
+            "label"_a = TextureViewDesc().label,
             D(Texture, create_view)
         )
         .def("to_bitmap", &Texture::to_bitmap, "layer"_a = 0, "mip"_a = 0, D(Texture, to_bitmap))

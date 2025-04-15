@@ -434,7 +434,8 @@ SGL_PY_EXPORT(device_device)
            ComparisonFunc comparison_func,
            float4 border_color,
            float min_lod,
-           float max_lod)
+           float max_lod,
+           std::string label)
         {
             return self->create_sampler({
                 .min_filter = min_filter,
@@ -450,6 +451,7 @@ SGL_PY_EXPORT(device_device)
                 .border_color = border_color,
                 .min_lod = min_lod,
                 .max_lod = max_lod,
+                .label = std::move(label),
             });
         },
         "min_filter"_a = SamplerDesc().min_filter,
@@ -465,6 +467,7 @@ SGL_PY_EXPORT(device_device)
         "border_color"_a = SamplerDesc().border_color,
         "min_lod"_a = SamplerDesc().min_lod,
         "max_lod"_a = SamplerDesc().max_lod,
+        "label"_a = SamplerDesc().label,
         D(Device, create_sampler)
     );
     device.def("create_sampler", &Device::create_sampler, "desc"_a, D(Device, create_sampler));
