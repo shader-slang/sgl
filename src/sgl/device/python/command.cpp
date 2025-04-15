@@ -542,7 +542,8 @@ SGL_PY_EXPORT(device_command)
             "index"_a,
             D(CommandEncoder, write_timestamp)
         )
-        .def("finish", &CommandEncoder::finish, D(CommandEncoder, finish));
+        .def("finish", &CommandEncoder::finish, D(CommandEncoder, finish))
+        .def_prop_ro("native_handle", &CommandEncoder::native_handle, D(CommandEncoder, native_handle));
 
     nb::class_<PassEncoder, Object>(m, "PassEncoder", D(PassEncoder))
         .def("end", &PassEncoder::end, D(PassEncoder, end))

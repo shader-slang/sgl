@@ -176,6 +176,8 @@ public:
         return NativeHandleTrait<T>::unpack(m_value);
     }
 
+    std::string to_string() const { return fmt::format("NativeHandle(type={}, value=0x{:08x})", m_type, m_value); }
+
 private:
     NativeHandleType m_type{NativeHandleType::undefined};
     uint64_t m_value{0};

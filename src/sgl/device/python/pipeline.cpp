@@ -55,7 +55,8 @@ SGL_PY_EXPORT(device_pipeline)
     nb::implicitly_convertible<nb::dict, ComputePipelineDesc>();
 
     nb::class_<ComputePipeline, Pipeline>(m, "ComputePipeline", D(ComputePipeline))
-        .def_prop_ro("thread_group_size", &ComputePipeline::thread_group_size, D(ComputePipeline, thread_group_size));
+        .def_prop_ro("thread_group_size", &ComputePipeline::thread_group_size, D(ComputePipeline, thread_group_size))
+        .def_prop_ro("native_handle", &ComputePipeline::native_handle, D(ComputePipeline, native_handle));
 
     nb::class_<RenderPipelineDesc>(m, "RenderPipelineDesc", D(RenderPipelineDesc))
         .def(nb::init<>())
@@ -76,7 +77,8 @@ SGL_PY_EXPORT(device_pipeline)
         .def_rw("rasterizer", &RenderPipelineDesc::rasterizer, D(RenderPipelineDesc, rasterizer))
         .def_rw("multisample", &RenderPipelineDesc::multisample, D(RenderPipelineDesc, multisample));
 
-    nb::class_<RenderPipeline, Pipeline>(m, "RenderPipeline", D(RenderPipeline));
+    nb::class_<RenderPipeline, Pipeline>(m, "RenderPipeline", D(RenderPipeline)) //
+        .def_prop_ro("native_handle", &RenderPipeline::native_handle, D(RenderPipeline, native_handle));
 
     nb::class_<HitGroupDesc>(m, "HitGroupDesc", D(HitGroupDesc))
         .def(nb::init<>())
@@ -130,5 +132,6 @@ SGL_PY_EXPORT(device_pipeline)
         .def_rw("flags", &RayTracingPipelineDesc::flags, D(RayTracingPipelineDesc, flags));
     nb::implicitly_convertible<nb::dict, RayTracingPipelineDesc>();
 
-    nb::class_<RayTracingPipeline, Pipeline>(m, "RayTracingPipeline", D(RayTracingPipeline));
+    nb::class_<RayTracingPipeline, Pipeline>(m, "RayTracingPipeline", D(RayTracingPipeline)) //
+        .def_prop_ro("native_handle", &RayTracingPipeline::native_handle, D(RayTracingPipeline, native_handle));
 }
