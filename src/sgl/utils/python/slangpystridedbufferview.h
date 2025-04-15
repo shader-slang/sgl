@@ -50,6 +50,8 @@ public:
     ref<Buffer> storage() const { return m_storage; }
     size_t element_stride() const { return desc().element_layout->stride(); }
 
+    bool is_contiguous() const;
+
     ref<BufferCursor> cursor(std::optional<int> start = std::nullopt, std::optional<int> count = std::nullopt) const;
     nb::dict uniforms() const;
 

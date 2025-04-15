@@ -81,6 +81,25 @@ StridedBufferView::StridedBufferView(Device* device, const StridedBufferViewDesc
     );
 }
 
+bool StridedBufferView::is_contiguous() const
+{
+    const auto &shape_vec = shape().as_vector();
+    const auto &stride_vec = strides().as_vector();
+
+    int prod = 1;
+    for (int i = dims() - 1; i >= 0; --i) {
+        // Ignore strides of singleton dimensions
+        if (shape_vec[i] == 1)
+            continue;
+
+        if (stride_vec[i] != prod)
+            return false;
+        prod *= shape_vec[i];
+    }
+
+    return true;
+}
+
 ref<BufferCursor> StridedBufferView::cursor(std::optional<int> start, std::optional<int> count) const
 {
     size_t el_stride = desc().element_layout->stride();
@@ -369,5 +388,6 @@ SGL_PY_EXPORT(utils_slangpy_strided_buffer_view)
         .def("cursor", &StridedBufferView::cursor, "start"_a.none() = std::nullopt, "count"_a.none() = std::nullopt)
         .def("uniforms", &StridedBufferView::uniforms)
         .def("to_numpy", &StridedBufferView::to_numpy, D_NA(StridedBufferView, to_numpy))
-        .def("copy_from_numpy", &StridedBufferView::copy_from_numpy, "data"_a, D_NA(StridedBufferView, copy_from_numpy));
+        .def("copy_from_numpy", &StridedBufferView::copy_from_numpy, "data"_a, D_NA(StridedBufferView, copy_from_numpy))
+        .def("is_contiguous", &StridedBufferView::is_contiguous, D_NA(&StridedBufferView, is_contiguous));
 }
