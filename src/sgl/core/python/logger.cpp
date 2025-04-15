@@ -51,7 +51,7 @@ SGL_PY_EXPORT(core_logger)
 #define DEF_LOG_METHOD(name) def(#name, [](Logger& self, const std::string_view msg) { self.name(msg); }, "msg"_a)
     // clang-format on
 
-    nb::class_<Logger>(m, "Logger", D(Logger))
+    nb::class_<Logger, Object>(m, "Logger", D(Logger))
         .def(
             nb::init<LogLevel, std::string_view, bool>(),
             "level"_a = LogLevel::info,
