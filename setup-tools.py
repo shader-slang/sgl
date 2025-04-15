@@ -333,6 +333,7 @@ class ninja(Package):
             },
         }
 
+
 class clang_format(Package):
     def __init__(self):
         self.name = "clang-format"
