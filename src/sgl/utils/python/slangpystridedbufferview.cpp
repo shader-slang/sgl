@@ -289,6 +289,15 @@ void StridedBufferView::index_inplace(nb::args args)
         strides.push_back(cur_strides[dim + j]);
     }
 
+    if (shape.empty()) {
+        // A fully indexed buffer technically returns a 0D buffer
+        // This is not really compatible with the rest of the machinery,
+        // so turn it into a 1D buffer with 1 element instead
+        shape.push_back(1);
+        strides.push_back(1);
+    }
+
+    // Finally, change our view to the new shape/strides/offset
     view_inplace(Shape(shape), Shape(strides), offset);
 }
 
