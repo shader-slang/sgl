@@ -657,12 +657,12 @@ uint64_t Device::submit_command_buffer(CommandBuffer* command_buffer, CommandQue
     return submit_command_buffers(command_buffers, {}, {}, {}, {}, queue);
 }
 
-bool Device::is_command_buffer_complete(uint64_t id)
+bool Device::is_submit_finished(uint64_t id)
 {
     return id <= m_global_fence->current_value();
 }
 
-void Device::wait_command_buffer(uint64_t id)
+void Device::wait_for_submit(uint64_t id)
 {
     m_global_fence->wait(id);
 }

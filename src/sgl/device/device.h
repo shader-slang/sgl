@@ -458,19 +458,19 @@ public:
     uint64_t submit_command_buffer(CommandBuffer* command_buffer, CommandQueueType queue = CommandQueueType::graphics);
 
     /**
-     * \brief Check if a command buffer is complete.
+     * \brief Check if a submission is finished executing.
      *
      * \param id Submission ID.
-     * \return True if the command buffer is complete.
+     * \return True if the submission is finished executing.
      */
-    bool is_command_buffer_complete(uint64_t id);
+    bool is_submit_finished(uint64_t id);
 
     /**
-     * \brief Wait for a command buffer to complete.
+     * \brief Wait for a submission to finish execution.
      *
      * \param id Submission ID.
      */
-    void wait_command_buffer(uint64_t id);
+    void wait_for_submit(uint64_t id);
 
     /**
      * \brief Wait for the command queue to be idle.
