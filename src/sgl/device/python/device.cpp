@@ -510,6 +510,17 @@ SGL_PY_EXPORT(device_device)
         D(Device, create_command_encoder)
     );
     device.def(
+        "submit_command_buffers",
+        &Device::submit_command_buffers,
+        "command_buffers"_a,
+        "wait_fences"_a = std::span<Fence*>(),
+        "wait_fence_values"_a = std::span<uint64_t>(),
+        "signal_fences"_a = std::span<Fence*>(),
+        "signal_fence_values"_a = std::span<uint64_t>(),
+        "queue"_a = CommandQueueType::graphics,
+        D(Device, submit_command_buffers)
+    );
+    device.def(
         "submit_command_buffer",
         &Device::submit_command_buffer,
         "command_buffer"_a,

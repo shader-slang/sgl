@@ -2794,6 +2794,8 @@ static const char *__doc_sgl_Device_shader_cache_stats = R"doc(Shader cache stat
 
 static const char *__doc_sgl_Device_slang_session = R"doc(Default slang session.)doc";
 
+static const char *__doc_sgl_Device_submit_command_buffers = R"doc()doc";
+
 static const char *__doc_sgl_Device_submit_command_buffer =
 R"doc(Submit a command buffer to the device.
 

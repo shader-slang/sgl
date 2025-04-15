@@ -419,9 +419,37 @@ public:
     ref<CommandEncoder> create_command_encoder(CommandQueueType queue = CommandQueueType::graphics);
 
     /**
+     * \brief Submit a list of command buffers to the device.
+     *
+     * The returned submission ID can be used to wait for the submission to complete.
+     *
+     * The wait fence values are optional. If not provided, the fence values will be set to AUTO, which means waiting
+     * for the last signaled value.
+     *
+     * The signal fence values are optional. If not provided, the fence values will be set to AUTO, which means
+     * incrementing the last signaled value by 1.     *
+     *
+     * \param command_buffers List of command buffers to submit.
+     * \param wait_fences List of fences to wait for before executing the command buffers.
+     * \param wait_fence_values List of fence values to wait for before executing the command buffers.
+     * \param signal_fences List of fences to signal after executing the command buffers.
+     * \param signal_fence_values List of fence values to signal after executing the command buffers.
+     * \param queue Command queue to submit to.
+     * \return Submission ID.
+     */
+    uint64_t submit_command_buffers(
+        std::span<CommandBuffer*> command_buffers,
+        std::span<Fence*> wait_fences = {},
+        std::span<uint64_t> wait_fence_values = {},
+        std::span<Fence*> signal_fences = {},
+        std::span<uint64_t> signal_fence_values = {},
+        CommandQueueType queue = CommandQueueType::graphics
+    );
+
+    /**
      * \brief Submit a command buffer to the device.
      *
-     * The returned submission ID can be used to wait for the command buffer to complete.
+     * The returned submission ID can be used to wait for the submission to complete.
      *
      * \param command_buffer Command buffer to submit.
      * \param queue Command queue to submit to.
