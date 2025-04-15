@@ -36,7 +36,7 @@ add_subdirectory(glfw)
 
 # tevclient
 
-add_subdirectory(tevclient)
+add_subdirectory(tevclient EXCLUDE_FROM_ALL)
 
 # nanobind
 
