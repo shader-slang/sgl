@@ -33,6 +33,8 @@ public:
     StridedBufferView(Device* device, const StridedBufferViewDesc& desc, ref<Buffer> storage);
     virtual ~StridedBufferView() {}
 
+    // Derived classes are free to store a desc with extra information, and can provide us
+    // with the desc for the buffer view by implementing these methods
     virtual StridedBufferViewDesc &desc() { SGL_THROW("desc() is not implemented"); }
     virtual const StridedBufferViewDesc &desc() const { SGL_THROW("desc() is not implemented"); }
 
@@ -60,7 +62,9 @@ public:
     void copy_from_numpy(nb::ndarray<nb::numpy> data);
 
 protected:
-    /// In-place versions of view changing methods, to be called in derived classes.
+    // In-place versions of view changing methods.
+    // Derived classes are supposed the non-inplace versions by creating a copy
+    // with the same buffer/view, call the inplace method on the copy, and return it
     void view_inplace(Shape shape, Shape strides = Shape(), int offset = 0);
     void broadcast_to_inplace(const Shape& shape);
     void index_inplace(nb::args args);

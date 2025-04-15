@@ -120,6 +120,9 @@ void StridedBufferView::view_inplace(Shape shape, Shape strides, int offset)
 
 void StridedBufferView::broadcast_to_inplace(const Shape& new_shape)
 {
+    // This 'broadcasts' the buffer view to a new shape, i.e.
+    // - Prepend extra dimensions of the new shape to the front our shape
+    // - Expand our singleton dimensions to the new shape
     auto& curr_shape_vec = this->shape().as_vector();
     auto& new_shape_vec = new_shape.as_vector();
 
@@ -154,6 +157,21 @@ void StridedBufferView::broadcast_to_inplace(const Shape& new_shape)
 
 void StridedBufferView::index_inplace(nb::args args)
 {
+    // This implements python indexing (i.e. __getitem__)
+    // Like numpy or torch, this supports a number of different ways of indexing:
+    // - Indexing with a positive index (e.g. buffer[3, 2])
+    // - Indexing with a negative index, for 'from the end' indexing (e.g. buffer[-1])
+    // - Indexing with a slize (e.g. buffer[3:], buffer[:-3], buffer[::2])
+    // - Inserting singleton dimensions (e.g. buffer[3, None, 2])
+    // - Skipping dimensions with ellipsis (e.g. buffer[..., 3])
+    //
+    // A buffer may be partially indexed. E.g. for a 2D buffer of shape (64, 32),
+    // doing buffer[5] is valid and will return a 1D buffer of shape (32, ) that is
+    // the 1D slice of the full 2D buffer at index 5
+
+    // Step 1: Figure out the number of 'real' indices, i.e. indices that
+    // access an existing dimension, as opposed to inserting/skipping them
+    // This applies to integers and slices
     int real_dims = 0;
     for (auto v: args) {
         if (nb::isinstance<int>(v))
@@ -164,15 +182,20 @@ void StridedBufferView::index_inplace(nb::args args)
     auto cur_shape = shape().as_vector();
     auto cur_strides = strides().as_vector();
 
+    // This is the next dimension to be indexed by a 'real' index
     int dim = 0;
+    // Offset (in elements) to be applied by the indexing operation
     int offset = 0;
+    // shape and strides of the output of the indexing operation
     std::vector<int> shape, strides;
 
     for (size_t i = 0; i < args.size(); ++i) {
         const nb::handle &arg = args[i];
 
         if (nb::isinstance<int>(arg)) {
+            // Integer index
             int idx = nb::cast<int>(arg);
+            // First, do bounds checking
             SGL_CHECK(
                 idx < cur_shape[dim] && idx >= -cur_shape[dim],
                 "Index {} is out of bounds for dimension {} with size {}",
@@ -180,19 +203,25 @@ void StridedBufferView::index_inplace(nb::args args)
                 i,
                 cur_shape[dim]
             );
+            // Next, wrap around negative indices
             if (idx < 0)
                 idx += cur_shape[dim];
+            // Finally, move offset forward by the index
             offset += idx * cur_strides[dim];
+            // We indexed this dimension, so advance to the next one
             dim++;
         } else if (nb::isinstance<nb::slice>(arg)) {
+            // Slice index
             nb::slice slice = nb::cast<nb::slice>(arg);
 
+            // First, use .compute to apply slice to size of current dimension
             auto adjusted = slice.compute(cur_shape[dim]);
             size_t start = adjusted.get<0>();
             size_t stop = adjusted.get<1>();
             size_t step = adjusted.get<2>();
             size_t slice_length = adjusted.get<3>();
 
+            // We only support positive steps
             SGL_CHECK(
                 step > 0,
                 "Slice step must be greater than zero (found stride {} at dimension {})",
@@ -200,18 +229,29 @@ void StridedBufferView::index_inplace(nb::args args)
                 i
             );
 
+            // Move offset by start of the slice
             offset += int(start) * cur_strides[dim];
+            // Adjust shape by the computed slice length
             shape.push_back(int(slice_length));
+            // Finally, adjust strides to account for the slice step
             strides.push_back(int(step) * cur_strides[dim]);
+            // We indexed this dimension, so advance to the next one
             dim++;
         } else if (nb::isinstance<nb::ellipsis>(arg)) {
+            // The ellipsis (...) skips past all unindexed dimensions
+            // This is the number of dimensions of this buffer, minus the
+            // number of dimensions indexed
             int eta = dims() - real_dims;
+            // The skipped dimensions are directly appended to the output shape/strides
             for (int j = 0; j < eta; ++j) {
                 shape.push_back(cur_shape[dim + j]);
                 strides.push_back(cur_strides[dim + j]);
             }
+            // Advance past the skipped dimensions
             dim += eta;
         } else if (arg.is_none()) {
+            // Singleton dimensions are just dimensions of size 1 and stride 0.
+            // Insert it to the output
             shape.push_back(1);
             strides.push_back(0);
         } else {
@@ -219,6 +259,7 @@ void StridedBufferView::index_inplace(nb::args args)
         }
     }
 
+    // Any remaining unindexed dimensions can now be appended to the output
     int remaining = dims() - dim;
     for (int j = 0; j < remaining; ++j) {
         shape.push_back(cur_shape[dim + j]);
