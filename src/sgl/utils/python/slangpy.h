@@ -561,6 +561,21 @@ private:
     nb::object m_this{nb::none()};
 };
 
+/// Defines the common logging functions for a given log level.
+/// The functions are:
+/// - name(msg)
+/// - name(fmt, ...)
+#define SGL_LOG_FUNC_FAMILY(name, level)                                                                               \
+    inline void name(const std::string_view msg)                                                                       \
+    {                                                                                                                  \
+        log(level, msg, LogFrequency::always);                                                                         \
+    }                                                                                                                  \
+    template<typename... Args>                                                                                         \
+    inline void name(fmt::format_string<Args...> fmt, Args&&... args)                                                  \
+    {                                                                                                                  \
+        log(level, fmt::format(fmt, std::forward<Args>(args)...), LogFrequency::always);                               \
+    }
+
 /// Contains the compute kernel for a call, the corresponding bindings and any additional
 /// options provided by the user.
 class NativeCallData : Object {
@@ -600,12 +615,52 @@ public:
     /// Get the shape of the last call (useful for debugging).
     const Shape& get_last_call_shape() const { return m_last_call_shape; }
 
+    /// Get the debug name
+    std::string get_debug_name() const { return m_debug_name; }
+
+    /// Set the debug name
+    void set_debug_name(std::string debug_name) { m_debug_name = debug_name; }
+
+    /// Get the logger
+    ref<Logger> get_logger() const { return m_logger; }
+
+    /// Set the logger
+    void set_logger(ref<Logger> logger) { m_logger = logger; }
+
     /// Call the compute kernel with the provided arguments and keyword arguments.
     nb::object call(ref<NativeCallRuntimeOptions> opts, nb::args args, nb::kwargs kwargs);
 
     /// Append the compute kernel to a command encoder with the provided arguments and keyword arguments.
     nb::object
     append_to(ref<NativeCallRuntimeOptions> opts, CommandEncoder* command_encoder, nb::args args, nb::kwargs kwargs);
+
+    /// Log a message, using either the provided logger or the default logger.
+    void log(LogLevel level, const std::string_view msg, LogFrequency frequency = LogFrequency::always)
+    {
+        if (m_logger)
+            m_logger->log(level, msg, frequency);
+        else
+            sgl::Logger::get().log(level, msg, frequency);
+    }
+
+    /// Check if log level is enabled. Used to avoid generating strings native side that would be thrown away.
+    bool is_log_enabled(LogLevel level) const
+    {
+        LogLevel curr_level;
+        if (m_logger)
+            curr_level = m_logger->level();
+        else
+            curr_level = sgl::Logger::get().level();
+        return level != LogLevel::none && level >= curr_level;
+    }
+
+    // Define logging functions.
+    SGL_LOG_FUNC_FAMILY(log_debug, LogLevel::debug)
+    SGL_LOG_FUNC_FAMILY(log_info, LogLevel::info)
+    SGL_LOG_FUNC_FAMILY(log_warn, LogLevel::warn)
+    SGL_LOG_FUNC_FAMILY(log_error, LogLevel::error)
+    SGL_LOG_FUNC_FAMILY(log_fatal, LogLevel::fatal)
+
 
 private:
     ref<Device> m_device;
@@ -614,10 +669,13 @@ private:
     ref<NativeBoundCallRuntime> m_runtime;
     CallMode m_call_mode{CallMode::prim};
     Shape m_last_call_shape;
+    std::string m_debug_name;
+    ref<Logger> m_logger;
 
     nb::object
     exec(ref<NativeCallRuntimeOptions> opts, CommandEncoder* command_encoder, nb::args args, nb::kwargs kwargs);
 };
+#undef SGL_LOG_FUNC_FAMILY
 
 typedef std::function<bool(const ref<SignatureBuilder>& builder, nb::handle)> BuildSignatureFunc;
 

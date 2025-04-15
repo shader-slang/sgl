@@ -421,6 +421,16 @@ nb::object NativeCallData::exec(
             }
         }
     };
+
+    if (is_log_enabled(LogLevel::debug)) {
+        log_debug("Dispatching {}", m_debug_name);
+        log_debug("  Call type: {}", command_encoder ? "append" : "call");
+        log_debug("  Call shape: {}", call_shape.to_string());
+        log_debug("  Call mode: {}", m_call_mode);
+        log_debug("  Strides: [{}]", fmt::join(strides, ", "));
+        log_debug("  Threads: {}", total_threads);
+    }
+
     m_kernel->dispatch(uint3(total_threads, 1, 1), bind_vars, command_encoder);
 
     // If command_buffer is not null, return early.
@@ -962,6 +972,10 @@ SGL_PY_EXPORT(utils_slangpy)
             D_NA(NativeCallRuntimeOptions, uniforms)
         );
 
+    // clang-format off
+#define DEF_LOG_METHOD(name) def(#name, [](NativeCallData& self, const std::string_view msg) { self.name(msg); }, "msg"_a)
+    // clang-format on
+
     nb::class_<NativeCallData, Object>(slangpy, "NativeCallData") //
         .def(nb::init<>(), D_NA(NativeCallData, NativeCallData))
         .def_prop_rw("device", &NativeCallData::get_device, &NativeCallData::set_device, D_NA(NativeCallData, device))
@@ -985,6 +999,19 @@ SGL_PY_EXPORT(utils_slangpy)
             D_NA(NativeCallData, call_mode)
         )
         .def_prop_ro("last_call_shape", &NativeCallData::get_last_call_shape, D_NA(NativeCallData, last_call_shape))
+        .def_prop_rw(
+            "debug_name",
+            &NativeCallData::get_debug_name,
+            &NativeCallData::set_debug_name,
+            D_NA(NativeCallData, debug_name)
+        )
+        .def_prop_rw(
+            "logger",
+            &NativeCallData::get_logger,
+            &NativeCallData::set_logger,
+            nb::arg().none(),
+            D_NA(NativeCallData, logger)
+        )
         .def(
             "call",
             &NativeCallData::call,
@@ -1001,7 +1028,15 @@ SGL_PY_EXPORT(utils_slangpy)
             nb::arg("args"),
             nb::arg("kwargs"),
             D_NA(NativeCallData, append_to)
-        );
+        )
+        .def("log", &NativeCallData::log, "level"_a, "msg"_a, "frequency"_a = LogFrequency::always, D(Logger, log))
+        .DEF_LOG_METHOD(log_debug)
+        .DEF_LOG_METHOD(log_info)
+        .DEF_LOG_METHOD(log_warn)
+        .DEF_LOG_METHOD(log_error)
+        .DEF_LOG_METHOD(log_fatal);
+
+#undef DEF_LOG_METHOD
 
     nb::class_<NativeCallDataCache, PyNativeCallDataCache, Object>(slangpy, "NativeCallDataCache")
         .def(
