@@ -152,8 +152,6 @@ def test_compute_set_and_overwrite(device_type: sgl.DeviceType):
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_gfx_clear(device_type: sgl.DeviceType):
-    if device_type == sgl.DeviceType.metal:
-        pytest.skip("Graphics pipeline tests not supported on Metal")
     ctx = PipelineTestContext(device_type)
 
     command_encoder = ctx.device.create_command_encoder()
@@ -202,7 +200,7 @@ class GfxContext:
                 {
                     "view": self.ctx.output_texture.create_view({}),
                     "clear_value": [0.0, 0.0, 0.0, 1.0],
-                    "load_op": sgl.LoadOp.clear if clear else sgl.LoadOp.dont_care,
+                    "load_op": sgl.LoadOp.clear if clear else sgl.LoadOp.load,
                     "store_op": sgl.StoreOp.store,
                 }
             ]
@@ -292,8 +290,6 @@ class GfxContext:
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_gfx_simple_primitive(device_type: sgl.DeviceType):
-    if device_type == sgl.DeviceType.metal:
-        pytest.skip("Graphics pipeline tests not supported on Metal")
     ctx = PipelineTestContext(device_type)
     gfx = GfxContext(ctx)
 
@@ -327,8 +323,6 @@ def test_gfx_simple_primitive(device_type: sgl.DeviceType):
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_gfx_viewport(device_type: sgl.DeviceType):
-    if device_type == sgl.DeviceType.metal:
-        pytest.skip("Graphics pipeline tests not supported on Metal")
     ctx = PipelineTestContext(device_type)
     gfx = GfxContext(ctx)
 
@@ -370,8 +364,6 @@ def test_gfx_viewport(device_type: sgl.DeviceType):
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_gfx_depth(device_type: sgl.DeviceType):
-    if device_type == sgl.DeviceType.metal:
-        pytest.skip("Graphics pipeline tests not supported on Metal")
     ctx = PipelineTestContext(device_type)
     gfx = GfxContext(ctx)
 
@@ -461,8 +453,10 @@ def test_gfx_depth(device_type: sgl.DeviceType):
     ctx.expect_counts([0, 0, area, area])
 
     # Quick check that the depth write happened correctly
-    dt = depth_texture.to_numpy()
-    assert np.all(dt == 0.75)
+    # Metal doesn't support reading from depth textures, so skip this check.
+    if device_type != sgl.DeviceType.metal:
+        dt = depth_texture.to_numpy()
+        assert np.all(dt == 0.75)
 
     # Try again at z=0.8, which should do nothing as z write was still enabled with the previous one.
     gfx.draw_graphics_pipeline(
@@ -499,8 +493,6 @@ def test_gfx_depth(device_type: sgl.DeviceType):
 
 @pytest.mark.parametrize("device_type", helpers.DEFAULT_DEVICE_TYPES)
 def test_gfx_blend(device_type: sgl.DeviceType):
-    if device_type == sgl.DeviceType.metal:
-        pytest.skip("Graphics pipeline tests not supported on Metal")
     ctx = PipelineTestContext(device_type)
     gfx = GfxContext(ctx)
     area = ctx.output_texture.width * ctx.output_texture.height
