@@ -83,7 +83,7 @@ Shape NativeTextureMarshall::get_shape(nb::object value) const
     } else if (nb::try_cast(value, view)) {
         texture = view->texture();
         SGL_CHECK(texture, "NativeTextureMarshall ResourceView must point at a texture");
-        mip = view->subresource_range().mip_level;
+        mip = view->subresource_range().mip;
     } else {
         texture = nb::cast<Texture*>(value);
         mip = 0;

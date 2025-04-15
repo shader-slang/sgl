@@ -652,7 +652,6 @@ struct Accumulator {
                 .format = Format::rgba32_float,
                 .width = input->width(),
                 .height = input->height(),
-                .mip_count = 1,
                 .usage = TextureUsage::shader_resource | TextureUsage::unordered_access,
                 .label = "accumulator",
             });
@@ -799,7 +798,6 @@ struct App {
                     .format = Format::rgba32_float,
                     .width = surface_texture->width(),
                     .height = surface_texture->height(),
-                    .mip_count = 1,
                     .usage = TextureUsage::shader_resource | TextureUsage::unordered_access,
                     .label = "output_texture",
                 });
@@ -807,7 +805,6 @@ struct App {
                     .format = Format::rgba32_float,
                     .width = surface_texture->width(),
                     .height = surface_texture->height(),
-                    .mip_count = 1,
                     .usage = TextureUsage::shader_resource | TextureUsage::unordered_access,
                     .label = "render_texture",
                 });
@@ -815,7 +812,6 @@ struct App {
                     .format = Format::rgba32_float,
                     .width = surface_texture->width(),
                     .height = surface_texture->height(),
-                    .mip_count = 1,
                     .usage = TextureUsage::shader_resource | TextureUsage::unordered_access,
                     .label = "accum_texture",
                 });

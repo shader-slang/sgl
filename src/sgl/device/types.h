@@ -254,12 +254,12 @@ static_assert(
 );
 
 struct SGL_API ScissorRect {
-    int32_t min_x{0};
-    int32_t min_y{0};
-    int32_t max_x{0};
-    int32_t max_y{0};
+    uint32_t min_x{0};
+    uint32_t min_y{0};
+    uint32_t max_x{0};
+    uint32_t max_y{0};
 
-    static ScissorRect from_size(int32_t width, int32_t height) { return {0, 0, width, height}; }
+    static ScissorRect from_size(uint32_t width, uint32_t height) { return {0, 0, width, height}; }
 
     std::string to_string() const;
 };

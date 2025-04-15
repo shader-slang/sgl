@@ -53,11 +53,11 @@ void Blitter::blit(CommandEncoder* command_encoder, TextureView* dst, TextureVie
     );
     SGL_CHECK(is_set(src_texture->desc().usage, TextureUsage::shader_resource), "src must be a shader resource");
 
-    uint32_t dst_mip_level = dst->subresource_range().mip_level;
-    uint32_t src_mip_level = src->subresource_range().mip_level;
+    uint32_t dst_mip = dst->subresource_range().mip;
+    uint32_t src_mip = src->subresource_range().mip;
 
-    uint2 dst_size = src_texture->get_mip_size(dst_mip_level).xy();
-    uint2 src_size = src_texture->get_mip_size(src_mip_level).xy();
+    uint2 dst_size = src_texture->get_mip_size(dst_mip).xy();
+    uint2 src_size = src_texture->get_mip_size(src_mip).xy();
 
     auto determine_texture_type = [](Format resource_format) -> TextureDataType
     {
@@ -110,18 +110,18 @@ void Blitter::generate_mips(CommandEncoder* command_encoder, Texture* texture, u
     for (uint32_t i = 0; i < texture->mip_count() - 1; ++i) {
         ref<TextureView> src = texture->create_view({
             .subresource_range{
-                .mip_level = i,
-                .mip_count = 1,
-                .base_array_layer = array_layer,
+                .layer = array_layer,
                 .layer_count = 1,
+                .mip = i,
+                .mip_count = 1,
             },
         });
         ref<TextureView> dst = texture->create_view({
             .subresource_range{
-                .mip_level = i + 1,
-                .mip_count = 1,
-                .base_array_layer = array_layer,
+                .layer = array_layer,
                 .layer_count = 1,
+                .mip = i + 1,
+                .mip_count = 1,
             },
         });
         blit(command_encoder, dst, src);

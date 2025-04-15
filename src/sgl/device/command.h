@@ -186,22 +186,22 @@ public:
      *
      * \param dst Destination texture.
      * \param dst_layer Destination layer.
-     * \param dst_mip_level Destination mip level.
+     * \param dst_mip Destination mip level.
      * \param dst_offset Destination offset in texels.
      * \param src Source texture.
      * \param src_layer Source layer.
-     * \param src_mip_level Source mip level.
+     * \param src_mip Source mip level.
      * \param src_offset Source offset in texels.
      * \param extent Size in texels (-1 for maximum possible size).
      */
     void copy_texture(
         Texture* dst,
         uint32_t dst_layer,
-        uint32_t dst_mip_level,
+        uint32_t dst_mip,
         uint3 dst_offset,
         const Texture* src,
         uint32_t src_layer,
-        uint32_t src_mip_level,
+        uint32_t src_mip,
         uint3 src_offset,
         uint3 extent = uint3(-1)
     );
@@ -215,7 +215,7 @@ public:
      * \param dst_row_pitch Destination row stride in bytes.
      * \param src Source texture.
      * \param src_layer Source layer.
-     * \param src_mip_level Source mip level.
+     * \param src_mip Source mip level.
      * \param src_offset Source offset in texels.
      * \param extent Extent in texels (-1 for maximum possible extent).
      */
@@ -226,7 +226,7 @@ public:
         DeviceSize dst_row_pitch,
         const Texture* src,
         uint32_t src_layer,
-        uint32_t src_mip_level,
+        uint32_t src_mip,
         uint3 src_offset = uint3(0),
         uint3 extent = uint3(-1)
     );
@@ -236,24 +236,24 @@ public:
      *
      * \param dst Destination texture.
      * \param dst_layer Destination layer.
-     * \param dst_mip_level Destination mip level.
+     * \param dst_mip Destination mip level.
      * \param dst_offset Destination offset in texels.
      * \param src Source buffer.
      * \param src_offset Source offset in bytes.
      * \param src_size Size in bytes.
      * \param src_row_pitch Source row stride in bytes.
-     * \param extents Extent in texels (-1 for maximum possible extent).
+     * \param extent Extent in texels (-1 for maximum possible extent).
      */
     void copy_buffer_to_texture(
         Texture* dst,
         uint32_t dst_layer,
-        uint32_t dst_mip_level,
+        uint32_t dst_mip,
         uint3 dst_offset,
         const Buffer* src,
         DeviceOffset src_offset,
         DeviceSize src_size,
         DeviceSize src_row_pitch,
-        uint3 extents = uint3(-1)
+        uint3 extent = uint3(-1)
     );
 
     /**
@@ -274,7 +274,7 @@ public:
         std::span<SubresourceData> subresource_data
     );
 
-    void upload_texture_data(Texture* texture, uint32_t layer, uint32_t mip_level, SubresourceData subresource_data);
+    void upload_texture_data(Texture* texture, uint32_t layer, uint32_t mip, SubresourceData subresource_data);
 
     void clear_buffer(Buffer* buffer, BufferRange range = {});
 

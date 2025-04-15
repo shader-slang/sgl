@@ -43,10 +43,10 @@ SGL_DICT_TO_DESC_FIELD(label, std::string)
 SGL_DICT_TO_DESC_END()
 
 SGL_DICT_TO_DESC_BEGIN(SubresourceRange)
-SGL_DICT_TO_DESC_FIELD(mip_level, uint32_t)
-SGL_DICT_TO_DESC_FIELD(mip_count, uint32_t)
-SGL_DICT_TO_DESC_FIELD(base_array_layer, uint32_t)
+SGL_DICT_TO_DESC_FIELD(layer, uint32_t)
 SGL_DICT_TO_DESC_FIELD(layer_count, uint32_t)
+SGL_DICT_TO_DESC_FIELD(mip, uint32_t)
+SGL_DICT_TO_DESC_FIELD(mip_count, uint32_t)
 SGL_DICT_TO_DESC_END()
 
 SGL_DICT_TO_DESC_BEGIN(TextureViewDesc)
@@ -169,21 +169,21 @@ static const char* __doc_sgl_texture_to_numpy = R"doc()doc";
 /**
  * Python binding wrapper for returning the content of a texture as a numpy array.
  */
-nb::ndarray<nb::numpy> texture_to_numpy(Texture* self, uint32_t layer, uint32_t mip_level)
+nb::ndarray<nb::numpy> texture_to_numpy(Texture* self, uint32_t layer, uint32_t mip)
 {
     SGL_CHECK_LT(layer, self->layer_count());
-    SGL_CHECK_LT(mip_level, self->mip_count());
+    SGL_CHECK_LT(mip, self->mip_count());
 
     // Get the subresource data and corresponding layout. Depending on platform, these
     // may not be tightly packed.
-    OwnedSubresourceData subresource_data = self->get_subresource_data(layer, mip_level);
-    SubresourceLayout src_layout = self->get_subresource_layout(mip_level);
+    OwnedSubresourceData subresource_data = self->get_subresource_data(layer, mip);
+    SubresourceLayout src_layout = self->get_subresource_layout(mip);
     SGL_ASSERT(subresource_data.size == src_layout.size_in_bytes);
     SGL_ASSERT(subresource_data.row_pitch == src_layout.row_pitch);
     SGL_ASSERT(subresource_data.slice_pitch == src_layout.slice_pitch);
 
     // Get tightly packed layout for numpy array.
-    SubresourceLayout dst_layout = self->get_subresource_layout(mip_level, 1);
+    SubresourceLayout dst_layout = self->get_subresource_layout(mip, 1);
 
     // Double check assumptions about column (aka block) size and dimensions
     // being consistent regardless of packing are correct.
@@ -267,19 +267,15 @@ nb::ndarray<nb::numpy> texture_to_numpy(Texture* self, uint32_t layer, uint32_t 
 
 static const char* __doc_sgl_texture_from_numpy = R"doc()doc";
 
-SubresourceData texture_build_subresource_data_for_upload(
-    Texture* self,
-    nb::ndarray<nb::numpy> data,
-    uint32_t layer,
-    uint32_t mip_level
-)
+SubresourceData
+texture_build_subresource_data_for_upload(Texture* self, nb::ndarray<nb::numpy> data, uint32_t layer, uint32_t mip)
 {
     SGL_CHECK(is_ndarray_contiguous(data), "numpy array is not contiguous");
     SGL_CHECK_LT(layer, self->layer_count());
-    SGL_CHECK_LT(mip_level, self->mip_count());
+    SGL_CHECK_LT(mip, self->mip_count());
 
     // Get the sub resource layout with 1B alignment so rows/slices are tightly packed.
-    SubresourceLayout subresource_layout = self->get_subresource_layout(mip_level, 1);
+    SubresourceLayout subresource_layout = self->get_subresource_layout(mip, 1);
 
     // Setup subresource data from the numpy array information.
     SubresourceData subresource_data{
@@ -329,13 +325,13 @@ SubresourceData texture_build_subresource_data_for_upload(
     return subresource_data;
 }
 
-inline void texture_from_numpy(Texture* self, nb::ndarray<nb::numpy> data, uint32_t layer, uint32_t mip_level)
+inline void texture_from_numpy(Texture* self, nb::ndarray<nb::numpy> data, uint32_t layer, uint32_t mip)
 {
     // Validate and set up SubresourceData argument to point to the numpy array data.
-    SubresourceData subresource_data = texture_build_subresource_data_for_upload(self, data, layer, mip_level);
+    SubresourceData subresource_data = texture_build_subresource_data_for_upload(self, data, layer, mip);
 
     // Write numpy data to the texture.
-    self->set_subresource_data(layer, mip_level, subresource_data);
+    self->set_subresource_data(layer, mip, subresource_data);
 }
 
 } // namespace sgl
@@ -344,7 +340,8 @@ SGL_PY_EXPORT(device_resource)
 {
     using namespace sgl;
 
-    m.attr("ALL_MIP_LEVELS") = ALL_MIP_LEVELS;
+    m.attr("ALL_LAYERS") = ALL_LAYERS;
+    m.attr("ALL_MIPS") = ALL_MIPS;
 
     nb::sgl_enum<ResourceState>(m, "ResourceState");
     nb::sgl_enum_flags<BufferUsage>(m, "BufferUsage");
@@ -368,10 +365,10 @@ SGL_PY_EXPORT(device_resource)
             "__init__",
             [](SubresourceRange* self, nb::dict dict) { new (self) SubresourceRange(dict_to_SubresourceRange(dict)); }
         )
-        .def_rw("mip_level", &SubresourceRange::mip_level, D(SubresourceRange, mip_level))
-        .def_rw("mip_count", &SubresourceRange::mip_count, D(SubresourceRange, mip_count))
-        .def_rw("base_array_layer", &SubresourceRange::base_array_layer, D(SubresourceRange, base_array_layer))
+        .def_rw("layer", &SubresourceRange::layer, D(SubresourceRange, layer))
         .def_rw("layer_count", &SubresourceRange::layer_count, D(SubresourceRange, layer_count))
+        .def_rw("mip", &SubresourceRange::mip, D(SubresourceRange, mip))
+        .def_rw("mip_count", &SubresourceRange::mip_count, D(SubresourceRange, mip_count))
         .def("__repr__", &SubresourceRange::to_string, D(SubresourceRange, to_string));
 
     nb::class_<BufferDesc>(m, "BufferDesc", D(BufferDesc))
@@ -468,14 +465,14 @@ SGL_PY_EXPORT(device_resource)
         .def_prop_ro("mip_count", &Texture::mip_count, D(Texture, mip_count))
         .def_prop_ro("layer_count", &Texture::layer_count, D(Texture, layer_count))
         .def_prop_ro("subresource_count", &Texture::subresource_count, D(Texture, subresource_count))
-        .def("get_mip_width", &Texture::get_mip_width, "mip_level"_a = 0, D(Texture, get_mip_width))
-        .def("get_mip_height", &Texture::get_mip_height, "mip_level"_a = 0, D(Texture, get_mip_height))
-        .def("get_mip_depth", &Texture::get_mip_depth, "mip_level"_a = 0, D(Texture, get_mip_depth))
-        .def("get_mip_size", &Texture::get_mip_size, "mip_level"_a = 0, D(Texture, get_mip_size))
+        .def("get_mip_width", &Texture::get_mip_width, "mip"_a = 0, D(Texture, get_mip_width))
+        .def("get_mip_height", &Texture::get_mip_height, "mip"_a = 0, D(Texture, get_mip_height))
+        .def("get_mip_depth", &Texture::get_mip_depth, "mip"_a = 0, D(Texture, get_mip_depth))
+        .def("get_mip_size", &Texture::get_mip_size, "mip"_a = 0, D(Texture, get_mip_size))
         .def(
             "get_subresource_layout",
             &Texture::get_subresource_layout,
-            "mip_level"_a,
+            "mip"_a,
             "row_alignment"_a = DEFAULT_ALIGNMENT,
             D(Texture, get_subresource_layout)
         )
@@ -488,33 +485,28 @@ SGL_PY_EXPORT(device_resource)
         )
         .def(
             "create_view",
-            [](Texture* self,
-               uint32_t mip_level,
-               uint32_t mip_count,
-               uint32_t base_array_layer,
-               uint32_t layer_count,
-               Format format)
+            [](Texture* self, uint32_t layer, uint32_t layer_count, uint32_t mip, uint32_t mip_count, Format format)
             {
                 TextureViewDesc desc;
                 desc.format = format == Format::undefined ? self->format() : format;
                 desc.subresource_range = {
-                    .mip_level = mip_level,
-                    .mip_count = mip_count,
-                    .base_array_layer = base_array_layer,
+                    .layer = layer,
                     .layer_count = layer_count,
+                    .mip = mip,
+                    .mip_count = mip_count,
                 };
                 return self->create_view(desc);
             },
-            "mip_level"_a = 0,
-            "mip_count"_a = SubresourceRange::ALL,
-            "base_array_layer"_a = 0,
-            "layer_count"_a = SubresourceRange::ALL,
+            "layer"_a = 0,
+            "layer_count"_a = ALL_LAYERS,
+            "mip"_a = 0,
+            "mip_count"_a = ALL_MIPS,
             "format"_a = Format::undefined,
             D(Texture, create_view)
         )
-        .def("to_bitmap", &Texture::to_bitmap, "layer"_a = 0, "mip_level"_a = 0, D(Texture, to_bitmap))
-        .def("to_numpy", &texture_to_numpy, "layer"_a = 0, "mip_level"_a = 0, D(texture_to_numpy))
-        .def("copy_from_numpy", &texture_from_numpy, "data"_a, "layer"_a = 0, "mip_level"_a = 0, D(texture_from_numpy));
+        .def("to_bitmap", &Texture::to_bitmap, "layer"_a = 0, "mip"_a = 0, D(Texture, to_bitmap))
+        .def("to_numpy", &texture_to_numpy, "layer"_a = 0, "mip"_a = 0, D(texture_to_numpy))
+        .def("copy_from_numpy", &texture_from_numpy, "data"_a, "layer"_a = 0, "mip"_a = 0, D(texture_from_numpy));
 
     nb::class_<TextureView, DeviceResource>(m, "TextureView", D(TextureView))
         .def_prop_ro("texture", &TextureView::texture, D(TextureView, texture))

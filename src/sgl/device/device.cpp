@@ -668,23 +668,23 @@ void Device::upload_texture_data(
     submit_command_buffer(command_encoder->finish());
 }
 
-void Device::upload_texture_data(Texture* texture, uint32_t layer, uint32_t mip_level, SubresourceData subresource_data)
+void Device::upload_texture_data(Texture* texture, uint32_t layer, uint32_t mip, SubresourceData subresource_data)
 {
     ref<CommandEncoder> command_encoder = create_command_encoder();
-    command_encoder->upload_texture_data(texture, layer, mip_level, subresource_data);
+    command_encoder->upload_texture_data(texture, layer, mip, subresource_data);
     submit_command_buffer(command_encoder->finish());
 }
 
-OwnedSubresourceData Device::read_texture_data(const Texture* texture, uint32_t layer, uint32_t mip_level)
+OwnedSubresourceData Device::read_texture_data(const Texture* texture, uint32_t layer, uint32_t mip)
 {
     SGL_CHECK_NOT_NULL(texture);
     SGL_CHECK_LT(layer, texture->layer_count());
-    SGL_CHECK_LT(mip_level, texture->mip_count());
+    SGL_CHECK_LT(mip, texture->mip_count());
 
     // TODO(slang-rhi) use readTexture function that takes data pointer instead of doing extra copy
     Slang::ComPtr<ISlangBlob> blob;
     rhi::SubresourceLayout rhi_layout;
-    SLANG_CALL(m_rhi_device->readTexture(texture->rhi_texture(), layer, mip_level, blob.writeRef(), &rhi_layout));
+    SLANG_CALL(m_rhi_device->readTexture(texture->rhi_texture(), layer, mip, blob.writeRef(), &rhi_layout));
 
     // Setup owned sub resource data that can contain the results.
     OwnedSubresourceData subresource_data;

@@ -210,27 +210,29 @@ SGL_ENUM_INFO(
 );
 SGL_ENUM_REGISTER(TextureAspect);
 
+static constexpr uint32_t ALL_LAYERS = rhi::kAllLayers;
+static constexpr uint32_t ALL_MIPS = rhi::kAllMipLevels;
+
 struct SubresourceRange {
-    static constexpr uint32_t ALL = std::numeric_limits<uint32_t>::max();
-    /// Most detailed mip level.
-    uint32_t mip_level{0};
-    /// Number of mip levels.
-    uint32_t mip_count{ALL};
     /// First array layer.
-    uint32_t base_array_layer{0}; // For Texture3D, this is WSlice.
+    uint32_t layer{0};
     /// Number of array layers.
-    uint32_t layer_count{ALL}; // For cube maps, this is a multiple of 6.
+    uint32_t layer_count{ALL_LAYERS};
+    /// Most detailed mip level.
+    uint32_t mip{0};
+    /// Number of mip levels.
+    uint32_t mip_count{ALL_MIPS};
 
     auto operator<=>(const SubresourceRange&) const = default;
 
     std::string to_string() const
     {
         return fmt::format(
-            "SubresourceRange(mip_level={}, mip_count={}, base_array_layer={}, layer_count={}",
-            mip_level,
-            mip_count,
-            base_array_layer,
-            layer_count
+            "SubresourceRange(layer={}, layer_count={}, mip={}, mip_count={}",
+            layer,
+            layer_count,
+            mip,
+            mip_count
         );
     }
 };
@@ -447,8 +449,6 @@ struct OwnedSubresourceData : SubresourceData {
     std::unique_ptr<uint8_t[]> owned_data;
 };
 
-static constexpr uint32_t ALL_MIP_LEVELS = rhi::kAllMipLevels;
-
 static constexpr uint32_t DEFAULT_ALIGNMENT = rhi::kDefaultAlignment;
 
 
@@ -465,7 +465,7 @@ struct TextureDesc {
     uint32_t depth{1};
     /// Array length.
     uint32_t array_length{1};
-    /// Number of mip levels (ALL_MIP_LEVELS for all mip levels).
+    /// Number of mip levels (ALL_MIPS for all mip levels).
     uint32_t mip_count{1};
     /// Number of samples per pixel.
     uint32_t sample_count{1};
@@ -544,49 +544,40 @@ public:
 
     uint32_t subresource_count() const { return layer_count() * mip_count(); }
 
-    uint32_t get_mip_width(uint32_t mip_level = 0) const
-    {
-        return mip_level < mip_count() ? std::max(1U, width() >> mip_level) : 0;
-    }
+    uint32_t get_mip_width(uint32_t mip = 0) const { return mip < mip_count() ? std::max(1U, width() >> mip) : 0; }
 
-    uint32_t get_mip_height(uint32_t mip_level = 0) const
-    {
-        return mip_level < mip_count() ? std::max(1U, height() >> mip_level) : 0;
-    }
+    uint32_t get_mip_height(uint32_t mip = 0) const { return mip < mip_count() ? std::max(1U, height() >> mip) : 0; }
 
-    uint32_t get_mip_depth(uint32_t mip_level = 0) const
-    {
-        return mip_level < mip_count() ? std::max(1U, depth() >> mip_level) : 0;
-    }
+    uint32_t get_mip_depth(uint32_t mip = 0) const { return mip < mip_count() ? std::max(1U, depth() >> mip) : 0; }
 
-    uint3 get_mip_size(uint32_t mip_level = 0) const
+    uint3 get_mip_size(uint32_t mip = 0) const
     {
-        return uint3(get_mip_width(mip_level), get_mip_height(mip_level), get_mip_depth(mip_level));
+        return uint3(get_mip_width(mip), get_mip_height(mip), get_mip_depth(mip));
     }
 
     /// Get layout of a texture subresource. By default, the row alignment used is
     /// that required by the target for direct buffer upload/download. Pass in 1
     /// for a completely packed layout.
-    SubresourceLayout get_subresource_layout(uint32_t mip_level, uint32_t row_alignment = DEFAULT_ALIGNMENT) const;
+    SubresourceLayout get_subresource_layout(uint32_t mip, uint32_t row_alignment = DEFAULT_ALIGNMENT) const;
 
     /**
      * Set subresource data from host memory.
      *
      * \param layer Layer index.
-     * \param mip_level Mip level.
+     * \param mip Mip level.
      * \param subresource_data Subresource data.
      */
-    void set_subresource_data(uint32_t layer, uint32_t mip_level, SubresourceData subresource_data);
+    void set_subresource_data(uint32_t layer, uint32_t mip, SubresourceData subresource_data);
 
     /**
      * Get subresource data to host memory.
      * \note This will wait until the data is copied back to host memory.
      *
      * \param layer Layer index.
-     * \param mip_level Mip level.
+     * \param mip Mip level.
      * \return Subresource data.
      */
-    OwnedSubresourceData get_subresource_data(uint32_t layer, uint32_t mip_level) const;
+    OwnedSubresourceData get_subresource_data(uint32_t layer, uint32_t mip) const;
 
     ref<TextureView> create_view(TextureViewDesc desc);
 
@@ -598,7 +589,7 @@ public:
 
     MemoryUsage memory_usage() const override;
 
-    ref<Bitmap> to_bitmap(uint32_t layer = 0, uint32_t mip_level = 0) const;
+    ref<Bitmap> to_bitmap(uint32_t layer = 0, uint32_t mip = 0) const;
 
     std::string to_string() const override;
 

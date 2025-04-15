@@ -92,7 +92,6 @@ int main(int argc, const char* argv[])
             .format = Format::rgba32_float,
             .width = w,
             .height = h,
-            .mip_count = 1,
             .usage = TextureUsage::shader_resource,
             .data = initial_data,
         });
@@ -106,7 +105,6 @@ int main(int argc, const char* argv[])
             .format = Format::rgba32_float,
             .width = w,
             .height = h,
-            .mip_count = 1,
             .usage = TextureUsage::unordered_access,
         });
 

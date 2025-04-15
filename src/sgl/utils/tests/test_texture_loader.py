@@ -261,8 +261,8 @@ def test_load_texture_from_dds_file(device_type: sgl.DeviceType, filename: str):
     data = {}
     for subresource in range(texture.subresource_count):
         layer = subresource // texture.mip_count
-        mip_level = subresource % texture.mip_count
-        subresource_data = texture.to_numpy(layer, mip_level)
+        mip = subresource % texture.mip_count
+        subresource_data = texture.to_numpy(layer, mip)
         data[f"subresource_{subresource}"] = subresource_data
 
     # Uncomment this to dump reference data.

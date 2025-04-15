@@ -70,7 +70,6 @@ class DemoWindow(sgl.AppWindow):
                 format=sgl.Format.rgba16_float,
                 width=image.width,
                 height=image.height,
-                mip_count=1,
                 usage=sgl.TextureUsage.shader_resource
                 | sgl.TextureUsage.unordered_access,
                 label="render_texture",

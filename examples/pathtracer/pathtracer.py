@@ -616,7 +616,6 @@ class Accumulator:
                 format=sgl.Format.rgba32_float,
                 width=input.width,
                 height=input.height,
-                mip_count=1,
                 usage=sgl.TextureUsage.shader_resource
                 | sgl.TextureUsage.unordered_access,
                 label="accumulator",
@@ -742,7 +741,6 @@ class App:
                     format=sgl.Format.rgba32_float,
                     width=surface_texture.width,
                     height=surface_texture.height,
-                    mip_count=1,
                     usage=sgl.TextureUsage.shader_resource
                     | sgl.TextureUsage.unordered_access,
                     label="output_texture",
@@ -751,7 +749,6 @@ class App:
                     format=sgl.Format.rgba32_float,
                     width=surface_texture.width,
                     height=surface_texture.height,
-                    mip_count=1,
                     usage=sgl.TextureUsage.shader_resource
                     | sgl.TextureUsage.unordered_access,
                     label="render_texture",
@@ -760,7 +757,6 @@ class App:
                     format=sgl.Format.rgba32_float,
                     width=surface_texture.width,
                     height=surface_texture.height,
-                    mip_count=1,
                     usage=sgl.TextureUsage.shader_resource
                     | sgl.TextureUsage.unordered_access,
                     label="accum_texture",
