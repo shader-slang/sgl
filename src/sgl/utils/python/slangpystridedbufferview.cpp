@@ -197,10 +197,10 @@ void StridedBufferView::index_inplace(nb::args args)
     // This applies to integers and slices
     int real_dims = 0;
     for (auto v: args) {
-        if (nb::isinstance<int>(v))
+        if (nb::isinstance<int>(v) || nb::isinstance<nb::slice>(v))
             real_dims++;
     }
-    SGL_CHECK(real_dims < dims(), "Too many indices for buffer of dimension {}", dims());
+    SGL_CHECK(real_dims <= dims(), "Too many indices for buffer of dimension {}", dims());
 
     auto cur_shape = shape().as_vector();
     auto cur_strides = strides().as_vector();
