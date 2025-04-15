@@ -288,7 +288,7 @@ public:
      * \param height Height in pixels.
      * \param depth Depth in pixels.
      * \param array_length Array length.
-     * \param mip_level_count Mip level count. Number of mip levels (ALL_MIP_LEVELS for all mip levels).
+     * \param mip_count Mip level count. Number of mip levels (ALL_MIP_LEVELS for all mip levels).
      * \param sample_count Number of samples for multisampled textures.
      * \param quality Quality level for multisampled textures.
      * \param usage Resource usage.
@@ -523,7 +523,7 @@ public:
         std::span<SubresourceData> subresource_data
     );
 
-    void upload_texture_data(Texture* texture, uint32_t layer, uint32_t mip_level, SubresourceData subresource_data);
+    void upload_texture_data(Texture* texture, uint32_t layer, uint32_t mip, SubresourceData subresource_data);
 
     /**
      * Read texture data to host memory.
@@ -531,10 +531,10 @@ public:
      *
      * \param texture Texture to read from.
      * \param layer Layer index.
-     * \param mip_level Mip level.
+     * \param mip Mip level.
      * \return Subresource data in host memory.
      */
-    OwnedSubresourceData read_texture_data(const Texture* texture, uint32_t layer, uint32_t mip_level);
+    OwnedSubresourceData read_texture_data(const Texture* texture, uint32_t layer, uint32_t mip);
 
     rhi::IDevice* rhi_device() const { return m_rhi_device; }
     rhi::ICommandQueue* rhi_graphics_queue() const { return m_rhi_graphics_queue; }

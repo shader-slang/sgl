@@ -13,7 +13,7 @@ import sglhelpers as helpers
 
 
 # Generate random data for a texture with a given array size and mip level count.
-def make_rand_data(type: sgl.TextureType, array_size: int, mip_level_count: int):
+def make_rand_data(type: sgl.TextureType, array_size: int, mip_count: int):
 
     layer_count = array_size
     if type in [sgl.TextureType.texture_cube, sgl.TextureType.texture_cube_array]:
@@ -23,7 +23,7 @@ def make_rand_data(type: sgl.TextureType, array_size: int, mip_level_count: int)
     for i in range(0, layer_count):
         sz = 32
         mips = []
-        for i in range(0, mip_level_count):
+        for i in range(0, mip_count):
             if type in [sgl.TextureType.texture_1d, sgl.TextureType.texture_1d_array]:
                 mips.append(np.random.rand(sz, 4).astype(np.float32))
             elif type in [
@@ -48,7 +48,7 @@ def make_rand_data(type: sgl.TextureType, array_size: int, mip_level_count: int)
 def make_args(
     type: sgl.TextureType,
     array_length: int,
-    mip_level_count: int,
+    mip_count: int,
     format: sgl.Format = sgl.Format.rgba32_float,
     usage: sgl.TextureUsage = sgl.TextureUsage.shader_resource
     | sgl.TextureUsage.unordered_access,
@@ -56,7 +56,7 @@ def make_args(
     args = {
         "format": format,
         "usage": usage,
-        "mip_level_count": mip_level_count,
+        "mip_count": mip_count,
         "array_length": array_length,
     }
     if type in [sgl.TextureType.texture_1d, sgl.TextureType.texture_1d_array]:
@@ -156,17 +156,17 @@ def test_read_write_texture(
 
     # Create texture and build random data
     tex = create_test_texture(device, type, array_length, mips)
-    rand_data = make_rand_data(tex.type, tex.array_length, tex.mip_level_count)
+    rand_data = make_rand_data(tex.type, tex.array_length, tex.mip_count)
 
     # Write random data to texture
     for layer_idx, layer_data in enumerate(rand_data):
         for mip_idx, mip_data in enumerate(layer_data):
-            tex.copy_from_numpy(mip_data, layer=layer_idx, mip_level=mip_idx)
+            tex.copy_from_numpy(mip_data, layer=layer_idx, mip=mip_idx)
 
     # Read back data and compare
     for layer_idx, layer_data in enumerate(rand_data):
         for mip_idx, mip_data in enumerate(layer_data):
-            data = tex.to_numpy(layer=layer_idx, mip_level=mip_idx)
+            data = tex.to_numpy(layer=layer_idx, mip=mip_idx)
             assert np.allclose(data, mip_data)
 
 
@@ -190,14 +190,14 @@ def test_upload_texture_single_mip(
 
     # Create texture and build random data
     tex = create_test_texture(device, type, array_length, mips)
-    rand_data = make_rand_data(tex.type, tex.array_length, tex.mip_level_count)
+    rand_data = make_rand_data(tex.type, tex.array_length, tex.mip_count)
 
     # Write random data to texture
     encoder = device.create_command_encoder()
     for layer_idx, layer_data in enumerate(rand_data):
         for mip_idx, mip_data in enumerate(layer_data):
             encoder.upload_texture_data(
-                tex, layer=layer_idx, mip_level=mip_idx, data=mip_data
+                tex, layer=layer_idx, mip=mip_idx, data=mip_data
             )
     device.submit_command_buffer(encoder.finish())
     device.wait_for_idle()
@@ -205,7 +205,7 @@ def test_upload_texture_single_mip(
     # Read back data and compare
     for layer_idx, layer_data in enumerate(rand_data):
         for mip_idx, mip_data in enumerate(layer_data):
-            data = tex.to_numpy(layer=layer_idx, mip_level=mip_idx)
+            data = tex.to_numpy(layer=layer_idx, mip=mip_idx)
             assert np.allclose(data, mip_data)
 
 
@@ -229,7 +229,7 @@ def test_upload_whole_texture(
 
     # Create texture and build random data
     tex = create_test_texture(device, type, array_length, mips)
-    rand_data = make_rand_data(tex.type, tex.array_length, tex.mip_level_count)
+    rand_data = make_rand_data(tex.type, tex.array_length, tex.mip_count)
 
     # Write random data to texture
     datas: list[npt.ArrayLike] = []
@@ -245,7 +245,7 @@ def test_upload_whole_texture(
     # Read back data and compare
     for layer_idx, layer_data in enumerate(rand_data):
         for mip_idx, mip_data in enumerate(layer_data):
-            data = tex.to_numpy(layer=layer_idx, mip_level=mip_idx)
+            data = tex.to_numpy(layer=layer_idx, mip=mip_idx)
             assert np.allclose(data, mip_data)
 
 
@@ -285,8 +285,8 @@ def test_texture_layout(
     w = tex.width
     h = tex.height
     d = tex.depth
-    for mip_level in range(tex.mip_level_count):
-        layout = tex.get_subresource_layout(mip_level, row_alignment=1)
+    for mip in range(tex.mip_count):
+        layout = tex.get_subresource_layout(mip, row_alignment=1)
         assert layout.size.x == w
         assert layout.size.y == h
         assert layout.size.z == d
@@ -311,8 +311,8 @@ def test_texture_layout(
     w = tex.width
     h = tex.height
     d = tex.depth
-    for mip_level in range(tex.mip_level_count):
-        layout = tex.get_subresource_layout(mip_level, row_alignment=256)
+    for mip in range(tex.mip_count):
+        layout = tex.get_subresource_layout(mip, row_alignment=256)
         assert layout.size.x == w
         assert layout.size.y == h
         assert layout.size.z == d
@@ -356,16 +356,14 @@ def test_shader_read_write_texture(
 
     # Create texture and build random data
     (src_tex, dst_tex) = create_test_textures(device, 2, type, array_length, mips)
-    rand_data = make_rand_data(
-        src_tex.type, src_tex.array_length, src_tex.mip_level_count
-    )
+    rand_data = make_rand_data(src_tex.type, src_tex.array_length, src_tex.mip_count)
 
     # Write random data to texture
     for layer_idx, slice_data in enumerate(rand_data):
         for mip_idx, mip_data in enumerate(slice_data):
-            src_tex.copy_from_numpy(mip_data, layer=layer_idx, mip_level=mip_idx)
+            src_tex.copy_from_numpy(mip_data, layer=layer_idx, mip=mip_idx)
 
-    for mip_level in range(src_tex.mip_level_count):
+    for mip in range(src_tex.mip_count):
         dims = len(rand_data[0][0].shape) - 1
         if array_length == 1:
 
@@ -390,26 +388,20 @@ def test_shader_read_write_texture(
             )
 
             src_view = src_tex.create_view(
-                {"subresource_range": sgl.SubresourceRange({"mip_level": mip_level})}
+                {"subresource_range": sgl.SubresourceRange({"mip": mip})}
             )
             assert src_view.subresource_range.layer == 0
             assert src_view.subresource_range.layer_count == 1
-            assert src_view.subresource_range.mip_level == mip_level
-            assert (
-                src_view.subresource_range.mip_level_count
-                == src_tex.mip_level_count - mip_level
-            )
+            assert src_view.subresource_range.mip == mip
+            assert src_view.subresource_range.mip_count == src_tex.mip_count - mip
 
             dst_view = dst_tex.create_view(
-                {"subresource_range": sgl.SubresourceRange({"mip_level": mip_level})}
+                {"subresource_range": sgl.SubresourceRange({"mip": mip})}
             )
             assert dst_view.subresource_range.layer == 0
             assert dst_view.subresource_range.layer_count == 1
-            assert dst_view.subresource_range.mip_level == mip_level
-            assert (
-                dst_view.subresource_range.mip_level_count
-                == dst_tex.mip_level_count - mip_level
-            )
+            assert dst_view.subresource_range.mip == mip
+            assert dst_view.subresource_range.mip_count == dst_tex.mip_count - mip
 
             copy_kernel.dispatch(
                 [src_tex.width, src_tex.height, src_tex.depth],
@@ -442,7 +434,7 @@ def test_shader_read_write_texture(
                 desc = sgl.TextureViewDesc(
                     {
                         "subresource_range": sgl.SubresourceRange(
-                            {"layer": i, "layer_count": 1, "mip_level": mip_level}
+                            {"layer": i, "layer_count": 1, "mip": mip}
                         )
                     }
                 )
@@ -450,20 +442,14 @@ def test_shader_read_write_texture(
                 srv = src_tex.create_view(desc)
                 assert srv.subresource_range.layer == i
                 assert srv.subresource_range.layer_count == 1
-                assert srv.subresource_range.mip_level == mip_level
-                assert (
-                    srv.subresource_range.mip_level_count
-                    == src_tex.mip_level_count - mip_level
-                )
+                assert srv.subresource_range.mip == mip
+                assert srv.subresource_range.mip_count == src_tex.mip_count - mip
 
                 uav = dst_tex.create_view(desc)
                 assert uav.subresource_range.layer == i
                 assert uav.subresource_range.layer_count == 1
-                assert uav.subresource_range.mip_level == mip_level
-                assert (
-                    uav.subresource_range.mip_level_count
-                    == dst_tex.mip_level_count - mip_level
-                )
+                assert uav.subresource_range.mip == mip
+                assert uav.subresource_range.mip_count == dst_tex.mip_count - mip
 
                 copy_kernel.dispatch(
                     [src_tex.width, src_tex.height, src_tex.depth], src=srv, dest=uav
@@ -472,7 +458,7 @@ def test_shader_read_write_texture(
     # Read back data and compare
     for layer_idx, slice_data in enumerate(rand_data):
         for mip_idx, mip_data in enumerate(slice_data):
-            data = dst_tex.to_numpy(layer=layer_idx, mip_level=mip_idx)
+            data = dst_tex.to_numpy(layer=layer_idx, mip=mip_idx)
             assert np.allclose(data, mip_data)
 
 
@@ -493,12 +479,12 @@ def test_copy_texture(
 
     # Create texture and build random data
     (src, dst) = create_test_textures(device, 2, type, array_length, mips)
-    rand_data = make_rand_data(src.type, src.array_length, src.mip_level_count)
+    rand_data = make_rand_data(src.type, src.array_length, src.mip_count)
 
     # Write random data to texture
     for layer_idx, layer_data in enumerate(rand_data):
         for mip_idx, mip_data in enumerate(layer_data):
-            src.copy_from_numpy(mip_data, layer=layer_idx, mip_level=mip_idx)
+            src.copy_from_numpy(mip_data, layer=layer_idx, mip=mip_idx)
 
     # Copy src to dst
     encoder = device.create_command_encoder()
@@ -521,7 +507,7 @@ def test_copy_texture(
     # Read back data and compare
     for layer_idx, layer_data in enumerate(rand_data):
         for mip_idx, mip_data in enumerate(layer_data):
-            data = dst.to_numpy(layer=layer_idx, mip_level=mip_idx)
+            data = dst.to_numpy(layer=layer_idx, mip=mip_idx)
             assert np.allclose(data, mip_data)
 
 
@@ -542,12 +528,12 @@ def test_copy_texture_to_buffer_and_back(
 
     # Create texture and build random data
     (src, dst) = create_test_textures(device, 2, type, array_length, mips)
-    rand_data = make_rand_data(src.type, src.array_length, src.mip_level_count)
+    rand_data = make_rand_data(src.type, src.array_length, src.mip_count)
 
     # Write random data to texture
     for layer_idx, layer_data in enumerate(rand_data):
         for mip_idx, mip_data in enumerate(layer_data):
-            src.copy_from_numpy(mip_data, layer=layer_idx, mip_level=mip_idx)
+            src.copy_from_numpy(mip_data, layer=layer_idx, mip=mip_idx)
 
     # Copy src to dst
     encoder = device.create_command_encoder()
@@ -585,7 +571,7 @@ def test_copy_texture_to_buffer_and_back(
     idx = 0
     for layer_idx, layer_data in enumerate(rand_data):
         for mip_idx, mip_data in enumerate(layer_data):
-            data = dst.to_numpy(layer=layer_idx, mip_level=mip_idx)
+            data = dst.to_numpy(layer=layer_idx, mip=mip_idx)
             assert np.allclose(data, mip_data)
             idx += 1
 

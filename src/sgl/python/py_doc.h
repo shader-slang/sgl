@@ -1527,7 +1527,7 @@ Parameter ``dst``:
 Parameter ``dst_layer``:
     Destination layer.
 
-Parameter ``dst_mip_level``:
+Parameter ``dst_mip``:
     Destination mip level.
 
 Parameter ``dst_offset``:
@@ -1581,7 +1581,7 @@ Parameter ``dst``:
 Parameter ``dst_layer``:
     Destination layer.
 
-Parameter ``dst_mip_level``:
+Parameter ``dst_mip``:
     Destination mip level.
 
 Parameter ``dst_offset``:
@@ -1593,7 +1593,7 @@ Parameter ``src``:
 Parameter ``src_layer``:
     Source layer.
 
-Parameter ``src_mip_level``:
+Parameter ``src_mip``:
     Source mip level.
 
 Parameter ``src_offset``:
@@ -1623,7 +1623,7 @@ Parameter ``src``:
 Parameter ``src_layer``:
     Source layer.
 
-Parameter ``src_mip_level``:
+Parameter ``src_mip``:
     Source mip level.
 
 Parameter ``src_offset``:
@@ -2589,7 +2589,7 @@ Parameter ``depth``:
 Parameter ``array_length``:
     Array length.
 
-Parameter ``mip_level_count``:
+Parameter ``mip_count``:
     Mip level count. Number of mip levels (ALL_MIP_LEVELS for all mip
     levels).
 
@@ -2768,7 +2768,7 @@ Parameter ``texture``:
 Parameter ``layer``:
     Layer index.
 
-Parameter ``mip_level``:
+Parameter ``mip``:
     Mip level.
 
 Returns:
@@ -6726,9 +6726,9 @@ static const char *__doc_sgl_SubresourceRange_layer = R"doc(First array layer.)d
 
 static const char *__doc_sgl_SubresourceRange_layer_count = R"doc(Number of array layers.)doc";
 
-static const char *__doc_sgl_SubresourceRange_mip_level_count = R"doc(Number of mip levels.)doc";
+static const char *__doc_sgl_SubresourceRange_mip_count = R"doc(Number of mip levels.)doc";
 
-static const char *__doc_sgl_SubresourceRange_mip_level = R"doc(Most detailed mip level.)doc";
+static const char *__doc_sgl_SubresourceRange_mip = R"doc(Most detailed mip level.)doc";
 
 static const char *__doc_sgl_SubresourceRange_operator_le = R"doc()doc";
 
@@ -6836,7 +6836,7 @@ static const char *__doc_sgl_TextureDesc_label = R"doc(Debug label.)doc";
 
 static const char *__doc_sgl_TextureDesc_memory_type = R"doc()doc";
 
-static const char *__doc_sgl_TextureDesc_mip_level_count = R"doc(Number of mip levels (ALL_MIP_LEVELS for all mip levels).)doc";
+static const char *__doc_sgl_TextureDesc_mip_count = R"doc(Number of mip levels (ALL_MIP_LEVELS for all mip levels).)doc";
 
 static const char *__doc_sgl_TextureDesc_sample_count = R"doc(Number of samples per pixel.)doc";
 
@@ -7113,7 +7113,7 @@ data is copied back to host memory.
 Parameter ``layer``:
     Layer index.
 
-Parameter ``mip_level``:
+Parameter ``mip``:
     Mip level.
 
 Returns:
@@ -7134,7 +7134,7 @@ static const char *__doc_sgl_Texture_m_rhi_texture = R"doc()doc";
 
 static const char *__doc_sgl_Texture_memory_usage = R"doc()doc";
 
-static const char *__doc_sgl_Texture_mip_level_count = R"doc()doc";
+static const char *__doc_sgl_Texture_mip_count = R"doc()doc";
 
 static const char *__doc_sgl_Texture_rhi_resource = R"doc()doc";
 
@@ -7146,7 +7146,7 @@ R"doc(Set subresource data from host memory.
 Parameter ``layer``:
     Layer index.
 
-Parameter ``mip_level``:
+Parameter ``mip``:
     Mip level.
 
 Parameter ``subresource_data``:

@@ -29,9 +29,9 @@ namespace detail {
     rhi::SubresourceRange rhi_subresource_range(const Texture* texture, uint32_t subresource_index)
     {
         return rhi::SubresourceRange{
-            .layer = subresource_index / texture->mip_level_count(),
+            .layer = subresource_index / texture->mip_count(),
             .layerCount = 1,
-            .mipLevel = subresource_index % texture->mip_level_count(),
+            .mipLevel = subresource_index % texture->mip_count(),
             .mipLevelCount = 1,
         };
     }
@@ -41,8 +41,8 @@ namespace detail {
         return rhi::SubresourceRange{
             .layer = range.layer,
             .layerCount = range.layer_count,
-            .mipLevel = range.mip_level,
-            .mipLevelCount = range.mip_level_count,
+            .mipLevel = range.mip,
+            .mipLevelCount = range.mip_count,
         };
     }
 
@@ -402,11 +402,11 @@ void CommandEncoder::copy_texture(
 void CommandEncoder::copy_texture(
     Texture* dst,
     uint32_t dst_layer,
-    uint32_t dst_mip_level,
+    uint32_t dst_mip,
     uint3 dst_offset,
     const Texture* src,
     uint32_t src_layer,
-    uint32_t src_mip_level,
+    uint32_t src_mip,
     uint3 src_offset,
     uint3 extent
 )
@@ -414,13 +414,13 @@ void CommandEncoder::copy_texture(
     SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(dst);
     SGL_CHECK_LT(dst_layer, dst->layer_count());
-    SGL_CHECK_LT(dst_mip_level, dst->mip_level_count());
+    SGL_CHECK_LT(dst_mip, dst->mip_count());
     SGL_CHECK_NOT_NULL(src);
     SGL_CHECK_LT(src_layer, src->layer_count());
-    SGL_CHECK_LT(src_mip_level, src->mip_level_count());
+    SGL_CHECK_LT(src_mip, src->mip_count());
 
-    rhi::SubresourceRange dst_sr = {dst_layer, 1, dst_mip_level, 1};
-    rhi::SubresourceRange src_sr = {src_layer, 1, src_mip_level, 1};
+    rhi::SubresourceRange dst_sr = {dst_layer, 1, dst_mip, 1};
+    rhi::SubresourceRange src_sr = {src_layer, 1, src_mip, 1};
 
     if (all(extent == uint3(-1)))
         extent = src->get_mip_size(src_sr.mipLevel) - src_offset;
@@ -443,7 +443,7 @@ void CommandEncoder::copy_texture_to_buffer(
     DeviceSize dst_row_pitch,
     const Texture* src,
     uint32_t src_layer,
-    uint32_t src_mip_level,
+    uint32_t src_mip,
     uint3 src_offset,
     uint3 extent
 )
@@ -453,7 +453,7 @@ void CommandEncoder::copy_texture_to_buffer(
     SGL_CHECK(dst_offset + dst_size <= dst->size(), "Destination buffer is too small");
     SGL_CHECK_NOT_NULL(src);
     SGL_CHECK_LT(src_layer, src->layer_count());
-    SGL_CHECK_LT(src_mip_level, src->mip_level_count());
+    SGL_CHECK_LT(src_mip, src->mip_count());
 
     m_rhi_command_encoder->copyTextureToBuffer(
         dst->rhi_buffer(),
@@ -462,7 +462,7 @@ void CommandEncoder::copy_texture_to_buffer(
         dst_row_pitch,
         src->rhi_texture(),
         src_layer,
-        src_mip_level,
+        src_mip,
         rhi::Offset3D{src_offset.x, src_offset.y, src_offset.z},
         rhi::Extent3D{extent.x, extent.y, extent.z}
     );
@@ -471,7 +471,7 @@ void CommandEncoder::copy_texture_to_buffer(
 void CommandEncoder::copy_buffer_to_texture(
     Texture* dst,
     uint32_t dst_layer,
-    uint32_t dst_mip_level,
+    uint32_t dst_mip,
     uint3 dst_offset,
     const Buffer* src,
     DeviceOffset src_offset,
@@ -485,12 +485,12 @@ void CommandEncoder::copy_buffer_to_texture(
     SGL_CHECK_NOT_NULL(src);
     SGL_CHECK(src_offset + src_size <= src->size(), "Source buffer is too small");
     SGL_CHECK_LT(dst_layer, dst->layer_count());
-    SGL_CHECK_LT(dst_mip_level, dst->mip_level_count());
+    SGL_CHECK_LT(dst_mip, dst->mip_count());
 
     m_rhi_command_encoder->copyBufferToTexture(
         dst->rhi_texture(),
         dst_layer,
-        dst_mip_level,
+        dst_mip,
         rhi::Offset3D{dst_offset.x, dst_offset.y, dst_offset.z},
         src->rhi_buffer(),
         src_offset,
@@ -545,19 +545,19 @@ void CommandEncoder::upload_texture_data(
 void CommandEncoder::upload_texture_data(
     Texture* texture,
     uint32_t layer,
-    uint32_t mip_level,
+    uint32_t mip,
     SubresourceData subresource_data
 )
 {
     SGL_CHECK(m_open, "Command encoder is finished");
     SGL_CHECK_NOT_NULL(texture);
     SGL_CHECK_LT(layer, texture->layer_count());
-    SGL_CHECK_LT(mip_level, texture->mip_level_count());
+    SGL_CHECK_LT(mip, texture->mip_count());
 
     rhi::SubresourceRange rhi_subresource_range = {
         .layer = layer,
         .layerCount = 1,
-        .mipLevel = mip_level,
+        .mipLevel = mip,
         .mipLevelCount = 1,
     };
 
@@ -781,8 +781,8 @@ void CommandEncoder::set_texture_state(Texture* texture, SubresourceRange range,
         {
             .layer = range.layer,
             .layerCount = range.layer_count,
-            .mipLevel = range.mip_level,
-            .mipLevelCount = range.mip_level_count,
+            .mipLevel = range.mip,
+            .mipLevelCount = range.mip_count,
         },
         static_cast<rhi::ResourceState>(state)
     );

@@ -45,12 +45,8 @@ SGL_DICT_TO_DESC_FIELD(depth_stencil_attachment, RenderPassDepthStencilAttachmen
 SGL_DICT_TO_DESC_END()
 
 // From resource.cpp
-extern SubresourceData texture_build_subresource_data_for_upload(
-    Texture* self,
-    nb::ndarray<nb::numpy> data,
-    uint32_t layer,
-    uint32_t mip_level
-);
+extern SubresourceData
+texture_build_subresource_data_for_upload(Texture* self, nb::ndarray<nb::numpy> data, uint32_t layer, uint32_t mip);
 
 void upload_buffer_data(CommandEncoder* self, Buffer* buffer, size_t offset, nb::ndarray<nb::numpy> data)
 {
@@ -73,15 +69,15 @@ void upload_texture_data(
     CommandEncoder* self,
     Texture* texture,
     uint32_t layer,
-    uint32_t mip_level,
+    uint32_t mip,
     nb::ndarray<nb::numpy> data
 )
 {
     // Validate and set up SubresourceData argument to point to the numpy array data.
-    SubresourceData subresource_data = texture_build_subresource_data_for_upload(texture, data, layer, mip_level);
+    SubresourceData subresource_data = texture_build_subresource_data_for_upload(texture, data, layer, mip);
 
     // Write numpy data to the texture.
-    self->upload_texture_data(texture, layer, mip_level, subresource_data);
+    self->upload_texture_data(texture, layer, mip, subresource_data);
 }
 
 void upload_texture_data(
@@ -104,37 +100,32 @@ void upload_texture_data(
         range.layer_count = layer_count - range.layer;
     }
 
-    uint32_t mip_level_count = texture->mip_level_count();
-    SGL_CHECK(range.mip_level < mip_level_count, "'mip_level' out of range");
+    uint32_t mip_count = texture->mip_count();
+    SGL_CHECK(range.mip < mip_count, "'mip' out of range");
     SGL_CHECK(
-        range.mip_level_count == SubresourceRange::ALL || range.mip_level + range.mip_level_count <= mip_level_count,
-        "'mip_level_count' out of range"
+        range.mip_count == SubresourceRange::ALL || range.mip + range.mip_count <= mip_count,
+        "'mip_count' out of range"
     );
-    if (range.mip_level_count == SubresourceRange::ALL) {
-        range.mip_level_count = mip_level_count - range.mip_level;
+    if (range.mip_count == SubresourceRange::ALL) {
+        range.mip_count = mip_count - range.mip;
     }
 
     SGL_CHECK(
-        range.layer_count * range.mip_level_count == data.size(),
+        range.layer_count * range.mip_count == data.size(),
         "Subresource count ({}) does not match required count for layer count ({}) and mip level count ({})",
         data.size(),
         range.layer_count,
-        range.mip_level_count
+        range.mip_count
     );
 
     // Generate SubresourceData structure for each layer and mip level.
     std::vector<SubresourceData> subresource_datas(data.size());
     for (uint32_t layer_offset = 0; layer_offset < range.layer_count; layer_offset++) {
         uint32_t layer = range.layer + layer_offset;
-        for (uint32_t mip_level_offset = 0; mip_level_offset < range.mip_level_count; mip_level_offset++) {
-            uint32_t mip_level = range.mip_level + mip_level_offset;
-            subresource_datas[layer_offset * range.mip_level_count + mip_level_offset]
-                = texture_build_subresource_data_for_upload(
-                    texture,
-                    data[layer * range.mip_level_count + mip_level],
-                    layer,
-                    mip_level
-                );
+        for (uint32_t mip_offset = 0; mip_offset < range.mip_count; mip_offset++) {
+            uint32_t mip = range.mip + mip_offset;
+            subresource_datas[layer_offset * range.mip_count + mip_offset]
+                = texture_build_subresource_data_for_upload(texture, data[layer * range.mip_count + mip], layer, mip);
         }
     }
 
@@ -305,11 +296,11 @@ SGL_PY_EXPORT(device_command)
             ),
             "dst"_a,
             "dst_layer"_a,
-            "dst_mip_level"_a,
+            "dst_mip"_a,
             "dst_offset"_a,
             "src"_a,
             "src_layer"_a,
-            "src_mip_level"_a,
+            "src_mip"_a,
             "src_offset"_a,
             "extent"_a = uint3(-1),
             D(CommandEncoder, copy_texture, 2)
@@ -323,7 +314,7 @@ SGL_PY_EXPORT(device_command)
             "dst_row_pitch"_a,
             "src"_a,
             "src_layer"_a,
-            "src_mip_level"_a,
+            "src_mip"_a,
             "src_offset"_a = uint3(0),
             "extent"_a = uint3(-1),
             D(CommandEncoder, copy_texture_to_buffer)
@@ -333,7 +324,7 @@ SGL_PY_EXPORT(device_command)
             &CommandEncoder::copy_buffer_to_texture,
             "dst"_a,
             "dst_layer"_a,
-            "dst_mip_level"_a,
+            "dst_mip"_a,
             "dst_offset"_a,
             "src"_a,
             "src_offset"_a,
@@ -350,7 +341,7 @@ SGL_PY_EXPORT(device_command)
             ),
             "texture"_a,
             "layer"_a,
-            "mip_level"_a,
+            "mip"_a,
             "data"_a,
             D(CommandEncoder, upload_texture_data)
         )
