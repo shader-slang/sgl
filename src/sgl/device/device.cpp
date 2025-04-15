@@ -588,7 +588,7 @@ uint64_t Device::submit_command_buffers(
             sync_to_cuda(cuda_stream);
     }
 
-    // Wait for passed in fences.
+    // Handle passed in wait fences.
     for (size_t i = 0; i < wait_fences.size(); ++i) {
         Fence* fence = wait_fences[i];
         SGL_CHECK_NOT_NULL(fence);
@@ -599,13 +599,13 @@ uint64_t Device::submit_command_buffers(
         rhi_wait_fence_values.push_back(fence_value);
     }
 
-    // Wait for global fence if needed.
+    // Handle wait for global fence if needed.
     if (m_wait_global_fence) {
         rhi_wait_fences.push_back(m_global_fence->rhi_fence());
         rhi_wait_fence_values.push_back(m_global_fence->signaled_value());
     }
 
-    // Signal passed in fences.
+    // Handle passed in signal fences.
     for (size_t i = 0; i < signal_fences.size(); ++i) {
         Fence* fence = signal_fences[i];
         SGL_CHECK_NOT_NULL(fence);
@@ -616,13 +616,13 @@ uint64_t Device::submit_command_buffers(
         rhi_signal_fence_values.push_back(fence_value);
     }
 
-    // Always signal global fence.
+    // Handle signal for global fence.
     rhi_signal_fences.push_back(m_global_fence->rhi_fence());
     rhi_signal_fence_values.push_back(m_global_fence->update_signaled_value());
 
+    // Handle actual submit.
     SGL_ASSERT(rhi_wait_fences.size() == rhi_wait_fence_values.size());
     SGL_ASSERT(rhi_signal_fences.size() == rhi_signal_fence_values.size());
-
     rhi::SubmitDesc rhi_submit_desc{
         .commandBuffers = rhi_command_buffers.data(),
         .commandBufferCount = narrow_cast<uint32_t>(rhi_command_buffers.size()),
