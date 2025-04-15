@@ -19,7 +19,6 @@ This document is designed to guide you in contributing to the project. It is int
    - [Cloning Your Fork](#cloning-your-fork)
    - [Creating a Branch](#creating-a-branch)
    - [Build SGL from Source](#build-sgl-from-source)
-   - [Making Changes](#making-changes)
    - [Testing](#testing)
    - [Commit to the Branch](#commit-to-the-branch)
    - [Push to Forked Repository](#push-to-forked-repository)
@@ -72,93 +71,10 @@ $ git checkout -b feature/your-feature-name
 ### Build SGL from Source
 Please follow the instructions on [Compiling](https://nv-sgl.readthedocs.io/en/latest/src/developer_guide/compiling.html) sgl in the documentation on readthedocs.
 
-For a quick reference, follow the instructions below.
-
-#### Windows
-Make sure you have a recent version of [Visual Studio 2022](https://visualstudio.microsoft.com/vs/) installed.
-
-Open `x64 Native Tools Command Prompt for VS 2022` and use the following commands to build the project:
-```
-# Configure
-tools\host\cmake\bin\cmake.exe --preset windows-msvc
-
-# Build "Debug" configuration
-tools\host\cmake\bin\cmake.exe --build --preset windows-msvc-debug
-
-# Build "Release" configuration
-tools\host\cmake\bin\cmake.exe --build --preset windows-msvc-release
-```
-
-#### Linux
-Make sure you have the required build tools and dependencies installed. The following commands can be used to install the required build tools and dependencies:
-```
-# Install build tools
-sudo apt install build-essential
-
-# Install required build dependencies
-sudo apt install libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev pkg-config
-```
-> Warning: Currently the required CMake version is 3.25 or above.
-
-Use the following commands to build the project:
-```
-# Configure
-./tools/host/cmake/bin/cmake --preset linux-gcc
-
-# Build "Debug" configuration
-./tools/host/cmake/bin/cmake --build --preset linux-gcc-debug
-
-# Build "Release" configuration
-./tools/host/cmake/bin/cmake --build --preset linux-gcc-release
-```
-
-#### MacOS
-Make sure you have a recent version of XCode installed. You also need to install the XCode command line tools by running the following command:
-```
-xcode-select --install
-```
-
-Use the following commands to build the project for arm64:
-```
-# Configure
-./tools/host/cmake/CMake.app/Contents/bin/cmake --preset macos-arm64-clang
-
-# Build "Debug" configuration
-./tools/host/cmake/CMake.app/Contents/bin/cmake --build --preset macos-arm64-clang-debug
-
-# Build "Release" configuration
-./tools/host/cmake/CMake.app/Contents/bin/cmake --build --preset macos-arm64-clang-release
-```
-For the x64 architecture, use the `macos-x64-clang` preset.
-
 ### Testing
 Test your changes thoroughly to ensure they do not introduce new issues. This is done by running `pytest` and `sgl_tests` from the repository root directory. For more details about these tests, please refer to the [Testing](https://nv-sgl.readthedocs.io/en/latest/src/developer_guide/testing.html) documentation on readthedocs.
 
 If you are familiar with Workflows/Actions in GitHub, you can check [Our Workflows](.github/workflows). The "Unit Tests" sections in [ci.yml](.github/workflows/ci.yml) are where `pytest` and `sgl_tests` are run.
-
-For a quick reference, follow the instructions below.
-
-#### Python Unit Tests
-To run the tests, simply run the following command from the root directory:
-```
-pytest src
-```
-
-To run all tests in a specific file, you can specify the file to run:
-```
-pytest src/sgl/core/tests/test_bitmap.py
-```
-
-To run just one specific test case, you can additionally set the -k flag:
-```
-pytest src/sgl/core/tests/test_bitmap.py -k test_jpg_io
-```
-
-#### C++ Unit Tests
-To run the tests, simply run the following command from the binary output directory:
-```
-./sgl_tests
-```
 
 ### Commit to the Branch
 Commit your changes to the branch with a descriptive commit message:
@@ -171,9 +87,9 @@ It is important to have a descriptive commit message. Unlike comments inside the
 Here is a good example of a commit message:
 
 > Add user authentication feature
-> 
+>
 > Fixes #1234
-> 
+>
 > This commit introduces a new user authentication feature. It includes changes to the login page, user database, and session management to provide secure user authentication.
 
 ### Push to Forked Repository
@@ -193,11 +109,11 @@ It will show a message like "This branch is 1 commit ahead of `shader-slang/sgl:
 You can create a PR by clicking on the message.
 
 ## Pull Request
-Once a PR is created against `shader-slang/slang:main`, the PR will be merged when the following conditions are met:
+Once a PR is created against `shader-slang/sgl:main`, the PR will be merged when the following conditions are met:
 1. The PR is reviewed and got approval.
 1. All of the workflows pass.
 
-When the conditions above are all met, you will have a chance to rewrite the commit message. Since the Slang repo uses the "squash" strategy for merging, multiple commits in your PR will become one commit. By default, GitHub will concatenate all of the commit messages sequentially, but often it is not readable. Please rewrite the final commit message in a way that people can easily understand what the purpose of the commit is.
+When the conditions above are all met, you will have a chance to rewrite the commit message. Since the SGL repo uses the "squash" strategy for merging, multiple commits in your PR will become one commit. By default, GitHub will concatenate all of the commit messages sequentially, but often it is not readable. Please rewrite the final commit message in a way that people can easily understand what the purpose of the commit is.
 
 ### Addressing Code Reviews
 After your pull request is created, you will receive code reviews from the community within 24 hours.
@@ -210,8 +126,8 @@ When your branch is out of sync with top-of-tree, submit a merge commit to keep 
 
 Use these commands to sync your branch:
 ```
-$ git fetch upstream master
-$ git merge upstream/master # resolve any conflicts here
+$ git fetch upstream main
+$ git merge upstream/main # resolve any conflicts here
 $ git submodule update --recursive
 ```
 
