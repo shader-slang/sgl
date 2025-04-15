@@ -85,7 +85,9 @@ NB_MODULE(sgl_ext, m_)
     m.attr("SGL_VERSION_MINOR") = SGL_VERSION_MINOR;
     m.attr("SGL_VERSION_PATCH") = SGL_VERSION_PATCH;
     m.attr("SGL_VERSION") = SGL_VERSION;
+    m.attr("__version__") = SGL_VERSION;
     m.attr("SGL_GIT_VERSION") = SGL_GIT_VERSION;
+    m.attr("SGL_BUILD_TYPE") = SGL_BUILD_TYPE;
 
     SGL_PY_IMPORT(core_object);
     m.def_submodule("platform", "Platform module");
