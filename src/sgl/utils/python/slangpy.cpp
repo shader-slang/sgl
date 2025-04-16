@@ -1156,6 +1156,7 @@ SGL_PY_EXPORT(utils_slangpy)
             nb::rv_policy::reference_internal,
             D_NA(Shape, as_list)
         )
+        .def("calc_contiguous_strides", &Shape::calc_contiguous_strides, D_NA(Shape, calc_contiguous_strides))
         .def("__repr__", &Shape::to_string, D_NA(Shape, to_string))
         .def("__str__", &Shape::to_string, D_NA(Shape, to_string))
         .def(

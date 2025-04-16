@@ -431,6 +431,8 @@ if(SGL_BUILD_PYTHON)
         sgl/utils/python/slangpy.cpp
         sgl/utils/python/slangpyvalue.h
         sgl/utils/python/slangpyvalue.cpp
+        sgl/utils/python/slangpystridedbufferview.h
+        sgl/utils/python/slangpystridedbufferview.cpp
         sgl/utils/python/slangpybuffer.h
         sgl/utils/python/slangpybuffer.cpp
         sgl/utils/python/slangpyfunction.h

@@ -16,37 +16,26 @@
 
 #include "sgl/utils/python/slangpy.h"
 
+#include "slangpystridedbufferview.h"
+
 namespace sgl::slangpy {
 
-struct NativeNDBufferDesc {
-    ref<NativeSlangType> dtype;
-    ref<TypeLayoutReflection> element_layout;
-    Shape shape;
-    Shape strides;
-    BufferUsage usage{BufferUsage::shader_resource | BufferUsage::unordered_access};
-    MemoryType memory_type{MemoryType::device_local};
-};
+struct NativeNDBufferDesc : public StridedBufferViewDesc { };
 
-class NativeNDBuffer : public NativeObject {
+class NativeNDBuffer : public StridedBufferView {
 public:
-    NativeNDBuffer(Device* device, NativeNDBufferDesc desc);
+    NativeNDBuffer(Device* device, NativeNDBufferDesc desc, ref<Buffer> storage = nullptr);
+    virtual ~NativeNDBuffer() { }
 
-    Device* device() const { return storage()->device(); }
-    ref<NativeSlangType> dtype() const { return m_desc.dtype; }
-    const Shape& shape() const { return m_desc.shape; }
-    const Shape& strides() const { return m_desc.strides; }
-    size_t element_count() const { return m_desc.shape.element_count(); }
-    BufferUsage usage() const { return m_desc.usage; }
-    MemoryType memory_type() const { return m_desc.memory_type; }
-    ref<Buffer> storage() const { return m_storage; }
-    size_t element_stride() const { return m_desc.element_layout->stride(); }
+    virtual NativeNDBufferDesc& desc() override { return m_desc; }
+    virtual const NativeNDBufferDesc& desc() const override { return m_desc; }
 
-    ref<BufferCursor> cursor(std::optional<int> start = std::nullopt, std::optional<int> count = std::nullopt) const;
-    nb::dict uniforms() const;
+    ref<NativeNDBuffer> view(Shape shape, Shape strides = Shape(), int offset = 0) const;
+    ref<NativeNDBuffer> broadcast_to(const Shape& shape) const;
+    ref<NativeNDBuffer> index(nb::args args) const;
 
 private:
     NativeNDBufferDesc m_desc;
-    ref<Buffer> m_storage;
 };
 
 
