@@ -10,6 +10,11 @@ sgl uses a `semantic versioning <http://semver.org>`__ policy for its API.
 Changelog
 =========
 
+v0.14.1
+--------------------
+* Fix D3D installation
+* Rework command buffer submission to support multiple command buffers and fences
+
 v0.14.0
 --------------------
 * Update Slang to 2025.6.4.
