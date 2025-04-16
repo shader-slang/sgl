@@ -10,6 +10,13 @@ sgl uses a `semantic versioning <http://semver.org>`__ policy for its API.
 Changelog
 =========
 
+v0.15.0
+--------------------
+* Make SlangPy NDBuffer and Tensor share a lot of functionality
+* Fix SlangPy string handling
+* Fix SlangPy _type handling
+* SlangPy NDBuffer and Tensor use full type name for signatures
+
 v0.14.1
 --------------------
 * Fix D3D installation
