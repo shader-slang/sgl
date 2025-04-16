@@ -16,19 +16,16 @@
 
 #include "sgl/utils/python/slangpy.h"
 
+#include "slangpystridedbufferview.h"
+
 namespace sgl::slangpy {
 
 class NativeTensor;
 
-struct NativeTensorDesc {
-    ref<NativeSlangType> dtype;
-    ref<TypeLayoutReflection> element_layout;
-    Shape shape;
-    Shape strides;
-    int offset{0};
+struct NativeTensorDesc : public StridedBufferViewDesc {
 };
 
-class NativeTensor : public NativeObject {
+class NativeTensor : public StridedBufferView {
 public:
     NativeTensor(
         NativeTensorDesc desc,
@@ -36,18 +33,14 @@ public:
         const ref<NativeTensor>& grad_in,
         const ref<NativeTensor>& grad_out
     );
+    virtual ~NativeTensor() {}
 
-    Device* device() const { return storage()->device(); }
-    ref<NativeSlangType> dtype() const { return m_desc.dtype; }
-    const Shape& shape() const { return m_desc.shape; }
-    const Shape& strides() const { return m_desc.strides; }
-    int dims() const { return (int)m_desc.shape.size(); }
-    int offset() const { return m_desc.offset; }
-    size_t element_count() const { return m_desc.shape.element_count(); }
-    BufferUsage usage() const { return m_storage->desc().usage; }
-    MemoryType memory_type() const { return m_storage->desc().memory_type; }
-    ref<Buffer> storage() const { return m_storage; }
-    size_t element_stride() const { return m_desc.element_layout->stride(); }
+    virtual NativeTensorDesc &desc() override { return m_desc; }
+    virtual const NativeTensorDesc &desc() const override { return m_desc; }
+
+    ref<NativeTensor> view(Shape shape, Shape strides = Shape(), int offset = 0) const;
+    ref<NativeTensor> broadcast_to(const Shape& shape) const;
+    ref<NativeTensor> index(nb::args args) const;
 
     const ref<NativeTensor>& grad_in() const { return m_grad_in; }
     void set_grad_in(const ref<NativeTensor>& grad_in) { m_grad_in = grad_in; }
@@ -62,27 +55,14 @@ public:
         return m_grad_out;
     }
 
-    /// Broadcast tensor to new shape using standard numpy broadcasting rules.
-    ref<NativeTensor> broadcast_to(const Shape& shape) const;
-
-    /// Clear tensor to 0s
-    void clear(CommandEncoder* cmd = nullptr);
-
     /// Create a new version of this tensor with associated grads. It is valid for
     /// both input and output grads to refer to the same tensor. If neither grad_in
     /// or grad_out are provided, a single new tensor is created and used for both grads.
     ref<NativeTensor>
     with_grads(ref<NativeTensor> grad_in = nullptr, ref<NativeTensor> grad_out = nullptr, bool zero = false) const;
 
-    /// Copy to CPU memory as a numpy array of correct stride/shape
-    nb::ndarray<nb::numpy> to_numpy() const;
-
-    ref<BufferCursor> cursor(std::optional<int> start = std::nullopt, std::optional<int> count = std::nullopt) const;
-    nb::dict uniforms() const;
-
 private:
     NativeTensorDesc m_desc;
-    ref<Buffer> m_storage;
     ref<NativeTensor> m_grad_in;
     ref<NativeTensor> m_grad_out;
 };
