@@ -16,7 +16,7 @@ env:
   CIBW_TEST_COMMAND: "python -c \"import sgl\""
   # zip required for vcpkg, rest for glfw
   CIBW_BEFORE_ALL_LINUX: yum install -y zip wayland-devel libxkbcommon-devel libXcursor-devel libXi-devel libXinerama-devel libXrandr-devel
-  MACOSX_DEPLOYMENT_TARGET: "10.15"
+  MACOSX_DEPLOYMENT_TARGET: 10.14
 
 jobs:
   wheels:
