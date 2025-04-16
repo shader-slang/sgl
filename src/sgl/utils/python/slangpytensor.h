@@ -22,8 +22,7 @@ namespace sgl::slangpy {
 
 class NativeTensor;
 
-struct NativeTensorDesc : public StridedBufferViewDesc {
-};
+struct NativeTensorDesc : public StridedBufferViewDesc { };
 
 class NativeTensor : public StridedBufferView {
 public:
@@ -33,10 +32,10 @@ public:
         const ref<NativeTensor>& grad_in,
         const ref<NativeTensor>& grad_out
     );
-    virtual ~NativeTensor() {}
+    virtual ~NativeTensor() { }
 
-    virtual NativeTensorDesc &desc() override { return m_desc; }
-    virtual const NativeTensorDesc &desc() const override { return m_desc; }
+    virtual NativeTensorDesc& desc() override { return m_desc; }
+    virtual const NativeTensorDesc& desc() const override { return m_desc; }
 
     ref<NativeTensor> view(Shape shape, Shape strides = Shape(), int offset = 0) const;
     ref<NativeTensor> broadcast_to(const Shape& shape) const;

@@ -31,12 +31,12 @@ struct StridedBufferViewDesc {
 class StridedBufferView : public NativeObject {
 public:
     StridedBufferView(Device* device, const StridedBufferViewDesc& desc, ref<Buffer> storage);
-    virtual ~StridedBufferView() {}
+    virtual ~StridedBufferView() { }
 
     // Derived classes are free to store a desc with extra information, and can provide us
     // with the desc for the buffer view by implementing these methods
-    virtual StridedBufferViewDesc &desc() { SGL_THROW("desc() is not implemented"); }
-    virtual const StridedBufferViewDesc &desc() const { SGL_THROW("desc() is not implemented"); }
+    virtual StridedBufferViewDesc& desc() { SGL_THROW("desc() is not implemented"); }
+    virtual const StridedBufferViewDesc& desc() const { SGL_THROW("desc() is not implemented"); }
 
     Device* device() const { return storage()->device(); }
     ref<NativeSlangType> dtype() const { return desc().dtype; }

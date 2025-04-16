@@ -77,12 +77,7 @@ ref<NativeTensor> NativeTensor::with_grads(ref<NativeTensor> grad_in, ref<Native
         desc.offset = m_desc.offset;
 
         // Create new native tensor to hold the grads.
-        new_grad_in = make_ref<NativeTensor>(
-            desc,
-            buffer,
-            nullptr,
-            nullptr
-        );
+        new_grad_in = make_ref<NativeTensor>(desc, buffer, nullptr, nullptr);
         new_grad_out = new_grad_in;
     }
 
@@ -224,12 +219,7 @@ nb::object NativeTensorMarshall::create_output(CallContext* context, NativeBound
     desc.offset = 0;
 
     // Create new native tensor to hold the grads.
-    return nb::cast(make_ref<NativeTensor>(
-        desc,
-        buffer,
-        nullptr,
-        nullptr
-    ));
+    return nb::cast(make_ref<NativeTensor>(desc, buffer, nullptr, nullptr));
 }
 
 nb::object
@@ -261,8 +251,7 @@ SGL_PY_EXPORT(utils_slangpy_tensor)
 
     nb::module_ slangpy = m.attr("slangpy");
 
-    nb::class_<NativeTensorDesc, StridedBufferViewDesc>(slangpy, "NativeTensorDesc")
-        .def(nb::init<>());
+    nb::class_<NativeTensorDesc, StridedBufferViewDesc>(slangpy, "NativeTensorDesc").def(nb::init<>());
 
     nb::class_<NativeTensor, StridedBufferView>(slangpy, "NativeTensor")
         .def(

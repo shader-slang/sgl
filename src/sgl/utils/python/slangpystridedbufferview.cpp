@@ -83,8 +83,8 @@ StridedBufferView::StridedBufferView(Device* device, const StridedBufferViewDesc
 
 bool StridedBufferView::is_contiguous() const
 {
-    const auto &shape_vec = shape().as_vector();
-    const auto &stride_vec = strides().as_vector();
+    const auto& shape_vec = shape().as_vector();
+    const auto& stride_vec = strides().as_vector();
 
     int prod = 1;
     for (int i = dims() - 1; i >= 0; --i) {
@@ -196,7 +196,7 @@ void StridedBufferView::index_inplace(nb::args args)
     // access an existing dimension, as opposed to inserting/skipping them
     // This applies to integers and slices
     int real_dims = 0;
-    for (auto v: args) {
+    for (auto v : args) {
         if (nb::isinstance<int>(v) || nb::isinstance<nb::slice>(v))
             real_dims++;
     }
@@ -213,7 +213,7 @@ void StridedBufferView::index_inplace(nb::args args)
     std::vector<int> shape, strides;
 
     for (size_t i = 0; i < args.size(); ++i) {
-        const nb::handle &arg = args[i];
+        const nb::handle& arg = args[i];
 
         if (nb::isinstance<int>(arg)) {
             // Integer index
@@ -245,12 +245,7 @@ void StridedBufferView::index_inplace(nb::args args)
             size_t slice_length = adjusted.get<3>();
 
             // We only support positive steps
-            SGL_CHECK(
-                step > 0,
-                "Slice step must be greater than zero (found stride {} at dimension {})",
-                step,
-                i
-            );
+            SGL_CHECK(step > 0, "Slice step must be greater than zero (found stride {} at dimension {})", step, i);
 
             // Move offset by start of the slice
             offset += int(start) * cur_strides[dim];
@@ -313,7 +308,7 @@ void StridedBufferView::clear(CommandEncoder* cmd)
 }
 
 template<typename Framework>
-static nb::ndarray<Framework> to_ndarray(void* data, nb::handle owner, const StridedBufferViewDesc &desc)
+static nb::ndarray<Framework> to_ndarray(void* data, nb::handle owner, const StridedBufferViewDesc& desc)
 {
     // Get dlpack type from scalar type.
     size_t dtype_size = desc.element_layout->stride();
@@ -332,7 +327,8 @@ static nb::ndarray<Framework> to_ndarray(void* data, nb::handle owner, const Str
     auto dtype_strides = dtype_shape.calc_contiguous_strides();
 
     size_t innermost_size = is_scalar ? innermost_layout->stride() : 1;
-    TypeReflection::ScalarType scalar_type = is_scalar ? innermost_layout->type()->scalar_type() : TypeReflection::ScalarType::uint8;
+    TypeReflection::ScalarType scalar_type
+        = is_scalar ? innermost_layout->type()->scalar_type() : TypeReflection::ScalarType::uint8;
     auto dlpack_type = scalartype_to_dtype(scalar_type);
 
     // Build sizes/strides arrays in form numpy wants them.
@@ -384,7 +380,7 @@ nb::ndarray<nb::pytorch> StridedBufferView::to_torch() const
     // However, if the buffer was created in cpp rather than python (which is true for NDBuffer),
     // nb::find won't work on it. For now, use the buffer view as the owner of the data,
     // which will keep m_storage alive
-    //auto owner = nb::find(m_storage.get());
+    // auto owner = nb::find(m_storage.get());
     auto owner = nb::find(this);
 
     return to_ndarray<nb::pytorch>(data, owner, desc());

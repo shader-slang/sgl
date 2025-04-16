@@ -18,8 +18,8 @@ extern void buffer_copy_from_numpy(Buffer* self, nb::ndarray<nb::numpy> data);
 namespace sgl::slangpy {
 
 NativeNDBuffer::NativeNDBuffer(Device* device, NativeNDBufferDesc desc, ref<Buffer> storage)
-: StridedBufferView(device, desc, std::move(storage))
-, m_desc(desc)
+    : StridedBufferView(device, desc, std::move(storage))
+    , m_desc(desc)
 {
 }
 
@@ -256,8 +256,7 @@ SGL_PY_EXPORT(utils_slangpy_buffer)
 
     nb::module_ slangpy = m.attr("slangpy");
 
-    nb::class_<NativeNDBufferDesc, StridedBufferViewDesc>(slangpy, "NativeNDBufferDesc")
-        .def(nb::init<>());
+    nb::class_<NativeNDBufferDesc, StridedBufferViewDesc>(slangpy, "NativeNDBufferDesc").def(nb::init<>());
 
     nb::class_<NativeNDBuffer, StridedBufferView>(slangpy, "NativeNDBuffer")
         .def(nb::init<ref<Device>, NativeNDBufferDesc, ref<Buffer>>(), "device"_a, "desc"_a, "buffer"_a = nullptr)

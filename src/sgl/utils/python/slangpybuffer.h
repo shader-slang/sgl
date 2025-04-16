@@ -20,16 +20,15 @@
 
 namespace sgl::slangpy {
 
-struct NativeNDBufferDesc : public StridedBufferViewDesc {
-};
+struct NativeNDBufferDesc : public StridedBufferViewDesc { };
 
 class NativeNDBuffer : public StridedBufferView {
 public:
     NativeNDBuffer(Device* device, NativeNDBufferDesc desc, ref<Buffer> storage = nullptr);
-    virtual ~NativeNDBuffer() {}
+    virtual ~NativeNDBuffer() { }
 
-    virtual NativeNDBufferDesc &desc() override { return m_desc; }
-    virtual const NativeNDBufferDesc &desc() const override { return m_desc; }
+    virtual NativeNDBufferDesc& desc() override { return m_desc; }
+    virtual const NativeNDBufferDesc& desc() const override { return m_desc; }
 
     ref<NativeNDBuffer> view(Shape shape, Shape strides = Shape(), int offset = 0) const;
     ref<NativeNDBuffer> broadcast_to(const Shape& shape) const;
