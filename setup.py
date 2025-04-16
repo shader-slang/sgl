@@ -2,7 +2,7 @@
 
 from __future__ import print_function
 
-import sys, re, os, subprocess
+import sys, re, os, subprocess, shutil
 from pathlib import Path
 
 try:
@@ -37,7 +37,7 @@ CMAKE_EXE = {
 CMAKE_PRESET = {
     "windows": "windows-msvc",
     "linux": "linux-gcc",
-    "macos": "macos-clang",
+    "macos": "macos-arm64-clang",
 }[PLATFORM]
 
 
@@ -81,7 +81,7 @@ class CMakeBuild(build_ext):
             f"-DPython_ROOT_DIR:PATH={sys.prefix}",
             f"-DPython_FIND_REGISTRY:STRING=NEVER",
             f"-DCMAKE_INSTALL_PREFIX={extdir}",
-            f"-DCMAKE_INSTALL_LIBDIR=sgl",
+            f"-DCMAKE_INSTALL_LIBDIR=lib",
             f"-DCMAKE_INSTALL_BINDIR=sgl",
             f"-DCMAKE_INSTALL_INCLUDEDIR=sgl/include",
             f"-DCMAKE_INSTALL_DATAROOTDIR=sgl",
@@ -97,6 +97,9 @@ class CMakeBuild(build_ext):
         subprocess.run([CMAKE_EXE, *cmake_args], env=env, check=True)
         subprocess.run([CMAKE_EXE, "--build", build_dir], env=env, check=True)
         subprocess.run([CMAKE_EXE, "--install", build_dir], env=env, check=True)
+
+        # Remove lib directory
+        shutil.rmtree(extdir / "lib", ignore_errors=True)
 
 
 VERSION_REGEX = re.compile(

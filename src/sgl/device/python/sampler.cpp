@@ -19,6 +19,7 @@ SGL_DICT_TO_DESC_FIELD(comparison_func, ComparisonFunc)
 SGL_DICT_TO_DESC_FIELD(border_color, float4)
 SGL_DICT_TO_DESC_FIELD(min_lod, float)
 SGL_DICT_TO_DESC_FIELD(max_lod, float)
+SGL_DICT_TO_DESC_FIELD(label, std::string)
 SGL_DICT_TO_DESC_END()
 } // namespace sgl
 
@@ -41,7 +42,8 @@ SGL_PY_EXPORT(device_sampler)
         .def_rw("comparison_func", &SamplerDesc::comparison_func, D(SamplerDesc, comparison_func))
         .def_rw("border_color", &SamplerDesc::border_color, D(SamplerDesc, border_color))
         .def_rw("min_lod", &SamplerDesc::min_lod, D(SamplerDesc, min_lod))
-        .def_rw("max_lod", &SamplerDesc::max_lod, D(SamplerDesc, max_lod));
+        .def_rw("max_lod", &SamplerDesc::max_lod, D(SamplerDesc, max_lod))
+        .def_rw("label", &SamplerDesc::label, D(SamplerDesc, label));
     nb::implicitly_convertible<nb::dict, SamplerDesc>();
 
     nb::class_<Sampler, DeviceResource>(m, "Sampler", D(Sampler)) //
