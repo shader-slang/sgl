@@ -24,7 +24,7 @@ struct StridedBufferViewDesc {
     int offset{0};
     Shape shape;
     Shape strides;
-    ResourceUsage usage{ResourceUsage::shader_resource | ResourceUsage::unordered_access};
+    BufferUsage usage{BufferUsage::shader_resource | BufferUsage::unordered_access};
     MemoryType memory_type{MemoryType::device_local};
 };
 
@@ -45,7 +45,7 @@ public:
     const Shape& strides() const { return desc().strides; }
     int dims() const { return (int)desc().shape.size(); }
     size_t element_count() const { return desc().shape.element_count(); }
-    ResourceUsage usage() const { return desc().usage; }
+    BufferUsage usage() const { return desc().usage; }
     MemoryType memory_type() const { return desc().memory_type; }
     ref<Buffer> storage() const { return m_storage; }
     size_t element_stride() const { return desc().element_layout->stride(); }
@@ -56,7 +56,7 @@ public:
     nb::dict uniforms() const;
 
     /// Clear buffer to 0s
-    void clear(CommandBuffer* cmd = nullptr);
+    void clear(CommandEncoder* cmd = nullptr);
 
     /// Copy to CPU memory as a numpy array of correct stride/shape
     nb::ndarray<nb::numpy> to_numpy() const;

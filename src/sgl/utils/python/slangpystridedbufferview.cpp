@@ -77,7 +77,7 @@ StridedBufferView::StridedBufferView(Device* device, const StridedBufferViewDesc
     m_storage = std::move(storage);
 
     set_slangpy_signature(
-        fmt::format("[{},{},{}]", desc.dtype->get_type_reflection()->name(), desc.shape.size(), desc.usage)
+        fmt::format("[{},{},{}]", desc.dtype->get_type_reflection()->full_name(), desc.shape.size(), desc.usage)
     );
 }
 
@@ -301,14 +301,14 @@ void StridedBufferView::index_inplace(nb::args args)
     view_inplace(Shape(shape), Shape(strides), offset);
 }
 
-void StridedBufferView::clear(CommandBuffer* cmd)
+void StridedBufferView::clear(CommandEncoder* cmd)
 {
     if (cmd) {
-        cmd->clear_resource_view(m_storage->get_uav(), uint4(0, 0, 0, 0));
+        cmd->clear_buffer(m_storage);
     } else {
-        ref<CommandBuffer> temp_cmd = device()->create_command_buffer();
-        temp_cmd->clear_resource_view(m_storage->get_uav(), uint4(0, 0, 0, 0));
-        temp_cmd->submit();
+        ref<CommandEncoder> temp_cmd = device()->create_command_encoder();
+        temp_cmd->clear_buffer(m_storage);
+        device()->submit_command_buffer(temp_cmd->finish());
     }
 }
 
